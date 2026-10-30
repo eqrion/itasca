@@ -29,7 +29,7 @@ theorem IssuedValue.in_store {M : Type} {s : runtime.store.Store M} {value : run
 theorem matched_issued_source_typed {M : Type} (view : M → Slice U8)
     (code : CodeInterpretation) (store : runtime.store.Store M)
     (sourceWf : wf_store (decodeStore view code store))
-    {values : List runtime.Value} {types : List Itasca.types.ValueType}
+    {values : List runtime.Value} {types : List Itasca.wasm_types.ValueType}
     (matched : List.Forall₂ (Interp.ArgumentMatches store.id) values types)
     (issued : ∀ value ∈ values, IssuedValue store value) :
     ResultsTyped (decodeStore view code store) (types.map Interp.sourceType)
@@ -56,7 +56,7 @@ issued values; it does not assume the host returned correctly typed results. -/
 theorem check_values_source_typed {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation) (store : runtime.store.Store M)
     (sourceWf : wf_store (decodeStore view code store))
-    (values : Slice runtime.Value) (types : Slice Itasca.types.ValueType)
+    (values : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType)
     (issued : ∀ value ∈ values.val, IssuedValue store value) :
     runtime.interp.check_values memory store values types ⦃ status =>
       status = .Ok () →
@@ -88,7 +88,7 @@ references remain admissible inputs to the public rejection theorem. -/
 theorem checked_arguments_owned {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : CodeInterpretation) (store : runtime.store.Store M)
     (sourceWf : wf_store (decodeStore view code store))
-    (args : Slice runtime.Value) (types : Slice Itasca.types.ValueType)
+    (args : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType)
     (issued : ∀ value ∈ args.val, IssuedValue store value)
     (accepted : runtime.interp.check_values memory store args types = .ok (.Ok ())) :
     ∀ value ∈ args.val, ValueInStore store value := by

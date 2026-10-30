@@ -20,8 +20,8 @@ private theorem return_stack_suffix {before outer segment rest : List code.Stack
   simpa [Sequence.stackTypes, values, List.map_append, List.append_assoc] using
     congrArg (Sequence.stackTypes outer ++ ·) types.symm
 
-theorem reader_return_stack_wasm2 (st out : code.BodyState) (env : module.Env) (index : U32)
-    (results : List types.ValueType) (outer segment : List code.StackType)
+theorem reader_return_stack_wasm2 (st out : code.BodyState) (env : metadata.Env) (index : U32)
+    (results : List wasm_types.ValueType) (outer segment : List code.StackType)
     (resolved : Wasm2.resolve env (.Type index .Results) = some results)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (known : ConcreteStack st.core.vals.val) (mono : Control.polymorphic st.core = false)

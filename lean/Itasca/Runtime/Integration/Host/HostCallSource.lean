@@ -36,7 +36,7 @@ def HostCallSourceOutcome {M P : Type} (view : M → Slice U8) (code : Store.Cod
 stack-overflow reply. The checked callback equation retains its returned store. -/
 def HostCallCauses {A M P : Type} (allocator : runtime.platform.Alloc A)
     (hooks : runtime.platform.Platform P M) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (signature : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (platform : P) (signature : Itasca.wasm_types.FuncType)
     (base : Usize) (identity : U64)
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P) : Prop :=
   match out.1 with
@@ -48,7 +48,7 @@ def HostCallCauses {A M P : Type} (allocator : runtime.platform.Alloc A)
 
 theorem HostCallCauses.of_preparation {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {signature : Itasca.types.FuncType}
+    {store : runtime.store.Store M} {platform : P} {signature : Itasca.wasm_types.FuncType}
     {base : Usize} {identity : U64}
     {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
     {error : runtime.ExecError} (status : out.1 = .Err error)

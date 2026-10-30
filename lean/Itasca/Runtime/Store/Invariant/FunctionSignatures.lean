@@ -11,7 +11,7 @@ theorem FunctionStageEffect.function_table {M : Type} {store : runtime.store.Sto
     {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
     {types : List functype} (table : Interp.FunctionTable store inst types)
-    {rawType : Itasca.types.FuncType} (typed : store.types.val[signature.val]? = some rawType)
+    {rawType : Itasca.wasm_types.FuncType} (typed : store.types.val[signature.val]? = some rawType)
     (success : out.1 = .Ok ()) :
     Interp.FunctionTable out.2.1 out.2.2 (types ++ [decodeFuncType rawType]) := by
   rcases effect with ⟨error, rfl⟩ | ⟨functions, addresses, appended, mapped, capacity, rfl⟩
@@ -28,8 +28,8 @@ theorem FunctionStageEffect.function_table {M : Type} {store : runtime.store.Sto
 /-- Canonical type-map lookup follows the source type relation through the
 actual instance map; no equality of unchecked type indices is assumed. -/
 theorem type_entries_resolve {M : Type} {store : runtime.store.Store M}
-    {source : List Itasca.types.FuncType} {indices : List Usize}
-    (entries : TypeEntries store source indices) (index : U32) (ty : Itasca.types.FuncType)
+    {source : List Itasca.wasm_types.FuncType} {indices : List Usize}
+    (entries : TypeEntries store source indices) (index : U32) (ty : Itasca.wasm_types.FuncType)
     (resolved : Resolves source index ty) :
     ∃ bound : index.val < indices.length,
       store.types.val[indices[index.val].val]? = some ty := by
@@ -42,18 +42,18 @@ theorem type_entries_resolve {M : Type} {store : runtime.store.Store M}
 /-- Every staged function is either an existing entry or a new defined entry
 with its exact source-function index and canonical raw signature. -/
 def StagedFunctionSignatures {M : Type} (before after : runtime.store.Store M)
-    (instanceIndex : Usize) (definedTypes : List Itasca.types.FuncType) : Prop :=
+    (instanceIndex : Usize) (definedTypes : List Itasca.wasm_types.FuncType) : Prop :=
   ∀ function ∈ after.funcs.val, function ∈ before.funcs.val ∨
     ∃ index : Usize, ∃ bound : index.val < definedTypes.length,
       function.code = .Wasm instanceIndex index ∧
       after.types.val[function.signature.val]? = some definedTypes[index.val]
 
 theorem StagedFunctionSignatures.refl {M : Type} (store : runtime.store.Store M)
-    (instanceIndex : Usize) (definedTypes : List Itasca.types.FuncType) :
+    (instanceIndex : Usize) (definedTypes : List Itasca.wasm_types.FuncType) :
     StagedFunctionSignatures store store instanceIndex definedTypes := fun _ present => .inl present
 
 theorem StagedFunctionSignatures.extend {M : Type} {before store after : runtime.store.Store M}
-    {instanceIndex : Usize} {definedTypes : List Itasca.types.FuncType}
+    {instanceIndex : Usize} {definedTypes : List Itasca.wasm_types.FuncType}
     (staged : StagedFunctionSignatures before store instanceIndex definedTypes)
     (retained : StagedPrefix store after) (functions : after.funcs = store.funcs) :
     StagedFunctionSignatures before after instanceIndex definedTypes := by
@@ -64,7 +64,7 @@ theorem StagedFunctionSignatures.extend {M : Type} {before store after : runtime
   · exact .inr ⟨index, bound, code, retained.type_lookup signature⟩
 
 theorem StagedFunctionSignatures.rebase {M : Type} {before stagedFrom after : runtime.store.Store M}
-    {instanceIndex : Usize} {definedTypes : List Itasca.types.FuncType}
+    {instanceIndex : Usize} {definedTypes : List Itasca.wasm_types.FuncType}
     (functions : stagedFrom.funcs = before.funcs)
     (staged : StagedFunctionSignatures stagedFrom after instanceIndex definedTypes) :
     StagedFunctionSignatures before after instanceIndex definedTypes := by
@@ -75,7 +75,7 @@ when a later function allocation rejects and the public wrapper rolls back. -/
 theorem FunctionStageEffect.signatures {M : Type} {before store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} {instanceIndex index signature out}
     (effect : FunctionStageEffect store inst instanceIndex index signature out)
-    {definedTypes : List Itasca.types.FuncType}
+    {definedTypes : List Itasca.wasm_types.FuncType}
     (staged : StagedFunctionSignatures before store instanceIndex definedTypes)
     (bound : index.val < definedTypes.length)
     (typed : store.types.val[signature.val]? = some definedTypes[index.val]) :
@@ -93,7 +93,7 @@ theorem FunctionStageEffect.signatures {M : Type} {before store : runtime.store.
 
 /-- The actual canonical type map decodes to its source signature list. -/
 theorem type_entries_decoded {M : Type} {store : runtime.store.Store M}
-    {source : List Itasca.types.FuncType} {indices : List Usize}
+    {source : List Itasca.wasm_types.FuncType} {indices : List Usize}
     (entries : TypeEntries store source indices) :
     indices.map (fun index => (store.types.val.map decodeFuncType).getD index.val default) =
       source.map decodeFuncType := by

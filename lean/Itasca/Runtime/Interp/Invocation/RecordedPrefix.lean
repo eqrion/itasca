@@ -45,7 +45,7 @@ theorem recorded_invoke_with_prefix_owned_causes_composition_mode {M P F A : Typ
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value) (prior : List HostEvent)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)

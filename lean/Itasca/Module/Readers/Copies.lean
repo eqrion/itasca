@@ -3,8 +3,8 @@ import Itasca.Support.EnvTranslation
 /-!
 # Copying and looking up types
 
-Specs for the allocation helpers `module.copy_value_types`, `module.copy_func_type` (each returns
-a copy equal to its source) and `module.lookup_type` (the indexed type, or `UnknownType` when the
+Specs for the allocation helpers `metadata.copy_value_types`, `metadata.copy_func_type` (each returns
+a copy equal to its source) and `metadata.lookup_type` (the indexed type, or `UnknownType` when the
 index is out of range).
 -/
 
@@ -14,20 +14,20 @@ namespace Itasca
 
 /-- The copy loop appends the remaining source elements to `out` in order. -/
 @[step]
-theorem module.copy_value_types_loop.spec (src : Slice types.ValueType)
-    (out : alloc.vec.Vec types.ValueType) (i : Usize)
+theorem metadata.copy_value_types_loop.spec (src : Slice wasm_types.ValueType)
+    (out : alloc.vec.Vec wasm_types.ValueType) (i : Usize)
     (hi : i.val ≤ src.val.length)
     (hsize : out.val.length + (src.val.length - i.val) ≤ Usize.max) :
-    module.copy_value_types_loop src out i ⦃ copied =>
+    metadata.copy_value_types_loop src out i ⦃ copied =>
       copied.val = out.val ++ src.val.drop i.val ⦄ := by
-  unfold module.copy_value_types_loop
+  unfold metadata.copy_value_types_loop
   apply loop.spec_decr_nat (fun p => src.val.length - p.2.val)
     (fun p => p.2.val ≤ src.val.length ∧
       p.1.val ++ src.val.drop p.2.val = out.val ++ src.val.drop i.val ∧
       p.1.val.length + (src.val.length - p.2.val) ≤ Usize.max)
   · rintro ⟨v, j⟩ ⟨hj, hv, hb⟩
     dsimp only at hj hv hb
-    unfold module.copy_value_types_loop.body
+    unfold metadata.copy_value_types_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -47,36 +47,36 @@ theorem module.copy_value_types_loop.spec (src : Slice types.ValueType)
       rw [List.drop_eq_getElem_cons hlt]
   · exact ⟨hi, rfl, hsize⟩
 
-/-- `module.copy_value_types` returns a vector equal to its source. -/
+/-- `metadata.copy_value_types` returns a vector equal to its source. -/
 @[step]
-theorem module.copy_value_types.spec (src : Slice types.ValueType) :
-    module.copy_value_types src ⦃ copied => copied.val = src.val ⦄ := by
-  simpa [module.copy_value_types] using
-    module.copy_value_types_loop.spec src (alloc.vec.Vec.new _) 0#usize
+theorem metadata.copy_value_types.spec (src : Slice wasm_types.ValueType) :
+    metadata.copy_value_types src ⦃ copied => copied.val = src.val ⦄ := by
+  simpa [metadata.copy_value_types] using
+    metadata.copy_value_types_loop.spec src (alloc.vec.Vec.new _) 0#usize
       (by simp) (by simp)
 
-/-- `module.copy_func_type` returns a function type equal to its source. -/
+/-- `metadata.copy_func_type` returns a function type equal to its source. -/
 @[step]
-theorem module.copy_func_type.spec (ft : types.FuncType) :
-    module.copy_func_type ft ⦃ copied => copied = ft ⦄ := by
-  unfold module.copy_func_type
+theorem metadata.copy_func_type.spec (ft : wasm_types.FuncType) :
+    metadata.copy_func_type ft ⦃ copied => copied = ft ⦄ := by
+  unfold metadata.copy_func_type
   obtain ⟨p, hp, hpval⟩ := WP.spec_imp_exists
-    (module.copy_value_types.spec (alloc.vec.Vec.deref ft.params))
+    (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.params))
   obtain ⟨r, hr, hrval⟩ := WP.spec_imp_exists
-    (module.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
+    (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
   have hp' : p = ft.params := alloc.vec.Vec.ext _ _ (by simpa [alloc.vec.Vec.deref] using hpval)
   have hr' : r = ft.results := alloc.vec.Vec.ext _ _ (by simpa [alloc.vec.Vec.deref] using hrval)
   simp [hp, hr, hp', hr']
 
-/-- `module.lookup_type` returns the type at the index, or `UnknownType` exactly when the index is
+/-- `metadata.lookup_type` returns the type at the index, or `UnknownType` exactly when the index is
 out of range. -/
 @[step]
-theorem module.lookup_type.spec (env : module.Env) (idx : U32) :
-    module.lookup_type env idx ⦃ r =>
+theorem metadata.lookup_type.spec (env : metadata.Env) (idx : U32) :
+    metadata.lookup_type env idx ⦃ r =>
       match r with
       | .Ok ft => ∃ hi : idx.val < env.types.val.length, env.types.val[idx.val] = ft
       | .Err e => e = .UnknownType idx ∧ env.types.val.length ≤ idx.val ⦄ := by
-  unfold module.lookup_type
+  unfold metadata.lookup_type
   step*
 
 end Itasca

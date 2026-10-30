@@ -120,7 +120,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- `code.step` sends every opcode from `0x45` up to `code.step_numeric`. -/
 theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hlow : 0x45 ≤ opcode.val) :
     code.step visitor st data env ctx opcode v = code.step_numeric visitor st opcode v := by
   rcases opcode with ⟨⟨n, hn⟩⟩
@@ -163,7 +163,7 @@ set_option maxHeartbeats 1000000 in
 /-- Reserved opcode bytes below the numeric range are rejected before any reader or visitor hook
 runs. -/
 theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V)
     (hreserved : (0x06 ≤ opcode.val ∧ opcode.val ≤ 0x0A) ∨
       (0x12 ≤ opcode.val ∧ opcode.val ≤ 0x19) ∨

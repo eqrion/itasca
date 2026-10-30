@@ -14,8 +14,8 @@ structure IndexedTableReaderCompilerPointWasm2
     (emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (types functions : List functype) (returns locals : List valtype)
-    (data : Slice U8) (env : Itasca.module.Env) (sourceLocals : alloc.vec.Vec Itasca.types.ValueType)
-    (index : U32) (ft : Itasca.types.FuncType) (st : Itasca.code.BodyState) : Prop where
+    (data : Slice U8) (env : Itasca.metadata.Env) (sourceLocals : alloc.vec.Vec Itasca.wasm_types.ValueType)
+    (index : U32) (ft : Itasca.wasm_types.FuncType) (st : Itasca.code.BodyState) : Prop where
   tables : CompilerTableBoundary compiler
   future : ∀ more, StructuredReaderCompilerPointWasm2
     ((CompilerTables.ofFunction compiler.function).append more).jumpTables

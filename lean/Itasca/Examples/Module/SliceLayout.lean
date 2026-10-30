@@ -4,7 +4,7 @@ import Itasca.Main
 # Layout facts for contiguous module examples
 
 Wasm 1.0 lemmas that turn an independently described module layout into acceptance by
-`module.validate_module`. `StreamSliceExamplesSupport.prepared_layout` builds a
+`metadata.validate_module`. `StreamSliceExamplesSupport.prepared_layout` builds a
 `StreamCompleteRegions.Certificate` from a layout, `accepted_certificate` and `accepted_layout`
 run the contiguous adapter from it, and `accepted_at_end` handles a module whose environment
 consumes the whole input. The module examples use these.
@@ -30,7 +30,7 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : ModuleLayout.Layout data raw decls codePos tailPos)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hrequirements : Requirements raw) (tail : module.Tail)
+    (hrequirements : Requirements raw) (tail : metadata.Tail)
     (hrawTail : tail.data.val.map ModuleData.raw = raw.data)
     (htypedReady : ∀ decls env, Ready raw 10 decls env →
       List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val raw.codes)
@@ -46,7 +46,7 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
   obtain ⟨tailBytes, htailSlice, htailSpan⟩ := WP.spec_imp_exists
     (slice_spec data tailPos (Slice.len data) (by simpa using htailPos) (by simp))
   have henvEnc := hl.environment.on_region henvSpan
-  obtain ⟨env, finalDecls, henv, hready⟩ := module.validate_env.complete
+  obtain ⟨env, finalDecls, henv, hready⟩ := metadata.validate_env.complete
     environment raw decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hrequirements
   have henvSize : environment.length ≤ limits.MAX_MODULE_BYTES.val := by
     have := henvSpan.length
@@ -94,11 +94,11 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     obtain ⟨bytes, hprefix, _⟩ := hl.environment
     obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hcount, _⟩ := hprefix
     exact hcount.1
-  have htail := module.validate_tail.complete tail (by simpa [hrawTail] using htailEnc)
+  have htail := metadata.validate_tail.complete tail (by simpa [hrawTail] using htailEnc)
     (htailReady finalDecls env hready)
     (by simp [hready.dataCount_eq (by decide), hrawCount])
   have hmatches := hready.matches tail hrawTail
-  have hsemantic := module.validate_env.semantic_spec environment
+  have hsemantic := metadata.validate_env.semantic_spec environment
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
   obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
@@ -116,14 +116,14 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     htail, hmatches, hmeta⟩
 
 
-/-- `module.validate_module` accepts a region certificate and returns its environment and
+/-- `metadata.validate_module` accepts a region certificate and returns its environment and
 tail. -/
 theorem accepted_certificate (data : Slice U8) (raw : ModuleBinary.Module)
-    (regions : stream.SliceSource) (env : module.Env) (tail : module.Tail)
+    (regions : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail)
     (hc : Certificate data raw regions env tail) :
-    module.validate_module data .Wasm1 = .ok (.Ok ⟨env, tail⟩) := by
+    metadata.validate_module data .Wasm1 = .ok (.Ok ⟨env, tail⟩) := by
   obtain ⟨first, last, hsplit, he, hcode, ht⟩ := hc.split
-  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists module.Env.new.spec
+  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨after, run, hrun, htail, _⟩ := complete_certificate
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } StreamSync.Queued StreamSync.accepts
@@ -138,18 +138,18 @@ theorem accepted_certificate (data : Slice U8) (raw : ModuleBinary.Module)
   simp [core.result.Result.Insts.CoreOpsTry.branch, hrun, hstored]
 
 /-- A module with a canonical layout, typed code entries and valid data segments is accepted by
-`module.validate_module`, which runs through the streaming implementation. -/
+`metadata.validate_module`, which runs through the streaming implementation. -/
 theorem accepted_layout (data : Slice U8) (raw : ModuleBinary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : ModuleLayout.Layout data raw decls codePos tailPos)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hrequirements : Requirements raw) (tail : module.Tail)
+    (hrequirements : Requirements raw) (tail : metadata.Tail)
     (hrawTail : tail.data.val.map ModuleData.raw = raw.data)
     (htypedReady : ∀ decls env, Ready raw 10 decls env →
       List.Forall₂ (CodeEntry.Typed env) env.func_type_indices.val raw.codes)
     (htailReady : ∀ decls env, Ready raw 10 decls env →
       ∀ segment ∈ tail.data.val, ModuleData.Valid env segment) :
-    ∃ env, module.validate_module data .Wasm1 = .ok (.Ok ⟨env, tail⟩) := by
+    ∃ env, metadata.validate_module data .Wasm1 = .ok (.Ok ⟨env, tail⟩) := by
   obtain ⟨regions, env, hc⟩ := prepared_layout data raw decls codePos tailPos hl hsize
     hrequirements tail hrawTail htypedReady htailReady
   exact ⟨env, accepted_certificate data raw regions env tail hc⟩
@@ -158,12 +158,12 @@ theorem accepted_layout (data : Slice U8) (raw : ModuleBinary.Module)
 
 /-- An environment that consumes the whole input and defines no functions takes the empty-code and
 empty-tail paths of the streaming adapter, and the module is accepted. -/
-theorem accepted_at_end (data : Slice U8) (env : module.Env)
+theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hfuncs : env.func_type_indices.val = [])
-    (henv : module.validate_env data .Wasm1 = .ok (.Ok (env, Slice.len data))) :
-    module.validate_module data .Wasm1 = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) := by
-  have hsemantic := module.validate_env.semantic_spec data
+    (henv : metadata.validate_env data .Wasm1 = .ok (.Ok (env, Slice.len data))) :
+    metadata.validate_module data .Wasm1 = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) := by
+  have hsemantic := metadata.validate_env.semantic_spec data
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
   obtain ⟨decls, hrep, hv, _, _, hprefix⟩ := hsemantic
@@ -186,7 +186,7 @@ theorem accepted_at_end (data : Slice U8) (env : module.Env)
   have hemptyEq : emptyBytes = empty := Slice.ext _ _ (by simpa [empty, alloc.vec.Vec.deref] using hnil)
   subst emptyBytes
   let raw := decls.module [] []
-  let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
+  let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
   have hready : Ready raw 10 decls env :=
     ⟨hrep, by simp [Phase], by intro; rfl, by intro; rfl, by intro; rfl,
       by intro; rfl, by intro; rfl, by intro; rfl, by intro; rfl,
@@ -196,11 +196,11 @@ theorem accepted_at_end (data : Slice U8) (env : module.Env)
     obtain ⟨bytes, hp, _⟩ := hprefix
     obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hcount, _⟩ := hp
     exact hcount.1
-  have htail : module.validate_tail empty 0#usize env .Wasm1 = .ok (.Ok tail) := by
+  have htail : metadata.validate_tail empty 0#usize env .Wasm1 = .ok (.Ok tail) := by
     have hr := ModuleTail.loop_eof empty env (alloc.vec.Vec.new _) false .Wasm1 (by simp [hdataCount])
     have hz : Slice.len empty = 0#usize := rfl
     rw [hz] at hr
-    simp [module.validate_tail, module.validate_tail_with, hr, tail]
+    simp [metadata.validate_tail, metadata.validate_tail_with, hr, tail]
   have hm := hready.matches tail (by simp [tail, raw, Declarations.module])
   have hn : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val) := by
     intro entry hentry

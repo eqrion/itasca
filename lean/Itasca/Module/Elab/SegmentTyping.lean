@@ -15,7 +15,7 @@ namespace Itasca.ModuleSegments
 
 /-- A valid element segment is typed with the element type recorded in its metadata, in every mode.
 Initializer references are checked in the complete function space. -/
-theorem elementValid.typed {env : module.Env} {entry : module.Element}
+theorem elementValid.typed {env : metadata.Env} {entry : metadata.Element}
     (h : elementValid env entry) (C : context) (hC : wf_context C)
     (hglobals : ModuleConstants.GlobalContext env C)
     (hfunctions : ModuleConstants.FunctionContext env C)
@@ -68,7 +68,7 @@ namespace Itasca.ModuleData
 
 /-- A valid data segment is typed. Both profiles allow at most one memory, and passive segments
 need no memory. -/
-theorem Valid.typed {env : module.Env} {segment : module.Data} (h : Valid env segment)
+theorem Valid.typed {env : metadata.Env} {segment : metadata.Data} (h : Valid env segment)
     (hmems : env.mem_types.val.length ≤ 1) (C : context) (hC : wf_context C)
     (hglobals : ModuleConstants.GlobalContext env C)
     (hfunctions : ModuleConstants.FunctionContext env C)

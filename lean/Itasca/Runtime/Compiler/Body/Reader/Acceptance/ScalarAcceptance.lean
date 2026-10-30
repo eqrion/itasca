@@ -61,7 +61,7 @@ def Parameter : ScalarReaderKind → Type
   | .f64_const => U64
 
 def read (kind : ScalarReaderKind) (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) : Result (core.result.Result kind.Parameter error.OpError × code.OpIterState) :=
+    (env : metadata.Env) (ctx : code.Context) : Result (core.result.Result kind.Parameter error.OpError × code.OpIterState) :=
   match kind with
   | .nop => .ok (.Ok (),st)
   | .unreachable => code.read_unreachable st
@@ -94,7 +94,7 @@ def action : (kind : ScalarReaderKind) → kind.Parameter → Action
 
 /-- Each inventory entry is checked against actual extracted source dispatch. -/
 theorem dispatch {V : Type} (kind : ScalarReaderKind) (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (before : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (before : V) :
     code.step visitor st data env ctx kind.opcode before =
       CoreVisitor.run (kind.read st data env ctx)
         (fun log state value => invoke visitor log (.op state (kind.action value))) before := by
@@ -131,7 +131,7 @@ theorem available {A V : Type} (kind : ScalarReaderKind)
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler out bound) (localsMatch : compiler.function.locals = ctx.locals)
     (capacity : st.vals.val.length < Usize.max)
     (outer segment : List code.StackType) (values : st.vals.val = outer ++ segment)

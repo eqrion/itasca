@@ -41,7 +41,7 @@ theorem reader_i32_const_wasm2 {data env locals index st}
       code.read_i32_const st.core data = .ok (.Ok value, out) ∧
       out.vals.val = st.core.vals.val ++ [.Val .I32] ∧
       Wasm2.ReaderPost p out (Spec.i32Const value) p.current.ctrl.polymorphic_base
-        (p.current.vals ++ [code.StackType.Val types.ValueType.I32]) := by
+        (p.current.vals ++ [code.StackType.Val wasm_types.ValueType.I32]) := by
   rw [dispatch_i32_const] at accepted
   obtain ⟨value, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   have effect := p.read_i32_const capacity byte
@@ -60,7 +60,7 @@ theorem reader_i64_const_wasm2 {data env locals index st}
       code.read_i64_const st.core data = .ok (.Ok value, out) ∧
       out.vals.val = st.core.vals.val ++ [.Val .I64] ∧
       Wasm2.ReaderPost p out (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
-        (p.current.vals ++ [code.StackType.Val types.ValueType.I64]) := by
+        (p.current.vals ++ [code.StackType.Val wasm_types.ValueType.I64]) := by
   rw [dispatch_i64_const] at accepted
   obtain ⟨value, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   have effect := p.read_i64_const capacity byte

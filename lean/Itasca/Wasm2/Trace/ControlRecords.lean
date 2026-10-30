@@ -17,7 +17,7 @@ attribute [local step] code.pop_with_type.total code.check_suffix.spec
 
 /-- Call stack adjustment returns the exact encoded function index. -/
 theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (hs : Control.Shape st.core) :
+    (env : metadata.Env) (hs : Control.Shape st.core) :
     code.call_info st data env ⦃ r => ∀ index, r.1 = .Ok index →
       Leb128.Decoded data st.core.pos index r.2.core.pos ⦄ := by
   unfold code.call_info
@@ -28,7 +28,7 @@ theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
 
 /-- Indirect-call callbacks receive both independently decoded indices. -/
 theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
+    (env : metadata.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
     code.call_indirect_info st data env profile ⦃ r => ∀ index table, r.1 = .Ok (index, table) →
       ∃ middle, Leb128.Decoded data st.core.pos index middle ∧
         Leb128.Decoded data middle table r.2.core.pos ⦄ := by
@@ -240,7 +240,7 @@ open VisitorTrace
 
 /-- Factor the actual return callback after result checking and stack erasure. -/
 theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x0f#u8 v =
       bodyRun (returnStep st env index) visitor (fun _ => .return_) v := by
@@ -267,7 +267,7 @@ theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
 
 /-- Return reads no immediate bytes; checking results and erasing the active
 stack segment preserve its post-opcode cursor. -/
-theorem return_position (st : code.BodyState) (env : module.Env) (index : U32)
+theorem return_position (st : code.BodyState) (env : metadata.Env) (index : U32)
     (shape : Control.Shape st.core) :
     returnStep st env index ⦃ r => r.2.core.pos = st.core.pos ⦄ := by
   obtain ⟨⟨res, popped⟩, hp, hs, _, hpos, _⟩ := WP.spec_imp_exists

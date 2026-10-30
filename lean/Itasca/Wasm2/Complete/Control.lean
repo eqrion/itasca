@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
-theorem blocktype_signature {env : module.Env} {ctx : code.Context} {C : context}
+theorem blocktype_signature {env : metadata.Env} {ctx : code.Context} {C : context}
     (hm : EnvTranslation.Matches env ctx C) (bt : signature.BlockType) {input output : List valtype}
     (h : Blocktype_ok C (blockType bt) (.mk_functype (.mk_list input) (.mk_list output))) :
     ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
@@ -37,8 +37,8 @@ theorem blocktype_signature {env : module.Env} {ctx : code.Context} {C : context
         simpa [EnvTranslation.funcType] using congrArg (fun t => match t with | .mk_functype _ (.mk_list a) => a) he'.symm
       exact ⟨_, _, by simp [resolve, inputs, hib], by simp [resolve, outputs, hib], hie, hoe⟩
 
-theorem signature_limits {env : module.Env} (limits : Profile.EnvironmentWithinLimits env)
-    (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem signature_limits {env : metadata.Env} (limits : Profile.EnvironmentWithinLimits env)
+    (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs) :
     ins.length ≤ 1000 ∧ outs.length ≤ 1000 := by
   cases bt with
@@ -51,9 +51,9 @@ theorem signature_limits {env : module.Env} (limits : Profile.EnvironmentWithinL
     simp [inputs, outputs, resolve, List.getElem?_eq_getElem hi] at hin hout
     simpa [← hin, ← hout] using h
 
-theorem labels_push {env : module.Env} {C : context} {st s : code.BodyState}
+theorem labels_push {env : metadata.Env} {C : context} {st s : code.BodyState}
     (hl : Labels env st C) (ha : st.blocks.val.length = st.core.ctrls.val.length)
-    (frame : code.Ctrl) (bt : signature.BlockType) (ts : List types.ValueType)
+    (frame : code.Ctrl) (bt : signature.BlockType) (ts : List wasm_types.ValueType)
     (hc : s.core.ctrls.val = st.core.ctrls.val ++ [frame])
     (hb : s.blocks.val = st.blocks.val ++ [bt])
     (ht : resolve env (target frame.kind bt) = some ts) :
@@ -79,8 +79,8 @@ theorem labels_push {env : module.Env} {C : context} {st s : code.BodyState}
 /-- A delimiter execution, with exact effects and no post-delimiter capacity
 estimate; callers derive bounds from the enclosing entry. -/
 theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
-    (ins outs : List types.ValueType)
+    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
+    (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .end_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
     (hthen : f.core.current.kind = .Then → ins = outs)
@@ -108,8 +108,8 @@ theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
     hp.trans hnext.symm, hc, hb, hv⟩
 
 theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
-    (ins outs : List types.ValueType)
+    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
+    (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .else_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
     (hthen : f.core.current.kind = .Then)
@@ -137,9 +137,9 @@ theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
     hp.trans hnext.symm, hc, hb, hv⟩
 
 theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
+    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (index : U32) (next : Usize)
     (form : Frames.Form) (initial : form.Initial) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (front : List valtype)
+    (ins outs : List wasm_types.ValueType) (front : List valtype)
     (limits : Profile.EnvironmentWithinLimits env) (hb : Bounds data st)
     (hat : At data st.core.pos (form.token bt) next)
     (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
@@ -187,11 +187,11 @@ private theorem restore_bounds {data : Slice U8} {st s : code.BodyState}
 
 /-- Execute a child list and its end, preserving the original suspended
 parent stack and result descriptor. -/
-theorem execute_body {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem execute_body {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32} {tokens : List Token} {ops : List instr}
     (program : Program data env profile ctx index tokens ops) (C : context)
     (st : code.BodyState) (f : Frame st) (next : Usize)
-    (ins outs : List types.ValueType)
+    (ins outs : List wasm_types.ValueType)
     (hm : EnvTranslation.Matches env ctx C) (hl : Labels env st C)
     (hb : Bounds data st)
     (hbytes : ProfileConsumed profile data st.core.pos (tokens ++ [Token.end_]) next)
@@ -216,13 +216,13 @@ theorem execute_body {data : Slice U8} {env : module.Env} {profile : ValidationP
   exact ⟨s, hrun.append hclose, hp', by simpa [hp] using hc', by simpa [hgp] using hb',
     by simpa [hgp, ho] using hv'⟩
 
-private theorem concrete_realizes (ts : List types.ValueType) :
+private theorem concrete_realizes (ts : List wasm_types.ValueType) :
     Sequence.Realizes false (ts.map code.StackType.Val) (ts.map Translate.valueType) := by
   apply (Sequence.realizes_append_concrete false [] ts _).mpr
   exact ⟨[], by simp [Sequence.Realizes], rfl⟩
 
 private theorem resume_parent {st s : code.BodyState} (f : Frame st)
-    (remaining : List code.StackType) (front : List valtype) (outs : List types.ValueType)
+    (remaining : List code.StackType) (front : List valtype) (outs : List wasm_types.ValueType)
     (hreal : Sequence.Realizes f.core.current.polymorphic_base remaining front)
     (hc : s.core.ctrls.val = st.core.ctrls.val) (hb : s.blocks.val = st.blocks.val)
     (hv : s.core.vals.val = f.core.outer ++ remaining ++ outs.map code.StackType.Val) :
@@ -236,7 +236,7 @@ private theorem resume_parent {st s : code.BodyState} (f : Frame st)
 
 private theorem closed_bounds {data : Slice U8} {st s : code.BodyState}
     (f : Frame st) (hb : Bounds data st) (next : Usize)
-    (remaining : List code.StackType) (outs : List types.ValueType)
+    (remaining : List code.StackType) (outs : List wasm_types.ValueType)
     (hp : s.core.pos = next) (hend : next.val ≤ data.length)
     (hlen : st.core.pos.val + 2 ≤ next.val) (hrem : remaining.length ≤ f.core.operands.length)
     (houts : outs.length ≤ 1000) (hblocks : s.blocks.val = st.blocks.val)
@@ -250,13 +250,13 @@ private theorem closed_bounds {data : Slice U8} {st s : code.BodyState}
   · simp only [hp, hblocks]; omega
 
 /-- Common structured execution for blocks, loops, and omitted-else ifs. -/
-theorem run_closed_child {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem run_closed_child {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32}
     (limits : Profile.EnvironmentWithinLimits env) (form : Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (tokens : List Token) (ops : List instr)
     (program : Program data env profile ctx index tokens ops)
     (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
-    (front : List valtype) (ins outs : List types.ValueType)
+    (front : List valtype) (ins outs : List wasm_types.ValueType)
     (hm : EnvTranslation.Matches env ctx C) (hl : Labels env st C) (hb : Bounds data st)
     (hbytes : ProfileConsumed profile data st.core.pos ([form.token bt] ++ tokens ++ [Token.end_]) next)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
@@ -321,7 +321,7 @@ theorem run_closed_child {data : Slice U8} {env : module.Env} {profile : Validat
     omega
   omega
 
-theorem empty_identity {C : context} (ins outs : List types.ValueType)
+theorem empty_identity {C : context} (ins outs : List wasm_types.ValueType)
     (h : Instrs_ok C [] (.mk_functype (.mk_list (ins.map Translate.valueType))
       (.mk_list (outs.map Translate.valueType)))) : ins = outs := by
   have hreal := DeclarativeComplete.empty_realizes (concrete_realizes ins) h
@@ -340,8 +340,8 @@ theorem empty_identity {C : context} (ins outs : List types.ValueType)
       simp [hio, ih outs hs.2]
 
 /-- A Wasm 1.0 block type has no parameters and its result list is the label of its body. -/
-theorem result_types {env : module.Env} {bt : signature.BlockType} {result : Option valtype}
-    {ins outs : List types.ValueType} (hbt : blockType bt = ._RESULT result)
+theorem result_types {env : metadata.Env} {bt : signature.BlockType} {result : Option valtype}
+    {ins outs : List wasm_types.ValueType} (hbt : blockType bt = ._RESULT result)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs) :
     ins = [] ∧ outs.map Translate.valueType = result.toList := by
   cases bt with
@@ -357,7 +357,7 @@ theorem result_types {env : module.Env} {bt : signature.BlockType} {result : Opt
     simp
   | TypeIndex i => simp [blockType] at hbt
 
-theorem atom_block {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem atom_block {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32}
     (limits : Profile.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -376,7 +376,7 @@ theorem atom_block {data : Slice U8} {env : module.Env} {profile : ValidationPro
         have hres := result_types hr hin hout
         exact hops.congr_labels _ (by simp [Frames.enter, Frames.Form.label, hres.2]))
 
-theorem atom_loop {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem atom_loop {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32}
     (limits : Profile.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -395,7 +395,7 @@ theorem atom_loop {data : Slice U8} {env : module.Env} {profile : ValidationProf
         have hres := result_types hr hin hout
         exact hops.congr_labels _ (by simp [Frames.enter, Frames.Form.label, hres.1]))
 
-theorem atom_ifEnd {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem atom_ifEnd {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32}
     (limits : Profile.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -414,7 +414,7 @@ theorem atom_ifEnd {data : Slice U8} {env : module.Env} {profile : ValidationPro
         have hres := result_types hr hin hout
         exact hops.congr_labels _ (by simp [Frames.enter, Frames.Form.label, hres.2]))
 
-theorem atom_ifElse {data : Slice U8} {env : module.Env} {profile : ValidationProfile}
+theorem atom_ifElse {data : Slice U8} {env : metadata.Env} {profile : ValidationProfile}
     {ctx : code.Context} {index : U32}
     (limits : Profile.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {yesTokens noTokens : List Token} {yes no : List instr}

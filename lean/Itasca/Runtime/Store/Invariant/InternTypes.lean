@@ -10,7 +10,7 @@ def scanState {M : Type} (s : runtime.store.Store M) (i : Usize) :=
 
 /-- Signature search returns the first matching retained signature, or its
 exact end index, without changing any store field. -/
-theorem intern_scan {M : Type} (s : runtime.store.Store M) (ty : Itasca.types.FuncType)
+theorem intern_scan {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (position : Usize) (hpos : position.val ≤ s.types.length)
     (hprefix : ty ∉ s.types.val.take position.val) :
     runtime.store.Store.intern_type_loop s ty position ⦃ result =>
@@ -46,11 +46,11 @@ theorem intern_scan {M : Type} (s : runtime.store.Store M) (ty : Itasca.types.Fu
       exact ⟨index, rfl, hindex, hprefix, Or.inr heq⟩
   · exact ⟨hpos, hprefix⟩
 
-def InternEffect {M : Type} (s : runtime.store.Store M) (ty : Itasca.types.FuncType)
+def InternEffect {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (result : core.result.Result Usize runtime.ExecError × runtime.store.Store M) : Prop :=
   (∃ error, result = (.Err error, s)) ∨
   (∃ index, s.types.val[index.val]? = some ty ∧ result = (.Ok index, s)) ∨
-  (∃ types : alloc.vec.Vec Itasca.types.FuncType, ∃ count : Usize,
+  (∃ types : alloc.vec.Vec Itasca.wasm_types.FuncType, ∃ count : Usize,
     types.val = s.types.val ++ [ty] ∧ ty ∉ s.types.val ∧
     objectCount s < s.limits.max_objects.val ∧
     count.val = s.signature_values.val + ty.params.length + ty.results.length ∧
@@ -61,7 +61,7 @@ def InternEffect {M : Type} (s : runtime.store.Store M) (ty : Itasca.types.FuncT
 most one exact copy of a previously absent signature. -/
 theorem intern_type_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (ty : Itasca.types.FuncType)
+    (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.intern_type ops allocator s ty ⦃ result => InternEffect s ty result ⦄ := by
   obtain ⟨scanned, hscan, index, hstate, hi, hprefix, hfound⟩ :=

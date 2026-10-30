@@ -166,7 +166,7 @@ open Aeneas Aeneas.Std Itasca.ModuleBinary
 lowering, directly from the independently encoded module and collected function
 count. This covers successful lowering and every normal error result. -/
 theorem initializer_lower_source_total {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (env : Itasca.module.Env) (tail : Itasca.module.Tail)
+    (law : Platform.AllocCorrect ops) (env : Itasca.metadata.Env) (tail : Itasca.metadata.Tail)
     (profile : Itasca.ValidationProfile) (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
     (budget : runtime.compiler.Budget A) {R raw bytes}
     (encoding : ModuleEncodingWith R raw bytes profile)

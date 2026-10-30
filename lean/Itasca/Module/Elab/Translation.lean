@@ -100,11 +100,11 @@ theorem mems_unique {xs result} (h : fun_memsxt xs result) : result = mems xs :=
 
 /-- The limits' minimum and any maximum are ordered and within `bound`. This is the byte-level check
 that corresponds to the generated `Limits_ok`. -/
-def LimitsValid (lim : types.Limits) (bound : Nat) : Prop :=
+def LimitsValid (lim : wasm_types.Limits) (bound : Nat) : Prop :=
   lim.min.val ≤ bound ∧ ∀ maximum ∈ lim.max, lim.min.val ≤ maximum.val ∧ maximum.val ≤ bound
 
 /-- Valid limits are typed by the generated `Limits_ok`. -/
-theorem limits_valid (lim : types.Limits) (bound : Nat) (h : LimitsValid lim bound) :
+theorem limits_valid (lim : wasm_types.Limits) (bound : Nat) (h : LimitsValid lim bound) :
     Limits_ok (EnvTranslation.limitsType lim) bound := by
   have hw := EnvTranslation.limitsType_wf lim
   cases lim with
@@ -117,11 +117,11 @@ theorem limits_valid (lim : types.Limits) (bound : Nat) (h : LimitsValid lim bou
         (by simpa [Forall] using h.2 maximum (by simp)) hw
 
 /-- Every translated function type is valid. -/
-theorem funcType_valid (ft : types.FuncType) : Functype_ok (EnvTranslation.funcType ft) :=
+theorem funcType_valid (ft : wasm_types.FuncType) : Functype_ok (EnvTranslation.funcType ft) :=
   .mk_Functype_ok _ _
 
 /-- A table type with valid limits is typed by `Tabletype_ok`. -/
-theorem tableType_valid (tt : types.TableType)
+theorem tableType_valid (tt : wasm_types.TableType)
     (h : LimitsValid tt.limits (2 ^ 32 - 1)) :
     Tabletype_ok (EnvTranslation.tableType tt) := by
   apply Tabletype_ok.mk_Tabletype_ok
@@ -129,7 +129,7 @@ theorem tableType_valid (tt : types.TableType)
   · exact EnvTranslation.tableType_wf tt
 
 /-- A memory type with valid limits is typed by `Memtype_ok`. -/
-theorem memType_valid (mt : types.MemType)
+theorem memType_valid (mt : wasm_types.MemType)
     (h : LimitsValid mt.limits (2 ^ 16)) :
     Memtype_ok (EnvTranslation.memType mt) :=
   .mk_Memtype_ok _ (limits_valid mt.limits _ h) (EnvTranslation.memType_wf mt)

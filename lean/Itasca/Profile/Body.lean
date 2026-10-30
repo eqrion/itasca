@@ -29,8 +29,8 @@ theorem Body.to_wasm2 {profile data env locals index} (h : Body profile data env
 
 /-- `Profile.Body` is `Wasm2.Validated` for the profile together with `FuncType` for the selected
 signature. -/
-theorem Body.iff_validated (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) :
+theorem Body.iff_validated (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) :
     Body profile data env locals index ↔ Wasm2.Validated profile data env locals index ∧
       ∀ ft, env.types.val[index.val]? = some ft → FuncType profile ft := by
   constructor
@@ -52,14 +52,14 @@ theorem Body.iff_validated (profile : ValidationProfile) (data : Slice U8) (env 
       | Wasm2 => trivial
 
 /-- The visitor-free body validator for a profile. -/
-def run (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
+def run (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) :=
   code.bodyCore data env ctx.locals ctx.results index profile
 
 /-- If the body validator accepts and the selected signature meets `FuncType`, the body meets
 `Profile.Body`. -/
-theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (ft : types.FuncType)
+theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
+    (ctx : code.Context) (index : U32) (ft : wasm_types.FuncType)
     (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
     (haccepted : run profile data env ctx index = .ok (.Ok ())) :
     Body profile data env ctx.locals index := by
@@ -71,7 +71,7 @@ theorem run.sound (profile : ValidationProfile) (data : Slice U8) (env : module.
 
 /-- If the body meets `Profile.Body` and the implementation bounds hold, the body validator
 accepts. -/
-theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
+theorem run.complete (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (hlimits : EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : Body profile data env ctx.locals index) :

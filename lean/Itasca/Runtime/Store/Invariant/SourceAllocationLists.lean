@@ -83,7 +83,7 @@ theorem ElementSourceSegments.syntax {s inst sources values}
   rw [related.types, maps_three]
   simp only [List.map_map, Function.comp_def, ModuleElaboration.element, ModuleEnv.rawElement]
 
-theorem source_data_payload_syntax (sources : List Itasca.module.Data) :
+theorem source_data_payload_syntax (sources : List Itasca.metadata.Data) :
     (sources.map ModuleData.raw).map ModuleData.translate =
       Map₂ data.DATA ((sources.map sourceDataPayload).map datainst.BYTES)
         (sources.map fun original => ModuleSegments.dataMode original.mode) := by

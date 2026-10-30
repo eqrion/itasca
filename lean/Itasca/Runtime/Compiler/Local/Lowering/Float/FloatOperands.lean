@@ -37,7 +37,7 @@ theorem float_operands {A : Type} (ops : runtime.platform.Alloc A)
 
 @[step] theorem compiler_float_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (front : List valtype) (op : Instruction)
     (layout : CompilerLayout compiler (front ++ List.replicate op.arity (valtype_numtype op.input)))
     (reachable : compiler.reachable = true)

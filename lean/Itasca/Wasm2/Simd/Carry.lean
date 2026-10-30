@@ -14,15 +14,15 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Simd
 
 /-- Applies a fixed operand effect and returns the already parsed immediate. -/
-def carryFixed {A : Type} (a : A) (st : code.OpIterState) (inputs : List types.ValueType)
-    (output : Option types.ValueType) : Result (core.result.Result A error.OpError × code.OpIterState) := do
+def carryFixed {A : Type} (a : A) (st : code.OpIterState) (inputs : List wasm_types.ValueType)
+    (output : Option wasm_types.ValueType) : Result (core.result.Result A error.OpError × code.OpIterState) := do
   let (r, s) ← readFixed st inputs output
   match r with
   | .Err e => .ok (.Err e, s)
   | .Ok _ => .ok (.Ok a, s)
 
 theorem carryFixed.segment {A : Type} (a : A) (st : code.OpIterState)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (outer segment : List code.StackType)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max) :
@@ -40,7 +40,7 @@ theorem carryFixed.segment {A : Type} (a : A) (st : code.OpIterState)
     exact ⟨hc, hp, after, hv, hl, fun _ h => by cases h; exact ⟨rfl, he rfl⟩⟩
 
 theorem carryFixed.complete {A : Type} (a : A) (st : code.OpIterState)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (outer segment : List code.StackType) (front : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
@@ -55,7 +55,7 @@ theorem carryFixed.complete {A : Type} (a : A) (st : code.OpIterState)
 
 /-- Returning a decoded payload commutes with the visitor's fixed stack runner. -/
 theorem carryFixed.run {A V : Type} (a : A) (st : code.OpIterState)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (hook : V → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × V))
     (v : V) :
     CoreVisitor.run (carryFixed a st inputs output) hook v =

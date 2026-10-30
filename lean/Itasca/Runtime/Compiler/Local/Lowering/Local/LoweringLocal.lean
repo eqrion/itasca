@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 theorem CompilerLayout.local_slot {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {stack : List valtype} (layout : CompilerLayout compiler stack)
-    (index : U32) (ty : Itasca.types.ValueType)
+    (index : U32) (ty : Itasca.wasm_types.ValueType)
     (found : compiler.function.locals.val[index.val]? = some ty) :
     ∃ slot : U32, compiler.local_offsets.val[index.val]? = some slot ∧
       slot.val = offset (compilerLocals compiler) index.val := by
@@ -17,7 +17,7 @@ theorem CompilerLayout.local_slot {A : Type} {compiler : runtime.compiler.Functi
 
 theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (ty : Itasca.types.ValueType) (dst src : U32) (different : src ≠ dst) :
+    (ty : Itasca.wasm_types.ValueType) (dst src : U32) (different : src ≠ dst) :
     (do
       let count ← runtime.value.width ty
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
@@ -43,8 +43,8 @@ theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
 set_option maxRecDepth 4096 in
 @[step] theorem lower_local_get {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (before : List valtype) (index : U32) (ty : Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
+    (before : List valtype) (index : U32) (ty : Itasca.wasm_types.ValueType)
     (layout : CompilerLayout compiler before) (reachable : compiler.reachable = true)
     (found : compiler.function.locals.val[index.val]? = some ty)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
@@ -69,7 +69,7 @@ set_option maxRecDepth 4096 in
       let i ← lift (UScalar.cast .Usize index)
       let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
       let j ← lift (UScalar.cast .Usize index)
-      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
       let count ← runtime.value.width rawType
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
       let branch ← core.result.Result.Insts.CoreOpsTry.branch result
@@ -116,8 +116,8 @@ theorem last_operand {A : Type} (ops : runtime.platform.Alloc A)
 set_option maxRecDepth 4096 in
 @[step] theorem lower_local_write {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (before : List valtype) (index : U32) (ty : Itasca.types.ValueType) (tee : Bool)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
+    (before : List valtype) (index : U32) (ty : Itasca.wasm_types.ValueType) (tee : Bool)
     (layout : CompilerLayout compiler (before ++ [Itasca.Translate.valueType ty]))
     (reachable : compiler.reachable = true)
     (found : compiler.function.locals.val[index.val]? = some ty)
@@ -149,7 +149,7 @@ set_option maxRecDepth 4096 in
       match branch with
       | .Continue src =>
         let j ← lift (UScalar.cast .Usize index)
-        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
         let count ← runtime.value.width rawType
         let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
         let branch ← core.result.Result.Insts.CoreOpsTry.branch result

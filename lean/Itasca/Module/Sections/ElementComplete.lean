@@ -6,9 +6,9 @@ import Itasca.Module.Const.ParserComplete
 /-!
 # Completeness of the element section parser
 
-`module.decode_element_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
+`metadata.decode_element_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
 encoded vector of elements that are `ElementValidRaw` in the environment is accepted, and the
-environment gains them (`ElementsAdded`). `module.decode_func_indices.complete` covers the index
+environment gains them (`ElementsAdded`). `metadata.decode_func_indices.complete` covers the index
 vectors. Soundness is in `Module/Sections/Element`.
 -/
 
@@ -35,29 +35,29 @@ private theorem element_raw_valid_caches {env result entry}
     exact (hi value hv).same_caches hf hg hn
 
 /-- The element loop accepts the remaining valid elements of a repetition span and adds them. -/
-theorem module.decode_element_section_loop.profile_complete
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
+theorem metadata.decode_element_section_loop.profile_complete
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Element) (next : Usize)
     (hb : At (Rep (ElementEncodingFor profile)) data pos entries next)
     (hc : i.val + entries.length = count.val)
     (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
     (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
+    ∃ result actual, metadata.decode_element_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
       actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
   induction entries generalizing env pos i with
   | nil =>
     have he := hb.rep_nil
     have hstop : i ≥ count := by simp only [List.length_nil, Nat.add_zero] at hc; scalar_tac
     refine ⟨env, [], ?_, rfl, ⟨by cases env; rfl, by simp, by simp⟩⟩
-    unfold module.decode_element_section_loop
+    unfold metadata.decode_element_section_loop
     rw [loop]
-    simp [module.decode_element_section_loop.body, hstop, he]
+    simp [metadata.decode_element_section_loop.body, hstop, he]
   | cons entry entries ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    obtain ⟨updated, current, hread, hraw, hadded⟩ := module.decode_element.complete
+    obtain ⟨updated, current, hread, hraw, hadded⟩ := metadata.decode_element.complete
       data env profile pos middle entry hfirst (hv entry (by simp)) hrefs
-    have hpost := module.decode_element.spec data pos env profile hrefs
+    have hpost := metadata.decode_element.spec data pos env profile hrefs
     rw [hread] at hpost
     simp only [WP.spec_ok] at hpost
     obtain ⟨_, _, _, hbound, hprogress⟩ := hpost
@@ -76,9 +76,9 @@ theorem module.decode_element_section_loop.profile_complete
       (by simp only [after, helements, hunchanged, List.length_append, List.length_singleton]; omega)
       hbound
     refine ⟨result, current :: actual, ?_, ?_, ?_⟩
-    · unfold module.decode_element_section_loop at hloop ⊢
+    · unfold metadata.decode_element_section_loop at hloop ⊢
       rw [loop]
-      simpa [module.decode_element_section_loop.body, hmore, hread, hpush, hj, after,
+      simpa [metadata.decode_element_section_loop.body, hmore, hread, hpush, hj, after,
         core.result.Result.Insts.CoreOpsTry.branch] using hloop
     · simp only [List.map_cons, hraw, hraws]
     · refine ⟨?_, ?_, ?_⟩
@@ -89,20 +89,20 @@ theorem module.decode_element_section_loop.profile_complete
           List.nil_append] using htail.2.1
       · simpa only [after, hadded.2, List.flatMap_cons, List.append_assoc] using htail.2.2
 
-/-- `module.decode_element_section` accepts a vector span of valid elements and adds them. -/
-theorem module.decode_element_section.profile_complete (data : Slice U8) (pos : Usize)
-    (env : module.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Element) (next : Usize)
+/-- `metadata.decode_element_section` accepts a vector span of valid elements and adds them. -/
+theorem metadata.decode_element_section.profile_complete (data : Slice U8) (pos : Usize)
+    (env : metadata.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Element) (next : Usize)
     (hb : At (VecEncoding (ElementEncodingFor profile)) data pos entries next)
     (hv : ∀ entry ∈ entries, ElementValidRaw env entry)
     (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result actual, module.decode_element_section data pos env profile = .ok (.Ok next, result) ∧
+    ∃ result actual, metadata.decode_element_section data pos env profile = .ok (.Ok next, result) ∧
       actual.map ModuleEnv.rawElement = entries ∧ ElementsAdded env result actual := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
-  obtain ⟨result, actual, hr, hp⟩ := module.decode_element_section_loop.profile_complete
+  obtain ⟨result, actual, hr, hp⟩ := metadata.decode_element_section_loop.profile_complete
     data env profile count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
     (by have := hcount.span; omega) (by have := hcount.span; omega)
   refine ⟨result, actual, ?_, hp⟩
-  simp [module.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
+  simp [metadata.decode_element_section, reader.read_u32_leb.complete data pos count middle hcount,
     core.result.Result.Insts.CoreOpsTry.branch, hr]
 
 end Itasca

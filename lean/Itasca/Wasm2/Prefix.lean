@@ -25,7 +25,7 @@ structure TypedPrefix (C : context) (inputs : List valtype) (ops : List instr)
     Instrs_ok C ops (.mk_functype (.mk_list inputs) (.mk_list ts))
 
 /-- A frame with no instructions is a typed prefix of its parameter vector. -/
-theorem TypedPrefix.start (C : context) (hC : wf_context C) (inputs : List types.ValueType) :
+theorem TypedPrefix.start (C : context) (hC : wf_context C) (inputs : List wasm_types.ValueType) :
     TypedPrefix C (inputs.map Translate.valueType) [] false
       (inputs.map code.StackType.Val) := by
   constructor
@@ -73,7 +73,7 @@ theorem ResumePrefix.after_pop {C inputs ops poly before after args}
 parent to a typed prefix. -/
 theorem ResumePrefix.finish {C inputs ops poly vals args}
     (h : ResumePrefix C inputs ops poly vals args) (hC : wf_context C)
-    (op : instr) (results : List types.ValueType) (hwf : wf_instr op)
+    (op : instr) (results : List wasm_types.ValueType) (hwf : wf_instr op)
     (hop : Instr_ok C op
       (.mk_functype (.mk_list args) (.mk_list (results.map Translate.valueType)))) :
     TypedPrefix C inputs (ops ++ [op]) poly (vals ++ results.map code.StackType.Val) := by

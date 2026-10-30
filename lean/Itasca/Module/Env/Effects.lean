@@ -26,8 +26,8 @@ open ModuleBinary ModuleSections
 declarations, ending at `next`. Each constructor pairs the payload encoding with the section's
 checked environment update. Emptiness of later sections distinguishes an initial declaration
 vector from an append performed by the extracted parser. -/
-inductive Effect (data : Slice U8) (pos : Usize) (env : module.Env)
-    (before : Declarations) : U8 → Usize → module.Env → Declarations →
+inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
+    (before : Declarations) : U8 → Usize → metadata.Env → Declarations →
       (profile : optParam ValidationProfile .Wasm1) → Prop where
   | types {profile} {result next added} : TypesAdded env result added →
       At (VecEncoding FuncTypeEncoding) data pos added next →

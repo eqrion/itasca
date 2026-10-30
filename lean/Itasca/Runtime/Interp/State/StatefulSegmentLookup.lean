@@ -36,7 +36,7 @@ theorem data_binding_raw {M : Type} (view : M → Slice U8) (code : Store.CodeIn
   change address.val=(Store.decodeInstance store inst).DATAS[index] at addressEq
   rw [←addressEq] at issued
   exact ⟨address,rawMapped,issued⟩
-theorem decode_elem_type_injective {a b : Itasca.types.ElemType}
+theorem decode_elem_type_injective {a b : Itasca.wasm_types.ElemType}
     (equal : Store.decodeElemType a=Store.decodeElemType b) : a=b := by
   cases a <;> cases b <;> simp_all [Store.decodeElemType]
 

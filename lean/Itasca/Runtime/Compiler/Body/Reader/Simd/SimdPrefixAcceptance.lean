@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Independent decoding selects the exact successful source subopcode run. -/
 theorem simd_sub_success_of_decoded {V : Type} (source : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V) (sub : U32) (next : Usize)
     (decoded : Leb128.Decoded data st.core.pos sub next)
     (reference : code.step_profile source st data env ctx index .Wasm2 253#u8 before = .ok (.Ok (),out,after)) :
@@ -20,7 +20,7 @@ theorem simd_sub_success_of_decoded {V : Type} (source : code.OpVisitor V)
 /-- Replay the actual profile guard and unsigned-LEB prefix with an available
 subopcode implementation. The target uses exactly the source-decoded cursor. -/
 theorem simd_prefix_available {W : Type} (target : code.OpVisitor W)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (compiler : W) (sub : U32) (next : Usize) (post : W → Prop)
     (decoded : Leb128.Decoded data st.core.pos sub next)
     (capacity : st.core.vals.val.length < Usize.max)

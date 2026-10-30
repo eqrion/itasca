@@ -77,7 +77,7 @@ namespace Itasca.Wasm2.Completeness
 /-- Scalar dispatch accepts an independently encoded principal typing and
 preserves the current block descriptor. The semantic return vector can
 differ from the runtime scalar context's unused return vector. -/
-theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx semantic : code.Context) (index : U32) (C : context)
     (opcode : U8) (op : instr) (bytes : List U8) (next : Usize)
     (front input output : List valtype)
@@ -105,7 +105,7 @@ theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : S
 /-- A leaf contract uses a principal generated typing and an independent
 immediate encoding, which is a Wasm 1.0 immediate with the Wasm 1.0 restrictions under Wasm 1.0.
 Growth is bounded by the full token's encoded byte count. -/
-def LeafContract (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+def LeafContract (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
@@ -122,7 +122,7 @@ def LeafContract (data : Slice U8) (env : module.Env) (profile : ValidationProfi
 
 /-- Reading the opcode and running a leaf contract produces an actual execution
 and preserves the byte-weighted capacity bound for the surrounding program. -/
-theorem atom_of_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem atom_of_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (hstep : LeafContract data env profile ctx index) (op : instr) :
     AtomProgram data env profile ctx index [.plain op] op := by
@@ -154,7 +154,7 @@ theorem atom_of_leaf (data : Slice U8) (env : module.Env) (profile : ValidationP
     simp [hb]
 
 /-- The scalar family discharges the shared leaf growth contract. -/
-theorem scalar_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem scalar_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)

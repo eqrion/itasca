@@ -115,14 +115,14 @@ def observedHeight (height : Nat) : List Itasca.code.StackType → Nat
   split <;> simp_all
   scalar_tac
 
-theorem observed_height_values (height : Nat) (types : List Itasca.types.ValueType) :
+theorem observed_height_values (height : Nat) (types : List Itasca.wasm_types.ValueType) :
     observedHeight height (types.map Itasca.code.StackType.Val) =
       height + slots (types.map Itasca.Translate.valueType) := by
   induction types generalizing height with
   | nil => simp [observedHeight, slots]
   | cons ty rest ih => simp [observedHeight, compilerStackWidth, slots, ih, Nat.add_assoc]
 
-theorem observed_offsets_values (height : Nat) (types : List Itasca.types.ValueType) :
+theorem observed_offsets_values (height : Nat) (types : List Itasca.wasm_types.ValueType) :
     observedOffsets height (types.map Itasca.code.StackType.Val) =
       (List.range types.length).map (fun index =>
         height + offset (types.map Itasca.Translate.valueType) index) := by
@@ -140,7 +140,7 @@ theorem observed_offsets_values (height : Nat) (types : List Itasca.types.ValueT
 
 @[step] theorem compiler_observe_layout {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
     (localSlots : compiler.function.local_slots.val = slots (compilerLocals compiler))
     (localOffsets : compiler.local_offsets.val.map (fun word => word.val) =

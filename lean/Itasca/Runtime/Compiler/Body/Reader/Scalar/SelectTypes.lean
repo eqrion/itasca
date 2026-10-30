@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 theorem select_full_stack_types {before after outer segment result : List code.StackType} {selected}
     (known : ConcreteStack before) (old : before = outer ++ segment) (new : after = outer ++ result)
     (effect : StackSemantics.SelectEffect false segment selected result) :
-    ∃ (ty : types.ValueType) (front : List valtype) (types : List Itasca.types.ValueType),
+    ∃ (ty : wasm_types.ValueType) (front : List valtype) (types : List Itasca.wasm_types.ValueType),
       selected = .Val ty ∧
       Sequence.stackTypes before = front ++ [Translate.valueType ty, Translate.valueType ty, .I32] ∧
       after = types.map code.StackType.Val ∧

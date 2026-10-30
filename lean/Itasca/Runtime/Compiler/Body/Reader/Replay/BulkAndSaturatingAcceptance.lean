@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The actual bulk dispatcher accepts only its ten source subopcodes. -/
 theorem reader_bulk_accepted_subopcode {V} (visitor : code.OpVisitor V)
-    (st out : code.OpIterState) (data : Slice U8) (env : module.Env) (sub : U32)
+    (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env) (sub : U32)
     (before after : V)
     (accepted : code.step_bulk visitor st data env sub before = .ok (.Ok (),out,after)) :
     sub.val ∈ [8,9,10,11,12,13,14,15,16,17] := by
@@ -33,7 +33,7 @@ theorem cumulative_misc_small (sub : U32) (small : sub.val < 8) : CumulativeMisc
 /-- Recognition of a misc instruction comes from the actual successful
 reader; no independent encoding of the unconsumed suffix is assumed. -/
 theorem reader_misc_accepted {V} (visitor : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 252#u8 before =
       .ok (.Ok (),out,after)) :

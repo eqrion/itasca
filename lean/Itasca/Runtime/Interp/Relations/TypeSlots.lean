@@ -5,10 +5,10 @@ sole error, with an exact mathematical size witness. -/
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-def typeSlots (types : List Itasca.types.ValueType) : Nat :=
+def typeSlots (types : List Itasca.wasm_types.ValueType) : Nat :=
   Compiler.slots (types.map sourceType)
 
-@[step] theorem type_slots_effect (types : Slice Itasca.types.ValueType) :
+@[step] theorem type_slots_effect (types : Slice Itasca.wasm_types.ValueType) :
     runtime.interp.type_slots types ⦃ result =>
       match result with
       | .Ok amount => amount.val = typeSlots types.val

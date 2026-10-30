@@ -23,7 +23,7 @@ rejections and malformed instructions, is reproduced with the same result and va
 theorem code.step.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (st' : code.OpIterState) (v' : V)
     (h : code.step visitor st data env ctx opcode v = .ok (res, st', v')) :

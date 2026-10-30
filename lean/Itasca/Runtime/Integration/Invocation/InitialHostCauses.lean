@@ -41,7 +41,7 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 def InitialHostSourceResourceCause {M P A : Type}
     (hooks : runtime.platform.Platform P M) (allocator : runtime.platform.Alloc A)
-    (store after : runtime.store.Store M) (identity : U64) (signature : Itasca.types.FuncType) : runtime.ExecError → Prop
+    (store after : runtime.store.Store M) (identity : U64) (signature : Itasca.wasm_types.FuncType) : runtime.ExecError → Prop
   | .Exhausted .Values => store.limits.max_values.val<signatureWords (Store.decodeFuncType signature)
   | .Exhausted .Allocation => HostSignatureAllocation allocator (signature.params.val.map sourceType) (signature.results.val.map sourceType) 0
   | .Exhausted .CallStack => ∃ p args defaults host returned,

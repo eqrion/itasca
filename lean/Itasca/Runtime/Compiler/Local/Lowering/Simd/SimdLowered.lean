@@ -87,7 +87,7 @@ set_option maxRecDepth 4096
 post-layout from the validated source signature and actual compiler state. -/
 theorem compiler_simd_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front input output : List valtype) (source : instr)
     (opcode : U16) (sub a : U32) (bits : U128)
     (number : opcode.val = 512 + sub.val) (bounded : sub.val < 256) (nonconstant : sub.val ≠ 12)
@@ -146,7 +146,7 @@ theorem compiler_simd_emission {A : Type} (ops : runtime.platform.Alloc A)
 constant-pool entry and use the current validated stack height. -/
 theorem compiler_simd_const_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front : List valtype) (a : U32) (bits : U128)
     (locals : C.LOCALS = compilerLocals before) (layout : CompilerLayout before front)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)

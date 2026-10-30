@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 including reader rejection, allocation rejection and unknown subopcodes. -/
 theorem compiler_reader_bulk_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (opcode : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (opcode : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step_bulk (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

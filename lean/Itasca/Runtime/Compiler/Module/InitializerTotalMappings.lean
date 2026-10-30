@@ -15,7 +15,7 @@ set_option maxHeartbeats 1800000
 @[step] theorem initializer_element_value_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (m : runtime.compiler.ExecutableModule)
     (budget : runtime.compiler.Budget A) (indices : alloc.vec.Vec Usize) (i j : Usize)
-    (segment : Itasca.module.Element)
+    (segment : Itasca.metadata.Element)
     (found : m.module.env.elements.val[i.val]? = some segment)
     (bound : j.val < segment.init.val.length) (capacity : indices.val.length < Usize.max)
     (space : initializerSize m + 1 ≤ Usize.max) :
@@ -24,11 +24,11 @@ set_option maxHeartbeats 1800000
       out.2.2.2.val.length ≤ indices.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.lower_element_value
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok]
   step as ⟨expr, read⟩
   try simp only [bind_ok]
-  have tyEq : types.ElemType.value_type segment.elem =
+  have tyEq : wasm_types.ElemType.value_type segment.elem =
       .ok (Itasca.ModuleConstants.referenceValueType segment.elem) := by cases segment.elem <;> rfl
   rw [tyEq, bind_ok]
   step with initializer_expression_total ops law m budget expr _ space
@@ -46,7 +46,7 @@ set_option maxHeartbeats 1800000
 @[step] theorem initializer_element_values_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (m : runtime.compiler.ExecutableModule)
     (budget : runtime.compiler.Budget A) (i : Usize) (indices : alloc.vec.Vec Usize) (j : Usize)
-    (status : core.result.Result Unit Itasca.error.VisitError) (segment : Itasca.module.Element)
+    (status : core.result.Result Unit Itasca.error.VisitError) (segment : Itasca.metadata.Element)
     (found : m.module.env.elements.val[i.val]? = some segment)
     (bound : j.val ≤ segment.init.val.length) (indicesBound : indices.val.length ≤ j.val)
     (space : initializerSize m + (segment.init.val.length - j.val) ≤ Usize.max) :
@@ -63,7 +63,7 @@ set_option maxHeartbeats 1800000
     unfold runtime.compiler.initialize.lower_element_loop.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
     split
     · rename_i more
@@ -84,7 +84,7 @@ set_option maxHeartbeats 1800000
 
 @[step] theorem initializer_element_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (m : runtime.compiler.ExecutableModule)
-    (budget : runtime.compiler.Budget A) (i : Usize) (segment : Itasca.module.Element)
+    (budget : runtime.compiler.Budget A) (i : Usize) (segment : Itasca.metadata.Element)
     (found : m.module.env.elements.val[i.val]? = some segment)
     (space : initializerSize m + segment.init.val.length + 3 ≤ Usize.max) :
     runtime.compiler.initialize.lower_element ops m budget i ⦃ out =>
@@ -110,7 +110,7 @@ set_option maxHeartbeats 1800000
     | Ok value =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
         runtime.compiler.ExecutableModule.env,
-        Itasca.module.Module.impl.env, runtime.compiler.initialize.element_offset, Itasca.module.Env.impl.elements]
+        Itasca.metadata.Module.impl.env, runtime.compiler.initialize.element_offset, Itasca.metadata.Env.impl.elements]
       try simp only [bind_ok]
       rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
       have room : initializerSize { middle with element_initializers := rows } + 2 ≤ Usize.max := by
@@ -167,7 +167,7 @@ set_option maxHeartbeats 1800000
     unfold runtime.compiler.initialize.lower_loop0.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < current.module.env.globals.val.length := by
@@ -202,7 +202,7 @@ set_option maxHeartbeats 1800000
     unfold runtime.compiler.initialize.lower_loop2.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok]
+      Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < current.module.tail.data.val.length := by
@@ -221,11 +221,11 @@ set_option maxHeartbeats 1800000
   · exact ⟨rfl, Nat.le_refl _⟩
 
 /-- Exact remaining append allowance for element initializer rows and offsets. -/
-def initializerElementCost (elements : List Itasca.module.Element) : Nat :=
+def initializerElementCost (elements : List Itasca.metadata.Element) : Nat :=
   (elements.map (fun e => e.init.val.length + 3)).sum
 
-theorem initializer_element_cost_step (elements : List Itasca.module.Element)
-    (index : Nat) (segment : Itasca.module.Element) (found : elements[index]? = some segment) :
+theorem initializer_element_cost_step (elements : List Itasca.metadata.Element)
+    (index : Nat) (segment : Itasca.metadata.Element) (found : elements[index]? = some segment) :
     initializerElementCost (elements.drop index) = segment.init.val.length + 3 +
       initializerElementCost (elements.drop (index + 1)) := by
   rw [List.drop_eq_getElem_cons (List.getElem?_eq_some_iff.mp found).1]
@@ -249,7 +249,7 @@ theorem initializer_element_cost_step (elements : List Itasca.module.Element)
     unfold runtime.compiler.initialize.lower_loop1.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < current.module.env.elements.val.length := by

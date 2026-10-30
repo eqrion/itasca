@@ -18,13 +18,13 @@ noncomputable local instance : DecidableEq code.LabelKind := Classical.decEq _
 
 /-- Which closes are allowed: `else` only closes a `then` frame, and `end` of a `then` frame
 needs equal parameters and results (the omitted-else identity). -/
-def EndAllowed (frame : code.Ctrl) (isElse : Bool) (ins outs : List types.ValueType) : Prop :=
+def EndAllowed (frame : code.Ctrl) (isElse : Bool) (ins outs : List wasm_types.ValueType) : Prop :=
   if isElse then frame.kind = .Then else frame.kind = .Then → ins = outs
 
 /-- The exact successful closing effect, including the root's discarded results. -/
 def EndEffect (st s : code.BodyState) (parents : List code.Ctrl)
     (blocks : List signature.BlockType) (frame : code.Ctrl) (isElse : Bool)
-    (ins outs : List types.ValueType) (outer : List code.StackType) : Prop :=
+    (ins outs : List wasm_types.ValueType) (outer : List code.StackType) : Prop :=
   s.core.pos = st.core.pos ∧
   if isElse then
     s.core.ctrls.val = parents ++ [{ frame with kind := .Else, polymorphic_base := false }] ∧
@@ -35,7 +35,7 @@ def EndEffect (st s : code.BodyState) (parents : List code.Ctrl)
 
 /-- `code.end_frame` on a state with a known innermost frame unfolds to the kind check,
 `code.same_types` for an omitted else, and `finishFrame`. -/
-theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem end_frame_eq (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (hc : st.core.ctrls.val = parents ++ [frame])
@@ -81,10 +81,10 @@ theorem end_frame_eq (st : code.BodyState) (env : module.Env) (isElse : Bool)
   all_goals rfl
 
 /-- Successful closing consumes precisely a realization of the complete result vector. -/
-theorem finishFrame.sound (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem finishFrame.sound (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType)
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hi : i.val = parents.length) (hn : n.val = blocks.length + 1)
@@ -157,10 +157,10 @@ namespace Itasca
 
 /-- Successful `else`/`end` exposes both the semantic closing check and the
 exact physical frame transition. No capacity assumption is needed for soundness. -/
-theorem code.end_frame.sound (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem code.end_frame.sound (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType)
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hv : st.core.vals.val = outer ++ segment) (hbase : frame.value_stack_base.val = outer.length)

@@ -23,7 +23,7 @@ def IndexedFunctionCode
 
 def DefinedIndexedFunctionCode
     (emission : CompilerTables → context → List valtype → instr → List Bytecode → List valtype → Prop)
-    (env : Itasca.module.Env) (typeIndex : U32) (source : funccode)
+    (env : Itasca.metadata.Env) (typeIndex : U32) (source : funccode)
     (compiled : runtime.bytecode.CompiledFunction) : Prop :=
   compiled.type_index=typeIndex ∧ ∃ signature declared body epilogue,
     env.types.val[typeIndex.val]?=some signature ∧

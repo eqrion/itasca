@@ -5,7 +5,7 @@ import Itasca.Module.Readers.Names
 /-!
 # Export and start section parsers
 
-Soundness of `module.decode_export_section` and `module.decode_start_section`. `ExportsAdded` says
+Soundness of `metadata.decode_export_section` and `metadata.decode_start_section`. `ExportsAdded` says
 the environment gains the exports in order, each with a fresh name, an in-range index and the
 function references it declares. The decoded span is a `VecEncoding ExportEncoding`. An accepted
 start section names a function without parameters or results. Completeness is in
@@ -19,13 +19,13 @@ namespace Itasca
 private theorem names_equal_loop_spec (a b : Slice U8) (i : Usize)
     (hlen : a.length = b.length) (hi : i.val ≤ a.length)
     (hprefix : a.val.take i.val = b.val.take i.val) :
-    module.names_equal_loop a b i ⦃ result => result = true ↔ a.val = b.val ⦄ := by
-  unfold module.names_equal_loop
+    metadata.names_equal_loop a b i ⦃ result => result = true ↔ a.val = b.val ⦄ := by
+  unfold metadata.names_equal_loop
   apply loop.spec_decr_nat (fun pos => a.length - pos.val)
     (fun pos => pos.val ≤ a.length ∧ a.val.take pos.val = b.val.take pos.val)
   · intro pos hp
     obtain ⟨hpos, heq⟩ := hp
-    unfold module.names_equal_loop.body
+    unfold metadata.names_equal_loop.body
     step*
     · have hend : pos.val = a.length := by scalar_tac
       have he : a.val = b.val := by
@@ -41,11 +41,11 @@ private theorem names_equal_loop_spec (a b : Slice U8) (i : Usize)
       rw [i4_post, List.take_succ_eq_append_getElem ha, List.take_succ_eq_append_getElem hb, heq, hbyte]
   · exact ⟨hi, hprefix⟩
 
-/-- `module.names_equal` returns normally and decides equality of the byte lists. -/
+/-- `metadata.names_equal` returns normally and decides equality of the byte lists. -/
 @[step]
-theorem module.names_equal.spec (a b : Slice U8) :
-    module.names_equal a b ⦃ result => result = true ↔ a.val = b.val ⦄ := by
-  unfold module.names_equal
+theorem metadata.names_equal.spec (a b : Slice U8) :
+    metadata.names_equal a b ⦃ result => result = true ↔ a.val = b.val ⦄ := by
+  unfold metadata.names_equal
   dsimp only
   split
   · rename_i hne
@@ -56,18 +56,18 @@ theorem module.names_equal.spec (a b : Slice U8) :
   · rename_i heq
     exact names_equal_loop_spec a b 0#usize (by scalar_tac) (by simp) (by simp)
 
-/-- `module.export_name_taken` decides whether the name is already exported. -/
+/-- `metadata.export_name_taken` decides whether the name is already exported. -/
 @[step]
-theorem module.export_name_taken.spec (env : module.Env) (nm : Slice U8) :
-    module.export_name_taken env nm ⦃ result =>
+theorem metadata.export_name_taken.spec (env : metadata.Env) (nm : Slice U8) :
+    metadata.export_name_taken env nm ⦃ result =>
       result = true ↔ nm.val ∈ env.exports.val.map (fun entry => entry.name.val) ⦄ := by
-  unfold module.export_name_taken module.export_name_taken_loop
+  unfold metadata.export_name_taken metadata.export_name_taken_loop
   apply loop.spec_decr_nat (fun pos => env.exports.val.length - pos.val)
     (fun pos => pos.val ≤ env.exports.val.length ∧
       ∀ j (hj : j < env.exports.val.length), j < pos.val → env.exports.val[j].name.val ≠ nm.val)
   · intro pos hp
     obtain ⟨hpos, hprefix⟩ := hp
-    unfold module.export_name_taken_loop.body
+    unfold metadata.export_name_taken_loop.body
     step*
     · simp only [Bool.false_eq_true, false_iff]
       intro hm
@@ -96,7 +96,7 @@ namespace Itasca.ModuleSections
 /-- `result` is `env` with `entry` appended to the exports, under a fresh name with a resolvable
 descriptor, and its function references appended to the declared functions. Nothing else
 changes. -/
-def ExportAdded (env result : module.Env) (entry : module.Export) : Prop :=
+def ExportAdded (env result : metadata.Env) (entry : metadata.Export) : Prop :=
   result = { env with exports := result.exports, declared_funcs := result.declared_funcs } ∧
   result.exports.val = env.exports.val ++ [entry] ∧
   entry.name.val ∉ env.exports.val.map (fun e => e.name.val) ∧
@@ -104,7 +104,7 @@ def ExportAdded (env result : module.Env) (entry : module.Export) : Prop :=
   result.declared_funcs.val = env.declared_funcs.val ++ ModuleReferences.exportIndices entry
 
 /-- `result` is `initial` after adding `entries` one at a time by `ExportAdded`. -/
-inductive ExportsAdded (initial : module.Env) : List module.Export → module.Env → Prop where
+inductive ExportsAdded (initial : metadata.Env) : List metadata.Export → metadata.Env → Prop where
   | nil : ExportsAdded initial [] initial
   | snoc {entries before after entry} : ExportsAdded initial entries before →
       ExportAdded before after entry → ExportsAdded initial (entries ++ [entry]) after
@@ -124,15 +124,15 @@ theorem ExportsAdded.unchanged {env entries result} (h : ExportsAdded env entrie
   | snoc _ ha ih => rw [ha.1, ih]
 
 /-- The binary kind byte of an export descriptor. -/
-def descByte : module.ExportDesc → U8
+def descByte : metadata.ExportDesc → U8
   | .Func _ => 0#u8 | .Table _ => 1#u8 | .Memory _ => 2#u8 | .Global _ => 3#u8
 
 /-- The index of an export descriptor. -/
-def descIndex : module.ExportDesc → U32
+def descIndex : metadata.ExportDesc → U32
   | .Func idx | .Table idx | .Memory idx | .Global idx => idx
 
 /-- The descriptor's index is in range for its index space. -/
-def ExportDescValid (env : module.Env) : module.ExportDesc → Prop
+def ExportDescValid (env : metadata.Env) : metadata.ExportDesc → Prop
   | .Func idx => idx.val < env.func_types.val.length
   | .Table idx => idx.val < env.table_types.val.length
   | .Memory idx => idx.val < env.mem_types.val.length
@@ -148,7 +148,7 @@ theorem ExportDescValid.resolves {env desc} (h : ExportDescValid env desc) (nm :
   | Global idx => exact ⟨.Global env.global_types.val[idx.val], h, rfl⟩
 
 /-- A kind byte followed by the index encoding is an `ExportDescEncoding`. -/
-theorem exportDesc_encoded (desc : module.ExportDesc) {bytes}
+theorem exportDesc_encoded (desc : metadata.ExportDesc) {bytes}
     (h : ModuleBinary.IndexEncoding (descIndex desc) bytes) :
     ModuleBinary.ExportDescEncoding desc (descByte desc :: bytes) := by
   cases desc with
@@ -179,22 +179,22 @@ namespace Itasca
 
 open ModuleSections
 
-/-- `module.export_desc` returns the descriptor for a kind byte and index, which is in range. -/
+/-- `metadata.export_desc` returns the descriptor for a kind byte and index, which is in range. -/
 @[step]
-theorem module.export_desc.spec (env : module.Env) (kind : U8) (idx : U32) :
-    module.export_desc env kind idx ⦃ r => match r with
+theorem metadata.export_desc.spec (env : metadata.Env) (kind : U8) (idx : U32) :
+    metadata.export_desc env kind idx ⦃ r => match r with
       | .Ok desc => kind = descByte desc ∧ idx = descIndex desc ∧ ExportDescValid env desc
       | .Err _ => True ⦄ := by
-  unfold module.export_desc
+  unfold metadata.export_desc
   step
   split <;> step* <;> simp_all [descByte, descIndex, ExportDescValid]
   all_goals with_unfolding_all rfl
 
-/-- An accepted `module.decode_start_section` reads a `StartEncoding` span and records an in-range
+/-- An accepted `metadata.decode_start_section` reads a `StartEncoding` span and records an in-range
 function without parameters or results as the start. -/
 @[step]
-theorem module.decode_start_section.spec (data : Slice U8) (start : Usize) (env : module.Env) :
-    module.decode_start_section data start env ⦃ r => match r.1 with
+theorem metadata.decode_start_section.spec (data : Slice U8) (start : Usize) (env : metadata.Env) :
+    metadata.decode_start_section data start env ⦃ r => match r.1 with
       | .Ok next => ∃ idx, ModuleBinary.At ModuleBinary.StartEncoding data start (some idx) next ∧
           r.2 = { env with start := some idx } ∧
           ∃ hi : idx.val < env.func_types.val.length,
@@ -203,12 +203,12 @@ theorem module.decode_start_section.spec (data : Slice U8) (start : Usize) (env 
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
   cases r with
   | Err e =>
-      simp [module.decode_start_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_start_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
       obtain ⟨idx, next⟩ := pair
-      simp [module.decode_start_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_start_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
       step*
       simp [alloc.vec.Vec.is_empty]
       split_ifs <;> simp
@@ -228,40 +228,40 @@ attribute [local simp] core.result.Result.Insts.CoreOpsTry.branch
   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
   error.Error.Insts.CoreConvertFromOpError.from
 
-private theorem export_step (data : Slice U8) (count : U32) (env : module.Env)
+private theorem export_step (data : Slice U8) (count : U32) (env : metadata.Env)
     (pos : Usize) (i : U32) (hi : i.val < count.val) (hbound : ModuleEnv.Bounded env pos.val) :
-    module.decode_export_section_loop.body data count env pos i ⦃ r => match r with
+    metadata.decode_export_section_loop.body data count env pos i ⦃ r => match r with
       | .done (.Err _, _) => True
       | .done (.Ok _, _) => False
       | .cont (result, next, j) => ∃ entry, ExportAdded env result entry ∧
           At ExportEncoding data pos (ModuleEnv.rawExport entry) next ∧
           ModuleEnv.Bounded result next.val ∧ j.val = i.val + 1 ⦄ := by
   have hmore : ¬i ≥ count := by scalar_tac
-  obtain ⟨r, hn, hname⟩ := WP.spec_imp_exists (module.decode_name.spec data pos)
+  obtain ⟨r, hn, hname⟩ := WP.spec_imp_exists (metadata.decode_name.spec data pos)
   cases r with
-  | Err e => simp [module.decode_export_section_loop.body, hmore, hn]
+  | Err e => simp [metadata.decode_export_section_loop.body, hmore, hn]
   | Ok pair =>
       obtain ⟨nm, p1⟩ := pair
       obtain ⟨taken, ht, htaken⟩ := WP.spec_imp_exists
-        (module.export_name_taken.spec env (alloc.vec.Vec.deref nm))
+        (metadata.export_name_taken.spec env (alloc.vec.Vec.deref nm))
       cases taken with
-      | true => simp [module.decode_export_section_loop.body, hmore, hn, ht]
+      | true => simp [metadata.decode_export_section_loop.body, hmore, hn, ht]
       | false =>
           have hfresh : nm.val ∉ env.exports.val.map (fun entry => entry.name.val) := by
             simpa [alloc.vec.Vec.deref] using htaken
           obtain ⟨r, hk, hkind⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p1)
           cases r with
-          | Err e => simp [module.decode_export_section_loop.body, hmore, hn, ht, hk]
+          | Err e => simp [metadata.decode_export_section_loop.body, hmore, hn, ht, hk]
           | Ok pair =>
               obtain ⟨kind, p2⟩ := pair
               obtain ⟨r, hu, hindex⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data p2)
               cases r with
-              | Err e => simp [module.decode_export_section_loop.body, hmore, hn, ht, hk, hu]
+              | Err e => simp [metadata.decode_export_section_loop.body, hmore, hn, ht, hk, hu]
               | Ok pair =>
                   obtain ⟨idx, next⟩ := pair
-                  obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.export_desc.spec env kind idx)
+                  obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.export_desc.spec env kind idx)
                   cases r with
-                  | Err e => simp [module.decode_export_section_loop.body, hmore, hn, ht, hk, hu, hd]
+                  | Err e => simp [metadata.decode_export_section_loop.body, hmore, hn, ht, hk, hu, hd]
                   | Ok desc =>
                       obtain ⟨hbyte, hidx, hvalid⟩ := hdesc
                       have he := export_encoded hname hkind hindex hbyte hidx
@@ -273,7 +273,7 @@ private theorem export_step (data : Slice U8) (count : U32) (env : module.Env)
                       have hcapacity : env.exports.val.length < Usize.max := by scalar_tac
                       have hsizeRefs := hbound.declaredFuncs
                       have hcapacityRefs : env.declared_funcs.val.length < Usize.max := by scalar_tac
-                      simp [module.decode_export_section_loop.body, hmore, hn, ht, hk, hu, hd]
+                      simp [metadata.decode_export_section_loop.body, hmore, hn, ht, hk, hu, hd]
                       cases desc <;> step*
                       all_goals
                         refine ⟨⟨nm, _⟩, ⟨rfl, ?_, hfresh, hvalid.resolves nm, ?_⟩, he, ?_, ?_⟩
@@ -286,15 +286,15 @@ private theorem export_step (data : Slice U8) (count : U32) (env : module.Env)
 
 /-- The export loop adds `count` exports forming a `Rep ExportEncoding` span, each with a fresh
 name and valid descriptor. -/
-theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_export_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hbound : ModuleEnv.Bounded env start.val) :
-    module.decode_export_section_loop data env count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_export_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ entries, entries.length = count.val ∧ ExportsAdded env entries r.2 ∧
           At (Rep ExportEncoding) data start (entries.map ModuleEnv.rawExport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_export_section_loop
+  unfold metadata.decode_export_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ entries, entries.length = s.2.2.val ∧
       ExportsAdded env entries s.1 ∧
@@ -304,7 +304,7 @@ theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.E
     dsimp only at *
     by_cases hdone : count.val ≤ i.val
     · have he : i ≥ count := by scalar_tac
-      simp [module.decode_export_section_loop.body, he]
+      simp [metadata.decode_export_section_loop.body, he]
       exact ⟨entries, by omega, hhistory, hbytes, hbound⟩
     · apply WP.spec_mono (export_step data count current pos i (by omega) hbound)
       intro r hr
@@ -324,29 +324,29 @@ theorem module.decode_export_section_loop.spec (data : Slice U8) (env : module.E
           · simpa using hbytes.snoc he
   · exact ⟨by simp, [], by simp, .nil, ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
-/-- `module.decode_export_section` adds the exports of a `VecEncoding ExportEncoding` span, each
+/-- `metadata.decode_export_section` adds the exports of a `VecEncoding ExportEncoding` span, each
 with a fresh name and valid descriptor. -/
 @[step]
-theorem module.decode_export_section.spec (data : Slice U8) (start : Usize) (env : module.Env)
+theorem metadata.decode_export_section.spec (data : Slice U8) (start : Usize) (env : metadata.Env)
     (hbound : ModuleEnv.Bounded env start.val) :
-    module.decode_export_section data start env ⦃ r => match r.1 with
+    metadata.decode_export_section data start env ⦃ r => match r.1 with
       | .Ok next => ∃ entries, ExportsAdded env entries r.2 ∧
           At (VecEncoding ExportEncoding) data start (entries.map ModuleEnv.rawExport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
   cases r with
-  | Err e => simp [module.decode_export_section, hr]
+  | Err e => simp [metadata.decode_export_section, hr]
   | Ok pair =>
       obtain ⟨count, pos⟩ := pair
       obtain ⟨⟨r, final⟩, hl, hp⟩ := WP.spec_imp_exists
-        (module.decode_export_section_loop.spec data env count pos hd.span.2.2
+        (metadata.decode_export_section_loop.spec data env count pos hd.span.2.2
           (hbound.mono (Nat.le_of_lt hd.span.1)))
       cases r with
-      | Err e => simp [module.decode_export_section, hr, hl]
+      | Err e => simp [metadata.decode_export_section, hr, hl]
       | Ok next =>
           obtain ⟨entries, hlen, hhistory, hbytes, hb⟩ := hp
-          simp [module.decode_export_section, hr, hl]
+          simp [metadata.decode_export_section, hr, hl]
           exact ⟨entries, hhistory, At.vector hd hbytes (by simpa using hlen), hb⟩
 
 end Itasca

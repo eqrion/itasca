@@ -33,8 +33,8 @@ set_option maxRecDepth 4096
 budget rejection after partial emission. Each vector grows by at most one. -/
 @[step] theorem initializer_constant_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget : runtime.compiler.Budget A)
-    (function : runtime.bytecode.CompiledFunction) (expr : Itasca.types.ConstExpr)
-    (ty : Itasca.types.ValueType) (dst : U32)
+    (function : runtime.bytecode.CompiledFunction) (expr : Itasca.wasm_types.ConstExpr)
+    (ty : Itasca.wasm_types.ValueType) (dst : U32)
     (codeFits : function.code.val.length < Usize.max)
     (poolFits : function.v128_pool.val.length < Usize.max) :
     runtime.compiler.initialize.constant ops budget function expr ty dst ⦃ out =>
@@ -70,7 +70,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.indirect.val.length ≤ function.indirect.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.emit_element
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step
   · simpa [alloc.vec.Vec.deref] using bound
   repeat' first
@@ -99,7 +99,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.indirect = function.indirect ⦄ := by
   unfold runtime.compiler.initialize.emit_data
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   step
   repeat' first
     | (step with initializer_constant_total ops law _ _ _ _ _ (by scalar_tac) (by scalar_tac))
@@ -148,7 +148,7 @@ set_option maxHeartbeats 2000000
     unfold runtime.compiler.initialize.lower_loop3.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < m.module.env.elements.val.length := by
@@ -193,7 +193,7 @@ set_option maxHeartbeats 2000000
     unfold runtime.compiler.initialize.lower_loop4.body
     dsimp only at *
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok]
+      Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more
       have inbounds : index.val < m.module.tail.data.val.length := by scalar_tac
@@ -228,7 +228,7 @@ set_option maxHeartbeats 1800000
 set_option maxRecDepth 4096
 
 /-- A source-derived upper bound on all retained initializer-map appends. -/
-def initializerMappingCost (source : Itasca.module.Module) : Nat :=
+def initializerMappingCost (source : Itasca.metadata.Module) : Nat :=
   2 * source.env.globals.val.length + initializerElementCost source.env.elements.val +
   2 * source.tail.data.val.length
 

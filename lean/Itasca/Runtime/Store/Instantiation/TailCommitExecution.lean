@@ -33,7 +33,7 @@ theorem instantiate_tail_committed {M P F A : Type}
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at run
     obtain ⟨inst, instRun, run⟩ := normal_bind_exists _ _ _ run
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.start, bind_ok] at run
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.start, bind_ok] at run
     split at run
     · exact (congrArg (fun out => out.2.2.2) (Result.ok_injective run)).symm
     · obtain ⟨index, indexRun, run⟩ := normal_bind_exists _ _ _ run

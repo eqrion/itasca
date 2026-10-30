@@ -24,7 +24,7 @@ theorem compiler_reader_nop_available {A V : Type} (ops : runtime.platform.Alloc
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_NOP before = .ok (.Ok (),final,after)) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -50,7 +50,7 @@ theorem compiler_reader_drop_available {A V : Type} (ops : runtime.platform.Allo
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_DROP before = .ok (.Ok (),final,after)) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -76,7 +76,7 @@ theorem compiler_reader_unreachable_available {A V : Type} (ops : runtime.platfo
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_UNREACHABLE before = .ok (.Ok (),final,after)) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -97,7 +97,7 @@ theorem compiler_reader_global_get_available {A V : Type} (ops : runtime.platfor
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_GLOBAL_GET before = .ok (.Ok (),final,after)) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -120,7 +120,7 @@ theorem compiler_reader_global_set_available {A V : Type} (ops : runtime.platfor
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype) (ty : valtype)
     (layout : compiler.reachable = true → CompilerLayout compiler (front ++ [ty]))
     (reference : code.step source st data env ctx code.OP_GLOBAL_SET before = .ok (.Ok (),final,after)) :
@@ -144,7 +144,7 @@ theorem compiler_reader_select_available {A V : Type} (ops : runtime.platform.Al
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype) (ty : valtype)
     (layout : compiler.reachable = true → CompilerLayout compiler (front ++ [ty,ty,.I32]))
     (reference : code.step source st data env ctx code.OP_SELECT before = .ok (.Ok (),final,after)) :
@@ -180,7 +180,7 @@ theorem reached_reader_global_set_available {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler out bound)
     (outer segment : List code.StackType) (values : st.vals.val = outer ++ segment)
     (base : (Control.base st).val = outer.length)
@@ -214,7 +214,7 @@ theorem reached_reader_select_available {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler out bound) (capacity : st.vals.val.length < Usize.max)
     (outer segment : List code.StackType) (values : st.vals.val = outer ++ segment)
     (base : (Control.base st).val = outer.length)

@@ -5,7 +5,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 # Completeness of the primitive readers
 
 Inversion lemmas for `At` over index, byte, repetition and vector encodings, and acceptance
-(`.complete`) of `module.decode_value_type` and `module.decode_elem_type` from independent
+(`.complete`) of `metadata.decode_value_type` and `metadata.decode_elem_type` from independent
 encodings that the profile allows. The matching soundness specs are in `Module/Readers/Basic`.
 -/
 
@@ -63,28 +63,28 @@ namespace Itasca
 
 open ModuleBinary
 
-/-- `module.decode_value_type` accepts an independently encoded value type that the profile
+/-- `metadata.decode_value_type` accepts an independently encoded value type that the profile
 allows. -/
-theorem module.decode_value_type.complete (data : Slice U8) (pos : Usize)
-    (ty : types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next)
+theorem metadata.decode_value_type.complete (data : Slice U8) (pos : Usize)
+    (ty : wasm_types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next)
     (profile : ValidationProfile) (hallowed : ValueTypeAllowed profile ty) :
-    module.decode_value_type data pos profile = .ok (.Ok (ty, next)) := by
+    metadata.decode_value_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [module.decode_value_type, valueByte, ValueTypeAllowed,
+    simp_all [metadata.decode_value_type, valueByte, ValueTypeAllowed,
       core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- `module.decode_elem_type` accepts an independently encoded element type that the profile
+/-- `metadata.decode_elem_type` accepts an independently encoded element type that the profile
 allows. -/
-theorem module.decode_elem_type.complete (data : Slice U8) (pos : Usize)
-    (ty : types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next)
+theorem metadata.decode_elem_type.complete (data : Slice U8) (pos : Usize)
+    (ty : wasm_types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next)
     (profile : ValidationProfile) (hallowed : ElemTypeAllowed profile ty) :
-    module.decode_elem_type data pos profile = .ok (.Ok (ty, next)) := by
+    metadata.decode_elem_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [module.decode_elem_type, elemByte, ElemTypeAllowed,
+    simp_all [metadata.decode_elem_type, elemByte, ElemTypeAllowed,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

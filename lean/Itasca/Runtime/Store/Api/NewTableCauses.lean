@@ -9,13 +9,13 @@ quota or allocation refusal before changing either map or store. -/
 theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (ty : Itasca.types.TableType) (found : inst.module.module.env.table_types.val[index.val]? = some ty)
+    (ty : Itasca.wasm_types.TableType) (found : inst.module.module.env.table_types.val[index.val]? = some ty)
     (bound : objectCount store ≤ Usize.max)
     (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok (.Err (.Exhausted limit),after,next)) :
     after = store ∧ next = inst ∧ TableAllocationCause allocator store ty limit := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.table_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.table_types,bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.table_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found),bind_ok] at run
   obtain ⟨⟨status,staged⟩,defined,run⟩ := normal_bind_exists _ _ _ run

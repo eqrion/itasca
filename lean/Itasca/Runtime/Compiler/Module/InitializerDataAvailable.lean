@@ -29,7 +29,7 @@ theorem initializer_data_offset_available {A : Type} (ops : runtime.platform.All
       initializerSize out.2.1 ≤ initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail,bind_ok]
+    Itasca.metadata.Module.impl.tail,bind_ok]
   step as ⟨segment,found⟩
   have member : segment ∈ module.module.tail.data.val := by rw [found]; exact List.getElem_mem inside
   cases mode : segment.mode with
@@ -113,7 +113,7 @@ theorem initializer_data_offsets_available {A : Type} (ops : runtime.platform.Al
     subst status
     unfold runtime.compiler.initialize.lower_loop2.body
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail,bind_ok]
+      Itasca.metadata.Module.impl.tail,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.tail.data.val.length := by

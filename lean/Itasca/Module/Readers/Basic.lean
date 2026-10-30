@@ -4,8 +4,8 @@ import Itasca.Binary.Module
 # Primitive module readers
 
 Soundness specs for the byte-level helpers of the module parser: `reader.read_byte`,
-`module.have_bytes`, `module.copy_bytes`, `module.read_section_header`, `limits.validate_limits`,
-`module.decode_value_type` and `module.decode_elem_type`. Each relates a successful result to the
+`metadata.have_bytes`, `metadata.copy_bytes`, `metadata.read_section_header`, `limits.validate_limits`,
+`metadata.decode_value_type` and `metadata.decode_elem_type`. Each relates a successful result to the
 independent grammar through `ParserPost`, or states `SectionHeader` and `LimitsValid`. Completeness
 is in `Module/Readers/BasicComplete` and `Module/Readers/FramingComplete`.
 -/
@@ -42,7 +42,7 @@ theorem At.prepend {α : Type} {R S : α → List U8 → Prop} {data start pos n
   exact ⟨b :: bytes, hR bytes he, by simpa using hb.byte.append hs⟩
 
 /-- A limits pair has `min` within `bound` and, when `max` is present, `min ≤ max ≤ bound`. -/
-def LimitsValid (lim : types.Limits) (bound : U32) : Prop :=
+def LimitsValid (lim : wasm_types.Limits) (bound : U32) : Prop :=
   lim.min.val ≤ bound.val ∧ ∀ maximum, lim.max = some maximum →
     lim.min.val ≤ maximum.val ∧ maximum.val ≤ bound.val
 
@@ -80,69 +80,69 @@ theorem reader.read_byte.module_spec (data : Slice U8) (pos : Usize) :
 
 /-- The subtraction-based bounds check terminates for an in-bounds cursor. -/
 @[step]
-theorem module.have_bytes.spec (data : Slice U8) (pos n : Usize)
+theorem metadata.have_bytes.spec (data : Slice U8) (pos n : Usize)
     (hb : pos.val ≤ data.length) :
-    module.have_bytes data pos n ⦃ r =>
+    metadata.have_bytes data pos n ⦃ r =>
       (r = .Ok () ↔ pos.val + n.val ≤ data.length) ∧
       (r = .Err .UnexpectedEof ↔ data.length < pos.val + n.val) ⦄ := by
-  unfold module.have_bytes
+  unfold metadata.have_bytes
   step* <;> scalar_tac
 
-/-- `module.decode_value_type` returns a value type allowed by the profile, with its exact
+/-- `metadata.decode_value_type` returns a value type allowed by the profile, with its exact
 encoding. -/
 @[step]
-theorem module.decode_value_type.spec (data : Slice U8) (pos : Usize)
+theorem metadata.decode_value_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
-    module.decode_value_type data pos profile ⦃ r =>
+    metadata.decode_value_type data pos profile ⦃ r =>
       ModuleBinary.ParserPost (ModuleBinary.ValueTypeEncodingFor profile) data pos r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
   cases r with
   | Err e =>
-      simp [module.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from, ModuleBinary.ParserPost]
   | Ok pair =>
       obtain ⟨b, next⟩ := pair
       have hs := ModuleBinary.At.byte hp
       cases profile <;>
-        simp [module.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+        simp [metadata.decode_value_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
           ModuleBinary.ParserPost]
       all_goals split
       all_goals first
         | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
         | simp
 
-/-- `module.decode_elem_type` returns an element type allowed by the profile, with its exact
+/-- `metadata.decode_elem_type` returns an element type allowed by the profile, with its exact
 encoding. -/
 @[step]
-theorem module.decode_elem_type.spec (data : Slice U8) (pos : Usize)
+theorem metadata.decode_elem_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
-    module.decode_elem_type data pos profile ⦃ r =>
+    metadata.decode_elem_type data pos profile ⦃ r =>
       ModuleBinary.ParserPost (ModuleBinary.ElemTypeEncodingFor profile) data pos r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
   cases r with
   | Err e =>
-      simp [module.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from, ModuleBinary.ParserPost]
   | Ok pair =>
       obtain ⟨b, next⟩ := pair
       have hs := ModuleBinary.At.byte hp
       cases profile <;>
-        simp [module.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+        simp [metadata.decode_elem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
           ModuleBinary.ParserPost]
       all_goals split
       all_goals first
         | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
         | simp
 
-/-- `module.decode_value_type` returns a value type with its exact encoding, whatever the
+/-- `metadata.decode_value_type` returns a value type with its exact encoding, whatever the
 profile admits. -/
-theorem module.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
+theorem metadata.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
-    module.decode_value_type data pos profile ⦃ r =>
+    metadata.decode_value_type data pos profile ⦃ r =>
       ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ := by
-  apply WP.spec_mono (module.decode_value_type.spec data pos profile)
+  apply WP.spec_mono (metadata.decode_value_type.spec data pos profile)
   intro result h
   cases result with
   | Err _ => trivial
@@ -154,19 +154,19 @@ theorem module.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
 private theorem copy_bytes_body (data : Slice U8) (last : Usize) (out : alloc.vec.Vec U8)
     (i : Usize) (hi : i.val < last.val) (hb : last.val ≤ data.length)
     (hlen : out.val.length ≤ i.val) :
-    module.copy_bytes_loop.body data last out i ⦃ r =>
+    metadata.copy_bytes_loop.body data last out i ⦃ r =>
       ∃ out' next, r = .cont (out', next) ∧
         out'.val = out.val ++ [data.val[i.val]'(by simpa using Nat.lt_of_lt_of_le hi hb)] ∧ next.val = i.val + 1 ⦄ := by
-  unfold module.copy_bytes_loop.body
+  unfold metadata.copy_bytes_loop.body
   step*
   exact ⟨out1, i2, rfl, by simpa [i1_post] using out1_post, i2_post⟩
 
 /-- Copying a bounded range terminates and returns exactly that byte interval. -/
 @[step]
-theorem module.copy_bytes.spec (data : Slice U8) (first last : Usize)
+theorem metadata.copy_bytes.spec (data : Slice U8) (first last : Usize)
     (hf : first.val ≤ last.val) (hb : last.val ≤ data.length) :
-    module.copy_bytes data first last ⦃ out => Wasm1.BytesAt data first out.val last ⦄ := by
-  unfold module.copy_bytes module.copy_bytes_loop
+    metadata.copy_bytes data first last ⦃ out => Wasm1.BytesAt data first out.val last ⦄ := by
+  unfold metadata.copy_bytes metadata.copy_bytes_loop
   apply loop.spec_decr_nat (fun s => last.val - s.2.val)
     (fun s => first.val ≤ s.2.val ∧ s.2.val ≤ last.val ∧
       s.2.val = first.val + s.1.val.length ∧
@@ -175,7 +175,7 @@ theorem module.copy_bytes.spec (data : Slice U8) (first last : Usize)
     dsimp only at *
     by_cases hdone : last.val ≤ i.val
     · have heq : i = last := UScalar.eq_of_val_eq (by omega)
-      simp only [module.copy_bytes_loop.body, heq, ge_iff_le, le_refl, ↓reduceIte, WP.spec_ok]
+      simp only [metadata.copy_bytes_loop.body, heq, ge_iff_le, le_refl, ↓reduceIte, WP.spec_ok]
       exact ⟨by simpa [heq] using hs, by simpa [heq] using hlen, hb⟩
     · apply WP.spec_mono (copy_bytes_body data last out i (by omega) hb (by omega))
       rintro _ ⟨out', next, rfl, hv, hn⟩
@@ -191,21 +191,21 @@ theorem module.copy_bytes.spec (data : Slice U8) (first last : Usize)
 
 /-- `limits.validate_limits` accepts only limits satisfying `LimitsValid`. -/
 @[step]
-theorem limits.validate_limits.spec (lim : types.Limits) (bound : U32) :
+theorem limits.validate_limits.spec (lim : wasm_types.Limits) (bound : U32) :
     limits.validate_limits lim bound ⦃ r => r = .Ok () → ModuleBinary.LimitsValid lim bound ⦄ := by
   unfold limits.validate_limits ModuleBinary.LimitsValid
   step*
   simp_all
 
-/-- `module.read_section_header` returns a `SectionHeader` for the bytes it consumed. -/
-theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
-    module.read_section_header data start ⦃ r => match r with
+/-- `metadata.read_section_header` returns a `SectionHeader` for the bytes it consumed. -/
+theorem metadata.read_section_header.spec (data : Slice U8) (start : Usize) :
+    metadata.read_section_header data start ⦃ r => match r with
       | .Ok (id, first, last) => ModuleBinary.SectionHeader data start id first last
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data start)
   cases r with
   | Err e =>
-      simp [module.read_section_header, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.read_section_header, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
@@ -213,13 +213,13 @@ theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
       obtain ⟨r, hu, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
       cases r with
       | Err e =>
-          simp [module.read_section_header, hr, hu, core.result.Result.Insts.CoreOpsTry.branch,
+          simp [metadata.read_section_header, hr, hu, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
           obtain ⟨size, first⟩ := pair
           have hspan := hd.span
-          simp [module.read_section_header, hr, hu,
+          simp [metadata.read_section_header, hr, hu,
             core.result.Result.Insts.CoreOpsTry.branch]
           step*
           cases r2 with
@@ -234,7 +234,7 @@ theorem module.read_section_header.spec (data : Slice U8) (start : Usize) :
 
 /-- Under Wasm 1.0 the segment flag is the index and nothing is consumed. -/
 @[simp]
-theorem module.decode_segment_index.wasm1 (data : Slice U8) (pos : Usize) (idx : U32) :
-    module.decode_segment_index data pos idx .Wasm1 = .ok (.Ok (idx, pos, false)) := rfl
+theorem metadata.decode_segment_index.wasm1 (data : Slice U8) (pos : Usize) (idx : U32) :
+    metadata.decode_segment_index data pos idx .Wasm1 = .ok (.Ok (idx, pos, false)) := rfl
 
 end Itasca

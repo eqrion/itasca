@@ -11,7 +11,7 @@ private theorem constant_compatible {M : Type} {store : runtime.store.Store M} {
 
 private theorem element_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
+    (index : Nat) (segment : Itasca.metadata.Element) (instructions : List runtime.bytecode.Instr)
     (program : Compiler.ElementProgram code index segment instructions)
     (found : inst.module.module.env.elements.val[index]? = some segment)
     (typed : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
@@ -38,7 +38,7 @@ private theorem element_compatible {M : Type} (store : runtime.store.Store M)
 
 private theorem data_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
+    (index : Nat) (segment : Itasca.metadata.Data) (instructions : List runtime.bytecode.Instr)
     (program : Compiler.DataProgram code index segment instructions) :
     ∀ instruction ∈ instructions, SegmentBulkCompatible store inst code instruction := by
   cases program with

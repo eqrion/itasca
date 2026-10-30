@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- All non-control opcodes use the capacity-guarded shared scalar arm. -/
-theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (ctx : code.Context) (index : U32) (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes) :
     step st data env profile ctx index opcode =
       if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
@@ -30,7 +30,7 @@ theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : module.Env
 
 /-- The Wasm 2.0 body dispatcher uses the selected type index for returns;
 the shared context contributes only locals for every opcode. -/
-theorem step_context (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem step_context (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (ctx ctx' : code.Context) (index : U32) (opcode : U8)
     (hlocals : ctx.locals = ctx'.locals) :
     step st data env profile ctx index opcode = step st data env profile ctx' index opcode := by

@@ -22,7 +22,7 @@ when the reader or callback rejects the instruction. -/
 theorem code.step_bulk.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)
     (h : code.step_bulk visitor st data env opcode v = .ok (res, final, v')) :
@@ -48,7 +48,7 @@ theorem code.step_bulk.refines {V W : Type}
       (fun s (a : U32 × U32) => .op s (.table_init a.1 a.2)) v w hrelated res final v' h
   case h_6 =>
     exact CoreVisitor.run.refines _ visitor replacement related hrefines
-      (fun s (a : U32 × types.ValueType) => .op s (.elem_drop a.1)) v w hrelated res final v' h
+      (fun s (a : U32 × wasm_types.ValueType) => .op s (.elem_drop a.1)) v w hrelated res final v' h
   case h_7 =>
     exact CoreVisitor.run.refines _ visitor replacement related hrefines
       (fun s (a : U32 × U32) => .op s (.table_copy a.1 a.2)) v w hrelated res final v' h
@@ -77,7 +77,7 @@ callbacks, preserving errors and the full post-operator state. -/
 theorem code.step_extended.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)
@@ -164,7 +164,7 @@ words, memory arguments and lane indices delivered to callbacks. -/
 theorem subStep.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)
     (h : subStep visitor st data env opcode v = .ok (res, final, v')) :
@@ -228,7 +228,7 @@ return, including malformed prefix bytes and observed rejection. -/
 theorem code.step_simd.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)
     (h : code.step_simd visitor st data env v = .ok (res, final, v')) :
@@ -259,7 +259,7 @@ bulk and SIMD), preserving reader failure, callback rejection and both states. -
 theorem code.step_wasm2.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)

@@ -46,7 +46,7 @@ set_option maxHeartbeats 1500000 in
 including a rejecting label or a label preceding a suffix error. -/
 theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (count i : U32) (arity : Option Usize) (first : signature.ResultType) (hi : i.val ≤ count.val)
     (v : V) (result : BodyResult) (final : code.BodyState) (v' : V)
@@ -225,7 +225,7 @@ theorem table_records {data env profile locals index st} (p : Pending data env p
 
 /-- The table arm of the profile dispatcher returns its handler's exact result. -/
 theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x0e#u8 v =
       code.branch_table_with visitor st data env profile v := by

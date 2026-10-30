@@ -15,7 +15,7 @@ namespace Itasca.Wasm2.Visitor
 /-- Accepted replacement hooks preserve every successful bulk reader state. -/
 theorem bulk_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
     (v v' : V) (w : W)
     (h : code.step_bulk visitor st data env opcode v = .ok (.Ok (), final, v')) :
     ∃ w', code.step_bulk replacement st data env opcode w = .ok (.Ok (), final, w') := by

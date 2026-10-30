@@ -99,7 +99,7 @@ theorem PopResult.length {poly before r after} (h : PopResult poly before r afte
 
 /-- The outcome of the typed pop: it rejects only an empty reachable frame (`EmptyStack`) or an
 incompatible operand (`TypeMismatch`). -/
-def TypedPopResult (poly : Bool) (before : List code.StackType) (expected : types.ValueType)
+def TypedPopResult (poly : Bool) (before : List code.StackType) (expected : wasm_types.ValueType)
     (r : core.result.Result code.StackType error.OpError) (after : List code.StackType) : Prop :=
   match r with
   | .Ok t => Popped poly before t after ∧ Sequence.Accepts t (Translate.valueType expected)
@@ -162,7 +162,7 @@ theorem code.pop_stack_type.segment (st : code.OpIterState)
 /-- `code.pop_with_type` on the current frame's operand segment has a `TypedPopResult` outcome. -/
 @[step]
 theorem code.pop_with_type.segment (st : code.OpIterState)
-    (outer segment : List code.StackType) (expected : types.ValueType)
+    (outer segment : List code.StackType) (expected : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length) :
     code.pop_with_type st expected ⦃ r =>
@@ -202,7 +202,7 @@ theorem code.pop_with_type.segment (st : code.OpIterState)
 realizations of the remainder extend to the original segment. Errors are `EmptyStack` or
 `TypeMismatch`. -/
 theorem code.pop_with_type.realizes (st : code.OpIterState)
-    (outer segment : List code.StackType) (expected : types.ValueType)
+    (outer segment : List code.StackType) (expected : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length) :
     code.pop_with_type st expected ⦃ r =>
@@ -229,7 +229,7 @@ theorem code.pop_with_type.realizes (st : code.OpIterState)
 the original segment with the expected types appended. Errors are `EmptyStack` or
 `TypeMismatch`. -/
 theorem code.pop_types.realizes (st : code.OpIterState)
-    (outer segment : List code.StackType) (expected : Slice types.ValueType)
+    (outer segment : List code.StackType) (expected : Slice wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length) :
     code.pop_types st expected ⦃ r =>
@@ -319,7 +319,7 @@ theorem code.pop_stack_type.total (st : code.OpIterState) (hshape : Control.Shap
 
 /-- `code.pop_with_type` terminates and preserves `Control.Shape`, including for `Bot` and
 mismatched operands. -/
-theorem code.pop_with_type.total (st : code.OpIterState) (expected : types.ValueType)
+theorem code.pop_with_type.total (st : code.OpIterState) (expected : wasm_types.ValueType)
     (hshape : Control.Shape st) :
     code.pop_with_type st expected ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -342,7 +342,7 @@ theorem code.pop_with_type.total (st : code.OpIterState) (expected : types.Value
     | Err e' => cases he; exact hout
 
 /-- `code.pop_types` terminates and preserves `Control.Shape` on acceptance and rejection. -/
-theorem code.pop_types.total (st : code.OpIterState) (expected : Slice types.ValueType)
+theorem code.pop_types.total (st : code.OpIterState) (expected : Slice wasm_types.ValueType)
     (hshape : Control.Shape st) :
     code.pop_types st expected ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧

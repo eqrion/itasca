@@ -14,7 +14,7 @@ adapter derives source initializer space and all result/error bookkeeping. -/
 theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
     (limits : CompileLimits)
-    (streaming : ∀ (codeStart codeEnd : Usize) (storage : module.Env),
+    (streaming : ∀ (codeStart codeEnd : Usize) (storage : metadata.Env),
       codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
       stream.validate_streaming CompileSource.Insts.ItascaStreamSource
         (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile
@@ -27,7 +27,7 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
   split
   · simp
   · obtain ⟨⟨codeStart,codeEnd⟩,region,bounds⟩ := WP.spec_imp_exists (code_region_spec bytes)
-    obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists module.Env.new.spec
+    obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists metadata.Env.new.spec
     simp only [region,initialized,bind_ok,uncurry_apply_pair]
     obtain ⟨⟨status,scheduler,env⟩,validated,ready⟩ := WP.spec_imp_exists (streaming codeStart codeEnd storage bounds)
     simp only [initialScheduler] at validated

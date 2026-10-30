@@ -11,8 +11,8 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Checked branch arguments form the exact source suffix of a live concrete stack. -/
-theorem reader_br_arguments (st out : code.BodyState) (data : Slice U8) (env : module.Env)
-    (depth : U32) (view : signature.ResultType) (expected : List types.ValueType)
+theorem reader_br_arguments (st out : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (depth : U32) (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (monomorphic : Control.polymorphic st.core = false) (known : ConcreteStack segment)
@@ -39,8 +39,8 @@ theorem reader_br_arguments (st out : code.BodyState) (data : Slice U8) (env : m
     exact ⟨Sequence.stackTypes rest, (realized_concrete_types known (transfer rfl _ (Sequence.realizes_default false rest))).symm⟩
 
 /-- Conditional branches consume exactly the condition and retain the checked target arguments. -/
-theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env : module.Env)
-    (depth : U32) (view : signature.ResultType) (expected : List types.ValueType)
+theorem reader_br_if_arguments (st out : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (depth : U32) (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (monomorphic : Control.polymorphic st.core = false) (known : ConcreteStack segment)

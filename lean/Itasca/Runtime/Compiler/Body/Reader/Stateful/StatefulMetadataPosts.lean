@@ -245,7 +245,7 @@ theorem reader_table_set_wasm2 {data env locals index st} (p : Pending data env 
 theorem reader_ref_null_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
     (hsize : st.core.vals.val.length < Usize.max)
-    (value : types.ElemType) (out : code.OpIterState)
+    (value : wasm_types.ElemType) (out : code.OpIterState)
     (accepted : code.read_ref_null st.core data = .ok (.Ok value,out)) :
     Wasm2.MetadataReaderPost p (code.take_reference_type st.core data) (fun _ => []) (fun rt => some (ModuleConstants.referenceValueType rt)) id
       (fun rt => .REF_NULL (Translate.referenceType rt)) value out := by
@@ -389,7 +389,7 @@ theorem reader_elem_drop_wasm2 {data env locals index st} (p : Pending data env 
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
-    (value : U32 × types.ValueType) (out : code.OpIterState)
+    (value : U32 × wasm_types.ValueType) (out : code.OpIterState)
     (accepted : code.take_element {st.core with pos := next} data env = .ok (.Ok value,out)) :
     Wasm2.MetadataReaderPost p (code.take_element {st.core with pos := next} data env) (fun _ => []) (fun _ => none) id
       (fun a => .ELEM_DROP (.mk_uN a.1.val)) value out := by
@@ -424,7 +424,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
-theorem memory_size_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem memory_size_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_size st data env = metadataOperands (code.read_bulk_memory st data env)
       (fun _ => []) (fun _ => some .I32) id := by
   simp only [code.read_memory_size,code.read_bulk_memory,code.require_memory,alloc.vec.Vec.is_empty,metadataOperands,Simd.readFixed,Std.bind_assoc]
@@ -438,7 +438,7 @@ theorem memory_size_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Std.bind_assoc,Std.uncurry])
 
-theorem memory_grow_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem memory_grow_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_grow st data env = metadataOperands (code.read_bulk_memory st data env)
       (fun _ => [.I32]) (fun _ => some .I32) id := by
   simp only [code.read_memory_grow,code.read_bulk_memory,code.require_memory,alloc.vec.Vec.is_empty,metadataOperands,Simd.readFixed,Std.bind_assoc]
@@ -538,7 +538,7 @@ theorem reader_table_set_post_wasm2 {data env locals index st} (p : Pending data
 theorem reader_ref_null_post_wasm2 {data env locals index st} (p : Pending data env .Wasm2 locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
     (hsize : st.core.vals.val.length < Usize.max)
-    (value : types.ElemType) (out : code.OpIterState)
+    (value : wasm_types.ElemType) (out : code.OpIterState)
     (accepted : code.read_ref_null st.core data = .ok (.Ok value,out)) :
     StatefulReaderPost p out (.refNull (Translate.referenceType value)) := by
   apply (reader_ref_null_wasm2 p hbyte hsize value out accepted).stateful_post (.refNull (Translate.referenceType value)) ?_ hsize
@@ -598,7 +598,7 @@ theorem reader_elem_drop_post_wasm2 {data env locals index st} (p : Pending data
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max)
-    (value : U32 × types.ValueType) (out : code.OpIterState)
+    (value : U32 × wasm_types.ValueType) (out : code.OpIterState)
     (accepted : code.take_element {st.core with pos := next} data env = .ok (.Ok value,out)) :
     StatefulReaderPost p out (.elemDrop value.1.val) := by
   apply (reader_elem_drop_wasm2 p hbyte next hprefix hsize value out accepted).stateful_post (.elemDrop value.1.val) ?_ hsize

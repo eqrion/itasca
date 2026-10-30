@@ -13,7 +13,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before : V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes) :
     code.step_profile visitor st data env ctx index .Wasm2 opcode before =
@@ -35,7 +35,7 @@ theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
   all_goals exact False.elim (ordinary (by decide))
 
 theorem profile_scalar_success {V : Type} (visitor : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before after : V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
@@ -68,7 +68,7 @@ theorem profile_scalar_success {V : Type} (visitor : code.OpVisitor V)
 /-- Successful ordinary Wasm 2 dispatch supplies both the reader capacity
 and the exact scalar callback run, with the pending zipper's result context. -/
 theorem profile_base_success_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
     (index : U32) (opcode : U8) (before after : V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
     (base : opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253])

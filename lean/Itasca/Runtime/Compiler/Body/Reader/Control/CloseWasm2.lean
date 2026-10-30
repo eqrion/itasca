@@ -12,7 +12,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxHeartbeats 2000000
 /-- Successful END/ELSE metadata belongs to the frame actually removed or switched. -/
-theorem reader_end_info_metadata (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem reader_end_info_metadata (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (parents : List code.Ctrl) (frame : code.Ctrl)
     (controls : st.core.ctrls.val = parents ++ [frame])
     (kind : code.LabelKind) (bt : signature.BlockType) (out : code.BodyState)

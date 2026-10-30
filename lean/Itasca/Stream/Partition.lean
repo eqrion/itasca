@@ -19,7 +19,7 @@ variable {profile : ValidationProfile}
 
 /-- Issued batches partition bytes and defined-function indices in submission
 order. Worker completion order is deliberately absent from this relation. -/
-inductive Partition (code : Slice U8) (env : module.Env) :
+inductive Partition (code : Slice U8) (env : metadata.Env) :
     Usize → Nat → List StreamBatch.Issued → Usize → Nat → Prop where
   | nil (pos : Usize) (func : Nat) : pos.val ≤ code.length →
       Partition code env pos func [] pos func

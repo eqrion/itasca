@@ -17,7 +17,7 @@ namespace ReachedBody
 bound the sizes of all remaining source observations. This supplies source
 validation evidence only, never an accepted target run. -/
 def AcceptingSuffixRefinement {V W : Type} (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (final : V) (related : code.BodyState → V → W → Prop) : Prop :=
   ∀ st v w, related st v w →
     code.body_loop_loop source data env ctx typeIndex profile v st = .ok (.Ok (),final) →
@@ -33,7 +33,7 @@ end ReachedBody
 /-- Isolate the independently accepted suffix after a reached step. The
 byte read and source step are the actual extracted loop operations. -/
 theorem code.body_loop_loop.accepted_tail {V : Type}
-    (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (typeIndex : U32) (profile : ValidationProfile) (st out : code.BodyState)
     (before middle final : V) (nonempty : st.core.ctrls.val ≠ [])
     (inbounds : st.core.pos.val < data.length) (next : Usize)
@@ -58,7 +58,7 @@ acceptance proofs. Both complete profiles use this actual common extracted
 loop. The theorem assumes neither target body success nor a target trace. -/
 theorem code.body_loop_loop.accepted_suffix_replay_on {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
     (final : V)
     (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex profile final related)
@@ -119,7 +119,7 @@ visitor-independent initial-state construction. The reference may be the
 validator's accepting recorder; no successful target run is assumed. -/
 theorem code.validate_body_with.accepted_suffix_replay_on {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
     (final : V)
     (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex profile final related)

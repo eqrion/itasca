@@ -25,10 +25,10 @@ def bytes : Slice U8 := alloc.vec.Vec.deref (alloc.vec.Vec.from
    0x01#u8, 0x0B#u8, 0x1A#u8, 0x00#u8, 0x0B#u8] (by scalar_tac))
 
 /-- The function type `[] -> [i32]`. -/
-def resultI32 : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
+def resultI32 : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32] (by scalar_tac)⟩
 
 /-- An environment whose only type is `resultI32`. -/
-def env : module.Env where
+def env : metadata.Env where
   types := alloc.vec.Vec.from [resultI32] (by scalar_tac)
   imports := alloc.vec.Vec.new _
   globals := alloc.vec.Vec.new _

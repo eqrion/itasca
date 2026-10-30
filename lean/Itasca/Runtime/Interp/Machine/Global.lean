@@ -166,7 +166,7 @@ section
 namespace Itasca.Runtime.Interp.Machine.Global
 open Aeneas Aeneas.Std SpecExt
 
-theorem decode_words_value_type (ty : Itasca.types.ValueType) (lo hi : U64) :
+theorem decode_words_value_type (ty : Itasca.wasm_types.ValueType) (lo hi : U64) :
     Compiler.valueType (Store.decodeWords ty lo hi) = sourceType ty := by
   cases ty <;> simp only [Store.decodeWords,Store.decodeRef,Store.decodeElemType,sourceType]
   all_goals first | rfl | (split <;> rfl)

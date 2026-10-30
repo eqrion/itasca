@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- Logical list denoted by a descriptor; no such list is allocated by Rust. -/
-def resolve (env : module.Env) : signature.ResultType → Option (List types.ValueType)
+def resolve (env : metadata.Env) : signature.ResultType → Option (List wasm_types.ValueType)
   | .Empty => some []
   | .One t => some [t]
   | .Type index part => (env.types.val[index.val]?).map fun ft =>
@@ -27,13 +27,13 @@ end Itasca.Wasm2
 namespace Itasca
 
 @[step]
-theorem types.ValueType.eq_spec (a b : types.ValueType) :
-    types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ equal =>
+theorem wasm_types.ValueType.eq_spec (a b : wasm_types.ValueType) :
+    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ equal =>
       equal = true ↔ a = b ⦄ := by
-  cases a <;> cases b <;> simp [types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+  cases a <;> cases b <;> simp [wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 @[step]
-theorem signature.ResultType.len.spec (view : signature.ResultType) (env : module.Env) :
+theorem signature.ResultType.len.spec (view : signature.ResultType) (env : metadata.Env) :
     signature.ResultType.len view env ⦃ r =>
       match r with
       | .Ok n => ∃ ts, Wasm2.resolve env view = some ts ∧ n.val = ts.length
@@ -49,7 +49,7 @@ theorem signature.ResultType.len.spec (view : signature.ResultType) (env : modul
     all_goals simp_all
 
 @[step]
-theorem signature.ResultType.get.spec (view : signature.ResultType) (env : module.Env) (i : Usize) :
+theorem signature.ResultType.get.spec (view : signature.ResultType) (env : metadata.Env) (i : Usize) :
     signature.ResultType.get view env i ⦃ r =>
       match r with
       | .Ok v => ∃ ts, Wasm2.resolve env view = some ts ∧ v = ts[i.val]?
@@ -67,8 +67,8 @@ theorem signature.ResultType.get.spec (view : signature.ResultType) (env : modul
     all_goals have hi : index.val < env.types.val.length := by scalar_tac
     all_goals simp_all
 
-theorem signature.ResultType.len.complete (view : signature.ResultType) (env : module.Env)
-    (ts : List types.ValueType) (hts : Wasm2.resolve env view = some ts) :
+theorem signature.ResultType.len.complete (view : signature.ResultType) (env : metadata.Env)
+    (ts : List wasm_types.ValueType) (hts : Wasm2.resolve env view = some ts) :
     ∃ n, signature.ResultType.len view env = .ok (.Ok n) ∧ n.val = ts.length := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
   cases r with
@@ -78,8 +78,8 @@ theorem signature.ResultType.len.complete (view : signature.ResultType) (env : m
     have he : us = ts := by simpa [hts] using hu.symm
     exact ⟨n, hr, he ▸ hn⟩
 
-theorem signature.ResultType.get.complete (view : signature.ResultType) (env : module.Env)
-    (ts : List types.ValueType) (hts : Wasm2.resolve env view = some ts) (i : Usize) :
+theorem signature.ResultType.get.complete (view : signature.ResultType) (env : metadata.Env)
+    (ts : List wasm_types.ValueType) (hts : Wasm2.resolve env view = some ts) (i : Usize) :
     signature.ResultType.get view env i = .ok (.Ok ts[i.val]?) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.get.spec view env i)
   cases r with

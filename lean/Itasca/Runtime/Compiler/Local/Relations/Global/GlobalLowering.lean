@@ -83,12 +83,12 @@ theorem lower_global_set_eq {A : Type} (ops : runtime.platform.Alloc A)
     globalSetInstruction]
   split <;> simp_all
 
-def valueIsVector : Itasca.types.ValueType → Bool
+def valueIsVector : Itasca.wasm_types.ValueType → Bool
   | .V128 => true
   | _ => false
 
 theorem top_is_v128_shape (values : Slice Itasca.code.StackType)
-    (front : List Itasca.code.StackType) (ty : Itasca.types.ValueType)
+    (front : List Itasca.code.StackType) (ty : Itasca.wasm_types.ValueType)
     (shape : values.val = front ++ [.Val ty]) :
     runtime.compiler.lower.top_is_v128 values = .ok (valueIsVector ty) := by
   have total : runtime.compiler.lower.top_is_v128 values ⦃ result => result = valueIsVector ty ⦄ := by

@@ -23,12 +23,12 @@ theorem check_value_owned {M : Type} (ops : runtime.platform.MemoryBuffer M)
     | none => rfl
     | some a => simp only [Interp.ValueOwnedFits] at hv; simp [runtime.store.Store.check, hv.1]
 
-@[simp] theorem value_type_eq_self (ty : Itasca.types.ValueType) :
-    types.ValueType.Insts.CoreCmpPartialEqValueType.eq ty ty = .ok true := by
+@[simp] theorem value_type_eq_self (ty : Itasca.wasm_types.ValueType) :
+    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq ty ty = .ok true := by
   cases ty <;> rfl
 
-@[simp] theorem element_value_type_exact (ty : Itasca.types.ElemType) :
-    types.ElemType.value_type ty = .ok (elementValueType ty) := by
+@[simp] theorem element_value_type_exact (ty : Itasca.wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty = .ok (elementValueType ty) := by
   cases ty <;> rfl
 
 end Itasca.Runtime.Store

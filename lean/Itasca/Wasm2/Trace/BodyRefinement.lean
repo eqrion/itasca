@@ -28,7 +28,7 @@ visitor state, regardless of whether the iteration accepts or rejects. -/
 theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
     (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (hrelated : related v w) (cf)
     (h : body visitor data env ctx index profile v st = .ok cf) :
     ∃ cf', body replacement data env ctx index profile w st = .ok cf' ∧
@@ -79,7 +79,7 @@ visitor supplies structural progress only. -/
 theorem code.body_loop_loop.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (hrelated : related v w)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
@@ -143,7 +143,7 @@ No valid-byte, well-typed-context, or total-callback premise is assumed. -/
 theorem code.validate_body_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (res, v')) :
@@ -173,7 +173,7 @@ theorem code.validate_body_with.refines {V W : Type}
 /-- Instrumenting body validation preserves its exact outcome and underlying visitor state and
 appends the actual callbacks, including rejection. -/
 theorem code.validate_body_with.instrument_forward {V : Type}
-    (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
+    (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V)
     (log : List Observation) (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (res, v')) :

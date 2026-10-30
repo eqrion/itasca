@@ -15,7 +15,7 @@ that concrete operand to the physical validator stack. -/
 theorem reader_local_get_effect (st out : code.OpIterState) (data : Slice U8) (ctx : code.Context)
     (index : U32) (capacity : st.vals.val.length < Usize.max)
     (accepted : code.read_local_get st data ctx = .ok (.Ok index, out)) :
-    ∃ ty : types.ValueType, ctx.locals.val[index.val]? = some ty ∧
+    ∃ ty : wasm_types.ValueType, ctx.locals.val[index.val]? = some ty ∧
       out.vals.val = st.vals.val ++ [.Val ty] := by
   obtain ⟨⟨result, state⟩, read, values, controls, post⟩ := WP.spec_imp_exists (code.take_local.spec st data ctx)
   dsimp only at values controls post
@@ -54,7 +54,7 @@ theorem reader_local_set_effect (st out : code.OpIterState) (data : Slice U8) (c
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)
     (accepted : code.read_local_set st data ctx = .ok (.Ok index, out)) :
-    ∃ ty : types.ValueType, ctx.locals.val[index.val]? = some ty ∧
+    ∃ ty : wasm_types.ValueType, ctx.locals.val[index.val]? = some ty ∧
       st.vals.val = out.vals.val ++ [.Val ty] := by
   obtain ⟨⟨result, state⟩, read, stateValues, controls, post⟩ := WP.spec_imp_exists (code.take_local.spec st data ctx)
   dsimp only at stateValues controls post
@@ -88,7 +88,7 @@ theorem reader_local_tee_effect (st out : code.OpIterState) (data : Slice U8) (c
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)
     (accepted : code.read_local_tee st data ctx = .ok (.Ok index, out)) :
-    ∃ ty : types.ValueType, ctx.locals.val[index.val]? = some ty ∧
+    ∃ ty : wasm_types.ValueType, ctx.locals.val[index.val]? = some ty ∧
       ∃ rest, st.vals.val = rest ++ [.Val ty] ∧ out.vals.val = st.vals.val := by
   obtain ⟨⟨result, state⟩, read, stateValues, controls, post⟩ := WP.spec_imp_exists (code.take_local.spec st data ctx)
   dsimp only at stateValues controls post

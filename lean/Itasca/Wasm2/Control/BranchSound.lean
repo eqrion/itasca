@@ -18,7 +18,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- Resolved runtime labels agree with the generated context's label space. -/
-def BranchLabels (env : module.Env) (st : code.BodyState) (C : context) : Prop :=
+def BranchLabels (env : metadata.Env) (st : code.BodyState) (C : context) : Prop :=
   ∀ (depth : U32) view, labelAt st depth.val = some view → ∃ ts,
     resolve env view = some ts ∧ C.LABELS[depth.val]? = some (.mk_list (ts.map Translate.valueType))
 
@@ -83,7 +83,7 @@ theorem code.read_multi_value_label.complete (st : code.BodyState) (data : Slice
 /-- Branch acceptance creates a generated typing derivation before discarding
 only the active frame's operands. -/
 theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hvals : st.core.vals.val = outer ++ segment)
     (hbase : c.value_stack_base.val = outer.length)
@@ -134,7 +134,7 @@ theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
 /-- Conditional branches reify the entire checked target signature on their
 fallthrough path, including parameters of multi-value loop labels. -/
 theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (outer segment : List code.StackType)
+    (env : metadata.Env) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)

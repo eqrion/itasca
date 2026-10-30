@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 /-- Actual accepted non-pair callbacks produce their source-indexed emission. -/
 theorem compiler_stateful_single_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
@@ -44,7 +44,7 @@ theorem compiler_stateful_single_emission {A : Type} (ops : runtime.platform.All
 the returned table entry; layout and code evidence refer to the original state. -/
 theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
@@ -87,7 +87,7 @@ theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc
 
 theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front input output : List valtype) (op : SourceMachine.Stateful.Instruction) (a b : U32)
     (signature : SourceMachine.Stateful.Signature C op input output)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)

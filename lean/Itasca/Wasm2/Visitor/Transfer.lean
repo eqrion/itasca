@@ -33,7 +33,7 @@ def bodyGood {V : Type} (cf :
   | .done (r, _) => r = .Ok ()
 
 /-- One iteration of the extracted body loop. -/
-abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
+abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) (st : code.BodyState) :=
   code.body_loop_loop.body visitor data env ctx index profile v st
 
@@ -42,7 +42,7 @@ set_option maxHeartbeats 2000000 in
 same validator state. Only the locals component of the scalar context matters. -/
 theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (profile : ValidationProfile)
     (st : code.BodyState) (v : V) (w : W) (cf)
     (h : body visitor data env ctx index profile v st = .ok cf) (hg : bodyGood cf) :
@@ -98,7 +98,7 @@ open Wasm2.Visitor
 obtained from the accepting replacement, so the source needs no totality premise. -/
 theorem code.body_loop_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : module.Env)
+    (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
     (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (v' : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
@@ -156,7 +156,7 @@ theorem code.body_loop_loop.accepted_transfer {V W : Type}
 successful execution under accepting callback replacement. -/
 theorem code.validate_body_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : module.Env)
+    (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
     (profile : ValidationProfile) (v : V) (w : W) (v' : V)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :

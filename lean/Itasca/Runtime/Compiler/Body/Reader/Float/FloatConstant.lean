@@ -22,7 +22,7 @@ theorem reader_f32_const_wasm2 {data env locals index st}
       code.read_f32_const st.core data = .ok (.Ok value, out) ∧
       out.vals.val = st.core.vals.val ++ [.Val .F32] ∧
       Wasm2.ReaderPost p out (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
-        (p.current.vals ++ [code.StackType.Val types.ValueType.F32]) := by
+        (p.current.vals ++ [code.StackType.Val wasm_types.ValueType.F32]) := by
   rw [dispatch_f32_const] at accepted
   obtain ⟨value, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   have effect := p.read_f32_const capacity byte
@@ -42,7 +42,7 @@ theorem reader_f64_const_wasm2 {data env locals index st}
       code.read_f64_const st.core data = .ok (.Ok value, out) ∧
       out.vals.val = st.core.vals.val ++ [.Val .F64] ∧
       Wasm2.ReaderPost p out (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
-        (p.current.vals ++ [code.StackType.Val types.ValueType.F64]) := by
+        (p.current.vals ++ [code.StackType.Val wasm_types.ValueType.F64]) := by
   rw [dispatch_f64_const] at accepted
   obtain ⟨value, read, callback⟩ := CoreVisitor.run.accepted _ _ _ _ _ accepted
   have effect := p.read_f64_const capacity byte

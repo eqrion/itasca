@@ -30,7 +30,7 @@ theorem CallEntryEffect.preserve_binding {M : Type} {store : runtime.store.Store
 theorem CallEntryEffect.callee_binding {M : Type}
     (store : runtime.store.Store M) (before after : runtime.interp.Execution)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex base : Usize)
+    (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex base : Usize)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (args defaults : List val) (body : List instr)
     (effect : CallEntryEffect before after instanceIndex functionIndex base compiled)

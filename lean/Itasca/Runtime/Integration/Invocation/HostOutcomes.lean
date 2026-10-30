@@ -28,7 +28,7 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     (valid : invariant code store) (sourceWf : wf_store (Store.decodeStore view code store))
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)

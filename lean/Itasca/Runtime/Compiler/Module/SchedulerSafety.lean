@@ -8,7 +8,7 @@ open runtime.compiler
 
 /-- The eager scheduler's raw metadata and queue bounds at the next submitted
 function index. No successful final module or semantic code certificate is used. -/
-structure SchedulerReady {A : Type} (env : module.Env) (cursor : Nat)
+structure SchedulerReady {A : Type} (env : metadata.Env) (cursor : Nat)
     (scheduler : CompileScheduler A) : Prop where
   signatures : SignatureSequence scheduler.signatures.val env.types.val
   functionSlots : scheduler.func_param_slots.val.map (fun word => word.val) =
@@ -28,7 +28,7 @@ structure SchedulerInitial {A : Type} (scheduler : CompileScheduler A) : Prop wh
 
 @[step] theorem compiler_environment_safety {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : CompileScheduler A)
-    (env : module.Env) (initial : SchedulerInitial scheduler) :
+    (env : metadata.Env) (initial : SchedulerInitial scheduler) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready ops scheduler env ⦃ out =>
       ∀ config, out.1 = .Ok config → SchedulerReady env 0 out.2 ⦄ := by
   obtain ⟨⟨status,after⟩,run,post⟩ := WP.spec_imp_exists
@@ -47,7 +47,7 @@ structure SchedulerInitial {A : Type} (scheduler : CompileScheduler A) : Prop wh
   · simp [fields.1,initial.queue]
 
 @[step] theorem compiler_poll_safety {A : Type} (ops : runtime.platform.Alloc A)
-    (env : module.Env) (cursor : Nat) (scheduler : CompileScheduler A)
+    (env : metadata.Env) (cursor : Nat) (scheduler : CompileScheduler A)
     (ready : SchedulerReady env cursor scheduler) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch ops scheduler ⦃ out =>
       ∀ batch, out.1 = .Ok batch → SchedulerReady env cursor out.2 ⦄ := by

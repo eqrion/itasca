@@ -6,9 +6,9 @@ import Mathlib.Data.List.Forall2
 # Import and export types
 
 `ImportResolves` and `ExportResolves` give the declarative external type of an import or export
-by looking up the environment's index spaces. `module.import_types.resolved` and
-`module.export_types.resolved` show that the accessors `module.import_types` and
-`module.export_types` return exactly a list of types that resolves entry by entry. `externalType`
+by looking up the environment's index spaces. `metadata.import_types.resolved` and
+`metadata.export_types.resolved` show that the accessors `metadata.import_types` and
+`metadata.export_types` return exactly a list of types that resolves entry by entry. `externalType`
 translates an external type to SpecTec's `externtype`.
 -/
 
@@ -18,7 +18,7 @@ namespace Itasca.ModuleExternals
 
 /-- The external type `xt` is what import `imp` denotes, found by index-space lookup rather than by
 running the accessor. -/
-def ImportResolves (env : module.Env) (imp : module.Import) (xt : types.ExternType) : Prop :=
+def ImportResolves (env : metadata.Env) (imp : metadata.Import) (xt : wasm_types.ExternType) : Prop :=
   match imp.desc with
   | .Func idx => ∃ hi : idx.val < env.types.val.length, xt = .Func env.types.val[idx.val]
   | .Table tt => xt = .Table tt
@@ -26,7 +26,7 @@ def ImportResolves (env : module.Env) (imp : module.Import) (xt : types.ExternTy
   | .Global gt => xt = .Global gt
 
 /-- The external type `xt` is what export `exp` denotes, looked up in the merged index spaces. -/
-def ExportResolves (env : module.Env) (exp : module.Export) (xt : types.ExternType) : Prop :=
+def ExportResolves (env : metadata.Env) (exp : metadata.Export) (xt : wasm_types.ExternType) : Prop :=
   match exp.desc with
   | .Func idx => ∃ hi : idx.val < env.func_types.val.length, xt = .Func env.func_types.val[idx.val]
   | .Table idx => ∃ hi : idx.val < env.table_types.val.length, xt = .Table env.table_types.val[idx.val]
@@ -34,7 +34,7 @@ def ExportResolves (env : module.Env) (exp : module.Export) (xt : types.ExternTy
   | .Global idx => ∃ hi : idx.val < env.global_types.val.length, xt = .Global env.global_types.val[idx.val]
 
 /-- The SpecTec external type for an extracted external type. -/
-def externalType : types.ExternType → externtype
+def externalType : wasm_types.ExternType → externtype
   | .Func ft => .FUNC (EnvTranslation.funcType ft)
   | .Table tt => .TABLE (EnvTranslation.tableType tt)
   | .Memory mt => .MEM (EnvTranslation.memType mt)
@@ -44,10 +44,10 @@ end Itasca.ModuleExternals
 
 namespace Itasca
 
-private theorem lookup_type_resolved (env : module.Env) (idx : U32)
+private theorem lookup_type_resolved (env : metadata.Env) (idx : U32)
     (hi : idx.val < env.types.val.length) :
-    module.lookup_type env idx = .ok (.Ok env.types.val[idx.val]) := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.lookup_type.spec env idx)
+    metadata.lookup_type env idx = .ok (.Ok env.types.val[idx.val]) := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.lookup_type.spec env idx)
   cases r with
   | Ok ft =>
     obtain ⟨_, he⟩ := hp
@@ -56,22 +56,22 @@ private theorem lookup_type_resolved (env : module.Env) (idx : U32)
     have := hp.2
     omega
 
-/-- The import loop of `module.import_types` returns the expected list when the imports resolve to
+/-- The import loop of `metadata.import_types` returns the expected list when the imports resolve to
 it. -/
-theorem module.import_types_loop.resolved (env : module.Env) (expected : List types.ExternType)
+theorem metadata.import_types_loop.resolved (env : metadata.Env) (expected : List wasm_types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ImportResolves env) env.imports.val expected)
-    (out : alloc.vec.Vec types.ExternType) (i : Usize)
+    (out : alloc.vec.Vec wasm_types.ExternType) (i : Usize)
     (hi : i.val ≤ expected.length) (hout : out.val = expected.take i.val) :
-    module.import_types_loop env out i ⦃ r =>
+    metadata.import_types_loop env out i ⦃ r =>
       ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
   have hlen := hresolve.length_eq
   have hbound : expected.length ≤ Usize.max := by rw [← hlen]; scalar_tac
-  unfold module.import_types_loop
+  unfold metadata.import_types_loop
   apply loop.spec_decr_nat (fun p => expected.length - p.2.val)
     (fun p => p.2.val ≤ expected.length ∧ p.1.val = expected.take p.2.val)
   · rintro ⟨v, j⟩ ⟨hj, hv⟩
     dsimp only at hj hv
-    unfold module.import_types_loop.body
+    unfold metadata.import_types_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -127,29 +127,29 @@ theorem module.import_types_loop.resolved (env : module.Env) (expected : List ty
         · scalar_tac
   · exact ⟨hi, hout⟩
 
-/-- `module.import_types` returns the independently resolved import types. -/
-theorem module.import_types.resolved (env : module.Env) (expected : List types.ExternType)
+/-- `metadata.import_types` returns the independently resolved import types. -/
+theorem metadata.import_types.resolved (env : metadata.Env) (expected : List wasm_types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ImportResolves env) env.imports.val expected) :
-    module.import_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
-  simpa [module.import_types] using module.import_types_loop.resolved env expected hresolve
+    metadata.import_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
+  simpa [metadata.import_types] using metadata.import_types_loop.resolved env expected hresolve
     (alloc.vec.Vec.new _) 0#usize (by simp) (by simp)
 
-/-- The export loop of `module.export_types` returns the expected list when the exports resolve
+/-- The export loop of `metadata.export_types` returns the expected list when the exports resolve
 against the merged imported and defined index spaces. -/
-theorem module.export_types_loop.resolved (env : module.Env) (expected : List types.ExternType)
+theorem metadata.export_types_loop.resolved (env : metadata.Env) (expected : List wasm_types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val expected)
-    (out : alloc.vec.Vec types.ExternType) (i : Usize)
+    (out : alloc.vec.Vec wasm_types.ExternType) (i : Usize)
     (hi : i.val ≤ expected.length) (hout : out.val = expected.take i.val) :
-    module.export_types_loop env out i ⦃ r =>
+    metadata.export_types_loop env out i ⦃ r =>
       ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
   have hlen := hresolve.length_eq
   have hbound : expected.length ≤ Usize.max := by rw [← hlen]; scalar_tac
-  unfold module.export_types_loop
+  unfold metadata.export_types_loop
   apply loop.spec_decr_nat (fun p => expected.length - p.2.val)
     (fun p => p.2.val ≤ expected.length ∧ p.1.val = expected.take p.2.val)
   · rintro ⟨v, j⟩ ⟨hj, hv⟩
     dsimp only at hj hv
-    unfold module.export_types_loop.body
+    unfold metadata.export_types_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -173,11 +173,11 @@ theorem module.export_types_loop.resolved (env : module.Env) (expected : List ty
         simp_all [List.take_succ_eq_append_getElem hlt'] <;> omega
   · exact ⟨hi, hout⟩
 
-/-- `module.export_types` returns the independently resolved export types. -/
-theorem module.export_types.resolved (env : module.Env) (expected : List types.ExternType)
+/-- `metadata.export_types` returns the independently resolved export types. -/
+theorem metadata.export_types.resolved (env : metadata.Env) (expected : List wasm_types.ExternType)
     (hresolve : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val expected) :
-    module.export_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
-  simpa [module.export_types] using module.export_types_loop.resolved env expected hresolve
+    metadata.export_types env ⦃ r => ∃ result, r = .Ok result ∧ result.val = expected ⦄ := by
+  simpa [metadata.export_types] using metadata.export_types_loop.resolved env expected hresolve
     (alloc.vec.Vec.new _) 0#usize (by simp) (by simp)
 
 end Itasca

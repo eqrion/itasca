@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
-def Program (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+def Program (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (tokens : List Token) (ops : List instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (input output : List valtype),
@@ -32,7 +32,7 @@ def Program (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
 
 /-- The normalized head instruction has a primitive generated typing rule
 and a preserved prefix on its operand stack. -/
-def AtomProgram (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+def AtomProgram (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (tokens : List Token) (op : instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
@@ -46,14 +46,14 @@ def AtomProgram (data : Slice U8) (env : module.Env) (profile : ValidationProfil
       f.Output (front ++ output) s ∧ Bounds data s
 
 /-- `Program` holds for every emitted token list shorter than `n`. -/
-def SmallerPrograms (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+def SmallerPrograms (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (n : Nat) : Prop :=
   ∀ tokens ops, tokens.length < n → Emits tokens ops → Program data env profile ctx index tokens ops
 
 /-- Left-to-right execution follows a declarative derivation even when that
 derivation uses arbitrary sequence, framing, and subsumption rules. The atom
 obligation recursively receives only strictly smaller nested bodies. -/
-theorem program_of_atoms (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (hatom : ∀ tokens op, Atom tokens op →
       SmallerPrograms data env profile ctx index tokens.length →

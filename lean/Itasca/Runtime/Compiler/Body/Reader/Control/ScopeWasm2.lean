@@ -72,7 +72,7 @@ theorem SourceScopeMatchesWasm2.resume {scope parent child instruction}
 
 theorem SourceScopeMatchesWasm2.fresh (bt : signature.BlockType) (form : Wasm2.Frames.Form)
     (scopeForm : ScopeForm) (matched : ScopeFormMatchesWasm2 bt scopeForm form)
-    (base : Usize) (ins outs : List types.ValueType) (front : List valtype) (entry bodyPc : Nat) (entered : Bool) :
+    (base : Usize) (ins outs : List wasm_types.ValueType) (front : List valtype) (entry bodyPc : Nat) (entered : Bool) :
     SourceScopeMatchesWasm2
       ⟨scopeForm, front, (form.params ins).map Translate.valueType, outs.map Translate.valueType, [], entry, bodyPc, entered⟩
       (Wasm2.Frames.Saved.fresh base form bt ins outs) :=

@@ -29,7 +29,7 @@ theorem initializer_emit_success {A : Type} (ops : runtime.platform.Alloc A)
 /-- Integer offsets have a single instruction and no literal-pool allocation. -/
 theorem initializer_offset_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
-    (before after : runtime.bytecode.CompiledFunction) (expr : Itasca.types.ConstExpr)
+    (before after : runtime.bytecode.CompiledFunction) (expr : Itasca.wasm_types.ConstExpr)
     (offset : (∃ bits, expr = .I32 bits) ∨ (∃ index, expr = .GlobalGet index))
     (success : runtime.compiler.initialize.constant ops budget before expr .I32 0#u32 =
       .ok (.Ok (), afterBudget, after)) :

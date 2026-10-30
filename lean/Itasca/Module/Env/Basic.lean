@@ -7,10 +7,10 @@ import Itasca.Profile.Types
 /-!
 # Decoded module environments
 
-Invariants of the `module.Env` built by `module.validate_env`. `Cache` says the merged index
+Invariants of the `metadata.Env` built by `metadata.validate_env`. `Cache` says the merged index
 spaces are imports followed by definitions, `Valid` collects the semantic checks that can be
 read off the environment, and `Bounded` tracks the cursor-relative size bounds used for
-overflow-free arithmetic. `module.Env.new.spec` shows the empty environment satisfies all three.
+overflow-free arithmetic. `metadata.Env.new.spec` shows the empty environment satisfies all three.
 -/
 
 open Aeneas Aeneas.Std
@@ -18,40 +18,40 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleEnv
 
 /-- The type indices of the function imports, in import order. -/
-def importedFuncs (imports : List module.Import) : List U32 :=
+def importedFuncs (imports : List metadata.Import) : List U32 :=
   imports.filterMap fun entry => match entry.desc with | .Func idx => some idx | _ => none
 
 /-- The types of the global imports, in import order. -/
-def importedGlobals (imports : List module.Import) : List types.GlobalType :=
+def importedGlobals (imports : List metadata.Import) : List wasm_types.GlobalType :=
   imports.filterMap fun entry => match entry.desc with | .Global gt => some gt | _ => none
 
 /-- The types of the table imports, in import order. -/
-def importedTables (imports : List module.Import) : List types.TableType :=
+def importedTables (imports : List metadata.Import) : List wasm_types.TableType :=
   imports.filterMap fun entry => match entry.desc with | .Table tt => some tt | _ => none
 
 /-- The types of the memory imports, in import order. -/
-def importedMems (imports : List module.Import) : List types.MemType :=
+def importedMems (imports : List metadata.Import) : List wasm_types.MemType :=
   imports.filterMap fun entry => match entry.desc with | .Memory mt => some mt | _ => none
 
 /-- Type index `idx` is in range of `typeList` and denotes the function type `ft`. -/
-def Resolves (typeList : List types.FuncType) (idx : U32) (ft : types.FuncType) : Prop :=
+def Resolves (typeList : List wasm_types.FuncType) (idx : U32) (ft : wasm_types.FuncType) : Prop :=
   ∃ hi : idx.val < typeList.length, typeList[idx.val] = ft
 
 /-- The environment's merged index spaces are imports followed by definitions. The defined
 tables and memories are explicit parameters because the environment stores only the merged
 lists. -/
-structure Cache (env : module.Env) (tables : List types.TableType) (memories : List types.MemType) : Prop where
+structure Cache (env : metadata.Env) (tables : List wasm_types.TableType) (memories : List wasm_types.MemType) : Prop where
   funcs : List.Forall₂ (Resolves env.types.val)
     (importedFuncs env.imports.val ++ env.func_type_indices.val) env.func_types.val
   numFuncs : env.num_imported_funcs.val = (importedFuncs env.imports.val).length
-  globals : env.global_types.val = importedGlobals env.imports.val ++ env.globals.val.map module.Global.gtype
+  globals : env.global_types.val = importedGlobals env.imports.val ++ env.globals.val.map metadata.Global.gtype
   numGlobals : env.num_imported_globals.val = (importedGlobals env.imports.val).length
   tables : env.table_types.val = importedTables env.imports.val ++ tables
   memories : env.mem_types.val = importedMems env.imports.val ++ memories
 
 /-- The semantic checks that are stored in, or derivable from, the environment under `profile`.
 Byte-format evidence is tracked separately. -/
-structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Prop where
+structure Valid (env : metadata.Env) (profile : ValidationProfile := .Wasm1) : Prop where
   types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
@@ -70,7 +70,7 @@ structure Valid (env : module.Env) (profile : ValidationProfile := .Wasm1) : Pro
 
 /-- Every list length and counter in the environment is at most the byte cursor `pos`, which
 keeps allocation and counter arithmetic within range. -/
-structure Bounded (env : module.Env) (pos : Nat) : Prop where
+structure Bounded (env : metadata.Env) (pos : Nat) : Prop where
   types : env.types.val.length ≤ pos
   imports : env.imports.val.length ≤ pos
   globals : env.globals.val.length ≤ pos
@@ -95,7 +95,7 @@ theorem Cache.global_prefix {env tables memories} (h : Cache env tables memories
   rw [h.globals, h.numGlobals, List.take_left]
 
 theorem Cache.func_property {env tables memories} (h : Cache env tables memories)
-    {P : types.FuncType → Prop} (ht : ∀ ft ∈ env.types.val, P ft) :
+    {P : wasm_types.FuncType → Prop} (ht : ∀ ft ∈ env.types.val, P ft) :
     ∀ ft ∈ env.func_types.val, P ft := by
   intro ft hf
   obtain ⟨j, hj, rfl⟩ := List.mem_iff_getElem.mp hf
@@ -154,7 +154,7 @@ theorem Cache.imports_resolve {env tables memories} (h : Cache env tables memori
     cases hd : entry.desc with
     | Func idx =>
       have hi : idx.val < env.types.val.length := hb idx (by simp [importedFuncs, hd])
-      exact ⟨.Func env.types.val[idx.val] :: rest, .cons (by simpa [ModuleExternals.ImportResolves, hd] using (show ∃ hj : idx.val < env.types.val.length, (types.ExternType.Func env.types.val[idx.val]) = .Func env.types.val[idx.val] from ⟨hi, rfl⟩)) hr⟩
+      exact ⟨.Func env.types.val[idx.val] :: rest, .cons (by simpa [ModuleExternals.ImportResolves, hd] using (show ∃ hj : idx.val < env.types.val.length, (wasm_types.ExternType.Func env.types.val[idx.val]) = .Func env.types.val[idx.val] from ⟨hi, rfl⟩)) hr⟩
     | Table tt => exact ⟨.Table tt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
     | Memory mt => exact ⟨.Memory mt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
     | Global gt => exact ⟨.Global gt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
@@ -176,9 +176,9 @@ namespace Itasca
 
 /-- The empty environment is cached, valid and bounded by `0`. -/
 @[step]
-theorem module.Env.new.spec : module.Env.new ⦃ env =>
+theorem metadata.Env.new.spec : metadata.Env.new ⦃ env =>
     ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env ∧ ModuleEnv.Bounded env 0 ⦄ := by
-  unfold module.Env.new
+  unfold metadata.Env.new
   simp only [WP.spec_ok]
   constructor
   · constructor <;> simp [ModuleEnv.importedFuncs, ModuleEnv.importedGlobals,

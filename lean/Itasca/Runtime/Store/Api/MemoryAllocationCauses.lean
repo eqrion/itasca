@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (ty : Itasca.types.MemType) : runtime.ResourceLimit → Prop
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.MemType) : runtime.ResourceLimit → Prop
   | .Objects => store.limits.max_objects.val ≤ objectCount store
   | .Allocation =>
       store.limits.max_memory_bytes.val < store.memory_bytes.val + ty.limits.min.val * 65536 ∨
@@ -16,7 +16,7 @@ budget comparison or the exact memory-vector allocator refusal. -/
 theorem define_memory_resource_causes {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (ty : Itasca.types.MemType) (buffer : M)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.MemType) (buffer : M)
     (bound : objectCount store ≤ Usize.max) :
     runtime.store.Store.define_memory_with memory allocator store ty buffer ⦃ out => ∀ limit,
       out.1 = .Err (.Exhausted limit) → out.2 = store ∧ MemoryAllocationCause allocator store ty limit ⦄ := by

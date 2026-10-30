@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 theorem code.step_local_get.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_GET v =
       CoreVisitor.run (code.read_local_get st data ctx) visitor.on_local_get v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -29,7 +29,7 @@ theorem code.step_local_get.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_local_set.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_SET v =
       CoreVisitor.run (code.read_local_set st data ctx) visitor.on_local_set v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -41,7 +41,7 @@ theorem code.step_local_set.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_local_tee.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_TEE v =
       CoreVisitor.run (code.read_local_tee st data ctx) visitor.on_local_tee v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -53,7 +53,7 @@ theorem code.step_local_tee.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_global_get.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_GLOBAL_GET v =
       CoreVisitor.run (code.read_global_get st data env) visitor.on_global_get v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -65,7 +65,7 @@ theorem code.step_global_get.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_global_set.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_GLOBAL_SET v =
       CoreVisitor.run (code.read_global_set st data env) visitor.on_global_set v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -77,7 +77,7 @@ theorem code.step_global_set.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_memory_size.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_MEMORY_SIZE v =
       CoreVisitor.run (code.read_memory_size st data env) (fun v s _ => visitor.on_memory_size v s) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -89,7 +89,7 @@ theorem code.step_memory_size.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_memory_grow.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_MEMORY_GROW v =
       CoreVisitor.run (code.read_memory_grow st data env) (fun v s _ => visitor.on_memory_grow v s) v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -103,7 +103,7 @@ theorem code.step_memory_grow.dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- For an opcode with a row in `MemoryMeaning.opcodeMeaning`, `code.step` runs `code.read_store`
 or `code.read_load` and then `code.visit_memory`. -/
 theorem code.step_memory.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
     (opcode : U8) (operation : MemoryMeaning.Operation)
     (hrow : MemoryMeaning.opcodeMeaning opcode = some operation) :
     code.step visitor st data env ctx opcode v =

@@ -5,10 +5,10 @@ import Itasca.Examples.Module.Support
 /-!
 # UTF-8 in custom-section names
 
-Checks the four-byte UTF-8 boundary of `module.validate_utf8` and `module.utf8_sequence_len`.
+Checks the four-byte UTF-8 boundary of `metadata.validate_utf8` and `metadata.utf8_sequence_len`.
 U+10FFFF (`f4 8f bf bf`) is accepted, while a surrogate (`ed a0 80`) and the first value above
 U+10FFFF (`f4 90 80 80`) are rejected with `InvalidUtf8`. The same bytes as a custom-section
-name are accepted or rejected by `module.validate_module` accordingly.
+name are accepted or rejected by `metadata.validate_module` accordingly.
 -/
 
 open Aeneas Aeneas.Std
@@ -20,12 +20,12 @@ open ModuleSupport (bytes)
 /-- The UTF-8 bytes `f4 8f bf bf` of U+10FFFF, the largest Unicode scalar. -/
 def lastScalar : Slice U8 := bytes [0xF4#u8, 0x8F#u8, 0xBF#u8, 0xBF#u8]
 
-/-- `module.utf8_sequence_len` reads `lastScalar` as one four-byte sequence. -/
-theorem last_scalar_sequence : module.utf8_sequence_len lastScalar 0#usize = .ok (.Ok 4#usize) := by
-  have hs : module.utf8_sequence_len lastScalar 0#usize ⦃ r => r = .Ok 4#usize ⦄ := by
+/-- `metadata.utf8_sequence_len` reads `lastScalar` as one four-byte sequence. -/
+theorem last_scalar_sequence : metadata.utf8_sequence_len lastScalar 0#usize = .ok (.Ok 4#usize) := by
+  have hs : metadata.utf8_sequence_len lastScalar 0#usize ⦃ r => r = .Ok 4#usize ⦄ := by
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [lastScalar, bytes, alloc.vec.Vec.deref]
-    unfold module.utf8_sequence_len module.utf8_cont
+    unfold metadata.utf8_sequence_len metadata.utf8_cont
     step
     simp_all
     iterate 8
@@ -41,13 +41,13 @@ def surrogate : Slice U8 := bytes [0xED#u8, 0xA0#u8, 0x80#u8]
 /-- The bytes `f4 90 80 80`, which encode U+110000, above the largest scalar. -/
 def beyondUnicode : Slice U8 := bytes [0xF4#u8, 0x90#u8, 0x80#u8, 0x80#u8]
 
-/-- `module.utf8_sequence_len` rejects `surrogate` with `InvalidUtf8`. -/
-theorem surrogate_sequence_rejected : module.utf8_sequence_len surrogate 0#usize =
+/-- `metadata.utf8_sequence_len` rejects `surrogate` with `InvalidUtf8`. -/
+theorem surrogate_sequence_rejected : metadata.utf8_sequence_len surrogate 0#usize =
     .ok (.Err .InvalidUtf8) := by
-  have hs : module.utf8_sequence_len surrogate 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
+  have hs : metadata.utf8_sequence_len surrogate 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [surrogate, bytes, alloc.vec.Vec.deref]
-    unfold module.utf8_sequence_len module.utf8_cont
+    unfold metadata.utf8_sequence_len metadata.utf8_cont
     step
     simp_all
     iterate 4
@@ -57,13 +57,13 @@ theorem surrogate_sequence_rejected : module.utf8_sequence_len surrogate 0#usize
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-/-- `module.utf8_sequence_len` rejects `beyondUnicode` with `InvalidUtf8`. -/
-theorem beyond_unicode_sequence_rejected : module.utf8_sequence_len beyondUnicode 0#usize =
+/-- `metadata.utf8_sequence_len` rejects `beyondUnicode` with `InvalidUtf8`. -/
+theorem beyond_unicode_sequence_rejected : metadata.utf8_sequence_len beyondUnicode 0#usize =
     .ok (.Err .InvalidUtf8) := by
-  have hs : module.utf8_sequence_len beyondUnicode 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
+  have hs : metadata.utf8_sequence_len beyondUnicode 0#usize ⦃ r => r = .Err .InvalidUtf8 ⦄ := by
     have hmax : 4 ≤ Usize.max := by scalar_tac
     simp only [beyondUnicode, bytes, alloc.vec.Vec.deref]
-    unfold module.utf8_sequence_len module.utf8_cont
+    unfold metadata.utf8_sequence_len metadata.utf8_cont
     step
     simp_all
     iterate 4
@@ -74,33 +74,33 @@ theorem beyond_unicode_sequence_rejected : module.utf8_sequence_len beyondUnicod
   exact hr
 
 private theorem utf8_reject (data : Slice U8) (h : 0 < data.length)
-    (hr : module.utf8_sequence_len data 0#usize = .ok (.Err .InvalidUtf8)) :
-    module.validate_utf8 data = .ok (.Err .InvalidUtf8) := by
+    (hr : metadata.utf8_sequence_len data 0#usize = .ok (.Err .InvalidUtf8)) :
+    metadata.validate_utf8 data = .ok (.Err .InvalidUtf8) := by
   have hb : ¬ 0#usize ≥ data.len := by scalar_tac
-  unfold module.validate_utf8 module.validate_utf8_loop
+  unfold metadata.validate_utf8 metadata.validate_utf8_loop
   rw [loop]
-  simp [module.validate_utf8_loop.body, hb, hr,
+  simp [metadata.validate_utf8_loop.body, hb, hr,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-/-- `module.validate_utf8` rejects `surrogate`. -/
-theorem surrogate_rejected : module.validate_utf8 surrogate = .ok (.Err .InvalidUtf8) :=
+/-- `metadata.validate_utf8` rejects `surrogate`. -/
+theorem surrogate_rejected : metadata.validate_utf8 surrogate = .ok (.Err .InvalidUtf8) :=
   utf8_reject surrogate (by decide) surrogate_sequence_rejected
 
-/-- `module.validate_utf8` rejects `beyondUnicode`. -/
-theorem beyond_unicode_rejected : module.validate_utf8 beyondUnicode = .ok (.Err .InvalidUtf8) :=
+/-- `metadata.validate_utf8` rejects `beyondUnicode`. -/
+theorem beyond_unicode_rejected : metadata.validate_utf8 beyondUnicode = .ok (.Err .InvalidUtf8) :=
   utf8_reject beyondUnicode (by decide) beyond_unicode_sequence_rejected
 
-/-- `module.validate_utf8` accepts `lastScalar`. -/
-theorem last_scalar_accepted : module.validate_utf8 lastScalar = .ok (.Ok ()) := by
+/-- `metadata.validate_utf8` accepts `lastScalar`. -/
+theorem last_scalar_accepted : metadata.validate_utf8 lastScalar = .ok (.Ok ()) := by
   have hnext : (0#usize + 4#usize : Result Usize) = .ok 4#usize := by
     have hs : (0#usize + 4#usize) ⦃ r => r = 4#usize ⦄ := by step*
     obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
     exact hr
   have hb : ¬ 0#usize ≥ lastScalar.len := by decide
-  unfold module.validate_utf8 module.validate_utf8_loop
+  unfold metadata.validate_utf8 metadata.validate_utf8_loop
   rw [loop]
-  simp only [module.validate_utf8_loop.body, hb, ↓reduceIte, last_scalar_sequence,
+  simp only [metadata.validate_utf8_loop.body, hb, ↓reduceIte, last_scalar_sequence,
     bind_ok, core.result.Result.Insts.CoreOpsTry.branch, hnext]
   rw [loop]
   simp [lastScalar, bytes, alloc.vec.Vec.deref]
@@ -119,47 +119,47 @@ def fourByteCustom (a b c d : U8) : Slice U8 :=
 private theorem small_leb (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val := by
   exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Leb128.payload, Nat.mod_eq_of_lt h]⟩
 
-/-- `module.validate_module` on `fourByteCustom a b c d` returns the empty module when
-`module.validate_utf8` accepts the name, and returns its error otherwise. -/
+/-- `metadata.validate_module` on `fourByteCustom a b c d` returns the empty module when
+`metadata.validate_utf8` accepts the name, and returns its error otherwise. -/
 private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Result Unit error.Error)
-    (hutf8 : module.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
-    module.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
+    (hutf8 : metadata.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
+    metadata.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
       | .Ok _ => .Ok Examples.ModuleBasic.emptyModule
       | .Err e => .Err e) := by
   let data := fourByteCustom a b c d
   let nm := alloc.vec.Vec.from [a,b,c,d] (by simp; scalar_tac)
   have hlen : Slice.len data = 15#usize := UScalar.eq_of_val_eq rfl
-  have hheader := module.read_header.complete data 8#usize
+  have hheader := metadata.read_header.complete data 8#usize
     (by constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion])
   have hsection : ModuleBinary.SectionHeader data 8#usize 0#u8 10#usize 15#usize := by
     refine ⟨9#usize, 5#u32, ⟨[0#u8], rfl, ?_⟩, ?_, rfl, by simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]⟩
     · constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
     · refine ⟨[5#u8], ?_, rfl, ?_, small_leb 5#u8 (by decide)⟩ <;>
         simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
-  have hread := module.read_section_header.complete data 8#usize 0#u8 10#usize 15#usize hsection
+  have hread := metadata.read_section_header.complete data 8#usize 0#u8 10#usize 15#usize hsection
   have hnamebytes : ModuleBinary.At ModuleBinary.ByteVecEncoding data 10#usize nm.val 15#usize := by
     refine ⟨[4#u8,a,b,c,d], ModuleBinary.ByteVecEncoding.iff.mpr ⟨[4#u8], small_leb 4#u8 (by decide), rfl⟩, ?_⟩
     constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
-  have hname := module.decode_name.from_utf8 data 10#usize nm 15#usize hnamebytes reply hutf8
-  have henv : module.validate_env data .Wasm1 = .ok (match reply with
+  have hname := metadata.decode_name.from_utf8 data 10#usize nm 15#usize hnamebytes reply hutf8
+  have henv : metadata.validate_env data .Wasm1 = .ok (match reply with
       | .Ok _ => .Ok (Examples.ModuleBasic.emptyEnv, 15#usize)
       | .Err e => .Err e) := by
-    simp [module.validate_env, module.validate_env_with, module.Env.new, hheader,
+    simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hheader,
       core.result.Result.Insts.CoreOpsTry.branch, Examples.ModuleBasic.emptyEnv]
-    unfold module.validate_env_with_loop
+    unfold metadata.validate_env_with_loop
     rw [loop]
-    simp only [module.validate_env_with_loop.body, hlen,
+    simp only [metadata.validate_env_with_loop.body, hlen,
       show (8#usize ≥ 15#usize) = False from by decide, ↓reduceIte,
-      hread, bind_ok, core.result.Result.Insts.CoreOpsTry.branch, module.SECTION_CUSTOM]
+      hread, bind_ok, core.result.Result.Insts.CoreOpsTry.branch, metadata.SECTION_CUSTOM]
     cases reply with
     | Err e =>
-        simp [module.decode_custom_section, hname,
+        simp [metadata.decode_custom_section, hname,
           core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
-        simp [module.decode_custom_section, hname,
+        simp [metadata.decode_custom_section, hname,
           core.result.Result.Insts.CoreOpsTry.branch,
-          module.ModuleVisitor.on_custom_section.default]
+          metadata.ModuleVisitor.on_custom_section.default]
         rw [loop]
         simp
   have hsize : data.length ≤ limits.MAX_MODULE_BYTES.val := by
@@ -175,18 +175,18 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
 
 /-- A custom section named U+10FFFF is accepted. -/
 theorem last_scalar_module_accepted :
-    module.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
+    metadata.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
       .ok (.Ok Examples.ModuleBasic.emptyModule) :=
   four_byte_custom_reply _ _ _ _ (.Ok ()) last_scalar_accepted
 
 /-- The accepted module with a custom section named U+10FFFF has a soundness certificate. -/
 theorem last_scalar_module_validated :
     ModuleSound.Validated (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) Examples.ModuleBasic.emptyModule :=
-  module.validate_module.wasm_sound _ _ last_scalar_module_accepted
+  metadata.validate_module.wasm_sound _ _ last_scalar_module_accepted
 
 /-- A custom section named by `f4 90 80 80` is rejected with `InvalidUtf8`. -/
 theorem beyond_unicode_module_rejected :
-    module.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) .Wasm1 =
+    metadata.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) .Wasm1 =
       .ok (.Err .InvalidUtf8) :=
   four_byte_custom_reply _ _ _ _ (.Err .InvalidUtf8) beyond_unicode_rejected
 

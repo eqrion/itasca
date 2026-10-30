@@ -31,7 +31,7 @@ new function index, and two-instruction certificate, preserving other fields. -/
 theorem initializer_lower_global {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (index : Usize)
-    (global : Itasca.module.Global)
+    (global : Itasca.metadata.Global)
     (found : module.module.env.globals.val[index.val]? = some global)
     (success : runtime.compiler.initialize.lower_global ops module budget index =
       .ok (.Ok (), after, budgetAfter)) :
@@ -43,7 +43,7 @@ theorem initializer_lower_global {A : Type} (ops : runtime.platform.Alloc A)
       after.global_initializers.val = module.global_initializers.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_global at success
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at success
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at success
   rw [initializer_slice_index _ _ global (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
   cases result with
@@ -70,7 +70,7 @@ theorem initializer_lower_global {A : Type} (ops : runtime.platform.Alloc A)
       simpa only [same] using pushedValues
 
 def InitializerAt (functions : List runtime.bytecode.CompiledFunction)
-    (index : Usize) (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) : Prop :=
+    (index : Usize) (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) : Prop :=
   ∃ code, functions[index.val]? = some code ∧ InitializerCode code expr ty
 
 theorem InitializerAt.extend {before after : List runtime.bytecode.CompiledFunction}
@@ -92,7 +92,7 @@ initializer and records precisely its issued function index. -/
 theorem initializer_lower_element_value {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (indices outIndices : alloc.vec.Vec Usize)
-    (i j : Usize) (segment : Itasca.module.Element) (expr : Itasca.types.ConstExpr)
+    (i j : Usize) (segment : Itasca.metadata.Element) (expr : Itasca.wasm_types.ConstExpr)
     (found : module.module.env.elements.val[i.val]? = some segment)
     (valueFound : segment.init.val[j.val]? = some expr)
     (success : runtime.compiler.initialize.lower_element_value ops module budget indices i j =
@@ -105,11 +105,11 @@ theorem initializer_lower_element_value {A : Type} (ops : runtime.platform.Alloc
       outIndices.val = indices.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_element_value at success
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at success
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok,
     initializer_vec_index _ _ expr valueFound, bind_ok] at success
   simp only [bind_ok] at success
-  have elemType : types.ElemType.value_type segment.elem =
+  have elemType : wasm_types.ElemType.value_type segment.elem =
       .ok (Itasca.ModuleConstants.referenceValueType segment.elem) := by
     cases segment.elem <;> rfl
   rw [elemType, bind_ok] at success
@@ -137,8 +137,8 @@ theorem initializer_lower_element_value {A : Type} (ops : runtime.platform.Alloc
 theorem initializer_lower_data_active {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (index : Usize)
-    (segment : Itasca.module.Data)
-    (memory : U32) (expr : Itasca.types.ConstExpr)
+    (segment : Itasca.metadata.Data)
+    (memory : U32) (expr : Itasca.wasm_types.ConstExpr)
     (found : module.module.tail.data.val[index.val]? = some segment)
     (active : segment.mode = .Active memory expr)
     (success : runtime.compiler.initialize.lower_data_offset ops module budget index =
@@ -151,7 +151,7 @@ theorem initializer_lower_data_active {A : Type} (ops : runtime.platform.Alloc A
       after.data_offsets.val = module.data_offsets.val ++ [some fnIndex] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok] at success
+    Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, active] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
   cases result with
@@ -181,7 +181,7 @@ theorem initializer_lower_data_active {A : Type} (ops : runtime.platform.Alloc A
 theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (index : Usize)
-    (segment : Itasca.module.Data)
+    (segment : Itasca.metadata.Data)
     (found : module.module.tail.data.val[index.val]? = some segment)
     (passive : segment.mode = .Passive)
     (success : runtime.compiler.initialize.lower_data_offset ops module budget index =
@@ -190,7 +190,7 @@ theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc 
       after.data_offsets.val = module.data_offsets.val ++ [none] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok] at success
+    Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, passive] at success
   obtain ⟨⟨result, b1, indices⟩, pushed, rest⟩ := initializer_bind_success success
   have output := Result.ok_injective rest

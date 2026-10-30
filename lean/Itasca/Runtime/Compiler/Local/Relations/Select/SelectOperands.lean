@@ -39,7 +39,7 @@ theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
 
 @[step] theorem compiler_select_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (front : List valtype) (ty : valtype)
     (layout : CompilerLayout compiler (front ++ [ty, ty, .I32]))
     (reachable : compiler.reachable = true)

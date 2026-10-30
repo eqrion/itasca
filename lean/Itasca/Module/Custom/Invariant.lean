@@ -7,8 +7,8 @@ import Itasca.Contracts
 
 If a visitor's `on_custom_section` hook preserves a predicate on its state (`PreservesInvariant`)
 or an observation of it (`Preserves`), every accepted run of the environment and tail parsers
-preserves it too. The theorems are `module.validate_env_with.accepted_invariant`,
-`module.validate_tail_with.accepted_invariant` and `module.validate_tail_with.accepted_preserves`.
+preserves it too. The theorems are `metadata.validate_env_with.accepted_invariant`,
+`metadata.validate_tail_with.accepted_invariant` and `metadata.validate_tail_with.accepted_preserves`.
 They speak only about the successful run.
 -/
 
@@ -19,19 +19,19 @@ namespace Itasca
 variable {profile : ValidationProfile}
 
 /-- A successful run of the tail loop preserves `P` when the custom hook does. -/
-theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
-    (visitor : module.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
-    (data : Slice U8) (env : module.Env) (v : V)
-    (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
-    (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
+theorem metadata.validate_tail_with_loop.accepted_invariant {V : Type}
+    (visitor : metadata.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
+    (data : Slice U8) (env : metadata.Env) (v : V)
+    (segments : alloc.vec.Vec metadata.Data) (pos : Usize) (seen : Bool)
+    (result : metadata.Tail) (v' : V)
+    (h : metadata.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
     P v → P v' := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v segments pos seen with
   | h n ih =>
-    unfold module.validate_tail_with_loop at h
+    unfold metadata.validate_tail_with_loop at h
     rw [loop] at h
-    simp only [module.validate_tail_with_loop.body] at h
+    simp only [metadata.validate_tail_with_loop.body] at h
     by_cases hstop : pos ≥ Slice.len data
     · simp only [hstop, ↓reduceIte] at h
       cases hc : env.data_count with
@@ -48,7 +48,7 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
           exact id
         · simp [he] at ht
     · simp only [hstop, ↓reduceIte] at h
-      obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (module.read_section_header.spec data pos)
+      obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (metadata.read_section_header.spec data pos)
       rw [hr] at h
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -58,9 +58,9 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
         have hspan := hh.span
         have hmeasure : data.length - last.val < n := by scalar_tac
         simp [core.result.Result.Insts.CoreOpsTry.branch] at h
-        by_cases hcustom : id = module.SECTION_CUSTOM
+        by_cases hcustom : id = metadata.SECTION_CUSTOM
         · simp only [hcustom, ↓reduceIte] at h
-          obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (module.decode_custom_section.spec data first last)
+          obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (metadata.decode_custom_section.spec data first last)
           rw [hr] at h
           cases r with
           | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
@@ -73,11 +73,11 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
               cases u
               have hobs := hp v chunk v1 hv
               have hrest := ih (data.length - last.val) hmeasure v1 segments last seen
-                (by simpa [module.validate_tail_with_loop, module.validate_tail_with_loop.body,
+                (by simpa [metadata.validate_tail_with_loop, metadata.validate_tail_with_loop.body,
                   core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
               exact fun hv => hrest (hobs hv)
         · simp only [hcustom, ↓reduceIte] at h
-          by_cases hdata : id.val = module.SECTION_DATA.val
+          by_cases hdata : id.val = metadata.SECTION_DATA.val
           · simp only [hdata, ↓reduceIte] at h
             cases seen with
             | true => simp at h
@@ -92,42 +92,42 @@ theorem module.validate_tail_with_loop.accepted_invariant {V : Type}
                 by_cases he : consumed.val = last.val
                 · simp only [he, ↓reduceIte] at ht
                   exact ih (data.length - last.val) hmeasure v decoded last true
-                    (by simpa [module.validate_tail_with_loop, module.validate_tail_with_loop.body,
+                    (by simpa [metadata.validate_tail_with_loop, metadata.validate_tail_with_loop.body,
                       core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
                 · simp [he] at ht
           · simp [hdata] at h
 
-/-- A successful `module.validate_tail_with` run preserves a scheduler invariant when the custom
+/-- A successful `metadata.validate_tail_with` run preserves a scheduler invariant when the custom
 hook does. -/
-theorem module.validate_tail_with.accepted_invariant {V : Type}
-    (visitor : module.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (v : V) (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
+theorem metadata.validate_tail_with.accepted_invariant {V : Type}
+    (visitor : metadata.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
+    (data : Slice U8) (pos : Usize) (env : metadata.Env) (v : V) (result : metadata.Tail) (v' : V)
+    (h : metadata.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
     P v → P v' :=
-  module.validate_tail_with_loop.accepted_invariant visitor P hp data env v
+  metadata.validate_tail_with_loop.accepted_invariant visitor P hp data env v
     (alloc.vec.Vec.new _) pos false result v' h
 
 /-- A successful run of the environment loop preserves any scheduler provenance `P` that the custom
 hook preserves. -/
-theorem module.validate_env_with_loop.accepted_invariant {V : Type}
-    (visitor : module.ModuleVisitor V) (P : V → Prop)
+theorem metadata.validate_env_with_loop.accepted_invariant {V : Type}
+    (visitor : metadata.ModuleVisitor V) (P : V → Prop)
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
-    (v : V) (env : module.Env) (pos : Usize) (lastId : U8)
-    (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with_loop visitor data profile v env pos lastId =
+    (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
+    (result : metadata.Env) (next : Usize) (v' : V)
+    (h : metadata.validate_env_with_loop visitor data profile v env pos lastId =
       .ok (.Ok (result, next), v')) : P v → P v' := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v env pos lastId with
   | h n ih =>
-    unfold module.validate_env_with_loop at h
+    unfold metadata.validate_env_with_loop at h
     rw [loop] at h
-    simp only [module.validate_env_with_loop.body] at h
+    simp only [metadata.validate_env_with_loop.body] at h
     by_cases hstop : pos ≥ Slice.len data
     · simp [hstop] at h
       obtain ⟨_, _, rfl⟩ := h
       exact id
     · simp only [hstop, ↓reduceIte] at h
-      obtain ⟨r, hr, hpRead⟩ := WP.spec_imp_exists (module.read_section_header.spec data pos)
+      obtain ⟨r, hr, hpRead⟩ := WP.spec_imp_exists (metadata.read_section_header.spec data pos)
       rw [hr] at h
       cases r with
       | Err e =>
@@ -138,9 +138,9 @@ theorem module.validate_env_with_loop.accepted_invariant {V : Type}
         have hspan := hpRead.span
         have hmeasure : data.length - last.val < n := by scalar_tac
         simp [core.result.Result.Insts.CoreOpsTry.branch] at h
-        by_cases hcustom : id = module.SECTION_CUSTOM
+        by_cases hcustom : id = metadata.SECTION_CUSTOM
         · simp only [hcustom, ↓reduceIte] at h
-          obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (module.decode_custom_section.spec data first last)
+          obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (metadata.decode_custom_section.spec data first last)
           rw [hr] at h
           cases r with
           | Err e =>
@@ -153,21 +153,21 @@ theorem module.validate_env_with_loop.accepted_invariant {V : Type}
             | Ok u =>
               cases u
               have hrest := ih (data.length - last.val) hmeasure v1 env last lastId
-                (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
+                (by simpa [metadata.validate_env_with_loop, metadata.validate_env_with_loop.body,
                   core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
               exact fun hv0 => hrest (hp v chunk v1 hv hv0)
         · simp only [hcustom, ↓reduceIte] at h
-          by_cases hcode : id = module.SECTION_CODE
+          by_cases hcode : id = metadata.SECTION_CODE
           · simp [hcode] at h
             obtain ⟨_, _, rfl⟩ := h
             exact fun hv => hv
           · simp only [hcode, ↓reduceIte] at h
-            by_cases hdata : id = module.SECTION_DATA
+            by_cases hdata : id = metadata.SECTION_DATA
             · simp [hdata] at h
               obtain ⟨_, _, rfl⟩ := h
               exact fun hv => hv
             · simp only [hdata, ↓reduceIte] at h
-              obtain ⟨ordered, hord, _⟩ := WP.spec_imp_exists (module.section_order.spec id)
+              obtain ⟨ordered, hord, _⟩ := WP.spec_imp_exists (metadata.section_order.spec id)
               rw [hord] at h
               cases ordered with
               | Err e =>
@@ -187,19 +187,19 @@ theorem module.validate_env_with_loop.accepted_invariant {V : Type}
                     by_cases he : consumed = last
                     · simp only [he, ↓reduceIte] at ht
                       exact ih (data.length - last.val) hmeasure v updated last rank
-                        (by simpa [module.validate_env_with_loop, module.validate_env_with_loop.body,
+                        (by simpa [metadata.validate_env_with_loop, metadata.validate_env_with_loop.body,
                           core.result.Result.Insts.CoreOpsTry.branch] using ht) rfl
                     · have hne : consumed.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simp [hne] at ht
 
-/-- A successful `module.validate_env_with` run preserves `P` when the custom hook does. -/
-theorem module.validate_env_with.accepted_invariant {V : Type}
-    (visitor : module.ModuleVisitor V) (P : V → Prop)
+/-- A successful `metadata.validate_env_with` run preserves `P` when the custom hook does. -/
+theorem metadata.validate_env_with.accepted_invariant {V : Type}
+    (visitor : metadata.ModuleVisitor V) (P : V → Prop)
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
-    (v : V) (result : module.Env) (next : Usize) (v' : V)
-    (h : module.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
+    (v : V) (result : metadata.Env) (next : Usize) (v' : V)
+    (h : metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
     P v → P v' := by
-  unfold module.validate_env_with at h
+  unfold metadata.validate_env_with at h
   obtain ⟨initial, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   obtain ⟨read, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ ht
   cases read with
@@ -208,7 +208,7 @@ theorem module.validate_env_with.accepted_invariant {V : Type}
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at ht
   | Ok start =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at ht
-    exact module.validate_env_with_loop.accepted_invariant visitor P hp data
+    exact metadata.validate_env_with_loop.accepted_invariant visitor P hp data
       v initial start 0#u8 result next v' ht
 
 end Itasca
@@ -219,7 +219,7 @@ namespace Itasca.ModuleTail
 
 /-- The visitor's `on_custom_section` hook may change its own state while preserving the
 observation `observe`, such as the work list handed to deferred compilation threads. -/
-def Preserves {V A : Type} (visitor : module.ModuleVisitor V) (observe : V → A) : Prop :=
+def Preserves {V A : Type} (visitor : metadata.ModuleVisitor V) (observe : V → A) : Prop :=
   ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') → observe v' = observe v
 
 end Itasca.ModuleTail
@@ -229,27 +229,27 @@ namespace Itasca
 variable {profile : ValidationProfile}
 
 /-- A successful run of the tail loop preserves an observation that the custom hook preserves. -/
-theorem module.validate_tail_with_loop.accepted_preserves {V A : Type}
-    (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
-    (data : Slice U8) (env : module.Env) (v : V)
-    (segments : alloc.vec.Vec module.Data) (pos : Usize) (seen : Bool)
-    (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
+theorem metadata.validate_tail_with_loop.accepted_preserves {V A : Type}
+    (visitor : metadata.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
+    (data : Slice U8) (env : metadata.Env) (v : V)
+    (segments : alloc.vec.Vec metadata.Data) (pos : Usize) (seen : Bool)
+    (result : metadata.Tail) (v' : V)
+    (h : metadata.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
     observe v' = observe v := by
   have hinvariant : ModuleTail.PreservesInvariant visitor (fun state => observe state = observe v) := by
     intro before chunk after hcallback hbefore
     exact (hp before chunk after hcallback).trans hbefore
-  exact module.validate_tail_with_loop.accepted_invariant visitor _ hinvariant
+  exact metadata.validate_tail_with_loop.accepted_invariant visitor _ hinvariant
     data env v segments pos seen result v' h rfl
 
-/-- A successful `module.validate_tail_with` run preserves deferred work observations when the
+/-- A successful `metadata.validate_tail_with` run preserves deferred work observations when the
 custom hook does. -/
-theorem module.validate_tail_with.accepted_preserves {V A : Type}
-    (visitor : module.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (v : V) (result : module.Tail) (v' : V)
-    (h : module.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
+theorem metadata.validate_tail_with.accepted_preserves {V A : Type}
+    (visitor : metadata.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
+    (data : Slice U8) (pos : Usize) (env : metadata.Env) (v : V) (result : metadata.Tail) (v' : V)
+    (h : metadata.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
     observe v' = observe v :=
-  module.validate_tail_with_loop.accepted_preserves visitor observe hp data env v
+  metadata.validate_tail_with_loop.accepted_preserves visitor observe hp data env v
     (alloc.vec.Vec.new _) pos false result v' h
 
 end Itasca

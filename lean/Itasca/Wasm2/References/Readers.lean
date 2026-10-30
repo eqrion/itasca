@@ -17,7 +17,7 @@ namespace Itasca
 /-- Accepted literal type tags identify their exact single-byte encoding. -/
 theorem code.take_reference_type.spec (st : code.OpIterState) (data : Slice U8) :
     code.take_reference_type st data ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      ∀ ty : types.ElemType, r.1 = .Ok ty →
+      ∀ ty : wasm_types.ElemType, r.1 = .Ok ty →
         Wasm1.BytesAt data st.pos [Wasm2.ReferencesBinary.referenceByte ty] r.2.pos ⦄ := by
   by_cases hp : st.pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data st.pos hp)
@@ -36,7 +36,7 @@ theorem code.take_reference_type.spec (st : code.OpIterState) (data : Slice U8) 
 /-- Accepted literal type tags identify their exact single-byte encoding. -/
 theorem code.take_value_type.spec (st : code.OpIterState) (data : Slice U8) :
     code.take_value_type st data ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      ∀ ty : types.ValueType, r.1 = .Ok ty →
+      ∀ ty : wasm_types.ValueType, r.1 = .Ok ty →
         Wasm1.BytesAt data st.pos [Wasm2.valueByte ty] r.2.pos ⦄ := by
   by_cases hp : st.pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data st.pos hp)
@@ -52,12 +52,12 @@ theorem code.take_value_type.spec (st : code.OpIterState) (data : Slice U8) :
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem types.ElemType.value_type.eq (rt : types.ElemType) :
-    types.ElemType.value_type rt = .ok (ModuleConstants.referenceValueType rt) := by
+theorem wasm_types.ElemType.value_type.eq (rt : wasm_types.ElemType) :
+    wasm_types.ElemType.value_type rt = .ok (ModuleConstants.referenceValueType rt) := by
   cases rt <;> rfl
 
 /-- A decoded index resolves to its actual reference element type. -/
-theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.take_table st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index ty, r.1 = .Ok (index, ty) → Leb128.Decoded data st.pos index r.2.pos ∧
         ∃ hi : index.val < env.table_types.val.length,
@@ -77,7 +77,7 @@ theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : mo
       have hn := Nat.not_le_of_gt hi
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (index, ModuleConstants.referenceValueType entry.elem), s), ?_, hv, hc, ?_⟩
-      · simp [code.take_table, hr, lift, hn, hget, types.ElemType.value_type.eq,
+      · simp [code.take_table, hr, lift, hn, hget, wasm_types.ElemType.value_type.eq,
           core.result.Result.Insts.CoreOpsTry.branch]
       · intro other ty hok
         cases hok
@@ -86,7 +86,7 @@ theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : mo
       simp [code.take_table, hr, hv, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- A decoded index resolves to its actual reference element type. -/
-theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.take_element st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index ty, r.1 = .Ok (index, ty) → Leb128.Decoded data st.pos index r.2.pos ∧
         ∃ hi : index.val < env.elements.val.length,
@@ -106,7 +106,7 @@ theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : 
       have hn := Nat.not_le_of_gt hi
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (index, ModuleConstants.referenceValueType entry.elem), s), ?_, hv, hc, ?_⟩
-      · simp [code.take_element, hr, lift, hn, hget, types.ElemType.value_type.eq,
+      · simp [code.take_element, hr, lift, hn, hget, wasm_types.ElemType.value_type.eq,
           core.result.Result.Insts.CoreOpsTry.branch]
       · intro other ty hok
         cases hok
@@ -115,7 +115,7 @@ theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : 
       simp [code.take_element, hr, hv, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Data instructions require the explicit data-count section and its bound. -/
-theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.take_data_index st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index, r.1 = .Ok index → Leb128.Decoded data st.pos index r.2.pos ∧
         ∃ count, env.data_count = some count ∧ index.val < count.val ⦄ := by
@@ -141,7 +141,7 @@ theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env
         simp [code.take_data_index, hr, hv, hc, hcount, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Bulk memory instructions consume one literal reserved byte and require memory zero. -/
-theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_bulk_memory st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       (r.1 = .Ok () → Wasm1.BytesAt data st.pos [0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_reserved_zero.spec st data)
@@ -167,7 +167,7 @@ theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (en
 /-- Successful `ref.func` decoding establishes the independent declaration
 condition in addition to ordinary function-index bounds. -/
 theorem code.read_ref_func.spec (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (hsize : st.vals.val.length < Usize.max) :
+    (env : metadata.Env) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_func st data env ⦃ r =>
       r.2.ctrls = st.ctrls ∧ ∀ index, r.1 = .Ok index →
         Leb128.Decoded data st.pos index r.2.pos ∧ index.val < env.func_types.val.length ∧
@@ -189,13 +189,13 @@ theorem code.read_ref_func.spec (st : code.OpIterState) (data : Slice U8)
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok index, out), ?_, hctrls.trans hc, ?_⟩
         · simp [code.read_ref_func, hr, core.result.Result.Insts.CoreOpsTry.branch,
-            lift, hn, module.Env.declares_function.eq, hm, hp]
+            lift, hn, metadata.Env.declares_function.eq, hm, hp]
         intro other he
         cases he
         exact ⟨by simpa [hpos] using hd, hi,
           DeclaredReferences.Instruction.ref_func_iff.mpr (List.mem_map.mpr ⟨index, hm, rfl⟩),
           by simpa [hv] using hvals⟩
-      · simp [code.read_ref_func, hr, hc, lift, hn, module.Env.declares_function.eq, hm,
+      · simp [code.read_ref_func, hr, hc, lift, hn, metadata.Env.declares_function.eq, hm,
           core.result.Result.Insts.CoreOpsTry.branch]
     · have hn := Nat.le_of_not_gt hi
       simp [code.read_ref_func, hr, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]

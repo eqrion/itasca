@@ -29,7 +29,7 @@ theorem reader_emit_const32_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -52,9 +52,9 @@ theorem reader_emit_const32_wasm2 {data env locals index st}
     (by simp only [global_simps]; rfl) (by simp only [global_simps]; decide) contextLocals accepted
   obtain ⟨value, callback, _, vals, post⟩ := reader_i32_const_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core capacity byte run
-  have postConcrete : out.core.vals.val = (types ++ [Itasca.types.ValueType.I32]).map code.StackType.Val := by
+  have postConcrete : out.core.vals.val = (types ++ [Itasca.wasm_types.ValueType.I32]).map code.StackType.Val := by
     simp [vals, concrete]
-  have lowered := callback_const32 ops law before out.core (types ++ [Itasca.types.ValueType.I32])
+  have lowered := callback_const32 ops law before out.core (types ++ [Itasca.wasm_types.ValueType.I32])
     (types.map Translate.valueType) value layout reachable postConcrete codeFits sourceFits coordinateFits
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const ops before out.core value = _ at callback
   have ordinary := compiler_i32_const_ordinary_result ops law before after out.core value (.Ok ()) callback
@@ -78,7 +78,7 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -101,9 +101,9 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
     (by simp only [global_simps]; rfl) (by simp only [global_simps]; decide) contextLocals accepted
   obtain ⟨value, callback, _, vals, post⟩ := reader_i64_const_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out.core capacity byte run
-  have postConcrete : out.core.vals.val = (types ++ [Itasca.types.ValueType.I64]).map code.StackType.Val := by
+  have postConcrete : out.core.vals.val = (types ++ [Itasca.wasm_types.ValueType.I64]).map code.StackType.Val := by
     simp [vals, concrete]
-  have lowered := callback_const64 ops law before out.core (types ++ [Itasca.types.ValueType.I64])
+  have lowered := callback_const64 ops law before out.core (types ++ [Itasca.wasm_types.ValueType.I64])
     (types.map Translate.valueType) value layout reachable postConcrete codeFits sourceFits coordinateFits
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const ops before out.core value = _ at callback
   have ordinary := compiler_i64_const_ordinary_result ops law before after out.core value (.Ok ()) callback

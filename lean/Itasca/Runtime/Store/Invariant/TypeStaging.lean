@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 /-- A successful type-map entry names the exact canonical type; rejection
 leaves both the store and provisional instance unchanged. -/
 def TypeStageEffect {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
-    (ty : Itasca.types.FuncType)
+    (ty : Itasca.wasm_types.FuncType)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst) : Prop :=
   (∃ error, out = (.Err error, store, inst)) ∨
   (∃ index addresses,
@@ -31,7 +31,7 @@ theorem add_instance_type_effect {M A : Type} (memory : runtime.platform.MemoryB
     runtime.store.instantiate.Store.add_instance_type memory allocator store inst index
       ⦃ out => TypeStageEffect store inst inst.module.module.env.types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_type
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -53,7 +53,7 @@ theorem add_instance_type_effect {M A : Type} (memory : runtime.platform.MemoryB
     exact Or.inr ⟨_, addresses, Or.inr (Or.inr ⟨types, count, appended, fresh, capacity, counter, limit, rfl⟩), mapped, rfl, rfl⟩
 
 theorem InternEffect.lookup {M : Type} {store after : runtime.store.Store M}
-    {ty : Itasca.types.FuncType} {index : Usize}
+    {ty : Itasca.wasm_types.FuncType} {index : Usize}
     (effect : InternEffect store ty (.Ok index, after)) : after.types.val[index.val]? = some ty := by
   rcases effect with ⟨error, failed⟩ | ⟨canonical, found, existing⟩ | ⟨types, count, appended, fresh, capacity, counter, limit, created⟩
   · cases failed
@@ -61,7 +61,7 @@ theorem InternEffect.lookup {M : Type} {store after : runtime.store.Store M}
   · cases created; simp [appended]
 
 theorem InternEffect.staged {M : Type} {store after : runtime.store.Store M}
-    {ty : Itasca.types.FuncType} {status}
+    {ty : Itasca.wasm_types.FuncType} {status}
     (effect : InternEffect store ty (status, after)) : StagedPrefix store after := by
   rcases effect with ⟨error, failed⟩ | ⟨canonical, found, existing⟩ | ⟨types, count, appended, fresh, capacity, counter, limit, created⟩
   · cases failed; exact .refl _
@@ -69,7 +69,7 @@ theorem InternEffect.staged {M : Type} {store after : runtime.store.Store M}
   · cases created; constructor <;> simp [appended]
 
 theorem InternEffect.object_bound {M : Type} {store after : runtime.store.Store M}
-    {ty : Itasca.types.FuncType} {status}
+    {ty : Itasca.wasm_types.FuncType} {status}
     (effect : InternEffect store ty (status, after)) (bound : objectCount store ≤ Usize.max) :
     objectCount after ≤ Usize.max := by
   rcases effect with ⟨error, failed⟩ | ⟨canonical, found, existing⟩ | ⟨types, count, appended, fresh, capacity, counter, limit, created⟩
@@ -86,7 +86,7 @@ theorem InternEffect.object_bound {M : Type} {store after : runtime.store.Store 
     omega
 
 theorem InternEffect.only_types {M : Type} {store after : runtime.store.Store M}
-    {ty : Itasca.types.FuncType} {status} (effect : InternEffect store ty (status, after)) :
+    {ty : Itasca.wasm_types.FuncType} {status} (effect : InternEffect store ty (status, after)) :
     after = {store with types := after.types, signature_values := after.signature_values} := by
   rcases effect with ⟨error, failed⟩ | ⟨canonical, found, existing⟩ |
     ⟨types, count, appended, fresh, capacity, counter, limit, created⟩
@@ -95,7 +95,7 @@ theorem InternEffect.only_types {M : Type} {store after : runtime.store.Store M}
   · cases created; rfl
 
 theorem TypeEntries.extend {M : Type} {store after : runtime.store.Store M}
-    {source : List Itasca.types.FuncType} {indices : List Usize}
+    {source : List Itasca.wasm_types.FuncType} {indices : List Usize}
     (entries : TypeEntries store source indices) (retained : StagedPrefix store after) :
     TypeEntries after source indices := by
   apply List.Forall₂.imp ?_ entries
@@ -105,7 +105,7 @@ theorem TypeEntries.extend {M : Type} {store after : runtime.store.Store M}
   simpa [bound] using found
 
 theorem TypeStageEffect.context {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.ModuleInst} {ty : Itasca.types.FuncType} {out}
+    {inst : runtime.store.ModuleInst} {ty : Itasca.wasm_types.FuncType} {out}
     (effect : TypeStageEffect store inst ty out) (bound : objectCount store ≤ Usize.max) :
     out.2.1 = {store with types := out.2.1.types, signature_values := out.2.1.signature_values} ∧
     out.2.2 = {inst with types := out.2.2.types} ∧ StagedPrefix store out.2.1 ∧
@@ -115,9 +115,9 @@ theorem TypeStageEffect.context {M : Type} {store : runtime.store.Store M}
   · exact ⟨interned.only_types, by rw [next], interned.staged, interned.object_bound bound⟩
 
 theorem TypeStageEffect.entries {M : Type} {store : runtime.store.Store M}
-    {inst : runtime.store.ModuleInst} {ty : Itasca.types.FuncType} {out}
+    {inst : runtime.store.ModuleInst} {ty : Itasca.wasm_types.FuncType} {out}
     (effect : TypeStageEffect store inst ty out) (success : out.1 = .Ok ())
-    {source : List Itasca.types.FuncType} (entries : TypeEntries store source inst.types.val) :
+    {source : List Itasca.wasm_types.FuncType} (entries : TypeEntries store source inst.types.val) :
     TypeEntries out.2.1 (source ++ [ty]) out.2.2.types.val := by
   rcases effect with ⟨error, failed⟩ | ⟨index, addresses, interned, mapped, ok, next⟩
   · rw [failed] at success; cases success
@@ -170,7 +170,7 @@ theorem type_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.types.val.length := by

@@ -57,7 +57,7 @@ macro "table_entry_metadata_step " h:ident " using " ops:term ", " law:term : ta
 
 theorem compiler_add_local_table_entry_metadata {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (ty : Itasca.types.ValueType) (status : core.result.Result Unit Itasca.error.VisitError)
+    (ty : Itasca.wasm_types.ValueType) (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.add_local ops before ty = .ok (status, after)) :
     CompilerTableEntryMetadata before after := by
   unfold runtime.compiler.FunctionCompiler.add_local at accepted

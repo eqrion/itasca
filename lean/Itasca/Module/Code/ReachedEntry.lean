@@ -5,12 +5,12 @@ open Aeneas Aeneas.Std
 namespace CodeEntry
 
 /-- Decoded entry metadata before the function-start callback. No body or callback acceptance is assumed. -/
-structure Prepared (data : Slice U8) (env : module.Env) (index start : Usize)
+structure Prepared (data : Slice U8) (env : metadata.Env) (index start : Usize)
     (profile : ValidationProfile) where
   finish : Usize
   typeIdx : U32
-  ft : types.FuncType
-  groups : List (U32 × types.ValueType)
+  ft : wasm_types.FuncType
+  groups : List (U32 × wasm_types.ValueType)
   ctx : code.Context
   content : Usize
   bodyStart : Usize
@@ -34,16 +34,16 @@ end CodeEntry
 
 /-- Entry parsing and local-vector construction return on malformed bytes.
 Only the actual prepared function-start and body calls need normal-return proofs. -/
-theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (index : Usize) (v : V)
+theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVisitor V)
+    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
     (start : ∀ prepared : CodeEntry.Prepared data env index pos profile,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
     (bodyTotal : ∀ (prepared : CodeEntry.Prepared data env index pos profile) started,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
       code.validate_body_with visitor prepared.body env prepared.ctx prepared.typeIdx profile started ⦃ _ => True ⦄) :
-    module.validate_code_entry_with visitor data pos env index profile v ⦃ _ => True ⦄ := by
-  unfold module.validate_code_entry_with
+    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ _ => True ⦄ := by
+  unfold metadata.validate_code_entry_with
   dsimp only
   split
   · simp
@@ -61,7 +61,7 @@ theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVi
         have hs := hp.span
         simp [core.result.Result.Insts.CoreOpsTry.branch]
         step
-        obtain ⟨r, hh, hhpost⟩ := WP.spec_imp_exists (module.have_bytes.spec data content n hs.2.2)
+        obtain ⟨r, hh, hhpost⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data content n hs.2.2)
         rw [hh]
         cases r with
         | Err e =>
@@ -71,7 +71,7 @@ theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVi
             have hbytes := hhpost.1.mp rfl
             simp
             step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (module.decode_locals.spec data content profile)
+            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content profile)
             rw [hl]
             cases r with
             | Err e =>
@@ -96,10 +96,10 @@ theorem module.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVi
                     have hparams := hbound ft hftmem
                     have hroom : ft.params.val.length + declared.val.length ≤ Usize.max := by omega
                     obtain ⟨v1, hv1, v1_post⟩ := WP.spec_imp_exists
-                      (module.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
+                      (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
                         (alloc.vec.Vec.deref declared) (by simpa [alloc.vec.Vec.deref] using hroom))
                     obtain ⟨v2, hv2, v2_post⟩ := WP.spec_imp_exists
-                      (module.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
+                      (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
                     rw [hv1]
                     simp only [bind_ok]
                     rw [hv2]

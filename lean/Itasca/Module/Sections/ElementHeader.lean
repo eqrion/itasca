@@ -6,8 +6,8 @@ import Itasca.Module.Readers.BasicComplete
 
 `ModuleElements.HeaderEncoding` is the independent grammar of the flag word and prefix of an
 element segment for each profile (the eight Wasm 2.0 forms and the Wasm 1.0 form).
-`module.decode_element_header.spec` shows an accepted header is a `HeaderEncoding` span whose
-table and offset are valid. `module.decode_element.spec` assembles a full entry: an
+`metadata.decode_element_header.spec` shows an accepted header is a `HeaderEncoding` span whose
+table and offset are valid. `metadata.decode_element.spec` assembles a full entry: an
 `ElementEncodingFor` span that is valid, extends the declared functions by its references and
 consumes input. Completeness is in `Module/Sections/ElementHeaderComplete`.
 -/
@@ -19,7 +19,7 @@ open ModuleBinary
 
 /-- The bytes of an element segment header for a profile, mode, element type and initializer
 form (`true` for expressions). The first argument of each constructor is the flag word. -/
-inductive HeaderEncoding : ValidationProfile → module.ElementMode → types.ElemType → Bool → List U8 → Prop where
+inductive HeaderEncoding : ValidationProfile → metadata.ElementMode → wasm_types.ElemType → Bool → List U8 → Prop where
   | legacy {index offset ib ob} : IndexEncoding index ib → ConstEncoding offset ob →
       HeaderEncoding .Wasm1 (.Active index offset) .FuncRef false (ib ++ ob)
   | activeIndices {offset fb ob} : IndexEncoding 0#u32 fb → ConstEncoding offset ob →
@@ -43,7 +43,7 @@ inductive HeaderEncoding : ValidationProfile → module.ElementMode → types.El
 
 /-- An active segment names an in-range table of the segment's element type with a valid `i32`
 offset. Passive and declarative segments have no condition. -/
-def HeaderValid (env : module.Env) (mode : module.ElementMode) (elem : types.ElemType) : Prop :=
+def HeaderValid (env : metadata.Env) (mode : metadata.ElementMode) (elem : wasm_types.ElemType) : Prop :=
   match mode with
   | .Active index offset => ∃ hi : index.val < env.table_types.val.length,
       env.table_types.val[index.val].elem = elem ∧ ModuleConstants.Valid env offset .I32
@@ -51,7 +51,7 @@ def HeaderValid (env : module.Env) (mode : module.ElementMode) (elem : types.Ele
 
 private theorem indices_rep {values bytes}
     (h : Rep (InitializerEncoding false) values bytes) :
-    ∃ indices, values = indices.map types.ConstExpr.RefFunc ∧ Rep IndexEncoding indices bytes := by
+    ∃ indices, values = indices.map wasm_types.ConstExpr.RefFunc ∧ Rep IndexEncoding indices bytes := by
   induction h with
   | nil => exact ⟨[], rfl, .nil⟩
   | cons hv hs ih =>
@@ -62,7 +62,7 @@ private theorem indices_rep {values bytes}
 /-- A vector of index initializers is a vector of function indices. -/
 theorem indices_vector {values bytes}
     (h : VecEncoding (InitializerEncoding false) values bytes) :
-    ∃ indices, values = indices.map types.ConstExpr.RefFunc ∧ VecEncoding IndexEncoding indices bytes := by
+    ∃ indices, values = indices.map wasm_types.ConstExpr.RefFunc ∧ VecEncoding IndexEncoding indices bytes := by
   obtain ⟨count, encoded, hc, hr, rfl⟩ := h
   obtain ⟨indices, rfl, hi⟩ := indices_rep hr
   exact ⟨indices, rfl, count, encoded, by simpa using hc, hi, rfl⟩
@@ -101,7 +101,7 @@ theorem HeaderEncoding.initializer_type {profile mode elem expressions bytes}
 
 /-- A vector of function indices is a vector of index initializers. -/
 theorem indices_vector_intro {indices bytes} (h : VecEncoding IndexEncoding indices bytes) :
-    VecEncoding (InitializerEncoding false) (indices.map types.ConstExpr.RefFunc) bytes := by
+    VecEncoding (InitializerEncoding false) (indices.map wasm_types.ConstExpr.RefFunc) bytes := by
   obtain ⟨count, encoded, hc, hr, rfl⟩ := h
   refine ⟨count, encoded, by simpa using hc, ?_, rfl⟩
   clear hc
@@ -130,7 +130,7 @@ theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry
 
 /-- Expression initializers are allowed in every header that has them. -/
 theorem HeaderEncoding.const_allowed {profile mode elem expressions bytes}
-    (h : HeaderEncoding profile mode elem expressions bytes) (value : types.ConstExpr)
+    (h : HeaderEncoding profile mode elem expressions bytes) (value : wasm_types.ConstExpr)
     (he : expressions = true) : ConstAllowed profile value := by
   cases h <;> simp_all [ConstAllowed]
 
@@ -139,25 +139,25 @@ end Itasca.ModuleElements
 namespace Itasca
 open ModuleBinary ModuleElements
 
-/-- An accepted `module.decode_element_header` is a `HeaderEncoding` span with a `HeaderValid`
+/-- An accepted `metadata.decode_element_header` is a `HeaderEncoding` span with a `HeaderValid`
 mode and element type. -/
 @[step]
-theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
-    (env : module.Env) (profile : ValidationProfile) :
-    module.decode_element_header data pos env profile ⦃ r => match r with
+theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
+    (env : metadata.Env) (profile : ValidationProfile) :
+    metadata.decode_element_header data pos env profile ⦃ r => match r with
       | .Ok (mode, elem, expressions, next) =>
           At (fun value => HeaderEncoding profile value.1 value.2.1 value.2.2)
             data pos (mode, elem, expressions) next ∧ HeaderValid env mode elem
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨tag, first⟩ := pair
     obtain ⟨fb, hf, hfs⟩ := At.of_u32 hp
-    simp only [module.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    simp only [metadata.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     cases profile with
     | Wasm1 =>
       dsimp only
@@ -165,7 +165,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
       split
       · simp
       · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-          (module.decode_const_expr.spec data first env .I32 .Wasm1)
+          (metadata.decode_const_expr.spec data first env .I32 .Wasm1)
         rw [hconst]
         cases r with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -177,11 +177,11 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
           split
           · simp
           · have hi : tag.val < env.table_types.val.length := by scalar_tac
-            simp only [types.ElemType.value_type, bind_ok]
+            simp only [wasm_types.ElemType.value_type, bind_ok]
             step
             cases ht : tt.elem <;>
               simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
             exact ⟨⟨fb ++ ob, .legacy hf ho, hfs.append hos⟩,
               hi, (by
                 have hrval : r.val = tag.val := by scalar_tac
@@ -209,7 +209,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
           split
           · simp
           · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-              (module.decode_const_expr.spec data first env .I32 .Wasm2)
+              (metadata.decode_const_expr.spec data first env .I32 .Wasm2)
             rw [hconst]
             cases r with
             | Err e => simp [
@@ -222,11 +222,11 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
               split
               · simp
               · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
-                simp only [types.ElemType.value_type, bind_ok]
+                simp only [wasm_types.ElemType.value_type, bind_ok]
                 step
                 cases ht : tt.elem <;>
                   simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                 all_goals
                   exact ⟨⟨fb ++ ob, .activeIndices hf ho, hfs.append hos⟩,
                     hi, (by
@@ -262,7 +262,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
             split
             · simp
             · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-                (module.decode_const_expr.spec data indexNext env .I32 .Wasm2)
+                (metadata.decode_const_expr.spec data indexNext env .I32 .Wasm2)
               rw [hconst]
               cases r with
               | Err e => simp [
@@ -289,11 +289,11 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                     split
                     · simp
                     · have hi : (index).val < env.table_types.val.length := by scalar_tac
-                      simp only [types.ElemType.value_type, bind_ok]
+                      simp only [wasm_types.ElemType.value_type, bind_ok]
                       step
                       cases ht : tt.elem <;>
                         simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                          types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                          wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                       all_goals
                         exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], .explicitIndices hf hindexEnc ho, ((hfs.append his).append hos).append hks⟩,
                           hi, (by
@@ -324,7 +324,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
           split
           · simp
           · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-              (module.decode_const_expr.spec data first env .I32 .Wasm2)
+              (metadata.decode_const_expr.spec data first env .I32 .Wasm2)
             rw [hconst]
             cases r with
             | Err e => simp [
@@ -337,17 +337,17 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
               split
               · simp
               · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
-                simp only [types.ElemType.value_type, bind_ok]
+                simp only [wasm_types.ElemType.value_type, bind_ok]
                 step
                 cases ht : tt.elem <;>
                   simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                 all_goals
                   exact ⟨⟨fb ++ ob, .activeExpressions hf ho, hfs.append hos⟩,
                     hi, (by
                       have hrval : r.val = (0#u32).val := by scalar_tac
                       simpa [tt_post, hrval] using ht), hv⟩
-        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data first .Wasm2)
+        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first .Wasm2)
           simp only [helemRead, bind_ok]
           cases r with
           | Err e => simp [
@@ -373,7 +373,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
             split
             · simp
             · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-                (module.decode_const_expr.spec data indexNext env .I32 .Wasm2)
+                (metadata.decode_const_expr.spec data indexNext env .I32 .Wasm2)
               rw [hconst]
               cases r with
               | Err e => simp [
@@ -382,15 +382,15 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 obtain ⟨offset, offsetNext⟩ := pair
                 obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
                 simp only [bind_ok]
-                let Target : WP.Post (core.result.Result (module.ElementMode × types.ElemType × Bool × Usize) error.Error) :=
+                let Target : WP.Post (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error) :=
                   fun result => match result with
                     | .Ok (mode, elem, expressions, next) =>
                         At (fun value => HeaderEncoding .Wasm2 value.1 value.2.1 value.2.2)
                           data pos (mode, elem, expressions) next ∧ HeaderValid env mode elem
                     | .Err _ => True
-                change ((module.decode_elem_type data offsetNext .Wasm2 >>= _) :
-                  Result (core.result.Result (module.ElementMode × types.ElemType × Bool × Usize) error.Error)) ⦃ Target ⦄
-                obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data offsetNext .Wasm2)
+                change ((metadata.decode_elem_type data offsetNext .Wasm2 >>= _) :
+                  Result (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error)) ⦃ Target ⦄
+                obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data offsetNext .Wasm2)
                 simp only [helemRead]
                 cases r with
                 | Err e => simp [Target,
@@ -405,15 +405,15 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                   split
                   · simp [Target]
                   · have hi : (index).val < env.table_types.val.length := by scalar_tac
-                    have hty : types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
+                    have hty : wasm_types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
                       cases elem <;> rfl
                     rw [hty]
                     simp only [bind_ok]
                     step
                     cases elem <;> cases ht : tt.elem <;>
-                      simp [Target, types.ElemType.value_type, ModuleConstants.referenceValueType,
+                      simp [Target, wasm_types.ElemType.value_type, ModuleConstants.referenceValueType,
                         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                        types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                     all_goals
                       exact ⟨⟨_, .explicitExpressions hf hindexEnc ho, ((hfs.append his).append hos).append hes⟩,
                         hi, (by
@@ -422,7 +422,7 @@ theorem module.decode_element_header.spec (data : Slice U8) (pos : Usize)
                             congr 1
                             scalar_tac
                           simpa [hentry] using ht), hv⟩
-        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data first .Wasm2)
+        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first .Wasm2)
           simp only [helemRead, bind_ok]
           cases r with
           | Err e => simp [
@@ -442,36 +442,36 @@ open Aeneas Aeneas.Std
 namespace Itasca
 open ModuleBinary ModuleElements
 
-/-- An accepted `module.decode_element` is an `ElementEncodingFor` span of a valid element. The
+/-- An accepted `metadata.decode_element` is an `ElementEncodingFor` span of a valid element. The
 declared functions grow by its references, and the cursor advances. -/
 @[step]
-theorem module.decode_element.spec (data : Slice U8) (pos : Usize)
-    (env : module.Env) (profile : ValidationProfile)
+theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
+    (env : metadata.Env) (profile : ValidationProfile)
     (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    module.decode_element data pos env profile ⦃ r => match r.1 with
+    metadata.decode_element data pos env profile ⦃ r => match r.1 with
       | .Ok (entry, next) =>
           At (ElementEncodingFor profile) data pos ⟨entry.elem, entry.mode, entry.init.val⟩ next ∧
           ModuleReferences.Added env r.2 (ModuleReferences.element entry) ∧
           ModuleSegments.elementValid env entry ∧
           r.2.declared_funcs.val.length ≤ next.val ∧ pos.val < next.val
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_element_header.spec data pos env profile)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_element_header.spec data pos env profile)
   cases r with
-  | Err e => simp [module.decode_element, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_element, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok tuple =>
     obtain ⟨mode, elem, expressions, middle⟩ := tuple
     obtain ⟨hheader, hvalid⟩ := hp
     have hspan := hheader.span
     obtain ⟨⟨r, result⟩, hinit, hp⟩ := WP.spec_imp_exists
-      (module.decode_element_initializers.spec data middle env elem expressions profile (by omega))
+      (metadata.decode_element_initializers.spec data middle env elem expressions profile (by omega))
     cases r with
-    | Err e => simp [module.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
       obtain ⟨init, next⟩ := pair
       obtain ⟨hib, hadded, hiv, hbound⟩ := hp
-      simp [module.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch]
       obtain ⟨fb, hf, hfs⟩ := hheader
       have hty := hf.initializer_type
       have hprogress : middle.val < next.val := by

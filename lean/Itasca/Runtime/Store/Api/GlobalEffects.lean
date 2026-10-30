@@ -35,7 +35,7 @@ theorem add_instance_global_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.metadata.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -52,7 +52,7 @@ theorem add_instance_global_effect {M P F A : Type}
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
@@ -186,7 +186,7 @@ theorem add_instance_global_result_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.metadata.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -203,7 +203,7 @@ theorem add_instance_global_result_effect {M P F A : Type}
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
@@ -294,7 +294,7 @@ open Aeneas Aeneas.Std
 
 /-- The appended global retains the exact validated source type. -/
 inductive GlobalTypedEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.types.GlobalType) :
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.wasm_types.GlobalType) :
     core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : GlobalTypedEffect store instIndex inst ty (.Err error) store
   | appended (globals : alloc.vec.Vec runtime.store.GlobalInst)
@@ -319,7 +319,7 @@ theorem add_instance_global_typed_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.metadata.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -336,7 +336,7 @@ theorem add_instance_global_typed_effect {M P F A : Type}
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
@@ -393,7 +393,7 @@ open Aeneas Aeneas.Std
 
 /-- The appended global retains its validated type and exact decoded initializer value. -/
 inductive GlobalValueEffect {M : Type} (store : runtime.store.Store M)
-    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.types.GlobalType) (value : val) :
+    (instIndex : Usize) (inst : runtime.store.ModuleInst) (ty : Itasca.wasm_types.GlobalType) (value : val) :
     core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : GlobalValueEffect store instIndex inst ty value (.Err error) store
   | appended (globals : alloc.vec.Vec runtime.store.GlobalInst)
@@ -419,7 +419,7 @@ theorem add_instance_global_value_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.metadata.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -444,7 +444,7 @@ theorem add_instance_global_value_effect {M P F A : Type}
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
   step with Interp.vec_index_given inst.module.global_initializers index function hmapping
@@ -506,7 +506,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Every appended runtime global has its declared type and its source
 initializer's value in the unchanged initial source state. -/
 def GlobalSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (source : List Itasca.module.Global) (values : List runtime.store.GlobalInst) : Prop :=
+    (source : List Itasca.metadata.Global) (values : List runtime.store.GlobalInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.gtype ∧
     Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (ModuleConstants.expression original.init)
       ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [(decodeGlobal actual).VALUE]) source values
@@ -532,11 +532,11 @@ theorem GlobalStageEffect.source_context {M : Type} {store after : runtime.store
 
 theorem GlobalValueEffect.source_values {M : Type} {store after : runtime.store.Store M}
     {instIndex inst sourceStore sourceInstance status value}
-    {original : Itasca.module.Global}
+    {original : Itasca.metadata.Global}
     (effect : GlobalValueEffect store instIndex inst original.gtype value status after)
     (evaluated : Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩
       (ModuleConstants.expression original.init) ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [value])
-    {sources : List Itasca.module.Global} {base produced : List runtime.store.GlobalInst}
+    {sources : List Itasca.metadata.Global} {base produced : List runtime.store.GlobalInst}
     (stored : store.globals.val = base ++ produced)
     (previous : GlobalSourceValues sourceStore sourceInstance sources produced)
     (success : status = .Ok ()) :

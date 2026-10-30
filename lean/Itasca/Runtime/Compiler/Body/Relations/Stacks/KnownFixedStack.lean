@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 /-- Fixed signatures preserve concrete operands even when the control frame is
 polymorphic; this follows from actual pop/push behavior. -/
 theorem read_fixed_known (st out : code.OpIterState) (outer segment : List code.StackType)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (size : st.vals.val.length < Usize.max) (known : ConcreteStack st.vals.val)
     (accepted : Wasm2.Simd.readFixed st inputs output = .ok (.Ok (),out)) :

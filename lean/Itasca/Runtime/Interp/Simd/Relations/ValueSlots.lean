@@ -73,7 +73,7 @@ theorem WordsAt.simd_scalar {words : List U64} {position bits : Nat} (width : U3
   exact word
 
 theorem ValuesAt.simd_scalar_result {words : List U64} {base : Nat} {front : List val}
-    (represented : ValuesAt words base front) (ty : Itasca.types.ValueType) (value : U128)
+    (represented : ValuesAt words base front) (ty : Itasca.wasm_types.ValueType) (value : U128)
     (scalar : ty ≠ .V128)
     (small : ty = .I32 ∨ ty = .F32 → (UScalar.cast .U64 value).val < 2^32)
     (capacity : base + Compiler.slots (front.map Compiler.valueType) < words.length) :

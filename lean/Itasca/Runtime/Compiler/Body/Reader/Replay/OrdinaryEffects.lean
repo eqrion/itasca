@@ -97,7 +97,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_unreachable_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 0#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -115,7 +115,7 @@ theorem reader_unreachable_effects {A : Type}
 theorem reader_nop_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 1#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -133,7 +133,7 @@ theorem reader_nop_effects {A : Type}
 theorem reader_drop_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 26#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -150,7 +150,7 @@ theorem reader_drop_effects {A : Type}
 theorem reader_local_get_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 32#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -167,7 +167,7 @@ theorem reader_local_get_effects {A : Type}
 theorem reader_local_set_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 33#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -184,7 +184,7 @@ theorem reader_local_set_effects {A : Type}
 theorem reader_local_tee_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 34#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -201,7 +201,7 @@ theorem reader_local_tee_effects {A : Type}
 theorem reader_i32_const_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 65#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -218,7 +218,7 @@ theorem reader_i32_const_effects {A : Type}
 theorem reader_i64_const_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 66#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -235,7 +235,7 @@ theorem reader_i64_const_effects {A : Type}
 theorem reader_select_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 27#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -252,7 +252,7 @@ theorem reader_select_effects {A : Type}
 theorem reader_global_get_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 35#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -269,7 +269,7 @@ theorem reader_global_get_effects {A : Type}
 theorem reader_global_set_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 36#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -286,7 +286,7 @@ theorem reader_global_set_effects {A : Type}
 theorem reader_f32_const_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 67#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -305,7 +305,7 @@ theorem reader_f32_const_effects {A : Type}
 theorem reader_f64_const_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx 68#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out := by
@@ -324,7 +324,7 @@ theorem reader_f64_const_effects {A : Type}
 theorem reader_memory_load_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (op : SourceMachine.Memory.Load)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -343,7 +343,7 @@ theorem reader_memory_load_effects {A : Type}
 theorem reader_memory_store_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (op : SourceMachine.Memory.Store)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -362,7 +362,7 @@ theorem reader_memory_store_effects {A : Type}
 theorem reader_numeric_base_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (op : SourceMachine.Numeric.Instruction) (baseOpcode : (integerOpcode op).val < 192)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -381,7 +381,7 @@ theorem reader_numeric_base_effects {A : Type}
 theorem reader_float_base_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -400,7 +400,7 @@ theorem reader_float_base_effects {A : Type}
 theorem reader_ordinary_base_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (ordinary : opcode ∈ readerBaseOrdinaryOpcodes)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx opcode before = .ok (.Ok (),out,after)) :
@@ -433,7 +433,7 @@ theorem reader_ordinary_base_effects {A : Type}
 theorem reader_scalar_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (covered : opcode.val ∈ scalarOpcodeValues)
     (accepted : code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx opcode before = .ok (.Ok (),out,after)) :
@@ -500,7 +500,7 @@ theorem reader_scalar_effects {A : Type}
 /-- A successful Wasm 2 step on an opcode without profile-specific handling
 is the shared scalar step. -/
 theorem base_step_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    {st out : code.BodyState} {data : Slice U8} {env : module.Env} {ctx : code.Context}
+    {st out : code.BodyState} {data : Slice U8} {env : metadata.Env} {ctx : code.Context}
     {index : U32} {opcode : U8} {before after : V}
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
     (base : opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253])
@@ -514,7 +514,7 @@ theorem base_step_wasm2 {V : Type} (visitor : code.OpVisitor V)
 theorem reader_return_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
@@ -530,7 +530,7 @@ theorem reader_return_effects_wasm2 {A : Type}
 theorem reader_call_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 16#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
@@ -613,7 +613,7 @@ private theorem scalar_base_conditions {opcode : U8} (covered : opcode.val ∈ s
 theorem reader_scalar_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (covered : opcode.val ∈ scalarOpcodeValues)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
@@ -625,7 +625,7 @@ theorem reader_scalar_effects_wasm2 {A : Type}
 theorem reader_float_base_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
@@ -637,7 +637,7 @@ theorem reader_float_base_effects_wasm2 {A : Type}
 theorem reader_memory_load_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Load)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Load)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=
@@ -648,7 +648,7 @@ theorem reader_memory_load_effects_wasm2 {A : Type}
 theorem reader_memory_store_effects_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Store)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Store)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=

@@ -12,7 +12,7 @@ set_option maxHeartbeats 2000000
 
 /-- Branch stack processing cannot change the label metadata produced by its actual reader. -/
 theorem reader_branch_info_label (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (conditional : Bool) (depth : U32) (view : signature.ResultType)
+    (env : metadata.Env) (conditional : Bool) (depth : U32) (view : signature.ResultType)
     (out : code.BodyState)
     (accepted : code.branch_info st data env conditional = .ok (.Ok (depth, view), out)) :
     ∃ middle, code.read_label_info st data = .ok (.Ok (depth, view), middle) := by
@@ -43,7 +43,7 @@ theorem reader_branch_info_label (st : code.BodyState) (data : Slice U8)
 
 /-- A successful branch's actual callback depth selects exactly its reported label view. -/
 theorem reader_branch_info_selected (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (conditional : Bool) (depth : U32) (view : signature.ResultType)
+    (env : metadata.Env) (conditional : Bool) (depth : U32) (view : signature.ResultType)
     (out : code.BodyState)
     (aligned : st.blocks.val.length = st.core.ctrls.val.length)
     (accepted : code.branch_info st data env conditional = .ok (.Ok (depth, view), out)) :

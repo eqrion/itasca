@@ -18,7 +18,7 @@ theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     unfold runtime.store.instantiate.Store.prepare_instance_loop3 at run
     rw [loop] at run
     simp only [runtime.store.instantiate.Store.prepare_instance_loop3.body,
-      runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.types, bind_ok] at run
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok] at run
     split at run
     · cases status with
       | Err error =>
@@ -39,7 +39,7 @@ theorem type_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
         have nextAllowed := add_type_errors memory allocator law store inst index _ called
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop3 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop3, runtime.store.instantiate.Store.prepare_instance_loop3.body,
-            runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       subst out
@@ -57,7 +57,7 @@ theorem function_staging_errors {M A : Type} (memory : runtime.platform.MemoryBu
     unfold runtime.store.instantiate.Store.prepare_instance_loop4 at run
     rw [loop] at run
     simp only [runtime.store.instantiate.Store.prepare_instance_loop4.body,
-      runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.func_type_indices, bind_ok] at run
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, bind_ok] at run
     split at run
     · cases status with
       | Err error =>
@@ -78,7 +78,7 @@ theorem function_staging_errors {M A : Type} (memory : runtime.platform.MemoryBu
         have nextAllowed := add_function_errors memory allocator law store inst instanceIndex index _ called
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop4 memory allocator nextStore nextStatus nextIndex nextInst instanceIndex = .ok out := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop4, runtime.store.instantiate.Store.prepare_instance_loop4.body,
-            runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.func_type_indices, core.result.Result.is_ok] using tail
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       subst out

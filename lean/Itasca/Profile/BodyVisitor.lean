@@ -18,8 +18,8 @@ namespace Itasca
 /-- If the body validator accepts and the selected signature meets `FuncType`, the body meets
 `Profile.Body`. -/
 theorem code.validate_body_with.profile_sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (ft : types.FuncType) (v v' : V)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (profile : ValidationProfile) (ft : wasm_types.FuncType) (v v' : V)
     (hi : env.types.val[index.val]? = some ft) (hs : Profile.FuncType profile ft)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
     Profile.Body profile data env ctx.locals index :=
@@ -29,7 +29,7 @@ theorem code.validate_body_with.profile_sound {V : Type} (visitor : code.OpVisit
 /-- If the body meets `Profile.Body` and the bounds hold, the body validator accepts with
 accepting callbacks. -/
 theorem code.validate_body_with.profile_complete {V : Type} (visitor : code.OpVisitor V)
-    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (profile : ValidationProfile) (v : V)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -41,7 +41,7 @@ theorem code.validate_body_with.profile_complete {V : Type} (visitor : code.OpVi
 /-- On a valid Wasm 1.0 body within the bounds, the Wasm 1.0 run of any visitor is its Wasm 2.0
 run. -/
 theorem code.validate_body_with.wasm1_of_body {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (v : V) r
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (v : V) r
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : Profile.Body .Wasm1 data env ctx.locals index)

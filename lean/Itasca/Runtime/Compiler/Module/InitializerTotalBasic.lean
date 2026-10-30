@@ -25,8 +25,8 @@ def initializerSize (m : runtime.compiler.ExecutableModule) : Nat :=
 The bytecode checker is total even when it rejects the synthetic function. -/
 @[step] theorem initializer_expression_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (m : runtime.compiler.ExecutableModule)
-    (budget : runtime.compiler.Budget A) (expr : Itasca.types.ConstExpr)
-    (ty : Itasca.types.ValueType) (space : initializerSize m + 1 ≤ Usize.max) :
+    (budget : runtime.compiler.Budget A) (expr : Itasca.wasm_types.ConstExpr)
+    (ty : Itasca.wasm_types.ValueType) (space : initializerSize m + 1 ≤ Usize.max) :
     runtime.compiler.initialize.expression ops m budget expr ty ⦃ out =>
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 1 ⦄ := by
   unfold runtime.compiler.initialize.expression
@@ -73,7 +73,7 @@ The bytecode checker is total even when it rejects the synthetic function. -/
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step as ⟨g, found⟩
   · simpa [alloc.vec.Vec.deref] using bound
   step with initializer_expression_total ops law m budget g.init g.gtype.valtype (by omega)
@@ -99,7 +99,7 @@ The bytecode checker is total even when it rejects the synthetic function. -/
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   step as ⟨segment, found⟩
   cases mode : segment.mode with
   | Active memory offset =>

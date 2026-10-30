@@ -39,7 +39,7 @@ theorem code.pop_stack_type.above_base (st : code.OpIterState)
 /-- `code.push_types_loop` appends the remaining types in order. -/
 @[step]
 theorem code.push_types_loop.spec (st : code.OpIterState)
-    (ts : Slice types.ValueType) (i : Usize)
+    (ts : Slice wasm_types.ValueType) (i : Usize)
     (hi : i.val ≤ ts.val.length)
     (hsize : st.vals.val.length + (ts.val.length - i.val) ≤ Usize.max) :
     code.push_types_loop st ts i ⦃ st' =>
@@ -76,7 +76,7 @@ theorem code.push_types_loop.spec (st : code.OpIterState)
 
 /-- `code.push_types` appends all the types in order. -/
 @[step]
-theorem code.push_types.spec (st : code.OpIterState) (ts : Slice types.ValueType)
+theorem code.push_types.spec (st : code.OpIterState) (ts : Slice wasm_types.ValueType)
     (hsize : st.vals.val.length + ts.val.length ≤ Usize.max) :
     code.push_types st ts ⦃ st' =>
       st'.vals.val = st.vals.val ++ ts.val.map code.StackType.Val ∧

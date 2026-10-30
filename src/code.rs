@@ -8,12 +8,12 @@ use crate::error::{OpError, VisitError};
 use crate::limits::{
     MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS,
 };
-use crate::module::Env;
+use crate::metadata::Env;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
 use crate::signature::{self, BlockType as BlockSignature, ResultType, TypePart};
-use crate::types::{ElemType, FuncType, GlobalType, Mut, ValueType};
+use crate::wasm_types::{ElemType, FuncType, GlobalType, Mut, ValueType};
 use alloc::vec::Vec;
 
 /// The alignment exponent and byte offset of a memory instruction.

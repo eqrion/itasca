@@ -15,7 +15,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- The actual memory reader selected by the independently defined binary row. -/
-def memoryReader (operation : MemoryMeaning.Operation) (st : code.OpIterState) (data : Slice U8) (env : module.Env) :=
+def memoryReader (operation : MemoryMeaning.Operation) (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :=
   if operation.store then code.read_store st data env operation.ty operation.naturalAlign
   else code.read_load st data env operation.ty operation.naturalAlign
 
@@ -65,7 +65,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-def memoryRawType : numtype → types.ValueType
+def memoryRawType : numtype → wasm_types.ValueType
   | .I32 => .I32 | .I64 => .I64 | .F32 => .F32 | .F64 => .F64
 
 def memoryNatural : numtype → U32

@@ -7,7 +7,7 @@ set_option maxRecDepth 4096
 /-- The real Wasm 2 target loop terminates from a reached-state body contract.
 The count/index measure includes the final default-target iteration. -/
 theorem _root_.Itasca.code.branch_table_with_loop.total_on {V : Type}
-    (visitor : code.OpVisitor V) (data : Slice U8) (env : module.Env)
+    (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (count : U32)
     (inv : code.BodyState → V → Option Usize → signature.ResultType → U32 → Prop)
     (post : code.BodyState → V → Prop)

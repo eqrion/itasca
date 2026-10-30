@@ -248,8 +248,8 @@ theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
   · have equal : subopcode = 13#u32 := UScalar.eq_of_val_eq member
     rw [equal] at decoded raw ⊢
     simp only [Wasm2.bulkStep] at raw ⊢
-    refine CoreVisitor.run.accepted_lift_on (code.take_element {st.core with pos := next} data env) (fun v state (arg : U32 × types.ValueType) => source.on_elem_drop v state arg.1)
-      (fun v state (arg : U32 × types.ValueType) => (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_elem_drop v state arg.1) before after compiler out.core
+    refine CoreVisitor.run.accepted_lift_on (code.take_element {st.core with pos := next} data env) (fun v state (arg : U32 × wasm_types.ValueType) => source.on_elem_drop v state arg.1)
+      (fun v state (arg : U32 × wasm_types.ValueType) => (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_elem_drop v state arg.1) before after compiler out.core
       (fun after => CompilationBudgetEffect compiler.budget after.budget
         (fun counter => if counter = .instructions then 1 else 0)) raw ?_
     intro value read _

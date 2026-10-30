@@ -5,7 +5,7 @@ import Itasca.Module.Readers.Names
 /-!
 # Single import parser
 
-Soundness of `module.decode_import`. `ImportAdded` says that the environment gains the import
+Soundness of `metadata.decode_import`. `ImportAdded` says that the environment gains the import
 and updates only the index space of its kind, with the limits, table count and profile guards of
 that kind. The decoded bytes are an `ImportEncoding` span and the environment stays `Bounded`.
 Completeness is in `Module/Sections/ImportsComplete`.
@@ -20,7 +20,7 @@ namespace Itasca.ModuleSections
 /-- `result` is `env` with `entry` appended to the imports and to the index space of its kind.
 Functions must resolve their type, tables and memories satisfy their limits and count caps,
 and tables and globals use types the profile allows. -/
-def ImportAdded (env result : module.Env) (entry : module.Import)
+def ImportAdded (env result : metadata.Env) (entry : metadata.Import)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
   match entry.desc with
@@ -60,31 +60,31 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
-/-- `module.decode_import` adds one import to the environment (`ImportAdded`), the bytes are its
+/-- `metadata.decode_import` adds one import to the environment (`ImportAdded`), the bytes are its
 `ImportEncoding` span, and the environment stays within the byte bound. -/
 @[step]
-theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :
-    module.decode_import data pos env profile ⦃ r => match r.1 with
+    metadata.decode_import data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ entry, ImportAdded env r.2 entry profile ∧
           At ImportEncoding data pos (ModuleEnv.rawImport entry) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hm⟩ := WP.spec_imp_exists (module.decode_name.spec data pos)
+  obtain ⟨r, hr, hm⟩ := WP.spec_imp_exists (metadata.decode_name.spec data pos)
   cases r with
-  | Err e => simp [module.decode_import, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_import, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨modname, p1⟩ := pair
-    obtain ⟨r, hn, hname⟩ := WP.spec_imp_exists (module.decode_name.spec data p1)
+    obtain ⟨r, hn, hname⟩ := WP.spec_imp_exists (metadata.decode_name.spec data p1)
     cases r with
-    | Err e => simp [module.decode_import, hr, hn, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [metadata.decode_import, hr, hn, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
       obtain ⟨nm, p2⟩ := pair
       obtain ⟨r, hk, hkind⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p2)
       cases r with
-      | Err e => simp [module.decode_import, hr, hn, hk, core.result.Result.Insts.CoreOpsTry.branch,
+      | Err e => simp [metadata.decode_import, hr, hn, hk, core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
           error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
@@ -95,7 +95,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
         have hspanB := (At.byte hkind).bound
         have hprogress : pos.val < p3.val := by simp only [List.length_singleton] at hspanK; omega
         cases hbound
-        simp [module.decode_import, hr, hn, hk, core.result.Result.Insts.CoreOpsTry.branch]
+        simp [metadata.decode_import, hr, hn, hk, core.result.Result.Insts.CoreOpsTry.branch]
         split
         · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data p3)
           cases r with
@@ -105,7 +105,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
           | Ok pair =>
             obtain ⟨value, next⟩ := pair
             have hspanD := hdesc.span
-            obtain ⟨r, ht, hlookup⟩ := WP.spec_imp_exists (module.lookup_type.spec env value)
+            obtain ⟨r, ht, hlookup⟩ := WP.spec_imp_exists (metadata.lookup_type.spec env value)
             cases r with
             | Err e => simp [hd, ht,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -117,7 +117,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
               step
               step
               step
-              let entry : module.Import := ⟨modname, nm, .Func value⟩
+              let entry : metadata.Import := ⟨modname, nm, .Func value⟩
               refine ⟨entry, ?_, ?_, ?_⟩
               · refine ⟨v1_post, ft, hlookup, rfl, v_post, i_post⟩
               · apply import_encoded hm hname
@@ -125,7 +125,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
                 intro bytes hbytes
                 exact .func value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_table_type.allowed_spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.allowed_spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -138,7 +138,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
             simp [hd]
             step
             obtain ⟨checked, hchecked, hcount⟩ := WP.spec_imp_exists
-              (module.check_table_count.spec { env with table_types := v } profile)
+              (metadata.check_table_count.spec { env with table_types := v } profile)
             rw [hchecked]
             cases checked with
             | Err e => simp [
@@ -147,7 +147,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
               cases u
               simp only [bind_ok]
               step
-              let entry : module.Import := ⟨modname, nm, .Table value⟩
+              let entry : metadata.Import := ⟨modname, nm, .Table value⟩
               refine ⟨entry, ?_, ?_, ?_⟩
               · refine ⟨v1_post, rfl, v_post, ?_, ?_, hallowed⟩
                 · exact hcount
@@ -157,7 +157,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
                 intro bytes hbytes
                 exact .table value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_mem_type.spec data p3)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_mem_type.spec data p3)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -173,7 +173,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
             · simp
             · rename_i hcount
               step
-              let entry : module.Import := ⟨modname, nm, .Memory value⟩
+              let entry : metadata.Import := ⟨modname, nm, .Memory value⟩
               refine ⟨entry, ?_, ?_, ?_⟩
               · refine ⟨v1_post, rfl, v_post, ?_, ?_⟩
                 · simpa [global_simps] using hcount
@@ -183,7 +183,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
                 intro bytes hbytes
                 exact .memory value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (module.decode_global_type.allowed_spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.allowed_spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -198,7 +198,7 @@ theorem module.decode_import.spec (data : Slice U8) (pos : Usize) (env : module.
             step
             step
             step
-            let entry : module.Import := ⟨modname, nm, .Global value⟩
+            let entry : metadata.Import := ⟨modname, nm, .Global value⟩
             refine ⟨entry, ?_, ?_, ?_⟩
             · exact ⟨v1_post, rfl, v_post, i_post, hallowed⟩
             · apply import_encoded hm hname

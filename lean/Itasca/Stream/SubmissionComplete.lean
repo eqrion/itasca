@@ -41,7 +41,7 @@ open ModuleBinary StreamAcceptingScheduler
 /-- The scheduler's queue of valid work matches the pending vector, and the remaining bytes and
 entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (code : Slice U8) (env : module.Env) (id : U64) (config : stream.Config)
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   batchId.val ≤ func.val ∧ pending.length ≤ batchId.val ∧ pending.length ≤ config.max_batches.val ∧
@@ -62,7 +62,7 @@ def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → 
   | (.Err _, _) => False
 
 private def CompleteBodyPost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (code : Slice U8) (env : module.Env) (id : U64) (config : stream.Config) (func : Usize)
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : stream.Config) (func : Usize)
     (profile : ValidationProfile := .Wasm1) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
@@ -79,7 +79,7 @@ private theorem increment (n bound : Usize) (h : n.val < bound.val) :
 private theorem resume_complete {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
     (hlimits : Profile.EnvironmentWithinLimits env)
@@ -193,7 +193,7 @@ open ModuleBinary StreamAcceptingScheduler
 private theorem body_complete {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
     (hlimits : Profile.EnvironmentWithinLimits env)
@@ -254,7 +254,7 @@ outstanding work as its function cursor advances. -/
 theorem stream.submit_code_batches_loop.complete_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
     (hlimits : Profile.EnvironmentWithinLimits env)
@@ -292,7 +292,7 @@ matches the pending IDs for the final drain. -/
 theorem stream.submit_code_batches.complete {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (config : stream.Config) (ha : Accepts visitor config Queued profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
     (hlimits : Profile.EnvironmentWithinLimits env)

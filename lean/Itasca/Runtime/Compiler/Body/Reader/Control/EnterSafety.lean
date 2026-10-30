@@ -33,7 +33,7 @@ theorem typed_pop_prefix {poly before expected result after}
     · exact popped_prefix popped
 
 @[step] theorem pop_with_type_prefix (st : code.OpIterState) (outer segment : List code.StackType)
-    (expected : types.ValueType) (values : st.vals.val = outer ++ segment)
+    (expected : wasm_types.ValueType) (values : st.vals.val = outer ++ segment)
     (base : (Control.base st).val = outer.length) :
     code.pop_with_type st expected ⦃ out => out.2.ctrls = st.ctrls ∧ out.2.pos = st.pos ∧
       ∃ rest, out.2.vals.val = outer ++ rest ∧ rest <+: segment ⦄ := by
@@ -42,7 +42,7 @@ theorem typed_pop_prefix {poly before expected result after}
   exact ⟨controls, position, rest, afterValues, typed_pop_prefix effect⟩
 
 @[step] theorem pop_types_prefix (st : code.OpIterState) (outer segment : List code.StackType)
-    (expected : Slice types.ValueType) (values : st.vals.val = outer ++ segment)
+    (expected : Slice wasm_types.ValueType) (values : st.vals.val = outer ++ segment)
     (base : (Control.base st).val = outer.length) :
     code.pop_types st expected ⦃ out => out.2.ctrls = st.ctrls ∧ out.2.pos = st.pos ∧
       ∃ rest, out.2.vals.val = outer ++ rest ∧ rest <+: segment ⦄ := by
@@ -77,7 +77,7 @@ theorem typed_pop_prefix {poly before expected result after}
           ⟨rest, afterValues, afterPrefix.trans currentPrefix⟩, by scalar_tac⟩
   · exact ⟨by simp, rfl, rfl, segment, values, ⟨[], by simp⟩⟩
 
-@[step] theorem pop_results_prefix (st : code.OpIterState) (env : module.Env)
+@[step] theorem pop_results_prefix (st : code.OpIterState) (env : metadata.Env)
     (view : signature.ResultType) (outer segment : List code.StackType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length) :
     code.pop_results st env view ⦃ out => out.2.ctrls = st.ctrls ∧ out.2.pos = st.pos ∧
@@ -118,7 +118,7 @@ def EntryPrefix (before after : code.OpIterState) : Prop :=
     ctrl.value_stack_base.val ≤ after.vals.val.length ∧
     after.vals.val.take ctrl.value_stack_base.val <+: before.vals.val
 
-@[step] theorem enter_params_prefix (st : code.BodyState) (env : module.Env)
+@[step] theorem enter_params_prefix (st : code.BodyState) (env : metadata.Env)
     (form : Frames.Form) (bt : signature.BlockType) (outer segment : List code.StackType)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (shape : Control.Shape st.core) (capacity : st.blocks.val.length < Usize.max) :
@@ -148,7 +148,7 @@ def EntryPrefix (before after : code.OpIterState) : Prop :=
       exact ⟨suffix, by rw [middleValues, values, ← suffixEq, List.append_assoc]⟩
   · step*
 
-@[step] theorem enter_args_prefix (st : code.BodyState) (env : module.Env)
+@[step] theorem enter_args_prefix (st : code.BodyState) (env : metadata.Env)
     (form : Frames.Form) (bt : signature.BlockType) (outer segment : List code.StackType)
     (initial : form.Initial)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)

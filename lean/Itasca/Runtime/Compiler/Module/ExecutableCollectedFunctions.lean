@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctio
 import Itasca.Runtime.Compiler.Module.CollectFunctions
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
-structure PendingExecutableModuleFunctions (env : Itasca.module.Env)
+structure PendingExecutableModuleFunctions (env : Itasca.metadata.Env)
     (pending : List (Option runtime.bytecode.CompiledFunction)) (sources : List funccode) : Prop where
   count : sources.length = env.func_type_indices.val.length
   entry : ∀ (index : Nat) (typeIndex : U32), env.func_type_indices.val[index]? = some typeIndex →

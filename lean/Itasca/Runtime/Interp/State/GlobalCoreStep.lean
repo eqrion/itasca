@@ -69,11 +69,11 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
 
-theorem source_type_width_two (ty : Itasca.types.ValueType) :
+theorem source_type_width_two (ty : Itasca.wasm_types.ValueType) :
     Compiler.width (sourceType ty) = 2 ↔ ty = .V128 := by
   cases ty <;> simp [sourceType,Compiler.width]
 
-theorem source_type_width_scalar (ty : Itasca.types.ValueType) (scalar : ty ≠ .V128) :
+theorem source_type_width_scalar (ty : Itasca.wasm_types.ValueType) (scalar : ty ≠ .V128) :
     Compiler.width (sourceType ty) = 1 := by
   cases ty <;> simp_all [sourceType,Compiler.width]
 

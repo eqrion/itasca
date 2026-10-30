@@ -8,7 +8,7 @@ def schedulerFrame {A : Type} (scheduler : runtime.compiler.CompileScheduler A) 
   (scheduler.completed, scheduler.tail, scheduler.code_start)
 
 theorem capture_signature_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : module.Env) (index : Usize)
+    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
     (result : core.result.Result Unit error.Error)
     (run : runtime.compiler.CompileScheduler.capture_signature allocator before env index = .ok (result, after)) :
     schedulerFrame after = schedulerFrame before := by
@@ -37,7 +37,7 @@ theorem capture_signature_frame {A : Type} (allocator : runtime.platform.Alloc A
       simpa [schedulerFrame] using congrArg schedulerFrame same.symm
 
 theorem capture_func_slots_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : module.Env) (index : Usize)
+    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
     (result : core.result.Result Unit error.Error)
     (run : runtime.compiler.CompileScheduler.capture_func_slots allocator before env index = .ok (result, after)) :
     schedulerFrame after = schedulerFrame before := by
@@ -58,7 +58,7 @@ theorem capture_func_slots_frame {A : Type} (allocator : runtime.platform.Alloc 
     simpa [schedulerFrame] using congrArg schedulerFrame same.symm
 
 theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before : runtime.compiler.CompileScheduler A) (env : module.Env) (index : Usize)
+    (before : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
     (result : core.result.Result Unit error.Error) (output)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
       allocator before env index result = .ok output) :
@@ -68,7 +68,7 @@ theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A
   | h n ih =>
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0 at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.module.Env.impl.types, bind_ok] at accepted
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.metadata.Env.impl.types, bind_ok] at accepted
     split at accepted
     · cases result with
       | Err error =>
@@ -90,7 +90,7 @@ theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A
             allocator middle env nextIndex nextResult = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
             runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.module.Env.impl.types, core.result.Result.is_ok] using tail
+            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
         exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
           (capture_signature_frame allocator before middle env index nextResult entry)
     · simp only [bind_ok, Result.ok.injEq] at accepted
@@ -98,7 +98,7 @@ theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A
       rfl
 
 theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before : runtime.compiler.CompileScheduler A) (env : module.Env) (index : Usize)
+    (before : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
     (result : core.result.Result Unit error.Error) (output)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1
       allocator before env index result = .ok output) :
@@ -108,7 +108,7 @@ theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A
   | h n ih =>
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1 at accepted
     rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.module.Env.impl.func_types, bind_ok] at accepted
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.metadata.Env.impl.func_types, bind_ok] at accepted
     split at accepted
     · cases result with
       | Err error =>
@@ -130,7 +130,7 @@ theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A
             allocator middle env nextIndex nextResult = .ok output := by
           simpa only [uncurry_apply_pair, bind_ok,
             runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.module.Env.impl.func_types, core.result.Result.is_ok] using tail
+            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.metadata.Env.impl.func_types, core.result.Result.is_ok] using tail
         exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
           (capture_func_slots_frame allocator before middle env index nextResult entry)
     · simp only [bind_ok, Result.ok.injEq] at accepted
@@ -140,14 +140,14 @@ theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A
 /-- Environment preparation does not alter queued workers, the source origin,
 or the tail handoff. This statement follows from actual successful callbacks. -/
 theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : module.Env) (config : stream.Config)
+    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.Config)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
       allocator before env = .ok (.Ok config, after)) : schedulerFrame after = schedulerFrame before := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready at accepted
-  simp only [Itasca.module.Env.impl.func_type_indices, bind_ok] at accepted
+  simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok] at accepted
   split at accepted
   · simp [runtime.compiler.Budget.reject] at accepted
-  · simp only [Itasca.module.Env.impl.types, bind_ok] at accepted
+  · simp only [Itasca.metadata.Env.impl.types, bind_ok] at accepted
     split at accepted
     · simp [runtime.compiler.Budget.reject] at accepted
     · obtain ⟨⟨signatures, slots, completed, functions, tail, start, budget, status⟩, loop0, rest⟩ :=

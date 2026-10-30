@@ -5,11 +5,11 @@ import Itasca.Runtime.Interp.Relations.Regions
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-def readPair (words : List U64) (position : Nat) (ty : Itasca.types.ValueType) : U64 × U64 :=
+def readPair (words : List U64) (position : Nat) (ty : Itasca.wasm_types.ValueType) : U64 × U64 :=
   (words[position]!, if sourceType ty = .V128 then words[position + 1]! else 0#u64)
 
 theorem WordsAt.read_pair {words : List U64} {position : Nat} {bits : List Nat}
-    (ty : Itasca.types.ValueType) (represented : WordsAt words position bits)
+    (ty : Itasca.wasm_types.ValueType) (represented : WordsAt words position bits)
     (length : bits.length = Compiler.width (sourceType ty)) :
     pairWords ty (readPair words position ty) = bits := by
   by_cases hv : sourceType ty = .V128
@@ -69,7 +69,7 @@ theorem encode_value_reference_low (value : val) (fits : ResultIndexFits value)
   | REF_FUNC_ADDR address | REF_HOST_ADDR address => simpa [Compiler.encodeValue, ResultIndexFits] using fits
 
 @[step] theorem decode_slot_represents (slots : Slice U64) (position : Usize)
-    (ty : Itasca.types.ValueType) (store : Usize) (value : val)
+    (ty : Itasca.wasm_types.ValueType) (store : Usize) (value : val)
     (wellFormed : wf_val value) (typed : sourceType ty = Compiler.valueType value)
     (represented : WordsAt slots.val position.val (Compiler.encodeValue value))
     (bound : position.val + Compiler.width (sourceType ty) ≤ slots.length)
@@ -89,7 +89,7 @@ theorem encode_value_reference_low (value : val) (fits : ResultIndexFits value)
 /-- The live-value representation supplies the decoder's numeric bounds;
 only the independent issued-address bound remains explicit. -/
 @[step] theorem decode_slot_value (slots : Slice U64) (position : Usize)
-    (ty : Itasca.types.ValueType) (store : Usize) (value : val)
+    (ty : Itasca.wasm_types.ValueType) (store : Usize) (value : val)
     (wellFormed : wf_val value) (typed : sourceType ty = Compiler.valueType value)
     (represented : WordsAt slots.val position.val (Compiler.encodeValue value))
     (fits : ResultIndexFits value) :

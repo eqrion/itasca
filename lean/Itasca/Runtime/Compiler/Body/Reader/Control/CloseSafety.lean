@@ -19,7 +19,7 @@ theorem StructuredCompilerPrefix.close_reader_total {jumpTables : List U32} {A}
     {emit types functions returns locals parents current raw position}
     (invariant : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current raw position)
     (bounded : position ≤ limits.MAX_MODULE_BYTES.val)
-    (state : code.BodyState) (env : module.Env) (isElse : Bool)
+    (state : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (shape : Control.Shape state.core)
     (aligned : state.blocks.val.length = state.core.ctrls.val.length)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)

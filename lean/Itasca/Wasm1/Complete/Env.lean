@@ -19,8 +19,8 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm1.Completeness
 
 private theorem finish {st : code.OpIterState} (f : Frame st)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (opcode : U8)
-    (before : List valtype) (outputs : List types.ValueType) (next : Usize)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (opcode : U8)
+    (before : List valtype) (outputs : List wasm_types.ValueType) (next : Usize)
     {α : Type} (value : α) (s : code.OpIterState)
     (hp : EnvComplete.Post st f.outer f.operands before outputs next value (.Ok value, s))
     (houtputs : outputs.length ≤ 1)
@@ -32,7 +32,7 @@ private theorem finish {st : code.OpIterState} (f : Frame st)
   simp only [hv, f.vals, List.length_append]
   omega
 
-theorem localGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem localGet {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
     (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -52,7 +52,7 @@ theorem localGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
         code.OpVisitor.on_local_get.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_GET, hv] using result
 
-theorem localSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem localSet {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
     (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -71,7 +71,7 @@ theorem localSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
         code.OpVisitor.on_local_set.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_SET] using result
 
-theorem localTee {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem localTee {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
     (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -91,7 +91,7 @@ theorem localTee {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx :
         code.OpVisitor.on_local_tee.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_TEE, hv] using result
 
-theorem globalGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem globalGet {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
     (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -112,7 +112,7 @@ theorem globalGet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx 
         code.OpVisitor.on_global_get.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_GLOBAL_GET, hvt] using result
 
-theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Leb128.Encoding bytes idx.val)
     (hb : Wasm1.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -134,7 +134,7 @@ theorem globalSet {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx 
         code.OpVisitor.on_global_set.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_GLOBAL_SET] using result
 
-theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
     (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_SIZE (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -152,7 +152,7 @@ theorem memorySize {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
         code.OpVisitor.on_memory_size.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_MEMORY_SIZE, Translate.valueType] using result
 
-theorem memoryGrow {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem memoryGrow {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
     (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_GROW (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -172,7 +172,7 @@ theorem memoryGrow {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx
 
 /-- Every independently described memory row executes successfully when its
 principal generated typing rule applies to the realized operand stack. -/
-theorem memory {st} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem memory {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (hc : EnvTranslation.Matches env ctx C)
     (opcode : U8) (operation : MemoryMeaning.Operation)
     (hrow : MemoryMeaning.opcodeMeaning opcode = some operation) (arg : code.MemArg)

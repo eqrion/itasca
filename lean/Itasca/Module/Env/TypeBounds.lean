@@ -58,7 +58,7 @@ namespace Itasca.ModuleEnv
 
 /-- Every function type in the environment has at most `limit` parameters. Parameter vectors are
 nested inside the type list, so they need their own size bound unlike the index-space caches. -/
-def SignatureBounded (env : module.Env) (limit : Nat) : Prop :=
+def SignatureBounded (env : metadata.Env) (limit : Nat) : Prop :=
   ∀ ft ∈ env.types.val, ft.params.val.length ≤ limit
 
 theorem SignatureBounded.mono {env limit next} (h : SignatureBounded env limit) (hle : limit ≤ next) :

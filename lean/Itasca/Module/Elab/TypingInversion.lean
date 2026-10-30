@@ -72,7 +72,7 @@ theorem func_type_lookup {C : context} {f ft} (h : Func_ok C f ft) :
   assumption
 
 /-- A typed code entry in a context with translated types has the type given by `functionType`. -/
-theorem function_type_of_typing {C : context} {ts : List types.FuncType} {idx entry ft}
+theorem function_type_of_typing {C : context} {ts : List wasm_types.FuncType} {idx entry ft}
     (h : Func_ok C (CodeEntry.function idx entry) ft)
     (hC : C.TYPES = ts.map EnvTranslation.funcType) : ft = functionType ts idx := by
   have hi := func_index_bound h
@@ -85,7 +85,7 @@ theorem function_type_of_typing {C : context} {ts : List types.FuncType} {idx en
 
 /-- Typed functions in a context with translated types determine the function types of their type
 indices, and each entry is typed at its own type. -/
-theorem function_lists_of_typing {C : context} {ts : List types.FuncType} {indices codes fts}
+theorem function_lists_of_typing {C : context} {ts : List wasm_types.FuncType} {indices codes fts}
     (hn : indices.length = codes.length)
     (h : List.Forall₂ (fun ft f => Func_ok C f ft) fts (List.zipWith CodeEntry.function indices codes))
     (hC : C.TYPES = ts.map EnvTranslation.funcType) :

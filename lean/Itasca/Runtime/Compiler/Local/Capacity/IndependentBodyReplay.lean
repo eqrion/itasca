@@ -9,7 +9,7 @@ replays only its reached steps. The remaining compiler-specific obligation is
 the local resource/prefix refinement; an accepted callback trace or successful
 target body is not an input to this theorem. -/
 theorem independent_body_accepted_replay {W : Type} (target : code.OpVisitor W)
-    (profile : ValidationProfile) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (limits : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ Itasca.limits.MAX_FUNCTION_BYTES.val)
     (body : Profile.Body profile data env ctx.locals index)

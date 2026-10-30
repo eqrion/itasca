@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std Itasca
 theorem Pending.fixed_reader {data env profile locals index st}
     (p : Wasm2.Pending data env profile locals index st)
     (position : Usize)
-    (inputs : List types.ValueType) (output : Option types.ValueType) (source : instr)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (source : instr)
     (capacity : st.core.vals.val.length < Usize.max)
     (wf : wf_instr source)
     (declared : DeclaredReferences.Instruction
@@ -64,7 +64,7 @@ theorem Pending.fixed_reader {data env profile locals index st}
 theorem Pending.fixed_reader_accepted {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st)
     (position : Usize) (out : code.OpIterState)
-    (inputs : List types.ValueType) (output : Option types.ValueType) (source : instr)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (source : instr)
     (capacity : st.core.vals.val.length < Usize.max)
     (wf : wf_instr source)
     (declared : DeclaredReferences.Instruction

@@ -7,7 +7,7 @@ namespace ReachedBody
 /-- Only the reader/visitor pairs actually retained by the prefix invariant
 must return. Bytes may be malformed, and a callback may reject normally. -/
 def StepTotalOn {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (typeIndex : U32) (profile : ValidationProfile)
+    (env : metadata.Env) (ctx : code.Context) (typeIndex : U32) (profile : ValidationProfile)
     (inv : V → code.BodyState → Prop) : Prop :=
   ∀ (st : code.BodyState) (v : V), inv v st → st.core.ctrls.val ≠ [] →
     ∀ (inbounds : st.core.pos.val < data.length) (next : Usize), next.val = st.core.pos.val + 1 →
@@ -20,7 +20,7 @@ end ReachedBody
 states. Its termination measure uses the concrete byte cursor, independently of
 source validity or callback behavior at unreachable states. -/
 theorem code.body_loop_loop.total_on {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (inv : V → code.BodyState → Prop) (post : V → Prop)
     (steps : ReachedBody.StepTotalOn visitor data env ctx typeIndex profile inv)
     (closed : ∀ st v, inv v st → st.core.ctrls.val = [] → st.core.pos.val = data.length → post v)
@@ -71,7 +71,7 @@ theorem code.body_loop_loop.total_on {V : Type} (visitor : code.OpVisitor V)
 /-- The outer size guard and initialization preserve the reached-state loop
 contract. Initialization errors and oversized bodies return without callbacks. -/
 theorem code.validate_body_with.total_on {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile) (inv : V → code.BodyState → Prop) (post : V → Prop)
     (v : V)
     (initialization : code.initial_state env typeIndex ⦃ result =>

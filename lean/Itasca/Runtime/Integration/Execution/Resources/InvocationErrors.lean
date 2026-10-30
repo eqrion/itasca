@@ -53,7 +53,7 @@ theorem CumulativeFailure.eventful_error {M P A : Type} {allocator : runtime.pla
 
 theorem HostPreparationCause.eventful_error {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {signature : Itasca.types.FuncType} {base : Usize}
+    {store : runtime.store.Store M} {platform : P} {signature : Itasca.wasm_types.FuncType} {base : Usize}
     {source : SourceMachine.AState} {error : runtime.ExecError}
     (cause : HostPreparationCause allocator hooks exec store platform signature base error)
     (typed : SourceMachine.ATyped source) :

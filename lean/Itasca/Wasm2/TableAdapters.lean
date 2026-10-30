@@ -22,7 +22,7 @@ theorem ResultFacts.map_spec {A B : Type} (m : Result A) (f : A → B) (P : B �
 
 /-- One iteration of `code.branch_table_with_loop` with the empty visitor removed. -/
 def Wasm2.branchTableLoop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.module.Env) (profile : ValidationProfile)
+  (data : Slice Std.U8) (env : _root_.Itasca.metadata.Env) (profile : ValidationProfile)
   (count : Std.U32) (ois : _root_.Itasca.code.OpIterState)
   (arity : Option Std.Usize) (first : signature.ResultType) (i : Std.U32) :
   Result (ControlFlow (_root_.Itasca.code.OpIterState × (Option Std.Usize) ×
@@ -101,7 +101,7 @@ def Wasm2.branchTableLoop.body
 /-- The extracted `code.branch_table_with_loop` with the empty visitor, returning only the result
 and body state. -/
 def Wasm2.branchTableLoop
-  (ois : code.OpIterState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+  (ois : code.OpIterState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
   (count : U32) (arity : Option Usize) (first : signature.ResultType) (i : U32) :
   Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, s, _) ← code.branch_table_with_loop
@@ -111,7 +111,7 @@ def Wasm2.branchTableLoop
 /-- `code.branch_table_with` with the empty visitor, unfolded to `Wasm2.branchTableLoop`. -/
 def Wasm2.tableCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (profile : ValidationProfile) :
+  (env : _root_.Itasca.metadata.Env) (profile : ValidationProfile) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
     _root_.Itasca.code.BodyState)
   := do
@@ -121,7 +121,7 @@ def Wasm2.tableCore
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, «end») := val
     let (r1, ois) ←
-      code.pop_with_type { st.core with pos := «end» } types.ValueType.I32
+      code.pop_with_type { st.core with pos := «end» } wasm_types.ValueType.I32
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -158,7 +158,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 800000 in
 /-- The extracted loop body with the empty visitor equals `Wasm2.branchTableLoop.body` up to the
 visitor component. -/
-theorem tableBody_eq (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem tableBody_eq (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (count : U32) (ois : code.OpIterState) (arity : Option Usize) (first : signature.ResultType)
     (i : U32) :
     code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -204,7 +204,7 @@ theorem tableBody_eq (data : Slice U8) (env : module.Env) (profile : ValidationP
 end Wasm2
 
 /-- The extracted `code.branch_table_with` with the empty visitor equals `Wasm2.tableCore`. -/
-theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) :
     (do let (r, s, _) ← code.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
           st data env profile (); .ok (r, s)) = Wasm2.tableCore st data env profile := by
@@ -224,7 +224,7 @@ theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (
     cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- The extracted `code.branch_table` equals `Wasm2.tableCore`. -/
-theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) :
     code.branch_table st data env profile = Wasm2.tableCore st data env profile := by
   rw [← code.branch_table_with.eq_core]

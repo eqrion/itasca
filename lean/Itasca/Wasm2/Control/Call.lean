@@ -21,7 +21,7 @@ namespace Itasca
 /-- Direct-call acceptance consumes every parameter and supplies every result,
 with the function index certified by the independent LEB grammar. -/
 theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
@@ -66,7 +66,7 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
 theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (idx : U32) (next : Usize) (ft : types.FuncType)
+    (env : metadata.Env) (profile : ValidationProfile) (idx : U32) (next : Usize) (ft : wasm_types.FuncType)
     (hd : Leb128.Decoded data st.core.pos idx next)
     (hi : idx.val < env.func_types.val.length) (ht : env.func_types.val[idx.val] = ft)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
@@ -98,7 +98,7 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
 /-- Indirect calls decode both indices and require a function-reference table.
 The selector is consumed before function arguments. -/
 theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
@@ -142,9 +142,9 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
         cases helem : tt.elem with
         | ExternRef =>
           simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
-            htablesmall, hget, helem, types.ElemType.value_type,
+            htablesmall, hget, helem, wasm_types.ElemType.value_type,
             core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-            types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
+            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
             core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | FuncRef =>
@@ -161,9 +161,9 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
             cases rc with
             | Err e =>
               simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
-                htablesmall, hget, helem, types.ElemType.value_type,
+                htablesmall, hget, helem, wasm_types.ElemType.value_type,
                 core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
+                wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
                 core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok popped =>
@@ -173,9 +173,9 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
               cases res with
               | Err e =>
                 simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
-                  htablesmall, hget, helem, types.ElemType.value_type,
+                  htablesmall, hget, helem, wasm_types.ElemType.value_type,
                   core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                  types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
+                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                   core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
               | Ok u =>
@@ -195,18 +195,18 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                 rw [WP.spec_equiv_exists]
                 refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
                 · simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
-                    htablesmall, hget, helem, types.ElemType.value_type,
+                    htablesmall, hget, helem, wasm_types.ElemType.value_type,
                     core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
+                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                     core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                 · exact ⟨idx, table, middle, hd, hz, by simpa [Leb128.Post, hp, hpc] using hdtable,
                     hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), _, hv, htyping⟩
           · have hlarge := Nat.le_of_not_gt hi
             simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
-              htablesmall, hget, helem, types.ElemType.value_type,
+              htablesmall, hget, helem, wasm_types.ElemType.value_type,
               core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-              types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
+              wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · have hlarge := Nat.le_of_not_gt htable
@@ -216,8 +216,8 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
 
 /-- Independently encoded indices and compatible operands force acceptance. -/
 theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (idx table : U32) (middle next : Usize)
-    (ft : types.FuncType) (hd : Leb128.Decoded data st.core.pos idx middle)
+    (env : metadata.Env) (profile : ValidationProfile) (idx table : U32) (middle next : Usize)
+    (ft : wasm_types.FuncType) (hd : Leb128.Decoded data st.core.pos idx middle)
     (hzero : profile = .Wasm1 → ∃ h : middle.val < data.length, data.val[middle.val] = 0#u8)
     (hdtable : Leb128.Decoded data middle table next)
     (htable : table.val < env.table_types.val.length)
@@ -269,9 +269,9 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), hpos.trans hpc,
     rest, hvs, by omega, ?_⟩
   · simp [code.call, code.call_indirect_info, code.take_index, hread, hbyte, hreadtable, lift,
-      htablesmall, hget, helem, types.ElemType.value_type,
+      htablesmall, hget, helem, wasm_types.ElemType.value_type,
       core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-      types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, ht, hs,
+      wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, ht, hs,
       core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   · simpa [Control.polymorphic, hcc] using hreal'

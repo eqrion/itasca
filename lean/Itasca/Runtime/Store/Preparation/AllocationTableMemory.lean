@@ -5,7 +5,7 @@ import Itasca.Runtime.Spec.Allocation
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
-theorem decode_table_allocation (ty : types.TableType) (elements : alloc.vec.Vec U64)
+theorem decode_table_allocation (ty : wasm_types.TableType) (elements : alloc.vec.Vec U64)
     (zeros : elements.val = List.replicate ty.limits.min.val 0#u64) :
     decodeTable {elements, ty := ty.elem, maximum := ty.limits.max} =
       Spec.allocationTable (EnvTranslation.tableType ty) := by
@@ -13,7 +13,7 @@ theorem decode_table_allocation (ty : types.TableType) (elements : alloc.vec.Vec
     decodeRef, ↓reduceIte, decode_elem_type_source,
     Spec.allocationTable, EnvTranslation.tableType, EnvTranslation.limitsType, decodeLimits]
 
-theorem decode_memory_allocation {M : Type} (view : M → Slice U8) (ty : types.MemType) (buffer : M)
+theorem decode_memory_allocation {M : Type} (view : M → Slice U8) (ty : wasm_types.MemType) (buffer : M)
     (zeros : (view buffer).val = List.replicate (ty.limits.min.val * 65536) 0#u8) :
     decodeMemory view {buf := buffer, maximum := ty.limits.max} =
       Spec.allocationMemory (EnvTranslation.memType ty) := by

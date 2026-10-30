@@ -15,7 +15,7 @@ actual body acceptance with every final instruction check through the complete l
 theorem compiler_body_wasm2_checked_available {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (initial : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial initial
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (ft.results.val.map Translate.valueType) locals data env sourceLocals index ft (Wasm2.initial index))

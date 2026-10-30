@@ -7,7 +7,7 @@ set_option maxHeartbeats 2000000
 /-- The accepted reader advances the concrete cursor even when later bytes are malformed. Only
 the reached raw control geometry is needed. -/
 theorem code.step_profile.accepted_progress {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (profile : ValidationProfile)
     (st final : code.BodyState) (value after : V)
     (dataBound : data.length ≤ limits.MAX_FUNCTION_BYTES.val)

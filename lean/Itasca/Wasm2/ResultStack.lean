@@ -17,7 +17,7 @@ namespace Itasca
 /-- `code.check_func_type` accepts exactly the function types within the parameter and result
 limits and reports which limit is exceeded otherwise. -/
 @[step]
-theorem code.check_func_type.spec (ft : types.FuncType) :
+theorem code.check_func_type.spec (ft : wasm_types.FuncType) :
     code.check_func_type ft ⦃ r =>
       match r with
       | .Ok _ => ft.params.val.length ≤ 1000 ∧ ft.results.val.length ≤ 1000
@@ -30,8 +30,8 @@ theorem code.check_func_type.spec (ft : types.FuncType) :
 
 /-- Pushing a resolved descriptor has exactly the shared stack primitive's
     effect, with no intermediate runtime vector. -/
-theorem code.push_results.spec (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (ts : List types.ValueType)
+theorem code.push_results.spec (st : code.OpIterState) (env : metadata.Env)
+    (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hts : Wasm2.resolve env view = some ts)
     (hcap : st.vals.val.length + ts.length ≤ Usize.max) :
     code.push_results st env view ⦃ r =>

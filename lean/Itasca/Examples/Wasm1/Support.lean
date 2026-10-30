@@ -21,11 +21,11 @@ def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice 
 def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
 /-- The function type `[] -> []`. -/
-def voidFunction : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
+def voidFunction : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
 /-- A run of the body loop from the initial frame determines the result of `code.bodyCore`. -/
-theorem bodyCore_of_run (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+theorem bodyCore_of_run (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (result : core.result.Result Unit error.OpError)
     (hi : env.types.val[index.val]? = some ft)
     (hparams : ft.params.val.length ≤ 1000) (hresults : ft.results.val.length ≤ 1000)
@@ -53,7 +53,7 @@ theorem bodyCore_of_run (data : Slice U8) (env : module.Env) (profile : Validati
       simp [hrun]
 
 /-- An accepted step continues the loop from the step's state. -/
-theorem run_step (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem run_step (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st next : code.BodyState) (opcode : U8) (pos : Usize)
     (hc : st.blocks.val ≠ [])
     (hr : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
@@ -64,7 +64,7 @@ theorem run_step (data : Slice U8) (env : module.Env) (profile : ValidationProfi
   (Wasm2.Execution.single hc hr ho hs).loop_eq
 
 /-- A rejected step ends the loop with the step's error. -/
-theorem run_error (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem run_error (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st next : code.BodyState) (opcode : U8) (pos : Usize)
     (e : error.OpError) (hc : st.blocks.val ≠ [])
     (hr : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
@@ -77,7 +77,7 @@ theorem run_error (data : Slice U8) (env : module.Env) (profile : ValidationProf
   simp [hc', hr, ho, hs, Wasm2.continueStep]
 
 /-- An opcode outside the profile ends the loop with the filter's error. -/
-theorem run_filtered (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem run_filtered (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st : code.BodyState) (opcode : U8) (pos : Usize)
     (e : error.OpError) (hc : st.blocks.val ≠ [])
     (hr : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
@@ -97,7 +97,7 @@ theorem read_at (data : Slice U8) (pos next : Usize) (opcode : U8)
   simpa [heq, hb] using hr
 
 /-- The byte `0xff` is no opcode in either profile. -/
-theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (ctx : code.Context) (index : U32)
     (h : st.core.vals.val.length < Usize.max) :
     Wasm2.step st data env profile ctx index 0xFF#u8 = .ok (.Err .UnrecognizedOpcode, st) := by
@@ -106,7 +106,7 @@ theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : module.Env)
     code.sign_extension_type]
 
 /-- The body `ff` of a function of type `[] -> []` is rejected with `UnrecognizedOpcode`. -/
-theorem unknown_opcode_rejected (env : module.Env) (profile : ValidationProfile)
+theorem unknown_opcode_rejected (env : metadata.Env) (profile : ValidationProfile)
     (hi : env.types.val[0]? = some voidFunction) :
     code.bodyCore (bytes [0xFF#u8]) env (alloc.vec.Vec.new _) (alloc.vec.Vec.new _) 0#u32 profile =
       .ok (.Err .UnrecognizedOpcode) := by

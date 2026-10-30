@@ -17,12 +17,12 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 /-- Successful indirect-call checking exposes the actual function/table metadata
 and full parameter/result transfer, before any compiler callback. -/
-theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length) :
     code.call st data env .Wasm2 true ⦃ r => r.1 = .Ok () →
-      ∃ (idx table : U32) (middle : Usize) (ft : types.FuncType) (tt : types.TableType) (rest : List code.StackType),
+      ∃ (idx table : U32) (middle : Usize) (ft : wasm_types.FuncType) (tt : wasm_types.TableType) (rest : List code.StackType),
         Leb128.Decoded data st.core.pos idx middle ∧ Leb128.Decoded data middle table r.2.core.pos ∧
         env.types.val[idx.val]? = some ft ∧ env.table_types.val[table.val]? = some tt ∧ tt.elem = .FuncRef ∧
         r.2.core.vals.val = outer ++ (rest ++ ft.results.val.map code.StackType.Val) ∧
@@ -52,9 +52,9 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
         cases helem : tt.elem with
         | ExternRef =>
           simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
-            htablesmall, hget, helem, Itasca.types.ElemType.value_type,
+            htablesmall, hget, helem, Itasca.wasm_types.ElemType.value_type,
             core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-            Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
+            Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
             core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | FuncRef =>
@@ -71,9 +71,9 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
             cases rc with
             | Err e =>
               simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
-                htablesmall, hget, helem, Itasca.types.ElemType.value_type,
+                htablesmall, hget, helem, Itasca.wasm_types.ElemType.value_type,
                 core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
+                Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
                 core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok popped =>
@@ -83,9 +83,9 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
               cases res with
               | Err e =>
                 simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
-                  htablesmall, hget, helem, Itasca.types.ElemType.value_type,
+                  htablesmall, hget, helem, Itasca.wasm_types.ElemType.value_type,
                   core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                  Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
+                  Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                   core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
               | Ok u =>
@@ -101,9 +101,9 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
                 rw [WP.spec_equiv_exists]
                 refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
                 · simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
-                    htablesmall, hget, helem, Itasca.types.ElemType.value_type,
+                    htablesmall, hget, helem, Itasca.wasm_types.ElemType.value_type,
                     core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
+                    Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                     core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                 · refine ⟨idx,table,middle,ft,tt,rest,hd,?_,?_,?_,helem,hv,htransfer⟩
@@ -112,9 +112,9 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
                   · simpa [List.getElem?_eq_getElem htable] using congrArg some htt
           · have hlarge := Nat.le_of_not_gt hi
             simp [code.call, code.call_indirect_info, code.check_table_byte, code.take_index, hr, hreadtable, lift,
-              htablesmall, hget, helem, Itasca.types.ElemType.value_type,
+              htablesmall, hget, helem, Itasca.wasm_types.ElemType.value_type,
               core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-              Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
+              Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · have hlarge := Nat.le_of_not_gt htable
@@ -124,13 +124,13 @@ theorem indirect_call_effect (st : code.BodyState) (data : Slice U8) (env : modu
 
 /-- Concrete live stacks and the actual reader determine the complete indirect
 call signature and operand/result suffixes. -/
-theorem reader_indirect_call_stack_wasm2 (st out : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem reader_indirect_call_stack_wasm2 (st out : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (index table : U32) (outer segment : List code.StackType)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (known : ConcreteStack st.core.vals.val) (monomorphic : Control.polymorphic st.core = false)
     (shape : Control.Shape st.core)
     (accepted : code.call_indirect_info st data env .Wasm2 = .ok (.Ok (index,table),out)) :
-    ∃ (ft : types.FuncType) (tt : types.TableType) (front : List types.ValueType),
+    ∃ (ft : wasm_types.FuncType) (tt : wasm_types.TableType) (front : List wasm_types.ValueType),
       env.types.val[index.val]? = some ft ∧ env.table_types.val[table.val]? = some tt ∧ tt.elem = .FuncRef ∧
       Sequence.stackTypes st.core.vals.val = (front.map Translate.valueType ++ ft.params.val.map Translate.valueType) ++ [.I32] ∧
       out.core.vals.val = (front ++ ft.results.val).map code.StackType.Val := by
@@ -164,7 +164,7 @@ open Aeneas Aeneas.Std
 /-- The captured table supplies an actual readable signature at every canonical
 source type index; its parameter width is derived from the captured sequence. -/
 theorem SignatureSequence.indirect_call {signatures : Slice runtime.compiler.Signature}
-    {types : List Itasca.types.FuncType} (sequence : SignatureSequence signatures.val types)
+    {types : List Itasca.wasm_types.FuncType} (sequence : SignatureSequence signatures.val types)
     (index : U32) (params results : List valtype)
     (source : (types.map Itasca.EnvTranslation.funcType)[index.val]? = some ⟨.mk_list params,.mk_list results⟩) :
     ∃ signature, Slice.index_usize signatures (UScalar.cast .Usize index) = .ok signature ∧
@@ -201,7 +201,7 @@ open Aeneas Aeneas.Std
 emits the source-determined selector and argument coordinates. -/
 theorem compiler_indirect_call_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front params results : List valtype) (typeIndex tableIndex : U32)
     (bounds : limits) (signature : runtime.compiler.Signature)
     (signatureFound : C.TYPES[typeIndex.val]? = some ⟨.mk_list params,.mk_list results⟩)
@@ -250,8 +250,8 @@ theorem compiler_indirect_call_emission {A : Type} (ops : runtime.platform.Alloc
 captured source sequence, rather than assuming a width or a successful lookup. -/
 theorem compiler_indirect_call_emission_captured {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
-    (sourceTypes : List Itasca.types.FuncType) (sequence : SignatureSequence before.signatures.val sourceTypes)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
+    (sourceTypes : List Itasca.wasm_types.FuncType) (sequence : SignatureSequence before.signatures.val sourceTypes)
     (C : context) (contextTypes : C.TYPES = sourceTypes.map Itasca.EnvTranslation.funcType)
     (front params results : List valtype) (typeIndex tableIndex : U32) (bounds : limits)
     (signatureFound : C.TYPES[typeIndex.val]? = some ⟨.mk_list params,.mk_list results⟩)

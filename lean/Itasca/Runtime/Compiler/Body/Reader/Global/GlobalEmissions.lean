@@ -80,7 +80,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
     (C : context) (localsMatch : compilerLocals before = C.LOCALS)
     (globalsMatch : C.GLOBALS = env.global_types.val.map Translate.globalType)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -90,7 +90,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
-    ∃ (index : U32) (ty : Itasca.types.GlobalType) (values : List code.StackType),
+    ∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType),
       env.global_types.val[index.val]? = some ty ∧
       Wasm2.ReaderPost p out.core (.GLOBAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted
@@ -138,7 +138,7 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
       st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (index : U32) (ty : Itasca.types.GlobalType) (values : List code.StackType) (front : List valtype),
+    (∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType) (front : List valtype),
       env.global_types.val[index.val]? = some ty ∧ ty.mutability = .Var ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty.valtype] ∧
       Wasm2.ReaderPost p out.core (.GLOBAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧

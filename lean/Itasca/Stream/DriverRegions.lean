@@ -82,12 +82,12 @@ open ModuleBinary ModuleElaboration
 of the shared environment and tail validators and the encoded, typed code entries. Body checking
 is later obtained from the typed, bounded encodings by the streaming driver. -/
 structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
-    (source : stream.SliceSource) (env : module.Env) (tail : module.Tail)
+    (source : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
   split : Split data source
   bytes : data.val = source.env.val ++ source.code.val ++ source.tail.val
   bounded : data.length ≤ limits.MAX_MODULE_BYTES.val
-  environment : module.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
+  environment : metadata.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
   ready : ∃ decls, ModuleEnv.Ready raw 10 decls env
   entry_bounds : CodeEntry.Bounds env
   profile : Itasca.Profile.Environment validationProfile env
@@ -96,7 +96,7 @@ structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
     At (Rep (Itasca.Profile.CodeEncodingWithinLimits validationProfile)) source.code entries raw.codes (Slice.len source.code)
   typed : ModuleCode.EntriesTyped (profile := validationProfile) env 0 raw.codes
   code_count : raw.codes.length = env.func_type_indices.val.length
-  tail_accepted : module.validate_tail source.tail 0#usize env validationProfile = .ok (.Ok tail)
+  tail_accepted : metadata.validate_tail source.tail 0#usize env validationProfile = .ok (.Ok tail)
   realization : Matches env tail raw
   metadata : AccessorTypes env raw
 
@@ -128,7 +128,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
   obtain ⟨tailBytes, htailSlice, htailSpan⟩ := WP.spec_imp_exists
     (slice_spec data tailPos (Slice.len data) (by simpa using htailPos) (by simp))
   have henvEnc := hl.environment.on_region henvSpan
-  obtain ⟨env, finalDecls, henv, hready⟩ := module.validate_env.profile_complete
+  obtain ⟨env, finalDecls, henv, hready⟩ := metadata.validate_env.profile_complete
     environment raw profile decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hr
   have henvSize : environment.length ≤ limits.MAX_MODULE_BYTES.val := by
     have := henvSpan.length
@@ -141,9 +141,9 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
   have htailEnc := hl.tail.on_region htailSpan
   obtain ⟨segments, hsegments, hvalid⟩ := ModuleTail.materialize
     tailBytes 0#usize (Slice.len tailBytes) raw finalDecls env htailEnc hs hready
-  let tail : module.Tail := ⟨segments⟩
+  let tail : metadata.Tail := ⟨segments⟩
   have hmatches := hready.matches tail hsegments
-  have hsemantic := module.validate_env.profile_semantic_spec environment profile
+  have hsemantic := metadata.validate_env.profile_semantic_spec environment profile
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
   obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
@@ -170,7 +170,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     have he : raw.dataCount = some count := (hready.dataCount_eq (by decide)).symm.trans hc
     have hv := hguards.2
     simpa [DataCountValid, he, ← hsegments] using hv
-  have htail := module.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
+  have htail := metadata.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
   have htypes := ModuleLayout.CodeAt.typed hready hs hp hguards.1 hguards.2 hdeclared
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧

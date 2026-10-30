@@ -4,9 +4,9 @@ import Itasca.Module.Readers.BasicComplete
 /-!
 # Completeness of the constant expression parser
 
-`module.decode_const_expr.complete`: the parser accepts every independently encoded initializer
+`metadata.decode_const_expr.complete`: the parser accepts every independently encoded initializer
 that is `Valid` at the expected type and allowed by the profile. The helpers
-`module.expect_const_type`, `module.read_expr_end` and `module.const_global` have `.complete`
+`metadata.expect_const_type`, `metadata.read_expr_end` and `metadata.const_global` have `.complete`
 lemmas. Soundness is in `Module/Const/Parser`.
 -/
 
@@ -14,25 +14,25 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- `module.expect_const_type` accepts equal types. -/
-theorem module.expect_const_type.complete (ty : types.ValueType) :
-    module.expect_const_type ty ty = .ok (.Ok ()) := by
-  cases ty <;> simp [module.expect_const_type, core.cmp.PartialEq.ne.trait_default,
-    core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+/-- `metadata.expect_const_type` accepts equal types. -/
+theorem metadata.expect_const_type.complete (ty : wasm_types.ValueType) :
+    metadata.expect_const_type ty ty = .ok (.Ok ()) := by
+  cases ty <;> simp [metadata.expect_const_type, core.cmp.PartialEq.ne.trait_default,
+    core.cmp.PartialEq.ne.default, wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
-/-- `module.read_expr_end` accepts the byte `0x0b`. -/
-theorem module.read_expr_end.complete {data : Slice U8} {pos next : Usize}
+/-- `metadata.read_expr_end` accepts the byte `0x0b`. -/
+theorem metadata.read_expr_end.complete {data : Slice U8} {pos next : Usize}
     (h : Wasm1.BytesAt data pos [0x0B#u8] next) :
-    module.read_expr_end data pos = .ok (.Ok next) := by
-  simp [module.read_expr_end, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+    metadata.read_expr_end data pos = .ok (.Ok next) := by
+  simp [metadata.read_expr_end, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
-/-- `module.const_global` accepts an in-range imported immutable global. -/
-theorem module.const_global.complete (env : module.Env) (idx : U32) (wanted : types.GlobalType)
+/-- `metadata.const_global` accepts an in-range imported immutable global. -/
+theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted : wasm_types.GlobalType)
     (hi : idx.val < env.global_types.val.length) (hgt : env.global_types.val[idx.val] = wanted)
     (hn : idx.val < env.num_imported_globals.val) (hm : wanted.mutability = .Const) :
-    module.const_global env idx = .ok (.Ok wanted) := by
-  have hs : module.const_global env idx ⦃ r => r = .Ok wanted ⦄ := by
-    unfold module.const_global
+    metadata.const_global env idx = .ok (.Ok wanted) := by
+  have hs : metadata.const_global env idx ⦃ r => r = .Ok wanted ⦄ := by
+    unfold metadata.const_global
     step
     split
     · scalar_tac
@@ -45,17 +45,17 @@ theorem module.const_global.complete (env : module.Env) (idx : U32) (wanted : ty
           exact hx.trans hgt
         subst gt
         simp [he, hm, core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-          types.Mut.Insts.CoreCmpPartialEqMut.eq]
+          wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq]
   obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-/-- `module.decode_const_expr` accepts a valid, allowed `ConstEncoding` span and returns its end. -/
-theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
-    {env : module.Env} {expr : types.ConstExpr} {ty : types.ValueType}
+/-- `metadata.decode_const_expr` accepts a valid, allowed `ConstEncoding` span and returns its end. -/
+theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
+    {env : metadata.Env} {expr : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hb : ModuleBinary.At ModuleBinary.ConstEncoding data pos expr next)
     (hv : ModuleConstants.Valid env expr ty) (profile : ValidationProfile)
     (hallowed : ModuleBinary.ConstAllowed profile expr) :
-    module.decode_const_expr data pos env ty profile = .ok (.Ok (expr, next)) := by
+    metadata.decode_const_expr data pos env ty profile = .ok (.Ok (expr, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   cases he with
   | @i32 value immediate hi =>
@@ -65,8 +65,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_s32_leb.complete data afterOp value beforeEnd
       ⟨immediate, himm.suffix, himm.length, himm.bound, hi⟩
-    simp [module.decode_const_expr, hop.read_byte, hr, module.expect_const_type.complete,
-      module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+    simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
+      metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @i64 value immediate hi =>
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
@@ -74,8 +74,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_s64_leb.complete data afterOp value beforeEnd
       ⟨immediate, himm.suffix, himm.length, himm.bound, hi⟩
-    simp [module.decode_const_expr, hop.read_byte, hr, module.expect_const_type.complete,
-      module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+    simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
+      metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @f32 value immediate hi =>
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
@@ -83,8 +83,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f32_bits.complete data afterOp value beforeEnd
       ⟨immediate, himm.suffix, by simpa [hi.1] using himm.length, himm.bound, hi⟩
-    simp [module.decode_const_expr, hop.read_byte, hr, module.expect_const_type.complete,
-      module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+    simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
+      metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @f64 value immediate hi =>
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
@@ -92,8 +92,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f64_bits.complete data afterOp value beforeEnd
       ⟨immediate, himm.suffix, by simpa [hi.1] using himm.length, himm.bound, hi⟩
-    simp [module.decode_const_expr, hop.read_byte, hr, module.expect_const_type.complete,
-      module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+    simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
+      metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
   | @globalGet idx immediate hi =>
     cases hv with
     | globalGet _ gt hidx hgt hn hm =>
@@ -101,9 +101,9 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
         (first := [0x23#u8]) (rest := immediate ++ [0x0B#u8]) hs
       obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
       have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
-      have hg := module.const_global.complete env idx gt hidx hgt hn hm
-      simp [module.decode_const_expr, hop.read_byte, hr, hg, module.expect_const_type.complete,
-        module.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
+      have hg := metadata.const_global.complete env idx gt hidx hgt hn hm
+      simp [metadata.decode_const_expr, hop.read_byte, hr, hg, metadata.expect_const_type.complete,
+        metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
   | refNull refTy =>
     cases hv
@@ -114,12 +114,12 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
         (first := [0xD0#u8]) (rest := [ModuleBinary.elemByte refTy, 0x0B#u8]) hs
       obtain ⟨beforeEnd, himm, hend⟩ := Wasm1.BytesAt.split
         (first := [ModuleBinary.elemByte refTy]) (rest := [0x0B#u8]) hrest
-      have hr := module.decode_elem_type.complete data afterOp refTy beforeEnd
+      have hr := metadata.decode_elem_type.complete data afterOp refTy beforeEnd
         ⟨_, rfl, himm⟩ .Wasm2 (by cases refTy <;> trivial)
-      have ht : types.ElemType.value_type refTy = .ok (ModuleConstants.referenceValueType refTy) := by
+      have ht : wasm_types.ElemType.value_type refTy = .ok (ModuleConstants.referenceValueType refTy) := by
         cases refTy <;> rfl
-      simp [module.decode_const_expr, hop.read_byte, hr, ht,
-        module.expect_const_type.complete, module.read_expr_end.complete hend,
+      simp [metadata.decode_const_expr, hop.read_byte, hr, ht,
+        metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
         core.result.Result.Insts.CoreOpsTry.branch]
   | @refFunc idx immediate hi =>
     cases hv with
@@ -132,8 +132,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
         obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
         have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
         have hn : ¬idx.val ≥ env.func_types.val.length := by omega
-        simp [module.decode_const_expr, hop.read_byte, hr, lift, hn,
-          module.expect_const_type.complete, module.read_expr_end.complete hend,
+        simp [metadata.decode_const_expr, hop.read_byte, hr, lift, hn,
+          metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
           core.result.Result.Insts.CoreOpsTry.branch]
   | @v128 low high subBytes lowBytes highBytes hsub hlo hhi =>
     cases hv
@@ -154,8 +154,8 @@ theorem module.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
         ⟨lowBytes, hlospan.suffix, by simpa [hlo.1] using hlospan.length, hlospan.bound, hlo⟩
       have hh := reader.read_f64_bits.complete data afterLow high beforeEnd
         ⟨highBytes, hhispan.suffix, by simpa [hhi.1] using hhispan.length, hhispan.bound, hhi⟩
-      simp [module.decode_const_expr, hop.read_byte, hs, hl, hh,
-        module.expect_const_type.complete, module.read_expr_end.complete hend,
+      simp [metadata.decode_const_expr, hop.read_byte, hs, hl, hh,
+        metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
         core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

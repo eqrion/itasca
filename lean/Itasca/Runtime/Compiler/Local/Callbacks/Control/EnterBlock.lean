@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 inductive SignatureAt (signatures : Slice runtime.compiler.Signature) :
     Itasca.signature.BlockType → runtime.compiler.Signature → Prop where
   | empty : SignatureAt signatures .Empty ⟨0#usize, 0#usize, 0#u32, 0#u32⟩
-  | value (ty : Itasca.types.ValueType) (word : U32)
+  | value (ty : Itasca.wasm_types.ValueType) (word : U32)
       (width : word.val = Compiler.width (Itasca.Translate.valueType ty)) :
       SignatureAt signatures (.Value ty) ⟨0#usize, 1#usize, 0#u32, word⟩
   | index (i : U32) (signature : runtime.compiler.Signature)

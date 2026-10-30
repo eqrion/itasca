@@ -67,7 +67,7 @@ def Parameter : ControlReaderKind → Type
   | .call_indirect => U32 × U32
 
 def read (kind : ControlReaderKind) (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (index : U32) : Result (core.result.Result kind.Parameter error.OpError × code.BodyState) :=
+    (env : metadata.Env) (index : U32) : Result (core.result.Result kind.Parameter error.OpError × code.BodyState) :=
   match kind with
   | .block => code.enter_info st data env .Wasm2 .Block
   | .loop => code.enter_info st data env .Wasm2 .Loop
@@ -94,7 +94,7 @@ def action : (kind : ControlReaderKind) → kind.Parameter → Action
 
 /-- Every inventory entry agrees with actual complete-profile dispatch. -/
 theorem dispatch {V : Type} (kind : ControlReaderKind) (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (before : V) :
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (before : V) :
     code.step_profile visitor st data env ctx index .Wasm2 kind.opcode before =
       Wasm2.CallbackTrace.bodyRun (kind.read st data env index) visitor kind.action before := by
   cases kind

@@ -7,7 +7,7 @@ namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 theorem written_outside (words : List U64) (position index : Nat)
-    (ty : Itasca.types.ValueType) (lo hi : U64)
+    (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (outside : index < position ∨ position + Compiler.width (sourceType ty) ≤ index) :
     (written words position ty lo hi)[index]? = words[index]? := by
   have hp : index ≠ position := by have := Compiler.width_positive (sourceType ty); omega
@@ -19,7 +19,7 @@ theorem written_outside (words : List U64) (position index : Nat)
   · simp [hp]
 
 theorem written_represents (words : List U64) (position : Nat)
-    (ty : Itasca.types.ValueType) (lo hi : U64)
+    (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (bound : position + Compiler.width (sourceType ty) ≤ words.length) :
     WordsAt (written words position ty lo hi) position (pairWords ty (lo, hi)) := by
   intro index hindex
@@ -75,7 +75,7 @@ theorem argument_words_bound (args : List runtime.Value) (count : Nat) :
   exact Compiler.offset_le _ _
 
 @[step] theorem marshal_arguments_loop (words : alloc.vec.Vec U64)
-    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (index slot : Usize) (store : Usize)
     (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
@@ -134,7 +134,7 @@ theorem argument_words_bound (args : List runtime.Value) (count : Nat) :
 /-- The actual invocation argument loop produces the specification encoding
 of every accepted argument, starting at slot zero. -/
 @[step] theorem marshal_arguments (words : alloc.vec.Vec U64)
-    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (store : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
     (bound : (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length) :

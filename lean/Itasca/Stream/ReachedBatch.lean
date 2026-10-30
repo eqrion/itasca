@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 theorem stream.CodeBatch.validate_next.total_on {V : Type} (visitor : code.OpVisitor V)
     (batch : stream.CodeBatch) (index : Usize) (v : V)
     (range : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (entry : module.validate_code_entry_with visitor batch.code batch.validated_end
+    (entry : metadata.validate_code_entry_with visitor batch.code batch.validated_end
       batch.env index batch.profile v ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_next visitor batch index v ⦃ _ => True ⦄ := by
   unfold stream.CodeBatch.validate_next
@@ -27,7 +27,7 @@ return; no callbacks on other visitor states are assumed. -/
 theorem stream.CodeBatch.validate_func.total_on {V : Type} (visitor : code.OpVisitor V)
     (batch : stream.CodeBatch) (index : Usize) (v : V)
     (range : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (entry : module.validate_code_entry_with visitor batch.code batch.validated_end
+    (entry : metadata.validate_code_entry_with visitor batch.code batch.validated_end
       batch.env index batch.profile v ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_func visitor batch index v ⦃ _ => True ⦄ := by
   cases sticky : batch.error with
@@ -56,6 +56,6 @@ theorem stream.CodeBatch.validate_func.prepared_total {V : Type} (visitor : code
       code.validate_body_with visitor prepared.body batch.env prepared.ctx prepared.typeIdx batch.profile started ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_func visitor batch index v ⦃ _ => True ⦄ := by
   exact stream.CodeBatch.validate_func.total_on visitor batch index v range
-    (module.validate_code_entry_with.total_on visitor batch.code batch.validated_end batch.env index v
+    (metadata.validate_code_entry_with.total_on visitor batch.code batch.validated_end batch.env index v
       bounds batch.profile start bodyTotal)
 end Itasca

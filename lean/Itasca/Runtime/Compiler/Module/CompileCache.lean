@@ -13,10 +13,10 @@ theorem CompileWitness.cache_input {A : Type} {allocator : runtime.platform.Allo
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
-  have decoded := module.validate_env_with.accepted_erase
-    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).moduleModuleVisitorInst
+  have decoded := metadata.validate_env_with.accepted_erase
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.environment run.region w.env run.environmentLength run.decoded run.decode_environment
-  have semantic := module.validate_env.profile_semantic_spec run.environment profile
+  have semantic := metadata.validate_env.profile_semantic_spec run.environment profile
   rw [decoded, WP.spec_ok] at semantic
   obtain ⟨decls, represented, _, _, _, _⟩ := semantic
   exact ⟨decls.tables, decls.memories, represented.cache⟩

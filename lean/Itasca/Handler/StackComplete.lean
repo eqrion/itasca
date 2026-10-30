@@ -65,7 +65,7 @@ theorem code.pop_stack_type.complete (st : code.OpIterState)
 /-- If the segment realizes a stack ending in the translation of `u`, `code.pop_with_type`
 succeeds, and the remainder realizes the rest. -/
 theorem code.pop_with_type.complete (st : code.OpIterState)
-    (outer segment : List code.StackType) (ts : List valtype) (u : types.ValueType)
+    (outer segment : List code.StackType) (ts : List valtype) (u : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (ht : Sequence.Realizes (Control.polymorphic st) segment
@@ -91,7 +91,7 @@ theorem code.pop_with_type.complete (st : code.OpIterState)
 succeeds, and the remainder realizes the rest. -/
 theorem code.pop_types.complete (st : code.OpIterState)
     (outer segment : List code.StackType) (ts : List valtype)
-    (expected : Slice types.ValueType)
+    (expected : Slice wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (ht : Sequence.Realizes (Control.polymorphic st) segment

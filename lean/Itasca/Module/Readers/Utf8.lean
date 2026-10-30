@@ -3,9 +3,9 @@ import Itasca.Module.Readers.Basic
 /-!
 # UTF-8 validation
 
-`module.validate_utf8.spec`: an accepted byte string satisfies the independent strict `Utf8`
+`metadata.validate_utf8.spec`: an accepted byte string satisfies the independent strict `Utf8`
 predicate (canonical encodings of Unicode scalar values, including four-byte sequences). The
-helpers `module.utf8_cont` and `module.utf8_sequence_len` get their own specs. Completeness is in
+helpers `metadata.utf8_cont` and `metadata.utf8_sequence_len` get their own specs. Completeness is in
 `Module/Readers/Utf8Complete`.
 -/
 
@@ -54,21 +54,21 @@ private theorem take_four (xs : List U8) (i : Nat) (hb : i + 3 < xs.length) :
   simp only [List.take_succ_cons]
   rw [take_three xs (i + 1) (by omega)]
 
-/-- An accepted `module.utf8_cont` found an in-range byte between `lo` and `hi`. -/
+/-- An accepted `metadata.utf8_cont` found an in-range byte between `lo` and `hi`. -/
 @[step]
-theorem module.utf8_cont.spec (bytes : Slice U8) (pos : Usize) (lo hi : U8) :
-    module.utf8_cont bytes pos lo hi ⦃ r => r = .Ok () →
+theorem metadata.utf8_cont.spec (bytes : Slice U8) (pos : Usize) (lo hi : U8) :
+    metadata.utf8_cont bytes pos lo hi ⦃ r => r = .Ok () →
       ∃ hb : pos.val < bytes.length, lo.val ≤ bytes.val[pos.val].val ∧ bytes.val[pos.val].val ≤ hi.val ⦄ := by
-  unfold module.utf8_cont
+  unfold metadata.utf8_cont
   step*
 
-/-- `module.utf8_sequence_len` returns the length of one valid UTF-8 character at `pos`. -/
-theorem module.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
+/-- `metadata.utf8_sequence_len` returns the length of one valid UTF-8 character at `pos`. -/
+theorem metadata.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
     (hb : pos.val < bytes.length) :
-    module.utf8_sequence_len bytes pos ⦃ r => match r with
+    metadata.utf8_sequence_len bytes pos ⦃ r => match r with
       | .Ok count => Utf8Sequence bytes pos count
       | .Err _ => True ⦄ := by
-  unfold module.utf8_sequence_len
+  unfold metadata.utf8_sequence_len
   step
   split <;> step*
   all_goals try casesm* core.result.Result Unit error.Error
@@ -90,11 +90,11 @@ theorem module.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
     | (rw [take_three bytes.val pos.val (by scalar_tac)]; apply Utf8Char.three <;> scalar_tac)
     | (rw [take_four bytes.val pos.val (by scalar_tac)]; apply Utf8Char.four <;> scalar_tac)
 
-/-- `module.validate_utf8` returns normally, and acceptance implies `Utf8`. -/
+/-- `metadata.validate_utf8` returns normally, and acceptance implies `Utf8`. -/
 @[step]
-theorem module.validate_utf8.spec (bytes : Slice U8) :
-    module.validate_utf8 bytes ⦃ r => r = .Ok () → Utf8 bytes.val ⦄ := by
-  unfold module.validate_utf8 module.validate_utf8_loop
+theorem metadata.validate_utf8.spec (bytes : Slice U8) :
+    metadata.validate_utf8 bytes ⦃ r => r = .Ok () → Utf8 bytes.val ⦄ := by
+  unfold metadata.validate_utf8 metadata.validate_utf8_loop
   apply loop.spec_decr_nat (fun i => bytes.length - i.val)
     (fun i => i.val ≤ bytes.length ∧ Utf8 (bytes.val.take i.val))
   · intro pos hp
@@ -102,19 +102,19 @@ theorem module.validate_utf8.spec (bytes : Slice U8) :
     by_cases hend : bytes.length ≤ pos.val
     · have heq : pos.val = bytes.length := by omega
       have hd : pos ≥ Slice.len bytes := by scalar_tac
-      simp [module.validate_utf8_loop.body, hd]
+      simp [metadata.validate_utf8_loop.body, hd]
       simpa [heq] using hprefix
     · have hlt : pos.val < bytes.length := by omega
       have hd : ¬pos ≥ Slice.len bytes := by scalar_tac
-      obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (module.utf8_sequence_len.spec bytes pos hlt)
+      obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (metadata.utf8_sequence_len.spec bytes pos hlt)
       cases r with
       | Err e =>
-          simp [module.validate_utf8_loop.body, hd, hr,
+          simp [metadata.validate_utf8_loop.body, hd, hr,
             core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok count =>
           obtain ⟨hbound, hpositive, hchar⟩ := hs
-          simp [module.validate_utf8_loop.body, hd, hr,
+          simp [metadata.validate_utf8_loop.body, hd, hr,
             core.result.Result.Insts.CoreOpsTry.branch]
           step*
           refine ⟨by scalar_tac, ?_, by scalar_tac⟩

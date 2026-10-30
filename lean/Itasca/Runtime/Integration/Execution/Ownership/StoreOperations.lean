@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 theorem reference_value_owned {M : Type} (store : runtime.store.Store M)
-    (type : Itasca.types.ElemType) (word : U64) (shape : ReferenceShape store type word) :
+    (type : Itasca.wasm_types.ElemType) (word : U64) (shape : ReferenceShape store type word) :
     SourceMachine.Ownership.ValueOwned (ownershipBounds store) (val_ref (decodeRef type word)) := by
   cases type <;> unfold ReferenceShape at shape
   all_goals

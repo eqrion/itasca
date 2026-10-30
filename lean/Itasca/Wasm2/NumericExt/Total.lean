@@ -72,7 +72,7 @@ end Itasca.FullVisitor
 
 namespace Itasca.Wasm2
 
-private theorem conversion_total (st : code.OpIterState) (input output : types.ValueType)
+private theorem conversion_total (st : code.OpIterState) (input output : wasm_types.ValueType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_conversion st input output ⦃ r => Control.Shape r.2 ∧
       r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ⦄ := by
@@ -86,7 +86,7 @@ private theorem conversion_total (st : code.OpIterState) (input output : types.V
   simp [hv, n, Nat.min_eq_left hn]
 
 private theorem conversion_run_total {V : Type} (st : code.OpIterState)
-    (input output : types.ValueType)
+    (input output : wasm_types.ValueType)
     (hook : V → code.OpIterState → Unit → Result (core.result.Result Unit error.VisitError × V))
     (v : V) (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hh : ∀ s a, ∃ res v', hook v s a = .ok (res, v')) :
@@ -101,7 +101,7 @@ private theorem conversion_run_total {V : Type} (st : code.OpIterState)
 
 /-- `code.step_extended` terminates with ordinary returning hooks. -/
 theorem extended_total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Control.Shape st)
     (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes) (hv : FullVisitor.Total visitor) :

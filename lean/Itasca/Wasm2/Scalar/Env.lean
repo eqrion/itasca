@@ -28,7 +28,7 @@ end Itasca.Wasm2.Scalar
 namespace Itasca
 
 theorem code.read_local_get.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
@@ -57,7 +57,7 @@ theorem code.read_local_get.wasm2_prefix {inputs : List valtype} (st : code.OpIt
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
 theorem code.read_local_set.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
@@ -96,7 +96,7 @@ theorem code.read_local_set.wasm2_prefix {inputs : List valtype} (st : code.OpIt
               by simpa using htyping⟩
 
 theorem code.read_local_tee.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
@@ -142,7 +142,7 @@ theorem code.read_local_tee.wasm2_prefix {inputs : List valtype} (st : code.OpIt
               by simpa using htyping⟩
 
 theorem code.read_global_get.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :
@@ -171,7 +171,7 @@ theorem code.read_global_get.wasm2_prefix {inputs : List valtype} (st : code.OpI
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
 theorem code.read_global_set.wasm2_prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st) segment) :

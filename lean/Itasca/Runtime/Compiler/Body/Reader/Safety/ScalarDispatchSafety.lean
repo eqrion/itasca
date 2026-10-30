@@ -25,7 +25,7 @@ private theorem numeric_byte_partition (opcode : U8) (lower : 69 ≤ opcode.val)
 /-- The raw numeric dispatcher returns normally even for unrecognized bytes. -/
 theorem compiler_reader_numeric_dispatch_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (opcode : U8) (lower : 69 ≤ opcode.val) :
@@ -86,7 +86,7 @@ private theorem memory_byte_partition (opcode : U8) (lower : 40 ≤ opcode.val)
 /-- Every raw load/store opcode dispatches to a total canonical memory reader. -/
 theorem compiler_reader_memory_dispatch_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (opcode : U8) (lower : 40 ≤ opcode.val) (upper : opcode.val ≤ 62) :

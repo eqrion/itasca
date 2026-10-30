@@ -14,8 +14,8 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleElaboration
 
 /-- Each element segment of a valid environment is typed in the initializer context. -/
-theorem element_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
-    (entry : module.Element) (he : entry ∈ env.elements.val) :
+theorem element_typed {env : metadata.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
+    (entry : metadata.Element) (he : entry ∈ env.elements.val) :
     Elem_ok (initializerContext env) (element (ModuleEnv.rawElement entry))
       (Translate.referenceType entry.elem) := by
   exact (hv.elements entry he).typed (initializerContext env) (initializerContext_wf env)
@@ -23,7 +23,7 @@ theorem element_typed {env : module.Env} {profile : ValidationProfile} (hv : Mod
 
 /-- Each defined table of a valid cached environment is typed in any well-formed context. -/
 theorem table_typed {env tables memories} (hc : ModuleEnv.Cache env tables memories)
-    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (tt : types.TableType) (ht : tt ∈ tables)
+    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (tt : wasm_types.TableType) (ht : tt ∈ tables)
     (C : context) (hC : wf_context C) :
     Table_ok C (table tt) (EnvTranslation.tableType tt) := by
   have hm : tt ∈ env.table_types.val := by rw [hc.tables]; exact List.mem_append_right _ ht
@@ -32,7 +32,7 @@ theorem table_typed {env tables memories} (hc : ModuleEnv.Cache env tables memor
 
 /-- Each defined memory of a valid cached environment is typed in any well-formed context. -/
 theorem memory_typed {env tables memories} (hc : ModuleEnv.Cache env tables memories)
-    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (mt : types.MemType) (ht : mt ∈ memories)
+    {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (mt : wasm_types.MemType) (ht : mt ∈ memories)
     (C : context) (hC : wf_context C) :
     Mem_ok C (memory mt) (EnvTranslation.memType mt) := by
   have hm : mt ∈ env.mem_types.val := by rw [hc.memories]; exact List.mem_append_right _ ht

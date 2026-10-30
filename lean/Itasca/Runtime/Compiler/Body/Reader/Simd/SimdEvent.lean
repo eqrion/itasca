@@ -31,8 +31,8 @@ structure SimdReaderEvent {A : Type} (ops : runtime.platform.Alloc A)
     {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState) (C : context) where
   source : instr
-  inputs : List types.ValueType
-  output : Option types.ValueType
+  inputs : List wasm_types.ValueType
+  output : Option wasm_types.ValueType
   sub : U32
   a : U32
   b : U32

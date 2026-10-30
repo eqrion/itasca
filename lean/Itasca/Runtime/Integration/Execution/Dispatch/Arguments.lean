@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std SpecExt
 
 theorem arguments_typed {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (storeWf : wf_store (Store.decodeStore view code store))
-    (args : List runtime.Value) (types : List Itasca.types.ValueType)
+    (args : List runtime.Value) (types : List Itasca.wasm_types.ValueType)
     (matched : List.Forall₂ (Interp.ArgumentMatches store.id) args types)
     (owned : ∀ value ∈ args, Store.ValueInStore store value) :
     ResultsTyped (Store.decodeStore view code store) (types.map Interp.sourceType)
@@ -32,7 +32,7 @@ theorem arguments_typed {M : Type} (view : M → Slice U8) (code : Store.CodeInt
 theorem checked_arguments_typed {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (storeWf : wf_store (Store.decodeStore view code store))
-    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref types) = .ok (.Ok ()))
     (owned : ∀ value ∈ args.val, Store.ValueInStore store value) :
     ResultsTyped (Store.decodeStore view code store) (types.val.map Interp.sourceType)
@@ -43,7 +43,7 @@ theorem checked_arguments_typed {M : Type} (memory : runtime.platform.MemoryBuff
   apply arguments_typed view code store storeWf args.val types.val _ owned
   simpa [alloc.vec.Vec.deref] using h.mp trivial
 
-theorem argument_type_tags {id : Usize} {args : List runtime.Value} {types : List Itasca.types.ValueType}
+theorem argument_type_tags {id : Usize} {args : List runtime.Value} {types : List Itasca.wasm_types.ValueType}
     (matched : List.Forall₂ (Interp.ArgumentMatches id) args types) :
     (args.map Interp.sourceValue).map Compiler.valueType = types.map Interp.sourceType := by
   induction matched with
@@ -52,7 +52,7 @@ theorem argument_type_tags {id : Usize} {args : List runtime.Value} {types : Lis
     simp only [List.map_cons, Interp.source_value_type, head.2, ih]
 
 theorem checked_argument_type_tags {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (store : runtime.store.Store M) (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref types) = .ok (.Ok ())) :
     (args.val.map Interp.sourceValue).map Compiler.valueType = types.val.map Interp.sourceType := by
   have h := Interp.check_values_accepts_iff memory store args (alloc.vec.Vec.deref types)

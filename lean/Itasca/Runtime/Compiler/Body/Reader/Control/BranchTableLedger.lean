@@ -32,7 +32,7 @@ theorem compiler_br_table_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
 
 theorem reader_table_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (budget : FixupBudget before.frames.val before.function.code.val.length)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 14#u8 before = .ok (.Ok (),final,after)) :

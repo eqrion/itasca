@@ -36,7 +36,7 @@ theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisito
     simp only [bind_ok]
     split
     · exact ⟨_, rfl⟩
-    · exact module.validate_code_entry_with.profile_total visitor htotal batch.code
+    · exact metadata.validate_code_entry_with.profile_total visitor htotal batch.code
         batch.validated_end batch.env index v hbound profile
 
 /-- `stream.CodeBatch.validate_func` returns an ordinary result, stores worker errors, and cannot

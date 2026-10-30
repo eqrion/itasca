@@ -66,7 +66,7 @@ theorem compiler_op32_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
         let i1 ← lift (UScalar.cast .Usize a)
         let vt ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.types.ValueType) before.function.locals i1
+            _root_.Itasca.wasm_types.ValueType) before.function.locals i1
         let n ← runtime.value.width vt
         let (r, self1) ←
           runtime.compiler.FunctionCompiler.copy ops before
@@ -111,7 +111,7 @@ theorem compiler_op33_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
           let i1 ← lift (UScalar.cast .Usize a)
           let vt ←
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.types.ValueType) before.function.locals i1
+              _root_.Itasca.wasm_types.ValueType) before.function.locals i1
           let n ← runtime.value.width vt
           let (r1, self1) ←
             runtime.compiler.FunctionCompiler.copy ops before dst val
@@ -162,7 +162,7 @@ theorem compiler_op34_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
           let i1 ← lift (UScalar.cast .Usize a)
           let vt ←
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.types.ValueType) before.function.locals i1
+              _root_.Itasca.wasm_types.ValueType) before.function.locals i1
           let n ← runtime.value.width vt
           let (r1, self1) ←
             runtime.compiler.FunctionCompiler.copy ops before dst val

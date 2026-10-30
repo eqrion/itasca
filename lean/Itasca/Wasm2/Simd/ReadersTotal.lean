@@ -23,13 +23,13 @@ def ReaderPost (st s : code.OpIterState) : Prop :=
 attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   code.push_val.shape_total ScalarReaders.memarg code.check_memory_and_alignment.spec
 
-@[local step] private theorem conversion_total (st : code.OpIterState) (input output : types.ValueType)
+@[local step] private theorem conversion_total (st : code.OpIterState) (input output : wasm_types.ValueType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_conversion st input output ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_conversion ReaderPost
   step*
 
-@[local step] private theorem binary_total (st : code.OpIterState) (input output : types.ValueType)
+@[local step] private theorem binary_total (st : code.OpIterState) (input output : wasm_types.ValueType)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_binary st input output ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_binary ReaderPost
@@ -92,28 +92,28 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals step* <;> simp_all [ReaderPost] <;> omega
 
 @[step] theorem read_lane_total (st : code.OpIterState) (data : Slice U8)
-    (ty : types.ValueType) (count : U8) (replace : Bool)
+    (ty : wasm_types.ValueType) (count : U8) (replace : Bool)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_simd_lane st data ty count replace ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_simd_lane ReaderPost
   step* <;> simp_all [ReaderPost] <;> omega
 
-@[step] theorem memory_lane_total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+@[step] theorem memory_lane_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (alignment : U32) (store : Bool) (count : U8)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_simd_memory_lane st data env alignment store count ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_simd_memory_lane ReaderPost
   step*
 
-@[step] theorem load_total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (ty : types.ValueType) (alignment : U32)
+@[step] theorem load_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (ty : wasm_types.ValueType) (alignment : U32)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_load st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_load ReaderPost
   step*
 
-@[step] theorem store_total (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (ty : types.ValueType) (alignment : U32)
+@[step] theorem store_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (ty : wasm_types.ValueType) (alignment : U32)
     (hs : Control.Shape st) :
     code.read_store st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_store ReaderPost

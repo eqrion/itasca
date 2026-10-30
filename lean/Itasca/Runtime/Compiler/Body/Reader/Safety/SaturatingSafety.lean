@@ -44,7 +44,7 @@ private theorem saturating_callback {A} (ops : runtime.platform.Alloc A)
 return normally; successful callbacks establish the observed operand boundary. -/
 theorem compiler_reader_saturating_dispatch_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step_extended (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

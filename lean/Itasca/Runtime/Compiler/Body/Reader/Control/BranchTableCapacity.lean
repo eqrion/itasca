@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_capacity_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 0x0e#u8 before=.ok (.Ok (),out,after)) : CapacityStep before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_br_table] at accepted

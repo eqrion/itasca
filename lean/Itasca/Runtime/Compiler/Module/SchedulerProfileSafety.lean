@@ -6,12 +6,12 @@ open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
 /-- Signature restrictions retained from actual profile environment decoding. -/
-def ProfileEnvironment (profile : ValidationProfile) (env : module.Env) : Prop :=
+def ProfileEnvironment (profile : ValidationProfile) (env : metadata.Env) : Prop :=
   Profile.Environment profile env ∧ Profile.EnvironmentWithinLimits env
 
 def ReachedProfileEntriesTotal {A : Type} (ops : runtime.platform.Alloc A)
     (profile : ValidationProfile) : Prop :=
-  ∀ (env : module.Env) (issued : StreamBatch.Issued) (scheduler : CompileScheduler A)
+  ∀ (env : metadata.Env) (issued : StreamBatch.Issued) (scheduler : CompileScheduler A)
     (worker : stream.CodeBatch), issued.env = env → issued.Bounded → CodeEntry.Bounds env →
     issued.profile = profile → ProfileEnvironment profile env →
     SchedulerReady env issued.first_func.val scheduler →
@@ -28,13 +28,13 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
     exact ⟨(.Ok (),scheduler),rfl⟩
   · intro before chunk after accepted held
     have same : before = after := by simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaModuleModuleVisitor,
-      CompileScheduler.Insts.ItascaModuleModuleVisitor.on_custom_section] using accepted
+      CompileScheduler.Insts.ItascaMetadataModuleVisitor,
+      CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section] using accepted
     simpa only [same] using held
   · intro env cursor before chunk after accepted held
     have same : before = after := by simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaModuleModuleVisitor,
-      CompileScheduler.Insts.ItascaModuleModuleVisitor.on_custom_section] using accepted
+      CompileScheduler.Insts.ItascaMetadataModuleVisitor,
+      CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section] using accepted
     simpa only [same] using held
   · intro scheduler region held
     simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
@@ -73,7 +73,7 @@ theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platfo
     (law : Platform.AllocCorrect ops) (profile : ValidationProfile)
     (entries : ReachedProfileEntriesTotal ops profile) (source : CompileSource)
     (sourceBounds : SourceBounds source) (scheduler : CompileScheduler A)
-    (initial : SchedulerInitial scheduler) (storage : module.Env) :
+    (initial : SchedulerInitial scheduler) (storage : metadata.Env) :
     stream.validate_streaming CompileSource.Insts.ItascaStreamSource
       (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile source scheduler storage ⦃ out =>
         out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by

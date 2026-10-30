@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Capacity certificates retained in the scheduler's sparse vector. -/
-structure PendingModuleCapacities (profile : ValidationProfile) (env : module.Env)
+structure PendingModuleCapacities (profile : ValidationProfile) (env : metadata.Env)
     (pending : List (Option runtime.bytecode.CompiledFunction)) (sources : List funccode) : Prop where
   count : sources.length = env.func_type_indices.val.length
   entry : ∀ (index : Nat) (typeIndex : U32), env.func_type_indices.val[index]? = some typeIndex →
@@ -27,7 +27,7 @@ theorem PendingModuleCapacities.collected {profile env pending sources}
 
 /-- Every occupied scheduler slot carries the corresponding declared function
 certificate. Empty slots are permitted until actual collection succeeds. -/
-structure PartialModuleCapacities (profile : ValidationProfile) (env : module.Env) (sources : List funccode)
+structure PartialModuleCapacities (profile : ValidationProfile) (env : metadata.Env) (sources : List funccode)
     (pending : List (Option runtime.bytecode.CompiledFunction)) : Prop where
   count : pending.length = env.func_type_indices.val.length
   sourceCount : sources.length = env.func_type_indices.val.length
@@ -36,7 +36,7 @@ structure PartialModuleCapacities (profile : ValidationProfile) (env : module.En
     ∃ typeIndex source, env.func_type_indices.val[index]? = some typeIndex ∧
       sources[index]? = some source ∧ FunctionCapacity profile env typeIndex source compiled
 
-theorem PartialModuleCapacities.empty (profile : ValidationProfile) (env : module.Env) (sources : List funccode)
+theorem PartialModuleCapacities.empty (profile : ValidationProfile) (env : metadata.Env) (sources : List funccode)
     (count : sources.length = env.func_type_indices.val.length) :
     PartialModuleCapacities profile env sources (List.replicate env.func_type_indices.val.length none) := by
   refine ⟨by simp, count, ?_⟩
@@ -69,7 +69,7 @@ certificates and installs precisely its newly checked function. -/
 theorem CompileEntryWitness.capacities {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
     (w : CompileEntryWitness allocator before after batch finalBatch)
-    {profile : ValidationProfile} {env : module.Env} {sources : List funccode}
+    {profile : ValidationProfile} {env : metadata.Env} {sources : List funccode}
     (certificate : PartialModuleCapacities profile env sources before.functions.val)
     (typeIndex : U32) (source : funccode)
     (lookup : env.func_type_indices.val[w.entry.index.val]? = some typeIndex)

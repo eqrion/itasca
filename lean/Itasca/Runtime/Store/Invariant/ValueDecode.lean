@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Relations.DecodeValue
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
+theorem decode_words_code (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (hfloat : ty = .F32 → lo.val < 2^32) :
     Compiler.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
       some (decodeWords ty lo hi, []) := by

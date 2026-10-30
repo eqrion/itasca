@@ -23,7 +23,7 @@ def WorldDefinedSourceResourceCause {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
     (store : runtime.store.Store M) (ambient : frame) (address : runtime.FuncAddr)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value)
     (after : runtime.store.Store M) (error : runtime.ExecError) : Prop :=
   let initial := ⟨⟨Store.decodeStore view code store,ambient⟩,vals (args.val.map sourceValue)++[.CALL_ADDR address.index.val]⟩
   CanonicalInvocationResourceCause allocator hooks initial (Store.decodeStore view code store)
@@ -48,7 +48,7 @@ theorem invoke_defined_world_recorded_resources
     (valid : Inv code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
+    (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (owned : ∀ value ∈ args.val, Store.ValueInStore store value)

@@ -18,8 +18,8 @@ execution premise is accepted. The loop leaves the store and platform intact. -/
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :
-    types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
+private theorem elem_value_type_eq (ty : Itasca.wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
 
 private theorem encode_push {M : Type} (store : runtime.store.Store M)
     (values : alloc.vec.Vec U64) (value : runtime.Value) (owned : ValueInStore store value)
@@ -38,7 +38,7 @@ theorem element_initializers_loop_errors {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -81,7 +81,7 @@ theorem element_initializers_loop_errors {M P F A : Type}
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
         simp only [runtime.compiler.ExecutableModule.env,
-          Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+          Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
@@ -131,7 +131,7 @@ theorem add_element_errors {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (found : store.instances.val[instIndex.val]? = some inst)
     (element : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
@@ -141,7 +141,7 @@ theorem add_element_errors {M P F A : Type}
     ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len

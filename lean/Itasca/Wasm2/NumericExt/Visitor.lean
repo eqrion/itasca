@@ -17,7 +17,7 @@ namespace Itasca.Wasm2.Visitor
 extension, including the cursor after a nonminimal prefix encoding. -/
 theorem extended_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (opcode : U8) (v : V) (v' : V) (w : W)
     (hscalar : opcode.val ∉ controlOpcodes) (hlocals : ctx.locals = ctx'.locals)
     (h : code.step_extended visitor st data env ctx opcode v = .ok (.Ok (), final, v')) :

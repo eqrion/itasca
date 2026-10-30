@@ -60,7 +60,7 @@ theorem code.step_numeric.accepted_erase {V : Type} (visitor : code.OpVisitor V)
 set_option maxHeartbeats 1000000 in
 /-- An accepted `code.step` run also succeeds, at the same state, with the empty visitor. -/
 theorem code.step.accepted_erase {V : Type} (visitor : code.OpVisitor V)
-    (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v v' : V)
     (h : code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v')) :
     code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =

@@ -57,7 +57,7 @@ theorem reader_emit_nop_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -90,7 +90,7 @@ theorem reader_emit_nop_wasm2 {data env locals index st}
 
 theorem popped_concrete_exact {segment rest : List code.StackType} {value}
     (known : ConcreteStack segment) (popped : StackSemantics.Popped false segment value rest) :
-    ∃ ty : types.ValueType, value = .Val ty ∧ segment = rest ++ [.Val ty] := by
+    ∃ ty : wasm_types.ValueType, value = .Val ty ∧ segment = rest ++ [.Val ty] := by
   cases popped with
   | explicit =>
     cases value with
@@ -109,7 +109,7 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
       st data env ctx index .Wasm2 code.OP_DROP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (front : List valtype) (ty : types.ValueType) (values : List code.StackType),
+    (∃ (front : List valtype) (ty : wasm_types.ValueType) (values : List code.StackType),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
       Wasm2.ReaderPost p out.core .DROP p.current.ctrl.polymorphic_base values ∧
       TypedLoweredEmpty before after out.core.vals.val front ∧

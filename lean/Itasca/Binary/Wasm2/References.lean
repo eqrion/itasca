@@ -15,19 +15,19 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.ReferencesBinary
 
 /-- The reference type tag is the literal byte `0x70` or `0x6f`. -/
-def referenceByte : types.ElemType → U8
+def referenceByte : wasm_types.ElemType → U8
   | .FuncRef => 0x70#u8
   | .ExternRef => 0x6f#u8
 
 /-- The immediates of reference, typed select, table access and indirect call instructions. Index
 encodings admit every valid unsigned LEB128. -/
 inductive Immediate : U8 → instr → List U8 → Prop where
-  | refNull (rt : types.ElemType) :
+  | refNull (rt : wasm_types.ElemType) :
       Immediate 0xd0#u8 (.REF_NULL (Translate.referenceType rt)) [referenceByte rt]
   | refIsNull : Immediate 0xd1#u8 .REF_IS_NULL []
   | refFunc (index : U32) {bytes} : Leb128.Encoding bytes index.val →
       Immediate 0xd2#u8 (.REF_FUNC (.mk_uN index.val)) bytes
-  | selectTyped (ty : types.ValueType) {count} : Leb128.Encoding count 1 →
+  | selectTyped (ty : wasm_types.ValueType) {count} : Leb128.Encoding count 1 →
       Immediate 0x1c#u8 (.SELECT (some [Translate.valueType ty])) (count ++ [valueByte ty])
   | tableGet (index : U32) {bytes} : Leb128.Encoding bytes index.val →
       Immediate 0x25#u8 (.TABLE_GET (.mk_uN index.val)) bytes

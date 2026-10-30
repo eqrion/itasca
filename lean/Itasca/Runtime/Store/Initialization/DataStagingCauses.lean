@@ -47,7 +47,7 @@ open Aeneas Aeneas.Std
 
 /-- Both exact allocation requests made when adding a passive data payload. -/
 def DataAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (data : Itasca.module.Data) (error : runtime.ExecError) : Prop :=
+    (store : runtime.store.Store M) (data : Itasca.metadata.Data) (error : runtime.ExecError) : Prop :=
   error = .Exhausted .Allocation ∧
     (allocator.reserve (alloc.vec.Vec.new U8) data.init.len = .ok (false,alloc.vec.Vec.new U8) ∨
       allocator.reserve store.datas 1#usize = .ok (false,store.datas))
@@ -55,7 +55,7 @@ def DataAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
 theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (instanceIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (data : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (data : Itasca.metadata.Data)
     (found : store.instances.val[instanceIndex.val]? = some inst)
     (selected : inst.module.module.tail.data.val[index.val]? = some data)
     (error : runtime.ExecError) (after : runtime.store.Store M)
@@ -63,7 +63,7 @@ theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     after = store ∧ DataAllocationCause allocator store data error := by
   unfold runtime.store.instantiate.Store.add_instance_data at run
   simp only [Compiler.initializer_vec_index store.instances instanceIndex inst found,
-    runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok,
+    runtime.compiler.ExecutableModule.tail,Itasca.metadata.Module.impl.tail,bind_ok,
     Compiler.initializer_vec_index inst.module.module.tail.data index data selected] at run
   obtain ⟨copied,copiedRun,effect⟩ := WP.spec_imp_exists (copy_bytes_resource_causes allocator law data.init.deref)
   rw [copiedRun,bind_ok] at run
@@ -152,7 +152,7 @@ theorem data_staging_resource_loop {M A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok, hsource]
+      Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.tail.data.val.length := by simpa using more

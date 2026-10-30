@@ -11,7 +11,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def sourceDataOffset (segment : Itasca.module.Data) : Option Itasca.types.ConstExpr :=
+def sourceDataOffset (segment : Itasca.metadata.Data) : Option Itasca.wasm_types.ConstExpr :=
   match segment.mode with
   | .Active _ expr => some expr
   | .Passive => none
@@ -19,7 +19,7 @@ def sourceDataOffset (segment : Itasca.module.Data) : Option Itasca.types.ConstE
 theorem initializer_lower_data {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (index : Usize)
-    (segment : Itasca.module.Data)
+    (segment : Itasca.metadata.Data)
     (found : module.module.tail.data.val[index.val]? = some segment)
     (success : runtime.compiler.initialize.lower_data_offset ops module budget index =
       .ok (.Ok (), after, budgetAfter)) :
@@ -49,7 +49,7 @@ theorem initializer_lower_data {A : Type} (ops : runtime.platform.Alloc A)
       simp
 
 def DataOffsetMappings (functions : List runtime.bytecode.CompiledFunction)
-    (segments : List Itasca.module.Data) (offsets : List (Option Usize)) : Prop :=
+    (segments : List Itasca.metadata.Data) (offsets : List (Option Usize)) : Prop :=
   List.Forall₂ (fun segment offset => OffsetInitializer functions (sourceDataOffset segment) offset)
     segments offsets
 
@@ -119,7 +119,7 @@ theorem initializer_data_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop2.body at body
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok] at body
+      Itasca.metadata.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body

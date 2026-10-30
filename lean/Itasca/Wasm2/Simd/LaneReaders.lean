@@ -13,8 +13,8 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Simd
 
-theorem carryFixed.cons {A : Type} (a : A) (st : code.OpIterState) (ty : types.ValueType)
-    (rest : List types.ValueType) (output : Option types.ValueType) :
+theorem carryFixed.cons {A : Type} (a : A) (st : code.OpIterState) (ty : wasm_types.ValueType)
+    (rest : List wasm_types.ValueType) (output : Option wasm_types.ValueType) :
     carryFixed a st (ty :: rest) output = (do
       let (r, s) ← code.pop_with_type st ty
       match r with
@@ -27,16 +27,16 @@ theorem carryFixed.cons {A : Type} (a : A) (st : code.OpIterState) (ty : types.V
   cases r <;> simp
 
 /-- Operand types of a lane operation: a vector, preceded by the replacement scalar if any. -/
-def laneInputs (ty : types.ValueType) (replace : Bool) : List types.ValueType :=
+def laneInputs (ty : wasm_types.ValueType) (replace : Bool) : List wasm_types.ValueType :=
   if replace then [ty, .V128] else [.V128]
 
 /-- Result type of a lane operation: a vector when replacing, otherwise the scalar. -/
-def laneOutput (ty : types.ValueType) (replace : Bool) : Option types.ValueType :=
+def laneOutput (ty : wasm_types.ValueType) (replace : Bool) : Option wasm_types.ValueType :=
   if replace then some .V128 else some ty
 
 /-- Reads a lane index below `count` and applies the lane operation's stack effect. -/
 def laneReader (st : code.OpIterState) (data : Slice U8)
-    (ty : types.ValueType) (count : U8) (replace : Bool) :
+    (ty : wasm_types.ValueType) (count : U8) (replace : Bool) :
     Result (core.result.Result U8 error.OpError × code.OpIterState) := do
   let (r, s) ← code.take_simd_lane st data count
   match r with
@@ -44,7 +44,7 @@ def laneReader (st : code.OpIterState) (data : Slice U8)
   | .Ok lane => carryFixed lane s (laneInputs ty replace) (laneOutput ty replace)
 
 theorem lane_fixed (st : code.OpIterState) (data : Slice U8)
-    (ty : types.ValueType) (count : U8) (replace : Bool) :
+    (ty : wasm_types.ValueType) (count : U8) (replace : Bool) :
     code.read_simd_lane st data ty count replace = laneReader st data ty count replace := by
   unfold code.read_simd_lane laneReader
   congr 1

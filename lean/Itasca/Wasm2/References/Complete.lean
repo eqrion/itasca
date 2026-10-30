@@ -21,8 +21,8 @@ namespace Itasca.Wasm2.Completeness
 The contract fixes the final cursor and keeps the original control frames. -/
 theorem Frame.metadata_read {st} (f : Frame st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (a : A) (next : Usize) (pops : A → List types.ValueType)
-    (output : A → Option types.ValueType) (metadata : A → B) (front : List valtype)
+    (a : A) (next : Usize) (pops : A → List wasm_types.ValueType)
+    (output : A → Option wasm_types.ValueType) (metadata : A → B) (front : List valtype)
     (hd : decode = .ok (.Ok a, {st.core with pos := next}))
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands
@@ -41,7 +41,7 @@ theorem Frame.metadata_read {st} (f : Frame st) {A B : Type}
 
 /-- Lift a successful leaf reader through its accepting empty-visitor hook and
 into the actual profile step, including its checked capacity guard. -/
-theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) {A : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : Unit → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × Unit))
@@ -61,8 +61,8 @@ theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : module.En
   rw [if_neg hn, hdispatch]
   simp [CoreVisitor.run, hread, hhook, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem Frame.ref_null {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (rt : types.ElemType) (next : Usize) (front : List valtype)
+theorem Frame.ref_null {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+    (ctx : code.Context) (index : U32) (rt : wasm_types.ElemType) (next : Usize) (front : List valtype)
     (hb : Wasm1.BytesAt data st.core.pos [ReferencesBinary.referenceByte rt] next)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands front) :
@@ -78,7 +78,7 @@ theorem Frame.ref_null {st} {profile : ValidationProfile} (f : Frame st) (data :
     (by cases rt <;> simpa [Simd.outputTypes, ModuleConstants.referenceValueType,
       Translate.referenceType, Translate.valueType, valtype_reftype] using hout) hl hsize
 
-theorem Frame.table_get {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_get {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.table_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -95,7 +95,7 @@ theorem Frame.table_get {st} {profile : ValidationProfile} (f : Frame st) (data 
   exact f.reader_step data env ctx index 37#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.table_get _ _ _ _ _ _) hs rfl hp hout hl hsize
 
-theorem Frame.table_set {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_set {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.table_types.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -112,7 +112,7 @@ theorem Frame.table_set {st} {profile : ValidationProfile} (f : Frame st) (data 
   exact f.reader_step data env ctx index 38#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.table_set _ _ _ _ _ _) hs rfl hp hout hl hsize
 
-theorem Frame.table_grow {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_grow {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Leb128.Decoded data st.core.pos 15#u32 middle)
     (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
@@ -130,7 +130,7 @@ theorem Frame.table_grow {st} {profile : ValidationProfile} (f : Frame st) (data
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 15#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.table_size {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_size {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Leb128.Decoded data st.core.pos 16#u32 middle)
     (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
@@ -148,7 +148,7 @@ theorem Frame.table_size {st} {profile : ValidationProfile} (f : Frame st) (data
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 16#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.table_fill {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_fill {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Leb128.Decoded data st.core.pos 17#u32 middle)
     (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
@@ -166,8 +166,8 @@ theorem Frame.table_fill {st} {profile : ValidationProfile} (f : Frame st) (data
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 17#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.typed_select {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
-    (ctx : code.Context) (index : U32) (ty : types.ValueType) (count : List U8)
+theorem Frame.typed_select {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+    (ctx : code.Context) (index : U32) (ty : wasm_types.ValueType) (count : List U8)
     (next : Usize) (front : List valtype)
     (he : Leb128.Encoding count 1) (hb : Wasm1.BytesAt data st.core.pos (count ++ [valueByte ty]) next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -190,7 +190,7 @@ theorem Frame.typed_select {st} {profile : ValidationProfile} (f : Frame st) (da
 
 /-- Completeness of ref.func requires the independent declaration premise in
 addition to the ordinary generated function-index bound. -/
-theorem Frame.ref_func {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.ref_func {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
     (hd : Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.func_types.val.length)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
@@ -207,7 +207,7 @@ theorem Frame.ref_func {st} {profile : ValidationProfile} (f : Frame st) (data :
   obtain ⟨s, hs, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.push_val.spec {st.core with pos := next} (.Val .FuncRef) hsize)
   have hrun : code.read_ref_func st.core data env = .ok (.Ok idx, s) := by
-    simp [code.read_ref_func, hread, lift, Nat.not_le_of_gt hi, module.Env.declares_function.eq,
+    simp [code.read_ref_func, hread, lift, Nat.not_le_of_gt hi, metadata.Env.declares_function.eq,
       himem, hs, core.result.Result.Insts.CoreOpsTry.branch]
   apply f.reader_step data env ctx index 210#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.ref_func _ _ _ _ _ _) hrun rfl hp ?_ ?_ hsize
@@ -216,7 +216,7 @@ theorem Frame.ref_func {st} {profile : ValidationProfile} (f : Frame st) (data :
     simpa [f.core.poly_eq] using hr.snoc (.Val .FuncRef) .FUNCREF rfl
   · simp [hv]
 
-theorem Frame.ref_is_null {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.ref_is_null {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (rt : reftype) (next : Usize) (front : List valtype)
     (hb : Wasm1.BytesAt data st.core.pos [] next)
     (hsize : st.core.vals.val.length < Usize.max)

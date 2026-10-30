@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Itasca
 The obligation includes the exact framing and byte-read calls, so a decoded
 source split can be retained without assuming a callback certificate. -/
 def Submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (P : Usize → Usize → V → Prop) : Prop :=
   ∀ (v v' : V) (pos func batchId finish next count : Usize) (bytes : Slice U8),
     P pos func v → pos.val ≤ code.length → func.val < env.func_type_indices.val.length →
@@ -38,13 +38,13 @@ def Retire {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
     P pos func v'
 
 private def ResultPost {V : Type} (P : Usize → Usize → V → Prop)
-    (code : Slice U8) (env : module.Env) :
+    (code : Slice U8) (env : metadata.Env) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok _, v) => P (Slice.len code) (alloc.vec.Vec.len env.func_type_indices) v
   | (.Err _, _) => True
 
 private def BodyPost {V : Type} (P : Usize → Usize → V → Prop)
-    (code : Slice U8) (env : module.Env) (func : Usize) :
+    (code : Slice U8) (env : metadata.Env) (func : Usize) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | .done result => ResultPost P code env result
@@ -53,7 +53,7 @@ private def BodyPost {V : Type} (P : Usize → Usize → V → Prop)
       P pos next v ∧ func.val < next.val
 
 private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code profile config P)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -141,7 +141,7 @@ private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream
         exact ⟨by simpa using hfinish, by simpa using hnextbound, hv', by simpa using hnext⟩
 
 private theorem body {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code profile config P)
     (retired : Retire visitor moduleId P)
@@ -197,7 +197,7 @@ private theorem body {S V : Type} (source : stream.Source S) (visitor : stream.S
 /-- Accepted execution of the actual submission loop transports a retained
 source/compiler invariant through framing, submissions and retirements. -/
 theorem loop {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code profile config P)
     (retired : Retire visitor moduleId P)
@@ -241,7 +241,7 @@ theorem loop {S V : Type} (source : stream.Source S) (visitor : stream.Streaming
 and source function zero. No callback correctness premise survives once the
 local source-split and compiler-entry lemmas instantiate this transport. -/
 theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code profile config P)
     (retired : Retire visitor moduleId P)
@@ -278,7 +278,7 @@ open Aeneas Aeneas.Std Itasca ModuleBinary
 The processed prefix fixes the global source-function index independently of
 any compiler certificate. -/
 def Progress {V : Type} (profile : ValidationProfile) (code : Slice U8)
-    (env : module.Env) (entries : List ModuleBinary.Code) (Q : V → Prop)
+    (env : metadata.Env) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (position first : Usize) (visitor : V) : Prop :=
   ∃ processed remaining, entries = processed ++ remaining ∧
     processed.length = first.val ∧ first.val + remaining.length = env.func_type_indices.val.length ∧
@@ -287,7 +287,7 @@ def Progress {V : Type} (profile : ValidationProfile) (code : Slice U8)
 /-- A local batch proof receives its exact decoded source slice and issued
 function offset. This contract is instantiated by the concrete entry fold. -/
 def Batch {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
-    (profile : ValidationProfile) (env : module.Env) (entries : List ModuleBinary.Code) (Q : V → Prop) : Prop :=
+    (profile : ValidationProfile) (env : metadata.Env) (entries : List ModuleBinary.Code) (Q : V → Prop) : Prop :=
   ∀ (before after : V) (issued : StreamBatch.Issued) (processed taken remaining : List ModuleBinary.Code),
     entries = processed ++ taken ++ remaining → issued.module_id = moduleId → issued.profile = profile →
     issued.env = env → issued.first_func.val = processed.length → issued.num_funcs.val = taken.length →
@@ -295,7 +295,7 @@ def Batch {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
     visitor.submit_code_batch before issued.seed = .ok (.Ok (), after) → Q after
 
 theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -338,7 +338,7 @@ theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : strea
 /-- Actual submission preserves a concrete compiler invariant for a fixed
 independently encoded source list, provided each real issued batch is checked. -/
 theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (profile : ValidationProfile) (config : stream.Config) (entries : List ModuleBinary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)

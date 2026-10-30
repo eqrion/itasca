@@ -4,8 +4,8 @@ import Itasca.Profile.BodyVisitor
 /-!
 # Profile code-entry soundness
 
-Acceptance by `module.validate_code_entry_with` yields the specification `Profile.Entry`
-(`module.validate_code_entry_with.profile_sound`), for either profile and any visitor.
+Acceptance by `metadata.validate_code_entry_with` yields the specification `Profile.Entry`
+(`metadata.validate_code_entry_with.profile_sound`), for either profile and any visitor.
 -/
 
 open Aeneas Aeneas.Std
@@ -31,13 +31,13 @@ theorem CodeEntry.Witness.profile_validated
 
 /-- If the entry validator accepts, the entry satisfies `Profile.Entry`. This needs no visitor
 totality assumption. -/
-theorem module.validate_code_entry_with.profile_sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
+theorem metadata.validate_code_entry_with.profile_sound {V : Type} (visitor : code.OpVisitor V)
+    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
     (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
-    (h : module.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
+    (h : metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
     Profile.Entry profile data env index pos finish := by
-  obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile visitor data pos env index finish v v'
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile visitor data pos env index finish v v'
     hbound profile h
   apply w.profile_validated
   apply code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile w.ft w.startedState v'

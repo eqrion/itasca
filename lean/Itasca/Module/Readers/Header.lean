@@ -3,7 +3,7 @@ import Itasca.Module.Readers.Basic
 /-!
 # Module header reader
 
-`module.read_header.spec`: an accepted header is the magic and version bytes at offset 0. The
+`metadata.read_header.spec`: an accepted header is the magic and version bytes at offset 0. The
 completeness counterpart is in `Module/Readers/FramingComplete`.
 -/
 
@@ -13,15 +13,15 @@ namespace Itasca
 
 open ModuleBinary
 
-/-- An accepted result of `module.read_header` consumes exactly the magic and version bytes. -/
-theorem module.read_header.spec (data : Slice U8) :
-    module.read_header data ⦃ r => match r with
+/-- An accepted result of `metadata.read_header` consumes exactly the magic and version bytes. -/
+theorem metadata.read_header.spec (data : Slice U8) :
+    metadata.read_header data ⦃ r => match r with
       | .Ok next => Wasm1.BytesAt data 0#usize magicVersion next
       | .Err _ => True ⦄ := by
   obtain ⟨r, h1, hb1⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data 0#usize)
   cases r with
   | Err e =>
-      simp [module.read_header, h1, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.read_header, h1, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
@@ -29,7 +29,7 @@ theorem module.read_header.spec (data : Slice U8) :
       obtain ⟨r, h2, hb2⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p1)
       cases r with
       | Err e =>
-          simp [module.read_header, h1, h2, core.result.Result.Insts.CoreOpsTry.branch,
+          simp [metadata.read_header, h1, h2, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
@@ -37,7 +37,7 @@ theorem module.read_header.spec (data : Slice U8) :
           obtain ⟨r, h3, hb3⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p2)
           cases r with
           | Err e =>
-              simp [module.read_header, h1, h2, h3, core.result.Result.Insts.CoreOpsTry.branch,
+              simp [metadata.read_header, h1, h2, h3, core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 error.Error.Insts.CoreConvertFromOpError.from]
           | Ok pair =>
@@ -45,7 +45,7 @@ theorem module.read_header.spec (data : Slice U8) :
               obtain ⟨r, h4, hb4⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p3)
               cases r with
               | Err e =>
-                  simp [module.read_header, h1, h2, h3, h4, core.result.Result.Insts.CoreOpsTry.branch,
+                  simp [metadata.read_header, h1, h2, h3, h4, core.result.Result.Insts.CoreOpsTry.branch,
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                     error.Error.Insts.CoreConvertFromOpError.from]
               | Ok pair =>
@@ -53,7 +53,7 @@ theorem module.read_header.spec (data : Slice U8) :
                   obtain ⟨r, h5, hb5⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p4)
                   cases r with
                   | Err e =>
-                      simp [module.read_header, h1, h2, h3, h4, h5, core.result.Result.Insts.CoreOpsTry.branch,
+                      simp [metadata.read_header, h1, h2, h3, h4, h5, core.result.Result.Insts.CoreOpsTry.branch,
                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                         error.Error.Insts.CoreConvertFromOpError.from]
                       all_goals split_ifs <;> simp
@@ -62,7 +62,7 @@ theorem module.read_header.spec (data : Slice U8) :
                       obtain ⟨r, h6, hb6⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p5)
                       cases r with
                       | Err e =>
-                          simp [module.read_header, h1, h2, h3, h4, h5, h6, core.result.Result.Insts.CoreOpsTry.branch,
+                          simp [metadata.read_header, h1, h2, h3, h4, h5, h6, core.result.Result.Insts.CoreOpsTry.branch,
                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                             error.Error.Insts.CoreConvertFromOpError.from]
                           all_goals split_ifs <;> simp
@@ -71,7 +71,7 @@ theorem module.read_header.spec (data : Slice U8) :
                           obtain ⟨r, h7, hb7⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p6)
                           cases r with
                           | Err e =>
-                              simp [module.read_header, h1, h2, h3, h4, h5, h6, h7, core.result.Result.Insts.CoreOpsTry.branch,
+                              simp [metadata.read_header, h1, h2, h3, h4, h5, h6, h7, core.result.Result.Insts.CoreOpsTry.branch,
                                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                                 error.Error.Insts.CoreConvertFromOpError.from]
                               all_goals split_ifs <;> simp
@@ -80,13 +80,13 @@ theorem module.read_header.spec (data : Slice U8) :
                               obtain ⟨r, h8, hb8⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data p7)
                               cases r with
                               | Err e =>
-                                  simp [module.read_header, h1, h2, h3, h4, h5, h6, h7, h8, core.result.Result.Insts.CoreOpsTry.branch,
+                                  simp [metadata.read_header, h1, h2, h3, h4, h5, h6, h7, h8, core.result.Result.Insts.CoreOpsTry.branch,
                                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                                     error.Error.Insts.CoreConvertFromOpError.from]
                                   all_goals split_ifs <;> simp
                               | Ok pair =>
                                   obtain ⟨b8, p8⟩ := pair
-                                  simp [module.read_header, h1, h2, h3, h4, h5, h6, h7, h8,
+                                  simp [metadata.read_header, h1, h2, h3, h4, h5, h6, h7, h8,
                                     core.result.Result.Insts.CoreOpsTry.branch]
                                   split_ifs <;> simp_all
                                   have hbytes := ((((((((At.byte hb1).append (At.byte hb2)).append (At.byte hb3)).append (At.byte hb4)).append (At.byte hb5)).append (At.byte hb6)).append (At.byte hb7)).append (At.byte hb8))

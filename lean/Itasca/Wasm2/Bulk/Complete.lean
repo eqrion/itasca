@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2.Completeness
 
-theorem Frame.memory_fill {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_fill {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 11#u32 middle)
     (hb : Wasm1.BytesAt data middle [0#u8] next) (hmem : 0 < env.mem_types.val.length)
@@ -31,7 +31,7 @@ theorem Frame.memory_fill {st} {profile : ValidationProfile} (f : Frame st) (dat
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 11#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.memory_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (hprefix : Leb128.Decoded data st.core.pos 10#u32 middle)
     (hb : Wasm1.BytesAt data middle [0#u8, 0#u8] next) (hmem : 0 < env.mem_types.val.length)
@@ -52,7 +52,7 @@ theorem Frame.memory_copy {st} {profile : ValidationProfile} (f : Frame st) (dat
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 10#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.memory_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.memory_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (middle next : Usize) (front : List valtype)
     (idx count : U32) (dataBytes : List U8)
     (he : Leb128.Encoding dataBytes idx.val) (hcount : env.data_count = some count) (hidx : idx.val < count.val)
@@ -76,7 +76,7 @@ theorem Frame.memory_init {st} {profile : ValidationProfile} (f : Frame st) (dat
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 8#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.data_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.data_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (middle next : Usize) (front : List valtype)
     (count : U32) (hcount : env.data_count = some count) (hidx : idx.val < count.val)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 middle)
@@ -93,7 +93,7 @@ theorem Frame.data_drop {st} {profile : ValidationProfile} (f : Frame st) (data 
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 9#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.elem_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.elem_drop {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index idx : U32) (middle next : Usize) (front : List valtype)
     (hidx : idx.val < env.elements.val.length)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 middle)
@@ -110,7 +110,7 @@ theorem Frame.elem_drop {st} {profile : ValidationProfile} (f : Frame st) (data 
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 13#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.table_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_init {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index i j : U32) (middle next : Usize) (front : List valtype)
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)
@@ -141,7 +141,7 @@ theorem Frame.table_init {st} {profile : ValidationProfile} (f : Frame st) (data
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 12#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
-theorem Frame.table_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.table_copy {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index i j : U32) (middle next : Usize) (front : List valtype)
     (firstBytes secondBytes : List U8)
     (hfirst : Leb128.Encoding firstBytes i.val) (hsecond : Leb128.Encoding secondBytes j.val)

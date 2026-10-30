@@ -18,7 +18,7 @@ set_option maxHeartbeats 2000000 in
 validator state. Scalar steps depend on locals, not the context result vector. -/
 theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (data : Slice U8) (env : module.Env) (ctx ctx' : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (profile : ValidationProfile) (opcode : U8)
     (st final : code.BodyState) (v : V) (w : W) (v' : V)
     (h : code.step_profile visitor st data env ctx index profile opcode v =

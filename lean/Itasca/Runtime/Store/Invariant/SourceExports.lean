@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Runtime export decoding resolves the same namespace entry as the generated
 module allocator, using the validated index and the completed instance map. -/
 theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
-    (entry : Itasca.module.Export) (ty : types.ExternType)
+    (entry : Itasca.metadata.Export) (ty : wasm_types.ExternType)
     (shape : InstanceShape store inst)
     (resolved : ModuleExternals.ExportResolves inst.module.module.env entry ty)
     (nameWf : wf_name (decodeName entry.name.val)) :

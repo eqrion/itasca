@@ -62,7 +62,7 @@ set_option maxHeartbeats 1000000 in
 whose hooks all accept. The resulting visitor state is unconstrained. -/
 theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor)
-    (st st' : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V)
     (h : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), st', ())) :

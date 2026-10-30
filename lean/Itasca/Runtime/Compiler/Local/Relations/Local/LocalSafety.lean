@@ -33,7 +33,7 @@ set_option maxRecDepth 4096 in
         let i ← lift (UScalar.cast .Usize index)
         let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
         let j ← lift (UScalar.cast .Usize index)
-        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
         let count ← runtime.value.width rawType
         let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
         let branch ← core.result.Result.Insts.CoreOpsTry.branch result
@@ -86,7 +86,7 @@ set_option maxRecDepth 4096 in
         match branch with
         | .Continue src =>
           let j ← lift (UScalar.cast .Usize index)
-          let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+          let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
           let count ← runtime.value.width rawType
           let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
           let branch ← core.result.Result.Insts.CoreOpsTry.branch result

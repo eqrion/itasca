@@ -19,7 +19,7 @@ conservative five-instruction demand. Source indices have independent u32 bounds
 theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (function : runtime.bytecode.CompiledFunction) (index : Usize) (segment : Itasca.module.Data)
+    (function : runtime.bytecode.CompiledFunction) (index : Usize) (segment : Itasca.metadata.Data)
     (lookup : module.module.tail.data.val[index.val]? = some segment)
     (typed : ∀ memory offset, segment.mode = .Active memory offset →
       Itasca.ModuleConstants.Valid module.module.env offset .I32)
@@ -31,7 +31,7 @@ theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect = function.indirect ⦄ := by
   unfold runtime.compiler.initialize.emit_data
-  simp only [runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.tail,Itasca.metadata.Module.impl.tail,bind_ok]
   rw [initializer_vec_index _ _ segment lookup,bind_ok]
   cases mode : segment.mode with
   | Passive =>
@@ -140,7 +140,7 @@ theorem initializer_emit_datas_available {A : Type} (ops : runtime.platform.Allo
     dsimp only at limits accepted position used code pairs pool
     subst status
     unfold runtime.compiler.initialize.lower_loop4.body
-    simp only [runtime.compiler.ExecutableModule.tail,Itasca.module.Module.impl.tail,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.tail,Itasca.metadata.Module.impl.tail,bind_ok]
     split
     · rename_i more
       have sourceBound : next.val < module.module.tail.data.val.length := by
@@ -188,7 +188,7 @@ conservative five-instruction demand. Source indices have independent u32 bounds
 theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (function : runtime.bytecode.CompiledFunction) (index : Usize) (segment : Itasca.module.Element)
+    (function : runtime.bytecode.CompiledFunction) (index : Usize) (segment : Itasca.metadata.Element)
     (lookup : module.module.env.elements.val[index.val]? = some segment)
     (typed : ∀ table offset, segment.mode = .Active table offset →
       Itasca.ModuleConstants.Valid module.module.env offset .I32)
@@ -203,7 +203,7 @@ theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Al
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect.length ≤ function.indirect.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.emit_element
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using lookup),bind_ok]
   cases mode : segment.mode with
   | Passive =>
@@ -339,7 +339,7 @@ theorem initializer_emit_elements_available {A : Type} (ops : runtime.platform.A
     dsimp only at limits accepted position used code pairs pool
     subst status
     unfold runtime.compiler.initialize.lower_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have sourceBound : next.val < module.module.env.elements.val.length := by

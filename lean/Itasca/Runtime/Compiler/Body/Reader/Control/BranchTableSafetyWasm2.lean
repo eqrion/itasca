@@ -48,7 +48,7 @@ structure TableCollecting {A} (before current : runtime.compiler.FunctionCompile
   frames : before.frames.val.length = state.core.ctrls.val.length
   shape : Control.Shape state.core
 
-private theorem table_check_total (st : code.BodyState) (env : module.Env)
+private theorem table_check_total (st : code.BodyState) (env : metadata.Env)
     (types : signature.ResultType) (arity : Option Usize) (shape : Control.Shape st.core) :
     tableCheck st env types arity ⦃ _ => True ⦄ := by
   unfold tableCheck
@@ -103,7 +103,7 @@ theorem TableCollecting.label {A} (ops : runtime.platform.Alloc A) (law : Platfo
 
 theorem compiler_table_rest_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before current : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (env : module.Env) (count index depth : U32)
+    (state : code.BodyState) (env : metadata.Env) (count index depth : U32)
     (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
     (held : TableCollecting before current state) (bound : index.val ≤ count.val)
     (depthBound : depth.val < before.frames.val.length)
@@ -143,7 +143,7 @@ theorem compiler_table_rest_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_table_body_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before current : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (state : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (count index : U32) (arity : Option Usize) (first : signature.ResultType)
     (held : TableCollecting before current state)
     (bound : index.val ≤ count.val) (bounded : data.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -188,7 +188,7 @@ theorem compiler_table_body_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_table_reader_loop_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before current : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (state : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (count index : U32) (arity : Option Usize) (first : signature.ResultType) (held : TableCollecting before current state)
     (bound : index.val ≤ count.val) (bounded : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (aligned : SourceAligned before) (fixups : FixupBudget before.frames.val before.function.code.val.length)
@@ -209,7 +209,7 @@ theorem compiler_table_reader_loop_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_table_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (data : Slice U8) (env : module.Env)
+    (state : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (shape : Control.Shape state.core) (bounded : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (frameCount : compiler.frames.val.length = state.core.ctrls.val.length)
     (empty : compiler.table_depths.val = [])

@@ -4,14 +4,14 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
 
-private theorem limits_success (limits : Itasca.types.Limits) (maximum : U32)
+private theorem limits_success (limits : Itasca.wasm_types.Limits) (maximum : U32)
     (fit : LimitsFit limits maximum) : runtime.store.check_limits limits maximum = .ok (.Ok ()) := by
   obtain ⟨answer, called, result⟩ := WP.spec_imp_exists (check_limits_spec limits maximum)
   simpa [fit, result] using called
 
 theorem define_table_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.TableType)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.TableType)
     (fit : LimitsFit ty.limits core.num.U32.MAX)
     (out : core.result.Result runtime.TableAddr runtime.ExecError × runtime.store.Store M)
     (run : runtime.store.Store.define_table_with memory allocator store ty = .ok out) :
@@ -22,7 +22,7 @@ theorem define_table_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
 
 theorem define_global_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.GlobalType) (value : runtime.Value)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.GlobalType) (value : runtime.Value)
     (typed : ty.valtype = Interp.rawType value) (owned : Interp.ValueOwnedFits store.id value)
     (out : core.result.Result runtime.GlobalAddr runtime.ExecError × runtime.store.Store M)
     (run : runtime.store.Store.define_global_with memory allocator store ty value = .ok out) :
@@ -36,7 +36,7 @@ theorem define_global_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
 theorem define_memory_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
-    (store : runtime.store.Store M) (ty : Itasca.types.MemType) (buffer : M)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.MemType) (buffer : M)
     (fit : LimitsFit ty.limits 65536#u32)
     (length : (view buffer).length = ty.limits.min.val * 65536)
     (out : core.result.Result runtime.MemoryAddr runtime.ExecError × runtime.store.Store M)

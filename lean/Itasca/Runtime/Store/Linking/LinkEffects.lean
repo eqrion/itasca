@@ -14,12 +14,12 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-def LimitsMatch (size : Nat) (maximum : Option U32) (required : Itasca.types.Limits) : Prop :=
+def LimitsMatch (size : Nat) (maximum : Option U32) (required : Itasca.wasm_types.Limits) : Prop :=
   required.min.val ≤ size ∧ ∀ bound, required.max = some bound →
     ∃ actual, maximum = some actual ∧ actual.val ≤ bound.val
 
 @[step] theorem matches_limits_spec (size : U64) (maximum : Option U32)
-    (required : Itasca.types.Limits) :
+    (required : Itasca.wasm_types.Limits) :
     runtime.store.matches_limits size maximum required ⦃ answer =>
       answer = true ↔ LimitsMatch size.val maximum required ⦄ := by
   unfold runtime.store.matches_limits
@@ -59,7 +59,7 @@ theorem link_function {M : Type} (ops : runtime.platform.MemoryBuffer M)
          inst.module.module.env.types.val[typeIndex.val]) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Func typeIndex := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -68,7 +68,7 @@ theorem link_function {M : Type} (ops : runtime.platform.MemoryBuffer M)
   step as ⟨function, hfunction⟩
   have hsignature := (hs.functions function (by simp [hfunction])).1
   step as ⟨actual, hactual⟩
-  simp only [Itasca.module.Env.impl.types, bind_ok]
+  simp only [Itasca.metadata.Env.impl.types, bind_ok]
   step as ⟨index, hcast⟩
   have hind : index.val < inst.module.module.env.types.deref.length := by
     simp [alloc.vec.Vec.deref]
@@ -88,7 +88,7 @@ adding the address; neither successful linking nor rejection changes the store. 
 theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
     (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
-    (required : Itasca.types.MemType) (address : runtime.MemoryAddr)
+    (required : Itasca.wasm_types.MemType) (address : runtime.MemoryAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Memory required)
     (haddr : address.store = s.id) (hindex : address.index.val < s.memories.length)
@@ -104,7 +104,7 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
          (s.memories.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Memory required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -124,18 +124,18 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
     refine Or.inr ⟨hmemories, ?_⟩
     simpa [hsize, hpages, hmemory] using hmatch
 
-@[step] theorem value_type_ne (a b : Itasca.types.ValueType) :
-    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType a b
+@[step] theorem value_type_ne (a b : Itasca.wasm_types.ValueType) :
+    core.cmp.PartialEq.ne.trait_default wasm_types.ValueType.Insts.CoreCmpPartialEqValueType a b
       ⦃ different => different = true ↔ a ≠ b ⦄ := by
   unfold core.cmp.PartialEq.ne.trait_default core.cmp.PartialEq.ne.default
   step with value_type_equal a b as ⟨equal, hequal⟩
   cases equal <;> simp_all
 
-@[step] theorem mut_ne (a b : Itasca.types.Mut) :
-    core.cmp.PartialEq.ne.trait_default types.Mut.Insts.CoreCmpPartialEqMut a b
+@[step] theorem mut_ne (a b : Itasca.wasm_types.Mut) :
+    core.cmp.PartialEq.ne.trait_default wasm_types.Mut.Insts.CoreCmpPartialEqMut a b
       ⦃ different => different = true ↔ a ≠ b ⦄ := by
   cases a <;> cases b <;>
-    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, Itasca.types.Mut.Insts.CoreCmpPartialEqMut.eq]
+    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, Itasca.wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq]
 
 theorem element_value_type_injective : Function.Injective elementValueType := by
   intro a b h
@@ -144,7 +144,7 @@ theorem element_value_type_injective : Function.Injective elementValueType := by
 /-- Table linking compares both the element type and current size/maximum. -/
 theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
-    (required : Itasca.types.TableType) (address : runtime.TableAddr)
+    (required : Itasca.wasm_types.TableType) (address : runtime.TableAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Table required)
     (haddr : address.store = s.id) (hindex : address.index.val < s.tables.length)
@@ -161,7 +161,7 @@ theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
          (s.tables.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Table required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -190,7 +190,7 @@ theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
 /-- Imported globals must agree in both value type and mutability. -/
 theorem link_global {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (i : Usize)
-    (required : Itasca.types.GlobalType) (address : runtime.GlobalAddr)
+    (required : Itasca.wasm_types.GlobalType) (address : runtime.GlobalAddr)
     (hi : i.val < inst.module.module.env.imports.length)
     (hdesc : inst.module.module.env.imports.val[i.val].desc = .Global required)
     (haddr : address.store = s.id) (hindex : address.index.val < s.globals.length)
@@ -205,7 +205,7 @@ theorem link_global {M : Type} (ops : runtime.platform.MemoryBuffer M)
        (s.globals.val[address.index.val]).ty = required) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hd : entry.desc = .Global required := by simpa [hentry, alloc.vec.Vec.deref] using hdesc
@@ -231,7 +231,7 @@ theorem link_global {M : Type} (ops : runtime.platform.MemoryBuffer M)
   · simp
 
 /-- The kind test is independent of store addresses and resource contents. -/
-def ImportKindMatches : Itasca.module.ImportDesc → runtime.Extern → Prop
+def ImportKindMatches : Itasca.metadata.ImportDesc → runtime.Extern → Prop
   | .Func _, .Func _ | .Table _, .Table _ | .Memory _, .Memory _ | .Global _, .Global _ => True
   | _, _ => False
 
@@ -243,7 +243,7 @@ theorem link_wrong_kind {M : Type} (ops : runtime.platform.MemoryBuffer M)
       answer = .Err (.Link .IncompatibleImportType) ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   have hk : ¬ ImportKindMatches entry.desc external := by simpa [hentry, alloc.vec.Vec.deref] using hkind
@@ -265,7 +265,7 @@ theorem link_foreign {M : Type} (ops : runtime.platform.MemoryBuffer M)
       ∃ error, answer = .Err error ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.imports, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
   cases entry.desc <;> cases external <;>
@@ -294,7 +294,7 @@ def ExternalIssued {M : Type} (store : runtime.store.Store M) : runtime.Extern �
 /-- Exact structural effect of one successful import. Signature and global
 agreement are retained for the initializer and ordinary call invariants. -/
 inductive LinkedStep {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (before : runtime.store.ModuleInst) : Itasca.module.ImportDesc → runtime.Extern → runtime.store.ModuleInst → Prop where
+    (before : runtime.store.ModuleInst) : Itasca.metadata.ImportDesc → runtime.Extern → runtime.store.ModuleInst → Prop where
   | func (index : U32) (address : runtime.FuncAddr) (addresses : alloc.vec.Vec runtime.FuncAddr)
       (mapped : addresses.val = before.funcs.val ++ [address])
       (owner : address.store = store.id) (issued : address.index.val < store.funcs.length)
@@ -303,7 +303,7 @@ inductive LinkedStep {M : Type} (view : M → Slice U8) (store : runtime.store.S
       (typeEq : store.types.val[(store.funcs.val[address.index.val]).signature.val] =
         before.module.module.env.types.val[index.val]) :
       LinkedStep view store before (.Func index) (.Func address) {before with funcs := addresses}
-  | table (required : Itasca.types.TableType) (address : runtime.TableAddr)
+  | table (required : Itasca.wasm_types.TableType) (address : runtime.TableAddr)
       (addresses : alloc.vec.Vec runtime.TableAddr)
       (mapped : addresses.val = before.tables.val ++ [address])
       (owner : address.store = store.id) (issued : address.index.val < store.tables.length)
@@ -311,14 +311,14 @@ inductive LinkedStep {M : Type} (view : M → Slice U8) (store : runtime.store.S
       (limits : LimitsMatch (store.tables.val[address.index.val]).elements.length
         (store.tables.val[address.index.val]).maximum required.limits) :
       LinkedStep view store before (.Table required) (.Table address) {before with tables := addresses}
-  | memory (required : Itasca.types.MemType) (address : runtime.MemoryAddr)
+  | memory (required : Itasca.wasm_types.MemType) (address : runtime.MemoryAddr)
       (addresses : alloc.vec.Vec runtime.MemoryAddr)
       (mapped : addresses.val = before.memories.val ++ [address])
       (owner : address.store = store.id) (issued : address.index.val < store.memories.length)
       (limits : LimitsMatch ((view (store.memories.val[address.index.val]).buf).length / 65536)
         (store.memories.val[address.index.val]).maximum required.limits) :
       LinkedStep view store before (.Memory required) (.Memory address) {before with memories := addresses}
-  | global (required : Itasca.types.GlobalType) (address : runtime.GlobalAddr)
+  | global (required : Itasca.wasm_types.GlobalType) (address : runtime.GlobalAddr)
       (addresses : alloc.vec.Vec runtime.GlobalAddr)
       (mapped : addresses.val = before.globals.val ++ [address])
       (owner : address.store = store.id) (issued : address.index.val < store.globals.length)

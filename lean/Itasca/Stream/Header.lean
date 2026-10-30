@@ -21,7 +21,7 @@ namespace StreamFraming
 /-- The driver observes either an absent code region or an exact bounded
 header view. Counts and section size are independent of entry validation. -/
 def HeaderChecked {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env) (entries : Usize) : Prop :=
+    (codeLen : Usize) (env : metadata.Env) (entries : Usize) : Prop :=
   (codeLen = 0#usize ∧ entries = 0#usize ∧ env.func_type_indices.val = []) ∨
   ∃ header content size count,
     stream.read_exact source state 0#usize (core.cmp.impls.OrdUsize.min codeLen 11#usize) =
@@ -49,7 +49,7 @@ end StreamFraming
 /-- `stream.read_code_header` either errors or returns the entry count of a checked header,
 provided the reached code read returns. -/
 theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env)
+    (codeLen : Usize) (env : metadata.Env)
     (hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
       (core.cmp.impls.OrdUsize.min codeLen 11#usize) = .ok r) :
     stream.read_code_header source state codeLen env ⦃ r => match r with
@@ -87,7 +87,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (stat
       · rename_i hiscode
         have hidcode : id = 10#u8 := by
           apply UScalar.eq_of_val_eq
-          simpa [module.SECTION_CODE] using hiscode
+          simpa [metadata.SECTION_CODE] using hiscode
         have hbyte : ModuleBinary.At ModuleBinary.ByteEncoding header 0#usize 10#u8 1#usize :=
           ⟨[10#u8], rfl, Wasm1.BytesAt.byte header 0#usize 1#usize 10#u8 hpositive
             (by simpa [hidcode] using hidval.symm) (by simp)⟩
@@ -136,7 +136,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (stat
 /-- Acceptance itself supplies the reached source callback. No premise is
 imposed on unrelated or unexecuted source calls. -/
 theorem stream.read_code_header.checked {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env) (entries : Usize)
+    (codeLen : Usize) (env : metadata.Env) (entries : Usize)
     (h : stream.read_code_header source state codeLen env = .ok (.Ok entries)) :
     StreamFraming.HeaderChecked source state codeLen env entries := by
   have hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
@@ -158,13 +158,13 @@ namespace StreamFraming
 
 /-- The code region is either empty with no declared functions, or a code section whose size
 covers the whole region. A present zero-entry section is distinct from an absent one. -/
-def HeaderAt (data : Slice U8) (env : module.Env) (entries : Usize) : Prop :=
+def HeaderAt (data : Slice U8) (env : metadata.Env) (entries : Usize) : Prop :=
   (data.val = [] ∧ entries = 0#usize ∧ env.func_type_indices.val = []) ∨
     ∃ count, ModuleCode.Section data 0#usize env ⟨count, entries, Slice.len data⟩ ∧
       entries.val ≤ data.length
 
 theorem HeaderChecked.sound {S : Type} {source : stream.Source S} {state : S}
-    {codeLen : Usize} {env : module.Env} {entries : Usize} {data : Slice U8}
+    {codeLen : Usize} {env : metadata.Env} {entries : Usize} {data : Slice U8}
     {environment tail : List U8}
     (h : HeaderChecked source state codeLen env entries)
     (hcoherent : StreamSource.Coherent source state environment data.val tail)
@@ -194,7 +194,7 @@ end StreamFraming
 /-- Over a coherent source, a successful `stream.read_code_header` returns the entry count of a
 code section that spans the whole code region. -/
 theorem stream.read_code_header.sound {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env) (entries : Usize) (data : Slice U8)
+    (codeLen : Usize) (env : metadata.Env) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)
     (hcoherent : StreamSource.Coherent source state environment data.val tail)
     (hsize : codeLen.val = data.length)

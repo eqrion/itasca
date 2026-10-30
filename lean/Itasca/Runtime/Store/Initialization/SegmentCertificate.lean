@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 
 private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (instruction : runtime.bytecode.Instr) (width : Nat)
+    (expr : Itasca.wasm_types.ConstExpr) (instruction : runtime.bytecode.Instr) (width : Nat)
     (typed : Itasca.ModuleConstants.Valid inst.module.module.env expr .I32)
     (imports : InitializerImports store inst) (bindings : InitializerBindings store inst)
     (emitted : Compiler.ConstantInstruction code 0#u32 expr .I32 instruction)
@@ -25,7 +25,7 @@ private theorem offset_instruction_ready {M : Type} (store : runtime.store.Store
 /-- A retained element block uses only indices already issued by staging. -/
 theorem element_program_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Element) (instructions : List runtime.bytecode.Instr)
+    (index : Nat) (segment : Itasca.metadata.Element) (instructions : List runtime.bytecode.Instr)
     (width : Nat) (program : Compiler.ElementProgram code index segment instructions)
     (sourceBound : index < inst.module.module.env.elements.length)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
@@ -70,7 +70,7 @@ theorem element_program_ready {M : Type} (store : runtime.store.Store M)
 /-- Data-block safety needs a present memory, not a successful range check. -/
 theorem data_program_ready {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Data) (instructions : List runtime.bytecode.Instr)
+    (index : Nat) (segment : Itasca.metadata.Data) (instructions : List runtime.bytecode.Instr)
     (width : Nat) (program : Compiler.DataProgram code index segment instructions)
     (sourceBound : index < inst.module.module.tail.data.length)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)

@@ -18,29 +18,29 @@ namespace Itasca.ModuleElaboration
 /-- The SpecTec type of function type index `idx`, with an empty type as the fallback that makes
 the translation total. `Elaborates` requires every type reference to be in bounds, so no accepted
 module uses the fallback. -/
-def functionType (types : List types.FuncType) (idx : U32) : functype :=
+def functionType (types : List wasm_types.FuncType) (idx : U32) : functype :=
   ((types[idx.val]?).map EnvTranslation.funcType).getD (.mk_functype (.mk_list []) (.mk_list []))
 
 /-- An in-bounds type index looks up its translated function type. -/
-theorem functionType_lookup {types : List types.FuncType} {idx : U32}
+theorem functionType_lookup {types : List wasm_types.FuncType} {idx : U32}
     (hi : idx.val < types.length) :
     functionType types idx = EnvTranslation.funcType types[idx.val] := by
   simp [functionType, List.getElem?_eq_getElem hi]
 
 /-- The SpecTec external type of an import descriptor. -/
-def importType (types : List types.FuncType) : module.ImportDesc → externtype
+def importType (types : List wasm_types.FuncType) : metadata.ImportDesc → externtype
   | .Func idx => .FUNC (functionType types idx)
   | .Table tt => .TABLE (EnvTranslation.tableType tt)
   | .Memory mt => .MEM (EnvTranslation.memType mt)
   | .Global gt => .GLOBAL (Translate.globalType gt)
 
 /-- The SpecTec import declaration of a raw import. -/
-def importDecl (types : List types.FuncType) (entry : ModuleBinary.Import) : «import» :=
+def importDecl (types : List wasm_types.FuncType) (entry : ModuleBinary.Import) : «import» :=
   .IMPORT (ModuleBinary.nameOfBytes entry.moduleName) (ModuleBinary.nameOfBytes entry.name)
     (importType types entry.desc)
 
 /-- The SpecTec external index of an export descriptor. -/
-def exportIndex : module.ExportDesc → externidx
+def exportIndex : metadata.ExportDesc → externidx
   | .Func idx => .FUNC (.mk_uN idx.val)
   | .Table idx => .TABLE (.mk_uN idx.val)
   | .Memory idx => .MEM (.mk_uN idx.val)
@@ -56,10 +56,10 @@ def element (entry : ModuleBinary.Element) : elem :=
     (ModuleSegments.elementMode entry.mode)
 
 /-- The SpecTec table of a table type. -/
-def table (tt : types.TableType) : _root_.table := .TABLE (EnvTranslation.tableType tt)
+def table (tt : wasm_types.TableType) : _root_.table := .TABLE (EnvTranslation.tableType tt)
 
 /-- The SpecTec memory of a memory type. -/
-def memory (mt : types.MemType) : mem := .MEMORY (EnvTranslation.memType mt)
+def memory (mt : wasm_types.MemType) : mem := .MEMORY (EnvTranslation.memType mt)
 
 /-- The SpecTec start function of a function index. -/
 def start (idx : U32) : _root_.start := .START (.mk_uN idx.val)

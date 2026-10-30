@@ -33,7 +33,7 @@ theorem stream.frame_entry.spec (data : Slice U8) (pos index offset : Usize) :
     stream.frame_entry data pos index offset ⦃ r => match r with
       | .Ok entry => StreamFraming.EntryFrame data pos index offset entry
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.code_entry_extent.spec data pos)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.code_entry_extent.spec data pos)
   rw [stream.frame_entry, hr]
   cases r with
   | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -73,7 +73,7 @@ theorem stream.frame_entry.complete (data : Slice U8) (pos index offset content 
   obtain ⟨last, hf, hfp⟩ := limits.add_offset.complete offset finish hbound
   refine ⟨⟨index, start, contents, last⟩, ?_,
     content, finish, hext, rfl, hsp, hcp, hfp, by change last.val ≤ _; omega⟩
-  simp [stream.frame_entry, module.code_entry_extent.complete data pos content finish hext,
+  simp [stream.frame_entry, metadata.code_entry_extent.complete data pos content finish hext,
     hs, hc, hf, core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

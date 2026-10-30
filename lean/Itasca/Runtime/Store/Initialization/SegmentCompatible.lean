@@ -22,8 +22,8 @@ theorem SegmentBulkCompatible.transport {M : Type} {store after : runtime.store.
   cases instruction <;> simp only [SegmentBulkCompatible] at compatible ⊢
   all_goals try trivial
   intro element tableId address target segment table descriptor mapped tableMapped sourceFound targetFound
-  have elementTags := congrArg (fun values : List Itasca.types.ElemType => values[address.val]?) same.elements
-  have tableTags := congrArg (fun values : List Itasca.types.ElemType => values[target.index.val]?) same.tables
+  have elementTags := congrArg (fun values : List Itasca.wasm_types.ElemType => values[address.val]?) same.elements
+  have tableTags := congrArg (fun values : List Itasca.wasm_types.ElemType => values[target.index.val]?) same.tables
   simp only [List.getElem?_map, sourceFound, Option.map_some] at elementTags
   simp only [List.getElem?_map, targetFound, Option.map_some] at tableTags
   cases oldSource : store.elems.val[address.val]? with
@@ -41,7 +41,7 @@ theorem SegmentBulkCompatible.transport {M : Type} {store after : runtime.store.
 for a compiler-selected active element segment. -/
 theorem segment_table_compatible {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (entry element tableId : U32) (segment : Itasca.module.Element) (tableType : Itasca.types.TableType)
+    (entry element tableId : U32) (segment : Itasca.metadata.Element) (tableType : Itasca.wasm_types.TableType)
     (descriptor : code.indirect.val[entry.val]? = some (element, tableId))
     (source : inst.module.module.env.elements.val[element.val]? = some segment)
     (target : inst.module.module.env.table_types.val[tableId.val]? = some tableType)

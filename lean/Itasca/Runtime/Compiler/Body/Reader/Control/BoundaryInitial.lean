@@ -10,8 +10,8 @@ Main declarations: `ReaderBoundaryWasm2.initial`. A direct consumer is `Compiler
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem ReaderBoundaryWasm2.initial (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+theorem ReaderBoundaryWasm2.initial (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (signature : env.types.val[index.val]? = some ft)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     ReaderBoundaryWasm2 data env locals index ft (Wasm2.initial index) []

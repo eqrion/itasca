@@ -8,7 +8,7 @@ Public runtime values, issued-reference ownership and source-value interpretatio
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-def sourceType : Itasca.types.ValueType → valtype
+def sourceType : Itasca.wasm_types.ValueType → valtype
   | .I32 => .I32
   | .I64 => .I64
   | .F32 => .F32
@@ -17,11 +17,11 @@ def sourceType : Itasca.types.ValueType → valtype
   | .FuncRef => .FUNCREF
   | .ExternRef => .EXTERNREF
 
-@[step] theorem width_spec (ty : Itasca.types.ValueType) :
+@[step] theorem width_spec (ty : Itasca.wasm_types.ValueType) :
     runtime.value.width ty ⦃ result => result.val = Compiler.width (sourceType ty) ⦄ := by
   cases ty <;> simp [runtime.value.width, sourceType, Compiler.width]
 
-def rawType : runtime.Value → Itasca.types.ValueType
+def rawType : runtime.Value → Itasca.wasm_types.ValueType
   | .I32 _ => .I32
   | .I64 _ => .I64
   | .F32 _ => .F32
@@ -46,7 +46,7 @@ def sourceValue : runtime.Value → val
   | .ExternRef none => .REF_NULL .EXTERNREF
   | .ExternRef (some address) => .REF_HOST_ADDR address.index.val
 
-def pairWords (ty : Itasca.types.ValueType) (pair : U64 × U64) : List Nat :=
+def pairWords (ty : Itasca.wasm_types.ValueType) (pair : U64 × U64) : List Nat :=
   if sourceType ty = .V128 then [pair.1.val, pair.2.val] else [pair.1.val]
 
 theorem source_value_type (value : runtime.Value) :
@@ -121,13 +121,13 @@ theorem encode_value_spec (value : runtime.Value) (store : Usize)
       simp_all
 
 /-- Exact list update performed by the extracted slot writer. -/
-def written (words : List U64) (position : Nat) (ty : Itasca.types.ValueType)
+def written (words : List U64) (position : Nat) (ty : Itasca.wasm_types.ValueType)
     (lo hi : U64) : List U64 :=
   if sourceType ty = .V128 then (words.set position lo).set (position + 1) hi
   else words.set position lo
 
 @[step] theorem encode_slot_spec (slots : Slice U64) (position : Usize)
-    (ty : Itasca.types.ValueType) (value : runtime.Value) (lo hi : U64)
+    (ty : Itasca.wasm_types.ValueType) (value : runtime.Value) (lo hi : U64)
     (he : runtime.value.encode value = .ok (lo, hi))
     (hb : position.val + Compiler.width (sourceType ty) ≤ slots.length) :
     runtime.interp.encode_slot slots position ty value ⦃ result =>
@@ -157,7 +157,7 @@ theorem index_eq (slots : Slice U64) (position : Usize) (word : U64)
 /-- The extracted reader observes exactly the one or two words at its slot
 boundary, then uses the extracted value decoder on those words. -/
 @[step] theorem decode_slot_spec (slots : Slice U64) (position : Usize)
-    (ty : Itasca.types.ValueType) (store : Usize) (lo hi : U64) (value : runtime.Value)
+    (ty : Itasca.wasm_types.ValueType) (store : Usize) (lo hi : U64) (value : runtime.Value)
     (hb : position.val + Compiler.width (sourceType ty) ≤ slots.length)
     (hlo : slots.val[position.val]! = lo)
     (hhi : if sourceType ty = .V128 then slots.val[position.val + 1]! = hi else hi = 0#u64)
@@ -181,31 +181,31 @@ boundary, then uses the extracted value decoder on those words. -/
   have hreadHi := index_eq slots next hi hn hnword
   simp [hreadHi, hread, hd]
 
-theorem written_length (words : List U64) (position : Nat) (ty : Itasca.types.ValueType)
+theorem written_length (words : List U64) (position : Nat) (ty : Itasca.wasm_types.ValueType)
     (lo hi : U64) : (written words position ty lo hi).length = words.length := by
   simp [written]; split <;> simp
 
-theorem written_low (words : List U64) (position : Nat) (ty : Itasca.types.ValueType)
+theorem written_low (words : List U64) (position : Nat) (ty : Itasca.wasm_types.ValueType)
     (lo hi : U64) (hp : position < words.length) :
     (written words position ty lo hi)[position]! = lo := by
   unfold written
   split <;> simp [hp]
 
-theorem written_high (words : List U64) (position : Nat) (ty : Itasca.types.ValueType)
+theorem written_high (words : List U64) (position : Nat) (ty : Itasca.wasm_types.ValueType)
     (lo hi : U64) (hv : sourceType ty = .V128) (hp : position + 1 < words.length) :
     (written words position ty lo hi)[position + 1]! = hi := by
   simp [written, hv, hp]
 
 /-- The total slot width of a signature component, as computed by `value::type_slots`. -/
-def valueTypeSlots (types : List Itasca.types.ValueType) : Nat :=
+def valueTypeSlots (types : List Itasca.wasm_types.ValueType) : Nat :=
   Compiler.slots (types.map sourceType)
 
-def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
+def ValueTypeSlotsState (types : List Itasca.wasm_types.ValueType) (total : Nat)
     (amount : Usize) (index : Usize) (overflow : Bool) : Prop :=
   if overflow then Usize.max < total
   else amount.val + valueTypeSlots (types.drop index.val) = total
 
-@[step] theorem value_type_slots_loop (types : Slice Itasca.types.ValueType)
+@[step] theorem value_type_slots_loop (types : Slice Itasca.wasm_types.ValueType)
     (amount : Usize) (index : Usize) (overflow : Bool) (total : Nat)
     (bound : index.val ≤ types.val.length)
     (state : ValueTypeSlotsState types.val total amount index overflow) :
@@ -256,7 +256,7 @@ def ValueTypeSlotsState (types : List Itasca.types.ValueType) (total : Nat)
       cases overflow <;> simpa [ValueTypeSlotsState, same, valueTypeSlots, Compiler.slots] using hs
   · exact ⟨bound, state⟩
 
-@[step] theorem value_type_slots (types : Slice Itasca.types.ValueType) :
+@[step] theorem value_type_slots (types : Slice Itasca.wasm_types.ValueType) :
     runtime.value.type_slots types ⦃ result =>
       match result with
       | some word => word.val = valueTypeSlots types.val

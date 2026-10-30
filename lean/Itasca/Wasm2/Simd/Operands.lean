@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Simd
 
 /-- Operand types popped by a pure SIMD signature, listed from the top of the stack. -/
-def Signature.popTypes : Signature → List types.ValueType
+def Signature.popTypes : Signature → List wasm_types.ValueType
   | .unary | .test => [.V128]
   | .binary => [.V128, .V128]
   | .ternary => [.V128, .V128, .V128]
@@ -24,7 +24,7 @@ def Signature.popTypes : Signature → List types.ValueType
   | .splatF64 => [.F64]
 
 /-- Result type pushed by a pure SIMD signature. -/
-def Signature.output : Signature → types.ValueType
+def Signature.output : Signature → wasm_types.ValueType
   | .test => .I32
   | _ => .V128
 
@@ -34,7 +34,7 @@ theorem Signature.inputs_pop (sig : Signature) : inputTypes sig.popTypes = sig.i
 theorem Signature.outputs_pop (sig : Signature) : outputTypes (some sig.output) = sig.outputs := by
   cases sig <;> rfl
 
-theorem conversion_fixed (st : code.OpIterState) (input output : types.ValueType) :
+theorem conversion_fixed (st : code.OpIterState) (input output : wasm_types.ValueType) :
     code.read_conversion st input output = readFixed st [input] (some output) := by
   simp only [code.read_conversion, readFixed]
   congr 1
@@ -43,7 +43,7 @@ theorem conversion_fixed (st : code.OpIterState) (input output : types.ValueType
   cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-theorem binary_fixed (st : code.OpIterState) (input output : types.ValueType) :
+theorem binary_fixed (st : code.OpIterState) (input output : wasm_types.ValueType) :
     code.read_binary st input output = readFixed st [input, input] (some output) := by
   simp only [code.read_binary, readFixed]
   congr 1

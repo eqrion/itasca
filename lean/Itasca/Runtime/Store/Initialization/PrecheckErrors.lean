@@ -29,8 +29,8 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem element_bounds_active_errors (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
-    (tableIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
+    (tableIndex : U32) (offset : Itasca.wasm_types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (addr : runtime.TableAddr) (table : runtime.store.TableInst)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -51,7 +51,7 @@ theorem element_bounds_active_errors (law : Platform.AllocCorrect allocator)
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
@@ -100,8 +100,8 @@ theorem element_bounds_active_errors (law : Platform.AllocCorrect allocator)
 theorem data_bounds_active_errors (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
-    (memoryIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Data)
+    (memoryIndex : U32) (offset : Itasca.wasm_types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (addr : runtime.MemoryAddr) (mem : runtime.store.MemInst M)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -122,7 +122,7 @@ theorem data_bounds_active_errors (law : Platform.AllocCorrect allocator)
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   step with Interp.vec_index_given inst.module.module.tail.data index segment helem as ⟨found, hfound⟩
   subst found
   rw [active]

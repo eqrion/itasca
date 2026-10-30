@@ -27,7 +27,7 @@ private theorem memory_meaning_bound {opcode : Nat} {op : MemoryOperation}
 /-- The independent SIMD tables bound every selected subopcode and every
 accepted substep calls exactly one of the six SIMD visitor event forms. -/
 theorem reader_single_callback_simd_sub {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
     (before after : V) (out : code.OpIterState)
     (accepted : subStep visitor st data env opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
@@ -77,7 +77,7 @@ theorem reader_single_callback_simd_sub {V : Type} (visitor : code.OpVisitor V)
 /-- SIMD prefix decoding retains the exact event and its independently bounded
 subopcode; it does not introduce an additional callback. -/
 theorem reader_single_callback_simd {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (before after : V) (out : code.OpIterState)
     (accepted : code.step_simd visitor st data env before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧

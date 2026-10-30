@@ -63,7 +63,7 @@ theorem code.push_frame.total (st : code.BodyState)
 /-- Branches preserve frame alignment and bounds for arbitrary label bytes and
 arbitrary environments. Conditional branches restore the entire signature. -/
 theorem code.branch.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (conditional : Bool) (hs : Control.Shape st.core)
+    (env : metadata.Env) (conditional : Bool) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch st data env conditional ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -79,7 +79,7 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
 parameters before fixing the frame's base preserves nested frame bounds. -/
 theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (kind : code.LabelKind)
+    (env : metadata.Env) (profile : ValidationProfile) (kind : code.LabelKind)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env profile kind ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -119,21 +119,21 @@ theorem code.take_index.shape (st : code.OpIterState) (data : Slice U8)
     | Ok index => exact (Leb128.Decoded.span _ _ _ _ hd).1.le
 
 @[step]
-theorem types.ElemType.value_type.total (ty : types.ElemType) :
-    types.ElemType.value_type ty ⦃ _ => True ⦄ := by
-  cases ty <;> simp [types.ElemType.value_type]
+theorem wasm_types.ElemType.value_type.total (ty : wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty ⦃ _ => True ⦄ := by
+  cases ty <;> simp [wasm_types.ElemType.value_type]
 
 @[step]
-theorem types.ValueType.ne.total (a b : types.ValueType) :
-    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType a b
+theorem wasm_types.ValueType.ne.total (a b : wasm_types.ValueType) :
+    core.cmp.PartialEq.ne.trait_default wasm_types.ValueType.Insts.CoreCmpPartialEqValueType a b
       ⦃ _ => True ⦄ := by
   cases a <;> cases b <;>
     simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-      types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+      wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 @[step]
 theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (hs : Control.Shape st.core) :
+    (env : metadata.Env) (hs : Control.Shape st.core) :
     code.call_info st data env ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
@@ -142,7 +142,7 @@ theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
 
 @[step]
 theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
+    (env : metadata.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
     code.call_indirect_info st data env profile ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by

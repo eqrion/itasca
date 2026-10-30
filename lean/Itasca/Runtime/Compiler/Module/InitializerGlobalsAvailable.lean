@@ -18,7 +18,7 @@ needed by the actual initializer compiler. -/
 theorem initializer_source_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType)
     (typed : Itasca.ModuleConstants.Valid module.module.env expr ty)
     (instructions : budget.instructions.val + 2 ≤ budget.limits.max_instructions.val)
     (codeRequest : 2 ≤ bound) (functionsRequest : module.functions.length + 1 ≤ bound)
@@ -54,7 +54,7 @@ theorem initializer_global_available {A : Type} (ops : runtime.platform.Alloc A)
       initializerSize out.2.1 = initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env,Itasca.module.Env.impl.globals,bind_ok]
+    Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.globals,bind_ok]
   step as ⟨global,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
   have valid := typed global (by rw [found]; simpa [alloc.vec.Vec.deref] using List.getElem_mem inside)
@@ -123,7 +123,7 @@ theorem initializer_globals_available {A : Type} (ops : runtime.platform.Alloc A
     subst status
     unfold runtime.compiler.initialize.lower_loop0.body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env,Itasca.module.Env.impl.globals,bind_ok]
+      Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.globals,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.env.globals.val.length := by

@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 open Itasca.ModuleEnv
 
 theorem StagedPrefix.type_lookup {M : Type} {before after : runtime.store.Store M}
-    (retained : StagedPrefix before after) {index : Nat} {ty : Itasca.types.FuncType}
+    (retained : StagedPrefix before after) {index : Nat} {ty : Itasca.wasm_types.FuncType}
     (found : before.types.val[index]? = some ty) : after.types.val[index]? = some ty :=
   Itasca.Runtime.Representation.lookup_prefix _ _ retained.types found
 
@@ -45,7 +45,7 @@ theorem function_table_issued {M : Type} {store : runtime.store.Store M}
 module's canonical type cache. -/
 theorem ImportedFunction.signature {M : Type} {store : runtime.store.Store M}
     {module : runtime.compiler.ExecutableModule} {typeIndex : U32} {address : runtime.FuncAddr}
-    (linked : ImportedFunction store module typeIndex address) {ty : Itasca.types.FuncType}
+    (linked : ImportedFunction store module typeIndex address) {ty : Itasca.wasm_types.FuncType}
     (resolved : Resolves module.module.env.types.val typeIndex ty) :
     address.store = store.id ∧ ∃ function,
       store.funcs.val[address.index.val]? = some function ∧
@@ -61,7 +61,7 @@ theorem ImportedFunction.signature {M : Type} {store : runtime.store.Store M}
 private theorem imports_table {M : Type} {store : runtime.store.Store M}
     {module : runtime.compiler.ExecutableModule} {indices : List U32} {addresses : List runtime.FuncAddr}
     (linked : List.Forall₂ (ImportedFunction store module) indices addresses)
-    {types : List Itasca.types.FuncType}
+    {types : List Itasca.wasm_types.FuncType}
     (resolved : List.Forall₂ (Resolves module.module.env.types.val) indices types) :
     List.Forall₂ (fun address ty => address.store = store.id ∧
       ∃ function signature, store.funcs.val[address.index.val]? = some function ∧

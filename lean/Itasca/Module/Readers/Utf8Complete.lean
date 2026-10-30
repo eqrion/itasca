@@ -4,8 +4,8 @@ import Itasca.Module.Readers.Utf8
 /-!
 # Completeness of UTF-8 validation
 
-`module.validate_utf8.complete`: the scanner accepts every independent `Utf8` byte string, through
-`module.utf8_sequence_len.complete` and `module.validate_utf8_loop.complete`. Soundness is in
+`metadata.validate_utf8.complete`: the scanner accepts every independent `Utf8` byte string, through
+`metadata.utf8_sequence_len.complete` and `metadata.validate_utf8_loop.complete`. Soundness is in
 `Module/Readers/Utf8`.
 -/
 
@@ -36,15 +36,15 @@ open ModuleBinary
 @[local step] private theorem utf8_cont_accepts (data : Slice U8) (pos : Usize) (lo hi : U8)
     (hp : pos.val < data.length)
     (hl : lo.val ≤ data.val[pos.val].val) (hh : data.val[pos.val].val ≤ hi.val) :
-    module.utf8_cont data pos lo hi ⦃ r => r = .Ok () ⦄ := by
-  unfold module.utf8_cont
+    metadata.utf8_cont data pos lo hi ⦃ r => r = .Ok () ⦄ := by
+  unfold metadata.utf8_cont
   step*
 
-/-- `module.utf8_sequence_len` accepts one canonical UTF-8 character and returns its length. -/
-theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
+/-- `metadata.utf8_sequence_len` accepts one canonical UTF-8 character and returns its length. -/
+theorem metadata.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
     (encoded : List U8) (hc : Utf8Char encoded) (hb : Wasm1.BytesAt data pos encoded next) :
-    ∃ count, module.utf8_sequence_len data pos = .ok (.Ok count) ∧ count.val = encoded.length := by
-  have hs : module.utf8_sequence_len data pos ⦃ r =>
+    ∃ count, metadata.utf8_sequence_len data pos = .ok (.Ok count) ∧ count.val = encoded.length := by
+  have hs : metadata.utf8_sequence_len data pos ⦃ r =>
       ∃ count, r = .Ok count ∧ count.val = encoded.length ⦄ := by
     have hlen := hb.length
     have hbound := hb.bound
@@ -54,7 +54,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
     | one a ha =>
         have h0 := hb.get 0 (by simp)
         simp only [List.getElem_cons_zero, Nat.add_zero] at h0
-        unfold module.utf8_sequence_len
+        unfold metadata.utf8_sequence_len
         step
         split
         all_goals have hbval := congrArg UScalar.val b_post
@@ -69,7 +69,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
         have h0 := hb.get 0 (by simp)
         have h1 := hb.get 1 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1
-        unfold module.utf8_sequence_len
+        unfold metadata.utf8_sequence_len
         step
         split
         all_goals have hbval := congrArg UScalar.val b_post
@@ -86,7 +86,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
         have h2 := hb.get 2 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2
         rcases ha with ha | ha | ha | ha
-        all_goals unfold module.utf8_sequence_len
+        all_goals unfold metadata.utf8_sequence_len
         all_goals step
         all_goals split
         all_goals have hbval := congrArg UScalar.val b_post
@@ -104,7 +104,7 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
         have h3 := hb.get 3 (by simp)
         simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2 h3
         rcases ha with ha | ha | ha
-        all_goals unfold module.utf8_sequence_len
+        all_goals unfold metadata.utf8_sequence_len
         all_goals step
         all_goals split
         all_goals have hbval := congrArg UScalar.val b_post
@@ -120,17 +120,17 @@ theorem module.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
 
 
 /-- The scan loop accepts a valid UTF-8 suffix that runs to the end of the input. -/
-theorem module.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
+theorem metadata.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
     (encoded : List U8) (hc : Utf8 encoded)
     (hb : Wasm1.BytesAt data pos encoded (Slice.len data)) :
-    module.validate_utf8_loop data pos = .ok (.Ok ()) := by
+    metadata.validate_utf8_loop data pos = .ok (.Ok ()) := by
   induction hc generalizing pos with
   | nil =>
       have he := hb.empty
       subst pos
-      unfold module.validate_utf8_loop
+      unfold metadata.validate_utf8_loop
       rw [loop]
-      simp [module.validate_utf8_loop.body]
+      simp [metadata.validate_utf8_loop.body]
   | @cons first rest hchar hrest ih =>
       obtain ⟨middle, hfirst, htail⟩ := hb.split
       have hpositive : 0 < first.length := by cases hchar <;> simp
@@ -138,25 +138,25 @@ theorem module.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
         have := hfirst.length
         have := hfirst.bound
         scalar_tac
-      obtain ⟨count, hcount, hlen⟩ := module.utf8_sequence_len.complete data pos middle first hchar hfirst
+      obtain ⟨count, hcount, hlen⟩ := metadata.utf8_sequence_len.complete data pos middle first hchar hfirst
       obtain ⟨next, hnext, hn⟩ := WP.spec_imp_exists
         (Usize.add_spec (x := pos) (y := count) (by have := hfirst.length; scalar_tac))
       have he : next = middle := UScalar.eq_of_val_eq (by have := hfirst.length; omega)
       subst next
-      have hbody : module.validate_utf8_loop.body data pos = .ok (.cont middle) := by
-        simp [module.validate_utf8_loop.body, hmore, hcount, hnext,
+      have hbody : metadata.validate_utf8_loop.body data pos = .ok (.cont middle) := by
+        simp [metadata.validate_utf8_loop.body, hmore, hcount, hnext,
           core.result.Result.Insts.CoreOpsTry.branch]
       have hloop := ih middle htail
-      unfold module.validate_utf8_loop at hloop ⊢
+      unfold metadata.validate_utf8_loop at hloop ⊢
       rw [loop]
       simp only [hbody, bind_ok]
       exact hloop
 
-/-- `module.validate_utf8` accepts every `Utf8` byte string, including all Unicode scalar values
+/-- `metadata.validate_utf8` accepts every `Utf8` byte string, including all Unicode scalar values
 through U+10FFFF. -/
-theorem module.validate_utf8.complete (data : Slice U8) (h : Utf8 data.val) :
-    module.validate_utf8 data = .ok (.Ok ()) := by
-  apply module.validate_utf8_loop.complete data 0#usize data.val h
+theorem metadata.validate_utf8.complete (data : Slice U8) (h : Utf8 data.val) :
+    metadata.validate_utf8 data = .ok (.Ok ()) := by
+  apply metadata.validate_utf8_loop.complete data 0#usize data.val h
   constructor <;> simp
 
 end Itasca

@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 def NewMemoryResourceCause {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (store : runtime.store.Store M)
-    (ty : Itasca.types.MemType) (limit : runtime.ResourceLimit) : Prop :=
+    (ty : Itasca.wasm_types.MemType) (limit : runtime.ResourceLimit) : Prop :=
   MemoryAllocationCause allocator store ty limit ∨
     (limit = .Allocation ∧ (Usize.max < ty.limits.min.val * 65536 ∨
       ∃ requested : Usize, requested.val = ty.limits.min.val * 65536 ∧
@@ -18,7 +18,7 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (ty : Itasca.types.MemType)
+    (ty : Itasca.wasm_types.MemType)
     (found : inst.module.module.env.mem_types.val[index.val]? = some ty)
     (bound : objectCount store ≤ Usize.max)
     (limit : runtime.ResourceLimit) (after : runtime.store.Store M) (next : runtime.store.ModuleInst)
@@ -31,7 +31,7 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
     scalar_tac
   obtain ⟨size,sizeRun,sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.mem_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.mem_types,bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.mem_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,lift,sizeRun] at run

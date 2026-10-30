@@ -25,7 +25,7 @@ with exact byte provenance. A rejected final `br_table` may leave a partial vect
 follows an observed rejecting callback. No valid-input or total-callback premise is needed. -/
 theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v v' : V) (result : BodyResult)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -36,7 +36,7 @@ theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
 describe the same syntax, by uniqueness of the independent byte grammar. -/
 theorem code.validate_body_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v v' : V)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -48,7 +48,7 @@ to produce an `AcceptedBody` trace, within the documented resource bounds. No su
 assumed. -/
 theorem code.validate_body_with.trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (accepts : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
+    (accepts : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (environment : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -63,7 +63,7 @@ theorem code.validate_body_with.trace_complete {V : Type} (visitor : code.OpVisi
 /-- Wrapping a visitor with `instrument` keeps the result and the underlying visitor state of any
 returned execution, and the added log satisfies `BodyTrace`. -/
 theorem code.validate_body_with.instrument_trace {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v : V) (log : List Observation) (result : BodyResult) (v' : V)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (result, v')) :
     ∃ added,
@@ -74,7 +74,7 @@ theorem code.validate_body_with.instrument_trace {V : Type} (visitor : code.OpVi
 
 /-- The concrete `recorder` visitor terminates with a `BodyTrace` on arbitrary input bytes,
 including malformed instructions and reserved opcodes. -/
-theorem code.validate_body_with.recorder_total (data : Slice U8) (env : module.Env)
+theorem code.validate_body_with.recorder_total (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) : ∃ result observations,
     code.validate_body_with recorder data env ctx index profile [] =
       .ok (result, observations) ∧
@@ -83,7 +83,7 @@ theorem code.validate_body_with.recorder_total (data : Slice U8) (env : module.E
 
 /-- The concrete `recorder` visitor accepts an independently encoded, typed body and visits every
 instruction, with all entries of every branch table in order. -/
-theorem code.validate_body_with.recorder_complete (data : Slice U8) (env : module.Env)
+theorem code.validate_body_with.recorder_complete (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (environment : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -100,15 +100,15 @@ theorem code.validate_body_with.recorder_complete (data : Slice U8) (env : modul
 /-- A recording visitor that accepts an entry observes a function-start event followed by exactly
 the independently encoded, typed operators of that entry. There is no termination or acceptance
 hypothesis on other callback runs. -/
-theorem module.validate_code_entry_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
+theorem metadata.validate_code_entry_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List VisitorTrace.Observation) (hrecords : VisitorTrace.Records visitor observe)
-    (data : Slice U8) (pos : Usize) (env : module.Env) (index finish : Usize)
+    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
     (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
-    (h : module.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
+    (h : metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CodeEntry.AcceptedTrace profile data env index pos finish observations :=
-  (module.validate_code_entry_with.witness_profile visitor data pos env index finish v v' hbound
+  (metadata.validate_code_entry_with.witness_profile visitor data pos env index finish v v' hbound
     profile h).some.trace_sound observe hrecords hresults
 
 end Itasca

@@ -4,7 +4,7 @@ import Itasca.Module.Elab.Profile
 # Returned metadata
 
 `Matches` says the environment and tail the validator returns describe exactly a raw module, and
-`AccessorTypes` says the results of `module.import_types` and `module.export_types` agree with the
+`AccessorTypes` says the results of `metadata.import_types` and `metadata.export_types` agree with the
 elaborated module's import types and typed exports. `contextOf` is the module context computed from
 the raw module alone, and `accessorTypes` and `matches_fromEnv` establish these properties for a
 valid cached environment.
@@ -47,10 +47,10 @@ theorem import_types_resolved {env entries xts}
 /-- Both type accessors succeed on `env`, and their results match the elaborated module: the import
 types are equal, and the exports are typed by `Export_ok` pointwise, which preserves the export
 count. -/
-def AccessorTypes (env : module.Env) (raw : ModuleBinary.Module) : Prop :=
+def AccessorTypes (env : metadata.Env) (raw : ModuleBinary.Module) : Prop :=
   ∃ imports exports,
-    module.import_types env = .ok (.Ok imports) ∧
-    module.export_types env = .ok (.Ok exports) ∧
+    metadata.import_types env = .ok (.Ok imports) ∧
+    metadata.export_types env = .ok (.Ok exports) ∧
     imports.val.map ModuleExternals.externalType = raw.imports.map (fun e => importType raw.types e.desc) ∧
     List.Forall₂ (Export_ok (contextOf raw)) (raw.exports.map exportDecl)
       (exports.val.map ModuleExternals.externalType)
@@ -63,8 +63,8 @@ theorem accessorTypes {env tables memories codes segments}
     AccessorTypes env (fromEnv env tables memories codes segments) := by
   obtain ⟨ixts, hi⟩ := hc.imports_resolve
   obtain ⟨exts, he⟩ := hv.exports_resolve
-  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists (module.import_types.resolved env ixts hi)
-  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (module.export_types.resolved env exts he)
+  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists (metadata.import_types.resolved env ixts hi)
+  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (metadata.export_types.resolved env exts he)
   refine ⟨imports, exports, hir, her, ?_, ?_⟩
   · simpa [hiEq, fromEnv, ModuleEnv.rawImport, List.map_map, Function.comp_def] using import_types_resolved hi
   · rw [heEq, contextOf_fromEnv hc]
@@ -73,12 +73,12 @@ theorem accessorTypes {env tables memories codes segments}
 
 /-- The returned declarations and data segments are exactly the independently decoded module's
 declarations, and the merged index spaces satisfy `ModuleEnv.Cache`. -/
-def Matches (env : module.Env) (tail : module.Tail) (raw : ModuleBinary.Module) : Prop :=
+def Matches (env : metadata.Env) (tail : metadata.Tail) (raw : ModuleBinary.Module) : Prop :=
   raw = fromEnv env raw.tables raw.memories raw.codes tail.data.val ∧
     ModuleEnv.Cache env raw.tables raw.memories
 
 /-- A cached environment and tail match the module `fromEnv` builds from them. -/
-theorem matches_fromEnv {env tables memories codes} (tail : module.Tail)
+theorem matches_fromEnv {env tables memories codes} (tail : metadata.Tail)
     (hc : ModuleEnv.Cache env tables memories) :
     Matches env tail (fromEnv env tables memories codes tail.data.val) := ⟨rfl, hc⟩
 

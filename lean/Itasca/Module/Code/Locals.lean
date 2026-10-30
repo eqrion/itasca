@@ -4,41 +4,41 @@ import Itasca.Module.Readers.Basic
 /-!
 # Local declarations
 
-Specifications of the extracted local-variable code used by `module.validate_code_entry_with`.
-`module.decode_locals.spec` shows `module.decode_locals` decodes grouped local declarations into
+Specifications of the extracted local-variable code used by `metadata.validate_code_entry_with`.
+`metadata.decode_locals.spec` shows `metadata.decode_locals` decodes grouped local declarations into
 `ModuleLocals.declared` within `limits.MAX_LOCALS`, with the independent `LocalEncoding` byte
-provenance. `module.build_func_locals.spec` shows the function's locals are the parameters
-followed by the declared locals, and `module.push_locals.spec` is the replication helper.
+provenance. `metadata.build_func_locals.spec` shows the function's locals are the parameters
+followed by the declared locals, and `metadata.push_locals.spec` is the replication helper.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- `module.build_func_locals` returns the parameters followed by the declared locals. The size
+/-- `metadata.build_func_locals` returns the parameters followed by the declared locals. The size
 bound excludes the allocation overflow possible in a caller-built oversized environment. -/
 @[step]
-theorem module.build_func_locals.spec (params declared : Slice types.ValueType)
+theorem metadata.build_func_locals.spec (params declared : Slice wasm_types.ValueType)
     (hsize : params.val.length + declared.val.length ≤ Usize.max) :
-    module.build_func_locals params declared ⦃ locals =>
+    metadata.build_func_locals params declared ⦃ locals =>
       locals.val = params.val ++ declared.val ⦄ := by
-  obtain ⟨out, hout, heq⟩ := WP.spec_imp_exists (module.copy_value_types.spec params)
-  rw [module.build_func_locals, hout]
+  obtain ⟨out, hout, heq⟩ := WP.spec_imp_exists (metadata.copy_value_types.spec params)
+  rw [metadata.build_func_locals, hout]
   simp only [bind_ok]
-  simpa [module.build_func_locals_loop, module.copy_value_types_loop,
-    module.build_func_locals_loop.body, module.copy_value_types_loop.body,
+  simpa [metadata.build_func_locals_loop, metadata.copy_value_types_loop,
+    metadata.build_func_locals_loop.body, metadata.copy_value_types_loop.body,
     List.drop_zero, heq] using
-    module.copy_value_types_loop.spec declared out 0#usize (by simp) (by simpa [heq] using hsize)
+    metadata.copy_value_types_loop.spec declared out 0#usize (by simp) (by simpa [heq] using hsize)
 
-/-- The loop of `module.push_locals` appends the remaining `count - i` copies of `ty`. -/
+/-- The loop of `metadata.push_locals` appends the remaining `count - i` copies of `ty`. -/
 @[step]
-theorem module.push_locals_loop.spec (out : alloc.vec.Vec types.ValueType)
-    (count : U32) (ty : types.ValueType) (i : U32)
+theorem metadata.push_locals_loop.spec (out : alloc.vec.Vec wasm_types.ValueType)
+    (count : U32) (ty : wasm_types.ValueType) (i : U32)
     (hi : i.val ≤ count.val)
     (hsize : out.val.length + (count.val - i.val) ≤ Usize.max) :
-    module.push_locals_loop out count ty i ⦃ result =>
+    metadata.push_locals_loop out count ty i ⦃ result =>
       result.val = out.val ++ List.replicate (count.val - i.val) ty ⦄ := by
-  unfold module.push_locals_loop
+  unfold metadata.push_locals_loop
   apply loop.spec_decr_nat (fun p => count.val - p.2.val)
     (fun p => p.2.val ≤ count.val ∧
       p.1.val ++ List.replicate (count.val - p.2.val) ty =
@@ -46,7 +46,7 @@ theorem module.push_locals_loop.spec (out : alloc.vec.Vec types.ValueType)
       p.1.val.length + (count.val - p.2.val) ≤ Usize.max)
   · rintro ⟨v, j⟩ ⟨hj, hv, hb⟩
     dsimp only at hj hv hb
-    unfold module.push_locals_loop.body
+    unfold metadata.push_locals_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -66,20 +66,20 @@ theorem module.push_locals_loop.spec (out : alloc.vec.Vec types.ValueType)
       simp [List.append_assoc]
   · exact ⟨hi, rfl, hsize⟩
 
-/-- `module.push_locals` appends `count` copies of `ty`. -/
+/-- `metadata.push_locals` appends `count` copies of `ty`. -/
 @[step]
-theorem module.push_locals.spec (out : alloc.vec.Vec types.ValueType)
-    (count : U32) (ty : types.ValueType)
+theorem metadata.push_locals.spec (out : alloc.vec.Vec wasm_types.ValueType)
+    (count : U32) (ty : wasm_types.ValueType)
     (hsize : out.val.length + count.val ≤ Usize.max) :
-    module.push_locals out count ty ⦃ result =>
+    metadata.push_locals out count ty ⦃ result =>
       result.val = out.val ++ List.replicate count.val ty ⦄ := by
-  simpa [module.push_locals] using
-    module.push_locals_loop.spec out count ty 0#u32 (by simp) (by simpa using hsize)
+  simpa [metadata.push_locals] using
+    metadata.push_locals_loop.spec out count ty 0#u32 (by simp) (by simpa using hsize)
 
 namespace ModuleLocals
 
 /-- The expansion of grouped local declarations into one type per local. -/
-def declared (groups : List (U32 × types.ValueType)) : List types.ValueType :=
+def declared (groups : List (U32 × wasm_types.ValueType)) : List wasm_types.ValueType :=
   groups.flatMap (fun (count, ty) => List.replicate count.val ty)
 
 theorem at_snoc {data start pos next groups group}
@@ -100,14 +100,14 @@ theorem local_at {data start pos next count ty}
 
 end ModuleLocals
 
-/-- The loop of `module.decode_locals` decodes the remaining `groups - i` local groups, extends the
+/-- The loop of `metadata.decode_locals` decodes the remaining `groups - i` local groups, extends the
 output by their expansion, and keeps it within `limits.MAX_LOCALS`. -/
 @[step]
-theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
-    (out : alloc.vec.Vec types.ValueType) (q : Usize) (i : U32)
+theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
+    (out : alloc.vec.Vec wasm_types.ValueType) (q : Usize) (i : U32)
     (hi : i.val ≤ groups.val) (hq : q.val ≤ data.length)
     (hsize : out.val.length ≤ limits.MAX_LOCALS.val) (profile : ValidationProfile := .Wasm1) :
-    module.decode_locals_loop data profile groups out q i ⦃ r => match r with
+    metadata.decode_locals_loop data profile groups out q i ⦃ r => match r with
       | .Ok (locals, next) => ∃ decoded,
           decoded.length = groups.val - i.val ∧
           ModuleBinary.At (ModuleBinary.Rep ModuleBinary.LocalEncoding) data q decoded next ∧
@@ -115,7 +115,7 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
           locals.val.length ≤ limits.MAX_LOCALS.val ∧
           ∀ group ∈ decoded, ModuleBinary.ValueTypeAllowed profile group.2
       | .Err _ => True ⦄ := by
-  unfold module.decode_locals_loop
+  unfold metadata.decode_locals_loop
   apply loop.spec_decr_nat (fun s => groups.val - s.2.2.val)
     (fun s => i.val ≤ s.2.2.val ∧ s.2.2.val ≤ groups.val ∧
       ∃ decoded, decoded.length = s.2.2.val - i.val ∧
@@ -125,7 +125,7 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
         ∀ group ∈ decoded, ModuleBinary.ValueTypeAllowed profile group.2)
   · rintro ⟨v, p, j⟩ ⟨hij, hj, decoded, hlen, hbytes, hvals, hcap, hallowed⟩
     dsimp only at hij hj hlen hbytes hvals hcap hallowed
-    unfold module.decode_locals_loop.body
+    unfold metadata.decode_locals_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -143,7 +143,7 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
             error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
           obtain ⟨count, p1⟩ := pair
-          obtain ⟨r, ht, htpost⟩ := WP.spec_imp_exists (module.decode_value_type.spec data p1 profile)
+          obtain ⟨r, ht, htpost⟩ := WP.spec_imp_exists (metadata.decode_value_type.spec data p1 profile)
           simp [core.result.Result.Insts.CoreOpsTry.branch]
           rw [ht]
           cases r with
@@ -187,11 +187,11 @@ theorem module.decode_locals_loop.spec (data : Slice U8) (groups : U32)
   · refine ⟨le_refl _, hi, [], by simp, ?_, by simp [ModuleLocals.declared], hsize, by simp⟩
     exact ⟨[], .nil, Wasm1.BytesAt.nil data q hq⟩
 
-/-- `module.decode_locals` terminates, and on success returns the expansion of independently
+/-- `metadata.decode_locals` terminates, and on success returns the expansion of independently
 encoded local groups within `limits.MAX_LOCALS` whose types the profile allows. -/
 @[step]
-theorem module.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile := .Wasm1) :
-    module.decode_locals data pos profile ⦃ r => match r with
+theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile := .Wasm1) :
+    metadata.decode_locals data pos profile ⦃ r => match r with
       | .Ok (locals, next) => ∃ groups,
           ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding) data pos groups next ∧
           locals.val = ModuleLocals.declared groups ∧
@@ -201,15 +201,15 @@ theorem module.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : Val
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
   | Err e =>
-      simp [module.decode_locals, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_locals, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
       obtain ⟨groups, start⟩ := pair
       have hs := hp.span
-      rw [module.decode_locals, hr]
+      rw [metadata.decode_locals, hr]
       simp [core.result.Result.Insts.CoreOpsTry.branch]
-      apply WP.spec_mono (module.decode_locals_loop.spec data groups (alloc.vec.Vec.new _) start 0#u32
+      apply WP.spec_mono (metadata.decode_locals_loop.spec data groups (alloc.vec.Vec.new _) start 0#u32
         (by simp) hs.2.2 (by simp) profile)
       rintro r h
       cases r with

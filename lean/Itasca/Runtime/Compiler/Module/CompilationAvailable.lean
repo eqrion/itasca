@@ -34,10 +34,10 @@ private theorem certificate_initializer_typing {bytes raw regions env tail profi
     (certificate : StreamCompleteRegions.Certificate bytes raw regions env tail profile)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) :
     InitializerSourceTyping (uninitializedModule env tail profile functions) := by
-  have environment := Itasca.module.validate_env.profile_semantic_spec regions.env profile
+  have environment := Itasca.metadata.validate_env.profile_semantic_spec regions.env profile
   rw [certificate.environment,WP.spec_ok] at environment
   obtain ⟨_,_,valid,_,_,_⟩ := environment
-  have dataValid := Itasca.module.validate_tail.spec regions.tail 0#usize env (by simp) profile
+  have dataValid := Itasca.metadata.validate_tail.spec regions.tail 0#usize env (by simp) profile
   rw [certificate.tail_accepted,WP.spec_ok] at dataValid
   exact InitializerSourceTyping.of_valid valid dataValid.2.1
 
@@ -60,7 +60,7 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
   have origin : codeStart.val ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
     obtain ⟨ordered,bounded⟩ := Itasca.stream.find_code_region.bounds bytes codeStart codeEnd scanned
     exact (ordered.trans bounded).trans certificate.bounded
-  obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists Itasca.module.Env.new.spec
+  obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists Itasca.metadata.Env.new.spec
   obtain ⟨scheduler,run,streamCall,tailEq,tailReady,ready,workers⟩ := compiler_streaming_available ops law bound allocation
     runtime.compiler.CompileSource.Insts.ItascaStreamSource {bytes,code_start := codeStart,code_end := codeEnd} 0#u64 profile
     bytes raw regions env tail certificate available (initialScheduler A limits codeStart) storage bodyBytes localCount peak

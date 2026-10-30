@@ -17,7 +17,7 @@ width, and remaining local budget. Its exact frame retains every other compiler
 field and budget counter. -/
 theorem compiler_add_local_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (compiler : runtime.compiler.FunctionCompiler A) (type : Itasca.types.ValueType)
+    (compiler : runtime.compiler.FunctionCompiler A) (type : Itasca.wasm_types.ValueType)
     (room : compiler.budget.locals.val < compiler.budget.limits.max_locals.val)
     (localsCapacity : compiler.function.locals.length < Usize.max)
     (localsRequest : compiler.function.locals.length + 1 ≤ bound)

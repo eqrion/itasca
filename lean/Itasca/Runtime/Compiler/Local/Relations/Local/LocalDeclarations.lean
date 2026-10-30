@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_add_local {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (ty : Itasca.types.ValueType)
+    (ty : Itasca.wasm_types.ValueType)
     (offsetsFit : compiler.local_offsets.val.length < Usize.max)
     (localsFit : compiler.function.locals.val.length < Usize.max) :
     runtime.compiler.FunctionCompiler.add_local ops compiler ty ⦃ out =>
@@ -89,7 +89,7 @@ theorem LocalFrame.trans {A : Type} {a b c : runtime.compiler.FunctionCompiler A
 
 @[step] theorem compiler_add_local_layout {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (ty : Itasca.types.ValueType) (layout : LocalLayout compiler)
+    (ty : Itasca.wasm_types.ValueType) (layout : LocalLayout compiler)
     (fits : compiler.function.locals.val.length < Usize.max) :
     runtime.compiler.FunctionCompiler.add_local ops compiler ty ⦃ out =>
       out.1 = .Ok () → LocalFrame compiler out.2 ∧ LocalLayout out.2 ∧

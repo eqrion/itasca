@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- Interned indices agree exactly when their source signatures agree. -/
 theorem Shape.signature_eq_iff {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (shape : Shape view store)
-    (left right : Usize) (leftType rightType : Itasca.types.FuncType)
+    (left right : Usize) (leftType rightType : Itasca.wasm_types.FuncType)
     (leftFound : store.types.val[left.val]? = some leftType)
     (rightFound : store.types.val[right.val]? = some rightType) :
     left = right ↔ decodeFuncType leftType = decodeFuncType rightType := by
@@ -32,7 +32,7 @@ theorem Shape.function_signature_eq_iff {M : Type} {view : M → Slice U8}
     {store : runtime.store.Store M} (shape : Shape view store)
     (code : CodeInterpretation) (function : runtime.store.FuncInst)
     (present : function ∈ store.funcs.val) (wanted : Usize)
-    (wantedType : Itasca.types.FuncType)
+    (wantedType : Itasca.wasm_types.FuncType)
     (wantedFound : store.types.val[wanted.val]? = some wantedType) :
     function.signature = wanted ↔
       (decodeFunction code store function).TYPE = decodeFuncType wantedType := by

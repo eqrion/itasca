@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem InvocationResourceCause.canonical {M P A : Type}
     {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M}
-    {signature : Itasca.types.FuncType} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {results : alloc.vec.Vec runtime.Value}
     {error : runtime.ExecError} (initial : config) (sourceStore : _root_.store) (address : funcaddr)
     (cause : InvocationResourceCause allocator exec store signature results error) :
     CanonicalInvocationResourceCause allocator hooks initial sourceStore (Store.decodeFuncType signature) address
@@ -24,7 +24,7 @@ theorem InvocationResourceCause.canonical {M P A : Type}
 theorem CallCause.invocation_canonical {M P A : Type}
     {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
     {prepared : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
-    {signature : Itasca.types.FuncType} {error : runtime.ExecError}
+    {signature : Itasca.wasm_types.FuncType} {error : runtime.ExecError}
     (view : M → Slice U8) (code : Store.CodeInterpretation) (initial : config)
     (capacities : Store.FunctionCapacities code store) (typed : CoreFunctionsTyped view code store)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (instanceIndex functionIndex : Usize)

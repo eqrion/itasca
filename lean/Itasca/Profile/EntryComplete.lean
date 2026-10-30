@@ -5,7 +5,7 @@ import Itasca.Module.Code.LocalsComplete
 /-!
 # Profile code-entry completeness
 
-Completeness of `module.validate_code_entry_with`: a code entry that meets the independent
+Completeness of `metadata.validate_code_entry_with`: a code entry that meets the independent
 specification (`Profile.EntryTyped`, `CodeEncodingWithinLimits`) is accepted.
 `complete_spec_of_body` takes a body completeness hypothesis, and `profile_complete_spec` and
 `profile_complete` discharge it for both profiles.
@@ -20,9 +20,9 @@ open ModuleBinary
 /-- Code-entry validation succeeds with end offset `next` when the entry has exact bytes, is typed
 for the profile, and meets the byte and local limits, given a completeness hypothesis for the body
 step. -/
-theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visitor : code.OpVisitor V)
+theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
+    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile)
     (hi : index.val < env.func_type_indices.val.length)
     (htyped : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
@@ -33,7 +33,7 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
       body.length ≤ limits.MAX_FUNCTION_BYTES.val → Profile.Body profile body env ctx.locals typeIdx →
       ∀ started, ∃ ended,
         code.validate_body_with visitor body env ctx typeIdx profile started = .ok (.Ok (), ended)) :
-    module.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
+    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
   obtain ⟨bytes, he, hspan⟩ := hbytes
   obtain ⟨hcap, sizeBytes, localBytes, bodyBytes, hsize, hlocals, hbody, hbodyCap, rfl⟩ := he
   obtain ⟨bodyStart, hprefix, hbodySpan⟩ := hspan.split
@@ -45,14 +45,14 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
     have := hlocalsSpan.length
     have := hbodySpan.length
     omega
-  obtain ⟨declared, hdeclared, hdeclaredVal⟩ := module.decode_locals.complete data content profile entry.locals bodyStart
+  obtain ⟨declared, hdeclared, hdeclaredVal⟩ := metadata.decode_locals.complete data content profile entry.locals bodyStart
     ⟨localBytes, hlocals, hlocalsSpan⟩ htyped.locals_allowed hcap
   have hindex : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by scalar_tac
-  unfold module.validate_code_entry_with
+  unfold metadata.validate_code_entry_with
   simp [hindex, hread, core.result.Result.Insts.CoreOpsTry.branch]
   step
   obtain ⟨hr, hhave, hhavePost⟩ := WP.spec_imp_exists
-    (module.have_bytes.spec data content n (by have := hhead.bound; omega))
+    (metadata.have_bytes.spec data content n (by have := hhead.bound; omega))
   have hgood : hr = .Ok () := hhavePost.1.mpr (by have := hspan.bound; scalar_tac)
   rw [hgood] at hhave
   simp [hhave]
@@ -76,10 +76,10 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
     have hc : (ModuleLocals.declared entry.locals).length ≤ limits.MAX_LOCALS.val := hcap
     omega
   obtain ⟨locals, hbuild, hbuildVal⟩ := WP.spec_imp_exists
-    (module.build_func_locals.spec (alloc.vec.Vec.deref ft.params) (alloc.vec.Vec.deref declared)
+    (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params) (alloc.vec.Vec.deref declared)
       (by simpa [alloc.vec.Vec.deref] using hroom))
   obtain ⟨results, hcopy, hcopyVal⟩ := WP.spec_imp_exists
-    (module.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
+    (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
   rw [hbuild]
   simp only [bind_ok]
   rw [hcopy]
@@ -109,16 +109,16 @@ theorem module.validate_code_entry_with.complete_spec_of_body {V : Type} (visito
 
 /-- Entry validation succeeds, as a weakest-precondition statement, for either profile under the
 profile's environment and size bounds. -/
-theorem module.validate_code_entry_with.profile_complete_spec {V : Type} (visitor : code.OpVisitor V)
+theorem metadata.validate_code_entry_with.profile_complete_spec {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
+    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
     (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
-    module.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
-  apply module.validate_code_entry_with.complete_spec_of_body visitor haccept data pos env index entry next v
+    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
+  apply metadata.validate_code_entry_with.complete_spec_of_body visitor haccept data pos env index entry next v
     profile hi (Profile.EntryTyped.of_core htyped (henv.1 _ (List.getElem_mem _))) hbound hbytes
   intro body ctx typeIdx ft hlookup hresults hsize hcert started
   exact code.validate_body_with.profile_complete visitor haccept body env ctx typeIdx profile started
@@ -126,17 +126,17 @@ theorem module.validate_code_entry_with.profile_complete_spec {V : Type} (visito
 
 /-- Entry validation returns `.Ok next` for either profile under the profile's environment and size
 bounds. -/
-theorem module.validate_code_entry_with.profile_complete {V : Type} (visitor : code.OpVisitor V)
+theorem metadata.validate_code_entry_with.profile_complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : module.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
+    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
     (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
-    ∃ v', module.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok next, v') := by
+    ∃ v', metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok next, v') := by
   obtain ⟨⟨r, v'⟩, hr, hok⟩ := WP.spec_imp_exists
-    (module.validate_code_entry_with.profile_complete_spec visitor haccept data pos env index entry next v
+    (metadata.validate_code_entry_with.profile_complete_spec visitor haccept data pos env index entry next v
       profile hi htyped henv hlimits hbound hbytes)
   dsimp only at hok
   exact ⟨v', by simpa only [hok] using hr⟩

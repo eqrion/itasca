@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Lookup in the canonical source table selects an actual captured compiler
 signature, including exact parameter and result widths. -/
 theorem SignatureSequence.lookup_source {signatures types}
-    (sequence : SignatureSequence signatures types) {index : Nat} {ty : Itasca.types.FuncType}
+    (sequence : SignatureSequence signatures types) {index : Nat} {ty : Itasca.wasm_types.FuncType}
     (found : types[index]? = some ty) :
     ∃ signature, signatures[index]? = some signature ∧ SignatureMatches signature
       (ty.params.val.map Translate.valueType) (ty.results.val.map Translate.valueType) := by
@@ -36,7 +36,7 @@ theorem SignatureSequence.lookup_source {signatures types}
 /-- The fixed data needed by the body fold is derived from the accepted entry
 and scheduler tables, before any opcode is compiled. -/
 structure CompilerEntryFacts {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
-    (env : module.Env) (ctx : code.Context) (index : U32) (ft : types.FuncType)
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (ft : wasm_types.FuncType)
     (body : Slice U8) : Prop where
   localLayout : LocalLayout compiler
   locals : compiler.function.locals = ctx.locals

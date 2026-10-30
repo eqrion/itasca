@@ -29,7 +29,7 @@ theorem reader_const32_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -52,7 +52,7 @@ theorem reader_const64_open_instructions_wasm2 {data env locals index st}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -76,7 +76,7 @@ theorem reader_float32_open_instructions_wasm2 {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A)
     (C : context) (localTypes : C.LOCALS = compilerLocals before) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -100,7 +100,7 @@ theorem reader_float64_open_instructions_wasm2 {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A)
     (C : context) (localTypes : C.LOCALS = compilerLocals before) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -132,7 +132,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 Literal bits and local/global indices are exactly those selected by the reader. -/
 theorem reader_dead_scalar_checked_prefix {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (kind : ScalarReaderKind)
+    (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (kind : ScalarReaderKind)
     (dead : before.reachable = false)
     (codeFits : before.function.code.val.length < Usize.max)
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
@@ -168,7 +168,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_nop_open_instructions_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 1#u8 before = .ok (.Ok (),out,after)) :
@@ -187,7 +187,7 @@ theorem reader_nop_open_instructions_wasm2 {A : Type}
 theorem reader_drop_open_instructions_wasm2 {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 26#u8 before = .ok (.Ok (),out,after)) :

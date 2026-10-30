@@ -4,7 +4,7 @@ import Itasca.Binary.Wasm2.Bulk
 /-!
 # Environment matching for reference and bulk instructions
 
-Lemmas about `EnvTranslation.Matches`, the agreement between a runtime `module.Env` and a
+Lemmas about `EnvTranslation.Matches`, the agreement between a runtime `metadata.Env` and a
 SpecTec context. Each `Matches.table_get`, `Matches.table_copy`, `Matches.memory_init`, ... turns
 bounds on the runtime environment into the corresponding `Instr_ok` judgment for the reference,
 table and bulk-memory instructions.
@@ -16,7 +16,7 @@ namespace Itasca.EnvTranslation
 
 /-- A runtime table entry supplies the corresponding generated lookup. -/
 theorem Matches.table_entry {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     idx.val < C.TABLES.length ∧ C.TABLES[idx.val]! = tableType tt := by
   rw [h.tables]
@@ -25,7 +25,7 @@ theorem Matches.table_entry {env ctx C} (h : Matches env ctx C)
   · rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map, ht]
 
 theorem Matches.element_entry {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (elem : module.Element) (hi : idx.val < env.elements.val.length)
+    (idx : U32) (elem : metadata.Element) (hi : idx.val < env.elements.val.length)
     (ht : env.elements.val[idx.val] = elem) :
     idx.val < C.ELEMS.length ∧ C.ELEMS[idx.val]! = Translate.referenceType elem.elem := by
   rw [h.elems]
@@ -52,7 +52,7 @@ theorem Matches.ref_func {env ctx C} (h : Matches env ctx C)
   · exact .instr_case_41 _ (index_wf idx)
 
 theorem Matches.table_get {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     Instr_ok C (.TABLE_GET (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32]) (.mk_list [valtype_reftype (Translate.referenceType tt.elem)])) := by
@@ -60,7 +60,7 @@ theorem Matches.table_get {env ctx C} (h : Matches env ctx C)
   exact .table_get _ _ _ _ hb he h.wf (.instr_case_48 _ (index_wf idx)) (tableType_wf tt)
 
 theorem Matches.table_set {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     Instr_ok C (.TABLE_SET (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32, valtype_reftype (Translate.referenceType tt.elem)]) (.mk_list [])) := by
@@ -68,7 +68,7 @@ theorem Matches.table_set {env ctx C} (h : Matches env ctx C)
   exact .table_set _ _ _ _ hb he h.wf (.instr_case_49 _ (index_wf idx)) (tableType_wf tt)
 
 theorem Matches.table_size {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     Instr_ok C (.TABLE_SIZE (.mk_uN idx.val))
       (.mk_functype (.mk_list []) (.mk_list [.I32])) := by
@@ -76,7 +76,7 @@ theorem Matches.table_size {env ctx C} (h : Matches env ctx C)
   exact .table_size _ _ _ _ hb he h.wf (.instr_case_50 _ (index_wf idx)) (tableType_wf tt)
 
 theorem Matches.table_grow {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     Instr_ok C (.TABLE_GROW (.mk_uN idx.val))
       (.mk_functype (.mk_list [valtype_reftype (Translate.referenceType tt.elem), .I32]) (.mk_list [.I32])) := by
@@ -84,7 +84,7 @@ theorem Matches.table_grow {env ctx C} (h : Matches env ctx C)
   exact .table_grow _ _ _ _ hb he h.wf (.instr_case_51 _ (index_wf idx)) (tableType_wf tt)
 
 theorem Matches.table_fill {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : types.TableType) (hi : idx.val < env.table_types.val.length)
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
     (ht : env.table_types.val[idx.val] = tt) :
     Instr_ok C (.TABLE_FILL (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32, valtype_reftype (Translate.referenceType tt.elem), .I32]) (.mk_list [])) := by
@@ -92,7 +92,7 @@ theorem Matches.table_fill {env ctx C} (h : Matches env ctx C)
   exact .table_fill _ _ _ _ hb he h.wf (.instr_case_52 _ (index_wf idx)) (tableType_wf tt)
 
 theorem Matches.table_copy {env ctx C} (h : Matches env ctx C)
-    (destination source : U32) (dst src : types.TableType)
+    (destination source : U32) (dst src : wasm_types.TableType)
     (hd : destination.val < env.table_types.val.length) (hs : source.val < env.table_types.val.length)
     (htd : env.table_types.val[destination.val] = dst) (hts : env.table_types.val[source.val] = src)
     (htype : src.elem = dst.elem) :
@@ -106,7 +106,7 @@ theorem Matches.table_copy {env ctx C} (h : Matches env ctx C)
     (by simpa [tableType, htype] using tableType_wf src)
 
 theorem Matches.table_init {env ctx C} (h : Matches env ctx C)
-    (table element : U32) (tt : types.TableType) (elem : module.Element)
+    (table element : U32) (tt : wasm_types.TableType) (elem : metadata.Element)
     (ht : table.val < env.table_types.val.length) (he : element.val < env.elements.val.length)
     (htt : env.table_types.val[table.val] = tt) (hee : env.elements.val[element.val] = elem)
     (htype : elem.elem = tt.elem) :
@@ -118,7 +118,7 @@ theorem Matches.table_init {env ctx C} (h : Matches env ctx C)
     (.instr_case_54 _ _ (index_wf table) (index_wf element)) (tableType_wf tt)
 
 theorem Matches.elem_drop {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (elem : module.Element) (hi : idx.val < env.elements.val.length)
+    (idx : U32) (elem : metadata.Element) (hi : idx.val < env.elements.val.length)
     (ht : env.elements.val[idx.val] = elem) :
     Instr_ok C (.ELEM_DROP (.mk_uN idx.val)) (.mk_functype (.mk_list []) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.element_entry idx elem hi ht

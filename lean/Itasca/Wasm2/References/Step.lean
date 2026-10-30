@@ -22,7 +22,7 @@ effect; the shared fixed checker transports both through the typed zipper. -/
 theorem Pending.metadata_read {data env profile locals index st} (p : Pending data env profile locals index st)
     {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr)
     (hd : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
       ∀ a, r.1 = .Ok a → At data p.start (.plain (operation a)) r.2.pos ⦄)
@@ -45,7 +45,7 @@ theorem Pending.metadata_read {data env profile locals index st} (p : Pending da
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, post, _⟩ := effect value accepted
   exact post.after
 
-theorem reference_value_translation (rt : types.ElemType) :
+theorem reference_value_translation (rt : wasm_types.ElemType) :
     Translate.valueType (ModuleConstants.referenceValueType rt) = valtype_reftype (Translate.referenceType rt) := by
   cases rt <;> rfl
 

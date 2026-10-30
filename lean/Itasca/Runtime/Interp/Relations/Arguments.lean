@@ -6,18 +6,18 @@ namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
 noncomputable section
-local instance : DecidableEq Itasca.types.ValueType := Classical.decEq _
+local instance : DecidableEq Itasca.wasm_types.ValueType := Classical.decEq _
 
 def OwnedBy (id : Usize) : runtime.Value → Prop
   | .FuncRef (some address) => address.store = id
   | .ExternRef (some address) => address.store = id
   | _ => True
 
-def ArgumentMatches (id : Usize) (value : runtime.Value) (ty : Itasca.types.ValueType) : Prop :=
+def ArgumentMatches (id : Usize) (value : runtime.Value) (ty : Itasca.wasm_types.ValueType) : Prop :=
   OwnedBy id value ∧ rawType value = ty
 
 /-- Accepted arguments retain exactly their runtime type tags. -/
-theorem argument_matches_rawtypes {id : Usize} {args : List runtime.Value} {types : List Itasca.types.ValueType}
+theorem argument_matches_rawtypes {id : Usize} {args : List runtime.Value} {types : List Itasca.wasm_types.ValueType}
     (matched : List.Forall₂ (ArgumentMatches id) args types) : types = args.map rawType := by
   induction matched with
   | nil => rfl
@@ -29,13 +29,13 @@ noncomputable def checkOwner (id : Usize) (value : runtime.Value) :
   exact if OwnedBy id value then .Ok () else .Err .WrongStore
 
 noncomputable def checkArgument (id : Usize) (value : runtime.Value)
-    (ty : Itasca.types.ValueType) : core.result.Result Unit runtime.ExecError := by
+    (ty : Itasca.wasm_types.ValueType) : core.result.Result Unit runtime.ExecError := by
   classical
   exact if OwnedBy id value then
     if rawType value = ty then .Ok () else .Err .BadArguments
   else .Err .WrongStore
 
-noncomputable def checkArguments (id : Usize) : List runtime.Value → List Itasca.types.ValueType →
+noncomputable def checkArguments (id : Usize) : List runtime.Value → List Itasca.wasm_types.ValueType →
     core.result.Result Unit runtime.ExecError
   | [], [] => .Ok ()
   | value :: values, ty :: types =>
@@ -44,14 +44,14 @@ noncomputable def checkArguments (id : Usize) : List runtime.Value → List Itas
       | .Err error => .Err error
   | _, _ => .Err .BadArguments
 
-theorem check_argument_ok_iff (id : Usize) (value : runtime.Value) (ty : Itasca.types.ValueType) :
+theorem check_argument_ok_iff (id : Usize) (value : runtime.Value) (ty : Itasca.wasm_types.ValueType) :
     checkArgument id value ty = .Ok () ↔ ArgumentMatches id value ty := by
   classical
   simp [checkArgument, ArgumentMatches]
   split <;> simp_all
 
 theorem check_arguments_ok_iff (id : Usize) (values : List runtime.Value)
-    (types : List Itasca.types.ValueType) :
+    (types : List Itasca.wasm_types.ValueType) :
     checkArguments id values types = .Ok () ↔ List.Forall₂ (ArgumentMatches id) values types := by
   induction values generalizing types with
   | nil => cases types <;> simp [checkArguments]
@@ -80,13 +80,13 @@ theorem check_arguments_ok_iff (id : Usize) (values : List runtime.Value)
     runtime.Value.value_type value ⦃ out => out = rawType value ⦄ := by
   cases value <;> simp [runtime.Value.value_type, rawType]
 
-theorem value_type_ne_eq (left right : Itasca.types.ValueType) :
-    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType left right =
+theorem value_type_ne_eq (left right : Itasca.wasm_types.ValueType) :
+    core.cmp.PartialEq.ne.trait_default wasm_types.ValueType.Insts.CoreCmpPartialEqValueType left right =
       .ok (if left = right then false else true) := by
   classical
   cases left <;> cases right <;>
-    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, types.ValueType.Insts.CoreCmpPartialEqValueType,
-      Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+    simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default, wasm_types.ValueType.Insts.CoreCmpPartialEqValueType,
+      Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 def checkSequence (first rest : core.result.Result Unit runtime.ExecError) :
     core.result.Result Unit runtime.ExecError :=
@@ -96,7 +96,7 @@ def checkSequence (first rest : core.result.Result Unit runtime.ExecError) :
 
 @[step] theorem check_values_loop_effect {M : Type}
     (memory : runtime.platform.MemoryBuffer M) (store : runtime.store.Store M)
-    (values : Slice runtime.Value) (types : Slice Itasca.types.ValueType)
+    (values : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType)
     (position : Usize) (status : core.result.Result Unit runtime.ExecError)
     (lengths : values.length = types.length) (bound : position.val ≤ values.length) :
     runtime.interp.check_values_loop memory store values types position status
@@ -162,7 +162,7 @@ def checkSequence (first rest : core.result.Result Unit runtime.ExecError) :
 otherwise it returns the first owner/tag error in argument order. -/
 @[step] theorem check_values_effect {M : Type}
     (memory : runtime.platform.MemoryBuffer M) (store : runtime.store.Store M)
-    (values : Slice runtime.Value) (types : Slice Itasca.types.ValueType) :
+    (values : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType) :
     runtime.interp.check_values memory store values types ⦃ out =>
       out = if values.length = types.length then checkArguments store.id values.val types.val
         else .Err .BadArguments ⦄ := by
@@ -180,7 +180,7 @@ otherwise it returns the first owner/tag error in argument order. -/
 reference carries the store's identity. This does not assume valid addresses. -/
 theorem check_values_accepts_iff {M : Type}
     (memory : runtime.platform.MemoryBuffer M) (store : runtime.store.Store M)
-    (values : Slice runtime.Value) (types : Slice Itasca.types.ValueType) :
+    (values : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType) :
     runtime.interp.check_values memory store values types ⦃ out =>
       out = .Ok () ↔ List.Forall₂ (ArgumentMatches store.id) values.val types.val ⦄ := by
   step with check_values_effect memory store values types as ⟨out, hout⟩

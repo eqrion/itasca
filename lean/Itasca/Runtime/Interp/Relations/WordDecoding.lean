@@ -3,13 +3,13 @@ import Itasca.Runtime.Interp.Relations.Readback
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-theorem decode_words_scalar (ty : Itasca.types.ValueType) (lo hi : U64)
+theorem decode_words_scalar (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (scalar : ty ≠ .V128) : Store.decodeWords ty lo hi = Store.decodeWords ty lo 0#u64 := by
   cases ty <;> simp_all [Store.decodeWords]
 
 /-- Recover a represented source value using the pure mathematical word
 decoder. Reference addresses remain naturals here, so no usize cast is assumed. -/
-theorem decode_words_represents (ty : Itasca.types.ValueType) (lo hi : U64)
+theorem decode_words_represents (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (value : val) (wellFormed : wf_val value) (typed : sourceType ty = Compiler.valueType value)
     (represented : pairWords ty (lo,hi) = Compiler.encodeValue value) :
     Store.decodeWords ty lo hi = value := by
@@ -25,7 +25,7 @@ theorem decode_words_represents (ty : Itasca.types.ValueType) (lo hi : U64)
   rw [←typed,←represented,decode_words_code ty lo hi floatBound] at source
   exact congrArg Prod.fst (Option.some.inj source)
 
-theorem WordsAt.decode_value {words : List U64} {position : Nat} (ty : Itasca.types.ValueType)
+theorem WordsAt.decode_value {words : List U64} {position : Nat} (ty : Itasca.wasm_types.ValueType)
     (value : val) (wellFormed : wf_val value) (typed : sourceType ty = Compiler.valueType value)
     (represented : WordsAt words position (Compiler.encodeValue value)) :
     Store.decodeWords ty (Itasca.Runtime.Interp.readPair words position ty).1 (Itasca.Runtime.Interp.readPair words position ty).2 = value := by

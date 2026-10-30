@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
-theorem concrete_values (types : List types.ValueType) : ConcreteStack (types.map code.StackType.Val) := by
+theorem concrete_values (types : List wasm_types.ValueType) : ConcreteStack (types.map code.StackType.Val) := by
   simp [ConcreteStack]
 
 /-- Closing or switching a frame reconstructs a concrete stack from the saved
@@ -27,9 +27,9 @@ theorem concrete_end_effect {st out : code.BodyState} {parents blocks frame isEl
     rw [effect.2.2]
     exact concrete_stack_append.mpr ⟨known, concrete_values inputs⟩
 
-theorem wasm2_end_concrete (st out : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem wasm2_end_concrete (st out : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType) (frame : code.Ctrl)
-    (bt : signature.BlockType) (inputs outputs : List types.ValueType) (outer segment : List code.StackType)
+    (bt : signature.BlockType) (inputs outputs : List wasm_types.ValueType) (outer segment : List code.StackType)
     (controls : st.core.ctrls.val = parents ++ [frame]) (signatures : st.blocks.val = blocks ++ [bt])
     (aligned : blocks.length = parents.length) (values : st.core.vals.val = outer ++ segment)
     (base : frame.value_stack_base.val = outer.length)

@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 set_option maxRecDepth 4096 in
 @[step] theorem lower_call {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (before : List valtype) (index paramSlots base : U32)
     (layout : CompilerLayout compiler before) (reachable : compiler.reachable = true)
     (signature : compiler.func_param_slots.val[index.val]? = some paramSlots)

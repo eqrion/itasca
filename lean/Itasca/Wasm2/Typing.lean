@@ -26,9 +26,9 @@ def outputs : signature.BlockType → signature.ResultType
 
 /-- Resolving both views of an indexed block selects the same function type
     used by the generated Wasm 2.0 block typing rule. -/
-theorem blockType_ok (env : module.Env) (C : context) (hC : wf_context C)
+theorem blockType_ok (env : metadata.Env) (C : context) (hC : wf_context C)
     (htypes : C.TYPES = env.types.val.map EnvTranslation.funcType)
-    (bt : signature.BlockType) (ins outs : List types.ValueType)
+    (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hi : resolve env (inputs bt) = some ins)
     (ho : resolve env (outputs bt) = some outs) :
     Blocktype_ok C (blockType bt)

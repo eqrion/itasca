@@ -11,11 +11,11 @@ theorem CompileWitness.data_count_input {A : Type} {allocator : runtime.platform
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
-  have tailDecoded := module.validate_tail_with.accepted_erase
-    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).moduleModuleVisitorInst
+  have tailDecoded := metadata.validate_tail_with.accepted_erase
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.remaining.tailBytes 0#usize w.env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have tailSemantic := module.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp) profile
+  have tailSemantic := metadata.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp) profile
   rw [tailDecoded, WP.spec_ok] at tailSemantic
   obtain ⟨_, _, count⟩ := tailSemantic
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by

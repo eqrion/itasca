@@ -122,7 +122,7 @@ theorem reader_end_target_bounds_wasm2 {data env localTypes index st}
 /-- Wasm 2 selector and label collection retain all prior targets before dispatch. -/
 theorem reader_table_target_bounds_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (held : JumpTableBounds before)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (held : JumpTableBounds before)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env .Wasm2 before = .ok (.Ok (),final,after)) : JumpTableBounds after := by
   obtain ⟨count,first,selector,popped,depths,fallback,types,last,readState,budget,buffer,_,_,_,_,_,_,_,callback⟩ :=

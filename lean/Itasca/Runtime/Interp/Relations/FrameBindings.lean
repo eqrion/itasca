@@ -31,7 +31,7 @@ body and owning module in the decoded store. -/
 theorem defined_function_lookup {M : Type} (view : M → Slice U8)
     (code : Store.CodeInterpretation) (store : runtime.store.Store M)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
+    (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex : Usize)
     (inst : runtime.store.ModuleInst) (sourceCode : funccode)
     (hf : store.funcs.val[address.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature)

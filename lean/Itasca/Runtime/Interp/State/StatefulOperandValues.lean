@@ -27,7 +27,7 @@ theorem three_operand_values {operands : List val} {first second third : valtype
 
 theorem frame_reference_second {exec : runtime.interp.Execution} {raw : runtime.interp.Frame}
     {f : SourceMachine.AFrame} {front : List val} {firstValue : val} {bits : Nat} {reference : ref}
-    {first second : U32} {type : Itasca.types.ElemType}
+    {first second : U32} {type : Itasca.wasm_types.ElemType}
     (slots : FrameSlots exec raw f) (values : f.vals=front++[firstValue,val_ref reference])
     (prefixBits : Compiler.encodeValue firstValue=[bits])
     (referenceType : Compiler.valueType (val_ref reference)=valtype_reftype (decodeElemType type))

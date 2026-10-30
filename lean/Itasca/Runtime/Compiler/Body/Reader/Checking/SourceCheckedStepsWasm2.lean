@@ -16,8 +16,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Source-paid executable and publication evidence, with all instruction checks retained. -/
 def SourceCheckedReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompiler A)
-    (C : context) (locals : List valtype) (data : Slice U8) (env : module.Env)
-    (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (C : context) (locals : List valtype) (data : Slice U8) (env : metadata.Env)
+    (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.BodyState) : Prop :=
   SourcePublicationReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st ∧
     CompilerInstructionPrefix compiler ∧ FrameExitSlotBounds compiler ∧
@@ -26,7 +26,7 @@ def SourceCheckedReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompil
 /-- Every actual source-paid reader step retains all final checker obligations. -/
 theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial compiler : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (st out : code.BodyState)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial compiler
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
@@ -99,7 +99,7 @@ coordinate and control-map bounds together, including all SIMD forms. -/
 theorem source_checked_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (initial : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (layout : LocalLayout initial) (localsMatch : initial.function.locals = sourceLocals)
     (metadata : FunctionParameterSlots initial env)
     (matched : EnvTranslation.Matches env ⟨sourceLocals,ft.results⟩ C) (contextLocals : C.LOCALS=locals)

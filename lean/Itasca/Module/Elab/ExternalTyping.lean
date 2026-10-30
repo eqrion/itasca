@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleElaboration
 
 /-- The SpecTec translation of an external type is well formed. -/
-theorem externalType_wf (xt : types.ExternType) : wf_externtype (ModuleExternals.externalType xt) := by
+theorem externalType_wf (xt : wasm_types.ExternType) : wf_externtype (ModuleExternals.externalType xt) := by
   cases xt with
   | Func ft => constructor
   | Global gt => constructor
@@ -21,7 +21,7 @@ theorem externalType_wf (xt : types.ExternType) : wf_externtype (ModuleExternals
   | Memory mt => exact .externtype_case_3 _ (EnvTranslation.memType_wf mt)
 
 /-- The SpecTec external index of an export descriptor is well formed. -/
-theorem exportIndex_wf (desc : module.ExportDesc) : wf_externidx (exportIndex desc) := by
+theorem exportIndex_wf (desc : metadata.ExportDesc) : wf_externidx (exportIndex desc) := by
   cases desc with
   | Func idx => exact .externidx_case_0 _ (EnvTranslation.index_wf idx)
   | Table idx => exact .externidx_case_2 _ (EnvTranslation.index_wf idx)
@@ -29,7 +29,7 @@ theorem exportIndex_wf (desc : module.ExportDesc) : wf_externidx (exportIndex de
   | Global idx => exact .externidx_case_1 _ (EnvTranslation.index_wf idx)
 
 /-- A resolved import has the translated external type as its `importType`. -/
-theorem importType_resolved {env : module.Env} {entry : module.Import} {xt : types.ExternType}
+theorem importType_resolved {env : metadata.Env} {entry : metadata.Import} {xt : wasm_types.ExternType}
     (h : ModuleExternals.ImportResolves env entry xt) :
     importType env.types.val entry.desc = ModuleExternals.externalType xt := by
   cases hd : entry.desc with
@@ -48,7 +48,7 @@ theorem importType_resolved {env : module.Env} {entry : module.Import} {xt : typ
     simp [h, importType, ModuleExternals.externalType]
 
 /-- A resolved export index has the translated external type in the module context. -/
-theorem export_index_typed {env : module.Env} {entry : module.Export} {xt : types.ExternType}
+theorem export_index_typed {env : metadata.Env} {entry : metadata.Export} {xt : wasm_types.ExternType}
     (h : ModuleExternals.ExportResolves env entry xt)
     (C : context) (hC : CodeEntry.ModuleContext env C) :
     Externidx_ok C (exportIndex entry.desc) (ModuleExternals.externalType xt) := by
@@ -95,7 +95,7 @@ theorem export_index_typed {env : module.Env} {entry : module.Export} {xt : type
     · exact .externtype_case_1 _
 
 /-- A resolved export with a well-formed name is typed in the module context. -/
-theorem export_typed {env : module.Env} {entry : module.Export} {xt : types.ExternType}
+theorem export_typed {env : metadata.Env} {entry : metadata.Export} {xt : wasm_types.ExternType}
     (h : ModuleExternals.ExportResolves env entry xt)
     (hn : wf_name (ModuleBinary.nameOfBytes entry.name.val))
     (C : context) (hC : CodeEntry.ModuleContext env C) :
@@ -104,14 +104,14 @@ theorem export_typed {env : module.Env} {entry : module.Export} {xt : types.Exte
     (.export_case_0 _ _ hn (exportIndex_wf entry.desc))
 
 /-- `functionType` always gives a valid function type. -/
-theorem functionType_valid (types : List types.FuncType) (idx : U32) :
+theorem functionType_valid (types : List wasm_types.FuncType) (idx : U32) :
     Functype_ok (functionType types idx) := by
   cases he : types[idx.val]? with
   | none => simp only [functionType, he, Option.map_none, Option.getD_none]; constructor
   | some ft => simpa [functionType, he] using ModuleTranslation.funcType_valid ft
 
 /-- An import's SpecTec external type is well formed. -/
-theorem importType_wf (types : List types.FuncType) (desc : module.ImportDesc) :
+theorem importType_wf (types : List wasm_types.FuncType) (desc : metadata.ImportDesc) :
     wf_externtype (importType types desc) := by
   cases desc with
   | Func idx => constructor
@@ -120,7 +120,7 @@ theorem importType_wf (types : List types.FuncType) (desc : module.ImportDesc) :
   | Memory mt => exact .externtype_case_3 _ (EnvTranslation.memType_wf mt)
 
 /-- The external type of each import of a valid cached environment is valid. -/
-theorem import_type_valid {env : module.Env} {tables memories entry}
+theorem import_type_valid {env : metadata.Env} {tables memories entry}
     (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (he : entry ∈ env.imports.val) : Externtype_ok (importType env.types.val entry.desc) := by
   cases hd : entry.desc with
@@ -142,7 +142,7 @@ theorem import_type_valid {env : module.Env} {tables memories entry}
       (.externtype_case_3 _ (EnvTranslation.memType_wf mt))
 
 /-- Each import of a valid cached environment is typed, given well-formed names. -/
-theorem import_typed {env : module.Env} {tables memories entry}
+theorem import_typed {env : metadata.Env} {tables memories entry}
     (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (he : entry ∈ env.imports.val)
     (hmod : wf_name (ModuleBinary.nameOfBytes entry.module.val))
@@ -154,7 +154,7 @@ theorem import_typed {env : module.Env} {tables memories entry}
     (.import_case_0 _ _ _ hmod hn (importType_wf _ _))
 
 /-- The start function of a valid environment is typed in the module context. -/
-theorem start_typed {env : module.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (idx : U32)
+theorem start_typed {env : metadata.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (idx : U32)
     (hs : env.start = some idx) (C : context) (hC : CodeEntry.ModuleContext env C) :
     Start_ok C (start idx) := by
   obtain ⟨hi, hp, hr⟩ := hv.start idx hs

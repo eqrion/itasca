@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- A source-only successful validation trace, recording every operand stack.
 Its reader equations use the empty visitor, independently of compiled code. -/
-inductive ValidatedStacksWasm2 (data : Slice U8) (env : module.Env)
+inductive ValidatedStacksWasm2 (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) : code.BodyState → List (List code.StackType) → Prop where
   | done {st} (typed : Wasm2.State data env .Wasm2 ctx.locals index st)
       (closed : st.blocks.val = []) (finished : st.core.pos = Slice.len data) :

@@ -152,7 +152,7 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 private theorem decoded_function {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
     {store : runtime.store.Store M} {address : runtime.FuncAddr} {function : runtime.store.FuncInst}
-    {signature : Itasca.types.FuncType}
+    {signature : Itasca.wasm_types.FuncType}
     (hf : store.funcs.val[address.index.val]?=some function)
     (hs : store.types.val[function.signature.val]?=some signature) :
     (Store.decodeStore view code store).FUNCS[address.index.val]?=some (Store.decodeFunction code store function) ∧

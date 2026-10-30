@@ -7,17 +7,17 @@ value/word arities, and source block-signature resolution. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def signatureSlots (types : List Itasca.types.ValueType) : Nat :=
+def signatureSlots (types : List Itasca.wasm_types.ValueType) : Nat :=
   slots (types.map Itasca.Translate.valueType)
 
-theorem signature_slots_eq (types : List Itasca.types.ValueType) :
+theorem signature_slots_eq (types : List Itasca.wasm_types.ValueType) :
     signatureSlots types = Interp.valueTypeSlots types := by
   have same : Itasca.Translate.valueType = Interp.sourceType := by
     funext ty
     cases ty <;> rfl
   simp [signatureSlots, Interp.valueTypeSlots, same]
 
-@[step] theorem compiler_type_slots (types : Slice Itasca.types.ValueType) :
+@[step] theorem compiler_type_slots (types : Slice Itasca.wasm_types.ValueType) :
     runtime.compiler.type_slots types ⦃ result =>
       match result with
       | .Ok word => word.val = signatureSlots types.val
@@ -60,7 +60,7 @@ def SignatureTable (signatures : Slice runtime.compiler.Signature) (types : List
 The slot accumulator is total, and rejects only a width above the u32 bound. -/
 @[step] theorem capture_signature {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (index : Usize) (ty : Itasca.types.FuncType)
+    (env : Itasca.metadata.Env) (index : Usize) (ty : Itasca.wasm_types.FuncType)
     (lookup : env.types.val[index.val]? = some ty)
     (fits : scheduler.signatures.val.length < Usize.max) :
     runtime.compiler.CompileScheduler.capture_signature ops scheduler env index ⦃ out =>
@@ -70,7 +70,7 @@ The slot accumulator is total, and rejects only a width above the u32 bound. -/
         SignatureMatches signature (ty.params.val.map Itasca.Translate.valueType)
           (ty.results.val.map Itasca.Translate.valueType) ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_signature
-  simp only [Itasca.module.Env.impl.types, bind_ok]
+  simp only [Itasca.metadata.Env.impl.types, bind_ok]
   have bound := (List.getElem?_eq_some_iff.mp lookup).1
   have inBounds : index.val < env.types.deref.length := by simpa [alloc.vec.Vec.deref] using bound
   step as ⟨actual, hactual⟩

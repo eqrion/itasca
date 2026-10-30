@@ -24,8 +24,8 @@ def BodyEncoding (profile : ValidationProfile) (data : Slice U8) (ops : List ins
 /-- The semantic specification of a valid function body, shared by both profiles. The signature
 comes from the environment's type `index`, and the bytes, typing and profile restrictions all
 describe the same instruction tree. Resource bounds are separate. -/
-def Body (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) : Prop :=
+def Body (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : Prop :=
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ FuncType profile ft ∧
     BodyEncoding profile data ops ∧ Wasm2.FunctionTyped env locals ft ops ∧
     Instructions profile (Wasm2.functionContext env locals ft) ops ∧

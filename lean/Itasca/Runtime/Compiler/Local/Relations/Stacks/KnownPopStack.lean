@@ -30,7 +30,7 @@ theorem concrete_typed_pop_result {poly before expected result after}
     · exact concrete_popped_remainder known popped
 
 @[step] theorem pop_with_type_concrete (st : code.OpIterState) (outer segment : List code.StackType)
-    (expected : types.ValueType) (values : st.vals.val = outer ++ segment)
+    (expected : wasm_types.ValueType) (values : st.vals.val = outer ++ segment)
     (base : (Control.base st).val = outer.length) (known : ConcreteStack segment) :
     code.pop_with_type st expected ⦃ out => out.2.ctrls = st.ctrls ∧ out.2.pos = st.pos ∧
       ∃ rest, out.2.vals.val = outer ++ rest ∧ ConcreteStack rest ⦄ := by

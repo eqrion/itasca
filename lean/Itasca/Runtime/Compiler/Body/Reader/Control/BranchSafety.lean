@@ -16,7 +16,7 @@ set_option maxRecDepth 4096
 
 theorem compiler_branch_reader_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (data : Slice U8) (env : module.Env) (conditional : Bool)
+    (state : code.BodyState) (data : Slice U8) (env : metadata.Env) (conditional : Bool)
     (shape : Control.Shape state.core)
     (aligned : state.blocks.val.length = state.core.ctrls.val.length)
     (frames : compiler.frames.val.length = state.blocks.val.length)

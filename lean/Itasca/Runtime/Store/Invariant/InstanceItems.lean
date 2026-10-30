@@ -34,7 +34,7 @@ theorem element_items_error (module : runtime.compiler.ExecutableModule) (items 
   unfold runtime.store.instantiate.Store.prepare_instance_loop1
   rw [loop.eq_def]
   simp only [runtime.store.instantiate.Store.prepare_instance_loop1.body,
-    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   split <;> simp [core.result.Result.is_ok]
 
 /-- Passing the actual item limit supplies the store and fresh-instance vector

@@ -11,9 +11,9 @@ open Aeneas Aeneas.Std Itasca
 /-- A source frame's word requirement: its parameter/local words plus the
 maximum operand width in a complete canonical validation trace. The reader
 trace uses the empty visitor and contains no compiled-code premise. -/
-def SourceFrameCapacity (profile : ValidationProfile) (env : module.Env)
+def SourceFrameCapacity (profile : ValidationProfile) (env : metadata.Env)
     (typeIndex : U32) (source : funccode) (words : Nat) : Prop :=
-  ∃ (signature : types.FuncType) (declared : List types.ValueType)
+  ∃ (signature : wasm_types.FuncType) (declared : List wasm_types.ValueType)
       (data : Slice U8) (ctx : code.Context) (body : List instr)
       (samples : List (List code.StackType)),
     env.types.val[typeIndex.val]? = some signature ∧
@@ -26,7 +26,7 @@ def SourceFrameCapacity (profile : ValidationProfile) (env : module.Env)
 
 /-- The allocated compiled frame is bounded by the independently described
 source frame requirement. This is separate from the emitted-code relation. -/
-def FunctionCapacity (profile : ValidationProfile) (env : module.Env)
+def FunctionCapacity (profile : ValidationProfile) (env : metadata.Env)
     (typeIndex : U32) (source : funccode) (compiled : runtime.bytecode.CompiledFunction) : Prop :=
   ∃ words, SourceFrameCapacity profile env typeIndex source words ∧ compiled.slot_count.val ≤ words
 

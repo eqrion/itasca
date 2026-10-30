@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def SignatureSequence (signatures : List runtime.compiler.Signature)
-    (types : List Itasca.types.FuncType) : Prop :=
+    (types : List Itasca.wasm_types.FuncType) : Prop :=
   List.Forall₂ (fun signature ty => SignatureMatches signature
     (ty.params.val.map Itasca.Translate.valueType) (ty.results.val.map Itasca.Translate.valueType)) signatures types
 
@@ -21,7 +21,7 @@ theorem SignatureSequence.append {signatures types signature ty}
 theorem SignatureSequence.lookup {signatures types}
     (sequence : SignatureSequence signatures types) {index : Nat} {signature : runtime.compiler.Signature}
     (found : signatures[index]? = some signature) :
-    ∃ ty : Itasca.types.FuncType, types[index]? = some ty ∧ SignatureMatches signature
+    ∃ ty : Itasca.wasm_types.FuncType, types[index]? = some ty ∧ SignatureMatches signature
       (ty.params.val.map Itasca.Translate.valueType) (ty.results.val.map Itasca.Translate.valueType) := by
   induction sequence generalizing index with
   | nil => simp at found
@@ -33,7 +33,7 @@ theorem SignatureSequence.lookup {signatures types}
     | succ index => exact ih (by simpa using found)
 
 theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
-    {types : List Itasca.types.FuncType} (sequence : SignatureSequence signatures.val types) :
+    {types : List Itasca.wasm_types.FuncType} (sequence : SignatureSequence signatures.val types) :
     SignatureTable signatures (types.map Itasca.EnvTranslation.funcType) := by
   intro index signature found
   obtain ⟨ty, lookup, matched⟩ := SignatureSequence.lookup sequence found
@@ -42,7 +42,7 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
 
 @[step] theorem capture_signatures_loop_frame {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
+    (env : Itasca.metadata.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
     (bound : index.val ≤ env.types.val.length)
     (prefixMatches : status = .Ok () → SignatureSequence scheduler.signatures.val (env.types.val.take index.val)) :
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
@@ -57,7 +57,7 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
   · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
     dsimp only at hi certified
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [Itasca.module.Env.impl.types, bind_ok]
+    simp only [Itasca.metadata.Env.impl.types, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac

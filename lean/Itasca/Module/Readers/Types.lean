@@ -4,8 +4,8 @@ import Itasca.Profile.Types
 /-!
 # Limit, memory, table, global and function type readers
 
-Soundness specs for `module.decode_limits`, `module.decode_mem_type`, `module.decode_table_type`,
-`module.decode_global_type`, `module.decode_value_types` and `module.decode_func_type`. Results
+Soundness specs for `metadata.decode_limits`, `metadata.decode_mem_type`, `metadata.decode_table_type`,
+`metadata.decode_global_type`, `metadata.decode_value_types` and `metadata.decode_func_type`. Results
 are `At` spans of the independent grammar, together with the limit bounds. The `allowed_spec` and
 `profile_spec` forms add the profile's value-type, reference-type and signature restrictions for
 both profiles. Completeness is in `Module/Readers/TypesComplete`.
@@ -17,14 +17,14 @@ namespace Itasca
 
 open ModuleBinary
 
-/-- `module.decode_limits` returns a `LimitsEncoding` span. -/
+/-- `metadata.decode_limits` returns a `LimitsEncoding` span. -/
 @[step]
-theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
-    module.decode_limits data start ⦃ r => ParserPost LimitsEncoding data start r ⦄ := by
+theorem metadata.decode_limits.spec (data : Slice U8) (start : Usize) :
+    metadata.decode_limits data start ⦃ r => ParserPost LimitsEncoding data start r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data start)
   cases r with
   | Err e =>
-      simp [module.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from, ParserPost]
   | Ok pair =>
@@ -33,12 +33,12 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
       · obtain ⟨r, hu, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
         cases r with
         | Err e =>
-            simp [module.decode_limits, hr, hu, hzero, core.result.Result.Insts.CoreOpsTry.branch,
+            simp [metadata.decode_limits, hr, hu, hzero, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
               error.Error.Insts.CoreConvertFromOpError.from, ParserPost]
         | Ok pair =>
             obtain ⟨min, next⟩ := pair
-            simp [module.decode_limits, hr, hu, hzero, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+            simp [metadata.decode_limits, hr, hu, hzero, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
             obtain ⟨bytes, hs, hl, hb, he⟩ := hd
             refine ⟨0#u8 :: bytes, .noMax min he, ?_⟩
             simpa [hzero] using (At.byte hp).append ⟨hs, hl, hb⟩
@@ -46,7 +46,7 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
         · obtain ⟨r, hu, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
           cases r with
           | Err e =>
-              simp [module.decode_limits, hr, hu, hone, core.result.Result.Insts.CoreOpsTry.branch,
+              simp [metadata.decode_limits, hr, hu, hone, core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 error.Error.Insts.CoreConvertFromOpError.from, ParserPost]
           | Ok pair =>
@@ -54,44 +54,44 @@ theorem module.decode_limits.spec (data : Slice U8) (start : Usize) :
               obtain ⟨r, hu', hd'⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data middle)
               cases r with
               | Err e =>
-                  simp [module.decode_limits, hr, hu, hu', hone, core.result.Result.Insts.CoreOpsTry.branch,
+                  simp [metadata.decode_limits, hr, hu, hu', hone, core.result.Result.Insts.CoreOpsTry.branch,
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                     error.Error.Insts.CoreConvertFromOpError.from, ParserPost]
               | Ok pair =>
                   obtain ⟨max, next⟩ := pair
-                  simp [module.decode_limits, hr, hu, hu', hone,
+                  simp [metadata.decode_limits, hr, hu, hu', hone,
                     core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
                   obtain ⟨first, hs, hl, hb, he⟩ := hd
                   obtain ⟨rest, hs', hl', hb', he'⟩ := hd'
                   refine ⟨1#u8 :: (first ++ rest), .max min max he he', ?_⟩
                   simpa [hone] using (At.byte hp).append
                     ((show Wasm1.BytesAt data pos first middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)
-        · simp [module.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
+        · simp [metadata.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
           split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
-/-- `module.decode_mem_type` returns a `MemTypeEncoding` span whose limits are within
+/-- `metadata.decode_mem_type` returns a `MemTypeEncoding` span whose limits are within
 `limits.MAX_MEMORY_PAGES`. -/
 @[step]
-theorem module.decode_mem_type.spec (data : Slice U8) (start : Usize) :
-    module.decode_mem_type data start ⦃ r => match r with
+theorem metadata.decode_mem_type.spec (data : Slice U8) (start : Usize) :
+    metadata.decode_mem_type data start ⦃ r => match r with
       | .Ok (ty, next) => At MemTypeEncoding data start ty next ∧
           LimitsValid ty.limits limits.MAX_MEMORY_PAGES
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (module.decode_limits.spec data start)
+  obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (metadata.decode_limits.spec data start)
   cases r with
   | Err e =>
-      simp [module.decode_mem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_mem_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨lim, next⟩ := pair
       obtain ⟨r, hv, hp⟩ := WP.spec_imp_exists (limits.validate_limits.spec lim limits.MAX_MEMORY_PAGES)
       cases r with
       | Err e =>
-          simp [module.decode_mem_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch,
+          simp [metadata.decode_mem_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok u =>
           cases u
-          simp [module.decode_mem_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
+          simp [metadata.decode_mem_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
           exact ⟨hd, hp rfl⟩
 
 namespace ModuleBinary
@@ -107,14 +107,14 @@ theorem At.rep_snoc {α : Type} {R : α → List U8 → Prop} {data start pos ne
 end ModuleBinary
 
 /-- The counted loop returns `count` value types forming a `Rep ValueTypeEncoding` span. -/
-theorem module.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
+theorem metadata.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
     (count : U32) (hb : start.val ≤ data.length) (profile : ValidationProfile := .Wasm1) :
-    module.decode_value_types_loop data profile count (alloc.vec.Vec.new types.ValueType) start 0#u32 ⦃ r =>
+    metadata.decode_value_types_loop data profile count (alloc.vec.Vec.new wasm_types.ValueType) start 0#u32 ⦃ r =>
       match r with
       | .Ok (out, next) => At (Rep ValueTypeEncoding) data start out.val next ∧
           out.val.length = count.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_value_types_loop
+  unfold metadata.decode_value_types_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ s.1.val.length = s.2.2.val ∧
       s.2.1.val = start.val + s.2.2.val ∧
@@ -123,13 +123,13 @@ theorem module.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
     dsimp only at *
     by_cases hdone : count.val ≤ i.val
     · have he : i ≥ count := by scalar_tac
-      simp [module.decode_value_types_loop.body, he]
+      simp [metadata.decode_value_types_loop.body, he]
       exact ⟨hrep, by omega⟩
     · have he : ¬i ≥ count := by scalar_tac
-      obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (module.decode_value_type.syntax_spec data pos profile)
+      obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (metadata.decode_value_type.syntax_spec data pos profile)
       cases r with
       | Err e =>
-          simp [module.decode_value_types_loop.body, he, hr,
+          simp [metadata.decode_value_types_loop.body, he, hr,
             core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
@@ -139,7 +139,7 @@ theorem module.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
           subst bytes
           have hn : next.val = pos.val + 1 := by simpa using hs.length
           have hb' := hs.bound
-          simp [module.decode_value_types_loop.body, he, hr,
+          simp [metadata.decode_value_types_loop.body, he, hr,
             core.result.Result.Insts.CoreOpsTry.branch]
           step*
           refine ⟨by scalar_tac, ?_, by scalar_tac, ?_, by scalar_tac⟩
@@ -149,29 +149,29 @@ theorem module.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
             exact hrep.rep_snoc ⟨_, rfl, hs⟩
   · exact ⟨by scalar_tac, rfl, by simp, ⟨[], .nil, Wasm1.BytesAt.nil data start hb⟩⟩
 
-/-- `module.decode_value_types` returns a `VecEncoding ValueTypeEncoding` span within the length
+/-- `metadata.decode_value_types` returns a `VecEncoding ValueTypeEncoding` span within the length
 bound. -/
-theorem module.decode_value_types.spec (data : Slice U8) (start : Usize) (limit : Usize)
+theorem metadata.decode_value_types.spec (data : Slice U8) (start : Usize) (limit : Usize)
     (err : error.OpError) (profile : ValidationProfile) :
-    module.decode_value_types data start limit err profile ⦃ r => match r with
+    metadata.decode_value_types data start limit err profile ⦃ r => match r with
       | .Ok (out, next) => At (VecEncoding ValueTypeEncoding) data start out.val next ∧
           out.val.length ≤ limit.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
   cases r with
   | Err e =>
-      simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
       obtain ⟨count, pos⟩ := pair
       by_cases hbig : count.val > limit.val
-      · simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
+      · simp [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
       · obtain ⟨r, hv, hp⟩ := WP.spec_imp_exists
-          (module.decode_value_types_loop.spec data pos count hd.span.2.2 profile)
-        have hrun : module.decode_value_types data start limit err profile =
-            module.decode_value_types_loop data profile count (alloc.vec.Vec.new _) pos 0#u32 := by
-          simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
+          (metadata.decode_value_types_loop.spec data pos count hd.span.2.2 profile)
+        have hrun : metadata.decode_value_types data start limit err profile =
+            metadata.decode_value_types_loop data profile count (alloc.vec.Vec.new _) pos 0#u32 := by
+          simp [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
         rw [hrun, hv]
         cases r with
         | Err e => simp
@@ -188,38 +188,38 @@ theorem module.decode_value_types.spec (data : Slice U8) (start : Usize) (limit 
             · have hc := U32.cast_Usize_val_eq count
               scalar_tac
 
-/-- `module.decode_func_type` returns a `FuncTypeEncoding` span in either profile. The result
+/-- `metadata.decode_func_type` returns a `FuncTypeEncoding` span in either profile. The result
 satisfies the profile's language restriction (`Profile.FuncType`) and the implementation
 signature cap (`Profile.FuncTypeWithinLimits`) as separate facts. -/
 @[step]
-theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
+theorem metadata.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile) :
-    module.decode_func_type data start profile ⦃ r => match r with
+    metadata.decode_func_type data start profile ⦃ r => match r with
       | .Ok (ty, next) => At FuncTypeEncoding data start ty next ∧
           Profile.FuncType profile ty ∧ Profile.FuncTypeWithinLimits ty
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data start)
   cases r with
   | Err e =>
-      simp [module.decode_func_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_func_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
       obtain ⟨tag, pos⟩ := pair
       by_cases he : tag = 0x60#u8
-      · obtain ⟨r, hv, hd⟩ := WP.spec_imp_exists (module.decode_value_types.spec
+      · obtain ⟨r, hv, hd⟩ := WP.spec_imp_exists (metadata.decode_value_types.spec
           data pos limits.MAX_MULTI_VALUE_PARAMS error.OpError.TooManyParams profile)
         cases r with
         | Err e =>
-            simp [module.decode_func_type, hr, he, hv, core.result.Result.Insts.CoreOpsTry.branch,
+            simp [metadata.decode_func_type, hr, he, hv, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok pair =>
             obtain ⟨params, middle⟩ := pair
-            obtain ⟨r, hv', hd'⟩ := WP.spec_imp_exists (module.decode_value_types.spec
+            obtain ⟨r, hv', hd'⟩ := WP.spec_imp_exists (metadata.decode_value_types.spec
               data middle limits.MAX_MULTI_VALUE_RESULTS error.OpError.TooManyResults profile)
             cases r with
             | Err e =>
-                simp [module.decode_func_type, hr, he, hv, hv', core.result.Result.Insts.CoreOpsTry.branch,
+                simp [metadata.decode_func_type, hr, he, hv, hv', core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
                 obtain ⟨results, next⟩ := pair
@@ -233,39 +233,39 @@ theorem module.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
                   ⟨hd.2, hd'.2⟩
                 cases profile with
                 | Wasm1 =>
-                    simp [module.decode_func_type, hr, he, hv, hv',
+                    simp [metadata.decode_func_type, hr, he, hv, hv',
                       core.result.Result.Insts.CoreOpsTry.branch, alloc.vec.Vec.len, limits.MAX_RESULTS]
                     split
                     · simp
                     · simp only [WP.spec_ok]
                       exact ⟨hat, by simp [Profile.FuncType]; scalar_tac, hlimits⟩
                 | Wasm2 =>
-                    simp [module.decode_func_type, hr, he, hv, hv',
+                    simp [metadata.decode_func_type, hr, he, hv, hv',
                       core.result.Result.Insts.CoreOpsTry.branch]
                     exact ⟨hat, trivial, hlimits⟩
       · have hv : tag.val ≠ 96 := by
           intro h
           exact he (UScalar.eq_of_val_eq h)
-        simp [module.decode_func_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
+        simp [metadata.decode_func_type, hr, hv, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- `module.decode_global_type` returns a `GlobalTypeEncoding` span whose value type the profile
+/-- `metadata.decode_global_type` returns a `GlobalTypeEncoding` span whose value type the profile
 allows. -/
-theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
+theorem metadata.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_global_type data start profile ⦃ r => match r with
+    metadata.decode_global_type data start profile ⦃ r => match r with
       | .Ok (ty, next) => At GlobalTypeEncoding data start ty next ∧ ValueTypeAllowed profile ty.valtype
       | .Err _ => True ⦄ := by
-  obtain ⟨r, ht, hd⟩ := WP.spec_imp_exists (module.decode_value_type.spec data start profile)
+  obtain ⟨r, ht, hd⟩ := WP.spec_imp_exists (metadata.decode_value_type.spec data start profile)
   cases r with
   | Err e =>
-      simp [module.decode_global_type, ht, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_global_type, ht, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨ty, pos⟩ := pair
       obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
       cases r with
       | Err e =>
-          simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch,
+          simp [metadata.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
@@ -274,45 +274,45 @@ theorem module.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
           have heq : bytes = [valueByte ty] := he
           subst bytes
           by_cases hzero : mutability = 0#u8
-          · simp [module.decode_global_type, ht, hr, hzero, core.result.Result.Insts.CoreOpsTry.branch]
+          · simp [metadata.decode_global_type, ht, hr, hzero, core.result.Result.Insts.CoreOpsTry.branch]
             exact ⟨⟨_, rfl, by simpa [hzero, mutByte] using hs.append (At.byte hp)⟩, ha⟩
           · by_cases hone : mutability = 1#u8
-            · simp [module.decode_global_type, ht, hr, hone, core.result.Result.Insts.CoreOpsTry.branch]
+            · simp [metadata.decode_global_type, ht, hr, hone, core.result.Result.Insts.CoreOpsTry.branch]
               exact ⟨⟨_, rfl, by simpa [hone, mutByte] using hs.append (At.byte hp)⟩, ha⟩
-            · simp [module.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch]
+            · simp [metadata.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch]
               split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
-/-- `module.decode_table_type.spec` plus the profile allowing the element type. -/
-theorem module.decode_table_type.allowed_spec (data : Slice U8) (start : Usize)
+/-- `metadata.decode_table_type.spec` plus the profile allowing the element type. -/
+theorem metadata.decode_table_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_table_type data start profile ⦃ r => match r with
+    metadata.decode_table_type data start profile ⦃ r => match r with
       | .Ok (ty, next) => (At TableTypeEncoding data start ty next ∧
           LimitsValid ty.limits limits.MAX_TABLE_ELEMS) ∧ ElemTypeAllowed profile ty.elem
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_elem_type.spec data start profile)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data start profile)
   cases r with
   | Err e =>
-      simp [module.decode_table_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      simp [metadata.decode_table_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
       obtain ⟨elem, pos⟩ := pair
-      obtain ⟨r, hl, hd⟩ := WP.spec_imp_exists (module.decode_limits.spec data pos)
+      obtain ⟨r, hl, hd⟩ := WP.spec_imp_exists (metadata.decode_limits.spec data pos)
       cases r with
       | Err e =>
-          simp [module.decode_table_type, hr, hl, core.result.Result.Insts.CoreOpsTry.branch,
+          simp [metadata.decode_table_type, hr, hl, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
           obtain ⟨lim, next⟩ := pair
           obtain ⟨r, hv, hvalid⟩ := WP.spec_imp_exists (limits.validate_limits.spec lim limits.MAX_TABLE_ELEMS)
           cases r with
           | Err e =>
-              simp [module.decode_table_type, hr, hl, hv, core.result.Result.Insts.CoreOpsTry.branch,
+              simp [metadata.decode_table_type, hr, hl, hv, core.result.Result.Insts.CoreOpsTry.branch,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok u =>
               cases u
-              have hrun : module.decode_table_type data start profile =
+              have hrun : metadata.decode_table_type data start profile =
                   .ok (.Ok ({ limits := lim, elem }, next)) := by
-                simp [module.decode_table_type, hr, hl, hv, core.result.Result.Insts.CoreOpsTry.branch]
+                simp [metadata.decode_table_type, hr, hl, hv, core.result.Result.Insts.CoreOpsTry.branch]
               rw [hrun]
               simp only [WP.spec_ok]
               obtain ⟨bytes, hc, hs⟩ := hd
@@ -320,23 +320,23 @@ theorem module.decode_table_type.allowed_spec (data : Slice U8) (start : Usize)
               refine ⟨⟨⟨elemByte elem :: bytes, ⟨bytes, hc, rfl⟩, ?_⟩, hvalid rfl⟩, ha⟩
               exact hes.append hs
 
-private theorem module.decode_value_types_loop.allowed_only_spec (data : Slice U8)
+private theorem metadata.decode_value_types_loop.allowed_only_spec (data : Slice U8)
     (profile : ValidationProfile) (count : U32) (start : Usize) :
-    module.decode_value_types_loop data profile count (alloc.vec.Vec.new _) start 0#u32 ⦃ r =>
+    metadata.decode_value_types_loop data profile count (alloc.vec.Vec.new _) start 0#u32 ⦃ r =>
       match r with
       | .Ok (out, _) => ∀ ty ∈ out.val, ValueTypeAllowed profile ty
       | .Err _ => True ⦄ := by
-  unfold module.decode_value_types_loop
+  unfold metadata.decode_value_types_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ s.1.val.length = s.2.2.val ∧
       ∀ ty ∈ s.1.val, ValueTypeAllowed profile ty)
   · rintro ⟨out, pos, i⟩ ⟨hi, hlen, hallowed⟩
     dsimp only at *
-    unfold module.decode_value_types_loop.body
+    unfold metadata.decode_value_types_loop.body
     split
     · simpa only [WP.spec_ok] using hallowed
     · have hcapacity : out.val.length < Usize.max := by scalar_tac
-      obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (module.decode_value_type.spec data pos profile)
+      obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (metadata.decode_value_type.spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -349,8 +349,8 @@ private theorem module.decode_value_types_loop.allowed_only_spec (data : Slice U
           let out1 ← alloc.vec.Vec.push out ty
           let i1 ← i + 1#u32
           (.ok (.cont (out1, next, i1)) : Result
-            (ControlFlow (alloc.vec.Vec types.ValueType × Usize × U32)
-              (core.result.Result (alloc.vec.Vec types.ValueType × Usize) error.Error)))) ⦃ _ ⦄
+            (ControlFlow (alloc.vec.Vec wasm_types.ValueType × Usize × U32)
+              (core.result.Result (alloc.vec.Vec wasm_types.ValueType × Usize) error.Error)))) ⦃ _ ⦄
         step
         step
         refine ⟨by scalar_tac, ?_, ?_, by scalar_tac⟩
@@ -363,51 +363,51 @@ private theorem module.decode_value_types_loop.allowed_only_spec (data : Slice U
           · simpa [List.mem_singleton.mp hm] using ha
   · exact ⟨by simp, by simp, by simp⟩
 
-private theorem module.decode_value_types.allowed_only_spec (data : Slice U8) (start : Usize)
+private theorem metadata.decode_value_types.allowed_only_spec (data : Slice U8) (start : Usize)
     (limit : Usize) (err : error.OpError) (profile : ValidationProfile) :
-    module.decode_value_types data start limit err profile ⦃ r => match r with
+    metadata.decode_value_types data start limit err profile ⦃ r => match r with
       | .Ok (out, _) => ∀ ty ∈ out.val, ValueTypeAllowed profile ty
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
   cases r with
-  | Err e => simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, pos⟩ := pair
     obtain ⟨r, hloop, ha⟩ := WP.spec_imp_exists
-      (module.decode_value_types_loop.allowed_only_spec data profile count pos)
+      (metadata.decode_value_types_loop.allowed_only_spec data profile count pos)
     by_cases hbig : count.val > limit.val
-    · simp [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
-    · simpa [module.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    · simp [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch, lift, hbig]
+    · simpa [metadata.decode_value_types, hr, core.result.Result.Insts.CoreOpsTry.branch,
         lift, hbig, hloop] using ha
 
-private theorem module.decode_func_type.allowed_only_spec (data : Slice U8) (start : Usize)
+private theorem metadata.decode_func_type.allowed_only_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile) :
-    module.decode_func_type data start profile ⦃ r => match r with
+    metadata.decode_func_type data start profile ⦃ r => match r with
       | .Ok (ft, _) => ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data start)
   cases r with
-  | Err e => simp [module.decode_func_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_func_type, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨tag, pos⟩ := pair
     by_cases he : tag = 0x60#u8
-    · obtain ⟨r, hp, hap⟩ := WP.spec_imp_exists (module.decode_value_types.allowed_only_spec
+    · obtain ⟨r, hp, hap⟩ := WP.spec_imp_exists (metadata.decode_value_types.allowed_only_spec
         data pos limits.MAX_MULTI_VALUE_PARAMS error.OpError.TooManyParams profile)
       cases r with
       | Err e =>
-        simp_all [module.decode_func_type, core.result.Result.Insts.CoreOpsTry.branch,
+        simp_all [metadata.decode_func_type, core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
         obtain ⟨params, middle⟩ := pair
-        obtain ⟨r, hres, har⟩ := WP.spec_imp_exists (module.decode_value_types.allowed_only_spec
+        obtain ⟨r, hres, har⟩ := WP.spec_imp_exists (metadata.decode_value_types.allowed_only_spec
           data middle limits.MAX_MULTI_VALUE_RESULTS error.OpError.TooManyResults profile)
         cases r with
         | Err e =>
-          simp_all [module.decode_func_type, core.result.Result.Insts.CoreOpsTry.branch,
+          simp_all [metadata.decode_func_type, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok pair =>
           obtain ⟨results, next⟩ := pair
@@ -418,29 +418,29 @@ private theorem module.decode_func_type.allowed_only_spec (data : Slice U8) (sta
             · exact har ty hm
           cases profile with
           | Wasm1 =>
-            simp [module.decode_func_type, hr, he, hp, hres,
+            simp [metadata.decode_func_type, hr, he, hp, hres,
               core.result.Result.Insts.CoreOpsTry.branch]
             split
             · simp
             · simpa [List.mem_append] using hall
           | Wasm2 =>
-            simpa [module.decode_func_type, hr, he, hp, hres,
+            simpa [metadata.decode_func_type, hr, he, hp, hres,
               core.result.Result.Insts.CoreOpsTry.branch] using hall
     · have htag : tag.val ≠ 96 := fun h => he (UScalar.eq_of_val_eq h)
-      simp [module.decode_func_type, hr, htag, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_func_type, hr, htag, core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- `module.decode_func_type.profile_spec` plus the profile allowing every parameter and result
+/-- `metadata.decode_func_type.profile_spec` plus the profile allowing every parameter and result
 type. -/
-theorem module.decode_func_type.allowed_spec (data : Slice U8) (start : Usize)
+theorem metadata.decode_func_type.allowed_spec (data : Slice U8) (start : Usize)
     (profile : ValidationProfile) :
-    module.decode_func_type data start profile ⦃ r => match r with
+    metadata.decode_func_type data start profile ⦃ r => match r with
       | .Ok (ft, next) =>
           (At FuncTypeEncoding data start ft next ∧ Profile.FuncType profile ft ∧
             Profile.FuncTypeWithinLimits ft) ∧
           ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.profile_spec data start profile)
-  obtain ⟨r', hr', ha⟩ := WP.spec_imp_exists (module.decode_func_type.allowed_only_spec data start profile)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_func_type.profile_spec data start profile)
+  obtain ⟨r', hr', ha⟩ := WP.spec_imp_exists (metadata.decode_func_type.allowed_only_spec data start profile)
   have he : r' = r := by simpa only [Result.ok.injEq] using hr'.symm.trans hr
   subst r'
   rw [hr]

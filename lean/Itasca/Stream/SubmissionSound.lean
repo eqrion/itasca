@@ -27,7 +27,7 @@ open StreamScheduler
 order, batch IDs are numbered consecutively, the pending IDs are distinct and bounded by the
 capacity, and every issued batch is pending or has a completion certificate from a successful
 retirement. -/
-structure SoundInvariant (code : Slice U8) (env : module.Env) (start : Usize)
+structure SoundInvariant (code : Slice U8) (env : metadata.Env) (start : Usize)
     (id : U64) (capacity : Usize) (history : List StreamBatch.Issued)
     (pending : alloc.vec.Vec Usize) (pos func nextId : Usize)
     (profile : ValidationProfile := .Wasm1) : Prop where
@@ -63,7 +63,7 @@ theorem SoundInvariant.pending_fresh {code env start id capacity history pending
   exact h.fresh issued hi he
 
 /-- The invariant holds before any batch is issued. -/
-theorem SoundInvariant.initial {profile : ValidationProfile} (code : Slice U8) (env : module.Env) (start : Usize)
+theorem SoundInvariant.initial {profile : ValidationProfile} (code : Slice U8) (env : metadata.Env) (start : Usize)
     (id : U64) (capacity : Usize) (hstart : start.val ≤ code.length) :
     SoundInvariant (profile := profile) code env start id capacity [] (alloc.vec.Vec.new _) start 0#usize 0#usize := by
   constructor
@@ -172,7 +172,7 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
 /-- Successful submission tiles the entire entry region and accounts for every issued ID as
 pending or completed, with the scheduler tracking the resulting history. -/
 def SoundPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (code : Slice U8) (env : module.Env) (start : Usize) (id : U64) (capacity : Usize)
+    (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64) (capacity : Usize)
     (profile : ValidationProfile := .Wasm1) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ history nextId,
@@ -181,7 +181,7 @@ def SoundPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Pro
   | (.Err _, _) => True
 
 private def BodyPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (code : Slice U8) (env : module.Env) (start : Usize) (id : U64)
+    (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64)
     (capacity func : Usize)
     (profile : ValidationProfile := .Wasm1) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
@@ -201,7 +201,7 @@ variable {profile : ValidationProfile}
 private theorem resume_sound {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
     (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List StreamBatch.Issued)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
@@ -319,7 +319,7 @@ variable {profile : ValidationProfile}
 private theorem body_sound {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
     (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List StreamBatch.Issued)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
@@ -400,7 +400,7 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
     (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List StreamBatch.Issued)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
@@ -452,7 +452,7 @@ theorem stream.submit_code_batches.sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
     (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize) (v' : V)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)

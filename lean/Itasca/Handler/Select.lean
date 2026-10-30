@@ -27,7 +27,7 @@ theorem code.join_stack_type.spec (a b : code.StackType) :
     | Bot => simp [code.join_stack_type, Sequence.Accepts]
     | Val b =>
       cases a <;> cases b <;>
-        simp [code.join_stack_type, types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
+        simp [code.join_stack_type, wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
           Sequence.Accepts]
 
 namespace StackSemantics
@@ -204,7 +204,7 @@ theorem code.read_select.segment (st : code.OpIterState)
 
 /-- `code.step` on `select` runs `code.read_select` and then the visitor's `on_select` hook. -/
 theorem code.step_select.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_SELECT v =
       CoreVisitor.run (code.read_select st) visitor.on_select v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,

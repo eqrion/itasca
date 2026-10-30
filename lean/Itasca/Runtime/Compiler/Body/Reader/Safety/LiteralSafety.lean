@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_i32_const_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -31,7 +31,7 @@ theorem compiler_reader_i32_const_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_i64_const_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -45,7 +45,7 @@ theorem compiler_reader_i64_const_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_f32_const_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -59,7 +59,7 @@ theorem compiler_reader_f32_const_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_f64_const_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -73,7 +73,7 @@ theorem compiler_reader_f64_const_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_drop_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -87,7 +87,7 @@ theorem compiler_reader_drop_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_select_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -101,7 +101,7 @@ theorem compiler_reader_select_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_global_get_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -115,7 +115,7 @@ theorem compiler_reader_global_get_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_global_set_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -129,7 +129,7 @@ theorem compiler_reader_global_set_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_unreachable_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -145,7 +145,7 @@ theorem compiler_reader_unreachable_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_nop_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

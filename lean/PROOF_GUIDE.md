@@ -12,7 +12,7 @@ directory layout, see the [Lean guide](README.md).
 under [Results/](Itasca/Results), and [Contracts.lean](Itasca/Contracts.lean)
 defines the obligations the streaming results place on an embedding.
 [Results/Validate.lean](Itasca/Results/Validate.lean) states the final
-guarantees about `Itasca.module.validate_module`:
+guarantees about `Itasca.metadata.validate_module`:
 
 | Theorem | Guarantee |
 | --- | --- |
@@ -63,10 +63,10 @@ caps. The values are listed in the [implementation bounds](../src/limits.rs).
 ## Reading Lean
 
 ```lean
-theorem module.validate_module.profile_sound
-    (data : Slice U8) (decoded : module.Module)
+theorem metadata.validate_module.profile_sound
+    (data : Slice U8) (decoded : metadata.Module)
     (profile : ValidationProfile)
-    (h : module.validate_module data profile = .ok (.Ok decoded)) :
+    (h : metadata.validate_module data profile = .ok (.Ok decoded)) :
     ModuleSound.Validated data decoded profile
 ```
 
@@ -299,7 +299,7 @@ original spelling.
 | Theorem basename | `snake_case`, describing its conclusion | `memory_fill_decodes`, `step_integer32_core_forward` |
 
 Facts about extracted functions hang off their Rust path, such as
-`module.validate_module.profile_sound` and `runtime.interp.invoke_with.behaves`.
+`metadata.validate_module.profile_sound` and `runtime.interp.invoke_with.behaves`.
 Facts about a relation belong under that relation where practical. Wasm names
 retain their instruction spelling, including `br_if` and `call_indirect`.
 Suffixes such as `_eq`, `_iff`, `_sound`, `_complete`, and `_spec`, or a

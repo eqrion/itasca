@@ -9,7 +9,7 @@ structure SourceStack (raw : List code.StackType) (types : List valtype) : Prop 
   decoded : Sequence.stackTypes raw = types
 
 theorem SourceStack.of_map {raw : List code.StackType} {types : List valtype}
-    (values : List Itasca.types.ValueType) (concrete : raw = values.map code.StackType.Val)
+    (values : List Itasca.wasm_types.ValueType) (concrete : raw = values.map code.StackType.Val)
     (decoded : values.map Translate.valueType = types) : SourceStack raw types := by
   refine ⟨(concrete_stack_iff raw).mpr ⟨values, concrete⟩, ?_⟩
   simpa only [concrete, Sequence.stackTypes, List.map_map, Function.comp_def] using decoded

@@ -18,7 +18,7 @@ set_option linter.unusedSimpArgs false
 
 /-- An unrecognized base-profile opcode rejects before visiting the compiler. -/
 theorem reader_opcode_wasm1 {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (value : V) :
     ReaderOpcode .Wasm1 opcode ∨
     code.step visitor st data env ctx opcode value =
@@ -40,7 +40,7 @@ theorem reader_opcode_wasm1 {V : Type} (visitor : code.OpVisitor V)
 /-- Extension dispatch likewise rejects every opcode outside the executable
 profile, independently of the reader or visitor state. -/
 theorem reader_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (value : V) :
     ReaderOpcode .Wasm2 opcode ∨
     code.step_wasm2 visitor st data env ctx opcode value =
@@ -67,7 +67,7 @@ theorem reader_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
   · exact rejected
 
 theorem reader_accepted_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (typeIndex : U32) (opcode : U8) (value after : V)
     (accepted : code.step_profile visitor st data env ctx typeIndex .Wasm2 opcode value =
       .ok (.Ok (),final,after)) : ReaderOpcode .Wasm2 opcode := by

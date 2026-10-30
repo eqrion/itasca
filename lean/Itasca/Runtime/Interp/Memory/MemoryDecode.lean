@@ -21,7 +21,7 @@ def numericLoadOpcode : numtype → U16
   | .F32 => 42#u16
   | .F64 => 43#u16
 
-def numericMemoryType : numtype → Itasca.types.ValueType
+def numericMemoryType : numtype → Itasca.wasm_types.ValueType
   | .I32 => .I32
   | .I64 => .I64
   | .F32 => .F32

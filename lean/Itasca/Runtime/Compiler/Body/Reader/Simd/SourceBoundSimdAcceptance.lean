@@ -475,7 +475,7 @@ private theorem reader_source_event {R : Type}
 
 /-- Every successful SIMD reader ends in its actual recorded source event at
 the final reader state. Unsupported subopcodes cannot supply this premise. -/
-theorem source_simd_callback (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem source_simd_callback (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : List Observation)
     (reference : code.step_profile recorder st data env ctx index .Wasm2 253#u8 before = .ok (.Ok (),out,after)) :
     ∃ action, invoke recorder before (.op out.core action) = .ok (.Ok (),after) := by

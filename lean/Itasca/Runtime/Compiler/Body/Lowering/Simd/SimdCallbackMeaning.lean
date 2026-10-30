@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Independent source meaning of a SIMD callback, including the constant
 pool case. Its fields are syntactic, not a promise about callback execution. -/
-inductive SimdCallbackMeaning (C : context) : U32 → U32 → U128 → List types.ValueType → instr → Option types.ValueType → Prop
+inductive SimdCallbackMeaning (C : context) : U32 → U32 → U128 → List wasm_types.ValueType → instr → Option wasm_types.ValueType → Prop
   | instruction {sub a bits input source output}
       (meaning : SimdImmediateMeaning C sub (simdImmediate sub a bits) (Wasm2.Simd.inputTypes input) source (Wasm2.Simd.outputTypes output)) :
       SimdCallbackMeaning C sub a bits input source output

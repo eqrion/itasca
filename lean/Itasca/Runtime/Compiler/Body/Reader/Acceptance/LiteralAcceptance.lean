@@ -30,7 +30,7 @@ theorem compiler_reader_i32_const_available {A V : Type} (ops : runtime.platform
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_I32_CONST before =
       .ok (.Ok (),final,after)) :
@@ -65,7 +65,7 @@ theorem compiler_reader_i64_const_available {A V : Type} (ops : runtime.platform
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_I64_CONST before =
       .ok (.Ok (),final,after)) :
@@ -100,7 +100,7 @@ theorem compiler_reader_f32_const_available {A V : Type} (ops : runtime.platform
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_F32_CONST before =
       .ok (.Ok (),final,after)) :
@@ -135,7 +135,7 @@ theorem compiler_reader_f64_const_available {A V : Type} (ops : runtime.platform
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound)
     (reference : code.step source st data env ctx code.OP_F64_CONST before =
       .ok (.Ok (),final,after)) :

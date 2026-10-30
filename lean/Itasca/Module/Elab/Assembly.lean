@@ -16,8 +16,8 @@ namespace Itasca.ModuleElaboration
 
 /-- The raw module described by an environment, its defined tables and memories, the code entries
 and the data segments. -/
-def fromEnv (env : module.Env) (tables : List types.TableType) (memories : List types.MemType)
-    (codes : List ModuleBinary.Code) (segments : List module.Data) : ModuleBinary.Module :=
+def fromEnv (env : metadata.Env) (tables : List wasm_types.TableType) (memories : List wasm_types.MemType)
+    (codes : List ModuleBinary.Code) (segments : List metadata.Data) : ModuleBinary.Module :=
   ⟨env.types.val, env.imports.val.map ModuleEnv.rawImport, env.func_type_indices.val,
     tables, memories, env.globals.val, env.exports.val.map ModuleEnv.rawExport, env.start,
     env.elements.val.map ModuleEnv.rawElement, env.data_count, codes, segments.map ModuleData.raw⟩
@@ -30,11 +30,11 @@ theorem represents_module {env decls codes segments} (h : ModuleEnv.Represents e
     h.globals, h.exports, h.start, h.elements, h.dataCount]
 
 /-- The context for import typing: only the module's types. -/
-def importContext (env : module.Env) : context :=
+def importContext (env : metadata.Env) : context :=
   ⟨env.types.val.map EnvTranslation.funcType, [], [], [], [], [], [], [], [], none⟩
 
 /-- The import context is well formed. -/
-theorem importContext_wf (env : module.Env) : wf_context (importContext env) := by
+theorem importContext_wf (env : metadata.Env) : wf_context (importContext env) := by
   constructor <;> simp [Forall]
 
 /-- For a cached environment, `moduleContext` is the imported spaces followed by the defined
@@ -66,7 +66,7 @@ theorem initializerContext_eq {env tables memories} (hc : ModuleEnv.Cache env ta
 /-- A valid cached environment with typed code entries, valid data segments and resolved exports
 has `Module_ok` for its elaborated module. All section judgments are assembled in one coherent
 module context, and name well-formedness comes from the independent byte grammar. -/
-theorem typed {env : module.Env} {tables memories codes segments xts}
+theorem typed {env : metadata.Env} {tables memories codes segments xts}
     (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
     (hiNames : ∀ entry ∈ env.imports.val,
       wf_name (ModuleBinary.nameOfBytes entry.module.val) ∧ wf_name (ModuleBinary.nameOfBytes entry.name.val))

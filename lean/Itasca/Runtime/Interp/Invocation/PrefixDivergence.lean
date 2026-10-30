@@ -23,7 +23,7 @@ theorem invoke_prefix_divergent_entry {M P F A : Type}
     (allocation : Platform.AllocCorrect allocator)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store=store.id)
     (hf : store.funcs.val[address.index.val]?=some function)
     (hs : store.types.val[function.signature.val]?=some signature)

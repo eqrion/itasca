@@ -16,16 +16,16 @@ namespace Itasca.Wasm2
 
 /-- Every opcode step from a `Pending` state either fails or yields a state satisfying
 `Pending.After`. -/
-def Steps (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
+def Steps (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env profile locals index st),
     step st data env profile ctx index (data.val[p.start.val]'p.inbounds) ⦃ r =>
       r.1 = .Ok () → p.After r.2 ⦄
 
 /-- Each successful iteration extends the independent syntax and typing
 invariant. Its strictly increasing cursor justifies the whole-body induction. -/
-theorem run.sound (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
+theorem run.sound (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hsteps : Steps data env profile locals ctx index) (st : code.BodyState)
     (hi : State data env profile locals index st)
     (haccepted : run data env profile ctx index st = .ok (.Ok ())) :
@@ -72,8 +72,8 @@ theorem run.sound (data : Slice U8) (env : module.Env) (profile : ValidationProf
 
 /-- If every opcode step preserves the invariant, an accepting run from any `State` proves
 `Validated`. -/
-theorem run.spec (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
+theorem run.spec (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hsteps : Steps data env profile locals ctx index) (st : code.BodyState)
     (hi : State data env profile locals index st) :
     run data env profile ctx index st ⦃ r => r = .Ok () → Validated profile data env locals index ⦄ := by
@@ -88,8 +88,8 @@ theorem run.spec (data : Slice U8) (env : module.Env) (profile : ValidationProfi
 
 /-- If every opcode step preserves the invariant, `code.bodyCore` accepts only `Validated`
 bodies. -/
-theorem public_spec_of_steps (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32)
+theorem public_spec_of_steps (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
     (hsteps : Steps data env profile locals ⟨locals, results⟩ index) :
     code.bodyCore data env locals results index profile ⦃ r =>
       r = .Ok () → Validated profile data env locals index ⦄ := by

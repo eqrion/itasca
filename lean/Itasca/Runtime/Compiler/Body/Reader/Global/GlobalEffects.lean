@@ -10,10 +10,10 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 /-- Successful global reads return the declared global type and append exactly
 that concrete operand to the physical validator stack. -/
-theorem reader_global_get_effect (st out : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem reader_global_get_effect (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (index : U32) (capacity : st.vals.val.length < Usize.max)
     (accepted : code.read_global_get st data env = .ok (.Ok index, out)) :
-    ∃ ty : types.GlobalType, env.global_types.val[index.val]? = some ty ∧
+    ∃ ty : wasm_types.GlobalType, env.global_types.val[index.val]? = some ty ∧
       out.vals.val = st.vals.val ++ [.Val ty.valtype] := by
   obtain ⟨⟨result, state⟩, read, values, controls, post⟩ := WP.spec_imp_exists (code.take_global.spec st data env)
   dsimp only at values controls post
@@ -33,12 +33,12 @@ theorem reader_global_get_effect (st out : code.OpIterState) (data : Slice U8) (
       by simpa [values] using nextValues⟩
 
 /-- A live, concrete global write consumes exactly the global's declared type. -/
-theorem reader_global_set_effect (st out : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem reader_global_set_effect (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (index : U32) (outer segment : List code.StackType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)
     (accepted : code.read_global_set st data env = .ok (.Ok index, out)) :
-    ∃ ty : types.GlobalType, env.global_types.val[index.val]? = some ty ∧ ty.mutability = .Var ∧
+    ∃ ty : wasm_types.GlobalType, env.global_types.val[index.val]? = some ty ∧ ty.mutability = .Var ∧
       st.vals.val = out.vals.val ++ [.Val ty.valtype] := by
   obtain ⟨⟨result, state⟩, read, stateValues, controls, post⟩ := WP.spec_imp_exists (code.take_global.spec st data env)
   dsimp only at stateValues controls post

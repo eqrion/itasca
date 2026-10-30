@@ -61,7 +61,7 @@ def ReadResult (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (s
     SourceMachine.Stateful.Transition state f rest after op (SourceMachine.advance state {f with code:=after,vals:=front++produced} rest)) ∨
   (status=.Err (.Trap .TableOutOfBounds) ∧ fresh=exec ∧ SourceMachine.Stateful.Transition state f rest after op .trap)
 
-private theorem decode_reference_type (type : Itasca.types.ElemType) (word : U64) :
+private theorem decode_reference_type (type : Itasca.wasm_types.ElemType) (word : U64) :
     Compiler.valueType (val_ref (decodeRef type word))=valtype_reftype (decodeElemType type) := by
   cases type <;> unfold decodeRef <;> split <;> rfl
 
@@ -100,7 +100,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     subst operands
     simp only [List.append_nil] at values
     subst front
-    let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
+    let rawType := match type with | .FUNCREF => Itasca.wasm_types.ElemType.FuncRef | .EXTERNREF => .ExternRef
     have typeEq : decodeElemType rawType=type := by cases type <;> rfl
     obtain ⟨out,run,effect⟩ := WP.spec_imp_exists (ref_null_slots exec raw first rawType state f rest after slots position capacity)
     simp only [Compiler.statefulInstruction,runtime.interp.dispatch,run,bind_ok,WP.spec_ok]
@@ -125,7 +125,7 @@ theorem read_dispatch {M P F A : Type} (memory : runtime.platform.MemoryBuffer M
     have valueTyped := typed value (by simp)
     rw [valueType] at valueTyped
     obtain ⟨reference,rfl,referenceTyped⟩ := SourceMachine.Stateful.reference_operand valueTyped
-    let rawType := match type with | .FUNCREF => Itasca.types.ElemType.FuncRef | .EXTERNREF => .ExternRef
+    let rawType := match type with | .FUNCREF => Itasca.wasm_types.ElemType.FuncRef | .EXTERNREF => .ExternRef
     have typeEq : decodeElemType rawType=type := by cases type <;> rfl
     obtain ⟨out,run,success,word,wordEq,written,represented,transition⟩ := WP.spec_imp_exists
       (ref_is_null_value_slots exec raw first rawType state f rest after front reference slots values (by simpa only [typeEq] using valueType) position)

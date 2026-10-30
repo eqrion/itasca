@@ -19,7 +19,7 @@ structure InstanceSyntax (code : CodeInterpretation) (index : Nat)
 def StoreSyntax {M : Type} (code : CodeInterpretation) (s : runtime.store.Store M) : Prop :=
   ∀ index inst, s.instances.val[index]? = some inst → InstanceSyntax code index inst
 
-theorem decode_words_wf (ty : Itasca.types.ValueType) (lo hi : U64) :
+theorem decode_words_wf (ty : Itasca.wasm_types.ValueType) (lo hi : U64) :
     wf_val (decodeWords ty lo hi) := by
   cases ty with
   | I32 =>

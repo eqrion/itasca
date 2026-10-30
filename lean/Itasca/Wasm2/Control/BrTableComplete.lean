@@ -14,8 +14,8 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- Completeness of the suffix check needs only the active frame's bound. -/
-theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (ts : List types.ValueType)
+theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : metadata.Env)
+    (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hbase : (Control.base st).val ≤ st.vals.val.length)
     (hts : Wasm2.resolve env view = some ts) (hfits : Wasm2.Suffix st ts) :
     code.check_suffix st env view = .ok (.Ok ()) := by
@@ -31,7 +31,7 @@ theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : module
 /-- The actual label loop accepts an independent vector whose targets all fit
 the original suffix and have the same arity. No successful-reader premise occurs. -/
 theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (count i : U32) (arity : Option Usize)
+    (env : metadata.Env) (profile : ValidationProfile) (count i : U32) (arity : Option Usize)
     (first : signature.ResultType) (n : Usize)
     (cs : List code.Ctrl) (c : code.Ctrl) (depths : List U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : c.value_stack_base.val ≤ st.core.vals.val.length)
@@ -124,7 +124,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
 /-- The generated common-subtype branch-table premise suffices for each
 concrete target check, while the selector is consumed just once. -/
 theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (front common : List valtype)
     (depths : List U32) (default : U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -150,7 +150,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
   have hs' : c.value_stack_base.val ≤ sc.vals.val.length := by simp [hvc, hb]
   obtain ⟨vdefault, tdefault, _, htd, hsubd⟩ := htargets default (by simp)
   obtain ⟨n, _, hn⟩ := signature.ResultType.len.complete vdefault env tdefault htd
-  have hsub_len {ts : List types.ValueType}
+  have hsub_len {ts : List wasm_types.ValueType}
       (h : Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType))) :
       ts.length = common.length := by
     have := List.Forall₂.length_eq (DeclarativeComplete.result_sub_iff.mp h)

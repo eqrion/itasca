@@ -18,7 +18,7 @@ open Aeneas Aeneas.Std Itasca
 publication bounds before its final table callback. -/
 theorem reader_table_publication_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (coordinates : SourceCoordinates before) (maps : ControlMapPublication before)
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ final.core.pos.val)

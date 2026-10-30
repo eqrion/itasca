@@ -3,7 +3,7 @@ import Itasca.Module.Sections.Type
 /-!
 # Table section parser
 
-Soundness of `module.decode_table_section` and its loop. `TablesAdded` says the environment gains
+Soundness of `metadata.decode_table_section` and its loop. `TablesAdded` says the environment gains
 the decoded table types. The span is a `VecEncoding TableTypeEncoding`, each table has limits
 within the table cap and an element type the profile allows, and Wasm 1.0 admits at most one
 table. Completeness is in `Module/Sections/TableComplete`.
@@ -27,7 +27,7 @@ end Itasca.ModuleBinary
 namespace Itasca.ModuleSections
 
 /-- `result` is `env` with the table types `added` appended and nothing else changed. -/
-def TablesAdded (env result : module.Env) (added : List types.TableType) : Prop :=
+def TablesAdded (env result : metadata.Env) (added : List wasm_types.TableType) : Prop :=
   result = { env with table_types := result.table_types } ∧ result.table_types.val = env.table_types.val ++ added
 
 end Itasca.ModuleSections
@@ -39,17 +39,17 @@ open ModuleBinary ModuleSections
 /-- The table loop adds `count` table types forming a `Rep TableTypeEncoding` span, with valid
 limits and allowed element types. -/
 @[step]
-theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.table_types.val.length ≤ start.val)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_table_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_table_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TablesAdded env r.2 added ∧
           At (Rep TableTypeEncoding) data start added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 32 - 1) ∧ ElemTypeAllowed profile ft.elem) ∧ r.2.table_types.val.length ≤ next.val ∧
           (profile = .Wasm1 → r.2.table_types.val.length ≤ max env.table_types.val.length 1)
       | .Err _ => True ⦄ := by
-  unfold module.decode_table_section_loop
+  unfold metadata.decode_table_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       TablesAdded env s.1 added ∧ At (Rep TableTypeEncoding) data start added s.2.1 ∧
@@ -57,14 +57,14 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
       (profile = .Wasm1 → s.1.table_types.val.length ≤ max env.table_types.val.length 1))
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize, hcount⟩
     dsimp only at hi hlen henv hbytes hvalid hsize hcount
-    unfold module.decode_table_section_loop.body
+    unfold metadata.decode_table_section_loop.body
     dsimp only
     split
     · rename_i hstop
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize, hcount⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_table_type.allowed_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_table_type.allowed_spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -78,7 +78,7 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
         step
         obtain ⟨result, hresult, hmax⟩ := WP.spec_imp_exists
-          (module.check_table_count.spec { current with table_types := r } profile)
+          (metadata.check_table_count.spec { current with table_types := r } profile)
         rw [hresult]
         cases result with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -106,13 +106,13 @@ theorem module.decode_table_section_loop.spec (data : Slice U8) (env : module.En
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, fun _ => Nat.le_max_left _ _⟩
 
-/-- `module.decode_table_section` adds the table types of a `VecEncoding TableTypeEncoding` span,
+/-- `metadata.decode_table_section` adds the table types of a `VecEncoding TableTypeEncoding` span,
 with valid limits and allowed element types. -/
 @[step]
-theorem module.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hsize : env.table_types.val.length ≤ pos.val)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_table_section data pos env profile ⦃ r => match r.1 with
+    metadata.decode_table_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TablesAdded env r.2 added ∧
           At (VecEncoding TableTypeEncoding) data pos added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 32 - 1) ∧ ElemTypeAllowed profile ft.elem) ∧ r.2.table_types.val.length ≤ next.val ∧
@@ -120,15 +120,15 @@ theorem module.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : 
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_table_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_table_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_table_section_loop.spec data env count start hs.2.2 (by omega) profile)
-    simp [module.decode_table_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_table_section_loop.spec data env count start hs.2.2 (by omega) profile)
+    simp [metadata.decode_table_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

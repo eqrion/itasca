@@ -32,28 +32,28 @@ def Form.kind : Form → code.LabelKind
 
 /-- Function parameters live in locals; all nested constructs start with
 their declared block parameters on the operand stack. -/
-def Form.params (form : Form) (ins : List types.ValueType) : List types.ValueType :=
+def Form.params (form : Form) (ins : List wasm_types.ValueType) : List wasm_types.ValueType :=
   match form with
   | .body => []
   | _ => ins
 
 /-- The operands consumed on entry: the block parameters, plus the `i32` condition of `if`. -/
-def Form.args (form : Form) (ins : List types.ValueType) : List valtype :=
+def Form.args (form : Form) (ins : List wasm_types.ValueType) : List valtype :=
   ins.map Translate.valueType ++ match form with
   | .then_ | .else_ _ _ => [.I32]
   | _ => []
 
 /-- The types a branch to the frame carries: the parameters for `loop`, the results otherwise. -/
-def Form.label (form : Form) (ins outs : List types.ValueType) : List valtype :=
+def Form.label (form : Form) (ins outs : List wasm_types.ValueType) : List valtype :=
   (match form with | .loop => ins | _ => outs).map Translate.valueType
 
 /-- The typing context inside a frame: its label pushed onto the enclosing context. -/
-def enter (C : context) (form : Form) (ins outs : List types.ValueType) : context :=
+def enter (C : context) (form : Form) (ins outs : List wasm_types.ValueType) : context :=
   Control.labelContext (form.label ins outs) ++ C
 
 /-- The already completed material of a frame is well typed. Only an `else_` frame has any: its
 `then` arm. -/
-def Form.Valid (C : context) (ins outs : List types.ValueType) : Form → Prop
+def Form.Valid (C : context) (ins outs : List wasm_types.ValueType) : Form → Prop
   | .else_ tokens ops => Emits tokens ops ∧
       Instrs_ok (enter C (.else_ tokens ops) ins outs) ops
         (.mk_functype (.mk_list (ins.map Translate.valueType))
@@ -65,8 +65,8 @@ the instructions, operand stack and tokens read so far. -/
 structure Saved where
   ctrl : code.Ctrl
   bt : signature.BlockType
-  ins : List types.ValueType
-  outs : List types.ValueType
+  ins : List wasm_types.ValueType
+  outs : List wasm_types.ValueType
   form : Form
   ops : List instr
   vals : List code.StackType
@@ -74,7 +74,7 @@ structure Saved where
 
 /-- The static facts about a frame: its control entry matches its form, its signature resolves
 from its block type, and its completed material is valid and emitted by its tokens. -/
-structure Header (env : module.Env) (C : context) (f : Saved) : Prop where
+structure Header (env : metadata.Env) (C : context) (f : Saved) : Prop where
   kind : f.ctrl.kind = f.form.kind
   inputs : resolve env (Wasm2.inputs f.bt) = some f.ins
   outputs : resolve env (Wasm2.outputs f.bt) = some f.outs
@@ -83,11 +83,11 @@ structure Header (env : module.Env) (C : context) (f : Saved) : Prop where
 
 /-- Suspended frames retain typing from their own input vector and remember
 the child arguments removed from the concrete operand stack. -/
-inductive Spine (env : module.Env) (root : context) :
-    List Saved → context → List code.StackType → Form → List types.ValueType → Prop where
+inductive Spine (env : metadata.Env) (root : context) :
+    List Saved → context → List code.StackType → Form → List wasm_types.ValueType → Prop where
   | root (ins) : Spine env root [] root [] .body ins
   | push (parents : List Saved) (C : context) (outer : List code.StackType)
-      (parent : Saved) (child : Form) (ins : List types.ValueType)
+      (parent : Saved) (child : Form) (ins : List wasm_types.ValueType)
       (spine : Spine env root parents C outer parent.form parent.ins)
       (header : Header env C parent)
       (base : parent.ctrl.value_stack_base.val = outer.length)
@@ -100,7 +100,7 @@ inductive Spine (env : module.Env) (root : context) :
 
 /-- The semantic control invariant aligns both physical control vectors with
 a typed syntax zipper, and partitions operands at each frame's actual base. -/
-def Open (env : module.Env) (root : context) (st : code.BodyState)
+def Open (env : metadata.Env) (root : context) (st : code.BodyState)
     (parents : List Saved) (current : Saved) : Prop :=
   ∃ C outer, Spine env root parents C outer current.form current.ins ∧
     Header env C current ∧ current.ctrl.value_stack_base.val = outer.length ∧
@@ -316,7 +316,7 @@ theorem Open.else_ {env root st st' parents current}
 
 /-- A newly opened frame with the given stack base and an empty body. -/
 def Saved.fresh (base : Usize) (form : Form) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) : Saved :=
+    (ins outs : List wasm_types.ValueType) : Saved :=
   { ctrl := ⟨form.kind, bt, base, false⟩, bt, ins, outs, form,
     ops := [], vals := (form.params ins).map code.StackType.Val, tokens := [] }
 
@@ -327,7 +327,7 @@ def Form.Initial (form : Form) : Prop := form = .block ∨ form = .loop ∨ form
 by the form's opening token. -/
 theorem Open.enter_child {env root st st' parents current}
     (h : Open env root st parents current) (hroot : wf_context root)
-    (form : Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
+    (form : Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hi : form.Initial) (hin : resolve env (inputs bt) = some ins)
     (hout : resolve env (outputs bt) = some outs) (base : Usize)
     (remaining : List code.StackType)
@@ -361,8 +361,8 @@ theorem Open.enter_child {env root st st' parents current}
   · simp [trace, Saved.trace, Saved.fresh, List.flatMap_append, List.append_assoc]
 
 /-- The state with a single fresh body frame satisfies `Open`. -/
-theorem Open.start (env : module.Env) (root : context) (hroot : wf_context root)
-    (st : code.BodyState) (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem Open.start (env : metadata.Env) (root : context) (hroot : wf_context root)
+    (st : code.BodyState) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hctrls : st.core.ctrls.val = [(Saved.fresh 0#usize .body bt ins outs).ctrl])
     (hblocks : st.blocks.val = [bt]) (hvals : st.core.vals.val = []) :
@@ -443,7 +443,7 @@ theorem Spine.headers {env root parents C outer form ins}
 
 /-- Physical reverse-depth lookup resolves to exactly the generated label
 vector, including loop parameters and invalid depths. -/
-theorem resolved_labelAt (env : module.Env) (st : code.BodyState) (frames : List Saved)
+theorem resolved_labelAt (env : metadata.Env) (st : code.BodyState) (frames : List Saved)
     (hc : st.core.ctrls.val = frames.map Saved.ctrl)
     (hb : st.blocks.val = frames.map Saved.bt)
     (hh : ∀ f ∈ frames, ∃ C, Header env C f) (depth : Nat) :

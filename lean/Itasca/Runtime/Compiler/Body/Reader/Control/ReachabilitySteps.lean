@@ -14,7 +14,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem ReaderScopeZipperWasm2.initial (bt : signature.BlockType) (base : Usize)
-    (ins outs : List types.ValueType) :
+    (ins outs : List wasm_types.ValueType) :
     ReaderScopeZipperWasm2 [] (SourceScope.initial (outs.map Translate.valueType)) []
       (Wasm2.Frames.Saved.fresh base .body bt ins outs) := by
   refine ⟨.nil, ?_⟩

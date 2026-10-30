@@ -19,27 +19,27 @@ def memArg (arg : code.MemArg) : memarg :=
 /-- A row of the memory opcode table: the value type, the natural alignment exponent, whether it is
 a store, and the instruction built from a memory argument. -/
 structure Operation where
-  ty : types.ValueType
+  ty : wasm_types.ValueType
   naturalAlign : U32
   store : Bool
   op : code.MemArg → instr
 
 /-- A load of the full width of a number type. -/
-def fullLoad (ty : types.ValueType) (nt : numtype) (alignment : U32) : Operation :=
+def fullLoad (ty : wasm_types.ValueType) (nt : numtype) (alignment : U32) : Operation :=
   ⟨ty, alignment, false, fun arg => .LOAD nt none (memArg arg)⟩
 
 /-- A packed integer load of the given bit width and signedness. -/
-def packedLoad (ty : types.ValueType) (it : Inn) (width : Nat)
+def packedLoad (ty : wasm_types.ValueType) (it : Inn) (width : Nat)
     (extension : sx) (alignment : U32) : Operation :=
   ⟨ty, alignment, false, fun arg =>
     .LOAD (numtype_Inn it) (some (.mk_loadop__0 it (.mk_loadop_Inn (.mk_sz width) extension))) (memArg arg)⟩
 
 /-- A store of the full width of a number type. -/
-def fullStore (ty : types.ValueType) (nt : numtype) (alignment : U32) : Operation :=
+def fullStore (ty : wasm_types.ValueType) (nt : numtype) (alignment : U32) : Operation :=
   ⟨ty, alignment, true, fun arg => .STORE nt none (memArg arg)⟩
 
 /-- A packed integer store of the given bit width. -/
-def packedStore (ty : types.ValueType) (it : Inn) (width : Nat) (alignment : U32) : Operation :=
+def packedStore (ty : wasm_types.ValueType) (it : Inn) (width : Nat) (alignment : U32) : Operation :=
   ⟨ty, alignment, true, fun arg => .STORE (numtype_Inn it) (some (.mk_sz width)) (memArg arg)⟩
 
 /-- The load or store opcode table, transcribed from the Wasm 1.0 specification. -/

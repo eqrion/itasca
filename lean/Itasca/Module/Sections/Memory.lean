@@ -3,7 +3,7 @@ import Itasca.Module.Sections.Type
 /-!
 # Memory section parser
 
-Soundness of `module.decode_memory_section` and its loop. `MemoriesAdded` says the environment
+Soundness of `metadata.decode_memory_section` and its loop. `MemoriesAdded` says the environment
 gains the decoded memory types. The span is a `VecEncoding MemTypeEncoding` whose limits are
 within 2^16 pages, and the environment never holds more than one memory unless it already did.
 Completeness is in `Module/Sections/MemoryComplete`.
@@ -26,7 +26,7 @@ end Itasca.ModuleBinary
 namespace Itasca.ModuleSections
 
 /-- `result` is `env` with the memory types `added` appended and nothing else changed. -/
-def MemoriesAdded (env result : module.Env) (added : List types.MemType) : Prop :=
+def MemoriesAdded (env result : metadata.Env) (added : List wasm_types.MemType) : Prop :=
   result = { env with mem_types := result.mem_types } ∧ result.mem_types.val = env.mem_types.val ++ added
 
 end Itasca.ModuleSections
@@ -38,16 +38,16 @@ open ModuleBinary ModuleSections
 /-- The memory loop adds `count` memory types forming a `Rep MemTypeEncoding` span with valid
 limits. -/
 @[step]
-theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_memory_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.mem_types.val.length ≤ start.val) :
-    module.decode_memory_section_loop data env count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_memory_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ MemoriesAdded env r.2 added ∧
           At (Rep MemTypeEncoding) data start added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 16)) ∧ r.2.mem_types.val.length ≤ next.val ∧
           r.2.mem_types.val.length ≤ max env.mem_types.val.length 1
       | .Err _ => True ⦄ := by
-  unfold module.decode_memory_section_loop
+  unfold metadata.decode_memory_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       MemoriesAdded env s.1 added ∧ At (Rep MemTypeEncoding) data start added s.2.1 ∧
@@ -55,14 +55,14 @@ theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.E
       s.1.mem_types.val.length ≤ max env.mem_types.val.length 1)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize, hcount⟩
     dsimp only at hi hlen henv hbytes hvalid hsize hcount
-    unfold module.decode_memory_section_loop.body
+    unfold metadata.decode_memory_section_loop.body
     dsimp only
     split
     · rename_i hstop
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize, hcount⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_mem_type.spec data pos)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_mem_type.spec data pos)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -98,12 +98,12 @@ theorem module.decode_memory_section_loop.spec (data : Slice U8) (env : module.E
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize, Nat.le_max_left _ _⟩
 
-/-- `module.decode_memory_section` adds the memory types of a `VecEncoding MemTypeEncoding` span
+/-- `metadata.decode_memory_section` adds the memory types of a `VecEncoding MemTypeEncoding` span
 with valid limits. -/
 @[step]
-theorem module.decode_memory_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_memory_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hsize : env.mem_types.val.length ≤ pos.val) :
-    module.decode_memory_section data pos env ⦃ r => match r.1 with
+    metadata.decode_memory_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, MemoriesAdded env r.2 added ∧
           At (VecEncoding MemTypeEncoding) data pos added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 16)) ∧ r.2.mem_types.val.length ≤ next.val ∧
@@ -111,15 +111,15 @@ theorem module.decode_memory_section.spec (data : Slice U8) (pos : Usize) (env :
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_memory_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_memory_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_memory_section_loop.spec data env count start hs.2.2 (by omega))
-    simp [module.decode_memory_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_memory_section_loop.spec data env count start hs.2.2 (by omega))
+    simp [metadata.decode_memory_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

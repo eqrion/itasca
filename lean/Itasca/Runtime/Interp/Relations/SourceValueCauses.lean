@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std
 source module and its issued function signatures. The selected signature also
 matches the source function itself; no compiled slot counter appears here. -/
 structure SourceCapacityEnvironment (store : _root_.store) (function : funcinst)
-    (env : Itasca.module.Env) (typeIndex : U32) : Prop where
+    (env : Itasca.metadata.Env) (typeIndex : U32) : Prop where
   types : function.MODULE.TYPES = env.types.val.map Store.decodeFuncType
   functions : Interp.FunctionsMatch store function.MODULE (env.func_types.val.map Store.decodeFuncType)
   signature : ∃ signature, env.types.val[typeIndex.val]? = some signature ∧

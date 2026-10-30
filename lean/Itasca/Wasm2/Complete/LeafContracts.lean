@@ -20,7 +20,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 theorem _root_.Itasca.Profile.EnvironmentWithinLimits.resolve_bound {env} (h : Profile.EnvironmentWithinLimits env)
-    (view : signature.ResultType) (ts : List types.ValueType) (ht : resolve env view = some ts) :
+    (view : signature.ResultType) (ts : List wasm_types.ValueType) (ht : resolve env view = some ts) :
     ts.length ≤ 1000 := by
   cases view with
   | Empty => simp [resolve] at ht; subst ts; simp
@@ -55,7 +55,7 @@ namespace Completeness
 
 /-- Conclusion of a leaf contract: `Wasm2.step` accepts, ends at `next` with output `out`, and
 grows the operand stack by at most 500 per encoded byte. -/
-def LeafResult {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+def LeafResult {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (ctx : code.Context) (index : U32) (opcode : U8)
     (bytes : List U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -65,7 +65,7 @@ private theorem encoding_nonempty {bytes n} (h : Leb128.Encoding bytes n) : 1 �
   obtain ⟨bs, hb, _, _⟩ := h
   cases bs <;> simp_all
 
-theorem Frame.call {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : Profile.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
@@ -93,7 +93,7 @@ theorem Frame.call {st} {profile : ValidationProfile} (f : Frame st) (data : Sli
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : Profile.EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hte : Leb128.Encoding tableBytes table.val)
@@ -134,7 +134,7 @@ theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Fram
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.call_indirect {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (henv : Profile.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hb : Wasm1.BytesAt data st.core.pos (bytes ++ [0#u8]) next)
@@ -148,7 +148,7 @@ theorem Frame.call_indirect {st} {profile : ValidationProfile} (f : Frame st) (d
     next he _ hb (fun _ => rfl) front input output hr ht hcap
   exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Leb128.payload]⟩
 
-theorem Frame.branch {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.branch {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
@@ -172,7 +172,7 @@ theorem Frame.branch {st} {profile : ValidationProfile} (f : Frame st) (data : S
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_if {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.branch_if {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C) (henv : Profile.EnvironmentWithinLimits env)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes depth.val) (hb : Wasm1.BytesAt data st.core.pos bytes next)
@@ -199,7 +199,7 @@ theorem Frame.branch_if {st} {profile : ValidationProfile} (f : Frame st) (data 
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.return_ {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.return_ {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : EnvTranslation.Matches env ctx C)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (next : Usize) (hb : Wasm1.BytesAt data st.core.pos [] next)
@@ -220,7 +220,7 @@ theorem Frame.return_ {st} {profile : ValidationProfile} (f : Frame st) (data : 
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depths : List U32) (default : U32) (count entries final : List U8) (next : Usize)
     (hcount : Leb128.Encoding count depths.length) (hentries : Wasm1.IndicesEncoding depths entries)
@@ -272,7 +272,7 @@ theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (da
 
 /-- All control leaves satisfy the shared byte-weighted execution
 contract directly from independent encodings and generated primitive rules. -/
-theorem control_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem control_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
@@ -297,7 +297,7 @@ theorem control_leaf (data : Slice U8) (env : module.Env) (profile : ValidationP
 
 /-- Reference immediates use ordinary generated typing together with the
 independent declaration condition for `ref.func`. -/
-theorem reference_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem reference_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (henv : Profile.EnvironmentWithinLimits env)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
@@ -353,14 +353,14 @@ theorem reference_leaf (data : Slice U8) (env : module.Env) (profile : Validatio
     exact f.call_indirect_indexed data env ctx index C hmatch henv idx table _ _ next he hte hb
       (fun hp => absurd hp hwasm2) front input output hr ht hcap
 
-private theorem reference_type_injective {a b : types.ElemType}
+private theorem reference_type_injective {a b : wasm_types.ElemType}
     (h : Translate.valueType (ModuleConstants.referenceValueType a) =
       Translate.valueType (ModuleConstants.referenceValueType b)) : a = b := by
   cases a <;> cases b <;> simp_all [ModuleConstants.referenceValueType, Translate.valueType]
 
 /-- Bulk memory and table instructions are complete for the Wasm 2.0
 reserved-byte grammar and the actual segment and table contexts. -/
-theorem bulk_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem bulk_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (subopcode : U32)
     (op : instr) (prefixBytes bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -450,7 +450,7 @@ theorem bulk_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProf
 
 /-- Every plain instruction of the independent Wasm 2.0 grammar has a
 complete actual dispatch contract, including all shared scalar instructions. -/
-theorem plain_leaf (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem plain_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
@@ -468,7 +468,7 @@ theorem plain_leaf (data : Slice U8) (env : module.Env) (profile : ValidationPro
   · exact control_leaf data env profile ctx index henv hroot C st f opcode op bytes next front
       input output hmatch hlabels hcap hcontrol hb hr ht hprofile
 
-theorem leaf_contract (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem leaf_contract (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val) :
     LeafContract data env profile ctx index := by

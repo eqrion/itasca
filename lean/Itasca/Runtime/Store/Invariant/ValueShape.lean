@@ -14,7 +14,7 @@ def ValueInStore {M : Type} (s : runtime.store.Store M) (value : runtime.Value) 
 /-- Encoding an owned typed API value establishes the canonical global-word
 invariant, including reference ownership and scalar high-word zeros. -/
 theorem encode_global_shape {M : Type} (s : runtime.store.Store M)
-    (value : runtime.Value) (ty : Itasca.types.GlobalType)
+    (value : runtime.Value) (ty : Itasca.wasm_types.GlobalType)
     (ht : ty.valtype = Interp.rawType value) (hv : ValueInStore s value) :
     runtime.value.encode value ⦃ words => GlobalShape s {ty, lo := words.1, hi := words.2} ⦄ := by
   cases value <;> simp only [runtime.value.encode, GlobalShape, ht, Interp.rawType]
@@ -42,12 +42,12 @@ theorem encode_global_shape {M : Type} (s : runtime.store.Store M)
       scalar_tac
 
 
-def elementValueType : Itasca.types.ElemType → Itasca.types.ValueType
+def elementValueType : Itasca.wasm_types.ElemType → Itasca.wasm_types.ValueType
   | .FuncRef => .FuncRef
   | .ExternRef => .ExternRef
 
 theorem encode_reference_shape {M : Type} (s : runtime.store.Store M)
-    (value : runtime.Value) (ty : Itasca.types.ElemType)
+    (value : runtime.Value) (ty : Itasca.wasm_types.ElemType)
     (ht : elementValueType ty = Interp.rawType value) (hv : ValueInStore s value) :
     runtime.value.encode value ⦃ words => ReferenceShape s ty words.1 ⦄ := by
   apply WP.spec_mono (encode_global_shape s value {valtype := elementValueType ty, mutability := .Const} ht hv)

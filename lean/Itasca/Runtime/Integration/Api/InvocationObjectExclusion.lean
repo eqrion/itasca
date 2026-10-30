@@ -11,7 +11,7 @@ theorem InitialHostInvocationCause.no_objects {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after (.Exhausted .Objects)) : False := by
   rcases cause with ⟨_,setup⟩ | ⟨impossible,_⟩ | ⟨prepared,p,called,_,_,_,_,failed,_,refused⟩
   · exact setup

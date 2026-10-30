@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Wasm2
 
 /-- Common parameter pop and frame setup in all extracted entry branches. -/
-def enterParams (st : code.BodyState) (env : module.Env)
+def enterParams (st : code.BodyState) (env : metadata.Env)
     (kind : code.LabelKind) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.params bt
@@ -33,7 +33,7 @@ def enterParams (st : code.BodyState) (env : module.Env)
 
 /-- Entry for all forms: `if` first pops its `i32` condition, then every form runs
 `enterParams`. -/
-def enterArgs (st : code.BodyState) (env : module.Env)
+def enterArgs (st : code.BodyState) (env : metadata.Env)
     (kind : code.LabelKind) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   match kind with
@@ -50,19 +50,19 @@ def enterArgs (st : code.BodyState) (env : module.Env)
 
 /-- The validity check of an indexed block type: the index is in range and the function type is
 within the limits. -/
-def checkIndex (env : module.Env) (bt : signature.BlockType) :
+def checkIndex (env : metadata.Env) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) := do
   match bt with
   | .TypeIndex index =>
     let i ← lift (UScalar.cast .Usize index)
     if i >= alloc.vec.Vec.len env.types then .ok (.Err .UnknownType)
     else
-      let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.FuncType) env.types i
+      let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice wasm_types.FuncType) env.types i
       code.check_func_type ft
   | _ => .ok (.Ok ())
 
 /-- The block type checks of `code.enter`: the profile filter, then `checkIndex`. -/
-def checkBlock (env : module.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
+def checkBlock (env : metadata.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) := do
   let r ← code.check_block_type profile bt
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -73,7 +73,7 @@ def checkBlock (env : module.Env) (profile : ValidationProfile) (bt : signature.
       Unit (core.convert.FromSame error.OpError) residual
 
 /-- `code.enter` unfolds to the block type read, `checkBlock` and `enterArgs`. -/
-theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (kind : code.LabelKind) :
     code.enter st data env profile kind = (do
       let r ← signature.read_block_type data st.core.pos
@@ -117,7 +117,7 @@ theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : module.Env)
     all_goals first | contradiction | simp_all [bind_ok]
 
 @[step]
-theorem checkIndex.spec (env : module.Env) (bt : signature.BlockType) :
+theorem checkIndex.spec (env : metadata.Env) (bt : signature.BlockType) :
     checkIndex env bt ⦃ r => r = .Ok () → ∃ ins outs,
       resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
@@ -138,7 +138,7 @@ theorem checkIndex.spec (env : module.Env) (bt : signature.BlockType) :
         by simp [resolve, outputs, hi, hft, r_post], hr⟩
 
 @[step]
-theorem checkBlock.spec (env : module.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
+theorem checkBlock.spec (env : metadata.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
     checkBlock env profile bt ⦃ r => r = .Ok () → (profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) ∧
       ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
@@ -154,7 +154,7 @@ theorem checkBlock.spec (env : module.Env) (profile : ValidationProfile) (bt : s
 
 /-- Exact semantic effect of opening a structured frame. -/
 def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType) : Prop :=
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType) : Prop :=
   ∃ remaining base,
     remaining.length ≤ segment.length ∧ base.val = outer.length + remaining.length ∧
     (∀ ts, Sequence.Realizes (Control.polymorphic st.core) remaining ts →
@@ -164,8 +164,8 @@ def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.Blo
     s.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val
 
 /-- Parameter popping preserves the suspended parent's input signature. -/
-theorem enterParams.sound (st : code.BodyState) (env : module.Env)
-    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem enterParams.sound (st : code.BodyState) (env : metadata.Env)
+    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
@@ -200,8 +200,8 @@ theorem enterParams.sound (st : code.BodyState) (env : module.Env)
     · simpa [he, hv1, hv'] using hvs
   · step*
 
-theorem enterArgs.sound (st : code.BodyState) (env : module.Env)
-    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem enterArgs.sound (st : code.BodyState) (env : metadata.Env)
+    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
@@ -243,7 +243,7 @@ namespace Itasca
 
 /-- A successful `code.enter` decodes a block type whose signature resolves within the limits and
 opens the frame with effect `EnterEffect`. -/
-theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)

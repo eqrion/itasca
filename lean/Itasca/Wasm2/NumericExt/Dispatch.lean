@@ -62,7 +62,7 @@ namespace Itasca.Wasm2
 
 /-- `code.step_extended` observes local types but never function results, like `code.step`. -/
 theorem extended_context {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (opcode : U8) (v : V)
     (hscalar : opcode.val ∉ controlOpcodes) (hlocals : ctx.locals = ctx'.locals) :
     code.step_extended visitor st data env ctx opcode v =
@@ -76,7 +76,7 @@ namespace Itasca
 
 /-- Sign extensions perform the independently specified unary operation. -/
 theorem code.step_extended.sign {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (op : Numeric.Operation) (v : V)
     (hmap : Wasm2.NumericExtensions.signMeaning opcode = some op) :
     code.step_extended visitor st data env ctx opcode v =
@@ -98,7 +98,7 @@ theorem code.step_extended.sign {V : Type} (visitor : code.OpVisitor V)
 
 /-- Opcodes that are neither sign extensions nor the `0xfc` prefix are handled by `code.step`. -/
 theorem code.step_extended.base {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (v : V)
     (hmap : Wasm2.NumericExtensions.signMeaning opcode = none)
     (hprefix : opcode ≠ code.OP_MISC_PREFIX) :
@@ -134,7 +134,7 @@ namespace Itasca
 
 /-- `Wasm2.prefixedStep` is an exact factorization of the `0xfc` arm of extracted dispatch. -/
 theorem code.step_extended.prefixed {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (v : V) :
     code.step_extended visitor st data env ctx 0xFC#u8 v =
       Wasm2.prefixedStep visitor st data v := by

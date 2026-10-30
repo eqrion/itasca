@@ -17,16 +17,16 @@ namespace Itasca.ModuleTrace
 /-- An event observed by a custom section hook. It carries the reported section, with its offsets
 in the component byte region. -/
 inductive Event where
-  | custom (chunk : types.CustomSection)
+  | custom (chunk : wasm_types.CustomSection)
 
 /-- A successful `on_custom_section` call appends the exact reported section to the observation. -/
-def RecordsCustom {V : Type} (visitor : module.ModuleVisitor V) (observe : V → List Event) : Prop :=
+def RecordsCustom {V : Type} (visitor : metadata.ModuleVisitor V) (observe : V → List Event) : Prop :=
   ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') →
     observe v' = observe v ++ [.custom chunk]
 
 /-- The reported `chunk` is the custom section from `start` to `finish` under independent framing,
 including its UTF-8 name and the payload interval that immediately follows the encoded name. -/
-def CustomAt (data : Slice U8) (start finish : Usize) (chunk : types.CustomSection) : Prop :=
+def CustomAt (data : Slice U8) (start finish : Usize) (chunk : wasm_types.CustomSection) : Prop :=
   ∃ first nm, ModuleBinary.SectionHeader data start 0#u8 first finish ∧
     ModuleBinary.At ModuleBinary.NameEncoding data first nm chunk.payload_start ∧
     chunk.payload_start.val ≤ finish.val ∧ chunk.payload_end = finish ∧ chunk.name_len.val = nm.length

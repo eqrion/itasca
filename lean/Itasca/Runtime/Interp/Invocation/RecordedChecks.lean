@@ -17,7 +17,7 @@ theorem recorded_invoke_with_checked_outcome {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value)
     (results : alloc.vec.Vec runtime.Value) (prior : List HostEvent)
     (owner : address.store = store.id)
     (hf : store.funcs.val[address.index.val]? = some function)

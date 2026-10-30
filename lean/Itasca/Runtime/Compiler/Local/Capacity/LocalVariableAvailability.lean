@@ -9,7 +9,7 @@ theorem lower_local_get_live_available {A : Type} (ops : runtime.platform.Alloc 
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (demand : CallbackDemand compiler state bound)
-    (before : List valtype) (index : U32) (ty : Itasca.types.ValueType)
+    (before : List valtype) (index : U32) (ty : Itasca.wasm_types.ValueType)
     (layout : CompilerLayout compiler before) (reachable : compiler.reachable = true)
     (found : compiler.function.locals.val[index.val]? = some ty)
  :
@@ -29,7 +29,7 @@ theorem lower_local_get_live_available {A : Type} (ops : runtime.platform.Alloc 
       let i ← lift (UScalar.cast .Usize index)
       let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
       let j ← lift (UScalar.cast .Usize index)
-      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
       let count ← runtime.value.width rawType
       let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
       let branch ← core.result.Result.Insts.CoreOpsTry.branch result
@@ -66,7 +66,7 @@ theorem lower_local_write_live_available {A : Type} (ops : runtime.platform.Allo
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (demand : CallbackDemand compiler state bound)
-    (before : List valtype) (index : U32) (ty : Itasca.types.ValueType) (tee : Bool)
+    (before : List valtype) (index : U32) (ty : Itasca.wasm_types.ValueType) (tee : Bool)
     (layout : CompilerLayout compiler (before ++ [Itasca.Translate.valueType ty]))
     (reachable : compiler.reachable = true)
     (found : compiler.function.locals.val[index.val]? = some ty)
@@ -92,7 +92,7 @@ theorem lower_local_write_live_available {A : Type} (ops : runtime.platform.Allo
       match branch with
       | .Continue src =>
         let j ← lift (UScalar.cast .Usize index)
-        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.ValueType) compiler.function.locals j
+        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
         let count ← runtime.value.width rawType
         let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
         let branch ← core.result.Result.Insts.CoreOpsTry.branch result
@@ -136,7 +136,7 @@ theorem compiler_local_variable_available {A : Type} (ops : runtime.platform.All
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
     (demand : CallbackDemand compiler state bound) (before : List valtype)
-    (index : U32) (ty : Itasca.types.ValueType) (write tee : Bool)
+    (index : U32) (ty : Itasca.wasm_types.ValueType) (write tee : Bool)
     (layout : compiler.reachable = true → CompilerLayout compiler
       (if write then before ++ [Itasca.Translate.valueType ty] else before))
     (found : compiler.reachable = true → compiler.function.locals.val[index.val]? = some ty) :

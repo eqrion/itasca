@@ -38,7 +38,7 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
   have hcanonical : StreamSource.CanonicalAvailable stream.SliceSource.Insts.ItascaStreamSource
       regions data :=
     ⟨regions, ⟨first, last, hsplit, henvironment, hcode, htail⟩, stream.SliceSource.available regions⟩
-  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists module.Env.new.spec
+  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨env, after, run, hrun, hmatches, hmetadata, _⟩ := stream.validate_streaming.complete
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } StreamSync.Queued StreamSync.accepts

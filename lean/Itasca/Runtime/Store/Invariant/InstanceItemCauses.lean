@@ -70,7 +70,7 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
     dsimp only at bound invariant ⊢
     unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+      Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have hmore : index.val < module.module.env.elements.val.length := by simpa [alloc.vec.Vec.deref] using more

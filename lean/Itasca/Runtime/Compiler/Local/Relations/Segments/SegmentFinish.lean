@@ -16,7 +16,7 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module : runtime.compiler.ExecutableModule)
     (budget afterBudget : runtime.compiler.Budget A)
     (before after : runtime.bytecode.CompiledFunction) (index : Usize)
-    (segment : Itasca.module.Element)
+    (segment : Itasca.metadata.Element)
     (found : module.module.env.elements.val[index.val]? = some segment)
     (valid : ∀ table offset, segment.mode = .Active table offset →
       Itasca.ModuleConstants.Valid module.module.env offset .I32)
@@ -30,7 +30,7 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_element at success
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at success
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   cases mode : segment.mode with
   | Passive =>
@@ -359,7 +359,7 @@ theorem element_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop3.body at body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
@@ -445,7 +445,7 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop4.body at body
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok] at body
+      Itasca.metadata.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body

@@ -19,7 +19,7 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (table type position : Nat) (after : List instr)
     (front args : List val) (params results : List valtype) (pc : U32) (base : Usize)
-    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64) (signature : Itasca.types.FuncType)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (host : U64) (signature : Itasca.wasm_types.FuncType)
     (functionAt : store.funcs.val[address.index.val]?=some function) (hostCode : function.code=.Host host)
     (signatureAt : store.types.val[function.signature.val]?=some signature)
     (signatureTypes : signature.params.val.map sourceType=params ∧ signature.results.val.map sourceType=results)

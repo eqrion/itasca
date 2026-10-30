@@ -14,8 +14,8 @@ namespace Itasca
 
 /-- A typed branch with an independent immediate always accepts. -/
 theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
-    (ts : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
+    (ts : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
     (hb : c.value_stack_base.val = outer.length)
@@ -43,8 +43,8 @@ theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
 /-- A typed conditional branch restores every target operand, subject only to
 room for its resolved signature. -/
 theorem code.branch.conditional_complete (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
-    (ts : List types.ValueType) (outer segment : List code.StackType) (before : List valtype)
+    (env : metadata.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
+    (ts : List wasm_types.ValueType) (outer segment : List code.StackType) (before : List valtype)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hd : Leb128.Decoded data st.core.pos depth next)

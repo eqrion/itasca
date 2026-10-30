@@ -16,7 +16,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 theorem eval_const_effect (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Compiler.InitializerCode code expr ty)
@@ -50,7 +50,7 @@ structure InitializerBindings {M : Type} (store : runtime.store.Store M)
   funcs : ∀ address ∈ inst.funcs.val, address.index.val < store.funcs.length
   globals : ∀ global ∈ store.globals.val, GlobalShape store global
 
-def initializerGlobal (ty : Itasca.types.ValueType) (words : List U64) : runtime.store.GlobalInst :=
+def initializerGlobal (ty : Itasca.wasm_types.ValueType) (words : List U64) : runtime.store.GlobalInst :=
   { ty := { mutability := .Const, valtype := ty },
     lo := (words[0]?).getD 0#u64, hi := (words[1]?).getD 0#u64 }
 
@@ -92,7 +92,7 @@ safely pass through the generic global-definition boundary. -/
 theorem eval_const_owned (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Compiler.InitializerCode code expr ty)

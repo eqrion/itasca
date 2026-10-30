@@ -9,7 +9,7 @@ open Aeneas Aeneas.Std Itasca
 theorem compiler_custom_preserves {A : Type} (ops : runtime.platform.Alloc A)
     (P : runtime.compiler.CompileScheduler A → Prop) :
     ModuleTail.PreservesInvariant
-      (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).moduleModuleVisitorInst P := by
+      (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).metadataModuleVisitorInst P := by
   intro before chunk after accepted prior
   have same : before = after := congrArg Prod.snd (Result.ok_injective accepted)
   simpa only [← same] using prior
@@ -22,8 +22,8 @@ theorem compiler_driver_decoded {A S : Type} (ops : runtime.platform.Alloc A)
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
       id state before after env profile) : run.decoded = before := by
   have region : run.region = before := (Result.ok_injective run.region_call).symm
-  have decoded := module.validate_env_with.accepted_invariant
-    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).moduleModuleVisitorInst
+  have decoded := metadata.validate_env_with.accepted_invariant
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).metadataModuleVisitorInst
     (fun scheduler => scheduler = before) (compiler_custom_preserves ops _) run.environment run.region env
     run.environmentLength run.decoded run.decode_environment region
   exact decoded
@@ -40,8 +40,8 @@ theorem compiler_driver_after_submission {A S : Type} (ops : runtime.platform.Al
     have same := congrArg Prod.snd (Result.ok_injective run.end_call)
     exact same.symm
   have region : run.region = run.ended := (Result.ok_injective run.region_call).symm
-  have decoded := module.validate_tail_with.accepted_invariant
-    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).moduleModuleVisitorInst
+  have decoded := metadata.validate_tail_with.accepted_invariant
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).metadataModuleVisitorInst
     (fun scheduler => scheduler = run.region) (compiler_custom_preserves ops _) run.tailBytes 0#usize env
     run.region run.tail run.decodedTail run.decode_tail rfl
   have ready : run.ready = {run.decodedTail with tail := some run.tail} := by

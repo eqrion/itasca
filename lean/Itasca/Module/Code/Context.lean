@@ -19,7 +19,7 @@ namespace Itasca.CodeEntry
 
 /-- The context `C` has the module's types, functions, globals, tables and memories translated from
 `env`, with empty local and label spaces. -/
-structure ModuleContext (env : module.Env) (C : context) : Prop where
+structure ModuleContext (env : metadata.Env) (C : context) : Prop where
   types : C.TYPES = env.types.val.map EnvTranslation.funcType
   funcs : C.FUNCS = env.func_types.val.map EnvTranslation.funcType
   globals : C.GLOBALS = env.global_types.val.map Translate.globalType
@@ -30,13 +30,13 @@ structure ModuleContext (env : module.Env) (C : context) : Prop where
 
 /-- The final element and data spaces of `C` extend those available while validating a body. The
 data count section supplies the body-visible data space. -/
-structure SegmentContext (env : module.Env) (C : context) : Prop where
+structure SegmentContext (env : metadata.Env) (C : context) : Prop where
   elems : (EnvTranslation.elementTypes env).IsPrefix C.ELEMS
   datas : (EnvTranslation.dataTypes env).IsPrefix C.DATAS
 
 /-- The typing context of a function body: the module's index spaces, the parameters followed by
 the declared locals, and a single label and the return type both given by the results. -/
-def bodyContext (env : module.Env) (params declared results : List types.ValueType) : context :=
+def bodyContext (env : metadata.Env) (params declared results : List wasm_types.ValueType) : context :=
   { TYPES := env.types.val.map EnvTranslation.funcType
     FUNCS := env.func_types.val.map EnvTranslation.funcType
     GLOBALS := env.global_types.val.map Translate.globalType
@@ -49,13 +49,13 @@ def bodyContext (env : module.Env) (params declared results : List types.ValueTy
     RETURN := some (.mk_list (results.map Translate.valueType)) }
 
 /-- The type `[] -> results` that a body must have. -/
-def instructionType (ft : types.FuncType) : functype :=
+def instructionType (ft : wasm_types.FuncType) : functype :=
   .mk_functype (.mk_list []) (.mk_list (ft.results.val.map Translate.valueType))
 
 /-- The code entry has a function type in the environment's type table. Its body is typed in
 `bodyContext` with the parameters followed by the declared locals, is admitted by the profile, uses
 allowed local types, and mentions only declared function references. -/
-structure Typed (env : module.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
+structure Typed (env : metadata.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
@@ -96,7 +96,7 @@ theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
 
 /-- A body typed in `bodyContext` gives the generated function typing `Func_ok` in any full module
 context `C` whose segment spaces extend those of the body. -/
-theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
+theorem typed_func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     (hindex : typeIdx.val < env.types.val.length)
     (htyped : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
       entry.declared env.types.val[typeIdx.val].results.val) entry.body
@@ -142,7 +142,7 @@ theorem typed_func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.C
     Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
 
 /-- A `Typed` certificate in either profile gives `Func_ok` in the full module context. -/
-theorem Typed.func_ok {env : module.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
+theorem Typed.func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C)
     (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=

@@ -67,14 +67,14 @@ theorem poll_tail (state after : stream.SyncVisitor)
   | none => rw [poll_none state he] at h; simp only [Result.ok.injEq, Prod.mk.injEq] at h; rw [← h.2]
   | some batch => rw [poll_some state batch he] at h; simp only [Result.ok.injEq, Prod.mk.injEq] at h; rw [← h.2]
 
-theorem tail_ready (state : stream.SyncVisitor) (tail : module.Tail) :
+theorem tail_ready (state : stream.SyncVisitor) (tail : metadata.Tail) :
     (sync).tail_ready state tail = .ok (.Ok (), { state with tail := some tail }) := rfl
 
-theorem environment_ready (state : stream.SyncVisitor) (env : module.Env) :
+theorem environment_ready (state : stream.SyncVisitor) (env : metadata.Env) :
     (sync).environment_ready state env =
       .ok (.Ok { batch_bytes := 25000#usize, max_batches := 1#usize }, state) := rfl
 
-theorem custom_accepts : ModuleTail.HooksAccept (sync).moduleModuleVisitorInst := by
+theorem custom_accepts : ModuleTail.HooksAccept (sync).metadataModuleVisitorInst := by
   intro state chunk
   exact ⟨state, rfl⟩
 
@@ -102,8 +102,8 @@ theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sy
   constructor
   · intro id history state chunk after hcall
     have he : state = after := by
-      simpa [stream.SyncVisitor.Insts.ItascaModuleModuleVisitor,
-        module.ModuleVisitor.on_custom_section.default] using hcall
+      simpa [stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor,
+        metadata.ModuleVisitor.on_custom_section.default] using hcall
     subst after
     exact fun h => h
   · intro id history state region after hs hcall

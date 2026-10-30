@@ -50,7 +50,7 @@ This connects the runtime's exact literal/global/reference words to Eval_expr,
 without a source execution premise. -/
 theorem initializer_resolution_source_in_state {M : Type}
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
-    (expression : types.ConstExpr) (ty : types.ValueType) (words : List U64)
+    (expression : wasm_types.ConstExpr) (ty : wasm_types.ValueType) (words : List U64)
     (resolved : Interp.InitializerResolution store inst expression ty words)
     (sourceStore : _root_.store) (sourceInstance : moduleinst)
     (functions : sourceInstance.FUNCS = inst.funcs.val.map (fun address => address.index.val))
@@ -141,7 +141,7 @@ theorem initializer_resolution_source_in_state {M : Type}
 /-- The ordinary runtime state is a direct instance of the source-state bridge. -/
 theorem initializer_resolution_source {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
-    (expression : types.ConstExpr) (ty : types.ValueType) (words : List U64)
+    (expression : wasm_types.ConstExpr) (ty : wasm_types.ValueType) (words : List U64)
     (resolved : Interp.InitializerResolution store inst expression ty words)
     (storeWf : wf_store (decodeStore view code store))
     (frameWf : wf_frame ⟨[], decodeInstance store inst⟩) :

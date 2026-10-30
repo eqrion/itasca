@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std
 
 private theorem offset_vector_width {env expr}
     (typed : Itasca.ModuleConstants.Valid env expr .I32) :
-    ∀ lo hi, expr = .V128 lo hi → Itasca.types.ValueType.I32 = .V128 := by
+    ∀ lo hi, expr = .V128 lo hi → Itasca.wasm_types.ValueType.I32 = .V128 := by
   intro lo hi same
   subst expr
   cases typed

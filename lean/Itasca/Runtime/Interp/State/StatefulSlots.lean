@@ -110,7 +110,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 
 theorem stateful_ref_null_effect (exec : runtime.interp.Execution) (base : Usize) (dst : U32)
-    (type : Itasca.types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
+    (type : Itasca.wasm_types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (slotBound : base.val+dst.val < exec.slots.length) :
     runtime.interp.execute_ref_null exec base dst ⦃ out =>
       out.1 = .Ok () ∧ SlotsEffect exec out.2 (exec.slots.val.set (base.val+dst.val) 0#u64) ∧
@@ -143,7 +143,7 @@ theorem stateful_ref_func_effect (exec : runtime.interp.Execution) (store : runt
   simp [SourceMachine.Stateful.evaluate,SourceMachine.Stateful.refFunc,moduleEq,decodeInstance,List.getElem?_map,mapped]
 
 theorem stateful_ref_is_null_effect (exec : runtime.interp.Execution) (base : Usize) (dst src : U32)
-    (type : Itasca.types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (type : Itasca.wasm_types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front : List val)
     (values : f.vals = front++[val_ref (decodeRef type exec.slots.val[base.val+src.val]!)])
     (sourceBound : base.val+src.val < exec.slots.length) (destinationBound : base.val+dst.val < exec.slots.length) :
@@ -201,7 +201,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 
 theorem ref_null_slots (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (dst : U32)
-    (type : Itasca.types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
+    (type : Itasca.wasm_types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (slots : FrameSlots exec raw f)
     (position : dst.val = Compiler.slots (f.locals.map Compiler.valueType)+Compiler.slots (f.vals.map Compiler.valueType))
     (bound : raw.base.val+dst.val < exec.slots.length) :
@@ -330,7 +330,7 @@ theorem table_get_slots (view : M → Slice U8) (code : CodeInterpretation)
     exact effect
 
 theorem ref_is_null_slots (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (dst : U32)
-    (type : Itasca.types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (type : Itasca.wasm_types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front : List val)
     (slots : FrameSlots exec raw f)
     (values : f.vals=front++[val_ref (decodeRef type exec.slots.val[raw.base.val+dst.val]!)])

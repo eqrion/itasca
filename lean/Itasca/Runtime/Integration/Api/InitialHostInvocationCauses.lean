@@ -12,7 +12,7 @@ def InitialHostInvocationCause {M P F A : Type}
     (view : M → Slice U8) (code : Store.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
     (ambient : frame) (address : runtime.FuncAddr) (identity : U64)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (after : runtime.store.Store M) (error : runtime.ExecError) : Prop :=
   (after=store ∧ InvocationResourceCause allocator exec store signature results error) ∨
   (error=.Exhausted .Allocation ∧ ∃ values,
@@ -36,7 +36,7 @@ theorem InitialHostInvocationCause.source_values {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after (.Exhausted .Values)) :
     store.limits.max_values.val<signatureWords (Store.decodeFuncType signature) := by
   rcases cause with ⟨same,cause⟩ | ⟨impossible,_⟩ | ⟨prepared,p,called,_,_,_,_,failed,_,cause⟩
@@ -53,7 +53,7 @@ theorem InitialHostInvocationCause.source_allocation {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after (.Exhausted .Allocation)) :
     HostSignatureAllocation allocator (signature.params.val.map sourceType) (signature.results.val.map sourceType) 0 := by
   rcases cause with ⟨same,cause⟩ | ⟨_,values,typed,source,n,amount,refused⟩ | ⟨prepared,p,called,_,_,_,_,failed,_,cause⟩
@@ -79,7 +79,7 @@ theorem InitialHostInvocationCause.interrupted {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after .Terminated) :
     ∃ p next, hooks.interrupt p=.ok (.Terminate,next) := by
   rcases cause with ⟨same,impossible⟩ | ⟨impossible,_⟩ | ⟨prepared,p,called,_,_,_,_,failed,_,cause⟩
@@ -93,7 +93,7 @@ theorem InitialHostInvocationCause.host_overflow {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after (.Exhausted .CallStack)) :
     ∃ p arguments defaults host returned,
       hooks.call_host p store identity arguments defaults=.ok (.Err .StackOverflow,host,after,returned) := by

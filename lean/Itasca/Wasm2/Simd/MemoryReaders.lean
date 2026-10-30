@@ -34,16 +34,16 @@ theorem const_fixed (st : code.OpIterState) (data : Slice U8) :
     carryFixed, readFixed, Std.bind_assoc]
 
 /-- Operand types of a full-width `v128` load (an address) or store (a vector and an address). -/
-def fullMemoryInputs (store : Bool) : List types.ValueType :=
+def fullMemoryInputs (store : Bool) : List wasm_types.ValueType :=
   if store then [.V128, .I32] else [.I32]
 
 /-- Result type of a `v128` memory operation: nothing for stores, a vector otherwise. -/
-def memoryOutput (store : Bool) : Option types.ValueType :=
+def memoryOutput (store : Bool) : Option wasm_types.ValueType :=
   if store then none else some .V128
 
 /-- Reads a memory argument, checks that memory zero exists and the alignment bound, then applies
 the operand effect of a full-width `v128` load or store. -/
-def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (align : U32) (store : Bool) :
     Result (core.result.Result code.MemArg error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_memarg st data
@@ -55,7 +55,7 @@ def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : module.Env
     | .Err e => .ok (.Err e, s)
     | .Ok _ => carryFixed arg s (fullMemoryInputs store) (memoryOutput store)
 
-theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (align : U32) (store : Bool) :
     (if store then code.read_store st data env .V128 align else code.read_load st data env .V128 align) =
       fullMemoryReader st data env align store := by
@@ -86,7 +86,7 @@ theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : modul
 
 /-- Reads a memory argument and a lane index, checks memory and alignment, then applies the
 operand effect of a `v128` load or store lane operation. -/
-def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (align : U32) (store : Bool) (count : U8) :
     Result (core.result.Result (code.MemArg × U8) error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_memarg st data
@@ -102,7 +102,7 @@ def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : module.Env
       | .Err e => .ok (.Err e, s)
       | .Ok _ => carryFixed (arg, lane) s [.V128, .I32] (memoryOutput store)
 
-theorem memory_lane_fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem memory_lane_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (align : U32) (store : Bool) (count : U8) :
     code.read_simd_memory_lane st data env align store count = memoryLaneReader st data env align store count := by
   simp only [code.read_simd_memory_lane, memoryLaneReader]
@@ -169,7 +169,7 @@ theorem MemoryOperation.conditions (op : MemoryOperation) (C : context)
   exact ⟨hp.1, (pow_le_pow_iff_right₀ (a := (2 : Rat)) (by norm_num)).mp hp.2.1, hp.2.2⟩
 
 theorem MemoryOperation.typed_runtime (op : MemoryOperation) (C : context)
-    (env : module.Env) (ctx : code.Context) (hC : wf_context C)
+    (env : metadata.Env) (ctx : code.Context) (hC : wf_context C)
     (hm : EnvTranslation.Matches env ctx C) (arg : code.MemArg) (lane : U8)
     (hmem : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ op.naturalAlign)
     (hl : op.laneCount ≠ 0 → lane.val < op.laneCount) :

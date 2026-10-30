@@ -15,7 +15,7 @@ constructed from source demand. This retains the executable prefix and all
 auxiliary ledgers, together with the independently proved resource effect. -/
 theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial compiler : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (st out : code.BodyState)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial compiler
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)

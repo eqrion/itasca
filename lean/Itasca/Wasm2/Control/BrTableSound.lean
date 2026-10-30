@@ -17,13 +17,13 @@ namespace Itasca.Wasm2
 
 /-- Every target is checked against the original operand suffix. Only arities
 must agree; unreachable bottom operands may support different concrete types. -/
-def TableTargets (env : module.Env) (st : code.BodyState) (depths : List U32)
+def TableTargets (env : metadata.Env) (st : code.BodyState) (depths : List U32)
     (arity : Option Usize) : Prop :=
   ∀ d ∈ depths, ∃ view ts n, labelAt st d.val = some view ∧ resolve env view = some ts ∧
     arity = some n ∧ n.val = ts.length ∧ Suffix st.core ts
 
 theorem TableTargets.snoc {env st depths arity} (h : TableTargets env st depths arity)
-    (d : U32) (view : signature.ResultType) (ts : List types.ValueType) (n : Usize)
+    (d : U32) (view : signature.ResultType) (ts : List wasm_types.ValueType) (n : Usize)
     (hl : labelAt st d.val = some view) (hts : resolve env view = some ts)
     (hn : n.val = ts.length) (hs : Suffix st.core ts)
     (ha : arity = none ∨ arity = some n) : TableTargets env st (depths ++ [d]) (some n) := by
@@ -40,13 +40,13 @@ theorem TableTargets.snoc {env st depths arity} (h : TableTargets env st depths 
     exact ⟨view, ts, n, hl, hts, rfl, hn, hs⟩
 
 /-- Every target resolves to the types of `first`, as Wasm 1.0 requires. -/
-def SameTargets (env : module.Env) (st : code.BodyState) (depths : List U32)
+def SameTargets (env : metadata.Env) (st : code.BodyState) (depths : List U32)
     (first : signature.ResultType) : Prop :=
   ∀ d ∈ depths, ∃ view us, labelAt st d.val = some view ∧ resolve env first = some us ∧
     resolve env view = some us
 
 theorem SameTargets.snoc {env st depths first} (h : SameTargets env st depths first)
-    (d : U32) (view : signature.ResultType) (us : List types.ValueType)
+    (d : U32) (view : signature.ResultType) (us : List wasm_types.ValueType)
     (hl : labelAt st d.val = some view) (hf : resolve env first = some us)
     (hv : resolve env view = some us) : SameTargets env st (depths ++ [d]) first := by
   intro x hx
@@ -56,7 +56,7 @@ theorem SameTargets.snoc {env st depths first} (h : SameTargets env st depths fi
     subst x
     exact ⟨view, us, hl, hf, hv⟩
 
-private def TableLoopInv (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+private def TableLoopInv (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (initial : code.BodyState) (count : U32)
     (p : code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize ×
       signature.ResultType × U32) : Prop :=
@@ -72,7 +72,7 @@ namespace Itasca
 
 /-- One table iteration after a successful label read, length and suffix check either finishes at
 the default or continues with the arity fixed. -/
-theorem Wasm2.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem Wasm2.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (count i : U32) (arity : Option Usize)
     (depth : U32) (first view : signature.ResultType) (n : Usize)
     (hr : code.read_label_info st data = .ok (.Ok (depth, view), s))
@@ -96,7 +96,7 @@ theorem Wasm2.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice
 /-- Successful table iteration records all labels, including the default,
 and certifies the unchanged operand suffix against every target. -/
 theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (count : U32) (cs : List code.Ctrl)
+    (env : metadata.Env) (profile : ValidationProfile) (count : U32) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : Control.Shape st.core) :
     Wasm2.branchTableLoop st.core data env profile count none .Empty 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
@@ -316,7 +316,7 @@ namespace Itasca
 /-- Every successful branch table produces the generated common-subtype rule,
 including tables whose target types differ at bottom operands. -/
 theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hvals : st.core.vals.val = outer ++ segment)
     (hbase : c.value_stack_base.val = outer.length)

@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Sequence
 
-private theorem accepts_concrete (rs : List types.ValueType) (ts : List valtype) :
+private theorem accepts_concrete (rs : List wasm_types.ValueType) (ts : List valtype) :
     List.Forall₂ Sequence.Accepts (rs.map code.StackType.Val) ts ↔
       ts = rs.map Translate.valueType := by
   induction rs generalizing ts with
@@ -22,7 +22,7 @@ private theorem accepts_concrete (rs : List types.ValueType) (ts : List valtype)
 /-- A realization of a stack with concrete operands appended is a realization of the stack
 followed by those operands' types. -/
 theorem realizes_append_concrete (poly : Bool) (vals : List code.StackType)
-    (rs : List types.ValueType) (ts : List valtype) :
+    (rs : List wasm_types.ValueType) (ts : List valtype) :
     Sequence.Realizes poly (vals ++ rs.map code.StackType.Val) ts ↔
       ∃ pre, Sequence.Realizes poly vals pre ∧ ts = pre ++ rs.map Translate.valueType := by
   constructor

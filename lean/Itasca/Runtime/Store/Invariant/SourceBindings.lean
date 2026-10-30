@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 
-theorem decode_func_type_source (ty : types.FuncType) : decodeFuncType ty = EnvTranslation.funcType ty := by
+theorem decode_func_type_source (ty : wasm_types.FuncType) : decodeFuncType ty = EnvTranslation.funcType ty := by
   have same : Interp.sourceType = Translate.valueType := by funext t; cases t <;> rfl
   simp only [decodeFuncType, EnvTranslation.funcType, same]
 

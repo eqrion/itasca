@@ -27,12 +27,12 @@ theorem witness_typed_steps {V : Type} {visitor : code.OpVisitor V}
 /-- Successful real entry validation exposes both the exact start callback and
 the typed instruction steps used to preserve the compiler's source relation. -/
 theorem entry_typed_steps {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (start : Usize) (env : module.Env) (index finish : Usize)
+    (data : Slice U8) (start : Usize) (env : metadata.Env) (index finish : Usize)
     (before after : V) (bounds : CodeEntry.Bounds env) (profile : ValidationProfile)
-    (accepted : module.validate_code_entry_with visitor data start env index profile before = .ok (.Ok finish, after)) :
+    (accepted : metadata.validate_code_entry_with visitor data start env index profile before = .ok (.Ok finish, after)) :
     ∃ w : CodeEntry.Witness visitor data env index start finish before after profile,
       TypedRunWasm2 visitor w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) w.startedState after := by
-  obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile visitor data start env index finish before after bounds profile accepted
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile visitor data start env index finish before after bounds profile accepted
   exact ⟨w, witness_typed_steps w⟩
 
 /-- The same typed run is obtained from the issued batch's actual successful

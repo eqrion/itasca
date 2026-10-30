@@ -16,8 +16,8 @@ namespace Itasca.Wasm2
 
 /-- Returning checks the root function's complete result vector, even within
 nested blocks, and erases only the current active stack segment. -/
-theorem returnStep.prefix (st : code.BodyState) (env : module.Env) (index : U32)
-    (results : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
+theorem returnStep.prefix (st : code.BodyState) (env : metadata.Env) (index : U32)
+    (results : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
     (hb : c.value_stack_base.val = outer.length)
@@ -50,8 +50,8 @@ theorem returnStep.prefix (st : code.BodyState) (env : module.Env) (index : U32)
       fun _ => ⟨by simpa [hv', hb] using hmv, hmc, by simp [hmc, hctrls], hmp.trans hp, htyping⟩⟩
 
 /-- Operands that realize the function's results make `returnStep` accept. -/
-theorem returnStep.complete (st : code.BodyState) (env : module.Env) (index : U32)
-    (results : List types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
+theorem returnStep.complete (st : code.BodyState) (env : metadata.Env) (index : U32)
+    (results : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
     (hb : c.value_stack_base.val = outer.length)

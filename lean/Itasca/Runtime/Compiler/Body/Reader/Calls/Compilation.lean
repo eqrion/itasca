@@ -32,7 +32,7 @@ theorem structured_reader_prefix_call_wasm2 {jumpTables : List U32} {data env so
     (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 code.OP_CALL before = .ok (.Ok (), out, after)) :
-    ∃ (callee : U32) (ft : Itasca.types.FuncType) (values : List code.StackType),
+    ∃ (callee : U32) (ft : Itasca.wasm_types.FuncType) (values : List code.StackType),
       env.func_types.val[callee.val]? = some ft ∧
       Wasm2.ReaderPost p out.core (.CALL (.mk_uN callee.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types (env.func_types.val.map EnvTranslation.funcType) returns locals parents (current.advance (.CALL (.mk_uN callee.val)))

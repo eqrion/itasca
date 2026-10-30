@@ -7,11 +7,11 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 inductive ElementProgram (function : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Element) : List runtime.bytecode.Instr → Prop where
+    (index : Nat) (segment : Itasca.metadata.Element) : List runtime.bytecode.Instr → Prop where
   | passive (mode : segment.mode = .Passive) : ElementProgram function index segment []
   | declarative (mode : segment.mode = .Declarative) (word : U32) (encoded : word.val = index) :
       ElementProgram function index segment [.ElemDrop word]
-  | active (table : U32) (offset : Itasca.types.ConstExpr)
+  | active (table : U32) (offset : Itasca.wasm_types.ConstExpr)
       (mode : segment.mode = .Active table offset)
       (word length entry : U32) (encoded : word.val = index) (count : length.val = segment.init.length)
       (descriptor : function.indirect.val[entry.val]? = some (word, table))
@@ -22,9 +22,9 @@ inductive ElementProgram (function : runtime.bytecode.CompiledFunction)
           .TableInit 0#u32 entry, .ElemDrop word]
 
 inductive DataProgram (function : runtime.bytecode.CompiledFunction)
-    (index : Nat) (segment : Itasca.module.Data) : List runtime.bytecode.Instr → Prop where
+    (index : Nat) (segment : Itasca.metadata.Data) : List runtime.bytecode.Instr → Prop where
   | passive (mode : segment.mode = .Passive) : DataProgram function index segment []
-  | active (memory : U32) (offset : Itasca.types.ConstExpr)
+  | active (memory : U32) (offset : Itasca.wasm_types.ConstExpr)
       (mode : segment.mode = .Active memory offset)
       (word length : U32) (encoded : word.val = index) (count : length.val = segment.init.length)
       (instruction : runtime.bytecode.Instr)

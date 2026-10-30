@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std
 
 /-- Source global types agree exactly with the issued instance addresses. -/
 def GlobalTypeMap {M : Type} (store : runtime.store.Store M)
-    (types : List Itasca.types.GlobalType) (addresses : List runtime.GlobalAddr) : Prop :=
+    (types : List Itasca.wasm_types.GlobalType) (addresses : List runtime.GlobalAddr) : Prop :=
   List.Forall₂ (ImportedGlobal store) types addresses
 
 theorem GlobalTypeMap.prefix {M : Type} {before after : runtime.store.Store M}
@@ -25,7 +25,7 @@ theorem GlobalTypedEffect.type_map {M : Type} {store after : runtime.store.Store
     (effect : GlobalTypedEffect store instIndex inst ty status after)
     (bound : instIndex.val < store.instances.length)
     (found : after.instances.val[instIndex.val]? = some next)
-    {types : List Itasca.types.GlobalType} (mapping : GlobalTypeMap store types inst.globals.val)
+    {types : List Itasca.wasm_types.GlobalType} (mapping : GlobalTypeMap store types inst.globals.val)
     (success : status = .Ok ()) : GlobalTypeMap after (types ++ [ty]) next.globals.val := by
   cases effect with
   | failed error => simp at success

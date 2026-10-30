@@ -226,8 +226,8 @@ theorem SegmentProgram.source {module function} (program : SegmentProgram module
         ModuleElaboration.element (ModuleEnv.rawElement entry)))).flatten.map admininstr_instr ++
       (Spec.Segment.dataPrograms (module.module.tail.data.val.map (fun entry =>
         ModuleData.translate (ModuleData.raw entry)))).flatten.map admininstr_instr := by
-  letI : Inhabited Itasca.module.Element := ⟨⟨.FuncRef, .Passive, default⟩⟩
-  letI : Inhabited Itasca.module.Data := ⟨⟨.Passive, default⟩⟩
+  letI : Inhabited Itasca.metadata.Element := ⟨⟨.FuncRef, .Passive, default⟩⟩
+  letI : Inhabited Itasca.metadata.Data := ⟨⟨.Passive, default⟩⟩
   obtain ⟨elements, datas, body⟩ := program
   have elementSources := group_sources function elements module.module.env.elements.val
     (fun entry index => (Spec.Segment.elementProgram (ModuleElaboration.element (ModuleEnv.rawElement entry))
@@ -251,7 +251,7 @@ theorem SegmentProgram.source {module function} (program : SegmentProgram module
   exact congrArg₂ (· ++ ·) elementSources dataSources
 
 /-- Every emitted global read uses an imported i32 global. -/
-def SegmentGlobalTypes (env : Itasca.module.Env) (instructions : List runtime.bytecode.Instr) : Prop :=
+def SegmentGlobalTypes (env : Itasca.metadata.Env) (instructions : List runtime.bytecode.Instr) : Prop :=
   ∀ slot index, runtime.bytecode.Instr.GlobalGet slot index ∈ instructions →
     ∃ ty, env.global_types.val[index.val]? = some ty ∧ ty.valtype = .I32 ∧
       index.val < env.num_imported_globals.val
@@ -306,7 +306,7 @@ theorem DataProgram.global_types {function index segment instructions env}
     exact constant_i32_global_type constant offsetValid rfl slot index justConstant
 
 private theorem groups_property {T : Type} (groups : List (List runtime.bytecode.Instr))
-    (sources : List T) (env : Itasca.module.Env) (count : groups.length = sources.length)
+    (sources : List T) (env : Itasca.metadata.Env) (count : groups.length = sources.length)
     (entries : ∀ (index : Nat) source, sources[index]? = some source → ∃ group,
       groups[index]? = some group ∧ SegmentGlobalTypes env group) :
     SegmentGlobalTypes env groups.flatten := by

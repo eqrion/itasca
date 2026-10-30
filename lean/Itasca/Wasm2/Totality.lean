@@ -13,8 +13,8 @@ namespace Itasca
 
 /-- The no-op loop specializes the totality proof for arbitrary returning
 visitors; it has no separate termination induction. -/
-theorem Wasm2.emptyVisitorLoop.total (data : Slice U8) (env : module.Env)
-    (profile : ValidationProfile) (locals results : alloc.vec.Vec types.ValueType)
+theorem Wasm2.emptyVisitorLoop.total (data : Slice U8) (env : metadata.Env)
+    (profile : ValidationProfile) (locals results : alloc.vec.Vec wasm_types.ValueType)
     (type_index : U32) (st : code.BodyState) (visitor : code.EmptyOpVisitor)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hs : Control.Shape st.core)

@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 @[step] theorem compiler_typed_select_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (front : List valtype) (ty : valtype)
     (layout : CompilerLayout compiler (front ++ [ty, ty, .I32]))
     (reachable : compiler.reachable = true)
@@ -39,7 +39,7 @@ open Aeneas Aeneas.Std
   exact ⟨left, right, condition, lp, rp, cp, by simpa only [typed] using lowered success⟩
 @[step] theorem compiler_typed_select_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front : List valtype) (ty : valtype)
     (locals : compilerLocals compiler = C.LOCALS)
     (layout : CompilerLayout compiler (front ++ [ty, ty, .I32]))

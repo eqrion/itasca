@@ -5,7 +5,7 @@ import Itasca.Profile.BinaryUnique
 
 A byte string encodes at most one raw module. Custom section placement and omitted empty sections
 introduce no ambiguity. Neither typing nor implementation limits are premises, so a module that
-`module.validate_module` accepts has exactly one decoding.
+`metadata.validate_module` accepts has exactly one decoding.
 -/
 
 open Aeneas Aeneas.Std

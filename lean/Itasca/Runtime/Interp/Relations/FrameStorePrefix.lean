@@ -52,7 +52,7 @@ theorem FrameStorePrefix.function_lookup {M : Type} {before after : runtime.stor
   retained_lookup retained.functions found
 
 theorem FrameStorePrefix.type_lookup {M : Type} {before after : runtime.store.Store M}
-    (retained : FrameStorePrefix before after) {index : Nat} {signature : Itasca.types.FuncType}
+    (retained : FrameStorePrefix before after) {index : Nat} {signature : Itasca.wasm_types.FuncType}
     (found : before.types.val[index]? = some signature) : after.types.val[index]? = some signature :=
   retained_lookup retained.types found
 

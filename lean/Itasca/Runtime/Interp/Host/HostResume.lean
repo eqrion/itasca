@@ -12,7 +12,7 @@ section
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 @[step] theorem host_results_encode_loop (words : alloc.vec.Vec U64)
-    (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (index slot : Usize) (store base : Usize)
     (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
@@ -79,7 +79,7 @@ open Aeneas Aeneas.Std
 
 /-- Type-checked host results replace exactly the caller's result region. -/
 @[step] theorem host_results_encode (words : alloc.vec.Vec U64)
-    (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (store base : Usize) (typed : types.val = args.val.map rawType)
     (owned : ∀ value ∈ args.val, ValueOwnedFits store value)
     (bound : base.val + (Compiler.encodeValues (args.val.map sourceValue)).length ≤ words.length) :
@@ -113,7 +113,7 @@ def hostResume {M : Type} (memory : runtime.platform.MemoryBuffer M)
   match status with
   | .Ok _ =>
     let function ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice runtime.store.FuncInst) store.funcs address.index
-    let signature ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.types.FuncType) store.types function.signature
+    let signature ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.FuncType) store.types function.signature
     let checked ← runtime.interp.check_values memory store results.slice signature.results.slice
     let failed ← runtime.interp.check_failed checked
     if failed then Result.ok (.Err (.Trap .Host),{exec with host_results := results})

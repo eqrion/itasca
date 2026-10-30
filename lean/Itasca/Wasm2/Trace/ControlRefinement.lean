@@ -27,7 +27,7 @@ def tableVisitor {V : Type} :
 theorem tableRest.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
     (hrefines : Refines visitor replacement related)
-    (st : code.BodyState) (env : module.Env) (count i depth : U32)
+    (st : code.BodyState) (env : metadata.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
     (v : V) (w : W) (hrelated : related v w) (cf)
     (h : tableRest visitor st env count i depth ts arity first v = .ok cf) :
@@ -65,7 +65,7 @@ type compatibility check fails. A rejecting callback remains last. -/
 theorem tableBody.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
     (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
     (st : code.BodyState) (v : V) (w : W) (hrelated : related v w) (arity : Option Usize)
     (first : signature.ResultType) (i : U32) (cf)
     (h : tableBody visitor data env profile count st v arity first i = .ok cf) :
@@ -121,7 +121,7 @@ ending at a rejected label or failed target check. -/
 theorem code.branch_table_with_loop.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (v : V) (w : W) (hrelated : related v w)
     (count : U32) (arity : Option Usize) (first : signature.ResultType) (i : U32)
     (hi : i.val ≤ count.val)
@@ -172,7 +172,7 @@ theorem code.branch_table_with_loop.refines {V W : Type}
 theorem code.branch_table_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.BodyState) (v' : V)
     (h : code.branch_table_with visitor st data env profile v = .ok (res, final, v')) :
@@ -214,7 +214,7 @@ callback refinement, including computed signatures and partial tables. -/
 theorem code.step_profile.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (opcode : U8)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.BodyState) (v' : V)

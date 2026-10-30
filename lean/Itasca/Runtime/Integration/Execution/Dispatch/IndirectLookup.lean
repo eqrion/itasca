@@ -27,7 +27,7 @@ theorem signature_binding_raw {M : Type} (view : M → Slice U8) (code : Store.C
 /-- The runtime type map and the generated `fun_type` select the same signature. -/
 theorem signature_lookup_decodes {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (ambient : frame)
-    (index : U32) (signature : Usize) (type : Itasca.types.FuncType)
+    (index : U32) (signature : Usize) (type : Itasca.wasm_types.FuncType)
     (moduleEq : ambient.MODULE = Store.decodeInstance store inst)
     (mapped : inst.types.val[index.val]? = some signature)
     (found : store.types.val[signature.val]? = some type) :

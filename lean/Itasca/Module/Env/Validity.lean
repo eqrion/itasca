@@ -16,7 +16,7 @@ namespace Itasca.ModuleEnv
 open ModuleBinary ModuleSections
 
 /-- Before globals, all consumers of the cached index spaces are absent. -/
-structure Early (env : module.Env) : Prop where
+structure Early (env : metadata.Env) : Prop where
   globals : env.globals.val = []
   exports : env.exports.val = []
   start : env.start = none
@@ -124,7 +124,7 @@ end Itasca.ModuleSections
 namespace Itasca.ModuleEnv
 
 /-- Later sections leave the function, table, memory and global index spaces unchanged. -/
-structure SameCore (env result : module.Env) : Prop where
+structure SameCore (env result : metadata.Env) : Prop where
   funcs : result.func_types = env.func_types
   tables : result.table_types = env.table_types
   memories : result.mem_types = env.mem_types
@@ -185,7 +185,7 @@ theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env resu
   · rw [he]; exact hv.tableCount
   · rw [he]; exact hv.memoryCount
   · intro g hg
-    have hg' : g ∈ env.globals.val := by simpa only [congrArg module.Env.globals he] using hg
+    have hg' : g ∈ env.globals.val := by simpa only [congrArg metadata.Env.globals he] using hg
     exact hc.constant (hv.globals g hg')
   · rw [he]; exact hv.imports
   · intro e hm
@@ -204,10 +204,10 @@ theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env resu
       obtain ⟨xt, hx⟩ := hresolve
       exact ⟨xt, hc.export hx⟩
   · intro idx hs
-    have hs' : env.start = some idx := by simpa only [congrArg module.Env.start he] using hs
+    have hs' : env.start = some idx := by simpa only [congrArg metadata.Env.start he] using hs
     exact hc.start (hv.start idx hs')
   · intro e hm
-    have hm' : e ∈ env.elements.val := by simpa only [congrArg module.Env.elements he] using hm
+    have hm' : e ∈ env.elements.val := by simpa only [congrArg metadata.Env.elements he] using hm
     exact hc.element (hv.elements _ hm')
   · have hrefold := hv.references
     unfold ModuleReferences.Coherent ModuleReferences.collected at hrefold ⊢
@@ -342,19 +342,19 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg module.Env.globals he] using hg))
+      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.exportNames
     · rw [he]; exact hv.distinctExports
     · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg module.Env.exports he] using hm)
+      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
       exact ⟨xt, hc.export hx⟩
     · intro idx hs
       rw [he] at hs
       cases Option.some.inj hs
       exact hc.start hstart
     · intro e hm
-      exact hc.element (hv.elements e (by simpa only [congrArg module.Env.elements he] using hm))
+      exact hc.element (hv.elements e (by simpa only [congrArg metadata.Env.elements he] using hm))
     · rw [he]; exact hv.references
   | elements ha hb ht =>
     obtain ⟨he, hes, href⟩ := ha
@@ -366,15 +366,15 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg module.Env.globals he] using hg))
+      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.exportNames
     · rw [he]; exact hv.distinctExports
     · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg module.Env.exports he] using hm)
+      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
       exact ⟨xt, hc.export hx⟩
     · intro idx hs
-      exact hc.start (hv.start idx (by simpa only [congrArg module.Env.start he] using hs))
+      exact hc.start (hv.start idx (by simpa only [congrArg metadata.Env.start he] using hs))
     · intro e hm
       rw [hes] at hm
       rcases List.mem_append.mp hm with hm | hm
@@ -395,17 +395,17 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg module.Env.globals he] using hg))
+      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.exportNames
     · rw [he]; exact hv.distinctExports
     · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg module.Env.exports he] using hm)
+      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
       exact ⟨xt, hc.export hx⟩
     · intro idx hs
-      exact hc.start (hv.start idx (by simpa only [congrArg module.Env.start he] using hs))
+      exact hc.start (hv.start idx (by simpa only [congrArg metadata.Env.start he] using hs))
     · intro e hm
-      exact hc.element (hv.elements e (by simpa only [congrArg module.Env.elements he] using hm))
+      exact hc.element (hv.elements e (by simpa only [congrArg metadata.Env.elements he] using hm))
     · rw [he]; exact hv.references
 
 end Itasca.ModuleEnv

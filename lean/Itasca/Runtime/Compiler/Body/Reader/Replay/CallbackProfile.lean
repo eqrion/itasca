@@ -20,7 +20,7 @@ set_option maxHeartbeats 4000000
 /-- Every accepted complete-profile noncontrol dispatcher step selects one
 actual callback at its returned state, with source-bounded SIMD arguments. -/
 theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (before after : V) (out : code.OpIterState)
     (accepted : code.step_wasm2 visitor st data env ctx opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
@@ -87,7 +87,7 @@ set_option maxHeartbeats 2000000
 /-- Wasm 2 profile dispatch outside entry, END and table collection selects one
 actual event at the returned core state, including its control callbacks. -/
 theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before after : V)
     (blocked : opcode ≠ code.OP_BLOCK ∧ opcode ≠ code.OP_LOOP ∧ opcode ≠ code.OP_IF ∧
       opcode ≠ code.OP_END ∧ opcode ≠ code.OP_BR_TABLE)

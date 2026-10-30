@@ -9,7 +9,7 @@ def ConcreteStack (values : List code.StackType) : Prop :=
   ∀ value ∈ values, value ≠ .Bot
 
 theorem concrete_stack_iff (values : List code.StackType) :
-    ConcreteStack values ↔ ∃ types : List Itasca.types.ValueType, values = types.map code.StackType.Val := by
+    ConcreteStack values ↔ ∃ types : List Itasca.wasm_types.ValueType, values = types.map code.StackType.Val := by
   induction values with
   | nil => simp [ConcreteStack]
   | cons value rest ih =>

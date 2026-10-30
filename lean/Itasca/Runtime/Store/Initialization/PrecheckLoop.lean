@@ -20,7 +20,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 
 theorem element_bounds_inactive (store : runtime.store.Store M) (platform : P)
-    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (inactive : segment.mode = .Passive ∨ segment.mode = .Declarative) :
@@ -30,14 +30,14 @@ theorem element_bounds_inactive (store : runtime.store.Store M) (platform : P)
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
   rcases inactive with inactive | inactive <;> simp [inactive]
 
 theorem data_bounds_inactive (store : runtime.store.Store M) (platform : P)
-    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
+    (instIndex index : Usize) (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Data)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
     (inactive : segment.mode = .Passive) :
@@ -47,7 +47,7 @@ theorem data_bounds_inactive (store : runtime.store.Store M) (platform : P)
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   step with Interp.vec_index_given inst.module.module.tail.data index segment hdata as ⟨found, hfound⟩
   subst found
   simp [inactive]
@@ -66,7 +66,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementPrecheckReady {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element) : Prop :=
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Element) : Prop :=
   match segment.mode with
   | .Active tableIndex offset => ∃ function code words addr table,
       inst.module.element_offsets.val[index.val]? = some (some function) ∧
@@ -77,7 +77,7 @@ def ElementPrecheckReady {M : Type} (store : runtime.store.Store M)
   | _ => True
 
 def DataPrecheckReady {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Data) : Prop :=
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Data) : Prop :=
   match segment.mode with
   | .Active memoryIndex offset => ∃ function code words addr mem,
       inst.module.data_offsets.val[index.val]? = some (some function) ∧

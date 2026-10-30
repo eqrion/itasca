@@ -68,7 +68,7 @@ private theorem trim_spec {T : Type} (n : Usize) (v : alloc.vec.Vec T) :
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄
   exact trim_spec n items
 
-@[step] theorem rollback_loop7 (items : alloc.vec.Vec (Itasca.types.FuncType)) (n : Usize) :
+@[step] theorem rollback_loop7 (items : alloc.vec.Vec (Itasca.wasm_types.FuncType)) (n : Usize) :
     runtime.store.instantiate.Store.instantiate_with_loop7 items n ⦃ after =>
       after.val = items.val.take n.val ⦄ := by
   change loop (trimBody n) items ⦃ after => after.val = items.val.take n.val ⦄

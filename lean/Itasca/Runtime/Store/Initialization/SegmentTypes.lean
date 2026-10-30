@@ -59,10 +59,10 @@ theorem SegmentTypes.element_drop {M : Type} (store : runtime.store.Store M) (ad
 /-- Raw staged table and element types agree with their source index spaces.
 This is a link/staging metadata condition, not an interpreter postcondition. -/
 structure SegmentTypeBindings {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) : Prop where
-  tables : ∀ (index : Nat) (source : Itasca.types.TableType) (address : runtime.TableAddr) (table : runtime.store.TableInst),
+  tables : ∀ (index : Nat) (source : Itasca.wasm_types.TableType) (address : runtime.TableAddr) (table : runtime.store.TableInst),
     inst.module.module.env.table_types.val[index]? = some source → inst.tables.val[index]? = some address →
     store.tables.val[address.index.val]? = some table → table.ty = source.elem
-  elements : ∀ (index : Nat) (source : Itasca.module.Element) (address : Usize) (segment : runtime.store.ElemInst),
+  elements : ∀ (index : Nat) (source : Itasca.metadata.Element) (address : Usize) (segment : runtime.store.ElemInst),
     inst.module.module.env.elements.val[index]? = some source → inst.elems.val[index]? = some address →
     store.elems.val[address.val]? = some segment → segment.ty = source.elem
 

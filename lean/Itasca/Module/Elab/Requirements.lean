@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleElaboration
 
 /-- The table space translated from raw import types is the translation of `rawTables`. -/
-theorem raw_tables_projection (ts : List types.FuncType) (entries : List ModuleBinary.Import) :
+theorem raw_tables_projection (ts : List wasm_types.FuncType) (entries : List ModuleBinary.Import) :
     ModuleTranslation.tables (entries.map (fun e => importType ts e.desc)) =
       (ModuleSections.rawTables entries).map EnvTranslation.tableType := by
   induction entries with
@@ -24,7 +24,7 @@ theorem raw_tables_projection (ts : List types.FuncType) (entries : List ModuleB
     cases hd : e.desc <;> simp [ModuleTranslation.tables, importType, ModuleSections.rawTables, hd, ih]
 
 /-- The memory space translated from raw import types is the translation of `rawMemories`. -/
-theorem raw_memories_projection (ts : List types.FuncType) (entries : List ModuleBinary.Import) :
+theorem raw_memories_projection (ts : List wasm_types.FuncType) (entries : List ModuleBinary.Import) :
     ModuleTranslation.mems (entries.map (fun e => importType ts e.desc)) =
       (ModuleSections.rawMemories entries).map EnvTranslation.memType := by
   induction entries with
@@ -34,13 +34,13 @@ theorem raw_memories_projection (ts : List types.FuncType) (entries : List Modul
     cases hd : e.desc <;> simp [ModuleTranslation.mems, importType, ModuleSections.rawMemories, hd, ih]
 
 /-- Limits valid in the SpecTec sense are valid in the binary sense for the same bound. -/
-theorem limits_scalar {lim : types.Limits} {bound : U32}
+theorem limits_scalar {lim : wasm_types.Limits} {bound : U32}
     (h : ModuleTranslation.LimitsValid lim bound.val) : ModuleBinary.LimitsValid lim bound := by
   obtain ⟨hlo, hhi⟩ := h
   exact ⟨hlo, fun m hm => hhi m hm⟩
 
 /-- A typed export index satisfies the export descriptor requirement of the environment. -/
-theorem external_index_valid {env : module.Env} {C : context} {desc : module.ExportDesc} {xt}
+theorem external_index_valid {env : metadata.Env} {C : context} {desc : metadata.ExportDesc} {xt}
     (hc : CodeEntry.ModuleContext env C) (h : Externidx_ok C (exportIndex desc) xt) :
     ModuleSections.ExportDescValid env desc := by
   cases desc <;> cases h <;>

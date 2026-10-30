@@ -9,7 +9,7 @@ open runtime.compiler
 theorem CompileEntryWitness.scheduler_ready {A : Type} {ops : runtime.platform.Alloc A}
     {before after : CompileScheduler A} {worker finalWorker : stream.CodeBatch}
     (entry : CompileEntryWitness ops before after worker finalWorker)
-    {env : module.Env} {cursor : Nat} (ready : SchedulerReady env cursor before) :
+    {env : metadata.Env} {cursor : Nat} (ready : SchedulerReady env cursor before) :
     SchedulerReady env cursor after := by
   rw [entry.published]
   refine ⟨ready.signatures,ready.functionSlots,?_,ready.origin,ready.queue,ready.cursorBound⟩
@@ -19,7 +19,7 @@ theorem CompileEntryWitness.scheduler_ready {A : Type} {ops : runtime.platform.A
 allocator assumption. Entry termination is required only for this batch's
 actual dispatch/validation successors. -/
 theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (env : module.Env)
+    (law : Platform.AllocCorrect ops) (env : metadata.Env)
     (issued : StreamBatch.Issued) (sameEnv : issued.env = env) (bounded : issued.Bounded)
     (scheduler : CompileScheduler A) (ready : SchedulerReady env issued.first_func.val scheduler)
     (entries : ∀ current worker, SchedulerReady env issued.first_func.val current →

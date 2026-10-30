@@ -24,27 +24,27 @@ theorem limits_constraints {lim : limits} {bound : Nat} (h : Limits_ok lim bound
     cases maximum <;> simpa [OMap, Forall, proj_uN_0] using And.intro hn hm
 
 /-- Typed limits are valid in the byte-level sense. -/
-theorem limits_valid_of_typing {lim : types.Limits} {bound : Nat}
+theorem limits_valid_of_typing {lim : wasm_types.Limits} {bound : Nat}
     (h : Limits_ok (EnvTranslation.limitsType lim) bound) : ModuleTranslation.LimitsValid lim bound := by
   have hc := limits_constraints h
   simpa [EnvTranslation.limitsType, proj_uN_0, ModuleTranslation.LimitsValid] using hc
 
 /-- A typed table type has valid limits for the table size bound. -/
-theorem table_valid_of_typing {tt : types.TableType}
+theorem table_valid_of_typing {tt : wasm_types.TableType}
     (h : Tabletype_ok (EnvTranslation.tableType tt)) :
     ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1) := by
   cases h with
   | mk_Tabletype_ok _ _ h _ => simpa using limits_valid_of_typing h
 
 /-- A typed memory type has valid limits for the memory page bound. -/
-theorem memory_valid_of_typing {mt : types.MemType}
+theorem memory_valid_of_typing {mt : wasm_types.MemType}
     (h : Memtype_ok (EnvTranslation.memType mt)) :
     ModuleTranslation.LimitsValid mt.limits (2 ^ 16) := by
   cases h with
   | mk_Memtype_ok _ h _ => exact limits_valid_of_typing h
 
 /-- A typed global has a typed constant initializer of its value type. -/
-theorem global_expr_typed {C : context} {g : module.Global}
+theorem global_expr_typed {C : context} {g : metadata.Global}
     (h : Global_ok C (ModuleConstants.global g) (Translate.globalType g.gtype)) :
     Expr_ok_const C (ModuleConstants.expression g.init) (Translate.valueType g.gtype.valtype) := by
   cases h
@@ -53,7 +53,7 @@ theorem global_expr_typed {C : context} {g : module.Global}
   simpa [hety] using ht
 
 /-- A typed global has a valid initializer in the environment. -/
-theorem global_valid_of_typing {env : module.Env} {C : context} {g : module.Global}
+theorem global_valid_of_typing {env : metadata.Env} {C : context} {g : metadata.Global}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)
     (h : Global_ok C (ModuleConstants.global g) (Translate.globalType g.gtype)) :
@@ -69,7 +69,7 @@ theorem start_signature {C : context} {s : _root_.start} (h : Start_ok C s) :
   exact ⟨by assumption, by assumption⟩
 
 /-- A typed start function is a function of the environment with no parameters or results. -/
-theorem start_valid_of_typing {env : module.Env} {C : context} {idx : U32}
+theorem start_valid_of_typing {env : metadata.Env} {C : context} {idx : U32}
     (hc : CodeEntry.ModuleContext env C) (h : Start_ok C (start idx)) :
     ∃ hi : idx.val < env.func_types.val.length,
       env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = [] := by
@@ -94,7 +94,7 @@ theorem data_mode_typed {C : context} {d : _root_.data} (h : Data_ok C d) :
     match d with | .DATA _ mode => Datamode_ok C mode := by cases h; assumption
 
 /-- A typed data segment is valid in the environment. -/
-theorem data_valid_of_typing {env : module.Env} {C : context} {entry : module.Data}
+theorem data_valid_of_typing {env : metadata.Env} {C : context} {entry : metadata.Data}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)
     (hm : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
@@ -120,7 +120,7 @@ theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
   exact ⟨by assumption, by assumption⟩
 
 /-- A typed raw element segment satisfies the element validity requirement. -/
-theorem element_valid_raw_of_typing {env : module.Env} {C : context} {entry : ModuleBinary.Element}
+theorem element_valid_raw_of_typing {env : metadata.Env} {C : context} {entry : ModuleBinary.Element}
     (hg : ModuleConstants.GlobalContext env C)
     (hf : ModuleConstants.FunctionContext env C)
     (ht : C.TABLES = env.table_types.val.map EnvTranslation.tableType)

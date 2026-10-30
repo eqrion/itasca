@@ -16,17 +16,17 @@ namespace Itasca.ModuleBinary
 private inductive ElementPayload : Nat → Element → List U8 → Prop where
   | activeIndices {offset initializers encodedOffset entries} :
       ConstEncoding offset encodedOffset → VecEncoding IndexEncoding initializers entries →
-      ElementPayload 0 ⟨.FuncRef, .Active 0#u32 offset, initializers.map types.ConstExpr.RefFunc⟩
+      ElementPayload 0 ⟨.FuncRef, .Active 0#u32 offset, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (encodedOffset ++ entries)
   | passiveIndices {initializers entries} : VecEncoding IndexEncoding initializers entries →
-      ElementPayload 1 ⟨.FuncRef, .Passive, initializers.map types.ConstExpr.RefFunc⟩ (0#u8 :: entries)
+      ElementPayload 1 ⟨.FuncRef, .Passive, initializers.map wasm_types.ConstExpr.RefFunc⟩ (0#u8 :: entries)
   | explicitIndices {tableIndex offset initializers table encodedOffset entries} :
       IndexEncoding tableIndex table → ConstEncoding offset encodedOffset →
       VecEncoding IndexEncoding initializers entries →
-      ElementPayload 2 ⟨.FuncRef, .Active tableIndex offset, initializers.map types.ConstExpr.RefFunc⟩
+      ElementPayload 2 ⟨.FuncRef, .Active tableIndex offset, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (table ++ encodedOffset ++ (0#u8 :: entries))
   | declarativeIndices {initializers entries} : VecEncoding IndexEncoding initializers entries →
-      ElementPayload 3 ⟨.FuncRef, .Declarative, initializers.map types.ConstExpr.RefFunc⟩ (0#u8 :: entries)
+      ElementPayload 3 ⟨.FuncRef, .Declarative, initializers.map wasm_types.ConstExpr.RefFunc⟩ (0#u8 :: entries)
   | activeExpressions {offset initializers encodedOffset entries} :
       ConstEncoding offset encodedOffset → VecEncoding ConstEncoding initializers entries →
       ElementPayload 4 ⟨.FuncRef, .Active 0#u32 offset, initializers⟩ (encodedOffset ++ entries)

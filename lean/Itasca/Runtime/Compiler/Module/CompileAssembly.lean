@@ -12,7 +12,7 @@ def initialScheduler (A : Type) (limits : runtime.compiler.CompileLimits) (codeS
     code_start := codeStart,
     budget := {marker := (), limits, instructions := 0#usize, branches := 0#usize, controls := 0#usize, locals := 0#usize, error := none} }
 
-def uninitializedModule (env : module.Env) (tail : module.Tail) (profile : ValidationProfile)
+def uninitializedModule (env : metadata.Env) (tail : metadata.Tail) (profile : ValidationProfile)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) : runtime.compiler.ExecutableModule :=
   { module := {env, tail}, profile, functions, global_initializers := alloc.vec.Vec.new _,
     element_initializers := alloc.vec.Vec.new _, element_offsets := alloc.vec.Vec.new _,
@@ -25,16 +25,16 @@ structure CompileWitness {A : Type} (allocator : runtime.platform.Alloc A)
     (executable : runtime.compiler.ExecutableModule) where
   codeStart : Usize
   codeEnd : Usize
-  initialEnv : module.Env
-  env : module.Env
+  initialEnv : metadata.Env
+  env : metadata.Env
   scheduler : runtime.compiler.CompileScheduler A
-  tail : module.Tail
+  tail : metadata.Tail
   functions : alloc.vec.Vec runtime.bytecode.CompiledFunction
   pending : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)
   collectedBudget : runtime.compiler.Budget A
   finalBudget : runtime.compiler.Budget A
   region : runtime.compiler.code_region bytes = .ok (codeStart, codeEnd)
-  initialized : module.Env.new = .ok initialEnv
+  initialized : metadata.Env.new = .ok initialEnv
   validated : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 profile {bytes, code_start := codeStart, code_end := codeEnd}

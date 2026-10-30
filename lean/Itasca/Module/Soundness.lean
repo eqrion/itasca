@@ -21,7 +21,7 @@ open ModuleElaboration
 code encoding, elaborates to `moduleOf raw`, matches the returned environment and tail, satisfies
 the generated `Module_ok`, meets the profile restrictions, and has the types returned by the
 public external-type accessors. -/
-def Validated (data : Slice U8) (decoded : module.Module)
+def Validated (data : Slice U8) (decoded : metadata.Module)
     (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∃ raw, ModuleBinary.ModuleEncodingWith (Itasca.Profile.CodeEncoding validationProfile) raw data.val validationProfile ∧
     Elaborates raw (moduleOf raw) ∧ Matches decoded.env decoded.tail raw ∧
@@ -44,7 +44,7 @@ private theorem code_guards {env indices codes profile}
       · exact hp.no_data hc
       · exact ih.2 hc entry hm
 
-private theorem assembly_guards {profile env decls codes} {segments : List module.Data}
+private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
     (ha : ModuleBinary.ModuleTypesAllowed profile (decls.module [] []))
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
@@ -77,7 +77,7 @@ private theorem assembly_guards {profile env decls codes} {segments : List modul
 /-- Like `assembled`, from byte lists that tile `data` exactly as `before ++ codeBytes ++
 tailBytes` instead of spans of one slice. Every semantic witness still belongs to one raw
 module. -/
-theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice U8} {env : module.Env} {tail : module.Tail}
+theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice U8} {env : metadata.Env} {tail : metadata.Tail}
     {decls : ModuleEnv.Declarations} {codes before codeBytes tailBytes}
     (hbytes : data.val = before ++ codeBytes ++ tailBytes)
     (henv : ModuleEnv.PrefixEncoding decls before validationProfile)

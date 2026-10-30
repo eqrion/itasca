@@ -19,7 +19,7 @@ def LoweredEmpty {A : Type} (before after : runtime.compiler.FunctionCompiler A)
 
 @[step] theorem compiler_observe_empty {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (before : List valtype) (layout : CompilerLayout compiler before)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val) :
     runtime.compiler.FunctionCompiler.observe ops compiler state ⦃ out => out.1 = .Ok () →

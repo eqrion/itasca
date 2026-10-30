@@ -18,7 +18,7 @@ namespace Itasca.Wasm2.Visitor
 
 /-- The suffix check of one `br_table` target, factored from the extracted loop. It compares the
 target arity with the first target's arity and checks the operand suffix. -/
-def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultType)
+def tableCheck (st : code.BodyState) (env : metadata.Env) (ts : signature.ResultType)
     (arity : Option Usize) : Result (core.result.Result (Option Usize) error.OpError) := do
   let r ← signature.ResultType.len ts env
   match r with
@@ -40,7 +40,7 @@ def tableCheck (st : code.BodyState) (env : module.Env) (ts : signature.ResultTy
 /-- The part of a table iteration after its label callback: checks the target, and at the default
 target (`i = count`) marks the code unreachable and calls the `br_table` callback. -/
 def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (env : module.Env) (count i depth : U32) (ts : signature.ResultType)
+    (env : metadata.Env) (count i depth : U32) (ts : signature.ResultType)
     (arity : Option Usize) (first : signature.ResultType) (v : V) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × signature.ResultType × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V)) := do
@@ -60,7 +60,7 @@ def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
 /-- One iteration of the `br_table` target loop: reads a label, calls the label callback for
 every target but the default, and continues with `tableRest`. -/
 def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (count : U32) (st : code.BodyState)
+    (env : metadata.Env) (profile : ValidationProfile) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (first : signature.ResultType) (i : U32) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × signature.ResultType × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V)) := do
@@ -84,7 +84,7 @@ def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
 set_option maxHeartbeats 1000000 in
 /-- The transfer adapter is an exact factorization of the extracted loop body. -/
 theorem tableBody_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (count : U32) (st : code.BodyState)
+    (env : metadata.Env) (profile : ValidationProfile) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (first : signature.ResultType) (i : U32) :
     code.branch_table_with_loop.body visitor data env profile count st.core v arity first i =
       tableBody visitor data env profile count st v arity first i := by
@@ -139,7 +139,7 @@ def tableGood {V : Type} (cf :
 /-- Accepting replacements preserve each successful table continuation. -/
 theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st : code.BodyState) (env : module.Env) (count i depth : U32)
+    (st : code.BodyState) (env : metadata.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
     (v : V) (w : W) (cf)
     (h : tableRest visitor st env count i depth ts arity first v = .ok cf)
@@ -182,7 +182,7 @@ theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
 returning on any unrelated execution. -/
 theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
     (st : code.BodyState) (v : V) (w : W) (arity : Option Usize) (first : signature.ResultType)
     (i : U32) (cf)
     (h : tableBody visitor data env profile count st v arity first i = .ok cf)
@@ -227,7 +227,7 @@ theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
 
 
 theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (env : module.Env) (count i depth : U32)
+    (st : code.BodyState) (env : metadata.Env) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (first : signature.ResultType) (v : V)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (first' : signature.ResultType) (j : U32)
@@ -257,7 +257,7 @@ theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
       scalar_tac
 
 theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
     (st : code.BodyState) (v : V) (arity : Option Usize) (first : signature.ResultType) (i : U32)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (first' : signature.ResultType) (j : U32)
@@ -302,7 +302,7 @@ with exactly the same validation state. -/
 theorem code.branch_table_with_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : FullVisitor.Accepts replacement) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (v : V) (w : W)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (v : V) (w : W)
     (count : U32) (arity : Option Usize) (first : signature.ResultType) (i : U32)
     (hi : i.val ≤ count.val) (final : code.BodyState) (v' : V)
     (h : code.branch_table_with_loop visitor st.core data env profile v count arity first i =
@@ -355,7 +355,7 @@ theorem code.branch_table_with_loop.accepted_transfer {V W : Type}
 theorem code.branch_table_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : FullVisitor.Accepts replacement) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (v : V) (w : W)
+    (data : Slice U8) (env : metadata.Env) (v : V) (w : W)
     (final : code.BodyState) (v' : V)
     (profile : ValidationProfile)
     (h : code.branch_table_with visitor st data env profile v = .ok (.Ok (), final, v')) :

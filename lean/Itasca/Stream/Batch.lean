@@ -26,7 +26,7 @@ inductive Prefix (issued : Issued) : Nat → Usize → Prop where
   | nil : Prefix issued 0 0#usize
   | snoc {V : Type} (visitor : code.OpVisitor V) {v v' count pos index finish} :
       Prefix issued count pos → index.val = issued.first_func.val + count →
-      module.validate_code_entry_with visitor issued.code pos issued.env index issued.profile v =
+      metadata.validate_code_entry_with visitor issued.code pos issued.env index issued.profile v =
         .ok (.Ok finish, v') →
       Prefix issued (count + 1) finish
 
@@ -70,7 +70,7 @@ theorem stream.CodeBatch.validate_next.accepted {V : Type} (visitor : code.OpVis
     (h : stream.CodeBatch.validate_next visitor batch index v = .ok (.Ok finish, v')) :
     batch.num_validated.val < batch.num_funcs.val ∧
     index.val = batch.first_func.val + batch.num_validated.val ∧
-    module.validate_code_entry_with visitor batch.code batch.validated_end batch.env index batch.profile v =
+    metadata.validate_code_entry_with visitor batch.code batch.validated_end batch.env index batch.profile v =
       .ok (.Ok finish, v') := by
   unfold stream.CodeBatch.validate_next at h
   split at h
@@ -214,7 +214,7 @@ theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Na
   induction h with
   | nil => exact ⟨[], rfl, ⟨[], .nil, Wasm1.BytesAt.nil _ _ (by simp)⟩, .nil _⟩
   | @snoc V visitor v v' count pos index finish previous hindex hentry ih =>
-    have hs := module.validate_code_entry_with.profile_sound visitor issued.code pos
+    have hs := metadata.validate_code_entry_with.profile_sound visitor issued.code pos
       issued.env index finish v v' hbound profile hresults (by simpa [hprofile] using hentry)
     obtain ⟨entries, hlen, hbytes, htyped⟩ := ih
     obtain ⟨entry, he, hi, ht, hl⟩ := hs

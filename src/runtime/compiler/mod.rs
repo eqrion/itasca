@@ -275,7 +275,7 @@ pub(crate) fn compile_default_with<A: Alloc>(
 ) -> Result<ExecutableModule, Error> {
     match compile_with::<A>(bytes, profile, CompileLimits::default()) {
         Ok(module) => Ok(module),
-        Err(CompileError::Validation(error)) => Err(error),
+        Err(CompileError::Validation(err)) => Err(err),
         Err(CompileError::Resource(_)) => Err(Error::Visitor(VisitError::OutOfMemory)),
     }
 }
@@ -521,7 +521,7 @@ struct Signature {
 fn visitor_result(result: VisitResult) -> Result<(), Error> {
     match result {
         Ok(()) => Ok(()),
-        Err(error) => Err(Error::Visitor(error)),
+        Err(err) => Err(Error::Visitor(err)),
     }
 }
 

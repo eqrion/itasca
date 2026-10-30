@@ -29,7 +29,7 @@ private theorem empty_saturating (st : code.OpIterState) (opcode : U32) :
   split <;> rfl
 
 /-- A sign-extension byte accepts its independently typed principal effect. -/
-theorem Frame.sign_extension {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.sign_extension {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) (op : Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.signMeaning opcode = some op)
@@ -59,7 +59,7 @@ theorem Frame.sign_extension {st} {profile : ValidationProfile} (f : Frame st) (
     omega
 
 /-- A saturating conversion accepts every valid u32 LEB encoding of its subopcode. -/
-theorem Frame.saturating {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.saturating {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Numeric.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.saturatingMeaning subopcode = some op)

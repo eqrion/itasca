@@ -18,7 +18,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 normally from a reached callback boundary, including parser and visitor errors. -/
 theorem compiler_reader_numeric_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192) :
@@ -40,7 +40,7 @@ theorem compiler_reader_numeric_total {A} (ops : runtime.platform.Alloc A)
 floating-point execution nor a FloatOps law is involved in compilation. -/
 theorem compiler_reader_float_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256) :

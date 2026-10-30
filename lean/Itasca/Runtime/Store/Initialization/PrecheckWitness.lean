@@ -15,8 +15,8 @@ open Aeneas Aeneas.Std
 The expression, local target map, store target, and payload are retained. -/
 def ElementBoundsFailure {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) : Prop :=
-  ∃ (index : Usize) (segment : Itasca.module.Element) (target : U32)
-      (offset : Itasca.types.ConstExpr) (words : List U64) (address : runtime.TableAddr)
+  ∃ (index : Usize) (segment : Itasca.metadata.Element) (target : U32)
+      (offset : Itasca.wasm_types.ConstExpr) (words : List U64) (address : runtime.TableAddr)
       (table : runtime.store.TableInst),
     inst.module.module.env.elements.val[index.val]? = some segment ∧
     segment.mode = .Active target offset ∧
@@ -28,8 +28,8 @@ def ElementBoundsFailure {M : Type} (store : runtime.store.Store M)
 /-- The corresponding exact source-offset witness for an active data segment. -/
 def DataBoundsFailure {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) : Prop :=
-  ∃ (index : Usize) (segment : Itasca.module.Data) (target : U32)
-      (offset : Itasca.types.ConstExpr) (words : List U64) (address : runtime.MemoryAddr)
+  ∃ (index : Usize) (segment : Itasca.metadata.Data) (target : U32)
+      (offset : Itasca.wasm_types.ConstExpr) (words : List U64) (address : runtime.MemoryAddr)
       (memory : runtime.store.MemInst M),
     inst.module.module.tail.data.val[index.val]? = some segment ∧
     segment.mode = .Active target offset ∧
@@ -75,7 +75,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 theorem element_bounds_ready_witness (law : Platform.AllocCorrect allocator) (view : M → Slice U8)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (ready : ElementPrecheckReady store inst index segment)
@@ -111,7 +111,7 @@ theorem element_bounds_ready_witness (law : Platform.AllocCorrect allocator) (vi
 theorem data_bounds_ready_witness (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Data)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
     (ready : DataPrecheckReady store inst index segment)
@@ -163,7 +163,7 @@ theorem element_precheck_loop_witness (law : Platform.AllocCorrect allocator) (v
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.length := by
@@ -209,7 +209,7 @@ theorem data_precheck_loop_witness (law : Platform.AllocCorrect allocator)
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok]
+      Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.tail.data.length := by

@@ -3,12 +3,12 @@ import Itasca.Runtime.Store.Invariant.CopyTypes
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-@[step] theorem value_type_equal (a b : Itasca.types.ValueType) :
-    types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ equal => equal = true ↔ a = b ⦄ := by
+@[step] theorem value_type_equal (a b : Itasca.wasm_types.ValueType) :
+    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq a b ⦃ equal => equal = true ↔ a = b ⦄ := by
   cases a <;> cases b <;> simp [
-    Itasca.types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+    Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
-@[step] theorem same_func_type_loop (left right : alloc.vec.Vec Itasca.types.ValueType)
+@[step] theorem same_func_type_loop (left right : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (position : Usize) (same : Bool) (gate : Prop) (hlen : left.length = right.length)
     (hpos : position.val ≤ left.length)
     (hprefix : same = true ↔ gate ∧ left.val.take position.val = right.val.take position.val) :
@@ -55,7 +55,7 @@ open Aeneas Aeneas.Std
         exact hprefix.mpr ⟨heq.1, congrArg alloc.vec.Vec.val heq.2⟩
   · exact ⟨hpos, hprefix⟩
 
-@[step] theorem same_func_results_loop (left right : alloc.vec.Vec Itasca.types.ValueType)
+@[step] theorem same_func_results_loop (left right : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (position : Usize) (same : Bool) (gate : Prop) (hlen : left.length = right.length)
     (hpos : position.val ≤ left.length)
     (hprefix : same = true ↔ gate ∧ left.val.take position.val = right.val.take position.val) :
@@ -67,7 +67,7 @@ open Aeneas Aeneas.Std
 
 /-- The actual canonical-signature comparison is total and recognizes exact
 parameter and result equality. -/
-@[step] theorem same_func_type_spec (left right : Itasca.types.FuncType) :
+@[step] theorem same_func_type_spec (left right : Itasca.wasm_types.FuncType) :
     runtime.store.same_func_type left right ⦃ answer => answer = true ↔ left = right ⦄ := by
   unfold runtime.store.same_func_type
   dsimp only

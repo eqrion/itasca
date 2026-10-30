@@ -4,7 +4,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (ty : Itasca.types.TableType) : runtime.ResourceLimit → Prop
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.TableType) : runtime.ResourceLimit → Prop
   | .Objects => store.limits.max_objects.val ≤ objectCount store
   | .Allocation =>
       store.limits.max_table_elements.val < store.table_elements.val + ty.limits.min.val ∨
@@ -15,7 +15,7 @@ def TableAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
 
 theorem define_table_resource_causes {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.TableType)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.TableType)
     (bound : objectCount store ≤ Usize.max) :
     runtime.store.Store.define_table_with memory allocator store ty ⦃ out => ∀ limit,
       out.1 = .Err (.Exhausted limit) → out.2 = store ∧ TableAllocationCause allocator store ty limit ⦄ := by

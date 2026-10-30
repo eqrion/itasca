@@ -5,7 +5,7 @@ import Itasca.Module.Env.Basic
 
 `Declarations` is the ghost record of the sections decoded before the code section, keeping the
 section boundaries that the environment's merged caches lose. `Phase` constrains it by the last
-section seen, `Represents` relates it to a `module.Env`, and `PrefixEncoding` is the independent
+section seen, `Represents` relates it to a `metadata.Env`, and `PrefixEncoding` is the independent
 byte grammar of the whole prefix, including custom sections.
 -/
 
@@ -15,12 +15,12 @@ namespace Itasca.ModuleEnv
 
 /-- The declared contents of each pre-code section, kept apart rather than merged with imports. -/
 structure Declarations where
-  types : List types.FuncType := []
+  types : List wasm_types.FuncType := []
   imports : List ModuleBinary.Import := []
   functions : List U32 := []
-  tables : List _root_.Itasca.types.TableType := []
-  memories : List _root_.Itasca.types.MemType := []
-  globals : List module.Global := []
+  tables : List _root_.Itasca.wasm_types.TableType := []
+  memories : List _root_.Itasca.wasm_types.MemType := []
+  globals : List metadata.Global := []
   exports : List ModuleBinary.Export := []
   start : Option U32 := none
   elements : List ModuleBinary.Element := []
@@ -41,19 +41,19 @@ def Phase (last : Nat) (decls : Declarations) : Prop :=
   (last < 10 → decls.dataCount = none)
 
 /-- The independent grammar's import corresponding to an extracted import. -/
-def rawImport (entry : module.Import) : ModuleBinary.Import :=
+def rawImport (entry : metadata.Import) : ModuleBinary.Import :=
   ⟨entry.module.val, entry.name.val, entry.desc⟩
 
 /-- The independent grammar's export corresponding to an extracted export. -/
-def rawExport (entry : module.Export) : ModuleBinary.Export := ⟨entry.name.val, entry.desc⟩
+def rawExport (entry : metadata.Export) : ModuleBinary.Export := ⟨entry.name.val, entry.desc⟩
 
 /-- The independent grammar's element segment corresponding to an extracted element. -/
-def rawElement (entry : module.Element) : ModuleBinary.Element :=
+def rawElement (entry : metadata.Element) : ModuleBinary.Element :=
   ⟨entry.elem, entry.mode, entry.init.val⟩
 
 /-- The environment `env` stores exactly the declarations `decls`, and its caches are the merged
 index spaces of `decls`. -/
-structure Represents (env : module.Env) (decls : Declarations) : Prop where
+structure Represents (env : metadata.Env) (decls : Declarations) : Prop where
   types : decls.types = env.types.val
   imports : decls.imports = env.imports.val.map rawImport
   functions : decls.functions = env.func_type_indices.val

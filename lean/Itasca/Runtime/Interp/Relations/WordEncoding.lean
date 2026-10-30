@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std SpecExt
 
 /-- Canonical raw global words re-encode exactly, including reference zero and
 both vector words. Only 32-bit numerical payloads need their canonical bound. -/
-theorem encode_decode_words (ty : Itasca.types.ValueType) (lo hi : U64)
+theorem encode_decode_words (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (small : ty = .I32 ∨ ty = .F32 → lo.val < 2^32) :
     Compiler.encodeValue (Store.decodeWords ty lo hi) = pairWords ty (lo,hi) := by
   cases ty
@@ -32,7 +32,7 @@ theorem encode_decode_words (ty : Itasca.types.ValueType) (lo hi : U64)
       simp [Store.decodeWords,Store.decodeRef,zero,Store.refVal,Compiler.encodeValue,pairWords,sourceType,restore]
 
 theorem ValuesAt.append_scalar {words : List U64} {base : Nat} {front : List val}
-    (represented : ValuesAt words base front) (ty : Itasca.types.ValueType) (lo hi : U64)
+    (represented : ValuesAt words base front) (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (scalar : ty ≠ .V128) (small : ty = .I32 ∨ ty = .F32 → lo.val < 2^32)
     (capacity : base + Compiler.slots (front.map Compiler.valueType) < words.length) :
     ValuesAt (words.set (base + Compiler.slots (front.map Compiler.valueType)) lo) base

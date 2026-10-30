@@ -6,13 +6,13 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Conservative source-only instruction demand for all module initializers. -/
-def sourceInitializerInstructions (env : module.Env) (tail : module.Tail) : Nat :=
+def sourceInitializerInstructions (env : metadata.Env) (tail : metadata.Tail) : Nat :=
   2*initializerMappingCost ⟨env,tail⟩+5*(env.elements.length+tail.data.length)+1
 
 /-- Independent numerical eligibility for a complete module compilation.
 Environment metadata, source body maxima, aggregate function/initializer
 charges, scratch requests, and intrinsic publication bounds are all explicit. -/
-structure SourceCompilationDemand (A : Type) (env : module.Env) (tail : module.Tail)
+structure SourceCompilationDemand (A : Type) (env : metadata.Env) (tail : metadata.Tail)
     (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
     (bodyBytes localCount peak bound : Nat) : Prop where
   environment : EnvironmentDemand (initialScheduler A limits 0#usize) env bound

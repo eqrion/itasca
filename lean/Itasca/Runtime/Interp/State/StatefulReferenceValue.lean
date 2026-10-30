@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.State.StatefulSlots
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std
 
-theorem reference_word_value (value : val) (type : Itasca.types.ElemType) (word : U64)
+theorem reference_word_value (value : val) (type : Itasca.wasm_types.ElemType) (word : U64)
     (typed : Compiler.valueType value=valtype_reftype (Store.decodeElemType type))
     (encoded : Compiler.encodeValue value=[word.val]) :
     value=val_ref (Store.decodeRef type word) := by
@@ -22,7 +22,7 @@ theorem reference_encoding (reference : ref) : ∃ bits, Compiler.encodeValue (v
 
 theorem ref_is_null_value_slots
     (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (dst : U32)
-    (type : Itasca.types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (type : Itasca.wasm_types.ElemType) (state : SourceMachine.AState) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front : List val) (reference : ref)
     (slots : FrameSlots exec raw f) (values : f.vals=front++[val_ref reference])
     (referenceType : Compiler.valueType (val_ref reference)=valtype_reftype (Store.decodeElemType type))

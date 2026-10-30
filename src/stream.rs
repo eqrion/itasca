@@ -12,7 +12,7 @@
 //! Only a successful driver result certifies whole-module validity.
 
 use crate::limits::{add_offset, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES};
-use crate::module::{self, SECTION_CODE, SECTION_DATA_COUNT};
+use crate::metadata::{self, SECTION_CODE, SECTION_DATA_COUNT};
 use crate::{Env, Error, OpError, OpVisitor, Tail, ValidationProfile};
 use alloc::vec::Vec;
 
@@ -76,7 +76,7 @@ pub trait Source {
 /// An error stops the driver. The visitor must still release or join every worker
 /// before its borrowed source and environment storage are released. Only a
 /// successful driver result certifies the complete module.
-pub trait StreamingVisitor<'a>: module::ModuleVisitor {
+pub trait StreamingVisitor<'a>: metadata::ModuleVisitor {
     /// Selects the source region used by subsequent custom-section offsets.
     fn custom_region(&mut self, region: Region);
 
@@ -235,7 +235,7 @@ impl CodeBatch<'_> {
         if self.num_validated >= self.num_funcs || index != self.first_func + self.num_validated {
             return Err(Error::Host);
         }
-        module::validate_code_entry_with(
+        metadata::validate_code_entry_with(
             self.code,
             self.validated_end,
             self.env,
@@ -281,7 +281,7 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
     let bytes = source.environment()?;
     let env_len = add_offset(0, bytes.len())?;
     visitor.custom_region(Region::Environment);
-    let (decoded, env_end) = module::validate_env_with(bytes, profile, visitor)?;
+    let (decoded, env_end) = metadata::validate_env_with(bytes, profile, visitor)?;
     if env_end != env_len {
         return Err(Error::Host);
     }
@@ -313,7 +313,7 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
     let tail_bytes = source.tail()?;
     add_offset(code_end, tail_bytes.len())?;
     visitor.custom_region(Region::Tail);
-    let tail = module::validate_tail_with(tail_bytes, 0, env, profile, visitor)?;
+    let tail = metadata::validate_tail_with(tail_bytes, 0, env, profile, visitor)?;
     visitor.tail_ready(tail)?;
     retire_all_code_batches(module_id, visitor, &mut pending)
 }
@@ -473,7 +473,7 @@ fn retire_all_code_batches<'a, V: StreamingVisitor<'a>>(
 /// Frames an entry and translates its batch-relative offsets into code-region
 /// offsets.
 fn frame_entry(code: &[u8], pos: usize, index: usize, code_offset: usize) -> Result<CodeEntry> {
-    let (contents, end) = module::code_entry_extent(code, pos)?;
+    let (contents, end) = metadata::code_entry_extent(code, pos)?;
     Ok(CodeEntry {
         index,
         start: add_offset(code_offset, pos)?,
@@ -507,7 +507,7 @@ fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> 
 pub(crate) fn validate_module_slice(
     bytes: &[u8],
     profile: ValidationProfile,
-) -> Result<module::Module> {
+) -> Result<metadata::Module> {
     let (code_start, code_end) = find_code_region(bytes);
     let source = SliceSource {
         env: &bytes[0..code_start],
@@ -521,7 +521,7 @@ pub(crate) fn validate_module_slice(
     };
     validate_streaming(0, profile, &source, &mut visitor, &mut env)?;
     match visitor.tail {
-        Some(tail) => Ok(module::Module { env, tail }),
+        Some(tail) => Ok(metadata::Module { env, tail }),
         None => Err(Error::Host),
     }
 }
@@ -592,7 +592,7 @@ struct SyncVisitor<'a> {
     tail: Option<Tail>,
 }
 
-impl module::ModuleVisitor for SyncVisitor<'_> {}
+impl metadata::ModuleVisitor for SyncVisitor<'_> {}
 
 impl<'a> StreamingVisitor<'a> for SyncVisitor<'a> {
     fn custom_region(&mut self, _region: Region) {}

@@ -47,7 +47,7 @@ theorem take_local (st : code.OpIterState) (data : Slice U8) (ctx : code.Context
     · simp [hp]
     · exact (Leb128.Decoded.span _ _ _ _ hd).1.le
 
-theorem take_global (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem take_global (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (hs : Control.Shape st) :
     code.take_global st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
@@ -120,7 +120,7 @@ theorem local_tee (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
   cases val
   step*
 
-theorem global_get (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem global_get (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_global_get st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
@@ -129,7 +129,7 @@ theorem global_get (st : code.OpIterState) (data : Slice U8) (env : module.Env)
   cases val
   step*
 
-theorem global_set (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem global_set (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (hs : Control.Shape st) (_hsize : st.vals.val.length < Usize.max) :
     code.read_global_set st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
@@ -138,28 +138,28 @@ theorem global_set (st : code.OpIterState) (data : Slice U8) (env : module.Env)
   cases val
   step*
 
-theorem memory_size (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem memory_size (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_memory_size st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_memory_size
   step*
 
-theorem memory_grow (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem memory_grow (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_memory_grow st data env ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_memory_grow
   step*
 
-theorem load (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ty : types.ValueType) (align : U32)
+theorem load (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ty : wasm_types.ValueType) (align : U32)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_load st data env ty align ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_load
   step*
 
-theorem store (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ty : types.ValueType) (align : U32)
+theorem store (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ty : wasm_types.ValueType) (align : U32)
     (hs : Control.Shape st) (_hsize : st.vals.val.length < Usize.max) :
     code.read_store st data env ty align ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by

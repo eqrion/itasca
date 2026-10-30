@@ -19,7 +19,7 @@ theorem fixed_trace {data env profile locals index st} (p : Pending data env pro
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (action : Action) (token : Token)
     (haction : actionToken action [] = some token) (hbranch : action.opcode ≠ some 0x0E#u8)
-    (inputs : List types.ValueType) (output : Option types.ValueType) (pos : Usize)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max) (hencoded : At data p.start token pos)
     (v : V) (result : core.result.Result Unit error.OpError) (final : code.OpIterState) (v' : V)
     (run : CoreVisitor.run (Simd.readFixed {st.core with pos := pos} inputs output)

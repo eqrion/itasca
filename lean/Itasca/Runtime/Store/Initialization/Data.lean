@@ -65,7 +65,7 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
   unfold runtime.store.instantiate.Store.add_instance_data
   step as ⟨inst, hinst⟩
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   have hd : i.val < inst.module.module.tail.data.length := by simpa [hinst] using hi
   step as ⟨data, hdata⟩
   step with copy_bytes_spec allocator ha data.init.deref as ⟨copied, hcopied⟩

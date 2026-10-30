@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleConstants
 
 /-- A constant, well-typed initializer instruction is valid at some type. -/
-theorem constant_valid_type {env : module.Env} {C : context} {e : types.ConstExpr}
+theorem constant_valid_type {env : metadata.Env} {C : context} {e : wasm_types.ConstExpr}
     (hg : GlobalContext env C) (hf : FunctionContext env C)
     (h : Instr_const C (instruction e))
     {ins outs : List valtype}
@@ -50,7 +50,7 @@ theorem constant_valid_type {env : module.Env} {C : context} {e : types.ConstExp
       exact ⟨gt.valtype, .globalGet idx gt hi' rfl hn hm⟩
 
 /-- The output type of a typed initializer instruction is unique. -/
-theorem instruction_output_unique {C : context} {e : types.ConstExpr} {ins outs ins' outs'}
+theorem instruction_output_unique {C : context} {e : wasm_types.ConstExpr} {ins outs ins' outs'}
     (h : Instr_ok C (instruction e) (.mk_functype (.mk_list ins) (.mk_list outs)))
     (h' : Instr_ok C (instruction e) (.mk_functype (.mk_list ins') (.mk_list outs'))) :
     outs = outs' := by
@@ -58,7 +58,7 @@ theorem instruction_output_unique {C : context} {e : types.ConstExpr} {ins outs 
 
 /-- An initializer typed by `Expr_ok_const` at `Translate.valueType ty` satisfies `Valid env e
 ty`. -/
-theorem valid_of_typing {env : module.Env} {C : context} {e : types.ConstExpr} {ty : types.ValueType}
+theorem valid_of_typing {env : metadata.Env} {C : context} {e : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hg : GlobalContext env C) (hfunctions : FunctionContext env C) (h : Expr_ok_const C (expression e) (Translate.valueType ty)) :
     Valid env e ty := by
   cases h with

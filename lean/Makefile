@@ -7,7 +7,6 @@ CHARON := $(AENEAS_DIR)/charon/charon/target/release/charon
 AENEAS := $(AENEAS_DIR)/src/_build/default/main.exe
 SPECTEC := $(SPECTEC_DIR)/_build/default/src/exe-spectec/main.exe
 RUST_TOOLCHAIN := nightly-2026-09-17
-AENEAS_PATCH := $(ROOT)/patches/aeneas-lean-extraction.patch
 SPECTEC_PATCH := $(ROOT)/patches/spectec-wasm2-global-mutability.patch
 SPECTEC_MODULE_PATCH := $(ROOT)/patches/spectec-wasm2-module.patch
 SPECTEC_HOSTFUNC_PATCH := $(ROOT)/patches/spectec-wasm2-hostfunc.patch
@@ -28,14 +27,11 @@ CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 	--include='core::marker::{impl core::marker::Copy for u8}' \
 	--include='core::clone::impls::{impl core::clone::Clone for u8}'
 
-.PHONY: tools patch-aeneas patch-spectec aeneas-build extract extract-check llbc \
+.PHONY: tools patch-spectec aeneas-build extract extract-check llbc \
  prove trust script-tests audit-coverage audit-imports clean checkpoint spec-build spec-generate spec-update \
  spec-compare spec-check regressions
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
-patch-aeneas:
-	cd $(AENEAS_DIR) && { git apply --reverse --check $(AENEAS_PATCH) 2>/dev/null || git apply $(AENEAS_PATCH); }
-
 patch-spectec:
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_PATCH) 2>/dev/null || git apply $(SPECTEC_PATCH); }
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_MODULE_PATCH) 2>/dev/null || git apply $(SPECTEC_MODULE_PATCH); }
@@ -49,12 +45,12 @@ patch-spectec:
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_TABLE_WRITE_BOUNDS_PATCH) 2>/dev/null || git apply $(SPECTEC_TABLE_WRITE_BOUNDS_PATCH); }
 	cd $(ROOT)/vendor/spectec && { git apply --reverse --check $(SPECTEC_LOAD_VALUE_BOUNDS_PATCH) 2>/dev/null || git apply $(SPECTEC_LOAD_VALUE_BOUNDS_PATCH); }
 
-tools: patch-aeneas
+tools:
 	cd $(AENEAS_DIR)/charon/charon && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) cargo build --release --locked --bin charon --bin charon-driver
 	$(MAKE) -C $(AENEAS_DIR)/charon charon-ml/src/CharonVersion.ml
 	cd $(AENEAS_DIR)/src && opam exec --switch=$(OPAM_SWITCH) -- dune build main.exe
 
-aeneas-build: patch-aeneas
+aeneas-build:
 	cd $(AENEAS_DIR)/src && opam exec --switch=$(OPAM_SWITCH) -- dune build main.exe
 
 # Keep extraction outputs separate from ordinary Rust tests and release builds.
@@ -127,6 +123,6 @@ spec-check: spec-compare
 regressions: aeneas-build
 	lake build Aeneas
 	cd $(AENEAS_DIR)/tests/test_runner && opam exec --switch=$(OPAM_SWITCH) -- dune build run_test.exe
-	cd $(AENEAS_DIR) && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) gmake IN_CI=1 AENEAS_EXE=$(AENEAS) CHARON_EXE=$(CHARON) TEST_RUNNER_EXE=$(TEST_RUNNER) test-namespace-shadow.rs test-deep-else-if.rs
-	lake env lean $(AENEAS_DIR)/tests/lean/NamespaceShadow.lean
-	lake env lean $(AENEAS_DIR)/tests/lean/DeepElseIf.lean
+	cd $(AENEAS_DIR) && RUSTUP_TOOLCHAIN=$(RUST_TOOLCHAIN) gmake IN_CI=1 AENEAS_EXE=$(AENEAS) CHARON_EXE=$(CHARON) TEST_RUNNER_EXE=$(TEST_RUNNER) test-discriminant.rs test-loops.rs
+	lake env lean $(AENEAS_DIR)/tests/lean/Discriminant.lean
+	lake env lean $(AENEAS_DIR)/tests/lean/Loops.lean

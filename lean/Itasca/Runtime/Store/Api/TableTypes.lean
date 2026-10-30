@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def TableTypeMap {M : Type} (store : runtime.store.Store M)
-    (types : List Itasca.types.TableType) (addresses : List runtime.TableAddr) : Prop :=
+    (types : List Itasca.wasm_types.TableType) (addresses : List runtime.TableAddr) : Prop :=
   List.Forall₂ (fun ty address => ∃ table, store.tables.val[address.index.val]? = some table ∧ table.ty = ty.elem) types addresses
 
 theorem TableTypeMap.prefix {M : Type} {store after : runtime.store.Store M} {types addresses}
@@ -28,7 +28,7 @@ theorem LinkedMaps.table_types {M : Type} {view : M → Slice U8} {store : runti
 
 theorem TableStageEffect.table_types {M : Type} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} {ty out} (effect : TableStageEffect store inst ty out)
-    {types : List Itasca.types.TableType} (matching : TableTypeMap store types inst.tables.val)
+    {types : List Itasca.wasm_types.TableType} (matching : TableTypeMap store types inst.tables.val)
     (success : out.1 = .Ok ()) : TableTypeMap out.2.1 (types ++ [ty]) out.2.2.tables.val := by
   rcases effect with ⟨error, rfl⟩ | ⟨tables, elements, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
   · simp at success
@@ -40,7 +40,7 @@ theorem TableStageEffect.table_types {M : Type} {store : runtime.store.Store M}
 
 theorem TableTypeMap.bindings {M : Type} {store : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (matching : TableTypeMap store inst.module.module.env.table_types.val inst.tables.val) :
-    ∀ (index : Nat) (source : Itasca.types.TableType) (address : runtime.TableAddr) (table : runtime.store.TableInst),
+    ∀ (index : Nat) (source : Itasca.wasm_types.TableType) (address : runtime.TableAddr) (table : runtime.store.TableInst),
       inst.module.module.env.table_types.val[index]? = some source → inst.tables.val[index]? = some address →
       store.tables.val[address.index.val]? = some table → table.ty = source.elem := by
   intro index source address table sourceFound mapped found

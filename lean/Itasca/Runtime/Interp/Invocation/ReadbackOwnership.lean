@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem read_results_loop_owned {M : Type} (words : alloc.vec.Vec U64)
     (store : runtime.store.Store M) (results : alloc.vec.Vec runtime.Value)
-    (index slot : Usize) (types : alloc.vec.Vec Itasca.types.ValueType) (values : List val)
+    (index slot : Usize) (types : alloc.vec.Vec Itasca.wasm_types.ValueType) (values : List val)
     (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
@@ -90,7 +90,7 @@ open Aeneas Aeneas.Std
 results and leaves the store unchanged. -/
 @[step] theorem read_results_owned {M : Type} (words : alloc.vec.Vec U64)
     (store : runtime.store.Store M) (results : alloc.vec.Vec runtime.Value)
-    (types : alloc.vec.Vec Itasca.types.ValueType) (values : List val)
+    (types : alloc.vec.Vec Itasca.wasm_types.ValueType) (values : List val)
     (empty : results.val = [])
     (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)

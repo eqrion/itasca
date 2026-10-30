@@ -9,7 +9,7 @@ open Itasca Itasca.Wasm2
 /-- Actual Wasm 2.0 instruction steps paired with typed source zippers,
 including indexed block signatures and the declared-reference condition. -/
 inductive TypedRunWasm2 {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) :
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) :
     code.BodyState → V → V → Prop where
   | done {st v} (typed : State data env .Wasm2 ctx.locals index st)
       (closed : st.blocks.val = []) (finished : st.core.pos = Slice.len data) :
@@ -25,7 +25,7 @@ inductive TypedRunWasm2 {V : Type} (visitor : code.OpVisitor V)
       TypedRunWasm2 visitor data env ctx index st v final
 
 theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (st : code.BodyState) (v v' : V) (hi : State data env .Wasm2 ctx.locals index st)
     (h : code.body_loop_loop visitor data env ctx index .Wasm2 v st = .ok (.Ok (), v')) :
     TypedRunWasm2 visitor data env ctx index st v v' := by
@@ -119,7 +119,7 @@ theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
 /-- A real successful body validation starts the typed instruction trace at
 its actual root frame; no compiler-correctness premise is assumed. -/
 theorem typed_body_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (before after : V)
     (accepted : code.validate_body_with visitor data env ctx index .Wasm2 before =
       .ok (.Ok (), after)) :

@@ -24,7 +24,7 @@ def StatefulReaderPost {data env locals index st}
 theorem _root_.Itasca.Wasm2.MetadataReaderPost.stateful_post {data env locals index st}
     {p : Pending data env .Wasm2 locals index st} {D M : Type}
     {decode : Result (core.result.Result D error.OpError × code.OpIterState)}
-    {pops : D → List types.ValueType} {output : D → Option types.ValueType}
+    {pops : D → List wasm_types.ValueType} {output : D → Option wasm_types.ValueType}
     {metadata : D → M} {operation : D → instr} {value : M} {out : code.OpIterState}
     (post : Wasm2.MetadataReaderPost p decode pops output metadata operation value out)
     (op : SourceMachine.Stateful.Instruction)

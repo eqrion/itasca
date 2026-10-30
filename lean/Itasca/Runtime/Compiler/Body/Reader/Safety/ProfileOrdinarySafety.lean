@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Control.Shape st.core)

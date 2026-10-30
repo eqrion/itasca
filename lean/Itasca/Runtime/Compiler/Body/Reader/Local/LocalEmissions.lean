@@ -27,7 +27,7 @@ theorem reader_emit_local_get_wasm2 {data env locals typeIndex st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
     (localsMatch : before.function.locals = locals)
-    (types : List types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
+    (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translate.valueType))
     (reachable : before.reachable = true)
     (codeFits : before.function.code.val.length < Usize.max)
@@ -38,7 +38,7 @@ theorem reader_emit_local_get_wasm2 {data env locals typeIndex st}
       st data env ctx typeIndex .Wasm2 code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType),
+    (∃ (index : U32) (ty : Itasca.wasm_types.ValueType) (values : List code.StackType),
       locals.val[index.val]? = some ty ∧
       Wasm2.ReaderPost p out.core (.LOCAL_GET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (types.map Translate.valueType ++ [Translate.valueType ty]) ∧
@@ -87,7 +87,7 @@ theorem reader_emit_local_set_wasm2 {data env locals typeIndex st}
       st data env ctx typeIndex .Wasm2 code.OP_LOCAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType) (front : List valtype),
+    (∃ (index : U32) (ty : Itasca.wasm_types.ValueType) (values : List code.StackType) (front : List valtype),
       locals.val[index.val]? = some ty ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
       Wasm2.ReaderPost p out.core (.LOCAL_SET (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧
@@ -144,7 +144,7 @@ theorem reader_emit_local_tee_wasm2 {data env locals typeIndex st}
       st data env ctx typeIndex .Wasm2 code.OP_LOCAL_TEE before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (index : U32) (ty : Itasca.types.ValueType) (values : List code.StackType) (front : List valtype),
+    (∃ (index : U32) (ty : Itasca.wasm_types.ValueType) (values : List code.StackType) (front : List valtype),
       locals.val[index.val]? = some ty ∧
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty] ∧
       Wasm2.ReaderPost p out.core (.LOCAL_TEE (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧

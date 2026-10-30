@@ -20,14 +20,14 @@ set_option maxHeartbeats 2000000
 attribute [local step] code.pop_with_type.total code.pop_types.total
   Wasm2.ScalarReaders.reserved_zero
 
-theorem reader_call_info_bound (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem reader_call_info_bound (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (shape : Control.Shape st.core) :
     code.call_info st data env ⦃ out => ∀ index, out.1 = .Ok index →
       index.val < env.func_types.val.length ⦄ := by
   unfold code.call_info
   step*
 
-theorem reader_call_indirect_info_bound (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem reader_call_indirect_info_bound (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (shape : Control.Shape st.core) :
     code.call_indirect_info st data env .Wasm2 ⦃ out => ∀ index table, out.1 = .Ok (index,table) →
       index.val < env.types.val.length ⦄ := by
@@ -47,7 +47,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem compiler_reader_call_wasm2_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Control.Shape st.core) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -66,7 +66,7 @@ theorem compiler_reader_call_wasm2_total {A} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_call_indirect_wasm2_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (typeIndex : U32)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Control.Shape st.core) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

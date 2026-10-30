@@ -58,7 +58,7 @@ theorem function_staging_resource_loop {M A : Type} (memory : runtime.platform.M
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by

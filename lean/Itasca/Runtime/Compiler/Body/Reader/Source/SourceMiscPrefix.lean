@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Independent accepted bulk dispatch excludes every unsupported subopcode. -/
 theorem source_bulk_supported {V : Type} (source : code.OpVisitor V)
-    (st out : code.OpIterState) (data : Slice U8) (env : module.Env) (sub : U32) (before after : V)
+    (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env) (sub : U32) (before after : V)
     (reference : code.step_bulk source st data env sub before = .ok (.Ok (),out,after)) :
     sub.val ∈ [8,9,10,11,12,13,14,15,16,17] := by
   rw [code.step_bulk.eq_runs] at reference
@@ -17,7 +17,7 @@ theorem source_bulk_supported {V : Type} (source : code.OpVisitor V)
 or bulk subopcode. Decode failure and unsupported bulk cases are excluded by
 the source run itself, without any compiler premise. -/
 theorem source_misc_prefix {V : Type} (source : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (before after : V)
     (reference : code.step_profile source st data env ctx index .Wasm2 252#u8 before = .ok (.Ok (),out,after)) :
     ∃ sub next, Leb128.Decoded data st.core.pos sub next ∧

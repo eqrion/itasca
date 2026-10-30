@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
 result marshaling. These are separate from execution's frame requirements. -/
 def InvocationResourceCause {A M : Type} (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (signature : Itasca.types.FuncType) (results : alloc.vec.Vec runtime.Value) : runtime.ExecError → Prop
+    (signature : Itasca.wasm_types.FuncType) (results : alloc.vec.Vec runtime.Value) : runtime.ExecError → Prop
   | .Exhausted .Values => store.limits.max_values.val <
       max (typeSlots signature.params.val) (typeSlots signature.results.val)
   | .Exhausted .Allocation =>

@@ -14,7 +14,7 @@ inductive ScalarPublicationAction : Action → Prop where
   | call_indirect (ty table : U32) : ScalarPublicationAction (.call_indirect ty table)
   | drop (ty : code.StackType) : ScalarPublicationAction (.drop ty)
   | select (ty : code.StackType) : ScalarPublicationAction (.select ty)
-  | select_typed (ty : types.ValueType) : ScalarPublicationAction (.select_typed ty)
+  | select_typed (ty : wasm_types.ValueType) : ScalarPublicationAction (.select_typed ty)
   | local_get (index : U32) : ScalarPublicationAction (.local_get index)
   | local_set (index : U32) : ScalarPublicationAction (.local_set index)
   | local_tee (index : U32) : ScalarPublicationAction (.local_tee index)
@@ -40,7 +40,7 @@ inductive ScalarPublicationAction : Action → Prop where
   | f64_const (value : U64) : ScalarPublicationAction (.f64_const value)
   | table_init (first second : U32) : ScalarPublicationAction (.table_init first second)
   | table_copy (first second : U32) : ScalarPublicationAction (.table_copy first second)
-  | ref_null (ty : types.ElemType) : ScalarPublicationAction (.ref_null ty)
+  | ref_null (ty : wasm_types.ElemType) : ScalarPublicationAction (.ref_null ty)
 
 /-- Scalar event dispatch preserves every immediate, including signed and
 floating-point constant bits and both table instruction indices. -/

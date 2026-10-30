@@ -5,7 +5,7 @@ import Itasca.Module.Elab.Translation
 # Constant expression syntax
 
 `ModuleConstants.Valid` is the validator's typing relation for constant initializers
-(`types.ConstExpr`), independent of parsing. `instruction` and `expression` translate an
+(`wasm_types.ConstExpr`), independent of parsing. `instruction` and `expression` translate an
 initializer to SpecTec syntax, and `GlobalContext` and `FunctionContext` tie a SpecTec `context`
 to the decoded environment. Typing against `Expr_ok_const` is in `Module/Const/Typing`.
 -/
@@ -15,22 +15,22 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleConstants
 
 /-- The operand type corresponding to a table element type. -/
-def referenceValueType : types.ElemType → types.ValueType
+def referenceValueType : wasm_types.ElemType → wasm_types.ValueType
   | .FuncRef => .FuncRef
   | .ExternRef => .ExternRef
 
 /-- The initializer has the given type in `env`. `ref.func` needs an in-range function index, and
 `global.get` needs an imported immutable global. -/
-inductive Valid (env : module.Env) : types.ConstExpr → types.ValueType → Prop where
+inductive Valid (env : metadata.Env) : wasm_types.ConstExpr → wasm_types.ValueType → Prop where
   | i32 (value : I32) : Valid env (.I32 value) .I32
   | i64 (value : I64) : Valid env (.I64 value) .I64
   | f32 (value : U32) : Valid env (.F32 value) .F32
   | f64 (value : U64) : Valid env (.F64 value) .F64
   | v128 (low high : U64) : Valid env (.V128 low high) .V128
-  | refNull (ty : types.ElemType) : Valid env (.RefNull ty) (referenceValueType ty)
+  | refNull (ty : wasm_types.ElemType) : Valid env (.RefNull ty) (referenceValueType ty)
   | refFunc (idx : U32) (hi : idx.val < env.func_types.val.length) :
       Valid env (.RefFunc idx) .FuncRef
-  | globalGet (idx : U32) (gt : types.GlobalType)
+  | globalGet (idx : U32) (gt : wasm_types.GlobalType)
       (hi : idx.val < env.global_types.val.length)
       (hgt : env.global_types.val[idx.val] = gt)
       (himport : idx.val < env.num_imported_globals.val)
@@ -50,7 +50,7 @@ theorem Valid.const_allowed {env value expected} (h : Valid env value expected)
 
 /-- Translates an initializer to a SpecTec instruction. `V128` combines the low and high halves in
 little-endian order. -/
-def instruction : types.ConstExpr → instr
+def instruction : wasm_types.ConstExpr → instr
   | .I32 value => Spec.i32Const value
   | .I64 value => ScalarConst.i64 value
   | .F32 bits => ScalarConst.f32 bits
@@ -61,10 +61,10 @@ def instruction : types.ConstExpr → instr
   | .GlobalGet idx => .GLOBAL_GET (.mk_uN idx.val)
 
 /-- The single-instruction SpecTec expression of an initializer. -/
-def expression (e : types.ConstExpr) : expr := [instruction e]
+def expression (e : wasm_types.ConstExpr) : expr := [instruction e]
 
 /-- The translated instruction is well-formed. -/
-theorem instruction_wf (e : types.ConstExpr) : wf_instr (instruction e) := by
+theorem instruction_wf (e : wasm_types.ConstExpr) : wf_instr (instruction e) := by
   cases e with
   | I32 value => exact Spec.i32Const_wf value
   | I64 value => exact ScalarConst.i64_wf value
@@ -82,15 +82,15 @@ theorem instruction_wf (e : types.ConstExpr) : wf_instr (instruction e) := by
   | RefFunc idx => exact .instr_case_41 _ (EnvTranslation.index_wf idx)
   | GlobalGet idx => exact .instr_case_46 _ (EnvTranslation.index_wf idx)
 
-theorem expression_wf (e : types.ConstExpr) : Forall wf_instr (expression e) := by
+theorem expression_wf (e : wasm_types.ConstExpr) : Forall wf_instr (expression e) := by
   simpa [expression, Forall] using instruction_wf e
 
 /-- `C.GLOBALS` is the imported prefix of the environment's global types. -/
-def GlobalContext (env : module.Env) (C : context) : Prop :=
+def GlobalContext (env : metadata.Env) (C : context) : Prop :=
   C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType
 
 /-- `C.FUNCS` is the environment's function types, imported and defined. -/
-def FunctionContext (env : module.Env) (C : context) : Prop :=
+def FunctionContext (env : metadata.Env) (C : context) : Prop :=
   C.FUNCS = env.func_types.val.map EnvTranslation.funcType
 
 end Itasca.ModuleConstants

@@ -14,8 +14,8 @@ theorem TypedRunWasm2.fold_indexed_tables {A : Type}
     (emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop)
     (initial : runtime.compiler.FunctionCompiler A)
     (types functions : List functype) (returns locals : List valtype)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (ft : Itasca.types.FuncType) (source : List instr)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (ft : Itasca.wasm_types.FuncType) (source : List instr)
     (progress : ∀ (st : code.BodyState) (before middle final : runtime.compiler.FunctionCompiler A)
       (next : Usize) (out : code.BodyState),
       IndexedTableReaderCompilerPointWasm2 emit initial before types functions returns locals data env ctx.locals index ft st →

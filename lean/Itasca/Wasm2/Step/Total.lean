@@ -16,7 +16,7 @@ namespace Itasca.Wasm2
 /-- Every non-control Wasm 2.0 opcode is total on a bounded active operand stack when the
 visitor hooks return; the cursor never moves backwards. -/
 theorem wasm2_total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Control.Shape st)
     (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes) (hv : FullVisitor.Total visitor) :

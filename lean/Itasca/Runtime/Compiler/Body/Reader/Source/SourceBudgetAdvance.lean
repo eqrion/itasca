@@ -7,8 +7,8 @@ open Aeneas Aeneas.Std Itasca
 /-- The reached certificate and all compiler counters are retained together.
 The counters are paid by consumed source bytes, relative to function start. -/
 def SourceBudgetReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompiler A)
-    (C : context) (locals : List valtype) (data : Slice U8) (env : module.Env)
-    (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (C : context) (locals : List valtype) (data : Slice U8) (env : metadata.Env)
+    (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.BodyState) : Prop :=
   ReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st ∧
     SourceCompilationBudget initial.budget compiler.budget bodyResourceRate st.core.pos.val
@@ -18,7 +18,7 @@ budget used to construct capacity for the next step. One opcode byte pays
 ordinary and structured callbacks; table readers use their longer span. -/
 theorem source_budget_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial compiler : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (st out : code.BodyState)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial compiler
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)

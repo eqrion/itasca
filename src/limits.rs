@@ -4,7 +4,7 @@
 //! stated within those caps; otherwise valid modules may exceed them.
 
 use crate::error::Error;
-use crate::types::Limits;
+use crate::wasm_types::Limits;
 
 // A memory is at most 2^16 pages, i.e. 4 GiB (spec 4.2.8).
 pub const MAX_MEMORY_PAGES: u32 = 65536;

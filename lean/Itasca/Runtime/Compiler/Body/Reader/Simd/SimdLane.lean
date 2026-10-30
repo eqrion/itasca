@@ -16,7 +16,7 @@ private theorem simd_lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
 
 /-- A successful fixed checker returns exactly its already decoded payload. -/
 theorem simd_carry_success {A : Type} (value result : A) (st out : code.OpIterState)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (accepted : Wasm2.Simd.carryFixed value st inputs output = .ok (.Ok result,out)) :
     value = result ∧ Wasm2.Simd.readFixed st inputs output = .ok (.Ok (),out) := by
   unfold Wasm2.Simd.carryFixed at accepted

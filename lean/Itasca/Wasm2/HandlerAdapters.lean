@@ -17,7 +17,7 @@ namespace Itasca
 /-- `code.branch` with `code.branch_info` unfolded, so it returns only the result and state. -/
 def Wasm2.branchCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
-  (env : _root_.Itasca.module.Env) (conditional : Bool) :
+  (env : _root_.Itasca.metadata.Env) (conditional : Bool) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
     _root_.Itasca.code.BodyState)
   := do
@@ -27,7 +27,7 @@ def Wasm2.branchCore
   | core.ops.control_flow.ControlFlow.Continue val =>
     if conditional
     then
-      let (r1, ois) ← code.pop_with_type st1.core types.ValueType.I32
+      let (r1, ois) ← code.pop_with_type st1.core wasm_types.ValueType.I32
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -78,7 +78,7 @@ def Wasm2.branchCore
 /-- `code.call` with `code.call_info` and `code.call_indirect_info` unfolded, so it returns only
 the result and state. -/
 def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (indirect : Bool) :
+    (env : metadata.Env) (profile : ValidationProfile) (indirect : Bool) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   if indirect then
     let (r, out) ← code.call_indirect_info st data env profile
@@ -94,7 +94,7 @@ def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
       if i ≥ alloc.vec.Vec.len env.func_types then
         .ok (.Err .UnknownFunc, { st with core := { st.core with pos := next } })
       else
-        let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice types.FuncType)
+        let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice wasm_types.FuncType)
           env.func_types i
         let (r, out) ← code.apply_func_type { st.core with pos := next } ft
         .ok (r, { st with core := out })
@@ -102,7 +102,7 @@ def Wasm2.callCore (st : code.BodyState) (data : Slice U8)
 
 /-- The extracted `code.branch` equals `Wasm2.branchCore`. -/
 theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (conditional : Bool) :
+    (env : metadata.Env) (conditional : Bool) :
     code.branch st data env conditional = Wasm2.branchCore st data env conditional := by
   simp only [code.branch, code.branch_info, Wasm2.branchCore,
     code.read_multi_value_label, Std.bind_assoc]
@@ -134,7 +134,7 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
 
 /-- The extracted `code.call` equals `Wasm2.callCore`. -/
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (indirect : Bool) :
+    (env : metadata.Env) (profile : ValidationProfile) (indirect : Bool) :
     code.call st data env profile indirect = Wasm2.callCore st data env profile indirect := by
   cases indirect with
   | true =>

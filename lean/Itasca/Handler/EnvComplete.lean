@@ -21,7 +21,7 @@ namespace Itasca.EnvComplete
 the outer operands, and the remaining operands realize `before` followed by `outputs`, including
 unreachable operands represented by `Bot`. -/
 def Post {α : Type} (st : code.OpIterState) (outer segment : List code.StackType)
-    (before : List valtype) (outputs : List types.ValueType) (next : Usize) (value : α)
+    (before : List valtype) (outputs : List wasm_types.ValueType) (next : Usize) (value : α)
     (r : core.result.Result α error.OpError × code.OpIterState) : Prop :=
   r.1 = .Ok value ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = next ∧
     ∃ rest, r.2.vals.val = outer ++ rest ∧ rest.length ≤ segment.length + outputs.length ∧
@@ -32,7 +32,7 @@ end Itasca.EnvComplete
 namespace Itasca
 
 /-- `code.local_type` succeeds for an in-range local. -/
-theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : types.ValueType)
+theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : wasm_types.ValueType)
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t) :
     code.local_type ctx idx = .ok (.Ok t) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.local_type.spec ctx idx)
@@ -41,7 +41,7 @@ theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : types.Val
   | Err e => have := hp.2; omega
 
 /-- `code.global_type` succeeds for an in-range global. -/
-theorem code.global_type.complete (env : module.Env) (idx : U32) (gt : types.GlobalType)
+theorem code.global_type.complete (env : metadata.Env) (idx : U32) (gt : wasm_types.GlobalType)
     (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt) :
     code.global_type env idx = .ok (.Ok gt) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.global_type.spec env idx)
@@ -51,7 +51,7 @@ theorem code.global_type.complete (env : module.Env) (idx : U32) (gt : types.Glo
 
 /-- `code.take_local` succeeds when the LEB128 read returns an in-range local index. -/
 theorem code.take_local.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
-    (idx : U32) (next : Usize) (t : types.ValueType)
+    (idx : U32) (next : Usize) (t : wasm_types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t) :
     code.take_local st data ctx = .ok (.Ok (idx, t), { st with pos := next }) := by
@@ -59,8 +59,8 @@ theorem code.take_local.complete (st : code.OpIterState) (data : Slice U8) (ctx 
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `code.take_global` succeeds when the LEB128 read returns an in-range global index. -/
-theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (idx : U32) (next : Usize) (gt : types.GlobalType)
+theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt) :
     code.take_global st data env = .ok (.Ok (idx, gt), { st with pos := next }) := by
@@ -68,7 +68,7 @@ theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `code.require_memory` succeeds when the environment has a memory. -/
-theorem code.require_memory.complete (env : module.Env) (h : 0 < env.mem_types.val.length) :
+theorem code.require_memory.complete (env : metadata.Env) (h : 0 < env.mem_types.val.length) :
     code.require_memory env = .ok (.Ok ()) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.require_memory.spec env)
   cases r with
@@ -76,7 +76,7 @@ theorem code.require_memory.complete (env : module.Env) (h : 0 < env.mem_types.v
   | Err e => simp [hp.2] at h
 
 /-- `code.check_memory_and_alignment` succeeds with a memory and an alignment at most `natural`. -/
-theorem code.check_memory_and_alignment.complete (env : module.Env) (arg : code.MemArg)
+theorem code.check_memory_and_alignment.complete (env : metadata.Env) (arg : code.MemArg)
     (natural : U32) (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val) :
     code.check_memory_and_alignment env arg natural = .ok (.Ok ()) := by
   have hle : ¬ arg.align > natural := by scalar_tac
@@ -85,7 +85,7 @@ theorem code.check_memory_and_alignment.complete (env : module.Env) (arg : code.
 
 /-- `code.read_local_get` succeeds for an in-range local, pushing its type. -/
 theorem code.read_local_get.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
-    (idx : U32) (next : Usize) (t : types.ValueType)
+    (idx : U32) (next : Usize) (t : wasm_types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t)
     (outer segment : List code.StackType) (before : List valtype)
@@ -104,7 +104,7 @@ theorem code.read_local_get.complete (st : code.OpIterState) (data : Slice U8) (
 /-- `code.read_local_set` succeeds for an in-range local when the segment realizes a stack ending
 in its type. -/
 theorem code.read_local_set.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
-    (idx : U32) (next : Usize) (t : types.ValueType)
+    (idx : U32) (next : Usize) (t : wasm_types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t)
     (outer segment : List code.StackType) (before : List valtype)
@@ -121,7 +121,7 @@ theorem code.read_local_set.complete (st : code.OpIterState) (data : Slice U8) (
 /-- `code.read_local_tee` succeeds for an in-range local when the segment realizes a stack ending
 in its type, and pushes the type back. -/
 theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
-    (idx : U32) (next : Usize) (t : types.ValueType)
+    (idx : U32) (next : Usize) (t : wasm_types.ValueType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < ctx.locals.val.length) (ht : ctx.locals.val[idx.val] = t)
     (outer segment : List code.StackType) (before : List valtype)
@@ -143,8 +143,8 @@ theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (
   · exact (Sequence.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
 /-- `code.read_global_get` succeeds for an in-range global, pushing its type. -/
-theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (idx : U32) (next : Usize) (gt : types.GlobalType)
+theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt)
     (outer segment : List code.StackType) (before : List valtype)
@@ -162,8 +162,8 @@ theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) 
 
 /-- `code.read_global_set` succeeds for an in-range mutable global when the segment realizes a
 stack ending in its type. -/
-theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (idx : U32) (next : Usize) (gt : types.GlobalType)
+theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
     (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt)
     (hmut : gt.mutability = .Var)
@@ -191,7 +191,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- `code.read_memory_size` succeeds with a memory and a zero reserved byte, pushing an `i32`. -/
-theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
     (hm : 0 < env.mem_types.val.length)
     (outer segment : List code.StackType) (before : List valtype)
@@ -211,7 +211,7 @@ theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8)
 
 /-- `code.read_memory_grow` succeeds with a memory and a zero reserved byte when the segment
 realizes a stack ending in `i32`, and pushes an `i32`. -/
-theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
     (hm : 0 < env.mem_types.val.length)
     (outer segment : List code.StackType) (before : List valtype)
@@ -236,8 +236,8 @@ theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8)
 
 /-- `code.read_load` succeeds with a memory and a valid alignment when the segment realizes a stack
 ending in the `i32` address, and pushes the loaded type. -/
-theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)
+theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (next : Usize) (arg : code.MemArg) (t : wasm_types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))
     (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val)
     (outer segment : List code.StackType) (before : List valtype)
@@ -260,8 +260,8 @@ theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env :
 
 /-- `code.read_store` succeeds with a memory and a valid alignment when the segment realizes a
 stack ending in the address and stored value. -/
-theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (next : Usize) (arg : code.MemArg) (t : types.ValueType) (natural : U32)
+theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (next : Usize) (arg : code.MemArg) (t : wasm_types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))
     (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val)
     (outer segment : List code.StackType) (before : List valtype)

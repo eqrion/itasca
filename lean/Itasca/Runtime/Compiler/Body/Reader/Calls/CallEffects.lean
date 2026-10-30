@@ -11,11 +11,11 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call metadata lookup and parameter/result stack transfer. -/
-theorem reader_call_info_effect (st out : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem reader_call_info_effect (st out : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (index : U32) (outer segment : List code.StackType)
     (values : st.core.vals.val = outer ++ segment) (base : (Control.base st.core).val = outer.length)
     (accepted : code.call_info st data env = .ok (.Ok index, out)) :
-    ∃ (ft : types.FuncType) (rest : List code.StackType),
+    ∃ (ft : wasm_types.FuncType) (rest : List code.StackType),
       env.func_types.val[index.val]? = some ft ∧
       out.core.vals.val = outer ++ (rest ++ ft.results.val.map code.StackType.Val) ∧
       (∀ ts, Sequence.Realizes (Control.polymorphic st.core) rest ts →
@@ -53,12 +53,12 @@ theorem reader_call_info_effect (st out : code.BodyState) (data : Slice U8) (env
 /-- Live calls determine complete concrete operand stacks from their exact
 parameter/result transfer, without assuming a compiler stack effect. -/
 theorem call_full_stack_types {before after outer segment rest : List code.StackType}
-    (params results : List types.ValueType)
+    (params results : List wasm_types.ValueType)
     (known : ConcreteStack before) (old : before = outer ++ segment)
     (new : after = outer ++ (rest ++ results.map code.StackType.Val))
     (transfer : ∀ ts, Sequence.Realizes false rest ts →
       Sequence.Realizes false segment (ts ++ params.map Translate.valueType)) :
-    ∃ front : List types.ValueType,
+    ∃ front : List wasm_types.ValueType,
       Sequence.stackTypes before = front.map Translate.valueType ++ params.map Translate.valueType ∧
       after = (front ++ results).map code.StackType.Val := by
   have both := concrete_stack_append.mp (old ▸ known)

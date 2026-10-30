@@ -29,7 +29,7 @@ theorem initializer_bits_high (lo hi : U64) :
 
 inductive InitializerResolution {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) :
-    Itasca.types.ConstExpr → Itasca.types.ValueType → List U64 → Prop where
+    Itasca.wasm_types.ConstExpr → Itasca.wasm_types.ValueType → List U64 → Prop where
   | i32 (value : I32) : InitializerResolution store inst (.I32 value) .I32
       [UScalar.cast .U64 (IScalar.hcast .U32 value)]
   | i64 (value : I64) : InitializerResolution store inst (.I64 value) .I64
@@ -43,7 +43,7 @@ inductive InitializerResolution {M : Type} (store : runtime.store.Store M)
       (lookup : inst.funcs.val[index.val]? = some addr)
       (encoded : reference.val = addr.index.val + 1) :
       InitializerResolution store inst (.RefFunc index) .FuncRef [reference]
-  | global (ty : Itasca.types.ValueType) (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
+  | global (ty : Itasca.wasm_types.ValueType) (index : U32) (addr : runtime.GlobalAddr) (value : runtime.store.GlobalInst)
       (lookup : inst.globals.val[index.val]? = some addr)
       (resolved : store.globals.val[addr.index.val]? = some value)
       (typed : value.ty.valtype = ty) (scalar : ty ≠ .V128) :
@@ -86,7 +86,7 @@ synthetic entry point; no interpreter-correctness premise is hidden in either. -
 theorem synthetic_resolved_initializer (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hc : inst.module.functions.val[function.val]? = some code)
     (compiled : Compiler.InitializerCode code expr ty)

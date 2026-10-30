@@ -44,7 +44,7 @@ theorem table_rest_accepted_replay {V W : Type}
       source.on_br_table before marked depth ts = .ok (.Ok (),after) →
       target.on_br_table compiler marked depth ts ⦃ result => result.1 = .Ok () ∧
         post {st with core := marked} after result.2 ⦄)
-    (st : code.BodyState) (env : module.Env) (index depth : U32) (ts : signature.ResultType)
+    (st : code.BodyState) (env : metadata.Env) (index depth : U32) (ts : signature.ResultType)
     (bounded : index.val ≤ count.val)
     (arity : Option Usize) (first : signature.ResultType) (before : V) (compiler : W)
     (held : if index = count then readRelated index.val st.core depth ts before compiler
@@ -107,7 +107,7 @@ theorem table_body_accepted_replay {V W : Type}
     (related : Nat → code.OpIterState → V → W → Prop)
     (readRelated : Nat → code.OpIterState → U32 → signature.ResultType → V → W → Prop)
     (post : code.BodyState → V → W → Prop)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
     (readMoves : ∀ (index : U32) (st : code.BodyState) before compiler depth ts out,
       index.val ≤ count.val → related index.val st.core before compiler → code.read_label_info st data = .ok (.Ok (depth,ts),out) →
       readRelated index.val out.core depth ts before compiler)
@@ -181,7 +181,7 @@ theorem table_loop_reader_accepted_replay {V W : Type}
     (related : Nat → code.OpIterState → V → W → Prop)
     (readRelated : Nat → code.OpIterState → U32 → signature.ResultType → V → W → Prop)
     (post : code.BodyState → V → W → Prop)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
     (readMoves : ∀ (index : U32) (st : code.BodyState) before compiler depth ts out,
       index.val ≤ count.val → related index.val st.core before compiler → code.read_label_info st data = .ok (.Ok (depth,ts),out) →
       readRelated index.val out.core depth ts before compiler)

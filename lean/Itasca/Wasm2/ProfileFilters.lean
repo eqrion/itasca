@@ -97,12 +97,12 @@ theorem code.check_table_byte.complete (profile : ValidationProfile) (data : Sli
     rw [hr]
     simp [core.result.Result.Insts.CoreOpsTry.branch, hz]
 
-theorem code.check_table_target.wasm2 (env : module.Env) (first ts : signature.ResultType) :
+theorem code.check_table_target.wasm2 (env : metadata.Env) (first ts : signature.ResultType) :
     code.check_table_target .Wasm2 env first ts = .ok (.Ok ()) := rfl
 
 /-- Wasm 1.0 accepts exactly targets whose types resolve to the first target's types. -/
 @[step]
-theorem code.check_table_target.spec (profile : ValidationProfile) (env : module.Env)
+theorem code.check_table_target.spec (profile : ValidationProfile) (env : metadata.Env)
     (first ts : signature.ResultType) :
     code.check_table_target profile env first ts ⦃ r => r = .Ok () → profile = .Wasm1 →
       ∃ us, Wasm2.resolve env first = some us ∧ Wasm2.resolve env ts = some us ⦄ := by
@@ -119,8 +119,8 @@ theorem code.check_table_target.spec (profile : ValidationProfile) (env : module
       obtain ⟨us, vs, hf, ht, he⟩ := hs
       cases equal <;> simp_all [core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.check_table_target.complete (profile : ValidationProfile) (env : module.Env)
-    (first ts : signature.ResultType) (us : List types.ValueType)
+theorem code.check_table_target.complete (profile : ValidationProfile) (env : metadata.Env)
+    (first ts : signature.ResultType) (us : List wasm_types.ValueType)
     (hf : Wasm2.resolve env first = some us) (ht : Wasm2.resolve env ts = some us) :
     code.check_table_target profile env first ts = .ok (.Ok ()) := by
   cases profile with

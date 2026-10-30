@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std Itasca
 /-- The actual profile capacity guard is checked before ordinary decoding.
 Only the non-full branch needs the corresponding scalar-reader theorem. -/
 theorem reader_profile_scalar_reached {V} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before : V) (post : code.OpIterState → V → Prop)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
     (step : st.core.vals.val.length < Usize.max →

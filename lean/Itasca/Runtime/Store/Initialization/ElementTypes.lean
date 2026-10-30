@@ -5,7 +5,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementTypeMap {M : Type} (store : runtime.store.Store M)
-    (source : List Itasca.module.Element) (addresses : List Usize) : Prop :=
+    (source : List Itasca.metadata.Element) (addresses : List Usize) : Prop :=
   List.Forall₂ (fun entry address => ∃ segment, store.elems.val[address.val]? = some segment ∧ segment.ty = entry.elem) source addresses
 
 theorem ElementTypeMap.prefix {M : Type} {store after : runtime.store.Store M} {source addresses}
@@ -24,7 +24,7 @@ theorem ElementTypedEffect.type_map {M : Type} {store after : runtime.store.Stor
     (effect : ElementTypedEffect store instIndex inst source status after)
     (bound : instIndex.val < store.instances.length)
     (found : after.instances.val[instIndex.val]? = some next)
-    {entries : List Itasca.module.Element} (matching : ElementTypeMap store entries inst.elems.val)
+    {entries : List Itasca.metadata.Element} (matching : ElementTypeMap store entries inst.elems.val)
     (success : status = .Ok ()) : ElementTypeMap after (entries ++ [source]) next.elems.val := by
   cases effect with
   | failed error => simp at success
@@ -40,7 +40,7 @@ theorem ElementTypedEffect.type_map {M : Type} {store after : runtime.store.Stor
 
 theorem ElementTypeMap.bindings {M : Type} {store : runtime.store.Store M} {inst : runtime.store.ModuleInst}
     (matching : ElementTypeMap store inst.module.module.env.elements.val inst.elems.val) :
-    ∀ (index : Nat) (source : Itasca.module.Element) (address : Usize) (segment : runtime.store.ElemInst),
+    ∀ (index : Nat) (source : Itasca.metadata.Element) (address : Usize) (segment : runtime.store.ElemInst),
       inst.module.module.env.elements.val[index]? = some source → inst.elems.val[index]? = some address →
       store.elems.val[address.val]? = some segment → segment.ty = source.elem := by
   intro index source address segment sourceFound mapped found
@@ -58,7 +58,7 @@ theorem ElementTypeMap.bindings {M : Type} {store : runtime.store.Store M} {inst
 /-- Data staging changes no element values or element addresses, including
 refusal branches before or after a data append. -/
 theorem DataStageEffect.element_types {M : Type} {store after : runtime.store.Store M}
-    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {source : List Itasca.module.Element}
+    {inst next : runtime.store.ModuleInst} {instIndex : Usize} {source : List Itasca.metadata.Element}
     (effect : DataStageEffect store instIndex inst after)
     (found : store.instances.val[instIndex.val]? = some inst)
     (nextFound : after.instances.val[instIndex.val]? = some next)

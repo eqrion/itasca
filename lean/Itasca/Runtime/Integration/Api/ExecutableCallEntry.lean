@@ -11,7 +11,7 @@ open Aeneas Aeneas.Std
 structure ExecutableCallEntry {M : Type} (store : runtime.store.Store M)
     (address : runtime.FuncAddr) where
   function : runtime.store.FuncInst
-  signature : Itasca.types.FuncType
+  signature : Itasca.wasm_types.FuncType
   functionLookup : store.funcs.val[address.index.val]? = some function
   signatureLookup : store.types.val[function.signature.val]? = some signature
   signatureBound : function.signature.val < store.types.val.length

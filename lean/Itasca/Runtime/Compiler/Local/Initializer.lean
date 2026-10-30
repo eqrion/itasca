@@ -7,11 +7,11 @@ constant-expression typing and runtime reference resolution are separate facts. 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def initializerWidth : Itasca.types.ValueType → U32
+def initializerWidth : Itasca.wasm_types.ValueType → U32
   | .V128 => 2#u32
   | _ => 1#u32
 
-theorem compiler_width_eq (ty : Itasca.types.ValueType) :
+theorem compiler_width_eq (ty : Itasca.wasm_types.ValueType) :
     runtime.value.width ty = .ok (initializerWidth ty) := by
   cases ty <;> rfl
 
@@ -19,7 +19,7 @@ def initializerBits (lo hi : U64) : U128 :=
   ⟨(UScalar.cast .U128 lo).bv ||| ((UScalar.cast .U128 hi).bv <<< 64)⟩
 
 inductive ConstantInstruction (function : runtime.bytecode.CompiledFunction)
-    (dst : U32) : Itasca.types.ConstExpr → Itasca.types.ValueType → runtime.bytecode.Instr → Prop where
+    (dst : U32) : Itasca.wasm_types.ConstExpr → Itasca.wasm_types.ValueType → runtime.bytecode.Instr → Prop where
   | i32 (value : I32) (ty) : ConstantInstruction function dst (.I32 value) ty
       (.Const32 dst (IScalar.hcast .U32 value))
   | i64 (value : I64) (ty) : ConstantInstruction function dst (.I64 value) ty
@@ -37,11 +37,11 @@ inductive ConstantInstruction (function : runtime.bytecode.CompiledFunction)
       ConstantInstruction function dst (.GlobalGet index) .V128 (.GlobalGet2 dst index)
 
 abbrev InitialInstruction (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (instruction : runtime.bytecode.Instr) :=
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (instruction : runtime.bytecode.Instr) :=
   ConstantInstruction function 0#u32 expr ty instruction
 
 structure InitializerCode (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) : Prop where
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) : Prop where
   code : ∃ instruction, InitialInstruction function expr ty instruction ∧
     function.code.val = [instruction, .Return 0#u32 (initializerWidth ty)]
   capacity : function.slot_count = initializerWidth ty

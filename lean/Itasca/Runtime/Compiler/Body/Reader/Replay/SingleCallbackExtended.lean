@@ -40,7 +40,7 @@ set_option maxHeartbeats 4000000
 
 /-- Every accepted bulk-reader step invokes one bounded non-scope event. -/
 theorem reader_single_callback_bulk {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
     (before after : V) (out : code.OpIterState)
     (accepted : code.step_bulk visitor st data env opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
@@ -64,7 +64,7 @@ theorem reader_single_callback_bulk {V : Type} (visitor : code.OpVisitor V)
     exact reader_single_callback_of_run visitor _ (fun _ (a : U32 × U32) => .table_init a.1 a.2) before after out
       (by intro arg; exact ⟨True.intro,True.intro⟩) accepted
   case h_6 =>
-    exact reader_single_callback_of_run visitor _ (fun _ (a : U32 × types.ValueType) => .elem_drop a.1) before after out
+    exact reader_single_callback_of_run visitor _ (fun _ (a : U32 × wasm_types.ValueType) => .elem_drop a.1) before after out
       (by intro arg; exact ⟨True.intro,True.intro⟩) accepted
   case h_7 =>
     exact reader_single_callback_of_run visitor _ (fun _ (a : U32 × U32) => .table_copy a.1 a.2) before after out
@@ -83,7 +83,7 @@ theorem reader_single_callback_bulk {V : Type} (visitor : code.OpVisitor V)
 /-- Accepted base-reader steps call exactly one non-scope visitor event at their returned
 validator state. -/
 theorem reader_single_callback_base {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (before after : V) (out : code.OpIterState)
     (accepted : code.step visitor st data env ctx opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
@@ -189,7 +189,7 @@ theorem reader_single_callback_base {V : Type} (visitor : code.OpVisitor V)
 /-- Accepted sign-extension, saturating conversion and base-reader steps
 retain an exact event, with scope and table boundaries explicitly excluded. -/
 theorem reader_single_callback_extended {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (before after : V) (out : code.OpIterState)
     (accepted : code.step_extended visitor st data env ctx opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧

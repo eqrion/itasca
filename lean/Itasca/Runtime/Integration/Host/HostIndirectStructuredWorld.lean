@@ -48,7 +48,7 @@ theorem step_indirect_host_structured_world {M P F A : Type}
          ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩
          ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩) ∨
       (∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧
-       hostStepAddress exec store=some address ∧ ∃ (signature : Itasca.types.FuncType) (base : Usize) (pc : U32) (front args : List val),
+       hostStepAddress exec store=some address ∧ ∃ (signature : Itasca.wasm_types.FuncType) (base : Usize) (pc : U32) (front args : List val),
         f.vals=(front++args)++[SourceMachine.integerVal .I32 position] ∧ pc.val=raw.pc.val+1 ∧
         (∃ entry selector offset, compiled.code.val[raw.pc.val]?=some (.CallIndirect entry selector offset)) ∧
         runtime.interp.call memory hooks floats allocator

@@ -10,8 +10,8 @@ Main declarations: `reader_block_signature_wasm2` and `SourceScopeMatchesWasm2.c
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-theorem reader_block_signature_wasm2 (env : module.Env) (bt : signature.BlockType)
-    (ins outs : List types.ValueType)
+theorem reader_block_signature_wasm2 (env : metadata.Env) (bt : signature.BlockType)
+    (ins outs : List wasm_types.ValueType)
     (inputs : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
     (outputs : Wasm2.resolve env (Wasm2.outputs bt) = some outs) :
     BlockSignature (env.types.val.map EnvTranslation.funcType) (Wasm2.blockType bt)
@@ -34,7 +34,7 @@ theorem reader_block_signature_wasm2 (env : module.Env) (bt : signature.BlockTyp
     · simp [Wasm2.inputs, Wasm2.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ i.val)] at inputs
 
 theorem SourceScopeMatchesWasm2.signature {scope saved}
-    (same : SourceScopeMatchesWasm2 scope saved) (env : module.Env)
+    (same : SourceScopeMatchesWasm2 scope saved) (env : metadata.Env)
     (nonBody : saved.form ≠ .body)
     (inputs : Wasm2.resolve env (Wasm2.inputs saved.bt) = some saved.ins)
     (outputs : Wasm2.resolve env (Wasm2.outputs saved.bt) = some saved.outs) :

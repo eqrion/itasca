@@ -44,7 +44,7 @@ open Aeneas Aeneas.Std
     scalar_tac
 
 def ConstantLowered (before after : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (dst : U32) : Prop :=
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (dst : U32) : Prop :=
   ∃ code pool instruction,
     after = { before with code, v128_pool := pool } ∧
     code.val = before.code.val ++ [instruction] ∧ ConstantInstruction after dst expr ty instruction
@@ -52,7 +52,7 @@ def ConstantLowered (before after : runtime.bytecode.CompiledFunction)
 @[step] theorem initializer_constant {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget : runtime.compiler.Budget A)
     (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (dst : U32)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (dst : U32)
     (codeFits : function.code.val.length < Usize.max)
     (poolFits : function.v128_pool.val.length < Usize.max) :
     runtime.compiler.initialize.constant ops budget function expr ty dst ⦃ out =>

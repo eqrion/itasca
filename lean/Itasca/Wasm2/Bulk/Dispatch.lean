@@ -14,7 +14,7 @@ namespace Itasca.Wasm2
 
 /-- Factorization of the bulk instruction callbacks around their readers. -/
 def bulkStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) :
+    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) :=
   match opcode with
   | 8#uscalar => CoreVisitor.run (code.read_memory_init st data env) (fun v s a => visitor.on_memory_init v s a) v
@@ -35,7 +35,7 @@ namespace Itasca
 
 /-- `code.step_bulk` equals its unfolded form `Wasm2.bulkStep`. -/
 theorem code.step_bulk.eq_runs {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (opcode : U32) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) :
     code.step_bulk visitor st data env opcode v = Wasm2.bulkStep visitor st data env opcode v := by
   unfold code.step_bulk Wasm2.bulkStep
   split <;> try rfl
@@ -46,7 +46,7 @@ theorem code.step_bulk.eq_runs {V : Type} (visitor : code.OpVisitor V)
   all_goals cases r <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   all_goals try (rename_i a; cases (show U32 × U32 from a))
-  all_goals try (rename_i a; cases (show U32 × types.ValueType from a))
+  all_goals try (rename_i a; cases (show U32 × wasm_types.ValueType from a))
   all_goals try simp only [Std.uncurry]
   all_goals congr 1
   all_goals funext pair

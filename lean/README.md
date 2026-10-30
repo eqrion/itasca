@@ -89,7 +89,7 @@ Wasm 1.0.
 
 | Layer | Contracts |
 | --- | --- |
-| Whole module | [Results/Validate](Itasca/Results/Validate.lean): `module.validate_module.profile_total`, `profile_sound`, `profile_spec`, `profile_complete`, `profile_complete_with_metadata`. |
+| Whole module | [Results/Validate](Itasca/Results/Validate.lean): `metadata.validate_module.profile_total`, `profile_sound`, `profile_spec`, `profile_complete`, `profile_complete_with_metadata`. |
 | Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.profile_sound`, `profile_total`, and `profile_complete`, proved in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
 | Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
 | Worker batches | [Results/Batch](Itasca/Results/Batch.lean): `stream.CodeBatch.validate_func`, `validate_all`, and `finish.sound`, giving ordered entry validation and exact coverage. |
@@ -139,7 +139,7 @@ and examples import only `Main`. Between these, the order is a guide.
 | Directory | Contents |
 | --- | --- |
 | `Generated/` | Aeneas models of the Rust validator and runtime, and the handwritten external models. |
-| `Support/` | Result inversion, loop lemmas, dispatch simprocs, and translation of Rust types and `module.Env` into SpecTec contexts. |
+| `Support/` | Result inversion, loop lemmas, dispatch simprocs, and translation of Rust types and `metadata.Env` into SpecTec contexts. |
 | `Spec/` | Checks of and additions to the generated specification: declared references, `Instrs_ok` inversion, constants. |
 | `Binary/` | The independent grammar: LEB128, floats, names, modules, uniqueness, and the `Wasm1/` and `Wasm2/` instruction grammars. |
 | `Handler/` | Lemmas about individual extracted handlers, and `Realizes`/`TypedPrefix` for stacks. |
@@ -187,11 +187,15 @@ The proofs supplement the pinned specification without editing it:
 
 ### Source patches
 
+Aeneas runs unmodified at the pinned revision. Private Rust modules use
+`metadata` and `wasm_types` to avoid Lean namespace collisions with fields
+named `module` and `types`; their files remain `src/module.rs` and `src/types.rs`.
+Local binders also avoid namespaces referenced in the same scope, such as
+`limits` and `error`.
+`just regressions` extracts and compiles upstream discriminant and loop cases.
+
 Build targets apply these to the pinned checkouts:
 
-- [aeneas-lean-extraction.patch](../patches/aeneas-lean-extraction.patch) fixes
-  Lean name shadowing and nested branch indentation; `just regressions` checks
-  it.
 - [spectec-wasm2-global-mutability.patch](../patches/spectec-wasm2-global-mutability.patch)
   keeps both global mutabilities in typing.
 - [spectec-wasm2-module.patch](../patches/spectec-wasm2-module.patch)

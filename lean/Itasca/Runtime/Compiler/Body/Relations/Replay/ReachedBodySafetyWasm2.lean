@@ -16,8 +16,8 @@ open Aeneas Aeneas.Std Itasca
 /-- A rejected body needs no retained suffix; an accepted open boundary retains
 both the exact compiler/source point and its quantitative callback ledger. -/
 def ReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompiler A)
-    (C : context) (locals : List valtype) (data : Slice U8) (env : module.Env)
-    (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (C : context) (locals : List valtype) (data : Slice U8) (env : metadata.Env)
+    (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.BodyState) : Prop :=
   st.core.ctrls.val = [] ∨
     (IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial compiler
@@ -27,7 +27,7 @@ def ReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompiler A)
 
 theorem compiler_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (layout : LocalLayout initial) (localsMatch : initial.function.locals = sourceLocals)
     (metadata : FunctionParameterSlots initial env)
     (matched : EnvTranslation.Matches env ⟨sourceLocals,ft.results⟩ C) (contextLocals : C.LOCALS=locals)
@@ -64,7 +64,7 @@ theorem compiler_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Pl
 state. Every callback premise is derived at its reached source boundary. -/
 theorem compiler_body_wasm2_total {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial initial
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
       (ft.results.val.map Translate.valueType) locals data env sourceLocals index ft (Wasm2.initial index))

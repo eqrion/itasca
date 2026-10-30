@@ -116,7 +116,7 @@ theorem elem_drop_bytes {data env profile locals index st} (p : Pending data env
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
-    ReadBytes data p.start (code.take_element {st.core with pos := next} data env) (fun (a : U32 × types.ValueType) => .elem_drop a.1) := by
+    ReadBytes data p.start (code.take_element {st.core with pos := next} data env) (fun (a : U32 × wasm_types.ValueType) => .elem_drop a.1) := by
   intro s a hr
   refine ⟨.plain (.ELEM_DROP (.mk_uN a.1.val)), rfl, by simp [Action.opcode], ?_⟩
   rw [← metadataOperands.empty (code.take_element {st.core with pos := next} data env)] at hr
@@ -243,7 +243,7 @@ theorem bulk {data env profile locals index st} (p : Pending data env profile lo
     exact CallbackTrace.run_step_trace data p.start _ visitor observe records (fun (a : U32 × U32) => .table_init a.1 a.2)
       (table_init_bytes p hbyte next hprefix hsize) v result final v' run
   case h_6 =>
-    exact CallbackTrace.run_step_trace data p.start _ visitor observe records (fun (a : U32 × types.ValueType) => .elem_drop a.1)
+    exact CallbackTrace.run_step_trace data p.start _ visitor observe records (fun (a : U32 × wasm_types.ValueType) => .elem_drop a.1)
       (elem_drop_bytes p hbyte next hprefix hsize) v result final v' run
   case h_7 =>
     exact CallbackTrace.run_step_trace data p.start _ visitor observe records (fun (a : U32 × U32) => .table_copy a.1 a.2)

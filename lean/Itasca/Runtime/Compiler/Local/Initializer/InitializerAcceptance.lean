@@ -26,7 +26,7 @@ private theorem slots_fit_zero (function : runtime.bytecode.CompiledFunction) (c
 a vector literal requires a vector result slot. Other constant-expression
 forms fit the width selected from their result type. -/
 theorem initial_instruction_accepts (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (instruction : runtime.bytecode.Instr)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (instruction : runtime.bytecode.Instr)
     (lowered : InitialInstruction function expr ty instruction)
     (capacity : function.slot_count = initializerWidth ty)
     (vector : ∀ lo hi, expr = .V128 lo hi → ty = .V128) :
@@ -53,7 +53,7 @@ theorem initial_instruction_accepts (function : runtime.bytecode.CompiledFunctio
 /-- Exact initializer code and source metadata imply the actual publication
 checker accepts. Component checker success is derived here, not assumed. -/
 theorem initializer_well_formed (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType)
     (shape : InitializerCode function expr ty)
     (start : function.body_start = 0#usize) (finish : function.body_end = 0#usize)
     (offsets : function.source_offsets.val = []) (jumps : function.jump_tables.val = [])

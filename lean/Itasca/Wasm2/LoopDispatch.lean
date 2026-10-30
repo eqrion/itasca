@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Wasm2
 
 /-- The return arm of the extracted loop, with its state exposed for proofs. -/
-def returnStep (st : code.BodyState) (env : module.Env) (index : U32) :
+def returnStep (st : code.BodyState) (env : metadata.Env) (index : U32) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, ois) ← code.pop_results st.core env (.Type index .Results)
   match r with
@@ -25,7 +25,7 @@ def returnStep (st : code.BodyState) (env : module.Env) (index : U32) :
 
 /-- Proof adapter for one opcode of the extracted body loop after the profile's opcode filter. Its
 exact factorization is checked by `loopBody_eq`; it is not a separate validity judgment. -/
-def step (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+def step (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (opcode : U8) :
     Result (core.result.Result Unit error.OpError × code.BodyState) :=
   match opcode with
@@ -49,12 +49,12 @@ def step (st : code.BodyState) (data : Slice U8) (env : module.Env) (profile : V
       .ok (r, { st with core := ois })
 
 /-- The extracted body loop with the empty visitor. -/
-abbrev run (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (ctx : code.Context)
+abbrev run (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   Wasm2.emptyVisitorLoop data env profile index st ctx.locals ctx.results ()
 
 /-- One iteration of `run`. -/
-abbrev loopBody (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+abbrev loopBody (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :=
   Wasm2.emptyVisitorLoop.body data env profile index ctx.locals ctx.results st ()
 
@@ -67,7 +67,7 @@ def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
 
 /-- One loop iteration stops at the end of the body (with `TrailingBytes` if bytes remain) and
 otherwise reads an opcode, applies the profile's opcode filter and runs `step`. -/
-theorem loopBody_eq (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem loopBody_eq (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     loopBody data env profile ctx index st =
       if st.blocks.val = [] then

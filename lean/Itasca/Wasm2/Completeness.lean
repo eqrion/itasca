@@ -18,8 +18,8 @@ namespace Itasca.Wasm2.Completeness
 /-- A body with independent encoding, typing and declared references is accepted, given a
 `Program` contract for every token sequence. Typing starts the body with no operands, even when
 its type has parameters, and the final `end` closes the selected result signature. -/
-theorem body_of_programs (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+theorem body_of_programs (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (hi : env.types.val[index.val]? = some ft)
     (hparams : ft.params.val.length ≤ 1000) (hresults : ft.results.val.length ≤ 1000)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -71,7 +71,7 @@ namespace Itasca.Wasm2.Completeness
 
 /-- Every token sequence emitted by a syntax tree has a `Program` contract for arbitrary
 environments within limits. -/
-theorem programs (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem programs (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
     (hret : resolve env (.Type index .Results) = some ctx.results.val)
     (tokens : List Token) (ops : List instr) (he : Emits tokens ops) :
@@ -97,8 +97,8 @@ namespace Itasca
 generated Wasm 2.0 typing, the independent function-reference declaration condition, and for
 Wasm 1.0 the Wasm 1.0 grammar and restrictions. Implementation bounds constrain body bytes and
 signature sizes. -/
-theorem code.bodyCore.complete (data : Slice U8) (env : module.Env)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (profile : ValidationProfile)
+theorem code.bodyCore.complete (data : Slice U8) (env : metadata.Env)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile)
     (henv : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : Wasm2.Validated profile data env locals index) :

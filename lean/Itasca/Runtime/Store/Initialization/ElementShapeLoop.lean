@@ -4,11 +4,11 @@ import Itasca.Runtime.Store.Initialization.ElementLoop
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :
-    types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
+private theorem elem_value_type_eq (ty : Itasca.wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
 
 private theorem encode_push_shape {M : Type} (store : runtime.store.Store M)
-    (values : alloc.vec.Vec U64) (value : runtime.Value) (ty : Itasca.types.ElemType)
+    (values : alloc.vec.Vec U64) (value : runtime.Value) (ty : Itasca.wasm_types.ElemType)
     (typed : elementValueType ty = Interp.rawType value) (owned : ValueInStore store value)
     (previous : ∀ word ∈ values.val, ReferenceShape store ty word)
     (room : values.length < Usize.max) :
@@ -31,7 +31,7 @@ theorem element_initializers_shape_loop {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -75,7 +75,7 @@ theorem element_initializers_shape_loop {M P F A : Type}
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
         simp only [runtime.compiler.ExecutableModule.env,
-          Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+          Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found

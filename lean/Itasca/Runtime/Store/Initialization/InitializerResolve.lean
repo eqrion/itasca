@@ -12,7 +12,7 @@ defined global, including one whose initialization has already completed. -/
 structure InitializerImports {M : Type} (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) : Prop where
   funcs : inst.module.module.env.func_types.val.length ≤ inst.funcs.val.length
-  globals : ∀ index : U32, ∀ ty : Itasca.types.GlobalType,
+  globals : ∀ index : U32, ∀ ty : Itasca.wasm_types.GlobalType,
     inst.module.module.env.global_types.val[index.val]? = some ty →
     index.val < inst.module.module.env.num_imported_globals.val →
     ∃ addr value, inst.globals.val[index.val]? = some addr ∧
@@ -21,8 +21,8 @@ structure InitializerImports {M : Type} (store : runtime.store.Store M)
 /-- Source constant typing supplies the resolution relation used by the machine
 proof. The encoded reference bound follows from the issued store address. -/
 theorem initializer_resolves {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (expr : Itasca.types.ConstExpr)
-    (ty : Itasca.types.ValueType)
+    (inst : runtime.store.ModuleInst) (expr : Itasca.wasm_types.ConstExpr)
+    (ty : Itasca.wasm_types.ValueType)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env expr ty)
     (bindings : InitializerBindings store inst)
     (imports : InitializerImports store inst) :

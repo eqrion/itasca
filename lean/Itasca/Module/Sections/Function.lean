@@ -3,7 +3,7 @@ import Itasca.Module.Sections.Type
 /-!
 # Function section parser
 
-Soundness of `module.decode_function_section` and its loop. `FunctionsAdded` says the environment
+Soundness of `metadata.decode_function_section` and its loop. `FunctionsAdded` says the environment
 gains the decoded type indices and the signatures they resolve to, in order. The decoded span is
 a `VecEncoding IndexEncoding`. Completeness is in `Module/Sections/FunctionComplete`.
 -/
@@ -14,8 +14,8 @@ namespace Itasca.ModuleSections
 
 /-- `result` is `env` with `indices` appended to the function type indices and the resolved
 `signatures` appended to the function types, and nothing else changed. -/
-def FunctionsAdded (env result : module.Env) (indices : List U32)
-    (signatures : List types.FuncType) : Prop :=
+def FunctionsAdded (env result : metadata.Env) (indices : List U32)
+    (signatures : List wasm_types.FuncType) : Prop :=
   result = { env with func_type_indices := result.func_type_indices, func_types := result.func_types } ∧
     result.func_type_indices.val = env.func_type_indices.val ++ indices ∧
     result.func_types.val = env.func_types.val ++ signatures ∧
@@ -29,17 +29,17 @@ open ModuleBinary ModuleSections
 
 /-- The function loop adds `count` indices forming a `Rep IndexEncoding` span. -/
 @[step]
-theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_function_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hfuncs : env.func_types.val.length ≤ start.val)
     (hindices : env.func_type_indices.val.length ≤ start.val) :
-    module.decode_function_section_loop data env count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_function_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ indices signatures, indices.length = count.val ∧
           FunctionsAdded env r.2 indices signatures ∧
           At (Rep IndexEncoding) data start indices next ∧
           r.2.func_types.val.length ≤ next.val ∧ r.2.func_type_indices.val.length ≤ next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_function_section_loop
+  unfold metadata.decode_function_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ indices signatures,
       indices.length = s.2.2.val ∧ FunctionsAdded env s.1 indices signatures ∧
@@ -47,7 +47,7 @@ theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module
       s.1.func_types.val.length ≤ s.2.1.val ∧ s.1.func_type_indices.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, indices, signatures, hlen, henv, hbytes, hfuncs, hindices⟩
     dsimp only at hi hlen henv hbytes hfuncs hindices
-    unfold module.decode_function_section_loop.body
+    unfold metadata.decode_function_section_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -63,7 +63,7 @@ theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module
       | Ok pair =>
         obtain ⟨idx, next⟩ := pair
         have hs := hp.span
-        obtain ⟨r, ht, hlookup⟩ := WP.spec_imp_exists (module.lookup_type.spec current idx)
+        obtain ⟨r, ht, hlookup⟩ := WP.spec_imp_exists (metadata.lookup_type.spec current idx)
         cases r with
         | Err e => simp [ht, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -93,28 +93,28 @@ theorem module.decode_function_section_loop.spec (data : Slice U8) (env : module
       ⟨by cases env; rfl, by simp, by simp, .nil⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hfuncs, hindices⟩
 
-/-- `module.decode_function_section` adds the indices of a `VecEncoding IndexEncoding` span with
+/-- `metadata.decode_function_section` adds the indices of a `VecEncoding IndexEncoding` span with
 their resolved signatures. -/
 @[step]
-theorem module.decode_function_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_function_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hfuncs : env.func_types.val.length ≤ pos.val)
     (hindices : env.func_type_indices.val.length ≤ pos.val) :
-    module.decode_function_section data pos env ⦃ r => match r.1 with
+    metadata.decode_function_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ indices signatures, FunctionsAdded env r.2 indices signatures ∧
           At (VecEncoding IndexEncoding) data pos indices next ∧
           r.2.func_types.val.length ≤ next.val ∧ r.2.func_type_indices.val.length ≤ next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_function_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_function_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_function_section_loop.spec data env count start hs.2.2 (by omega) (by omega))
-    simp [module.decode_function_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_function_section_loop.spec data env count start hs.2.2 (by omega) (by omega))
+    simp [metadata.decode_function_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

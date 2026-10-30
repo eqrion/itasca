@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 /-- A selected source host call fixes both its source signature and its shared
 argument base, including suspended source callers. -/
 def HostSignatureSite (source : SourceMachine.AState) (address : funcaddr) (identity : Nat)
-    (signature : Itasca.types.FuncType) (base : Nat) : Prop :=
+    (signature : Itasca.wasm_types.FuncType) (base : Nat) : Prop :=
   SourceInvocationSite source address base ∧ HostFunction source.store address identity
     (signature.params.val.map sourceType) (signature.results.val.map sourceType)
 
@@ -22,7 +22,7 @@ def HostDispatchCause {M P F A : Type}
     (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P)
     (error : runtime.ExecError) : Prop :=
   out.1=.Err error ∧ ∃ (index : Usize) (raw : runtime.interp.Frame) (pc : U32)
-    (address : runtime.FuncAddr) (signature : Itasca.types.FuncType) (base : Usize) (identity : U64),
+    (address : runtime.FuncAddr) (signature : Itasca.wasm_types.FuncType) (base : Usize) (identity : U64),
     exec.frames.val[index.val]?=some raw ∧ pc.val=raw.pc.val+1 ∧
     HostSignatureSite source address.index.val identity.val signature base.val ∧
     runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set index {raw with pc:=pc}}

@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleConstants
 
 private theorem global_lookup {env C} (hC : GlobalContext env C)
-    (idx : U32) (gt : types.GlobalType) (hi : idx.val < env.global_types.val.length)
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
     (hgt : env.global_types.val[idx.val] = gt) (himport : idx.val < env.num_imported_globals.val) :
     idx.val < C.GLOBALS.length ∧ C.GLOBALS[idx.val]! = Translate.globalType gt := by
   rw [hC]
@@ -60,11 +60,11 @@ theorem Valid.expr_ok_const {env e t} (h : Valid env e t)
     hC (expression_wf _)
 
 /-- The SpecTec global of a decoded global. -/
-def global (g : module.Global) : _root_.global :=
+def global (g : metadata.Global) : _root_.global :=
   .GLOBAL (Translate.globalType g.gtype) (expression g.init)
 
 /-- A global with a valid initializer satisfies `Global_ok`. -/
-theorem global_typed (env : module.Env) (g : module.Global)
+theorem global_typed (env : metadata.Env) (g : metadata.Global)
     (h : Valid env g.init g.gtype.valtype) (C : context)
     (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
     Global_ok C (global g) (Translate.globalType g.gtype) := by

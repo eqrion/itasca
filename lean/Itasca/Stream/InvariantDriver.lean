@@ -9,11 +9,11 @@ namespace Itasca.StreamScheduler
 /-- Reachable scheduler phases. Only custom-section hooks are globally total;
 compilation callbacks are required on the states reached after environment setup. -/
 structure CallbacksOn {V : Type} (visitor : stream.StreamingVisitor V)
-    (pre : V → Prop) (ready : module.Env → Nat → V → Prop)
-    (admissible : module.Env → Prop) (profile : ValidationProfile) : Prop where
-  custom : ModuleTail.HooksTotal visitor.moduleModuleVisitorInst
-  custom_pre : ModuleTail.PreservesInvariant visitor.moduleModuleVisitorInst pre
-  custom_ready : ∀ env cursor, ModuleTail.PreservesInvariant visitor.moduleModuleVisitorInst (ready env cursor)
+    (pre : V → Prop) (ready : metadata.Env → Nat → V → Prop)
+    (admissible : metadata.Env → Prop) (profile : ValidationProfile) : Prop where
+  custom : ModuleTail.HooksTotal visitor.metadataModuleVisitorInst
+  custom_pre : ModuleTail.PreservesInvariant visitor.metadataModuleVisitorInst pre
+  custom_ready : ∀ env cursor, ModuleTail.PreservesInvariant visitor.metadataModuleVisitorInst (ready env cursor)
   region_pre : ∀ v region, pre v → visitor.custom_region v region ⦃ pre ⦄
   region_ready : ∀ env cursor v region, ready env cursor v → visitor.custom_region v region ⦃ ready env cursor ⦄
   environment : ∀ v env, pre v → admissible env → CodeEntry.Bounds env →
@@ -33,8 +33,8 @@ variable {profile : ValidationProfile}
 No successful batch or worker-provenance premise is used. -/
 theorem stream.validate_remaining.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
+    (env : metadata.Env) (envLen : Usize) (v : V)
+    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : metadata.Env → Nat → V → Prop) (admissible : metadata.Env → Prop)
     (hv : StreamScheduler.CallbacksOn visitor pre ready admissible profile) (held : pre v)
     (henv : CodeEntry.Bounds env) (admitted : admissible env) :
     stream.validate_remaining source visitor moduleId profile state env envLen v ⦃ out => out.1 = .Ok () → ready env env.func_type_indices.val.length out.2 ⦄ := by
@@ -98,14 +98,14 @@ theorem stream.validate_remaining.spec_on {S V : Type} (source : stream.Source S
                     rw [hregion]
                     simp only [bind_ok]
                     obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
-                      (module.validate_tail_with.spec visitor.moduleModuleVisitorInst hv.custom
+                      (metadata.validate_tail_with.spec visitor.metadataModuleVisitorInst hv.custom
                         bytes 0#usize env v4 (by simp) (profile := profile))
                     rw [hparsed]
                     cases r with
                     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                     | Ok tail =>
                       simp
-                      have retained5 := module.validate_tail_with.accepted_invariant _ (ready env env.func_type_indices.val.length) (hv.custom_ready env env.func_type_indices.val.length) bytes 0#usize env v4 tail v5 hparsed retained4
+                      have retained5 := metadata.validate_tail_with.accepted_invariant _ (ready env env.func_type_indices.val.length) (hv.custom_ready env env.func_type_indices.val.length) bytes 0#usize env v4 tail v5 hparsed retained4
                       obtain ⟨⟨r, v6⟩, hready, retained6⟩ := WP.spec_imp_exists (hv.tail_ready env v5 tail retained5)
                       rw [hready]
                       cases r with
@@ -125,11 +125,11 @@ ready-state invariant. Decoder acceptance establishes environment admissibility;
 callbacks need not return on arbitrary fabricated scheduler records. -/
 theorem stream.validate_streaming.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
-    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : module.Env → Nat → V → Prop) (admissible : module.Env → Prop)
+    (v : V) (storage : metadata.Env)
+    (hs : StreamSource.CallbacksTotal source state) (pre : V → Prop) (ready : metadata.Env → Nat → V → Prop) (admissible : metadata.Env → Prop)
     (hv : StreamScheduler.CallbacksOn visitor pre ready admissible profile) (held : pre v)
     (decoded : ∀ bytes env next, bytes.length ≤ limits.MAX_MODULE_BYTES.val →
-      module.validate_env bytes profile = .ok (.Ok (env,next)) → admissible env) :
+      metadata.validate_env bytes profile = .ok (.Ok (env,next)) → admissible env) :
     stream.validate_streaming source visitor moduleId profile state v storage ⦃ out =>
       out.1 = .Ok () → ready out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
   unfold stream.validate_streaming
@@ -151,15 +151,15 @@ theorem stream.validate_streaming.spec_on {S V : Type} (source : stream.Source S
       rw [hregion]
       simp only [bind_ok]
       obtain ⟨⟨r, v2⟩, hparsed, _⟩ := WP.spec_imp_exists
-        (module.validate_env_with.profile_spec visitor.moduleModuleVisitorInst hv.custom bytes profile v1)
+        (metadata.validate_env_with.profile_spec visitor.metadataModuleVisitorInst hv.custom bytes profile v1)
       rw [hparsed]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
         obtain ⟨env, envEnd⟩ := pair
-        have herase := module.validate_env_with.accepted_erase
-          visitor.moduleModuleVisitorInst bytes v1 env envEnd v2 hparsed
-        have retained2 := module.validate_env_with.accepted_invariant _ pre hv.custom_pre bytes v1 env envEnd v2 hparsed retained1
+        have herase := metadata.validate_env_with.accepted_erase
+          visitor.metadataModuleVisitorInst bytes v1 env envEnd v2 hparsed
+        have retained2 := metadata.validate_env_with.accepted_invariant _ pre hv.custom_pre bytes v1 env envEnd v2 hparsed retained1
         have admitted := decoded bytes env envEnd hsize herase
         have henv := (ModuleEnv.profile_accepted_entry_conditions bytes env envEnd profile hsize herase).1
         simp

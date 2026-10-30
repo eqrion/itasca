@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- Function types within the parameter and result limits pass `code.check_func_type`. -/
-theorem code.check_func_type.complete (ft : types.FuncType)
+theorem code.check_func_type.complete (ft : wasm_types.FuncType)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000) :
     code.check_func_type ft = .ok (.Ok ()) := by
   have hp' : ¬ alloc.vec.Vec.len ft.params > limits.MAX_MULTI_VALUE_PARAMS := by
@@ -27,7 +27,7 @@ theorem code.check_func_type.complete (ft : types.FuncType)
 /-- Function type application is total on structurally bounded stacks. The explicit
 capacity guard also covers arbitrary oversized caller-supplied environments. -/
 @[step]
-theorem code.apply_func_type.total (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.total (st : code.OpIterState) (ft : wasm_types.FuncType)
     (hshape : Control.Shape st) :
     code.apply_func_type st ft ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -73,7 +73,7 @@ theorem code.apply_func_type.total (st : code.OpIterState) (ft : types.FuncType)
 
 /-- An accepted call consumes its parameters in operand order and appends all
 results. The semantic transfer is independent of the function's arity. -/
-theorem code.apply_func_type.realizes (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.realizes (st : code.OpIterState) (ft : wasm_types.FuncType)
     (outer segment : List code.StackType)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length) :
     code.apply_func_type st ft ⦃ r =>
@@ -107,7 +107,7 @@ theorem code.apply_func_type.realizes (st : code.OpIterState) (ft : types.FuncTy
 
 /-- Declarative operand compatibility forces call acceptance within the
 profile's signature limits and available stack capacity. -/
-theorem code.apply_func_type.complete (st : code.OpIterState) (ft : types.FuncType)
+theorem code.apply_func_type.complete (st : code.OpIterState) (ft : wasm_types.FuncType)
     (outer segment : List code.StackType) (before : List valtype)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)

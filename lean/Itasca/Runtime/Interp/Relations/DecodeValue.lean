@@ -12,7 +12,7 @@ theorem cast_usize_exact (n : U64) (h : n.val ≤ Usize.max) :
   simp only [Usize.max, UScalarTy.numBits, Usize.numBits] at *
   omega
 
-theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
+theorem decode_words_code (ty : Itasca.wasm_types.ValueType) (lo hi : U64)
     (hfloat : ty = .F32 → lo.val < 2^32) :
     Compiler.decodeOne (Interp.sourceType ty) (Interp.pairWords ty (lo, hi)) =
       some (decodeWords ty lo hi, []) := by
@@ -28,7 +28,7 @@ theorem decode_words_code (ty : Itasca.types.ValueType) (lo hi : U64)
 
 /-- The actual word decoder returns the value observed by decodeStore. The only
 extra bound is on non-null reference encodings, supplied by ReferenceShape. -/
-theorem decode_value_boundary (ty : Itasca.types.ValueType) (lo hi : U64) (store : Usize)
+theorem decode_value_boundary (ty : Itasca.wasm_types.ValueType) (lo hi : U64) (store : Usize)
     (href : ty = .FuncRef ∨ ty = .ExternRef → lo.val ≤ Usize.max) :
     runtime.value.decode ty lo hi store ⦃ value =>
       Interp.rawType value = ty ∧ Interp.sourceValue value = decodeWords ty lo hi ⦄ := by
@@ -72,7 +72,7 @@ theorem decode_value_boundary (ty : Itasca.types.ValueType) (lo hi : U64) (store
 
 /-- The extracted primitive decoder recovers any well-formed source value
 represented by its exact typed word pair. -/
-theorem decode_value_represents (ty : Itasca.types.ValueType) (lo hi : U64) (store : Usize)
+theorem decode_value_represents (ty : Itasca.wasm_types.ValueType) (lo hi : U64) (store : Usize)
     (value : val) (wellFormed : wf_val value)
     (typed : sourceType ty = Compiler.valueType value)
     (represented : pairWords ty (lo, hi) = Compiler.encodeValue value)

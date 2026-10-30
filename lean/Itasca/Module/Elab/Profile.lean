@@ -19,12 +19,12 @@ namespace Itasca.ModuleElaboration
 /-- The context used for the profile's instruction restrictions. Only labels matter, and the
 initial function label comes from the function's result types in the raw module's type
 declaration. -/
-def profileContext (results : List types.ValueType) : context :=
+def profileContext (results : List wasm_types.ValueType) : context :=
   ⟨[], [], [], [], [], [], [], [], [.mk_list (results.map Translate.valueType)], none⟩
 
 /-- The body of a code entry with type index `idx` satisfies the profile's instruction
 restrictions, with `idx` in range of the type list. -/
-def FunctionProfile (types : List types.FuncType) (idx : U32) (entry : ModuleBinary.Code)
+def FunctionProfile (types : List wasm_types.FuncType) (idx : U32) (entry : ModuleBinary.Code)
     (validationProfile : ValidationProfile := .Wasm1) : Prop :=
   ∃ hi : idx.val < types.length,
     Itasca.Profile.Instructions validationProfile (profileContext types[idx.val].results.val) entry.body
@@ -51,7 +51,7 @@ theorem code_profiles {env indices codes} {validationProfile : ValidationProfile
   | cons hp _ ih => exact .cons (typed_profile hp) ih
 
 /-- Distinct export byte names in a valid environment have distinct decoded names. -/
-theorem export_names_distinct {env : module.Env} {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile) :
+theorem export_names_distinct {env : metadata.Env} {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile) :
     (env.exports.val.map (fun e => ModuleBinary.nameOfBytes e.name.val)).Nodup := by
   have h := hv.distinctExports.map_on (f := ModuleBinary.nameOfBytes) ?_
   · simpa [List.map_map, Function.comp_def] using h

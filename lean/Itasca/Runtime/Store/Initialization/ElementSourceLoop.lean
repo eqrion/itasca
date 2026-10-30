@@ -14,7 +14,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (ty : Itasca.types.ElemType) (expressions : List Itasca.types.ConstExpr) (words : List U64) : Prop :=
+    (ty : Itasca.wasm_types.ElemType) (expressions : List Itasca.wasm_types.ConstExpr) (words : List U64) : Prop :=
   List.Forall₂ (fun expr word => Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩
     (Itasca.ModuleConstants.expression expr) ⟨sourceStore, ⟨[], sourceInstance⟩⟩
     [refVal (decodeRef ty word)]) expressions words
@@ -25,7 +25,7 @@ theorem eval_const_source {M P F A : Type}
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex function : Usize)
     (inst : runtime.store.ModuleInst) (code : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (words : List U64)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (words : List U64)
     (found : store.instances.val[instIndex.val]? = some inst)
     (codeFound : inst.module.functions.val[function.val]? = some code)
     (compiled : Compiler.InitializerCode code expr ty)
@@ -54,12 +54,12 @@ theorem eval_const_source {M P F A : Type}
   exact context.expression valid resolved storeWf frameWf
 
 theorem encode_push_source {M : Type} (store : runtime.store.Store M)
-    (values : alloc.vec.Vec U64) (value : runtime.Value) (ty : Itasca.types.ElemType)
+    (values : alloc.vec.Vec U64) (value : runtime.Value) (ty : Itasca.wasm_types.ElemType)
     (typed : elementValueType ty = Interp.rawType value) (owned : ValueInStore store value)
     (previous : ∀ word ∈ values.val, ReferenceShape store ty word)
     (room : values.length < Usize.max)
     (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (expressions : List Itasca.types.ConstExpr) (expr : Itasca.types.ConstExpr)
+    (expressions : List Itasca.wasm_types.ConstExpr) (expr : Itasca.wasm_types.ConstExpr)
     (matched : ElementSourceValues sourceStore sourceInstance ty expressions values.val)
     (evaluated : Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (Itasca.ModuleConstants.expression expr)
       ⟨sourceStore, ⟨[], sourceInstance⟩⟩ [Interp.sourceValue value]) :
@@ -97,15 +97,15 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :
-    types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
+private theorem elem_value_type_eq (ty : Itasca.wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
 
 theorem element_initializers_source_loop {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -160,7 +160,7 @@ theorem element_initializers_source_loop {M P F A : Type}
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
         simp only [runtime.compiler.ExecutableModule.env,
-          Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+          Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found

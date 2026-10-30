@@ -17,7 +17,7 @@ namespace Itasca.Wasm2
 /-- Every independently encoded scalar instruction accepts its principal
 SpecTec typing. This imposes neither a Wasm 1.0 environment restriction nor a
 restriction on the active frame's input or output arity. -/
-theorem scalar_complete (data : Slice U8) (env : module.Env) (ctx : code.Context)
+theorem scalar_complete (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (C : context) (st : code.OpIterState) (f : Wasm1.Completeness.Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hc : EnvTranslation.Matches env ctx C) (hsize : st.vals.val.length < Usize.max)

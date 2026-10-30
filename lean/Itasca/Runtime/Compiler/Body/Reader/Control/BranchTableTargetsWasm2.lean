@@ -16,7 +16,7 @@ set_option maxRecDepth 4096
 /-- Canonical accepted target checks retain a suffix obligation for every
 label, independently of the compiler visitor's implementation. -/
 theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (before after : V) (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (before after : V) (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (cs : List code.Ctrl) (c : code.Ctrl)
     (controls : st.core.ctrls.val=cs++[c]) (shape : Control.Shape st.core)
     (accepted : code.branch_table_with visitor st data env .Wasm2 before=.ok (.Ok (),final,after)) :

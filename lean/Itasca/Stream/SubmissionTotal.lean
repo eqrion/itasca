@@ -32,7 +32,7 @@ def Post (max : Usize) : (core.result.Result (alloc.vec.Vec Usize) error.Error �
 /-- The loop continuation after its optional retirement, written as the extracted subexpression
 so that both generated branches share one proof. -/
 private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (codeLen : Usize) (config : stream.Config)
+    (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -123,7 +123,7 @@ variable {profile : ValidationProfile}
 
 private theorem submit_body_total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -174,7 +174,7 @@ private theorem submit_body_total {S V : Type} (source : stream.Source S)
 vector stays within the configured maximum. -/
 theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (v : V)
     (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -202,7 +202,7 @@ maximum, when the source and scheduler callbacks return. -/
 @[step]
 theorem stream.submit_code_batches.spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
@@ -216,7 +216,7 @@ theorem stream.submit_code_batches.spec {S V : Type} (source : stream.Source S)
 
 theorem stream.submit_code_batches.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :

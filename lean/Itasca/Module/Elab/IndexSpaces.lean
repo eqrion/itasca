@@ -15,11 +15,11 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleElaboration
 
 /-- The SpecTec external types of the environment's imports, in order. -/
-def importTypes (env : module.Env) : List externtype :=
+def importTypes (env : metadata.Env) : List externtype :=
   env.imports.val.map (fun entry => importType env.types.val entry.desc)
 
 /-- The function space translated from import types is the translation of `importedFuncs`. -/
-theorem funcs_imports (types : List types.FuncType) (entries : List module.Import) :
+theorem funcs_imports (types : List wasm_types.FuncType) (entries : List metadata.Import) :
     ModuleTranslation.funcs (entries.map (fun entry => importType types entry.desc)) =
       (ModuleEnv.importedFuncs entries).map (functionType types) := by
   induction entries with
@@ -30,7 +30,7 @@ theorem funcs_imports (types : List types.FuncType) (entries : List module.Impor
       simp [ModuleTranslation.funcs, importType, ModuleEnv.importedFuncs, hd, ih]
 
 /-- The global space translated from import types is the translation of `importedGlobals`. -/
-theorem globals_imports (types : List types.FuncType) (entries : List module.Import) :
+theorem globals_imports (types : List wasm_types.FuncType) (entries : List metadata.Import) :
     ModuleTranslation.globals (entries.map (fun entry => importType types entry.desc)) =
       (ModuleEnv.importedGlobals entries).map Translate.globalType := by
   induction entries with
@@ -41,7 +41,7 @@ theorem globals_imports (types : List types.FuncType) (entries : List module.Imp
       simp [ModuleTranslation.globals, importType, ModuleEnv.importedGlobals, hd, ih]
 
 /-- The table space translated from import types is the translation of `importedTables`. -/
-theorem tables_imports (types : List types.FuncType) (entries : List module.Import) :
+theorem tables_imports (types : List wasm_types.FuncType) (entries : List metadata.Import) :
     ModuleTranslation.tables (entries.map (fun entry => importType types entry.desc)) =
       (ModuleEnv.importedTables entries).map EnvTranslation.tableType := by
   induction entries with
@@ -52,7 +52,7 @@ theorem tables_imports (types : List types.FuncType) (entries : List module.Impo
       simp [ModuleTranslation.tables, importType, ModuleEnv.importedTables, hd, ih]
 
 /-- The memory space translated from import types is the translation of `importedMems`. -/
-theorem mems_imports (types : List types.FuncType) (entries : List module.Import) :
+theorem mems_imports (types : List wasm_types.FuncType) (entries : List metadata.Import) :
     ModuleTranslation.mems (entries.map (fun entry => importType types entry.desc)) =
       (ModuleEnv.importedMems entries).map EnvTranslation.memType := by
   induction entries with
@@ -99,7 +99,7 @@ theorem memories_cache {env tables memories} (h : ModuleEnv.Cache env tables mem
 
 /-- The typing context for functions, elements, segments and exports: the environment's translated
 index spaces, the given element types and `dataCount` data segments, and no locals or labels. -/
-def moduleContext (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) : context :=
+def moduleContext (env : metadata.Env) (elementTypes : List elemtype) (dataCount : Nat) : context :=
   { TYPES := env.types.val.map EnvTranslation.funcType
     FUNCS := env.func_types.val.map EnvTranslation.funcType
     GLOBALS := env.global_types.val.map Translate.globalType
@@ -113,22 +113,22 @@ def moduleContext (env : module.Env) (elementTypes : List elemtype) (dataCount :
 
 /-- The typing context for constant initializers: `moduleContext` with no segment spaces and only
 the imported globals. -/
-def initializerContext (env : module.Env) : context :=
+def initializerContext (env : metadata.Env) : context :=
   { moduleContext env [] 0 with
     GLOBALS := (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType }
 
 /-- `moduleContext` is a `CodeEntry.ModuleContext` for the environment. -/
-theorem moduleContext_matches (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) :
+theorem moduleContext_matches (env : metadata.Env) (elementTypes : List elemtype) (dataCount : Nat) :
     CodeEntry.ModuleContext env (moduleContext env elementTypes dataCount) :=
   ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- `moduleContext` is well formed. -/
-theorem moduleContext_wf (env : module.Env) (elementTypes : List elemtype) (dataCount : Nat) :
+theorem moduleContext_wf (env : metadata.Env) (elementTypes : List elemtype) (dataCount : Nat) :
     wf_context (moduleContext env elementTypes dataCount) :=
   (moduleContext_matches env elementTypes dataCount).wf
 
 /-- `initializerContext` is well formed. -/
-theorem initializerContext_wf (env : module.Env) : wf_context (initializerContext env) := by
+theorem initializerContext_wf (env : metadata.Env) : wf_context (initializerContext env) := by
   cases moduleContext_wf env [] 0
   constructor <;> assumption
 

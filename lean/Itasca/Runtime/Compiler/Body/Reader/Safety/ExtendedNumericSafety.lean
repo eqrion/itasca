@@ -26,7 +26,7 @@ private theorem sign_callback {A} (ops : runtime.platform.Alloc A)
 /-- Sign-extension readers and callbacks return normally from every reached boundary. -/
 theorem compiler_reader_sign_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val) :
@@ -56,7 +56,7 @@ private theorem sign_byte_descriptor (opcode : U8) (lower : 192 ≤ opcode.val)
 
 theorem compiler_reader_sign_dispatch_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max)
     (opcode : U8) (lower : 192 ≤ opcode.val) (upper : opcode.val ≤ 196) :

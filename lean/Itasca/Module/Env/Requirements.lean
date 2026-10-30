@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- The semantic requirements for one import against the index spaces built so far. -/
-def ImportValid (env : module.Env) (desc : module.ImportDesc)
+def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   match desc with
   | .Func idx => idx.val < env.types.val.length
@@ -28,16 +28,16 @@ def ImportValid (env : module.Env) (desc : module.ImportDesc)
   | .Global _ => True
 
 /-- The table types among the raw imports. -/
-def rawTables (entries : List ModuleBinary.Import) : List types.TableType :=
+def rawTables (entries : List ModuleBinary.Import) : List wasm_types.TableType :=
   entries.filterMap (fun e => match e.desc with | .Table tt => some tt | _ => none)
 
 /-- The memory types among the raw imports. -/
-def rawMemories (entries : List ModuleBinary.Import) : List types.MemType :=
+def rawMemories (entries : List ModuleBinary.Import) : List wasm_types.MemType :=
   entries.filterMap (fun e => match e.desc with | .Memory mt => some mt | _ => none)
 
 /-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
 on the merged table and memory spaces, so imports can be processed in order. -/
-structure ImportsValid (env : module.Env) (entries : List ModuleBinary.Import)
+structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import)
     (profile : ValidationProfile := .Wasm1) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
     | .Func idx => idx.val < env.types.val.length
@@ -49,7 +49,7 @@ structure ImportsValid (env : module.Env) (entries : List ModuleBinary.Import)
 
 /-- A raw element segment is valid against `env`. An active segment names a table of its element
 type with a valid `i32` offset, and every initializer is a valid constant of the element type. -/
-def ElementValidRaw (env : module.Env) (entry : ModuleBinary.Element) : Prop :=
+def ElementValidRaw (env : metadata.Env) (entry : ModuleBinary.Element) : Prop :=
   (match entry.mode with
     | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
         env.table_types.val[idx.val].elem = entry.elem ∧ ModuleConstants.Valid env offset .I32
@@ -131,7 +131,7 @@ def StopAt (data : Slice U8) (pos : Usize) : Prop :=
 /-- All slots through rank `last` are complete in `decls`, including omitted empty sections, and
 match the raw module `raw`. The environment `env` represents `decls`. -/
 structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
-    (env : module.Env) : Prop where
+    (env : metadata.Env) : Prop where
   represents : Represents env decls
   phase : Phase last decls
   types : 1 ≤ last → decls.types = raw.types
@@ -147,7 +147,7 @@ structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
 
 /-- The semantic requirements of declaration section rank `id` of `raw` against `env`. Binary
 framing, UTF-8 names, and cursor and capacity bounds come separately from the grammar. -/
-def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : module.Env)
+def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   match id with
   | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible profile ft

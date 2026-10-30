@@ -18,7 +18,7 @@ namespace Itasca.StreamFraming
 
 /-- A checked header declares no more entries than the code region has bytes. -/
 theorem HeaderChecked.entries_le {S : Type} {source : stream.Source S} {state : S}
-    {codeLen : Usize} {env : module.Env} {entries : Usize}
+    {codeLen : Usize} {env : metadata.Env} {entries : Usize}
     (h : HeaderChecked source state codeLen env entries) : entries.val ≤ codeLen.val := by
   rcases h with ⟨rfl, rfl, _⟩ | ⟨_, _, _, _, _, _, _, _, _, hp, _⟩
   · simp
@@ -34,7 +34,7 @@ variable {profile : ValidationProfile}
 and visitor callbacks return. Worker provenance is not needed. -/
 theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v : V)
+    (env : metadata.Env) (envLen : Usize) (v : V)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) :
     stream.validate_remaining source visitor moduleId profile state env envLen v ⦃ _ => True ⦄ := by
@@ -98,7 +98,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                     rw [hregion]
                     simp only [bind_ok]
                     obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
-                      (module.validate_tail_with.spec visitor.moduleModuleVisitorInst hv.custom
+                      (metadata.validate_tail_with.spec visitor.metadataModuleVisitorInst hv.custom
                         bytes 0#usize env v4 (by simp) (profile := profile))
                     rw [hparsed]
                     cases r with
@@ -120,7 +120,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
 /-- `stream.validate_remaining` returns an ordinary result under returning callbacks. -/
 theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v : V)
+    (env : metadata.Env) (envLen : Usize) (v : V)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
     (henv : CodeEntry.Bounds env) :
     ∃ r, stream.validate_remaining source visitor moduleId profile state env envLen v = .ok r := by
@@ -133,7 +133,7 @@ scheduler callbacks return. Neither successful batches, source coherence nor sch
 is a termination premise. -/
 theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
+    (v : V) (storage : metadata.Env)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile) :
     ∃ r, stream.validate_streaming source visitor moduleId profile state v storage = .ok r := by
   have hspec : stream.validate_streaming source visitor moduleId profile state v storage ⦃ _ => True ⦄ := by
@@ -156,14 +156,14 @@ theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
         rw [hregion]
         simp only [bind_ok]
         obtain ⟨⟨r, v2⟩, hparsed, _⟩ := WP.spec_imp_exists
-          (module.validate_env_with.profile_spec visitor.moduleModuleVisitorInst hv.custom bytes profile v1)
+          (metadata.validate_env_with.profile_spec visitor.metadataModuleVisitorInst hv.custom bytes profile v1)
         rw [hparsed]
         cases r with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok pair =>
           obtain ⟨env, envEnd⟩ := pair
-          have herase := module.validate_env_with.accepted_erase
-            visitor.moduleModuleVisitorInst bytes v1 env envEnd v2 hparsed
+          have herase := metadata.validate_env_with.accepted_erase
+            visitor.metadataModuleVisitorInst bytes v1 env envEnd v2 hparsed
           have henv := (ModuleEnv.profile_accepted_entry_conditions bytes env envEnd profile hsize herase).1
           simp
           split

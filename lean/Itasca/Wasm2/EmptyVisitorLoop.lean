@@ -17,9 +17,9 @@ namespace Itasca
 /-- One iteration of the extracted loop body with the visitor argument kept only as a pass-through
 value, so semantic proofs do not track the empty visitor. -/
 def Wasm2.emptyVisitorLoop.body
-  (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (type_index : U32)
-  (locals : alloc.vec.Vec types.ValueType)
-  (results : alloc.vec.Vec types.ValueType)
+  (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (type_index : U32)
+  (locals : alloc.vec.Vec wasm_types.ValueType)
+  (results : alloc.vec.Vec wasm_types.ValueType)
   (st : code.BodyState)
   (visitor : code.EmptyOpVisitor) :
   Result (ControlFlow (code.BodyState ×
@@ -230,10 +230,10 @@ def Wasm2.emptyVisitorLoop.body
 /-- The extracted loop `code.body_loop_loop` run with the empty visitor, returning only the
 validation result. -/
 def Wasm2.emptyVisitorLoop
-  (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (type_index : U32)
+  (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (type_index : U32)
   (st : code.BodyState)
-  (locals : alloc.vec.Vec types.ValueType)
-  (results : alloc.vec.Vec types.ValueType)
+  (locals : alloc.vec.Vec wasm_types.ValueType)
+  (results : alloc.vec.Vec wasm_types.ValueType)
   (visitor : code.EmptyOpVisitor) :
   Result (core.result.Result Unit error.OpError)
   := do
@@ -243,7 +243,7 @@ def Wasm2.emptyVisitorLoop
 
 /-- Only the placement of the empty visitor changes between the semantic
 adapter and the extracted visiting loop. -/
-theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
+theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (st : code.BodyState) :
     code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx index profile () st = (do
@@ -297,8 +297,8 @@ theorem Wasm2.emptyVisitorLoop.body_eq (data : Slice U8) (env : module.Env)
 
 /-- The visitor-free body validator with the loop replaced by `Wasm2.emptyVisitorLoop`. -/
 def code.bodyCore
-  (data : Slice U8) (env : module.Env)
-  (locals results : alloc.vec.Vec types.ValueType) (type_index : U32)
+  (data : Slice U8) (env : metadata.Env)
+  (locals results : alloc.vec.Vec wasm_types.ValueType) (type_index : U32)
   (profile : ValidationProfile) :
   Result (core.result.Result Unit error.OpError)
   := do
@@ -313,7 +313,7 @@ def code.bodyCore
     else
       let ft ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          types.FuncType) env.types i1
+          wasm_types.FuncType) env.types i1
       let r ← code.check_func_type ft
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with

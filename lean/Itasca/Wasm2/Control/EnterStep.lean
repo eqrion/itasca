@@ -31,7 +31,7 @@ def Frames.Form.opcode (form : Frames.Form) : U8 :=
 structure ReaderEnterPost {data env profile locals index st}
     (p : Pending data env profile locals index st) (out : code.BodyState)
     (form : Frames.Form) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (remaining : List code.StackType) (base : Usize) : Prop where
+    (ins outs : List wasm_types.ValueType) (remaining : List code.StackType) (base : Usize) : Prop where
   inputs : resolve env (Wasm2.inputs bt) = some ins
   outputs : resolve env (Wasm2.outputs bt) = some outs
   inputBound : ins.length ≤ 1000

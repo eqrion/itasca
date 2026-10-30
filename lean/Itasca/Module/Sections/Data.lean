@@ -6,8 +6,8 @@ import Itasca.Module.Readers.SegmentIndex
 /-!
 # Data section parser
 
-Soundness of `module.decode_data_segment`, `module.decode_data_section_loop` and
-`module.decode_data_section`. Accepted segments are spans of the independent grammar
+Soundness of `metadata.decode_data_segment`, `metadata.decode_data_section_loop` and
+`metadata.decode_data_section`. Accepted segments are spans of the independent grammar
 (`DataEncodingFor` for the profile, `DataEncoding` for Wasm 1.0) and satisfy `ModuleData.Valid`,
 which covers the memory index and the offset initializer of active segments. Passive segments
 need Wasm 2.0. Completeness is in `Module/Sections/DataComplete`.
@@ -64,11 +64,11 @@ end Itasca.ModuleData
 
 namespace Itasca
 
-/-- An accepted `module.decode_data_segment` is a `DataEncodingFor profile` span and its segment
+/-- An accepted `metadata.decode_data_segment` is a `DataEncodingFor profile` span and its segment
 is `ModuleData.Valid`. -/
 @[step]
-theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile) :
-    module.decode_data_segment data pos env profile ⦃ r => match r with
+theorem metadata.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env) (profile : ValidationProfile) :
+    metadata.decode_data_segment data pos env profile ⦃ r => match r with
       | .Ok (segment, next) =>
           ModuleBinary.At (ModuleBinary.DataEncodingFor profile) data pos (ModuleData.raw segment) next ∧
           ModuleData.Valid env segment
@@ -76,7 +76,7 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
   obtain ⟨r, hr, hm⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
   | Err e =>
-    simp [module.decode_data_segment, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [metadata.decode_data_segment, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
@@ -85,20 +85,20 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
     cases profile with
     | Wasm1 =>
       obtain ⟨r, hseg, hindex⟩ := WP.spec_imp_exists
-        (module.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm1 hm.span.2.2)
+        (metadata.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm1 hm.span.2.2)
       cases r with
-      | Err e => simp [module.decode_segment_index] at hseg
+      | Err e => simp [metadata.decode_segment_index] at hseg
       | Ok triple =>
           obtain ⟨memory, p1, explicit⟩ := triple
-          simp only [module.decode_segment_index, Result.ok.injEq, core.result.Result.Ok.injEq,
+          simp only [metadata.decode_segment_index, Result.ok.injEq, core.result.Result.Ok.injEq,
             Prod.mk.injEq] at hseg
           rcases hseg with ⟨rfl, rfl, rfl⟩
-          simp [module.decode_data_segment, hr, core.result.Result.Insts.CoreOpsTry.branch]
+          simp [metadata.decode_data_segment, hr, core.result.Result.Insts.CoreOpsTry.branch]
           step
           split
           · simp
           · have hmem : flags.val < env.mem_types.val.length := by scalar_tac
-            obtain ⟨r, hr, ho⟩ := WP.spec_imp_exists (module.decode_const_expr.spec data first env .I32 ValidationProfile.Wasm1)
+            obtain ⟨r, hr, ho⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data first env .I32 ValidationProfile.Wasm1)
             cases r with
             | Err e =>
               simp [hr, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -117,7 +117,7 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
                 simp [hr, hlen]
                 step
                 have hp3 : p3.val ≤ data.length := hc.span.2.2
-                obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (module.have_bytes.spec data p3 n hp3)
+                obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data p3 n hp3)
                 cases r with
                 | Err e =>
                   simp [hh, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -135,15 +135,15 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
       · subst flags
         obtain ⟨r, hlen, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
         cases r with
-        | Err e => simp [module.decode_data_segment, hr, hlen, core.result.Result.Insts.CoreOpsTry.branch,
+        | Err e => simp [metadata.decode_data_segment, hr, hlen, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             error.Error.Insts.CoreConvertFromOpError.from]
         | Ok pair =>
           obtain ⟨count, content⟩ := pair
-          simp [module.decode_data_segment, hr, hlen, core.result.Result.Insts.CoreOpsTry.branch]
+          simp [metadata.decode_data_segment, hr, hlen, core.result.Result.Insts.CoreOpsTry.branch]
           step
           have hcontent : content.val ≤ data.length := hc.span.2.2
-          obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (module.have_bytes.spec data content n hcontent)
+          obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data content n hcontent)
           cases r with
           | Err e => simp [hh, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok u =>
@@ -157,19 +157,19 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
             scalar_tac
       ·
         obtain ⟨r, hseg, hindex⟩ := WP.spec_imp_exists
-          (module.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm2 hm.span.2.2)
+          (metadata.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm2 hm.span.2.2)
         cases r with
         | Err e =>
-            simp [module.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch,
+            simp [metadata.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok triple =>
             obtain ⟨memory, p1, explicit⟩ := triple
-            simp [module.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch]
+            simp [metadata.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch]
             step
             split
             · simp
             · have hmem : memory.val < env.mem_types.val.length := by scalar_tac
-              obtain ⟨r, hr, ho⟩ := WP.spec_imp_exists (module.decode_const_expr.spec data p1 env .I32 ValidationProfile.Wasm2)
+              obtain ⟨r, hr, ho⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data p1 env .I32 ValidationProfile.Wasm2)
               cases r with
               | Err e =>
                 simp [hr, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -188,7 +188,7 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
                   simp [hr, hlen]
                   step
                   have hp3 : p3.val ≤ data.length := hc.span.2.2
-                  obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (module.have_bytes.spec data p3 n hp3)
+                  obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data p3 n hp3)
                   cases r with
                   | Err e =>
                     simp [hh, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -204,16 +204,16 @@ theorem module.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize) 
 
 /-- The data loop returns `count` segments forming a `Rep` span, all valid. -/
 @[step]
-theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem metadata.decode_data_section_loop.profile_spec (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length) :
-    module.decode_data_section_loop data env profile count (alloc.vec.Vec.new _) start 0#u32 ⦃ r =>
+    metadata.decode_data_section_loop data env profile count (alloc.vec.Vec.new _) start 0#u32 ⦃ r =>
       match r with
       | .Ok (segments, next) => segments.val.length = count.val ∧
           ModuleBinary.At (ModuleBinary.Rep (ModuleBinary.DataEncodingFor profile))
             data start (segments.val.map ModuleData.raw) next ∧
           ∀ segment ∈ segments.val, ModuleData.Valid env segment
       | .Err _ => True ⦄ := by
-  unfold module.decode_data_section_loop
+  unfold metadata.decode_data_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ s.1.val.length = s.2.2.val ∧
       ModuleBinary.At (ModuleBinary.Rep (ModuleBinary.DataEncodingFor profile))
@@ -221,7 +221,7 @@ theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : mo
       ∀ segment ∈ s.1.val, ModuleData.Valid env segment)
   · rintro ⟨out, pos, i⟩ ⟨hi, hlen, hbytes, hvalid⟩
     dsimp only at hi hlen hbytes hvalid
-    unfold module.decode_data_section_loop.body
+    unfold metadata.decode_data_section_loop.body
     dsimp only
     split
     · rename_i hstop
@@ -230,7 +230,7 @@ theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : mo
     · rename_i hmore
       have hlt : i.val < count.val := by scalar_tac
       have hcapacity : out.val.length < Usize.max := by scalar_tac
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_data_segment.profile_spec data pos env profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_data_segment.profile_spec data pos env profile)
       rw [hr]
       cases r with
       | Err e =>
@@ -256,11 +256,11 @@ theorem module.decode_data_section_loop.profile_spec (data : Slice U8) (env : mo
   · refine ⟨by simp, by simp, ?_, by simp [alloc.vec.Vec.new]⟩
     exact ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩
 
-/-- An accepted `module.decode_data_section` returns segments forming a `VecEncoding` span, all
+/-- An accepted `metadata.decode_data_section` returns segments forming a `VecEncoding` span, all
 valid. -/
 @[step]
-theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env) (profile : ValidationProfile) :
-    module.decode_data_section data pos env profile ⦃ r => match r with
+theorem metadata.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env) (profile : ValidationProfile) :
+    metadata.decode_data_section data pos env profile ⦃ r => match r with
       | .Ok (segments, next) =>
           ModuleBinary.At (ModuleBinary.VecEncoding (ModuleBinary.DataEncodingFor profile))
             data pos (segments.val.map ModuleData.raw) next ∧
@@ -269,15 +269,15 @@ theorem module.decode_data_section.profile_spec (data : Slice U8) (pos : Usize) 
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
   | Err e =>
-    simp [module.decode_data_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    simp [metadata.decode_data_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     rcases pair with ⟨count, start⟩
     change Leb128.Decoded data pos count start at hc
     obtain ⟨r, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_data_section_loop.profile_spec data env profile count start hc.span.2.2)
-    simp [module.decode_data_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_data_section_loop.profile_spec data env profile count start hc.span.2.2)
+    simp [metadata.decode_data_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

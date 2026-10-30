@@ -4,8 +4,8 @@ import Itasca.Module.Readers.Header
 /-!
 # Completeness of section framing
 
-Acceptance (`.complete`) of `module.have_bytes`, `module.copy_bytes`, `module.read_section_header`
-and `module.read_header` from independent byte spans, and `At.section_split`, which recovers the
+Acceptance (`.complete`) of `metadata.have_bytes`, `metadata.copy_bytes`, `metadata.read_section_header`
+and `metadata.read_header` from independent byte spans, and `At.section_split`, which recovers the
 header and payload spans of a complete section encoding. Soundness is in `Module/Readers/Basic` and
 `Module/Readers/Header`.
 -/
@@ -33,35 +33,35 @@ end Itasca.ModuleBinary
 namespace Itasca
 open ModuleBinary
 
-/-- `module.have_bytes` accepts when the bytes are available. -/
-theorem module.have_bytes.complete (data : Slice U8) (pos n : Usize)
-    (h : pos.val + n.val ≤ data.length) : module.have_bytes data pos n = .ok (.Ok ()) := by
+/-- `metadata.have_bytes` accepts when the bytes are available. -/
+theorem metadata.have_bytes.complete (data : Slice U8) (pos n : Usize)
+    (h : pos.val + n.val ≤ data.length) : metadata.have_bytes data pos n = .ok (.Ok ()) := by
   obtain ⟨r, hr, hgood, _⟩ := WP.spec_imp_exists
-    (module.have_bytes.spec data pos n (by omega))
+    (metadata.have_bytes.spec data pos n (by omega))
   exact (hgood.mpr h) ▸ hr
 
 /-- Copying a known byte interval recovers its exact vector, including empty intervals. -/
-theorem module.copy_bytes.complete (data : Slice U8) (first last : Usize)
+theorem metadata.copy_bytes.complete (data : Slice U8) (first last : Usize)
     (out : alloc.vec.Vec U8) (h : Wasm1.BytesAt data first out.val last) :
-    module.copy_bytes data first last = .ok out := by
+    metadata.copy_bytes data first last = .ok out := by
   obtain ⟨result, hr, hs⟩ := WP.spec_imp_exists
-    (module.copy_bytes.spec data first last (by have := h.length; omega) h.bound)
+    (metadata.copy_bytes.spec data first last (by have := h.length; omega) h.bound)
   have he : result = out := alloc.vec.Vec.ext _ _
     (List.append_cancel_right (hs.suffix.symm.trans h.suffix))
   simpa [he] using hr
 
-/-- `module.read_section_header` accepts a `SectionHeader` span and returns its id and bounds. -/
-theorem module.read_section_header.complete (data : Slice U8) (pos : Usize)
+/-- `metadata.read_section_header` accepts a `SectionHeader` span and returns its id and bounds. -/
+theorem metadata.read_section_header.complete (data : Slice U8) (pos : Usize)
     (id : U8) (first last : Usize) (h : SectionHeader data pos id first last) :
-    module.read_section_header data pos = .ok (.Ok (id, first, last)) := by
+    metadata.read_section_header data pos = .ok (.Ok (id, first, last)) := by
   obtain ⟨middle, count, hid, hc, hlast, hbound⟩ := h
   have hr := hid.read_byte
   have hcount := reader.read_u32_leb.complete data middle count first hc
-  have hs : module.read_section_header data pos ⦃ r => r = .Ok (id, first, last) ⦄ := by
-    simp [module.read_section_header, hr, hcount, core.result.Result.Insts.CoreOpsTry.branch]
+  have hs : metadata.read_section_header data pos ⦃ r => r = .Ok (id, first, last) ⦄ := by
+    simp [metadata.read_section_header, hr, hcount, core.result.Result.Insts.CoreOpsTry.branch]
     step
     have hb : first.val + n.val ≤ data.length := by scalar_tac
-    rw [module.have_bytes.complete data first n hb]
+    rw [metadata.have_bytes.complete data first n hb]
     simp only [bind_ok]
     step*
     congr 3
@@ -78,10 +78,10 @@ private theorem read_at (data : Slice U8) (pos next : Usize) (byte : U8)
   have he : p = next := UScalar.eq_of_val_eq (hnext.trans hn.symm)
   simpa [he, hb] using hr
 
-/-- `module.read_header` accepts the magic and version bytes. -/
-theorem module.read_header.complete (data : Slice U8) (next : Usize)
+/-- `metadata.read_header` accepts the magic and version bytes. -/
+theorem metadata.read_header.complete (data : Slice U8) (next : Usize)
     (h : Wasm1.BytesAt data 0#usize magicVersion next) :
-    module.read_header data = .ok (.Ok next) := by
+    metadata.read_header data = .ok (.Ok next) := by
   have hn : next = 8#usize := UScalar.eq_of_val_eq (by simpa [magicVersion] using h.length)
   subst next
   have hdata : data.val = magicVersion ++ data.val.drop 8 := by simpa using h.suffix
@@ -94,7 +94,7 @@ theorem module.read_header.complete (data : Slice U8) (next : Usize)
   have h5 := read_at data 5#usize 6#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
   have h6 := read_at data 6#usize 7#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
   have h7 := read_at data 7#usize 8#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  simp [module.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
+  simp [metadata.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

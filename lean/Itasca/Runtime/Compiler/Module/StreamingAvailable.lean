@@ -23,7 +23,7 @@ open ModuleBinary StreamAcceptingScheduler
 /-- The scheduler's queue of valid work matches the pending vector, and the remaining bytes and
 entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (code : Slice U8) (env : module.Env) (id : U64) (config : Itasca.stream.Config)
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   batchId.val ≤ func.val ∧ pending.length ≤ batchId.val ∧ pending.length ≤ config.max_batches.val ∧
@@ -36,7 +36,7 @@ def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → N
 /-- A successful submission leaves a valid queue whose batch IDs are a permutation of the pending
 IDs, so the final drain can retire exactly this queue. Errors are excluded. -/
 def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (id : U64) (config : Itasca.stream.Config) (env : module.Env)
+    (id : U64) (config : Itasca.stream.Config) (env : metadata.Env)
     (profile : ValidationProfile := .Wasm1) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ queue, Queued id queue env.func_type_indices.val.length v ∧ ValidQueue id queue profile ∧
@@ -44,7 +44,7 @@ def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat �
   | (.Err _, _) => False
 
 private def CompleteBodyPost {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (code : Slice U8) (env : module.Env) (id : U64) (config : Itasca.stream.Config) (func : Usize)
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config) (func : Usize)
     (profile : ValidationProfile := .Wasm1) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
@@ -61,7 +61,7 @@ private theorem increment (n bound : Usize) (h : n.val < bound.val) :
 private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
@@ -179,7 +179,7 @@ open ModuleBinary StreamAcceptingScheduler
 private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
@@ -242,7 +242,7 @@ outstanding work as its function cursor advances. -/
 theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
@@ -281,7 +281,7 @@ matches the pending IDs for the final drain. -/
 theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
-    (state : S) (moduleId : U64) (env : module.Env) (code : Slice U8)
+    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued) (start : Usize)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
@@ -324,7 +324,7 @@ open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
 private theorem compiler_hooks_accept {A : Type} (ops : runtime.platform.Alloc A) :
-    ModuleTail.HooksAccept (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).moduleModuleVisitorInst := by
+    ModuleTail.HooksAccept (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).metadataModuleVisitorInst := by
   intro before chunk
   exact ⟨before,rfl⟩
 
@@ -335,7 +335,7 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : Itasca.stream.Source S) (state : S) (id : U64) (profile : ValidationProfile)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : Itasca.stream.SliceSource)
-    (env : module.Env) (tail : module.Tail)
+    (env : metadata.Env) (tail : metadata.Tail)
     (certificate : StreamCompleteRegions.Certificate data raw regions env tail profile)
     (available : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
     (before : runtime.compiler.CompileScheduler A) (bodyBytes localCount peak : Nat)
@@ -384,9 +384,9 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
     rw [endEq,←bytesLength]
     exact certificate.bounded
   obtain ⟨moduleEnd,moduleBound,_⟩ := Itasca.limits.add_offset.complete codeEnd (Slice.len regions.tail) (by simpa using wholeRoom)
-  obtain ⟨decoded,decodedCall⟩ := module.validate_tail_with.accepted_lift visitor.moduleModuleVisitorInst
+  obtain ⟨decoded,decodedCall⟩ := metadata.validate_tail_with.accepted_lift visitor.metadataModuleVisitorInst
     (compiler_hooks_accept ops) regions.tail 0#usize env submitted tail certificate.tail_accepted
-  have decodedEq : decoded = submitted := module.validate_tail_with.accepted_invariant visitor.moduleModuleVisitorInst
+  have decodedEq : decoded = submitted := metadata.validate_tail_with.accepted_invariant visitor.metadataModuleVisitorInst
     (fun scheduler => scheduler = submitted) (compiler_custom_preserves ops _) regions.tail 0#usize env submitted tail decoded decodedCall rfl
   subst decoded
   let ready := {submitted with tail := some tail}
@@ -420,10 +420,10 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : Itasca.stream.Source S) (state : S) (id : U64) (profile : ValidationProfile)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : Itasca.stream.SliceSource)
-    (env : module.Env) (tail : module.Tail)
+    (env : metadata.Env) (tail : metadata.Tail)
     (certificate : StreamCompleteRegions.Certificate data raw regions env tail profile)
     (available : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
-    (before : runtime.compiler.CompileScheduler A) (storage : module.Env) (bodyBytes localCount peak : Nat)
+    (before : runtime.compiler.CompileScheduler A) (storage : metadata.Env) (bodyBytes localCount peak : Nat)
     (environmentDemand : EnvironmentDemand before env bound)
     (envelope : FunctionDemandEnvelope before.budget env.func_type_indices.val.length bodyBytes localCount peak bound)
     (maxima : SourcePreparationMaxima env profile bodyBytes localCount peak) (queueRoom : 4 ≤ bound)
@@ -437,7 +437,7 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
       run.remaining.tail = tail ∧ after.tail = some tail ∧
       CompilerQueued env before.budget bodyBytes localCount id [] env.func_type_indices.val.length after := by
   let visitor := runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops
-  have hooks : ModuleTail.HooksAccept visitor.moduleModuleVisitorInst := by
+  have hooks : ModuleTail.HooksAccept visitor.metadataModuleVisitorInst := by
     intro scheduler chunk
     exact ⟨scheduler,rfl⟩
   obtain ⟨bytes,environmentCall,environmentValue⟩ := available.environment_read
@@ -452,9 +452,9 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
     (by simpa using environmentRoom)
   have endEq : environmentEnd = Slice.len regions.env := UScalar.eq_of_val_eq (by simpa using environmentLength)
   subst environmentEnd
-  obtain ⟨decoded,decodeCall⟩ := module.validate_env_with.accepted_lift visitor.moduleModuleVisitorInst hooks regions.env before env
+  obtain ⟨decoded,decodeCall⟩ := metadata.validate_env_with.accepted_lift visitor.metadataModuleVisitorInst hooks regions.env before env
     (Slice.len regions.env) certificate.environment
-  have decodedEq : decoded = before := module.validate_env_with.accepted_invariant visitor.moduleModuleVisitorInst
+  have decodedEq : decoded = before := metadata.validate_env_with.accepted_invariant visitor.metadataModuleVisitorInst
     (fun scheduler => scheduler = before) (compiler_custom_preserves ops _) regions.env before env (Slice.len regions.env) decoded decodeCall rfl
   subst decoded
   obtain ⟨after,remaining,tailEq,delivered,retained⟩ := compiler_remaining_available ops law bound allocation source state id profile

@@ -33,25 +33,25 @@ structure code.MemArg where
   align : Std.U32
   offset : Std.U32
 
-/-- [itasca::types::ValueType]
+/-- [itasca::wasm_types::ValueType]
     Source: 'src/types.rs', lines 10:0-18:1
     Visibility: public -/
 @[discriminant isize]
-inductive types.ValueType where
-| I32 : types.ValueType
-| I64 : types.ValueType
-| F32 : types.ValueType
-| F64 : types.ValueType
-| V128 : types.ValueType
-| FuncRef : types.ValueType
-| ExternRef : types.ValueType
+inductive wasm_types.ValueType where
+| I32 : wasm_types.ValueType
+| I64 : wasm_types.ValueType
+| F32 : wasm_types.ValueType
+| F64 : wasm_types.ValueType
+| V128 : wasm_types.ValueType
+| FuncRef : wasm_types.ValueType
+| ExternRef : wasm_types.ValueType
 
 /-- [itasca::code::Context]
     Source: 'src/code.rs', lines 31:0-35:1
     Visibility: public -/
 structure code.Context where
-  locals : alloc.vec.Vec _root_.Itasca.types.ValueType
-  results : alloc.vec.Vec _root_.Itasca.types.ValueType
+  locals : alloc.vec.Vec wasm_types.ValueType
+  results : alloc.vec.Vec wasm_types.ValueType
 
 /-- [itasca::error::VisitError]
     Source: 'src/error.rs', lines 52:0-54:1
@@ -90,14 +90,14 @@ inductive error.OpError where
 | InvalidLane : error.OpError
 | TrailingBytes : error.OpError
 | BodyTooLarge : error.OpError
-| Visitor : _root_.Itasca.error.VisitError → error.OpError
+| Visitor : error.VisitError → error.OpError
 
 /-- [itasca::code::StackType]
     Source: 'src/code.rs', lines 52:0-55:1
     Visibility: public -/
 @[discriminant isize]
 inductive code.StackType where
-| Val : _root_.Itasca.types.ValueType → code.StackType
+| Val : wasm_types.ValueType → code.StackType
 | Bot : code.StackType
 
 /-- [itasca::code::LabelKind]
@@ -117,15 +117,15 @@ inductive code.LabelKind where
 @[discriminant isize]
 inductive signature.BlockType where
 | Empty : signature.BlockType
-| Value : _root_.Itasca.types.ValueType → signature.BlockType
+| Value : wasm_types.ValueType → signature.BlockType
 | TypeIndex : Std.U32 → signature.BlockType
 
 /-- [itasca::code::Ctrl]
     Source: 'src/code.rs', lines 71:0-79:1
     Visibility: public -/
 structure code.Ctrl where
-  kind : _root_.Itasca.code.LabelKind
-  signature : _root_.Itasca.signature.BlockType
+  kind : code.LabelKind
+  signature : signature.BlockType
   value_stack_base : Std.Usize
   polymorphic_base : Bool
 
@@ -133,155 +133,155 @@ structure code.Ctrl where
     Source: 'src/code.rs', lines 84:0-88:1
     Visibility: public -/
 structure code.OpIterState where
-  vals : alloc.vec.Vec _root_.Itasca.code.StackType
-  ctrls : alloc.vec.Vec _root_.Itasca.code.Ctrl
+  vals : alloc.vec.Vec code.StackType
+  ctrls : alloc.vec.Vec code.Ctrl
   pos : Std.Usize
 
 /-- [itasca::code::BodyState]
     Source: 'src/code.rs', lines 91:0-93:1 -/
 structure code.BodyState where
-  core : _root_.Itasca.code.OpIterState
+  core : code.OpIterState
 
-/-- [itasca::types::Mut]
+/-- [itasca::wasm_types::Mut]
     Source: 'src/types.rs', lines 40:0-43:1
     Visibility: public -/
 @[discriminant isize]
-inductive types.Mut where
-| Const : types.Mut
-| Var : types.Mut
+inductive wasm_types.Mut where
+| Const : wasm_types.Mut
+| Var : wasm_types.Mut
 
-/-- [itasca::types::GlobalType]
+/-- [itasca::wasm_types::GlobalType]
     Source: 'src/types.rs', lines 109:0-112:1
     Visibility: public -/
-structure types.GlobalType where
-  mutability : _root_.Itasca.types.Mut
-  valtype : _root_.Itasca.types.ValueType
+structure wasm_types.GlobalType where
+  mutability : wasm_types.Mut
+  valtype : wasm_types.ValueType
 
-/-- [itasca::types::ElemType]
+/-- [itasca::wasm_types::ElemType]
     Source: 'src/types.rs', lines 83:0-86:1
     Visibility: public -/
 @[discriminant isize]
-inductive types.ElemType where
-| FuncRef : types.ElemType
-| ExternRef : types.ElemType
+inductive wasm_types.ElemType where
+| FuncRef : wasm_types.ElemType
+| ExternRef : wasm_types.ElemType
 
-/-- [itasca::types::Limits]
+/-- [itasca::wasm_types::Limits]
     Source: 'src/types.rs', lines 68:0-71:1
     Visibility: public -/
-structure types.Limits where
+structure wasm_types.Limits where
   min : Std.U32
   max : Option Std.U32
 
-/-- [itasca::types::TableType]
+/-- [itasca::wasm_types::TableType]
     Source: 'src/types.rs', lines 101:0-104:1
     Visibility: public -/
-structure types.TableType where
-  limits : _root_.Itasca.types.Limits
-  elem : _root_.Itasca.types.ElemType
+structure wasm_types.TableType where
+  limits : wasm_types.Limits
+  elem : wasm_types.ElemType
 
-/-- [itasca::types::MemType]
+/-- [itasca::wasm_types::MemType]
     Source: 'src/types.rs', lines 76:0-78:1
     Visibility: public -/
-structure types.MemType where
-  limits : _root_.Itasca.types.Limits
+structure wasm_types.MemType where
+  limits : wasm_types.Limits
 
-/-- [itasca::types::FuncType]
+/-- [itasca::wasm_types::FuncType]
     Source: 'src/types.rs', lines 60:0-63:1
     Visibility: public -/
-structure types.FuncType where
-  params : alloc.vec.Vec _root_.Itasca.types.ValueType
-  results : alloc.vec.Vec _root_.Itasca.types.ValueType
+structure wasm_types.FuncType where
+  params : alloc.vec.Vec wasm_types.ValueType
+  results : alloc.vec.Vec wasm_types.ValueType
 
-/-- [itasca::types::ConstExpr]
+/-- [itasca::wasm_types::ConstExpr]
     Source: 'src/types.rs', lines 129:0-144:1
     Visibility: public -/
 @[discriminant isize]
-inductive types.ConstExpr where
-| I32 : Std.I32 → types.ConstExpr
-| I64 : Std.I64 → types.ConstExpr
-| F32 : Std.U32 → types.ConstExpr
-| F64 : Std.U64 → types.ConstExpr
-| V128 : Std.U64 → Std.U64 → types.ConstExpr
-| RefNull : _root_.Itasca.types.ElemType → types.ConstExpr
-| RefFunc : Std.U32 → types.ConstExpr
-| GlobalGet : Std.U32 → types.ConstExpr
+inductive wasm_types.ConstExpr where
+| I32 : Std.I32 → wasm_types.ConstExpr
+| I64 : Std.I64 → wasm_types.ConstExpr
+| F32 : Std.U32 → wasm_types.ConstExpr
+| F64 : Std.U64 → wasm_types.ConstExpr
+| V128 : Std.U64 → Std.U64 → wasm_types.ConstExpr
+| RefNull : wasm_types.ElemType → wasm_types.ConstExpr
+| RefFunc : Std.U32 → wasm_types.ConstExpr
+| GlobalGet : Std.U32 → wasm_types.ConstExpr
 
-/-- [itasca::module::ElementMode]
+/-- [itasca::metadata::ElementMode]
     Source: 'src/module.rs', lines 93:0-97:1
     Visibility: public -/
 @[discriminant isize]
-inductive module.ElementMode where
-| Active : Std.U32 → _root_.Itasca.types.ConstExpr → module.ElementMode
-| Passive : module.ElementMode
-| Declarative : module.ElementMode
+inductive metadata.ElementMode where
+| Active : Std.U32 → wasm_types.ConstExpr → metadata.ElementMode
+| Passive : metadata.ElementMode
+| Declarative : metadata.ElementMode
 
-/-- [itasca::module::Element]
+/-- [itasca::metadata::Element]
     Source: 'src/module.rs', lines 102:0-106:1
     Visibility: public -/
-structure module.Element where
-  elem : _root_.Itasca.types.ElemType
-  mode : _root_.Itasca.module.ElementMode
-  init : alloc.vec.Vec _root_.Itasca.types.ConstExpr
+structure metadata.Element where
+  elem : wasm_types.ElemType
+  mode : metadata.ElementMode
+  init : alloc.vec.Vec wasm_types.ConstExpr
 
-/-- [itasca::module::ExportDesc]
+/-- [itasca::metadata::ExportDesc]
     Source: 'src/module.rs', lines 75:0-80:1
     Visibility: public -/
 @[discriminant isize]
-inductive module.ExportDesc where
-| Func : Std.U32 → module.ExportDesc
-| Table : Std.U32 → module.ExportDesc
-| Memory : Std.U32 → module.ExportDesc
-| Global : Std.U32 → module.ExportDesc
+inductive metadata.ExportDesc where
+| Func : Std.U32 → metadata.ExportDesc
+| Table : Std.U32 → metadata.ExportDesc
+| Memory : Std.U32 → metadata.ExportDesc
+| Global : Std.U32 → metadata.ExportDesc
 
-/-- [itasca::module::Export]
+/-- [itasca::metadata::Export]
     Source: 'src/module.rs', lines 85:0-88:1
     Visibility: public -/
-structure module.Export where
+structure metadata.Export where
   «name» : alloc.vec.Vec Std.U8
-  desc : _root_.Itasca.module.ExportDesc
+  desc : metadata.ExportDesc
 
-/-- [itasca::module::ImportDesc]
+/-- [itasca::metadata::ImportDesc]
     Source: 'src/module.rs', lines 56:0-61:1
     Visibility: public -/
 @[discriminant isize]
-inductive module.ImportDesc where
-| Func : Std.U32 → module.ImportDesc
-| Table : _root_.Itasca.types.TableType → module.ImportDesc
-| Memory : _root_.Itasca.types.MemType → module.ImportDesc
-| Global : _root_.Itasca.types.GlobalType → module.ImportDesc
+inductive metadata.ImportDesc where
+| Func : Std.U32 → metadata.ImportDesc
+| Table : wasm_types.TableType → metadata.ImportDesc
+| Memory : wasm_types.MemType → metadata.ImportDesc
+| Global : wasm_types.GlobalType → metadata.ImportDesc
 
-/-- [itasca::module::Import]
+/-- [itasca::metadata::Import]
     Source: 'src/module.rs', lines 66:0-70:1
     Visibility: public -/
-structure module.Import where
+structure metadata.Import where
   module : alloc.vec.Vec Std.U8
   «name» : alloc.vec.Vec Std.U8
-  desc : _root_.Itasca.module.ImportDesc
+  desc : metadata.ImportDesc
 
-/-- [itasca::module::Global]
+/-- [itasca::metadata::Global]
     Source: 'src/module.rs', lines 48:0-51:1
     Visibility: public -/
-structure module.Global where
-  gtype : _root_.Itasca.types.GlobalType
-  init : _root_.Itasca.types.ConstExpr
+structure metadata.Global where
+  gtype : wasm_types.GlobalType
+  init : wasm_types.ConstExpr
 
-/-- [itasca::module::Env]
+/-- [itasca::metadata::Env]
     Source: 'src/module.rs', lines 115:0-144:1
     Visibility: public -/
-structure module.Env where
-  types : alloc.vec.Vec _root_.Itasca.types.FuncType
-  imports : alloc.vec.Vec _root_.Itasca.module.Import
-  globals : alloc.vec.Vec _root_.Itasca.module.Global
-  exports : alloc.vec.Vec _root_.Itasca.module.Export
-  elements : alloc.vec.Vec _root_.Itasca.module.Element
+structure metadata.Env where
+  types : alloc.vec.Vec wasm_types.FuncType
+  imports : alloc.vec.Vec metadata.Import
+  globals : alloc.vec.Vec metadata.Global
+  exports : alloc.vec.Vec metadata.Export
+  elements : alloc.vec.Vec metadata.Element
   data_count : Option Std.U32
   declared_funcs : alloc.vec.Vec Std.U32
   start : Option Std.U32
   func_type_indices : alloc.vec.Vec Std.U32
-  func_types : alloc.vec.Vec _root_.Itasca.types.FuncType
-  table_types : alloc.vec.Vec _root_.Itasca.types.TableType
-  mem_types : alloc.vec.Vec _root_.Itasca.types.MemType
-  global_types : alloc.vec.Vec _root_.Itasca.types.GlobalType
+  func_types : alloc.vec.Vec wasm_types.FuncType
+  table_types : alloc.vec.Vec wasm_types.TableType
+  mem_types : alloc.vec.Vec wasm_types.MemType
+  global_types : alloc.vec.Vec wasm_types.GlobalType
   num_imported_funcs : Std.Usize
   num_imported_globals : Std.Usize
 
@@ -299,478 +299,431 @@ inductive signature.TypePart where
 @[discriminant isize]
 inductive signature.ResultType where
 | Empty : signature.ResultType
-| One : _root_.Itasca.types.ValueType → signature.ResultType
-| «Type» :
-  Std.U32 →
-  _root_.Itasca.signature.TypePart →
-  signature.ResultType
+| One : wasm_types.ValueType → signature.ResultType
+| «Type» : Std.U32 → signature.TypePart → signature.ResultType
 
 /-- Trait declaration: [itasca::code::OpVisitor]
     Source: 'src/code.rs', lines 2316:0-2662:1
     Visibility: public -/
 structure code.OpVisitor (Self : Type) where
-  on_ref_null : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.types.ElemType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_ref_is_null : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_ref_func : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_select_typed : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.types.ValueType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_table_get : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_table_set : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_memory_init : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_data_drop : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_memory_copy : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_memory_fill : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_table_init : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Std.U32 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_elem_drop : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_table_copy : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Std.U32 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_table_grow : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_table_size : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_table_fill : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_simd : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_simd_lane : Self → _root_.Itasca.code.OpIterState → Std.U32 → Std.U8
-    → Result ((core.result.Result Unit _root_.Itasca.error.VisitError) ×
-    Self)
-  on_simd_memory : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_simd_memory_lane : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.code.MemArg → Std.U8 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_simd_const : Self → _root_.Itasca.code.OpIterState → Std.U64 →
-    Std.U64 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_simd_shuffle : Self → _root_.Itasca.code.OpIterState → Std.U64 →
-    Std.U64 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_extend8_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_extend16_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_extend8_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_extend16_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_extend32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_sat_f32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_sat_f32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_sat_f64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_sat_f64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_sat_f32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_sat_f32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_sat_f64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_sat_f64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_function_start : Self → _root_.Itasca.code.Context → Std.U32 →
-    Std.Usize → Std.Usize → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_unreachable : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_nop : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_block : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_loop : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_if : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_else : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.signature.BlockType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_end : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.LabelKind → _root_.Itasca.signature.BlockType →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_br : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_br_if : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_br_table_label : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_br_table : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    _root_.Itasca.signature.ResultType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_return : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_call : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_call_indirect : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Std.U32 → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_drop : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.StackType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_select : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.StackType → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_local_get : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_local_set : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_local_tee : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_global_get : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_global_set : Self → _root_.Itasca.code.OpIterState → Std.U32 →
-    Result ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_memory_size : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_memory_grow : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_const : Self → _root_.Itasca.code.OpIterState → Std.I32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_const : Self → _root_.Itasca.code.OpIterState → Std.I64 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_const : Self → _root_.Itasca.code.OpIterState → Std.U32 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_const : Self → _root_.Itasca.code.OpIterState → Std.U64 → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_load : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_f32_load : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_f64_load : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_load8_s : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_load8_u : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_load16_s : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_load16_u : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load8_s : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load8_u : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load16_s : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load16_u : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load32_s : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_load32_u : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_store : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_store : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_f32_store : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_f64_store : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_store8 : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_store16 : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_store8 : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_store16 : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i64_store32 : Self → _root_.Itasca.code.OpIterState →
-    _root_.Itasca.code.MemArg → Result ((core.result.Result Unit
-    _root_.Itasca.error.VisitError) × Self)
-  on_i32_eqz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_eq : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_ne : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_lt_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_lt_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_gt_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_gt_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_le_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_le_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_ge_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_ge_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_eqz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_eq : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_ne : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_lt_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_lt_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_gt_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_gt_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_le_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_le_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_ge_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_ge_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_eq : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_ne : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_lt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_gt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_le : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_ge : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_eq : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_ne : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_lt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_gt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_le : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_ge : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_sub : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_mul : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_div_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_div_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_rem_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_rem_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_and : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_or : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_xor : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_shl : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_shr_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_shr_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_rotl : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_rotr : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_add : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_sub : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_mul : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_div_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_div_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_rem_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_rem_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_and : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_or : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_xor : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_shl : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_shr_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_shr_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_rotl : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_rotr : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_add : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_sub : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_mul : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_div : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_min : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_max : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_copysign : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_add : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_sub : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_mul : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_div : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_min : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_max : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_copysign : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_clz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_ctz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_popcnt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_add : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_clz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_ctz : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_popcnt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_abs : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_neg : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_ceil : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_floor : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_trunc : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_nearest : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_sqrt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_abs : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_neg : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_ceil : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_floor : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_trunc : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_nearest : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_sqrt : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_wrap_i64 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_f32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_f32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_f64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_trunc_f64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_extend_i32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_extend_i32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_f32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_f32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_f64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_trunc_f64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_convert_i32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_convert_i32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_convert_i64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_convert_i64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_demote_f64 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_convert_i32_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_convert_i32_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_convert_i64_s : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_convert_i64_u : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_promote_f32 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i32_reinterpret_f32 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_i64_reinterpret_f64 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f32_reinterpret_i32 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
-  on_f64_reinterpret_i64 : Self → _root_.Itasca.code.OpIterState → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
+  on_ref_null : Self → code.OpIterState → wasm_types.ElemType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_ref_is_null : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_ref_func : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_select_typed : Self → code.OpIterState → wasm_types.ValueType →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_table_get : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_table_set : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_memory_init : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_data_drop : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_memory_copy : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_memory_fill : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_table_init : Self → code.OpIterState → Std.U32 → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_elem_drop : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_table_copy : Self → code.OpIterState → Std.U32 → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_table_grow : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_table_size : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_table_fill : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_simd : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_simd_lane : Self → code.OpIterState → Std.U32 → Std.U8 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_simd_memory : Self → code.OpIterState → Std.U32 → code.MemArg →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_simd_memory_lane : Self → code.OpIterState → Std.U32 → code.MemArg
+    → Std.U8 → Result ((core.result.Result Unit error.VisitError) × Self)
+  on_simd_const : Self → code.OpIterState → Std.U64 → Std.U64 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_simd_shuffle : Self → code.OpIterState → Std.U64 → Std.U64 →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_extend8_s : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_extend16_s : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i64_extend8_s : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i64_extend16_s : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i64_extend32_s : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_trunc_sat_f32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_sat_f32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_sat_f64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_sat_f64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_sat_f32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_sat_f32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_sat_f64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_sat_f64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_function_start : Self → code.Context → Std.U32 → Std.Usize →
+    Std.Usize → Result ((core.result.Result Unit error.VisitError) × Self)
+  on_unreachable : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_nop : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_block : Self → code.OpIterState → signature.BlockType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_loop : Self → code.OpIterState → signature.BlockType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_if : Self → code.OpIterState → signature.BlockType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_else : Self → code.OpIterState → signature.BlockType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_end : Self → code.OpIterState → code.LabelKind → signature.BlockType
+    → Result ((core.result.Result Unit error.VisitError) × Self)
+  on_br : Self → code.OpIterState → Std.U32 → signature.ResultType →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_br_if : Self → code.OpIterState → Std.U32 → signature.ResultType →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_br_table_label : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_br_table : Self → code.OpIterState → Std.U32 → signature.ResultType
+    → Result ((core.result.Result Unit error.VisitError) × Self)
+  on_return : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_call : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_call_indirect : Self → code.OpIterState → Std.U32 → Std.U32 →
+    Result ((core.result.Result Unit error.VisitError) × Self)
+  on_drop : Self → code.OpIterState → code.StackType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_select : Self → code.OpIterState → code.StackType → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_local_get : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_local_set : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_local_tee : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_global_get : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_global_set : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_memory_size : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_memory_grow : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_const : Self → code.OpIterState → Std.I32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_const : Self → code.OpIterState → Std.I64 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_const : Self → code.OpIterState → Std.U32 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_const : Self → code.OpIterState → Std.U64 → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_load : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_load : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_load : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_load8_s : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_load8_u : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_load16_s : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_load16_u : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load8_s : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load8_u : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load16_s : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load16_u : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load32_s : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_load32_u : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_store : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_store : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_store : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_store : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_store8 : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_store16 : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_store8 : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_store16 : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_store32 : Self → code.OpIterState → code.MemArg → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_eqz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_eq : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_ne : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_lt_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_lt_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_gt_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_gt_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_le_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_le_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_ge_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_ge_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_eqz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_eq : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_ne : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_lt_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_lt_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_gt_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_gt_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_le_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_le_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_ge_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_ge_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_eq : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_ne : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_lt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_gt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_le : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_ge : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_eq : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_ne : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_lt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_gt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_le : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_ge : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_sub : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_mul : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_div_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_div_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_rem_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_rem_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_and : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_or : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_xor : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_shl : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_shr_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_shr_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_rotl : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_rotr : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_add : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_sub : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_mul : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_div_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_div_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_rem_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_rem_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_and : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_or : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_xor : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_shl : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_shr_s : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_shr_u : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_rotl : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_rotr : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_add : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_sub : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_mul : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_div : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_min : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_max : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_copysign : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_f64_add : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_sub : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_mul : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_div : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_min : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_max : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_copysign : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_clz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_ctz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_popcnt : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_add : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_clz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_ctz : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i64_popcnt : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_f32_abs : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_neg : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_ceil : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_floor : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_trunc : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f32_nearest : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_f32_sqrt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_abs : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_neg : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_ceil : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_floor : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_trunc : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_f64_nearest : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_f64_sqrt : Self → code.OpIterState → Result ((core.result.Result Unit
+    error.VisitError) × Self)
+  on_i32_wrap_i64 : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_i32_trunc_f32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_f32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_f64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_trunc_f64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_extend_i32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_extend_i32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_f32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_f32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_f64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_trunc_f64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_convert_i32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_convert_i32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_convert_i64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_convert_i64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_demote_f64 : Self → code.OpIterState → Result ((core.result.Result
+    Unit error.VisitError) × Self)
+  on_f64_convert_i32_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_convert_i32_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_convert_i64_s : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_convert_i64_u : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_promote_f32 : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i32_reinterpret_f32 : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_i64_reinterpret_f64 : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f32_reinterpret_i32 : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
+  on_f64_reinterpret_i64 : Self → code.OpIterState → Result
+    ((core.result.Result Unit error.VisitError) × Self)
 
 /-- [itasca::code::SimdSignature]
     Source: 'src/code.rs', lines 1267:0-1277:1 -/
@@ -787,7 +740,7 @@ inductive code.SimdSignature where
 | SplatF64 : code.SimdSignature
 
 /-- [itasca::ValidationProfile]
-    Source: 'src/lib.rs', lines 71:0-76:1
+    Source: 'src/lib.rs', lines 74:0-79:1
     Visibility: public -/
 @[discriminant isize]
 inductive ValidationProfile where
@@ -805,7 +758,7 @@ def code.EmptyOpVisitor := Unit
     Visibility: public -/
 @[discriminant isize]
 inductive error.Error where
-| Read : _root_.Itasca.error.OpError → error.Error
+| Read : error.OpError → error.Error
 | InvalidMagic : error.Error
 | InvalidVersion : error.Error
 | UnexpectedEof : error.Error
@@ -832,37 +785,37 @@ inductive error.Error where
 | TooManyResults : error.Error
 | TooManyLocals : error.Error
 | ModuleTooLarge : error.Error
-| Body : _root_.Itasca.error.OpError → error.Error
-| Visitor : _root_.Itasca.error.VisitError → error.Error
+| Body : error.OpError → error.Error
+| Visitor : error.VisitError → error.Error
 | Host : error.Error
 
-/-- [itasca::module::DataMode]
+/-- [itasca::metadata::DataMode]
     Source: 'src/module.rs', lines 261:0-264:1
     Visibility: public -/
 @[discriminant isize]
-inductive module.DataMode where
-| Active : Std.U32 → _root_.Itasca.types.ConstExpr → module.DataMode
-| Passive : module.DataMode
+inductive metadata.DataMode where
+| Active : Std.U32 → wasm_types.ConstExpr → metadata.DataMode
+| Passive : metadata.DataMode
 
-/-- [itasca::module::Data]
+/-- [itasca::metadata::Data]
     Source: 'src/module.rs', lines 268:0-271:1
     Visibility: public -/
-structure module.Data where
-  mode : _root_.Itasca.module.DataMode
+structure metadata.Data where
+  mode : metadata.DataMode
   init : alloc.vec.Vec Std.U8
 
-/-- [itasca::module::Tail]
+/-- [itasca::metadata::Tail]
     Source: 'src/module.rs', lines 275:0-277:1
     Visibility: public -/
-structure module.Tail where
-  data : alloc.vec.Vec _root_.Itasca.module.Data
+structure metadata.Tail where
+  data : alloc.vec.Vec metadata.Data
 
-/-- [itasca::module::Module]
+/-- [itasca::metadata::Module]
     Source: 'src/module.rs', lines 281:0-284:1
     Visibility: public -/
-structure module.Module where
-  env : _root_.Itasca.module.Env
-  tail : _root_.Itasca.module.Tail
+structure metadata.Module where
+  env : metadata.Env
+  tail : metadata.Tail
 
 /-- [itasca::stream::CodeBatch]
     Source: 'src/stream.rs', lines 128:0-150:1
@@ -870,8 +823,8 @@ structure module.Module where
 structure stream.CodeBatch where
   module_id : Std.U64
   batch_id : Std.Usize
-  profile : _root_.Itasca.ValidationProfile
-  env : _root_.Itasca.module.Env
+  profile : ValidationProfile
+  env : metadata.Env
   code : Slice Std.U8
   code_offset : Std.Usize
   first_func : Std.Usize
@@ -880,13 +833,13 @@ structure stream.CodeBatch where
   dispatch_end : Std.Usize
   num_validated : Std.Usize
   validated_end : Std.Usize
-  error : Option _root_.Itasca.error.Error
+  error : Option error.Error
 
 /-- [itasca::stream::SyncVisitor]
     Source: 'src/stream.rs', lines 590:0-593:1 -/
 structure stream.SyncVisitor where
-  completed : Option _root_.Itasca.stream.CodeBatch
-  tail : Option _root_.Itasca.module.Tail
+  completed : Option stream.CodeBatch
+  tail : Option metadata.Tail
 
 /-- [itasca::stream::Config]
     Source: 'src/stream.rs', lines 33:0-39:1
@@ -903,38 +856,36 @@ inductive stream.Region where
 | Environment : stream.Region
 | Tail : stream.Region
 
-/-- [itasca::types::CustomSection]
+/-- [itasca::wasm_types::CustomSection]
     Source: 'src/types.rs', lines 153:0-160:1
     Visibility: public -/
-structure types.CustomSection where
+structure wasm_types.CustomSection where
   name_len : Std.Usize
   payload_start : Std.Usize
   payload_end : Std.Usize
 
-/-- Trait declaration: [itasca::module::ModuleVisitor]
-    Source: 'src/module.rs', lines 1679:0-1687:1
+/-- Trait declaration: [itasca::metadata::ModuleVisitor]
+    Source: 'src/module.rs', lines 1685:0-1693:1
     Visibility: public -/
-structure module.ModuleVisitor (Self : Type) where
-  on_custom_section : Self → _root_.Itasca.types.CustomSection → Result
-    ((core.result.Result Unit _root_.Itasca.error.VisitError) × Self)
+structure metadata.ModuleVisitor (Self : Type) where
+  on_custom_section : Self → wasm_types.CustomSection → Result
+    ((core.result.Result Unit error.VisitError) × Self)
 
 /-- Trait declaration: [itasca::stream::StreamingVisitor]
     Source: 'src/stream.rs', lines 79:0-103:1
     Visibility: public -/
 structure stream.StreamingVisitor (Self : Type) where
-  moduleModuleVisitorInst : module.ModuleVisitor Self
-  custom_region : Self → _root_.Itasca.stream.Region → Result Self
-  environment_ready : Self → _root_.Itasca.module.Env → Result
-    ((core.result.Result _root_.Itasca.stream.Config _root_.Itasca.error.Error)
-    × Self)
-  submit_code_batch : Self → _root_.Itasca.stream.CodeBatch → Result
-    ((core.result.Result Unit _root_.Itasca.error.Error) × Self)
-  poll_code_batch : Self → Result ((core.result.Result
-    _root_.Itasca.stream.CodeBatch _root_.Itasca.error.Error) × Self)
-  code_end : Self → Result ((core.result.Result Unit
-    _root_.Itasca.error.Error) × Self)
-  tail_ready : Self → _root_.Itasca.module.Tail → Result
-    ((core.result.Result Unit _root_.Itasca.error.Error) × Self)
+  metadataModuleVisitorInst : metadata.ModuleVisitor Self
+  custom_region : Self → stream.Region → Result Self
+  environment_ready : Self → metadata.Env → Result ((core.result.Result
+    stream.Config error.Error) × Self)
+  submit_code_batch : Self → stream.CodeBatch → Result ((core.result.Result
+    Unit error.Error) × Self)
+  poll_code_batch : Self → Result ((core.result.Result stream.CodeBatch
+    error.Error) × Self)
+  code_end : Self → Result ((core.result.Result Unit error.Error) × Self)
+  tail_ready : Self → metadata.Tail → Result ((core.result.Result Unit
+    error.Error) × Self)
 
 /-- [itasca::stream::SliceSource]
     Source: 'src/stream.rs', lines 559:0-563:1 -/
@@ -947,35 +898,33 @@ structure stream.SliceSource where
     Source: 'src/stream.rs', lines 51:0-67:1
     Visibility: public -/
 structure stream.Source (Self : Type) where
-  environment : Self → Result (core.result.Result (Slice Std.U8)
-    _root_.Itasca.error.Error)
+  environment : Self → Result (core.result.Result (Slice Std.U8) error.Error)
   code_len : Self → Result Std.Usize
   code : Self → Std.Usize → Std.Usize → Result (core.result.Result (Slice
-    Std.U8) _root_.Itasca.error.Error)
-  tail : Self → Result (core.result.Result (Slice Std.U8)
-    _root_.Itasca.error.Error)
+    Std.U8) error.Error)
+  tail : Self → Result (core.result.Result (Slice Std.U8) error.Error)
 
-/-- [itasca::types::ExternType]
+/-- [itasca::wasm_types::ExternType]
     Source: 'src/types.rs', lines 116:0-121:1
     Visibility: public -/
 @[discriminant isize]
-inductive types.ExternType where
-| Func : _root_.Itasca.types.FuncType → types.ExternType
-| Table : _root_.Itasca.types.TableType → types.ExternType
-| Memory : _root_.Itasca.types.MemType → types.ExternType
-| Global : _root_.Itasca.types.GlobalType → types.ExternType
+inductive wasm_types.ExternType where
+| Func : wasm_types.FuncType → wasm_types.ExternType
+| Table : wasm_types.TableType → wasm_types.ExternType
+| Memory : wasm_types.MemType → wasm_types.ExternType
+| Global : wasm_types.GlobalType → wasm_types.ExternType
 
-/-- [itasca::module::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1690:0-1690:30
+/-- [itasca::metadata::EmptyModuleVisitor]
+    Source: 'src/module.rs', lines 1696:0-1696:30
     Visibility: public -/
 @[reducible]
-def module.EmptyModuleVisitor := Unit
+def metadata.EmptyModuleVisitor := Unit
 
 /-- [itasca::runtime::compiler::ControlMap]
     Source: 'src/runtime/compiler/mod.rs', lines 190:0-204:1
     Visibility: public -/
 structure runtime.compiler.ControlMap where
-  kind : _root_.Itasca.code.LabelKind
+  kind : code.LabelKind
   source_start : Std.Usize
   source_end : Std.Usize
   start_pc : Std.Usize
@@ -1631,18 +1580,18 @@ structure runtime.bytecode.SimdImmediate where
 /-- [itasca::runtime::bytecode::CompiledFunction]
     Source: 'src/runtime/bytecode.rs', lines 7:0-25:1 -/
 structure runtime.bytecode.CompiledFunction where
-  locals : alloc.vec.Vec _root_.Itasca.types.ValueType
+  locals : alloc.vec.Vec wasm_types.ValueType
   local_slots : Std.U32
   param_slots : Std.U32
   slot_count : Std.U32
   max_stack : Std.Usize
-  code : alloc.vec.Vec _root_.Itasca.runtime.bytecode.Instr
+  code : alloc.vec.Vec runtime.bytecode.Instr
   jump_tables : alloc.vec.Vec Std.U32
   v128_pool : alloc.vec.Vec Std.U128
   indirect : alloc.vec.Vec (Std.U32 × Std.U32)
-  simd : alloc.vec.Vec _root_.Itasca.runtime.bytecode.SimdImmediate
+  simd : alloc.vec.Vec runtime.bytecode.SimdImmediate
   source_offsets : alloc.vec.Vec Std.Usize
-  controls : alloc.vec.Vec _root_.Itasca.runtime.compiler.ControlMap
+  controls : alloc.vec.Vec runtime.compiler.ControlMap
   type_index : Std.U32
   body_start : Std.Usize
   body_end : Std.Usize
@@ -1657,7 +1606,7 @@ structure runtime.platform.Alloc (Self : Type) where
     Source: 'src/runtime/compiler/mod.rs', lines 553:0-564:1 -/
 structure runtime.compiler.Frame where
   map : Std.Usize
-  kind : _root_.Itasca.code.LabelKind
+  kind : code.LabelKind
   height : Std.U32
   params : Std.U32
   results : Std.U32
@@ -1704,23 +1653,23 @@ structure runtime.compiler.CompileLimits where
 /-- [itasca::runtime::compiler::Budget]
     Source: 'src/runtime/compiler/mod.rs', lines 95:0-103:1 -/
 structure runtime.compiler.Budget (A : Type) where
-  marker : _root_.Itasca.core.marker.PhantomData A
-  limits : _root_.Itasca.runtime.compiler.CompileLimits
+  marker : core.marker.PhantomData A
+  limits : runtime.compiler.CompileLimits
   instructions : Std.Usize
   branches : Std.Usize
   controls : Std.Usize
   locals : Std.Usize
-  error : Option _root_.Itasca.runtime.compiler.CompileResource
+  error : Option runtime.compiler.CompileResource
 
 /-- [itasca::runtime::compiler::FunctionCompiler]
     Source: 'src/runtime/compiler/mod.rs', lines 566:0-579:1 -/
 structure runtime.compiler.FunctionCompiler (A : Type) where
-  signatures : Slice _root_.Itasca.runtime.compiler.Signature
+  signatures : Slice runtime.compiler.Signature
   func_param_slots : Slice Std.U32
-  budget : _root_.Itasca.runtime.compiler.Budget A
+  budget : runtime.compiler.Budget A
   batch_start : Std.Usize
-  function : _root_.Itasca.runtime.bytecode.CompiledFunction
-  frames : alloc.vec.Vec _root_.Itasca.runtime.compiler.Frame
+  function : runtime.bytecode.CompiledFunction
+  frames : alloc.vec.Vec runtime.compiler.Frame
   reachable : Bool
   next_source : Std.Usize
   before : alloc.vec.Vec Std.U32
@@ -1732,9 +1681,9 @@ structure runtime.compiler.FunctionCompiler (A : Type) where
     Source: 'src/runtime/compiler/mod.rs', lines 151:0-162:1
     Visibility: public -/
 structure runtime.compiler.ExecutableModule where
-  module : _root_.Itasca.module.Module
-  profile : _root_.Itasca.ValidationProfile
-  functions : alloc.vec.Vec _root_.Itasca.runtime.bytecode.CompiledFunction
+  module : metadata.Module
+  profile : ValidationProfile
+  functions : alloc.vec.Vec runtime.bytecode.CompiledFunction
   global_initializers : alloc.vec.Vec Std.Usize
   element_initializers : alloc.vec.Vec (alloc.vec.Vec Std.Usize)
   element_offsets : alloc.vec.Vec (Option Std.Usize)
@@ -1746,10 +1695,8 @@ structure runtime.compiler.ExecutableModule where
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.compiler.CompileError where
-| Validation : _root_.Itasca.error.Error → runtime.compiler.CompileError
-| Resource :
-  _root_.Itasca.runtime.compiler.CompileResource →
-  runtime.compiler.CompileError
+| Validation : error.Error → runtime.compiler.CompileError
+| Resource : runtime.compiler.CompileResource → runtime.compiler.CompileError
 
 /-- [itasca::runtime::compiler::FunctionStats]
     Source: 'src/runtime/compiler/mod.rs', lines 167:0-185:1
@@ -1769,14 +1716,13 @@ structure runtime.compiler.FunctionStats where
 /-- [itasca::runtime::compiler::CompileScheduler]
     Source: 'src/runtime/compiler/mod.rs', lines 439:0-447:1 -/
 structure runtime.compiler.CompileScheduler (A : Type) where
-  signatures : alloc.vec.Vec _root_.Itasca.runtime.compiler.Signature
+  signatures : alloc.vec.Vec runtime.compiler.Signature
   func_param_slots : alloc.vec.Vec Std.U32
-  completed : alloc.vec.Vec _root_.Itasca.stream.CodeBatch
-  functions : alloc.vec.Vec (Option
-    _root_.Itasca.runtime.bytecode.CompiledFunction)
-  tail : Option _root_.Itasca.module.Tail
+  completed : alloc.vec.Vec stream.CodeBatch
+  functions : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)
+  tail : Option metadata.Tail
   code_start : Std.Usize
-  budget : _root_.Itasca.runtime.compiler.Budget A
+  budget : runtime.compiler.Budget A
 
 /-- [itasca::stream::CodeEntry]
     Source: 'src/stream.rs', lines 111:0-120:1
@@ -1825,12 +1771,12 @@ structure runtime.FuncAddr where
 /-- [itasca::runtime::store::ModuleInst]
     Source: 'src/runtime/store.rs', lines 87:0-96:1 -/
 structure runtime.store.ModuleInst where
-  module : _root_.Itasca.runtime.compiler.ExecutableModule
+  module : runtime.compiler.ExecutableModule
   types : alloc.vec.Vec Std.Usize
-  funcs : alloc.vec.Vec _root_.Itasca.runtime.FuncAddr
-  tables : alloc.vec.Vec _root_.Itasca.runtime.TableAddr
-  memories : alloc.vec.Vec _root_.Itasca.runtime.MemoryAddr
-  globals : alloc.vec.Vec _root_.Itasca.runtime.GlobalAddr
+  funcs : alloc.vec.Vec runtime.FuncAddr
+  tables : alloc.vec.Vec runtime.TableAddr
+  memories : alloc.vec.Vec runtime.MemoryAddr
+  globals : alloc.vec.Vec runtime.GlobalAddr
   elems : alloc.vec.Vec Std.Usize
   datas : alloc.vec.Vec Std.Usize
 
@@ -1842,7 +1788,7 @@ structure runtime.store.DataInst where
 /-- [itasca::runtime::store::ElemInst]
     Source: 'src/runtime/store.rs', lines 78:0-81:1 -/
 structure runtime.store.ElemInst where
-  ty : _root_.Itasca.types.ElemType
+  ty : wasm_types.ElemType
   refs : alloc.vec.Vec Std.U64
 
 /-- [itasca::runtime::store::GlobalInst]
@@ -1850,13 +1796,13 @@ structure runtime.store.ElemInst where
 structure runtime.store.GlobalInst where
   lo : Std.U64
   hi : Std.U64
-  ty : _root_.Itasca.types.GlobalType
+  ty : wasm_types.GlobalType
 
 /-- [itasca::runtime::store::TableInst]
     Source: 'src/runtime/store.rs', lines 66:0-70:1 -/
 structure runtime.store.TableInst where
   elements : alloc.vec.Vec Std.U64
-  ty : _root_.Itasca.types.ElemType
+  ty : wasm_types.ElemType
   maximum : Option Std.U32
 
 /-- [itasca::runtime::store::MemInst]
@@ -1876,7 +1822,7 @@ inductive runtime.store.FuncCode where
     Source: 'src/runtime/store.rs', lines 57:0-60:1 -/
 structure runtime.store.FuncInst where
   signature : Std.Usize
-  code : _root_.Itasca.runtime.store.FuncCode
+  code : runtime.store.FuncCode
 
 /-- [itasca::runtime::store::StoreLimits]
     Source: 'src/runtime/store.rs', lines 16:0-36:1
@@ -1896,15 +1842,15 @@ structure runtime.store.StoreLimits where
     Visibility: public -/
 structure runtime.store.Store (M : Type) where
   id : Std.Usize
-  limits : _root_.Itasca.runtime.store.StoreLimits
-  funcs : alloc.vec.Vec _root_.Itasca.runtime.store.FuncInst
-  types : alloc.vec.Vec _root_.Itasca.types.FuncType
-  tables : alloc.vec.Vec _root_.Itasca.runtime.store.TableInst
-  memories : alloc.vec.Vec (_root_.Itasca.runtime.store.MemInst M)
-  globals : alloc.vec.Vec _root_.Itasca.runtime.store.GlobalInst
-  instances : alloc.vec.Vec _root_.Itasca.runtime.store.ModuleInst
-  elems : alloc.vec.Vec _root_.Itasca.runtime.store.ElemInst
-  datas : alloc.vec.Vec _root_.Itasca.runtime.store.DataInst
+  limits : runtime.store.StoreLimits
+  funcs : alloc.vec.Vec runtime.store.FuncInst
+  types : alloc.vec.Vec wasm_types.FuncType
+  tables : alloc.vec.Vec runtime.store.TableInst
+  memories : alloc.vec.Vec (runtime.store.MemInst M)
+  globals : alloc.vec.Vec runtime.store.GlobalInst
+  instances : alloc.vec.Vec runtime.store.ModuleInst
+  elems : alloc.vec.Vec runtime.store.ElemInst
+  datas : alloc.vec.Vec runtime.store.DataInst
   externs : alloc.vec.Vec Std.U64
   instance_items : Std.Usize
   signature_values : Std.Usize
@@ -1958,9 +1904,9 @@ inductive runtime.Trap where
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.ExecError where
-| Trap : _root_.Itasca.runtime.Trap → runtime.ExecError
-| Link : _root_.Itasca.runtime.LinkError → runtime.ExecError
-| Exhausted : _root_.Itasca.runtime.ResourceLimit → runtime.ExecError
+| Trap : runtime.Trap → runtime.ExecError
+| Link : runtime.LinkError → runtime.ExecError
+| Exhausted : runtime.ResourceLimit → runtime.ExecError
 | BadArguments : runtime.ExecError
 | WrongStore : runtime.ExecError
 | Terminated : runtime.ExecError
@@ -2023,8 +1969,8 @@ inductive runtime.Value where
 | F32 : Std.U32 → runtime.Value
 | F64 : Std.U64 → runtime.Value
 | V128 : Std.U128 → runtime.Value
-| FuncRef : Option _root_.Itasca.runtime.FuncAddr → runtime.Value
-| ExternRef : Option _root_.Itasca.runtime.ExternAddr → runtime.Value
+| FuncRef : Option runtime.FuncAddr → runtime.Value
+| ExternRef : Option runtime.ExternAddr → runtime.Value
 
 /-- [itasca::runtime::interp::Execution]
     Source: 'src/runtime/interp/mod.rs', lines 20:0-26:1
@@ -2032,9 +1978,9 @@ inductive runtime.Value where
 structure runtime.interp.Execution where
   store : Std.Usize
   slots : alloc.vec.Vec Std.U64
-  frames : alloc.vec.Vec _root_.Itasca.runtime.interp.Frame
-  host_args : alloc.vec.Vec _root_.Itasca.runtime.Value
-  host_results : alloc.vec.Vec _root_.Itasca.runtime.Value
+  frames : alloc.vec.Vec runtime.interp.Frame
+  host_args : alloc.vec.Vec runtime.Value
+  host_results : alloc.vec.Vec runtime.Value
 
 /-- [itasca::runtime::platform::HostError]
     Source: 'src/runtime/platform.rs', lines 17:0-20:1
@@ -2057,13 +2003,11 @@ inductive runtime.platform.InterruptAction where
     Visibility: public -/
 structure runtime.platform.Platform (Self : Type) (M : Type) where
   MemoryBufferInst : runtime.platform.MemoryBuffer M
-  interrupt : Self → Result (_root_.Itasca.runtime.platform.InterruptAction
-    × Self)
-  call_host : Self → _root_.Itasca.runtime.store.Store M → Std.U64 →
-    Slice _root_.Itasca.runtime.Value → Slice _root_.Itasca.runtime.Value →
-    Result ((core.result.Result Unit _root_.Itasca.runtime.platform.HostError)
-    × Self × (_root_.Itasca.runtime.store.Store M) × (Slice
-    _root_.Itasca.runtime.Value))
+  interrupt : Self → Result (runtime.platform.InterruptAction × Self)
+  call_host : Self → runtime.store.Store M → Std.U64 → Slice
+    runtime.Value → Slice runtime.Value → Result ((core.result.Result Unit
+    runtime.platform.HostError) × Self × (runtime.store.Store M) × (Slice
+    runtime.Value))
 
 /-- [itasca::runtime::InstanceAddr]
     Source: 'src/runtime/mod.rs', lines 38:8-41:9
@@ -2076,18 +2020,18 @@ structure runtime.InstanceAddr where
     Source: 'src/runtime/mod.rs', lines 55:0-58:1
     Visibility: public -/
 structure runtime.Instantiated where
-  «instance» : _root_.Itasca.runtime.InstanceAddr
-  start : Option _root_.Itasca.runtime.FuncAddr
+  «instance» : runtime.InstanceAddr
+  start : Option runtime.FuncAddr
 
 /-- [itasca::runtime::Extern]
     Source: 'src/runtime/mod.rs', lines 107:0-112:1
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Extern where
-| Func : _root_.Itasca.runtime.FuncAddr → runtime.Extern
-| Table : _root_.Itasca.runtime.TableAddr → runtime.Extern
-| Memory : _root_.Itasca.runtime.MemoryAddr → runtime.Extern
-| Global : _root_.Itasca.runtime.GlobalAddr → runtime.Extern
+| Func : runtime.FuncAddr → runtime.Extern
+| Table : runtime.TableAddr → runtime.Extern
+| Memory : runtime.MemoryAddr → runtime.Extern
+| Global : runtime.GlobalAddr → runtime.Extern
 
 /-- [itasca::runtime::platform::VecMemory]
     Source: 'src/runtime/platform.rs', lines 96:0-98:1

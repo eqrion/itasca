@@ -16,8 +16,8 @@ namespace Itasca
 
 /-- Descriptor pops preserve the backward stack interpretation, including
 mixed concrete/`Bot` stacks and implicit operands at an unreachable base. -/
-theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (expected : List types.ValueType)
+theorem code.pop_results.realizes (st : code.OpIterState) (env : metadata.Env)
+    (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (hts : Wasm2.resolve env view = some expected)
     (hvals : st.vals.val = outer ++ segment)
@@ -59,8 +59,8 @@ theorem code.pop_results.realizes (st : code.OpIterState) (env : module.Env)
     · simp [Wasm2.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
 
 /-- Independent stack compatibility suffices for descriptor-pop acceptance. -/
-theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (expected : List types.ValueType)
+theorem code.pop_results.complete (st : code.OpIterState) (env : metadata.Env)
+    (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hts : Wasm2.resolve env view = some expected)
     (hvals : st.vals.val = outer ++ segment)
@@ -102,7 +102,7 @@ theorem code.pop_results.complete (st : code.OpIterState) (env : module.Env)
 /-- No descriptor, including an invalid type index, can make a bounded pop
 panic or diverge. Frame bounds are preserved even on rejection. -/
 @[step]
-theorem code.pop_results.total (st : code.OpIterState) (env : module.Env)
+theorem code.pop_results.total (st : code.OpIterState) (env : metadata.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.pop_results st env view ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -125,7 +125,7 @@ theorem code.pop_results.total (st : code.OpIterState) (env : module.Env)
 /-- The explicit capacity guard makes descriptor pushes total for arbitrary
 environments, including invalid descriptors and oversized stored signatures. -/
 @[step]
-theorem code.push_results.total (st : code.OpIterState) (env : module.Env)
+theorem code.push_results.total (st : code.OpIterState) (env : metadata.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.push_results st env view ⦃ r =>
       Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧

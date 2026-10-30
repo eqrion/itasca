@@ -109,9 +109,9 @@ theorem prepared_entry_unique {data env index start profile}
     have right := second.extent
     rw [sizeEq,contentEq] at left
     omega)
-  obtain ⟨declaredLeft,decodedLeft,valuesLeft⟩ := module.decode_locals.complete data first.content profile first.groups
+  obtain ⟨declaredLeft,decodedLeft,valuesLeft⟩ := metadata.decode_locals.complete data first.content profile first.groups
     first.bodyStart first.locals_bytes first.locals_allowed first.locals_bound
-  obtain ⟨declaredRight,decodedRight,valuesRight⟩ := module.decode_locals.complete data second.content profile second.groups
+  obtain ⟨declaredRight,decodedRight,valuesRight⟩ := metadata.decode_locals.complete data second.content profile second.groups
     second.bodyStart second.locals_bytes second.locals_allowed second.locals_bound
   rw [contentEq,decodedRight] at decodedLeft
   have localsEq : declaredLeft = declaredRight ∧ first.bodyStart = second.bodyStart := by
@@ -171,7 +171,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Independently prepared, encoded, and typed source entries in byte/index
 order, with conservative source maxima. Preparation contains only source
 metadata and decoding facts, never a compiler callback or target certificate. -/
-inductive PreparedBatchSource (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+inductive PreparedBatchSource (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (bodyBytes localCount peak : Nat) : Nat → Usize → List ModuleBinary.Code → Usize → Prop where
   | nil (index start) : PreparedBatchSource data env profile bodyBytes localCount peak index start [] start
   | cons {index start next finish entry entries}

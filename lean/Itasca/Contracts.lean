@@ -29,17 +29,17 @@ namespace Itasca.ModuleTail
 
 /-- The visitor's custom-section hook returns normally for every state and chunk. It may still
 reject; totality excludes only panics and divergence. -/
-def HooksTotal {V : Type} (visitor : module.ModuleVisitor V) : Prop :=
-  ∀ (v : V) (chunk : types.CustomSection), ∃ r, visitor.on_custom_section v chunk = .ok r
+def HooksTotal {V : Type} (visitor : metadata.ModuleVisitor V) : Prop :=
+  ∀ (v : V) (chunk : wasm_types.CustomSection), ∃ r, visitor.on_custom_section v chunk = .ok r
 
 /-- The custom section hooks always return normally and accept. -/
-def HooksAccept {V : Type} (visitor : module.ModuleVisitor V) : Prop :=
-  ∀ (v : V) (chunk : types.CustomSection),
+def HooksAccept {V : Type} (visitor : metadata.ModuleVisitor V) : Prop :=
+  ∀ (v : V) (chunk : wasm_types.CustomSection),
     ∃ v', visitor.on_custom_section v chunk = .ok (.Ok (), v')
 
 /-- The visitor's `on_custom_section` hook preserves the predicate `P` on its state across
 successful calls. Hooks may advance workers, and no fixed work observation is required. -/
-def PreservesInvariant {V : Type} (visitor : module.ModuleVisitor V) (P : V → Prop) : Prop :=
+def PreservesInvariant {V : Type} (visitor : metadata.ModuleVisitor V) (P : V → Prop) : Prop :=
   ∀ v chunk v', visitor.on_custom_section v chunk = .ok (.Ok (), v') → P v → P v'
 
 end Itasca.ModuleTail
@@ -49,7 +49,7 @@ namespace Itasca.CodeEntry
 /-- Parameters plus the maximum local count fit in a `Usize` for every function type. The
 environment decoder supplies this. The validator accepts arbitrary environments, but concatenating
 parameters and locals cannot be total for a caller-built vector already at machine capacity. -/
-def Bounds (env : module.Env) : Prop :=
+def Bounds (env : metadata.Env) : Prop :=
   ∀ ft ∈ env.types.val, ft.params.val.length + limits.MAX_LOCALS.val ≤ Usize.max
 
 end Itasca.CodeEntry
@@ -124,7 +124,7 @@ namespace Itasca.StreamBatch
 structure Issued where
   module_id : U64
   batch_id : Usize
-  env : module.Env
+  env : metadata.Env
   code : Slice U8
   code_offset : Usize
   first_func : Usize
@@ -178,7 +178,7 @@ profile. Rust errors and malformed returned worker records are allowed, and noth
 about the workers. This is independent of the soundness provenance contract. -/
 structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
     (profile : ValidationProfile := .Wasm1) : Prop where
-  custom : ModuleTail.HooksTotal visitor.moduleModuleVisitorInst
+  custom : ModuleTail.HooksTotal visitor.metadataModuleVisitorInst
   region : ∀ v region, ∃ v', visitor.custom_region v region = .ok v'
   environment : ∀ v env, ∃ r, visitor.environment_ready v env = .ok r
   submit : ∀ v (issued : StreamBatch.Issued), issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
@@ -197,7 +197,7 @@ structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (profile : ValidationProfile := .Wasm1) : Prop where
   custom : ∀ id history, ModuleTail.PreservesInvariant
-    visitor.moduleModuleVisitorInst (Tracks id history)
+    visitor.metadataModuleVisitorInst (Tracks id history)
   region : ∀ id history v region v', Tracks id history v →
     visitor.custom_region v region = .ok v' → Tracks id history v'
   environment : ∀ id history v env config v', Tracks id history v →
@@ -249,9 +249,9 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
     (validationProfile : ValidationProfile := .Wasm1) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
-  custom_accepts : ModuleTail.HooksAccept visitor.moduleModuleVisitorInst
+  custom_accepts : ModuleTail.HooksAccept visitor.metadataModuleVisitorInst
   custom_preserves : ∀ id queue, ModuleTail.PreservesInvariant
-    visitor.moduleModuleVisitorInst (Queued id queue)
+    visitor.metadataModuleVisitorInst (Queued id queue)
   region : ∀ id queue v region, Queued id queue v →
     ∃ v', visitor.custom_region v region = .ok v' ∧ Queued id queue v'
   environment : ∀ id queue v env, Queued id queue v →

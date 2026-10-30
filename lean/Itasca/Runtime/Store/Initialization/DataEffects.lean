@@ -151,7 +151,7 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-def sourceDataPayload (segment : Itasca.module.Data) : datainst :=
+def sourceDataPayload (segment : Itasca.metadata.Data) : datainst :=
   ⟨segment.init.val.map (fun byte => .mk_byte byte.val)⟩
 
 theorem add_instance_data_payload {M A : Type} (memory : runtime.platform.MemoryBuffer M)

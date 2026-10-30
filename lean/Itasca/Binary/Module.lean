@@ -20,41 +20,41 @@ their Unicode validity is a separate judgment (`NameEncoding`). -/
 structure Import where
   moduleName : List U8
   «name» : List U8
-  desc : module.ImportDesc
+  desc : metadata.ImportDesc
 
 /-- A raw export: a byte-string name and its descriptor. -/
 structure Export where
   «name» : List U8
-  desc : module.ExportDesc
+  desc : metadata.ExportDesc
 
 /-- A raw element segment: element type, mode and initializer expressions. -/
 structure Element where
-  elem : types.ElemType
-  mode : module.ElementMode
-  init : List types.ConstExpr
+  elem : wasm_types.ElemType
+  mode : metadata.ElementMode
+  init : List wasm_types.ConstExpr
 
 /-- A raw code entry: grouped local declarations and the structured body. -/
 structure Code where
-  locals : List (U32 × types.ValueType)
+  locals : List (U32 × wasm_types.ValueType)
   body : List instr
 
 /-- The flattened local types declared by a code entry. -/
-def Code.declared (entry : Code) : List types.ValueType :=
+def Code.declared (entry : Code) : List wasm_types.ValueType :=
   entry.locals.flatMap (fun (count, ty) => List.replicate count.val ty)
 
 /-- A raw data segment: its mode and the initializer bytes. -/
 structure Data where
-  mode : module.DataMode
+  mode : metadata.DataMode
   init : List U8
 
 /-- A raw module: the decoded contents of every section, before any typing check. -/
 structure Module where
-  types : List types.FuncType
+  types : List wasm_types.FuncType
   imports : List Import
   functions : List U32
-  tables : List _root_.Itasca.types.TableType
-  memories : List _root_.Itasca.types.MemType
-  globals : List module.Global
+  tables : List _root_.Itasca.wasm_types.TableType
+  memories : List _root_.Itasca.wasm_types.MemType
+  globals : List metadata.Global
   exports : List Export
   start : Option U32
   elements : List Element
@@ -117,71 +117,71 @@ inductive Utf8 : List U8 → Prop where
 def NameEncoding (nm bytes : List U8) : Prop := ByteVecEncoding nm bytes ∧ Utf8 nm
 
 /-- The binary type byte of a value type. -/
-def valueByte : types.ValueType → U8
+def valueByte : wasm_types.ValueType → U8
   | .I32 => 0x7F#u8 | .I64 => 0x7E#u8 | .F32 => 0x7D#u8 | .F64 => 0x7C#u8
   | .V128 => 0x7B#u8 | .FuncRef => 0x70#u8 | .ExternRef => 0x6F#u8
 
 /-- The binary type byte of a reference element type. -/
-def elemByte : types.ElemType → U8
+def elemByte : wasm_types.ElemType → U8
   | .FuncRef => 0x70#u8 | .ExternRef => 0x6F#u8
 
 /-- Value types that the profile admits: Wasm 1.0 has only the four number types. -/
-def ValueTypeAllowed (profile : ValidationProfile) (ty : types.ValueType) : Prop :=
+def ValueTypeAllowed (profile : ValidationProfile) (ty : wasm_types.ValueType) : Prop :=
   match profile, ty with
   | .Wasm1, .V128 | .Wasm1, .FuncRef | .Wasm1, .ExternRef => False
   | _, _ => True
 
 /-- Element types that the profile admits: Wasm 1.0 has only `funcref`. -/
-def ElemTypeAllowed (profile : ValidationProfile) (ty : types.ElemType) : Prop :=
+def ElemTypeAllowed (profile : ValidationProfile) (ty : wasm_types.ElemType) : Prop :=
   match profile, ty with
   | .Wasm1, .ExternRef => False
   | _, _ => True
 
 /-- A value type as its type byte. -/
-def ValueTypeEncoding (ty : types.ValueType) (bytes : List U8) : Prop :=
+def ValueTypeEncoding (ty : wasm_types.ValueType) (bytes : List U8) : Prop :=
   bytes = [valueByte ty]
 
 /-- A value type encoding restricted to the profile's allowed types. -/
-def ValueTypeEncodingFor (profile : ValidationProfile) (ty : types.ValueType)
+def ValueTypeEncodingFor (profile : ValidationProfile) (ty : wasm_types.ValueType)
     (bytes : List U8) : Prop := ValueTypeEncoding ty bytes ∧ ValueTypeAllowed profile ty
 
 /-- An element type as its type byte. -/
-def ElemTypeEncoding (ty : types.ElemType) (bytes : List U8) : Prop := bytes = [elemByte ty]
+def ElemTypeEncoding (ty : wasm_types.ElemType) (bytes : List U8) : Prop := bytes = [elemByte ty]
 
 /-- An element type encoding restricted to the profile's allowed types. -/
-def ElemTypeEncodingFor (profile : ValidationProfile) (ty : types.ElemType)
+def ElemTypeEncodingFor (profile : ValidationProfile) (ty : wasm_types.ElemType)
     (bytes : List U8) : Prop := ElemTypeEncoding ty bytes ∧ ElemTypeAllowed profile ty
 
 /-- A function type: `0x60`, then the parameter vector and the result vector. -/
-def FuncTypeEncoding (ty : types.FuncType) (bytes : List U8) : Prop :=
+def FuncTypeEncoding (ty : wasm_types.FuncType) (bytes : List U8) : Prop :=
   ∃ params results, VecEncoding ValueTypeEncoding ty.params.val params ∧
     VecEncoding ValueTypeEncoding ty.results.val results ∧
     bytes = 0x60#u8 :: (params ++ results)
 
 /-- Limits: flag `0` with a minimum, or flag `1` with a minimum and a maximum. -/
-inductive LimitsEncoding : types.Limits → List U8 → Prop where
+inductive LimitsEncoding : wasm_types.Limits → List U8 → Prop where
   | noMax (min : U32) {bytes} : IndexEncoding min bytes →
       LimitsEncoding ⟨min, none⟩ (0#u8 :: bytes)
   | max (min max : U32) {first rest} : IndexEncoding min first → IndexEncoding max rest →
       LimitsEncoding ⟨min, some max⟩ (1#u8 :: (first ++ rest))
 
 /-- A table type: the element type byte followed by limits. -/
-def TableTypeEncoding (ty : types.TableType) (bytes : List U8) : Prop :=
+def TableTypeEncoding (ty : wasm_types.TableType) (bytes : List U8) : Prop :=
   ∃ limits, LimitsEncoding ty.limits limits ∧ bytes = elemByte ty.elem :: limits
 
 /-- A memory type is its limits. -/
-def MemTypeEncoding (ty : types.MemType) (bytes : List U8) : Prop :=
+def MemTypeEncoding (ty : wasm_types.MemType) (bytes : List U8) : Prop :=
   LimitsEncoding ty.limits bytes
 
 /-- The binary mutability byte. -/
-def mutByte : types.Mut → U8 | .Const => 0#u8 | .Var => 1#u8
+def mutByte : wasm_types.Mut → U8 | .Const => 0#u8 | .Var => 1#u8
 
 /-- A global type: the value type byte followed by the mutability byte. -/
-def GlobalTypeEncoding (ty : types.GlobalType) (bytes : List U8) : Prop :=
+def GlobalTypeEncoding (ty : wasm_types.GlobalType) (bytes : List U8) : Prop :=
   bytes = [valueByte ty.valtype, mutByte ty.mutability]
 
 /-- A constant expression: one constant instruction followed by `end` (`0x0b`). -/
-inductive ConstEncoding : types.ConstExpr → List U8 → Prop where
+inductive ConstEncoding : wasm_types.ConstExpr → List U8 → Prop where
   | i32 (value : I32) {bytes} : SignedLeb32.Encoding bytes value.val →
       ConstEncoding (.I32 value) (0x41#u8 :: (bytes ++ [0x0B#u8]))
   | i64 (value : I64) {bytes} : SignedLeb64.Encoding bytes value.val →
@@ -192,7 +192,7 @@ inductive ConstEncoding : types.ConstExpr → List U8 → Prop where
       ConstEncoding (.F64 value) (0x44#u8 :: (bytes ++ [0x0B#u8]))
   | globalGet (index : U32) {bytes} : IndexEncoding index bytes →
       ConstEncoding (.GlobalGet index) (0x23#u8 :: (bytes ++ [0x0B#u8]))
-  | refNull (ty : types.ElemType) :
+  | refNull (ty : wasm_types.ElemType) :
       ConstEncoding (.RefNull ty) [0xD0#u8, elemByte ty, 0x0B#u8]
   | refFunc (index : U32) {bytes} : IndexEncoding index bytes →
       ConstEncoding (.RefFunc index) (0xD2#u8 :: (bytes ++ [0x0B#u8]))
@@ -203,20 +203,20 @@ inductive ConstEncoding : types.ConstExpr → List U8 → Prop where
 
 /-- Constant expressions that the profile admits: Wasm 1.0 has no `v128.const`, `ref.null` or
 `ref.func`. -/
-def ConstAllowed (profile : ValidationProfile) (expr : types.ConstExpr) : Prop :=
+def ConstAllowed (profile : ValidationProfile) (expr : wasm_types.ConstExpr) : Prop :=
   match profile, expr with
   | .Wasm1, .V128 _ _ | .Wasm1, .RefNull _ | .Wasm1, .RefFunc _ => False
   | _, _ => True
 
 /-- An import descriptor: a kind byte followed by a type index or a table, memory or global type. -/
-inductive ImportDescEncoding : module.ImportDesc → List U8 → Prop where
+inductive ImportDescEncoding : metadata.ImportDesc → List U8 → Prop where
   | func (index : U32) {bytes} : IndexEncoding index bytes →
       ImportDescEncoding (.Func index) (0#u8 :: bytes)
-  | table (ty : types.TableType) {bytes} : TableTypeEncoding ty bytes →
+  | table (ty : wasm_types.TableType) {bytes} : TableTypeEncoding ty bytes →
       ImportDescEncoding (.Table ty) (1#u8 :: bytes)
-  | memory (ty : types.MemType) {bytes} : MemTypeEncoding ty bytes →
+  | memory (ty : wasm_types.MemType) {bytes} : MemTypeEncoding ty bytes →
       ImportDescEncoding (.Memory ty) (2#u8 :: bytes)
-  | global (ty : types.GlobalType) {bytes} : GlobalTypeEncoding ty bytes →
+  | global (ty : wasm_types.GlobalType) {bytes} : GlobalTypeEncoding ty bytes →
       ImportDescEncoding (.Global ty) (3#u8 :: bytes)
 
 /-- An import: module name, field name and descriptor. -/
@@ -226,7 +226,7 @@ def ImportEncoding (entry : Import) (bytes : List U8) : Prop :=
     bytes = modname ++ nm ++ desc
 
 /-- An export descriptor: a kind byte followed by an index. -/
-inductive ExportDescEncoding : module.ExportDesc → List U8 → Prop where
+inductive ExportDescEncoding : metadata.ExportDesc → List U8 → Prop where
   | func (index : U32) {bytes} : IndexEncoding index bytes →
       ExportDescEncoding (.Func index) (0#u8 :: bytes)
   | table (index : U32) {bytes} : IndexEncoding index bytes →
@@ -242,7 +242,7 @@ def ExportEncoding (entry : Export) (bytes : List U8) : Prop :=
     bytes = nm ++ desc
 
 /-- A global: its type followed by its initializer expression. -/
-def GlobalEncoding (entry : module.Global) (bytes : List U8) : Prop :=
+def GlobalEncoding (entry : metadata.Global) (bytes : List U8) : Prop :=
   ∃ ty expr, GlobalTypeEncoding entry.gtype ty ∧ ConstEncoding entry.init expr ∧
     bytes = ty ++ expr
 
@@ -250,7 +250,7 @@ def GlobalEncoding (entry : module.Global) (bytes : List U8) : Prop :=
 `ref.func` initializers. -/
 def ElementEncoding (entry : Element) (bytes : List U8) : Prop :=
   ∃ tableIndex offset initializers table encodedOffset entries,
-    entry = ⟨.FuncRef, .Active tableIndex offset, initializers.map types.ConstExpr.RefFunc⟩ ∧
+    entry = ⟨.FuncRef, .Active tableIndex offset, initializers.map wasm_types.ConstExpr.RefFunc⟩ ∧
     IndexEncoding tableIndex table ∧ ConstEncoding offset encodedOffset ∧
     VecEncoding IndexEncoding initializers entries ∧ bytes = table ++ encodedOffset ++ entries
 
@@ -260,20 +260,20 @@ inductive Wasm2ElementEncoding : Element → List U8 → Prop where
   | activeIndices {offset initializers flags encodedOffset entries} :
       IndexEncoding 0#u32 flags → ConstEncoding offset encodedOffset →
       VecEncoding IndexEncoding initializers entries →
-      Wasm2ElementEncoding ⟨.FuncRef, .Active 0#u32 offset, initializers.map types.ConstExpr.RefFunc⟩
+      Wasm2ElementEncoding ⟨.FuncRef, .Active 0#u32 offset, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (flags ++ encodedOffset ++ entries)
   | passiveIndices {initializers flags entries} :
       IndexEncoding 1#u32 flags → VecEncoding IndexEncoding initializers entries →
-      Wasm2ElementEncoding ⟨.FuncRef, .Passive, initializers.map types.ConstExpr.RefFunc⟩
+      Wasm2ElementEncoding ⟨.FuncRef, .Passive, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (flags ++ [0#u8] ++ entries)
   | explicitIndices {tableIndex offset initializers flags table encodedOffset entries} :
       IndexEncoding 2#u32 flags → IndexEncoding tableIndex table →
       ConstEncoding offset encodedOffset → VecEncoding IndexEncoding initializers entries →
-      Wasm2ElementEncoding ⟨.FuncRef, .Active tableIndex offset, initializers.map types.ConstExpr.RefFunc⟩
+      Wasm2ElementEncoding ⟨.FuncRef, .Active tableIndex offset, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (flags ++ table ++ encodedOffset ++ [0#u8] ++ entries)
   | declarativeIndices {initializers flags entries} :
       IndexEncoding 3#u32 flags → VecEncoding IndexEncoding initializers entries →
-      Wasm2ElementEncoding ⟨.FuncRef, .Declarative, initializers.map types.ConstExpr.RefFunc⟩
+      Wasm2ElementEncoding ⟨.FuncRef, .Declarative, initializers.map wasm_types.ConstExpr.RefFunc⟩
         (flags ++ [0#u8] ++ entries)
   | activeExpressions {offset initializers flags encodedOffset entries} :
       IndexEncoding 4#u32 flags → ConstEncoding offset encodedOffset →
@@ -334,7 +334,7 @@ theorem ActiveIndexEncoding.parts {index explicit bytes}
   | explicit hf hi => exact ⟨2#u32, _, _, hf, Or.inr ⟨rfl, rfl, hi⟩, rfl⟩
 
 /-- A local declaration: a count followed by a value type byte. -/
-def LocalEncoding (entry : U32 × types.ValueType) (bytes : List U8) : Prop :=
+def LocalEncoding (entry : U32 × wasm_types.ValueType) (bytes : List U8) : Prop :=
   ∃ count, IndexEncoding entry.1 count ∧ bytes = count ++ [valueByte entry.2]
 
 /-- A function body: tokens including the final `end`, assembled into structured instructions.

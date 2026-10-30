@@ -21,7 +21,7 @@ namespace Itasca
 /-- If the segment realizes a stack ending in `input`, `code.read_conversion` succeeds and the
 result realizes the stack with `output` instead. -/
 theorem code.read_conversion.complete (st : code.OpIterState)
-    (outer segment : List code.StackType) (ts : List valtype) (input output : types.ValueType)
+    (outer segment : List code.StackType) (ts : List valtype) (input output : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment (ts ++ [Translate.valueType input])) :
@@ -45,7 +45,7 @@ theorem code.read_conversion.complete (st : code.OpIterState)
 /-- If the segment realizes a stack ending in two `input` types, `code.read_binary` succeeds, with
 explicit, `Bot` or implicit operands, and the result realizes the stack with `output`. -/
 theorem code.read_binary.complete (st : code.OpIterState)
-    (outer segment : List code.StackType) (ts : List valtype) (input output : types.ValueType)
+    (outer segment : List code.StackType) (ts : List valtype) (input output : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment
@@ -119,7 +119,7 @@ theorem code.join_stack_type.complete (a b : code.StackType) (u : valtype)
           have heq : a = b := Translate.valueType_injective (ha.symm.trans hb)
           subst b
           refine ⟨.Val a, ?_, ha⟩
-          cases a <;> simp [code.join_stack_type, types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+          cases a <;> simp [code.join_stack_type, wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 /-- If the segment realizes a stack ending in `u, u, i32` with `u` not a reference type,
 `code.read_select` succeeds, including with `Bot` operands. -/
@@ -165,7 +165,7 @@ namespace Itasca
 /-- Shared completeness argument for constant handlers that push one operand of type `ty`. -/
 private theorem constant_complete {A : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
-    (st : code.OpIterState) (value : A) (next : Usize) (ty : types.ValueType)
+    (st : code.OpIterState) (value : A) (next : Usize) (ty : wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hread : read ⦃ r => r.1 = .Ok value ∧ r.2.vals.val = st.vals.val ++ [.Val ty] ∧
       r.2.ctrls = st.ctrls ∧ r.2.pos = next ⦄)

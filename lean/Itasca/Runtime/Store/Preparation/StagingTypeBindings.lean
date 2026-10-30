@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
 theorem InitializerFunctionMetadata.table_types {M : Type}
     {store after : runtime.store.Store M} {inst next : runtime.store.ModuleInst}
     (metadata : InitializerFunctionMetadata store inst after next)
-    {source : List Itasca.types.TableType} (matching : TableTypeMap store source inst.tables.val) :
+    {source : List Itasca.wasm_types.TableType} (matching : TableTypeMap store source inst.tables.val) :
     TableTypeMap after source next.tables.val := by
   simpa only [TableTypeMap, metadata.tables, metadata.tableMap] using matching
 

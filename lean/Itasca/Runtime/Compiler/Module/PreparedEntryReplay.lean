@@ -13,19 +13,19 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
     (before started after : V)
     (begun : visitor.on_function_start before w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started))
     (body : code.validate_body_with visitor w.body env w.ctx w.typeIdx profile started = .ok (.Ok (),after)) :
-    module.validate_code_entry_with visitor data start env index profile before
+    metadata.validate_code_entry_with visitor data start env index profile before
       ⦃ result => result = (.Ok w.finish,after) ⦄ := by
   have read := reader.read_u32_leb.complete data start w.size w.content w.header
-  obtain ⟨declared,decoded,declaredValues⟩ := module.decode_locals.complete data w.content profile w.groups w.bodyStart
+  obtain ⟨declared,decoded,declaredValues⟩ := metadata.decode_locals.complete data w.content profile w.groups w.bodyStart
     w.locals_bytes w.locals_allowed w.locals_bound
   have indexBound : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by
     have bound := w.index_lt
     scalar_tac
-  unfold module.validate_code_entry_with
+  unfold metadata.validate_code_entry_with
   simp [indexBound,read,core.result.Result.Insts.CoreOpsTry.branch]
   step
   obtain ⟨reply,haveBytes,haveBytesPost⟩ := WP.spec_imp_exists
-    (module.have_bytes.spec data w.content n (by have bound := w.header.span; omega))
+    (metadata.have_bytes.spec data w.content n (by have bound := w.header.span; omega))
   have enough : reply = .Ok () := haveBytesPost.1.mpr (by have bound := w.body_bytes.bound; have extent := w.extent; scalar_tac)
   rw [enough] at haveBytes
   simp [haveBytes]
@@ -50,8 +50,8 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
     have bound := w.ctx.locals.property
     omega
   obtain ⟨locals,build,localValues⟩ := WP.spec_imp_exists
-    (module.build_func_locals.spec ft.params.deref declared.deref (by simpa [alloc.vec.Vec.deref] using localRoom))
-  obtain ⟨results,copy,resultValues⟩ := WP.spec_imp_exists (module.copy_value_types.spec ft.results.deref)
+    (metadata.build_func_locals.spec ft.params.deref declared.deref (by simpa [alloc.vec.Vec.deref] using localRoom))
+  obtain ⟨results,copy,resultValues⟩ := WP.spec_imp_exists (metadata.copy_value_types.spec ft.results.deref)
   rw [build,copy]
   simp only [bind_ok]
   have localsEq : locals = w.ctx.locals := alloc.vec.Vec.ext _ _ (by

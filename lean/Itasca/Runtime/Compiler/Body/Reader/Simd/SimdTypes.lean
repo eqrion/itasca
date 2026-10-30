@@ -23,7 +23,7 @@ theorem reader_simd_fixed_types {data env locals index st out source values posi
     (known : ConcreteStack st.core.vals.val)
     (monomorphic : p.current.ctrl.polymorphic_base = false)
     (capacity : st.core.vals.val.length < Usize.max) :
-    ∃ (front : List valtype) (types : List Itasca.types.ValueType), Sequence.stackTypes st.core.vals.val = front ++ Wasm2.Simd.inputTypes inputs ∧
+    ∃ (front : List valtype) (types : List Itasca.wasm_types.ValueType), Sequence.stackTypes st.core.vals.val = front ++ Wasm2.Simd.inputTypes inputs ∧
       out.vals.val = types.map code.StackType.Val ∧
       types.map Translate.valueType = front ++ Wasm2.Simd.outputTypes output := by
   obtain ⟨_,outer,_,_,base,_,ctrls,_,stack⟩ := p.opened

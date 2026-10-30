@@ -33,7 +33,7 @@ theorem run_reader_total {A V : Type} (st : code.OpIterState)
 
 /-- Bulk instructions preserve structural bounds for arbitrary immediate bytes. -/
 theorem bulk_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (opcode : U32) (v : V)
+    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : FullVisitor.Total visitor) :
     code.step_bulk visitor st data env opcode v ⦃ r => Control.Shape r.2.1 ∧

@@ -45,7 +45,7 @@ theorem reached_profile_end_available_wasm2 {A V : Type}
     (invariant : @StructuredCompilerPrefix jumpTables emit A initial compiler types functions returns locals
       parents current raw position)
     (source : code.OpVisitor V) (before after : V) (st out : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (capacity : CallbackCapacity compiler out.core bound 1)
     (coordinate : compiler.function.body_start.val+out.core.pos.val ≤ Usize.max)
     (reference : code.step_profile source st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :

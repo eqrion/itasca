@@ -33,7 +33,7 @@ end Itasca.Numeric
 
 namespace Itasca.Wasm1.Completeness
 
-private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype)
     (s : code.OpIterState) (after : List code.StackType)
     (hs : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
@@ -47,7 +47,7 @@ private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : module.E
   omega
 
 /-- Numeric dispatch accepts its generated principal typing on the represented stack. -/
-theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (op : Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : Numeric.NumericOp opcode op) (hb : Wasm1.BytesAt data st.pos [] next)
@@ -65,7 +65,7 @@ theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : module.E
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Drop consumes the type supplied by its principal typing rule. -/
-theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
     (hb : Wasm1.BytesAt data st.pos [] next)
     (ht : Instr_ok C .DROP (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -82,7 +82,7 @@ theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : module.Env)
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Untyped `select` consumes the operands given by its principal typing rule. -/
-theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
     (hb : Wasm1.BytesAt data st.pos [] next) (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (.SELECT none) (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -98,7 +98,7 @@ theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : module.En
       simp [hs, code.OpVisitor.on_select.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (value : I32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : SignedLeb32.Encoding bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
@@ -117,7 +117,7 @@ theorem Frame.step_i32Const {st} (f : Frame st) (data : Slice U8) (env : module.
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (value : I64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : SignedLeb64.Encoding bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
@@ -136,7 +136,7 @@ theorem Frame.step_i64Const {st} (f : Frame st) (data : Slice U8) (env : module.
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (value : U32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : FloatBits.Encoding 4 bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)
@@ -155,7 +155,7 @@ theorem Frame.step_f32Const {st} (f : Frame st) (data : Slice U8) (env : module.
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_f64Const {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.step_f64Const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (value : U64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : FloatBits.Encoding 8 bytes value.val) (hbytes : Wasm1.BytesAt data st.pos bytes next)

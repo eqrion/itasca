@@ -6,10 +6,10 @@ import Itasca.Module.Env.Encoding
 /-!
 # Semantic contract of the environment parser
 
-`module.validate_env.profile_semantic_spec` shows that for arbitrary bytes, `module.validate_env`
+`metadata.validate_env.profile_semantic_spec` shows that for arbitrary bytes, `metadata.validate_env`
 either rejects or returns an environment with `SemanticPostWith`. That is a `Represents`
 declaration record, `Valid`, signature and size bounds, and an independent `PrefixEncoding` of the
-consumed bytes. The same holds for `module.validate_env_with` with total custom-section hooks, and
+consumed bytes. The same holds for `metadata.validate_env_with` with total custom-section hooks, and
 the Wasm 1.0 instances are the `semantic_spec` theorems.
 -/
 
@@ -31,7 +31,7 @@ theorem Run.valid {profile} {data initial decls start initialId after afterDecls
 /-- An accepted environment comes with a declaration record that represents it, its semantic
 checks, the signature and size bounds needed by the code and data parsers, and the independent byte
 encoding of the consumed prefix. -/
-def SemanticPostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Result (module.Env × Usize) error.Error → Prop
+def SemanticPostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Result (metadata.Env × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ decls, Represents env decls ∧ Valid env profile ∧
       SignatureBounded env next.val ∧ Bounded env next.val ∧
@@ -44,7 +44,7 @@ theorem PostWith.semantic {profile data result} (h : PostWith profile data resul
   | Ok pair =>
       obtain ⟨env, next⟩ := pair
       obtain ⟨initial, start, decls, last, hinit, hheader, hrun, hbound⟩ := h
-      have hi := module.Env.new.profile_declarations profile
+      have hi := metadata.Env.new.profile_declarations profile
       rw [hinit] at hi
       simp only [WP.spec_ok] at hi
       obtain ⟨hr, hv, hs, _, hp⟩ := hi
@@ -58,17 +58,17 @@ end Itasca.ModuleEnv
 
 namespace Itasca
 
-/-- Arbitrary bytes either make `module.validate_env` reject or yield an independently encoded,
+/-- Arbitrary bytes either make `metadata.validate_env` reject or yield an independently encoded,
 semantically valid declaration prefix with consistent caches. -/
-theorem module.validate_env.profile_semantic_spec (data : Slice U8) (profile : ValidationProfile) :
-    module.validate_env data profile ⦃ ModuleEnv.SemanticPostWith profile data ⦄ := by
-  obtain ⟨result, hr, hp⟩ := WP.spec_imp_exists (module.validate_env.profile_spec data profile)
+theorem metadata.validate_env.profile_semantic_spec (data : Slice U8) (profile : ValidationProfile) :
+    metadata.validate_env data profile ⦃ ModuleEnv.SemanticPostWith profile data ⦄ := by
+  obtain ⟨result, hr, hp⟩ := WP.spec_imp_exists (metadata.validate_env.profile_spec data profile)
   rw [hr]
   simpa only [WP.spec_ok] using ModuleEnv.PostWith.semantic hp
 
-/-- `module.validate_env.profile_semantic_spec` for Wasm 1.0. -/
-theorem module.validate_env.semantic_spec (data : Slice U8) :
-    module.validate_env data .Wasm1 ⦃ ModuleEnv.SemanticPost data ⦄ := by
-  exact module.validate_env.profile_semantic_spec data .Wasm1
+/-- `metadata.validate_env.profile_semantic_spec` for Wasm 1.0. -/
+theorem metadata.validate_env.semantic_spec (data : Slice U8) :
+    metadata.validate_env data .Wasm1 ⦃ ModuleEnv.SemanticPost data ⦄ := by
+  exact metadata.validate_env.profile_semantic_spec data .Wasm1
 
 end Itasca

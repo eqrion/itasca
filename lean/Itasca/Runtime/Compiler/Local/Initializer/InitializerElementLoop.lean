@@ -4,12 +4,12 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def ElementValueMappings (functions : List runtime.bytecode.CompiledFunction)
-    (segments : List Itasca.module.Element) (rows : List (alloc.vec.Vec Usize)) : Prop :=
+    (segments : List Itasca.metadata.Element) (rows : List (alloc.vec.Vec Usize)) : Prop :=
   List.Forall₂ (fun segment indices => InitializerEntries functions segment.init.val
     (Itasca.ModuleConstants.referenceValueType segment.elem) indices.val) segments rows
 
 def ElementOffsetMappings (functions : List runtime.bytecode.CompiledFunction)
-    (segments : List Itasca.module.Element) (offsets : List (Option Usize)) : Prop :=
+    (segments : List Itasca.metadata.Element) (offsets : List (Option Usize)) : Prop :=
   List.Forall₂ (fun segment offset => OffsetInitializer functions (sourceElementOffset segment) offset)
     segments offsets
 
@@ -102,7 +102,7 @@ theorem initializer_elements_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop1.body at body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body

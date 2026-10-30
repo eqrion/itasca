@@ -31,7 +31,7 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
 /-- Generated function typing of a code entry in a module context gives a `Typed` certificate.
 The context's element space must be the environment's, and its data space must be the
 environment's unless the body uses no data index. -/
-theorem Typed.of_func_ok {profile} {env : module.Env} {C : context} {idx : U32}
+theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32}
     {entry : ModuleBinary.Code} {ft : functype}
     (hc : ModuleContext env C)
     (he : C.ELEMS = EnvTranslation.elementTypes env)

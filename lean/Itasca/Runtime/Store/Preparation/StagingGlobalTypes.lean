@@ -25,7 +25,7 @@ theorem staging_global_types {M P F A : Type}
     (elementCapacity : store.elems.length + inst.module.module.env.elements.val.length ≤ Usize.max)
     (dataCapacity : store.datas.length + inst.module.module.tail.data.val.length ≤ Usize.max)
     (emptyElements : inst.elems.val = []) (emptyData : inst.datas.val = [])
-    (importTypes : List Itasca.types.GlobalType)
+    (importTypes : List Itasca.wasm_types.GlobalType)
     (globalMatching : GlobalTypeMap store importTypes inst.globals.val)
     (globalStore elementStore after : runtime.store.Store M)
     (globalRun : runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform (.Ok ()) 0#usize index =
@@ -36,7 +36,7 @@ theorem staging_global_types {M P F A : Type}
       .ok (storeStateParts after (.Ok ()))) :
     ∃ next, after.instances.val[index.val]? = some next ∧ next.module = inst.module ∧
       InitializerFunctionMetadata store inst after next ∧
-      GlobalTypeMap after (importTypes ++ inst.module.module.env.globals.val.map Itasca.module.Global.gtype) next.globals.val ∧
+      GlobalTypeMap after (importTypes ++ inst.module.module.env.globals.val.map Itasca.metadata.Global.gtype) next.globals.val ∧
       ElementTypeMap after inst.module.module.env.elements.val next.elems.val := by
   have globals := global_type_staging_loop memory hooks floats allocator law before store platform index 0#usize inst (.Ok ())
     staged fresh found compiled valid.globals bindings imports segments objectBound (by simp) (by simpa using globalCapacity) importTypes (by simpa using globalMatching)
@@ -57,7 +57,7 @@ theorem staging_global_types {M P F A : Type}
     globalStaged fresh globalFound (by simpa only [globalSource] using compiled)
     (by simpa only [globalSource] using valid.elements) globalBindings globalImports globalSegments globalBound
     (by simp) elementRoom mapRoom
-    (importTypes ++ inst.module.module.env.globals.val.map Itasca.module.Global.gtype) (globalTypes rfl) (fun _ => initialTypes)
+    (importTypes ++ inst.module.module.env.globals.val.map Itasca.metadata.Global.gtype) (globalTypes rfl) (fun _ => initialTypes)
   rw [elementRun] at elements
   simp only [WP.spec_ok] at elements
   obtain ⟨actual, status, result, elementStaged, elementBound, elementAccounted, elementMetadata,
@@ -72,7 +72,7 @@ theorem staging_global_types {M P F A : Type}
   have data := data_global_type_staging_loop memory allocator law before elementStore index 0#usize elementInst (.Ok ())
     elementStaged fresh elementFound elementBindings elementImports elementSegments elementBound
     (by simp) dataRoom dataMapRoom
-    (importTypes ++ inst.module.module.env.globals.val.map Itasca.module.Global.gtype) elementGlobals
+    (importTypes ++ inst.module.module.env.globals.val.map Itasca.metadata.Global.gtype) elementGlobals
     (by simpa only [elementSource] using elementTypes rfl)
   rw [dataRun] at data
   simp only [WP.spec_ok] at data

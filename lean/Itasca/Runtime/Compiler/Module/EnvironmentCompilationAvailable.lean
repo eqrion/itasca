@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std Itasca
 prefix, and initial aggregate budget state from independent numerical demand. -/
 theorem compiler_environment_compilation_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (before : runtime.compiler.CompileScheduler A) (env : module.Env) (bodyBytes localCount : Nat)
+    (before : runtime.compiler.CompileScheduler A) (env : metadata.Env) (bodyBytes localCount : Nat)
     (demand : EnvironmentDemand before env bound)
     (emptyTypes : before.signatures.val = []) (emptySlots : before.func_param_slots.val = [])
     (emptyFunctions : before.functions.val = []) (emptyQueue : before.completed.val = [])

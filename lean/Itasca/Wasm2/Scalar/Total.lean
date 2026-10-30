@@ -58,7 +58,7 @@ theorem memory_meaning_exists (opcode : U8)
 /-- The shared scalar dispatcher is total for arbitrary structurally bounded
 frames. It preserves control depth and never moves the cursor back. -/
 theorem scalar_total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Control.Shape st)
     (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes) (hvisitor : FullVisitor.Total visitor) :

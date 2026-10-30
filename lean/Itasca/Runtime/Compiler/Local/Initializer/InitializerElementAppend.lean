@@ -12,7 +12,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 def ElementMappingPrefix (before current : runtime.compiler.ExecutableModule)
-    (segment : Itasca.module.Element) (count : Nat) (indices : alloc.vec.Vec Usize) : Prop :=
+    (segment : Itasca.metadata.Element) (count : Nat) (indices : alloc.vec.Vec Usize) : Prop :=
   current = { before with functions := current.functions } ∧
   current.functions.val.take before.functions.length = before.functions.val ∧
   InitializerEntries current.functions.val (segment.init.val.take count)
@@ -21,7 +21,7 @@ def ElementMappingPrefix (before current : runtime.compiler.ExecutableModule)
 theorem element_mapping_append {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before current after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (indices outIndices : alloc.vec.Vec Usize)
-    (i j : Usize) (segment : Itasca.module.Element)
+    (i j : Usize) (segment : Itasca.metadata.Element)
     (found : before.module.env.elements.val[i.val]? = some segment)
     (prefixInv : ElementMappingPrefix before current segment j.val indices)
     (bound : j.val < segment.init.val.length)
@@ -62,7 +62,7 @@ complete vector of element-value initializer certificates. -/
 theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before current after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (indices outIndices : alloc.vec.Vec Usize)
-    (i j : Usize) (segment : Itasca.module.Element)
+    (i j : Usize) (segment : Itasca.metadata.Element)
     (found : before.module.env.elements.val[i.val]? = some segment)
     (prefixInv : ElementMappingPrefix before current segment j.val indices)
     (bound : j.val ≤ segment.init.val.length)
@@ -90,7 +90,7 @@ theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_element_loop.body at body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at body
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
       obtain ⟨actualSegment, indexed, rest⟩ := initializer_bind_success body
@@ -155,13 +155,13 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def sourceElementOffset (segment : Itasca.module.Element) : Option Itasca.types.ConstExpr :=
+def sourceElementOffset (segment : Itasca.metadata.Element) : Option Itasca.wasm_types.ConstExpr :=
   match segment.mode with
   | .Active _ expr => some expr
   | .Passive | .Declarative => none
 
 def OffsetInitializer (functions : List runtime.bytecode.CompiledFunction)
-    (expr : Option Itasca.types.ConstExpr) (index : Option Usize) : Prop :=
+    (expr : Option Itasca.wasm_types.ConstExpr) (index : Option Usize) : Prop :=
   match expr, index with
   | none, none => True
   | some expr, some index => InitializerAt functions index expr .I32
@@ -173,11 +173,11 @@ theorem OffsetInitializer.extend {before after : List runtime.bytecode.CompiledF
   cases expr <;> cases index <;> simp only [OffsetInitializer] at cert ⊢
   exact cert.extend prefixEq
 
-theorem element_offset_found (env : Itasca.module.Env) (index : Usize)
-    (segment : Itasca.module.Element) (found : env.elements.val[index.val]? = some segment) :
+theorem element_offset_found (env : Itasca.metadata.Env) (index : Usize)
+    (segment : Itasca.metadata.Element) (found : env.elements.val[index.val]? = some segment) :
     runtime.compiler.initialize.element_offset env index = .ok (sourceElementOffset segment) := by
   unfold runtime.compiler.initialize.element_offset
-  simp only [Itasca.module.Env.impl.elements, bind_ok]
+  simp only [Itasca.metadata.Env.impl.elements, bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok]
   unfold sourceElementOffset
   cases segment.mode <;> rfl
@@ -185,7 +185,7 @@ theorem element_offset_found (env : Itasca.module.Env) (index : Usize)
 theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module after : runtime.compiler.ExecutableModule)
     (budget budgetAfter : runtime.compiler.Budget A) (index : Usize)
-    (segment : Itasca.module.Element)
+    (segment : Itasca.metadata.Element)
     (found : module.module.env.elements.val[index.val]? = some segment)
     (success : runtime.compiler.initialize.lower_element ops module budget index =
       .ok (.Ok (), after, budgetAfter)) :
@@ -225,7 +225,7 @@ theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
       have oldOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets changed
       dsimp only at source oldRows oldOffsets
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env,
+        runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env,
         uncurry_apply_pair, source] at rest
       rw [element_offset_found _ _ segment found, bind_ok] at rest
       cases offsetEq : sourceElementOffset segment with

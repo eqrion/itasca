@@ -13,7 +13,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- Independent source signature width excludes the actual accumulator error. -/
-theorem type_slots_available (types : Slice Itasca.types.ValueType)
+theorem type_slots_available (types : Slice Itasca.wasm_types.ValueType)
     (bounded : signatureSlots types.val ≤ U32.max) :
     runtime.compiler.type_slots types ⦃ out =>
       ∃ amount, out = .Ok amount ∧ amount.val = signatureSlots types.val ⦄ := by
@@ -27,8 +27,8 @@ theorem type_slots_available (types : Slice Itasca.types.ValueType)
 widths and its actual append demand. -/
 theorem capture_signature_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.module.Env) (index : Usize)
-    (type : Itasca.types.FuncType) (lookup : env.types.val[index.val]? = some type)
+    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.metadata.Env) (index : Usize)
+    (type : Itasca.wasm_types.FuncType) (lookup : env.types.val[index.val]? = some type)
     (parameters : signatureSlots type.params.val ≤ U32.max)
     (results : signatureSlots type.results.val ≤ U32.max)
     (capacity : scheduler.signatures.length < Usize.max)
@@ -40,7 +40,7 @@ theorem capture_signature_available {A : Type} (ops : runtime.platform.Alloc A)
         SignatureMatches signature (type.params.val.map Itasca.Translate.valueType)
           (type.results.val.map Itasca.Translate.valueType) ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_signature
-  simp only [Itasca.module.Env.impl.types,bind_ok]
+  simp only [Itasca.metadata.Env.impl.types,bind_ok]
   have inside := (List.getElem?_eq_some_iff.mp lookup).1
   step as ⟨actual,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
@@ -70,8 +70,8 @@ theorem capture_signature_available {A : Type} (ops : runtime.platform.Alloc A)
 bounded source width and append request. -/
 theorem capture_func_slots_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.module.Env) (index : Usize)
-    (type : Itasca.types.FuncType) (lookup : env.func_types.val[index.val]? = some type)
+    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.metadata.Env) (index : Usize)
+    (type : Itasca.wasm_types.FuncType) (lookup : env.func_types.val[index.val]? = some type)
     (parameters : signatureSlots type.params.val ≤ U32.max)
     (capacity : scheduler.func_param_slots.length < Usize.max)
     (request : scheduler.func_param_slots.length + 1 ≤ bound) :
@@ -81,7 +81,7 @@ theorem capture_func_slots_available {A : Type} (ops : runtime.platform.Alloc A)
         slots.val = scheduler.func_param_slots.val ++ [amount] ∧
         amount.val = signatureSlots type.params.val ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_func_slots
-  simp only [Itasca.module.Env.impl.func_types,bind_ok]
+  simp only [Itasca.metadata.Env.impl.func_types,bind_ok]
   have inside := (List.getElem?_eq_some_iff.mp lookup).1
   step as ⟨actual,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
@@ -110,7 +110,7 @@ open Aeneas Aeneas.Std
 
 abbrev EnvironmentCapture (A : Type) :=
   alloc.vec.Vec runtime.compiler.Signature × alloc.vec.Vec U32 × alloc.vec.Vec Itasca.stream.CodeBatch ×
-  alloc.vec.Vec (Option runtime.bytecode.CompiledFunction) × Option Itasca.module.Tail × Usize ×
+  alloc.vec.Vec (Option runtime.bytecode.CompiledFunction) × Option Itasca.metadata.Tail × Usize ×
   runtime.compiler.Budget A × core.result.Result Unit Itasca.error.Error
 
 def captureState {A : Type} (scheduler : runtime.compiler.CompileScheduler A)
@@ -122,7 +122,7 @@ def captureState {A : Type} (scheduler : runtime.compiler.CompileScheduler A)
 widths and reserve demand for its remaining entries. -/
 theorem environment_signatures_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.module.Env) (index : Usize)
+    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.metadata.Env) (index : Usize)
     (inside : index.val ≤ env.types.val.length)
     (widths : ∀ type ∈ env.types.val,
       signatureSlots type.params.val ≤ U32.max ∧ signatureSlots type.results.val ≤ U32.max)
@@ -143,7 +143,7 @@ theorem environment_signatures_available {A : Type} (ops : runtime.platform.Allo
     dsimp only at same accepted position count
     subst status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [Itasca.module.Env.impl.types,bind_ok]
+    simp only [Itasca.metadata.Env.impl.types,bind_ok]
     split
     · rename_i more
       have insideType : next.val < env.types.val.length := by
@@ -186,7 +186,7 @@ open Aeneas Aeneas.Std
 widths and reserve demand for its remaining entries. -/
 theorem environment_function_slots_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.module.Env) (index : Usize)
+    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.metadata.Env) (index : Usize)
     (inside : index.val ≤ env.func_types.val.length)
     (widths : ∀ type ∈ env.func_types.val,
       signatureSlots type.params.val ≤ U32.max)
@@ -207,7 +207,7 @@ theorem environment_function_slots_available {A : Type} (ops : runtime.platform.
     dsimp only at same accepted position count
     subst status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body
-    simp only [Itasca.module.Env.impl.func_types,bind_ok]
+    simp only [Itasca.metadata.Env.impl.func_types,bind_ok]
     split
     · rename_i more
       have insideType : next.val < env.func_types.val.length := by
@@ -251,7 +251,7 @@ from the remaining source function declarations. The budget is unchanged. -/
 theorem environment_function_vector_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (functions : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction))
-    (budget : runtime.compiler.Budget A) (env : Itasca.module.Env) (index : Usize)
+    (budget : runtime.compiler.Budget A) (env : Itasca.metadata.Env) (index : Usize)
     (inside : index.val ≤ env.func_type_indices.val.length)
     (capacity : functions.length + (env.func_type_indices.val.length-index.val) ≤ Usize.max)
     (request : functions.length + (env.func_type_indices.val.length-index.val) ≤ bound) :
@@ -269,7 +269,7 @@ theorem environment_function_vector_available {A : Type} (ops : runtime.platform
     dsimp only at same accepted position count
     subst charged status
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop2.body
-    simp only [Itasca.module.Env.impl.func_type_indices,bind_ok]
+    simp only [Itasca.metadata.Env.impl.func_type_indices,bind_ok]
     split
     · rename_i more
       have inbounds : next.val < env.func_type_indices.val.length := by
@@ -308,7 +308,7 @@ open Aeneas Aeneas.Std
 
 /-- Independent numerical eligibility of the compiler's environment phase. -/
 structure EnvironmentDemand {A : Type} (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (bound : Nat) : Prop where
+    (env : Itasca.metadata.Env) (bound : Nat) : Prop where
   functionLimit : env.func_type_indices.length ≤ scheduler.budget.limits.max_functions.val
   typeLimit : env.types.length ≤ scheduler.budget.limits.max_types.val
   signatureWidths : ∀ type ∈ env.types.val,
@@ -326,7 +326,7 @@ widths, input limits, and allocation demand. No accepted callback trace is
 supplied. All budget counters remain unchanged in this metadata phase. -/
 theorem environment_ready_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.module.Env)
+    (scheduler : runtime.compiler.CompileScheduler A) (env : Itasca.metadata.Env)
     (demand : EnvironmentDemand scheduler env bound) :
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready ops scheduler env
       ⦃ out => out.1 = .Ok ⟨25000#usize,4#usize⟩ ∧ out.2.budget = scheduler.budget ⦄ := by
@@ -339,7 +339,7 @@ theorem environment_ready_available {A : Type} (ops : runtime.platform.Alloc A)
     simp [Slice.len,alloc.vec.Vec.deref,alloc.vec.Vec.length] at *
     scalar_tac
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
-  simp only [Itasca.module.Env.impl.func_type_indices,Itasca.module.Env.impl.types,bind_ok,if_neg functions,if_neg types]
+  simp only [Itasca.metadata.Env.impl.func_type_indices,Itasca.metadata.Env.impl.types,bind_ok,if_neg functions,if_neg types]
   obtain ⟨captured,actual,first,same,firstShape,firstLength⟩ := WP.spec_imp_exists
     (environment_signatures_available ops bound available scheduler env 0#usize (by simp)
       demand.signatureWidths (by simpa using demand.signatureCapacity) (by simpa using demand.signatureReserve))

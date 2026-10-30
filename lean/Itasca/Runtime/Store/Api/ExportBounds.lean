@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 
 /-- Static export descriptors address the validated namespace and retain
 unique source names. Both facts depend only on immutable module metadata. -/
-structure ModuleExportBounds (env : Itasca.module.Env) : Prop where
+structure ModuleExportBounds (env : Itasca.metadata.Env) : Prop where
   indices : ∀ entry ∈ env.exports.val, match entry.desc with
     | .Func index => index.val < env.func_types.length
     | .Table index => index.val < env.table_types.length
@@ -34,7 +34,7 @@ theorem module_export_bounds {env profile} (valid : Itasca.ModuleEnv.Valid env p
 makes every actual export address lookup safe. -/
 theorem export_address_bounds {M : Type} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} (bounds : ModuleExportBounds inst.module.module.env)
-    (shape : InstanceShape store inst) (entry : Itasca.module.Export)
+    (shape : InstanceShape store inst) (entry : Itasca.metadata.Export)
     (member : entry ∈ inst.module.module.env.exports.val) :
     match entry.desc with
     | .Func index => index.val < inst.funcs.length

@@ -34,7 +34,7 @@ def preparedOfSourceWitness {V : Type} {visitor : code.OpVisitor V} {data env in
 
 /-- Independent entry encoding and typing construct prepared source metadata
 and body validity, with no compiler visitor or accepted target trace. -/
-theorem source_entry_prepared (data : Slice U8) (env : module.Env) (index start finish : Usize)
+theorem source_entry_prepared (data : Slice U8) (env : metadata.Env) (index start finish : Usize)
     (profile : ValidationProfile) (entry : ModuleBinary.Code)
     (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
@@ -44,14 +44,14 @@ theorem source_entry_prepared (data : Slice U8) (env : module.Env) (index start 
     ∃ w : CodeEntry.Prepared data env index start profile,
       w.finish = finish ∧ Profile.Body profile w.body env w.ctx.locals w.typeIdx := by
   obtain ⟨⟨reply,after⟩,called,accepted⟩ := WP.spec_imp_exists
-    (module.validate_code_entry_with.complete_spec_of_body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (metadata.validate_code_entry_with.complete_spec_of_body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
       FullVisitor.empty_accepts data start env index entry finish () profile indexBound typed bounds encoded (by
         intro body ctx typeIdx ft signature results size bodyValid started
         exact code.validate_body_with.profile_complete _ FullVisitor.empty_accepts body env ctx typeIdx profile started
           limits size bodyValid))
   dsimp only at accepted
   subst reply
-  obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     data start env index finish () after bounds profile called
   refine ⟨preparedOfSourceWitness w,rfl,?_⟩
   exact code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after

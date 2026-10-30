@@ -14,8 +14,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Reached Wasm 2 executable and resource evidence with both publication invariants. -/
 def SourcePublicationReachedBodyWasm2 {A} (initial : runtime.compiler.FunctionCompiler A)
-    (C : context) (locals : List valtype) (data : Slice U8) (env : module.Env)
-    (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (C : context) (locals : List valtype) (data : Slice U8) (env : metadata.Env)
+    (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.BodyState) : Prop :=
   SourceBudgetReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st ∧
     SourceCoordinates compiler ∧ ControlMapPublication compiler ∧ JumpTableBounds compiler ∧
@@ -32,7 +32,7 @@ theorem SourcePublicationReachedBodyWasm2.final_ranges {A : Type}
 source-coordinate, and control-map bounds together. -/
 theorem source_publication_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial compiler : runtime.compiler.FunctionCompiler A) (C : context) (locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (st out : code.BodyState)
     (point : IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial compiler
       (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)

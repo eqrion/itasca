@@ -39,7 +39,7 @@ entry metadata, captured signature tables, and the actual fresh compiler/start
 calls. It does not presume a successful body or final compilation. -/
 def ProfilePreparedBodiesTotal {A : Type} (ops : runtime.platform.Alloc A)
     (profile : ValidationProfile) : Prop :=
-  ∀ (data : Slice U8) (env : module.Env) (index start : Usize)
+  ∀ (data : Slice U8) (env : metadata.Env) (index start : Usize)
     (signatures : Slice Signature) (functionSlots : Slice U32) (budget : Budget A)
     (batchStart : Usize) (initial started : FunctionCompiler A)
     (prepared : CodeEntry.Prepared data env index start profile),

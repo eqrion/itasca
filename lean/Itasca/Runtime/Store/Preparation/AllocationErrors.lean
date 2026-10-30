@@ -72,15 +72,15 @@ macro "allocation_error_step " h:ident " using " allocator:term ", " law:term : 
   | split at $h:ident)
 
 theorem copy_type_errors {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (ty : Itasca.types.FuncType)
-    (out : core.result.Result Itasca.types.FuncType runtime.ExecError)
+    (law : Platform.AllocCorrect allocator) (ty : Itasca.wasm_types.FuncType)
+    (out : core.result.Result Itasca.wasm_types.FuncType runtime.ExecError)
     (run : runtime.copy_type allocator ty = .ok out) : ErrorAllowed ResourceError out := by
   unfold runtime.copy_type at run
   repeat' allocation_error_step run using allocator, law
 
 theorem intern_type_errors {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (out : core.result.Result Usize runtime.ExecError × runtime.store.Store M)
     (run : runtime.store.Store.intern_type memory allocator store ty = .ok out) : ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.Store.intern_type at run

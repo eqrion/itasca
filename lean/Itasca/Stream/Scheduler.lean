@@ -29,18 +29,18 @@ def Completed (issued : StreamBatch.Issued) (profile : ValidationProfile := .Was
 theorem Provenance.environment_preserves {V : Type} {visitor : stream.StreamingVisitor V}
     {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (data : Slice U8)
-    (v v' : V) (env : module.Env) (next : Usize)
-    (h : module.validate_env_with visitor.moduleModuleVisitorInst data profile v = .ok (.Ok (env, next), v')) :
+    (v v' : V) (env : metadata.Env) (next : Usize)
+    (h : metadata.validate_env_with visitor.metadataModuleVisitorInst data profile v = .ok (.Ok (env, next), v')) :
     Tracks id history v → Tracks id history v' :=
-  module.validate_env_with.accepted_invariant _ _ (hp.custom id history) data v env next v' h
+  metadata.validate_env_with.accepted_invariant _ _ (hp.custom id history) data v env next v' h
 
 theorem Provenance.tail_preserves {V : Type} {visitor : stream.StreamingVisitor V}
     {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (data : Slice U8) (pos : Usize)
-    (v v' : V) (env : module.Env) (tail : module.Tail)
-    (h : module.validate_tail_with visitor.moduleModuleVisitorInst data pos env profile v = .ok (.Ok tail, v')) :
+    (v v' : V) (env : metadata.Env) (tail : metadata.Tail)
+    (h : metadata.validate_tail_with visitor.metadataModuleVisitorInst data pos env profile v = .ok (.Ok tail, v')) :
     Tracks id history v → Tracks id history v' :=
-  module.validate_tail_with.accepted_invariant _ _ (hp.custom id history) data pos env v tail v' h
+  metadata.validate_tail_with.accepted_invariant _ _ (hp.custom id history) data pos env v tail v' h
 
 /-- After a successful retirement, every historical issued batch matching the removed pending ID
 is completed, and provenance is preserved. Polls need not be replay-free. -/

@@ -16,8 +16,8 @@ open Aeneas Aeneas.Std Itasca
 structure StructuredReaderCompilerStateWasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type}
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (types functions : List functype) (returns locals : List valtype)
-    (data : Slice U8) (env : module.Env) (sourceLocals : alloc.vec.Vec Itasca.types.ValueType)
-    (index : U32) (ft : Itasca.types.FuncType) (st : code.BodyState)
+    (data : Slice U8) (env : metadata.Env) (sourceLocals : alloc.vec.Vec Itasca.wasm_types.ValueType)
+    (index : U32) (ft : Itasca.wasm_types.FuncType) (st : code.BodyState)
     (parents : List SourceScope) (current : SourceScope)
     (savedParents : List Wasm2.Frames.Saved) (savedCurrent : Wasm2.Frames.Saved) : Prop where
   compiled : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial compiler types functions returns locals parents current st.core.vals.val st.core.pos.val

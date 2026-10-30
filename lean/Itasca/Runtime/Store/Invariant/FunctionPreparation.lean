@@ -28,7 +28,7 @@ theorem function_signature_loop {M A : Type} (memory : runtime.platform.MemoryBu
     (issued : ∀ address ∈ inst.funcs.val, address.index.val < store.funcs.length)
     (count : inst.funcs.length = seed.funcs.length + start.val)
     (capacity : seed.funcs.length + seed.module.module.env.func_type_indices.val.length ≤ Usize.max)
-    (initialTypes : List functype) (definedTypes : List Itasca.types.FuncType)
+    (initialTypes : List functype) (definedTypes : List Itasca.wasm_types.FuncType)
     (resolves : List.Forall₂ (Itasca.ModuleEnv.Resolves seed.module.module.env.types.val)
       seed.module.module.env.func_type_indices.val definedTypes)
     (entries : TypeEntries before seed.module.module.env.types.val seed.types.val)
@@ -62,7 +62,7 @@ theorem function_signature_loop {M A : Type} (memory : runtime.platform.MemoryBu
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by

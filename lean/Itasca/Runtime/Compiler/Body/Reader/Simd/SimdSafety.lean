@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Simd
 
 theorem compiler_reader_simd_sub_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (sub : U32)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (sub : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     subStep (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -93,7 +93,7 @@ theorem compiler_reader_simd_sub_total {A} (ops : runtime.platform.Alloc A)
 callback families, with no accepted-reader or compiler-success premise. -/
 theorem compiler_reader_simd_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (ready : OrdinaryCallbackReady compiler env ctx st.vals.val)
     (shape : Control.Shape st) (capacity : st.vals.val.length < Usize.max) :
     code.step_simd (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

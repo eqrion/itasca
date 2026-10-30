@@ -24,7 +24,7 @@ private theorem run_total {A V : Type}
   · exact WP.spec_mono hr (fun _ h => ⟨h, by simp⟩)
 
 theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (subopcode : U32) (v : V)
+    (data : Slice U8) (env : metadata.Env) (subopcode : U32) (v : V)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : FullVisitor.Total visitor) :
     subStep visitor st data env subopcode v ⦃ r => ReaderPost st r.2.1 ⦄ := by
@@ -71,7 +71,7 @@ theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState
 
 /-- Every SIMD prefix terminates, preserves controls, and advances monotonically. -/
 theorem simd_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (v : V)
+    (data : Slice U8) (env : metadata.Env) (v : V)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : FullVisitor.Total visitor) :
     code.step_simd visitor st data env v ⦃ r => Control.Shape r.2.1 ∧

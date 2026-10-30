@@ -24,7 +24,7 @@ theorem compiler_reader_numeric_available {A V : Type} (ops : runtime.platform.A
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
     (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (layout : compiler.reachable = true →
@@ -57,7 +57,7 @@ theorem compiler_reader_float_available {A V : Type} (ops : runtime.platform.All
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st final : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (demand : CallbackDemand compiler final bound) (front : List valtype)
     (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (layout : compiler.reachable = true →

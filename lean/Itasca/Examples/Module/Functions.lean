@@ -8,7 +8,7 @@ import Itasca.Examples.Module.Support
 
 A 47-byte Wasm 1.0 module: an imported `() -> ()` function `m.f`, one defined function with an
 `i32` local whose body is `call 0`, an export `r` of function 1, and function 1 as the start
-function. `functions_accepted` shows that `module.validate_module` accepts it, with the call
+function. `functions_accepted` shows that `metadata.validate_module` accepts it, with the call
 resolved in the function space that puts imports first. `functions_validated` adds the soundness
 certificate, and `environment` exposes the validated prefix for the visitor trace examples.
 -/
@@ -22,7 +22,7 @@ open ModuleSupport (leb one padded omitted)
 open ModuleBinary ModuleEnv
 
 /-- The function type `[] -> []`. -/
-def functionType : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
+def functionType : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 /-- The import of function `m.f` with type index 0. -/
 def imported : ModuleBinary.Import := ⟨[0x6D#u8], [0x66#u8], .Func 0#u32⟩
 /-- An export named `r` of function 1. -/
@@ -169,18 +169,18 @@ theorem code_at : At (SectionEncoding 10#u8 (VecEncoding CodeEncodingWithinLimit
   constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
-/-- `module.validate_env` on `input` consumes exactly the 37 bytes before the code section and
+/-- `metadata.validate_env` on `input` consumes exactly the 37 bytes before the code section and
 produces an environment with one imported and one defined function. -/
-theorem environment : ∃ env decls, module.validate_env input .Wasm1 = .ok (.Ok (env, 37#usize)) ∧
+theorem environment : ∃ env decls, metadata.validate_env input .Wasm1 = .ok (.Ok (env, 37#usize)) ∧
     Ready raw 10 decls env := by
   obtain ⟨first, hh, _⟩ := code_at.section_split
-  exact module.validate_env.complete input raw declarations 37#usize prefix_encoding rfl
+  exact metadata.validate_env.complete input raw declarations 37#usize prefix_encoding rfl
     (.inr ⟨10#u8, first, 47#usize, hh, by decide⟩) requirements
 
-/-- `module.validate_module` accepts `input` under Wasm 1.0, checking the local declarations, a
+/-- `metadata.validate_module` accepts `input` under Wasm 1.0, checking the local declarations, a
 `call` of the imported function, the export and the start declaration. -/
-theorem functions_accepted : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) := by
-  let tail : module.Tail := ⟨alloc.vec.Vec.new _⟩
+theorem functions_accepted : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) := by
+  let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
   have ht : At ModuleTail.Encoding input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
@@ -201,9 +201,9 @@ theorem functions_accepted : ∃ decoded, module.validate_module input .Wasm1 = 
   exact ⟨⟨env, tail⟩, ha⟩
 
 /-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`. -/
-theorem functions_validated : ∃ decoded, module.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
+theorem functions_validated : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
     ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := functions_accepted
-  exact ⟨decoded, ha, module.validate_module.wasm_sound _ _ ha⟩
+  exact ⟨decoded, ha, metadata.validate_module.wasm_sound _ _ ha⟩
 
 end Itasca.Examples.ModuleFunctions

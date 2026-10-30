@@ -19,7 +19,7 @@ open VisitorTrace
 /-- Factors the capacity-guarded scalar arm of `code.step_profile` without changing error
 outcomes. -/
 theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (opcode : U8) (v : V)
     (hcheck : code.check_opcode profile opcode = .ok (.Ok ()))
     (hscalar : opcode.val ∉ controlOpcodes) :
@@ -71,8 +71,8 @@ theorem step_scalar {data env profile locals index st} (p : Pending data env pro
 /-- Assemble every concrete step once the branch-table protocol is supplied. -/
 theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
     (table : ∀ st (p : Pending data env profile locals index st),
       data.val[p.start.val]'p.inbounds = 0x0e#u8 →
@@ -105,8 +105,8 @@ theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
 provenance for every ordinary return, without a total-visitor premise. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals) :
     StepContract visitor observe data env profile locals ctx index := by
   exact step_contract_of_table visitor observe records data env profile locals ctx index hlocals

@@ -215,10 +215,10 @@ inductive Action where
   | f64_const : U64 → Action
   | numeric : NumericHook → Action
   | extendedNumeric : ExtendedNumericHook → Action
-  | ref_null : types.ElemType → Action
+  | ref_null : wasm_types.ElemType → Action
   | ref_is_null
   | ref_func : U32 → Action
-  | select_typed : types.ValueType → Action
+  | select_typed : wasm_types.ValueType → Action
   | table_get : U32 → Action
   | table_set : U32 → Action
   | memory_init : U32 → Action

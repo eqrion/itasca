@@ -91,7 +91,7 @@ theorem Pending.memory_init {data env profile locals index st} (p : Pending data
     obtain ⟨_, _, _, ⟨count, hcount, hi⟩, hm⟩ := hspec.2.2 idx rfl
     simpa [Simd.inputTypes, Simd.outputTypes, Translate.valueType] using hC.memory_init idx count hcount hi hm
 
-theorem reference_value_injective {a b : types.ElemType}
+theorem reference_value_injective {a b : wasm_types.ElemType}
     (h : ModuleConstants.referenceValueType a = ModuleConstants.referenceValueType b) : a = b := by
   cases a <;> cases b <;> simp_all [ModuleConstants.referenceValueType]
 

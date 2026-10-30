@@ -34,7 +34,7 @@ theorem stream.CodeBatch.validate_func.complete_at {V : Type} (visitor : code.Op
     ∃ count v', count.val = batch.num_validated.val + 1 ∧
       stream.CodeBatch.validate_func visitor batch index v = .ok (.Ok (),
         { batch with num_validated := count, validated_end := finish }, v') := by
-  obtain ⟨v', hentry⟩ := module.validate_code_entry_with.profile_complete visitor haccept
+  obtain ⟨v', hentry⟩ := metadata.validate_code_entry_with.profile_complete visitor haccept
     batch.code batch.validated_end batch.env index entry finish v profile hi htyped henv hlimits hbound hbytes
   obtain ⟨expected, hadd, hexpected⟩ := WP.spec_imp_exists
     (UScalar.add_spec (x := batch.first_func) (y := batch.num_validated) (by scalar_tac))

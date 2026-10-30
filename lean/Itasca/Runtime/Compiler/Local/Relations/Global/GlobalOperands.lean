@@ -6,8 +6,8 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_global_get_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (front : List Itasca.types.ValueType)
-    (ty : Itasca.types.ValueType) (index : U32)
+    (state : Itasca.code.OpIterState) (front : List Itasca.wasm_types.ValueType)
+    (ty : Itasca.wasm_types.ValueType) (index : U32)
     (layout : CompilerLayout compiler (front.map Itasca.Translate.valueType))
     (reachable : compiler.reachable = true)
     (concrete : state.vals.val = (front ++ [ty]).map Itasca.code.StackType.Val)
@@ -28,7 +28,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_global_set_lowered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (front : List valtype) (ty : valtype) (index : U32)
     (layout : CompilerLayout compiler (front ++ [ty]))
     (reachable : compiler.reachable = true)

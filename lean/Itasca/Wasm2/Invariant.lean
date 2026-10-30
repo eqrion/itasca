@@ -26,9 +26,9 @@ structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
 
 /-- A running typed zipper or a completed typed body, with exact provenance
 for the consumed prefix. No condition is placed on unread bytes. -/
-inductive State (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) : code.BodyState → Prop where
-  | running (st : code.BodyState) (ft : types.FuncType)
+inductive State (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : code.BodyState → Prop where
+  | running (st : code.BodyState) (ft : wasm_types.FuncType)
       (parents : List Frames.Saved) (current : Frames.Saved) :
       env.types.val[index.val]? = some ft → Bounds data st →
       Frames.Open env (bodyContext env locals ft) st parents current →
@@ -38,7 +38,7 @@ inductive State (data : Slice U8) (env : module.Env) (profile : ValidationProfil
       Frames.ProfileFrames profile (bodyContext env locals ft) (parents ++ [current]) →
       (profile = .Wasm1 → Wasm1.Consumed data 0#usize (Frames.trace parents current) st.core.pos) →
       State data env profile locals index st
-  | closed (st : code.BodyState) (ft : types.FuncType) (ops : List instr) (tokens : List Token) :
+  | closed (st : code.BodyState) (ft : wasm_types.FuncType) (ops : List instr) (tokens : List Token) :
       env.types.val[index.val]? = some ft → Bounds data st →
       st.core.ctrls.val = [] → st.blocks.val = [] → BodyTokens tokens ops →
       FunctionTyped env locals ft ops → Consumed data 0#usize tokens st.core.pos →
@@ -75,9 +75,9 @@ def initial (index : U32) : code.BodyState :=
       alloc.vec.Vec.from [⟨.Body, .TypeIndex index, 0#usize, false⟩] (by scalar_tac), 0#usize⟩ }
 
 /-- The initial state satisfies `State` for a body within the size limit. -/
-theorem State.start (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType)
-    (index : U32) (ft : types.FuncType) (hi : env.types.val[index.val]? = some ft)
+theorem State.start (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
+    (index : U32) (ft : wasm_types.FuncType) (hi : env.types.val[index.val]? = some ft)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     State data env profile locals index (initial index) := by
   apply State.running (initial index) ft []
@@ -100,10 +100,10 @@ theorem State.start (data : Slice U8) (env : module.Env) (profile : ValidationPr
 
 /-- The opcode has been consumed and passed the profile's opcode filter, but its immediate is
 still arbitrary. -/
-structure Pending (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) (st : code.BodyState) where
+structure Pending (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (st : code.BodyState) where
   start : Usize
-  ft : types.FuncType
+  ft : wasm_types.FuncType
   parents : List Frames.Saved
   current : Frames.Saved
   signature : env.types.val[index.val]? = some ft

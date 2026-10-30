@@ -170,7 +170,7 @@ end Itasca.Sequence
 
 namespace Itasca
 private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       CoreVisitor.run (code.read_i64_const st data) visitor.on_i64_const v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -184,7 +184,7 @@ private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_i64_const` that holds on every outcome lifts through `code.step` on
 `i64.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_i64_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : I64 → code.OpIterState → Prop)
     (hread : code.read_i64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_i64_const v s a = .ok (result, v')) :
@@ -194,7 +194,7 @@ theorem code.step_i64_const.of_read {V : Type} (visitor : code.OpVisitor V)
   exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
 
 private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       CoreVisitor.run (code.read_f32_const st data) visitor.on_f32_const v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -208,7 +208,7 @@ private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_f32_const` that holds on every outcome lifts through `code.step` on
 `f32.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_f32_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U32 → code.OpIterState → Prop)
     (hread : code.read_f32_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_f32_const v s a = .ok (result, v')) :
@@ -218,7 +218,7 @@ theorem code.step_f32_const.of_read {V : Type} (visitor : code.OpVisitor V)
   exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
 
 private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       CoreVisitor.run (code.read_f64_const st data) visitor.on_f64_const v := by
   simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -232,7 +232,7 @@ private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_f64_const` that holds on every outcome lifts through `code.step` on
 `f64.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_f64_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U64 → code.OpIterState → Prop)
     (hread : code.read_f64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_f64_const v s a = .ok (result, v')) :

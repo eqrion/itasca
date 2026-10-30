@@ -134,8 +134,8 @@ namespace Itasca.ModuleEnv
 
 /-- A fully decoded declaration prefix and a tail with the raw data segments match every returned
 field of the raw module, including the merged index spaces. -/
-theorem Ready.matches {raw : ModuleBinary.Module} {decls : Declarations} {env : module.Env}
-    (h : Ready raw 10 decls env) (tail : module.Tail)
+theorem Ready.matches {raw : ModuleBinary.Module} {decls : Declarations} {env : metadata.Env}
+    (h : Ready raw 10 decls env) (tail : metadata.Tail)
     (htail : tail.data.val.map ModuleData.raw = raw.data) :
     ModuleElaboration.Matches env tail raw := by
   have hr := h.represents

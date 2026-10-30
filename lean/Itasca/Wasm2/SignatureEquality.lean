@@ -14,8 +14,8 @@ namespace Itasca
 
 /-- The comparison loop decides equality of the resolved lists, without
 assuming descriptor identity (distinct type indices may have equal types). -/
-theorem code.same_types_loop.spec (env : module.Env)
-    (a b : signature.ResultType) (ts us : List types.ValueType)
+theorem code.same_types_loop.spec (env : metadata.Env)
+    (a b : signature.ResultType) (ts us : List wasm_types.ValueType)
     (ha : Wasm2.resolve env a = some ts)
     (hb : Wasm2.resolve env b = some us)
     (n i : Usize) (hn : n.val = ts.length) (hu : us.length = ts.length)
@@ -46,7 +46,7 @@ theorem code.same_types_loop.spec (env : module.Env)
       simp only [bind_ok,
         List.getElem?_eq_getElem ht, List.getElem?_eq_getElem hus]
       step with core.cmp.PartialEq.ne.trait_default.spec
-        types.ValueType.Insts.CoreCmpPartialEqValueType _ _ (types.ValueType.eq_spec _ _)
+        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType _ _ (wasm_types.ValueType.eq_spec _ _)
         as ⟨different, hdifferent⟩
       split
       · rename_i hne
@@ -69,7 +69,7 @@ theorem code.same_types_loop.spec (env : module.Env)
 
 /-- Totality and exact equality for arbitrary descriptor pairs. -/
 @[step]
-theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
+theorem code.same_types.spec (env : metadata.Env) (a b : signature.ResultType) :
     code.same_types env a b ⦃ r =>
       match r with
       | .Ok equal => ∃ ts us, Wasm2.resolve env a = some ts ∧
@@ -107,8 +107,8 @@ theorem code.same_types.spec (env : module.Env) (a b : signature.ResultType) :
         exact ⟨ts, us, ha, hb, hs⟩
 
 /-- Descriptors that resolve to the same list are accepted as equal. -/
-theorem code.same_types.complete (env : module.Env) (a b : signature.ResultType)
-    (ts : List types.ValueType) (ha : Wasm2.resolve env a = some ts)
+theorem code.same_types.complete (env : metadata.Env) (a b : signature.ResultType)
+    (ts : List wasm_types.ValueType) (ha : Wasm2.resolve env a = some ts)
     (hb : Wasm2.resolve env b = some ts) :
     code.same_types env a b = .ok (.Ok true) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (code.same_types.spec env a b)

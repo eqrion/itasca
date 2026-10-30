@@ -25,7 +25,7 @@ private theorem related_lookup {T U : Type} {relation : T → U → Prop}
       exact ih (by simpa only [List.getElem?_cons_succ] using found)
 
 theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (index : Usize) (global : Itasca.metadata.Global)
     (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.globals.val[index.val]? = some global)
     (valid : Itasca.ModuleConstants.Valid inst.module.module.env global.init global.gtype.valtype)
@@ -40,7 +40,7 @@ theorem global_initializer_certificate {M : Type} (store : runtime.store.Store M
   exact ⟨function, code, words, mapped, read, certificate, resolved⟩
 
 theorem element_initializer_certificates {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Element)
     (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
@@ -69,7 +69,7 @@ structure InitializerSegmentBindings {M : Type} (store : runtime.store.Store M)
   memories : ∀ addr ∈ inst.memories.val, addr.index.val < store.memories.val.length
 
 theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Element)
     (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.env.elements.val[index.val]? = some segment)
     (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
@@ -100,7 +100,7 @@ theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
       exact List.getElem?_eq_getElem issued
 
 theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Data)
     (compiled : Compiler.InitializerMappings inst.module)
     (found : inst.module.module.tail.data.val[index.val]? = some segment)
     (valid : Itasca.ModuleData.Valid inst.module.module.env segment)

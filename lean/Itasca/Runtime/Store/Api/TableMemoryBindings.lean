@@ -6,11 +6,11 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 abbrev TableBindings {M : Type} (store : runtime.store.Store M)
-    (types : List Itasca.types.TableType) (addresses : List runtime.TableAddr) : Prop :=
+    (types : List Itasca.wasm_types.TableType) (addresses : List runtime.TableAddr) : Prop :=
   List.Forall₂ (ImportedTable store) types addresses
 
 abbrev MemoryBindings {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (types : List Itasca.types.MemType) (addresses : List runtime.MemoryAddr) : Prop :=
+    (types : List Itasca.wasm_types.MemType) (addresses : List runtime.MemoryAddr) : Prop :=
   List.Forall₂ (ImportedMemory view store) types addresses
 
 theorem TableBindings.prefix {M : Type} {store after : runtime.store.Store M} {types addresses}
@@ -39,7 +39,7 @@ theorem MemoryBindings.prefix {M : Type} {view : M → Slice U8} {store after : 
 
 theorem TableStageEffect.table_bindings {M : Type} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} {ty out} (effect : TableStageEffect store inst ty out)
-    {types : List Itasca.types.TableType} (matching : TableBindings store types inst.tables.val)
+    {types : List Itasca.wasm_types.TableType} (matching : TableBindings store types inst.tables.val)
     (success : out.1 = .Ok ()) : TableBindings out.2.1 (types ++ [ty]) out.2.2.tables.val := by
   rcases effect with ⟨error, rfl⟩ | ⟨tables, elements, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
   · simp at success
@@ -54,7 +54,7 @@ theorem TableStageEffect.table_bindings {M : Type} {store : runtime.store.Store 
 
 theorem MemoryStageEffect.memory_bindings {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst} {ty out} (effect : MemoryStageEffect view store inst ty out)
-    {types : List Itasca.types.MemType} (matching : MemoryBindings view store types inst.memories.val)
+    {types : List Itasca.wasm_types.MemType} (matching : MemoryBindings view store types inst.memories.val)
     (success : out.1 = .Ok ()) : MemoryBindings view out.2.1 (types ++ [ty]) out.2.2.memories.val := by
   rcases effect with ⟨error, rfl⟩ | ⟨memories, buffer, addresses, count, zeros, appended, mapped, limits, capacity, counter, budget, rfl⟩
   · simp at success

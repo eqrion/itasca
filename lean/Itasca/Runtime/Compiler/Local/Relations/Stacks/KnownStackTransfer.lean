@@ -10,7 +10,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
-private theorem translated_not_bot (ty : types.ValueType) : Translate.valueType ty ≠ valtype.BOT := by
+private theorem translated_not_bot (ty : wasm_types.ValueType) : Translate.valueType ty ≠ valtype.BOT := by
   cases ty <;> simp [Translate.valueType]
 
 /-- A monomorphic realization of concrete validator operands contains no

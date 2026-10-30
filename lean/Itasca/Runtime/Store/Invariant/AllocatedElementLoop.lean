@@ -58,7 +58,7 @@ theorem element_allocated_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.val.length := by

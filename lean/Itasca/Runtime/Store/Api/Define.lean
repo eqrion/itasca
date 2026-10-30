@@ -39,7 +39,7 @@ theorem reserve_wrapper_eq {A T : Type} (allocator : runtime.platform.Alloc A)
 theorem ReferenceShape.mono {M : Type} (before after : runtime.store.Store M)
     (hfunc : before.funcs.length ≤ after.funcs.length)
     (hextern : before.externs.length ≤ after.externs.length)
-    (ty : Itasca.types.ElemType) (word : U64) :
+    (ty : Itasca.wasm_types.ElemType) (word : U64) :
     ReferenceShape before ty word → ReferenceShape after ty word := by
   intro h
   rcases h with hnull | hreference
@@ -96,7 +96,7 @@ theorem InstanceShape.mono {M : Type} (before after : runtime.store.Store M)
 /-- A successful global definition appends precisely the encoded typed value. -/
 theorem define_global_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (ty : Itasca.types.GlobalType) (value : runtime.Value)
+    (s : runtime.store.Store M) (ty : Itasca.wasm_types.GlobalType) (value : runtime.Value)
     (hbound : objectCount s ≤ Usize.max) (htype : ty.valtype = Interp.rawType value)
     (hv : ValueInStore s value) :
     runtime.store.Store.define_global_with ops allocator s ty value ⦃ result =>

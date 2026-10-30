@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- The binary type byte of a value type. -/
-def valueByte : types.ValueType → U8
+def valueByte : wasm_types.ValueType → U8
   | .I32 => 127#u8
   | .I64 => 126#u8
   | .F32 => 125#u8
@@ -30,7 +30,7 @@ theorem valueByte_injective : Function.Injective valueByte := by
 
 /-- Value type bytes are negative one-byte signed integers, so they cannot be confused with a
 nonnegative type index. -/
-theorem valueByte_negative (t : types.ValueType) :
+theorem valueByte_negative (t : wasm_types.ValueType) :
     64 ≤ (valueByte t).val ∧ (valueByte t).val < 128 := by
   cases t <;> decide
 

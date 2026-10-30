@@ -19,12 +19,12 @@ Main declarations: `FunctionParameterSlots` and `reader_emit_call_wasm2`. A dire
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-def FunctionParameterSlots {A : Type} (compiler : runtime.compiler.FunctionCompiler A) (env : module.Env) : Prop :=
+def FunctionParameterSlots {A : Type} (compiler : runtime.compiler.FunctionCompiler A) (env : metadata.Env) : Prop :=
   compiler.func_param_slots.val.map (fun word => word.val) =
     env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType))
 
 theorem FunctionParameterSlots.lookup {A : Type} {compiler : runtime.compiler.FunctionCompiler A} {env}
-    (metadata : FunctionParameterSlots compiler env) (index : U32) (ft : types.FuncType)
+    (metadata : FunctionParameterSlots compiler env) (index : U32) (ft : wasm_types.FuncType)
     (found : env.func_types.val[index.val]? = some ft) :
     ∃ word : U32, compiler.func_param_slots.val[index.val]? = some word ∧
       word.val = slots (ft.params.val.map Translate.valueType) := by
@@ -50,7 +50,7 @@ theorem reader_emit_call_wasm2 {data env locals typeIndex st}
       st data env ctx typeIndex .Wasm2 16#u8 before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
-    (∃ (index : U32) (ft : types.FuncType) (values : List code.StackType) (front : List valtype) (base : U32),
+    (∃ (index : U32) (ft : wasm_types.FuncType) (values : List code.StackType) (front : List valtype) (base : U32),
       env.func_types.val[index.val]? = some ft ∧
       Sequence.stackTypes st.core.vals.val = front ++ ft.params.val.map Translate.valueType ∧
       Wasm2.ReaderPost p out.core (.CALL (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧

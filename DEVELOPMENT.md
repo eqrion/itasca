@@ -52,7 +52,7 @@ just prove            # Build all proofs and check audit coverage and axioms
 just dead --check     # Optional: check reachability from headline results and examples
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
-just regressions      # Run patched Aeneas extraction regressions
+just regressions      # Run upstream Aeneas extraction regressions
 just verify           # Run the complete verification sequence
 ```
 

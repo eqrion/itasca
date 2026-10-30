@@ -14,12 +14,12 @@ open Aeneas Aeneas.Std
 
 noncomputable section
 
-local instance : DecidableEq Itasca.types.ValueType := Classical.decEq _
+local instance : DecidableEq Itasca.wasm_types.ValueType := Classical.decEq _
 
 namespace Itasca.Wasm2
 
 /-- Read a data-segment index and the reserved memory-zero byte before operands. -/
-def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     Result (core.result.Result U32 error.OpError × code.OpIterState) := do
   let (r, s) ← code.take_data_index st data env
   match r with
@@ -31,7 +31,7 @@ def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : module.E
     | .Ok () => .ok (.Ok idx, out)
 
 /-- Wasm 2.0 `memory.copy` reads two reserved literal memory-zero bytes. -/
-def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_bulk_memory st data env
   match r with
@@ -41,8 +41,8 @@ def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : module.E
 /-- Reads a second table index and requires its reference type to equal the first one's, as
 `table.copy` and `table.init` do. -/
 def referencePairMetadata
-    (first : Result (core.result.Result (U32 × types.ValueType) error.OpError × code.OpIterState))
-    (data : Slice U8) (env : module.Env) :
+    (first : Result (core.result.Result (U32 × wasm_types.ValueType) error.OpError × code.OpIterState))
+    (data : Slice U8) (env : metadata.Env) :
     Result (core.result.Result (U32 × U32) error.OpError × code.OpIterState) := do
   let (r, s) ← first
   match r with
@@ -59,11 +59,11 @@ end Itasca.Wasm2
 
 namespace Itasca
 
-theorem types.ValueType.ne.eq (a b : types.ValueType) :
-    core.cmp.PartialEq.ne.trait_default types.ValueType.Insts.CoreCmpPartialEqValueType a b =
+theorem wasm_types.ValueType.ne.eq (a b : wasm_types.ValueType) :
+    core.cmp.PartialEq.ne.trait_default wasm_types.ValueType.Insts.CoreCmpPartialEqValueType a b =
       .ok (decide (a ≠ b)) := by
   cases a <;> cases b <;> simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-    types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 theorem code.read_bulk_operands.fixed (st : code.OpIterState) :
     code.read_bulk_operands st = Wasm2.Simd.readFixed st [.I32, .I32, .I32] none := by
@@ -76,7 +76,7 @@ theorem code.read_bulk_operands.fixed (st : code.OpIterState) :
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
 
-theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_fill st data env = Wasm2.metadataOperands (code.read_bulk_memory st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_fill, Wasm2.metadataOperands, 
@@ -90,7 +90,7 @@ theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_init st data env = Wasm2.metadataOperands (Wasm2.memoryInitMetadata st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_init, Wasm2.metadataOperands, Wasm2.memoryInitMetadata,
@@ -104,7 +104,7 @@ theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_copy st data env = Wasm2.metadataOperands (Wasm2.memoryCopyMetadata st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_copy, Wasm2.metadataOperands, Wasm2.memoryCopyMetadata,
@@ -118,7 +118,7 @@ theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_table_init st data env = Wasm2.metadataOperands (Wasm2.referencePairMetadata (code.take_element st data env) data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_table_init, Wasm2.metadataOperands, Wasm2.referencePairMetadata,
@@ -131,10 +131,10 @@ theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (en
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
-    | (rename_i a; cases (show U32 × types.ValueType from a))
-    | (simp only [types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
+    | (rename_i a; cases (show U32 × wasm_types.ValueType from a))
+    | (simp only [wasm_types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
-theorem code.read_table_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.read_table_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_table_copy st data env = Wasm2.metadataOperands (Wasm2.referencePairMetadata (code.take_table st data env) data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_table_copy, Wasm2.metadataOperands, Wasm2.referencePairMetadata,
@@ -147,8 +147,8 @@ theorem code.read_table_copy.fixed (st : code.OpIterState) (data : Slice U8) (en
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Wasm2.Simd.readFixed, Std.bind_assoc, Std.uncurry])
-    | (rename_i a; cases (show U32 × types.ValueType from a))
-    | (simp only [types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
+    | (rename_i a; cases (show U32 × wasm_types.ValueType from a))
+    | (simp only [wasm_types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
 end Itasca
 
@@ -156,7 +156,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     memoryInitMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ idx, r.1 = .Ok idx → ∃ bytes,
         Wasm1.BytesAt data st.pos (bytes ++ [0#u8]) r.2.pos ∧ Leb128.Encoding bytes idx.val ∧
@@ -180,7 +180,7 @@ theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
       obtain ⟨hzero, hmem⟩ := hod rfl
       exact ⟨bytes, (Wasm1.BytesAt.mk hbs hbl hbb).append hzero, hbe, hcount, hmem⟩
 
-theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     memoryCopyMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       (r.1 = .Ok () → Wasm1.BytesAt data st.pos [0#u8, 0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_bulk_memory.spec st data env)
@@ -202,9 +202,9 @@ theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
 /-- Sequential reference-index decoding preserves each byte span and compares
 the two resolved element types before the fixed operand checker runs. -/
 theorem referencePairMetadata.spec
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (first : Result (core.result.Result (U32 × types.ValueType) error.OpError × code.OpIterState))
-    (P : U32 → types.ValueType → Usize → Prop)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (first : Result (core.result.Result (U32 × wasm_types.ValueType) error.OpError × code.OpIterState))
+    (P : U32 → wasm_types.ValueType → Usize → Prop)
     (hf : first ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ idx ty, r.1 = .Ok (idx, ty) → P idx ty r.2.pos ⦄) :
     referencePairMetadata first data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧

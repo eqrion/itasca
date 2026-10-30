@@ -13,10 +13,10 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Wasm2
 
 /-- Realizing the declared results is sufficient to close a frame. -/
-theorem finishFrame.complete (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem finishFrame.complete (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType)
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hi : i.val = parents.length) (hn : n.val = blocks.length + 1)
@@ -71,10 +71,10 @@ end Itasca.Wasm2
 namespace Itasca
 
 /-- Independent frame results and the omitted-else identity force actual acceptance. -/
-theorem code.end_frame.complete (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem code.end_frame.complete (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType)
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
     (hc : st.core.ctrls.val = parents ++ [frame])
     (hb : st.blocks.val = blocks ++ [bt]) (ha : blocks.length = parents.length)
     (hv : st.core.vals.val = outer ++ segment) (hbase : frame.value_stack_base.val = outer.length)

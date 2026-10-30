@@ -5,7 +5,7 @@ import Itasca.Module.Elab.SegmentSyntax
 /-!
 # Element initializer parsers
 
-Soundness of `module.decode_element_initializer` and `module.decode_element_initializers`, which
+Soundness of `metadata.decode_element_initializer` and `metadata.decode_element_initializers`, which
 read the initializers of an element segment either as function indices (`ref.func`) or as full
 constant expressions. `InitializerEncoding` is the independent grammar of one initializer.
 Accepted values are `ModuleConstants.Valid` at the segment's reference type, and the declared
@@ -19,13 +19,13 @@ namespace Itasca.ModuleElements
 
 /-- One initializer: either a function index standing for `ref.func`, or, when `expressions` is
 set, a whole constant expression including its terminating `end`. -/
-def InitializerEncoding (expressions : Bool) (value : types.ConstExpr) (bytes : List U8) : Prop :=
+def InitializerEncoding (expressions : Bool) (value : wasm_types.ConstExpr) (bytes : List U8) : Prop :=
   if expressions then ModuleBinary.ConstEncoding value bytes
   else ∃ index, value = .RefFunc index ∧ ModuleBinary.IndexEncoding index bytes
 
 /-- The value type of an initializer: the element type for expressions, and `funcref` for
 function indices. -/
-def initializerType (elem : types.ElemType) (expressions : Bool) : types.ValueType :=
+def initializerType (elem : wasm_types.ElemType) (expressions : Bool) : wasm_types.ValueType :=
   if expressions then ModuleConstants.referenceValueType elem else .FuncRef
 
 /-- An initializer encoding consumes at least one byte. -/
@@ -78,22 +78,22 @@ end Itasca.ModuleReferences
 
 namespace Itasca
 
-/-- An accepted `module.decode_element_initializer` is an `InitializerEncoding` span whose value is
+/-- An accepted `metadata.decode_element_initializer` is an `InitializerEncoding` span whose value is
 `Valid` at `initializerType`. -/
 @[step]
-theorem module.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
-    (env : module.Env) (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile) :
-    module.decode_element_initializer data pos env elem expressions profile ⦃ r => match r with
+theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
+    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile) :
+    metadata.decode_element_initializer data pos env elem expressions profile ⦃ r => match r with
       | .Ok (value, next) =>
           ModuleBinary.At (ModuleElements.InitializerEncoding expressions) data pos value next ∧
           ModuleConstants.Valid env value (ModuleElements.initializerType elem expressions)
       | .Err _ => True ⦄ := by
   cases expressions with
   | true =>
-    have ht : types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
+    have ht : wasm_types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
       cases elem <;> rfl
-    simp only [module.decode_element_initializer, ↓reduceIte, ht, bind_ok]
-    apply WP.spec_mono (module.decode_const_expr.spec data pos env (ModuleConstants.referenceValueType elem) profile)
+    simp only [metadata.decode_element_initializer, ↓reduceIte, ht, bind_ok]
+    apply WP.spec_mono (metadata.decode_const_expr.spec data pos env (ModuleConstants.referenceValueType elem) profile)
     intro r hp
     cases r with
     | Err _ => trivial
@@ -102,12 +102,12 @@ theorem module.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
   | false =>
     obtain ⟨r, hr, hb⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
     cases r with
-    | Err e => simp [module.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err e => simp [metadata.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
         error.Error.Insts.CoreConvertFromOpError.from]
     | Ok pair =>
       obtain ⟨idx, next⟩ := pair
-      simp [module.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch]
       step
       split
       · simp
@@ -117,11 +117,11 @@ theorem module.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
 
 /-- The initializer loop returns `count` initializers forming a `Rep` span, all valid, and extends
 only the declared functions, by their references. -/
-theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : module.Env)
-    (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile)
+theorem metadata.decode_element_initializers_loop.spec (data : Slice U8) (env : metadata.Env)
+    (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hrefs : env.declared_funcs.val.length ≤ start.val) :
-    module.decode_element_initializers_loop data env elem expressions profile count start
+    metadata.decode_element_initializers_loop data env elem expressions profile count start
       (alloc.vec.Vec.new _) 0#u32 ⦃ r => match r.1 with
       | .Ok (values, next) => values.val.length = count.val ∧
           ModuleReferences.Added env r.2 (values.val.flatMap ModuleReferences.initializer) ∧
@@ -130,7 +130,7 @@ theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : mo
           (∀ value ∈ values.val, ModuleConstants.Valid env value (ModuleElements.initializerType elem expressions)) ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_element_initializers_loop
+  unfold metadata.decode_element_initializers_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.2.val)
     (fun s => s.2.2.2.val ≤ count.val ∧ s.2.2.1.val.length = s.2.2.2.val ∧
       ModuleReferences.Added env s.1 (s.2.2.1.val.flatMap ModuleReferences.initializer) ∧
@@ -140,13 +140,13 @@ theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : mo
       s.1.declared_funcs.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, values, i⟩ ⟨hi, hlen, henv, hbytes, hvalid, hbound⟩
     dsimp only at hi hlen henv hbytes hvalid hbound
-    unfold module.decode_element_initializers_loop.body
+    unfold metadata.decode_element_initializers_loop.body
     dsimp only
     split
     · have heq : i.val = count.val := by scalar_tac
       exact ⟨by omega, henv, hbytes, hvalid, hbound⟩
     · obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists
-        (module.decode_element_initializer.spec data pos current elem expressions profile)
+        (metadata.decode_element_initializer.spec data pos current elem expressions profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -189,12 +189,12 @@ theorem module.decode_element_initializers_loop.spec (data : Slice U8) (env : mo
   · exact ⟨by simp, by simp, ⟨rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hrefs⟩
 
-/-- `module.decode_element_initializers` returns the initializers of a `VecEncoding` span, all
+/-- `metadata.decode_element_initializers` returns the initializers of a `VecEncoding` span, all
 valid, and extends only the declared functions, by their references. -/
-theorem module.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
-    (env : module.Env) (elem : types.ElemType) (expressions : Bool) (profile : ValidationProfile)
+theorem metadata.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
+    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile)
     (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    module.decode_element_initializers data pos env elem expressions profile ⦃ r => match r.1 with
+    metadata.decode_element_initializers data pos env elem expressions profile ⦃ r => match r.1 with
       | .Ok (values, next) =>
           ModuleBinary.At (ModuleBinary.VecEncoding (ModuleElements.InitializerEncoding expressions))
             data pos values.val next ∧
@@ -204,17 +204,17 @@ theorem module.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_element_initializers, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_element_initializers, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨r, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_element_initializers_loop.spec data env elem expressions profile count start
+      (metadata.decode_element_initializers_loop.spec data env elem expressions profile count start
         hs.2.2 (by omega))
     obtain ⟨res, result⟩ := r
-    simp [module.decode_element_initializers, hr, hloop, core.result.Result.Insts.CoreOpsTry.branch]
+    simp [metadata.decode_element_initializers, hr, hloop, core.result.Result.Insts.CoreOpsTry.branch]
     cases res with
     | Err e => trivial
     | Ok pair =>

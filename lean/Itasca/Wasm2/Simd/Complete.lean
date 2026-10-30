@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Completeness
 
 /-- Pure SIMD operators accept every realization of their principal signature. -/
-theorem Frame.simd_pure {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_pure {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.pureMeaning subopcode.val = some op)
@@ -54,7 +54,7 @@ theorem Frame.simd_pure {st} {profile : ValidationProfile} (f : Frame st) (data 
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.LaneOperation)
     (lane : U8) (prefixBytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.laneMeaning subopcode.val = some op)
@@ -91,7 +91,7 @@ theorem Frame.simd_lane {st} {profile : ValidationProfile} (f : Frame st) (data 
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_const {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_const {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 12)
@@ -127,7 +127,7 @@ theorem Frame.simd_const {st} {profile : ValidationProfile} (f : Frame st) (data
     omega
 
 
-theorem Frame.simd_memory {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_memory {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -169,7 +169,7 @@ theorem Frame.simd_memory {st} {profile : ValidationProfile} (f : Frame st) (dat
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_memory_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_memory_lane {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (lane : U8) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -216,7 +216,7 @@ theorem Frame.simd_memory_lane {st} {profile : ValidationProfile} (f : Frame st)
 
 
 
-theorem Frame.simd_shuffle {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd_shuffle {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes 13)
@@ -259,7 +259,7 @@ theorem Frame.simd_shuffle {st} {profile : ValidationProfile} (f : Frame st) (da
     omega
 
 /-- Every independently encoded and typed SIMD instruction is accepted. -/
-theorem Frame.simd {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : module.Env)
+theorem Frame.simd {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : instr)
     (prefixBytes immediate : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Leb128.Encoding prefixBytes subopcode.val) (hi : Simd.Immediate subopcode op immediate)

@@ -29,7 +29,7 @@ open Aeneas Aeneas.Std
 of this element segment; the store argument is the unchanged evaluation state. -/
 def ElementInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (segment : Itasca.module.Element) (error : runtime.ExecError) : Prop :=
+    (segment : Itasca.metadata.Element) (error : runtime.ExecError) : Prop :=
   ∃ (k : Usize), ∃ functions function code expr,
     k.val < segment.init.length ∧
     inst.module.element_initializers.val[index.val]? = some functions ∧
@@ -38,8 +38,8 @@ def ElementInitializerCause {M A : Type} (allocator : runtime.platform.Alloc A)
     Compiler.InitializerCode code expr (elementValueType segment.elem) ∧
     Interp.SyntheticPreparationCause allocator store code error
 
-private theorem elem_value_type_eq (ty : Itasca.types.ElemType) :
-    types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
+private theorem elem_value_type_eq (ty : Itasca.wasm_types.ElemType) :
+    wasm_types.ElemType.value_type ty = .ok (elementValueType ty) := by cases ty <;> rfl
 
 private theorem encode_push {M : Type} (store : runtime.store.Store M)
     (values : alloc.vec.Vec U64) (value : runtime.Value) (owned : ValueInStore store value)
@@ -58,7 +58,7 @@ theorem element_initializers_loop_causes {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index length : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (hlength : length.val = segment.init.length)
@@ -101,7 +101,7 @@ theorem element_initializers_loop_causes {M P F A : Type}
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
         simp only [runtime.compiler.ExecutableModule.env,
-          Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+          Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
         subst found
@@ -150,7 +150,7 @@ set_option maxRecDepth 8192
 final store-vector request, or source initializer witness. -/
 def ElementAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (segment : Itasca.module.Element) (error : runtime.ExecError) : Prop :=
+    (segment : Itasca.metadata.Element) (error : runtime.ExecError) : Prop :=
   (error = .Exhausted .Allocation ∧
     (allocator.reserve (alloc.vec.Vec.new U64) segment.init.len = .ok (false,alloc.vec.Vec.new U64) ∨
       allocator.reserve store.elems 1#usize = .ok (false,store.elems))) ∨
@@ -161,7 +161,7 @@ theorem add_element_resource_cause {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (found : store.instances.val[instIndex.val]? = some inst)
     (element : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
@@ -171,7 +171,7 @@ theorem add_element_resource_cause {M P F A : Type}
     after = store ∧ host = platform ∧ ElementAllocationCause allocator store inst index segment error := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun,refusal⟩ := reserve_with_cause allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -209,7 +209,7 @@ theorem add_element_resource_cause {M P F A : Type}
         obtain ⟨rfl,rfl,rfl⟩ := run
         exact ⟨rfl,rfl,Or.inl ⟨rfl,Or.inr refused⟩⟩
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
-          runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements] at run
+          runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements] at run
         obtain ⟨current,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨declared,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨elements,pushed,run⟩ := normal_bind_exists _ _ _ run
@@ -293,7 +293,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.val.length := by

@@ -13,7 +13,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def MemoryStageEffect {M : Type} (view : M → Slice U8) (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (ty : Itasca.types.MemType)
+    (inst : runtime.store.ModuleInst) (ty : Itasca.wasm_types.MemType)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst) : Prop :=
   (∃ error, out = (.Err error, store, inst)) ∨
   (∃ memories buffer addresses count,
@@ -33,7 +33,7 @@ theorem add_instance_memory_effect {M A : Type} (memory : runtime.platform.Memor
     runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index
       ⦃ out => MemoryStageEffect view store inst inst.module.module.env.mem_types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_memory
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.mem_types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -159,7 +159,7 @@ theorem memory_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by

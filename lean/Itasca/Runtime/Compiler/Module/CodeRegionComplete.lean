@@ -178,8 +178,8 @@ theorem compiler_code_region_complete_layout {profile} {data : Slice U8} {raw de
         simp only [Slice.len_val] at he
         omega
       · have he : id = id' ∧ first = first' ∧ last = last' := by
-          have hread := (module.read_section_header.complete data codePos id first last hh).symm.trans
-            (module.read_section_header.complete data codePos id' first' last' hh')
+          have hread := (metadata.read_section_header.complete data codePos id first last hh).symm.trans
+            (metadata.read_section_header.complete data codePos id' first' last' hh')
           simpa using hread
         have hid : id = 11#u8 := by
           rcases hge with hc | hd

@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem compiler_return_reader_wasm2_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : code.BodyState) (env : module.Env) (index : U32) (shape : Control.Shape state.core)
+    (state : code.BodyState) (env : metadata.Env) (index : U32) (shape : Control.Shape state.core)
     (bodyFrame : compiler.reachable = true → 0 < compiler.frames.val.length)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)

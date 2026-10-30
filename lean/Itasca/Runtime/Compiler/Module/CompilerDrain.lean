@@ -35,8 +35,8 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
   · intro id history before chunk after accepted tracked
     have same : before = after := by
       simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaModuleModuleVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaModuleModuleVisitor.on_custom_section,
+        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor,
+        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section,
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked

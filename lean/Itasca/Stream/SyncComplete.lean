@@ -36,8 +36,8 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
   · exact custom_accepts
   · intro id queue state chunk after hcall hqueue
     have he : state = after := by
-      simpa [stream.SyncVisitor.Insts.ItascaModuleModuleVisitor,
-        module.ModuleVisitor.on_custom_section.default] using hcall
+      simpa [stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor,
+        metadata.ModuleVisitor.on_custom_section.default] using hcall
     exact he ▸ hqueue
   · intro id queue state region hqueue
     exact ⟨state, custom_region state region, hqueue⟩
@@ -72,7 +72,7 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
 /-- The tail delivered to the scheduler survives the final drain, so the slice adapter returns the
 tail that the generic driver theorems describe. -/
 theorem delivered_tail {profile : ValidationProfile} {S : Type} {source : stream.Source S} {id : U64} {state : S}
-    {env : module.Env} {environmentLength : Usize} {before after : stream.SyncVisitor}
+    {env : metadata.Env} {environmentLength : Usize} {before after : stream.SyncVisitor}
     (run : StreamRun.Remaining source sync id state env environmentLength before after profile) :
     after.tail = some run.tail := by
   have hready := run.ready_call

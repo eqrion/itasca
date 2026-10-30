@@ -31,7 +31,7 @@ theorem initializer_loop_success {S O : Type} (body : S → Result (ControlFlow 
 
 /-- Indexed source expressions and their retained synthetic functions. -/
 def InitializerEntries (functions : List runtime.bytecode.CompiledFunction)
-    (expressions : List Itasca.types.ConstExpr) (ty : Itasca.types.ValueType)
+    (expressions : List Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType)
     (indices : List Usize) : Prop :=
   List.Forall₂ (fun expr index => InitializerAt functions index expr ty) expressions indices
 
@@ -44,7 +44,7 @@ theorem InitializerEntries.extend {before after : List runtime.bytecode.Compiled
   | cons cert rest ih => exact .cons (cert.extend prefixEq) ih
 
 def GlobalInitializerEntries (functions : List runtime.bytecode.CompiledFunction)
-    (globals : List Itasca.module.Global) (indices : List Usize) : Prop :=
+    (globals : List Itasca.metadata.Global) (indices : List Usize) : Prop :=
   List.Forall₂ (fun global index => InitializerAt functions index global.init global.gtype.valtype)
     globals indices
 
@@ -129,7 +129,7 @@ theorem initializer_global_loop {A : Type} (ops : runtime.platform.Alloc A)
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop0.body at body
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at body
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at body
     cases status with
     | Err error =>
       simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body

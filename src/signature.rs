@@ -4,9 +4,9 @@
 //! indices before accessing storage.
 
 use crate::error::OpError;
-use crate::module::Env;
+use crate::metadata::Env;
 use crate::reader::{read_byte, read_s33_leb};
-use crate::types::ValueType;
+use crate::wasm_types::ValueType;
 
 /// The parameter or result part of an indexed function signature.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]

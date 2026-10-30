@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Accepted SIMD prefix decoding retains the exact unsigned LEB and the
 selected independent subopcode dispatch. -/
 theorem simd_prefix_success {V : Type} (visitor : code.OpVisitor V)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
     (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
       .ok (.Ok (),out,after)) :

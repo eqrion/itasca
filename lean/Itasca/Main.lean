@@ -18,9 +18,9 @@ files below; everything else in the library supports them. `profile_*` theorems 
 obligations of the streaming results are defined in [Contracts](Contracts.lean).
 
 [Results/Validate](Results/Validate.lean), whole-module validation:
-- `module.validate_module.profile_spec`, `profile_total`, `profile_sound`
-- `module.validate_module.profile_complete`, `profile_complete_with_metadata`
-- `module.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`, `wasm_complete`,
+- `metadata.validate_module.profile_spec`, `profile_total`, `profile_sound`
+- `metadata.validate_module.profile_complete`, `profile_complete_with_metadata`
+- `metadata.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`, `wasm_complete`,
   `wasm_complete_with_metadata`
 
 [Results/Stream](Results/Stream.lean), the streaming driver:
@@ -35,7 +35,7 @@ obligations of the streaming results are defined in [Contracts](Contracts.lean).
 [Results/Trace](Results/Trace.lean), callback traces:
 - `code.validate_body_with.trace`, `trace_sound`, `trace_complete`, `instrument_trace`,
   `recorder_total`, `recorder_complete`
-- `module.validate_code_entry_with.trace_sound`
+- `metadata.validate_code_entry_with.trace_sound`
 
 [Results/Unique](Results/Unique.lean), decoding uniqueness:
 - `Profile.module_unique`, `ModuleBinary.ModuleEncoding.unique`

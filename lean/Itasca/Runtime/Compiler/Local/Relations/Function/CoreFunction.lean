@@ -18,7 +18,7 @@ open Aeneas.Std
 
 /-- The source function context is fixed by the independently decoded module
 metadata and the function's parameter, local and result declarations. -/
-def sourceFunctionContext (env : Itasca.module.Env) (locals results : List valtype) : context :=
+def sourceFunctionContext (env : Itasca.metadata.Env) (locals results : List valtype) : context :=
   { TYPES := env.types.val.map Itasca.EnvTranslation.funcType
     FUNCS := env.func_types.val.map Itasca.EnvTranslation.funcType
     GLOBALS := env.global_types.val.map Itasca.Translate.globalType
@@ -30,7 +30,7 @@ def sourceFunctionContext (env : Itasca.module.Env) (locals results : List valty
     LABELS := []
     RETURN := some (.mk_list results) }
 
-theorem source_function_context_reader (env : Itasca.module.Env) (ctx : Itasca.code.Context) :
+theorem source_function_context_reader (env : Itasca.metadata.Env) (ctx : Itasca.code.Context) :
     sourceFunctionContext env (ctx.locals.val.map Itasca.Translate.valueType)
       (ctx.results.val.map Itasca.Translate.valueType) = Itasca.EnvTranslation.context env ctx := rfl
 

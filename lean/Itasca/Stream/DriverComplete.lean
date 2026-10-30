@@ -36,7 +36,7 @@ theorem Remaining.run {S V : Type} {source : stream.Source S}
 /-- An accepted phase trace executes independently of the initial `storage` argument. -/
 theorem Accepted.run {S V : Type} {source : stream.Source S}
     {visitor : stream.StreamingVisitor V} {id state before after env}
-    (h : Accepted source visitor id state before after env profile) (storage : module.Env) :
+    (h : Accepted source visitor id state before after env profile) (storage : metadata.Env) :
     stream.validate_streaming source visitor id profile state before storage =
       .ok (.Ok (), after, env) := by
   simp [stream.validate_streaming, h.environment_call, h.environment_bound,
@@ -88,7 +88,7 @@ private theorem remaining_of_submission {S V : Type} (source : stream.Source S)
     (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (hp : Accepts visitor config Queued profile) (id : U64) (state : S)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : stream.SliceSource)
-    (env : module.Env) (tail : module.Tail) (hc : Certificate data raw regions env tail profile)
+    (env : metadata.Env) (tail : metadata.Tail) (hc : Certificate data raw regions env tail profile)
     (ha : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
     (before configured submitted : V) (entries : Usize) (codeEnd : Usize)
     (pending : alloc.vec.Vec Usize) (queue : List StreamBatch.Issued)
@@ -115,9 +115,9 @@ private theorem remaining_of_submission {S V : Type} (source : stream.Source S)
   obtain ⟨moduleEnd, hmodule, _⟩ := limits.add_offset.complete codeEnd (Slice.len regions.tail)
     (by simpa using hwhole)
   obtain ⟨region, hr, hvr⟩ := hp.region id queue ended .Tail hve
-  obtain ⟨decoded, hd⟩ := module.validate_tail_with.accepted_lift
-    visitor.moduleModuleVisitorInst hp.custom_accepts regions.tail 0#usize env region tail hc.tail_accepted
-  have hvd := module.validate_tail_with.accepted_invariant visitor.moduleModuleVisitorInst
+  obtain ⟨decoded, hd⟩ := metadata.validate_tail_with.accepted_lift
+    visitor.metadataModuleVisitorInst hp.custom_accepts regions.tail 0#usize env region tail hc.tail_accepted
+  have hvd := metadata.validate_tail_with.accepted_invariant visitor.metadataModuleVisitorInst
     (Queued id queue) (hp.custom_preserves id queue) regions.tail 0#usize env region tail decoded hd hvr
   obtain ⟨ready, ht, hvt⟩ := hp.tail_ready id queue decoded tail hvd
   obtain ⟨after, remaining, hfinish, _, hva⟩ :=
@@ -146,7 +146,7 @@ theorem remaining_complete {S V : Type} (source : stream.Source S)
     (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (hp : Accepts visitor config Queued profile) (id : U64) (state : S)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : stream.SliceSource)
-    (env : module.Env) (tail : module.Tail) (hc : Certificate data raw regions env tail profile)
+    (env : metadata.Env) (tail : metadata.Tail) (hc : Certificate data raw regions env tail profile)
     (ha : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
     (before : V) (hv : Queued id [] before) :
     ∃ after, ∃ run : StreamRun.Remaining source visitor id state env (Slice.len regions.env) before after profile,
@@ -181,9 +181,9 @@ theorem complete_certificate {S V : Type} (source : stream.Source S)
     (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (hp : Accepts visitor config Queued profile) (id : U64) (state : S)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : stream.SliceSource)
-    (env : module.Env) (tail : module.Tail) (hc : Certificate data raw regions env tail profile)
+    (env : metadata.Env) (tail : metadata.Tail) (hc : Certificate data raw regions env tail profile)
     (ha : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
-    (before : V) (storage : module.Env) (hv : Queued id [] before) :
+    (before : V) (storage : metadata.Env) (hv : Queued id [] before) :
     ∃ after, ∃ run : StreamRun.Accepted source visitor id state before after env profile,
       stream.validate_streaming source visitor id profile state before storage = .ok (.Ok (), after, env) ∧
       run.remaining.tail = tail ∧ Queued id [] after := by
@@ -200,10 +200,10 @@ theorem complete_certificate {S V : Type} (source : stream.Source S)
   have hlenEq : envLen = Slice.len regions.env := by apply UScalar.eq_of_val_eq; simpa using hlen
   subst envLen
   obtain ⟨region, hregion, hvregion⟩ := hp.region id [] before .Environment hv
-  obtain ⟨decoded, hdecode⟩ := module.validate_env_with.accepted_lift
-    visitor.moduleModuleVisitorInst hp.custom_accepts regions.env region env
+  obtain ⟨decoded, hdecode⟩ := metadata.validate_env_with.accepted_lift
+    visitor.metadataModuleVisitorInst hp.custom_accepts regions.env region env
     (Slice.len regions.env) hc.environment
-  have hvdecoded := module.validate_env_with.accepted_invariant visitor.moduleModuleVisitorInst
+  have hvdecoded := metadata.validate_env_with.accepted_invariant visitor.metadataModuleVisitorInst
     (Queued id []) (hp.custom_preserves id []) regions.env region env (Slice.len regions.env)
     decoded hdecode hvregion
   obtain ⟨after, remaining, htail, hvafter⟩ := remaining_complete source visitor config Queued hp
@@ -228,7 +228,7 @@ theorem stream.validate_streaming.complete {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (ha : StreamAcceptingScheduler.Accepts visitor config Queued profile)
-    (id : U64) (state : S) (before : V) (storage : module.Env)
+    (id : U64) (state : S) (before : V) (storage : metadata.Env)
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
     (hsignatures : ModuleSignaturesWithinLimits raw)

@@ -15,34 +15,34 @@ theorem reserve_with_cause {A T : Type} (allocator : runtime.platform.Alloc A)
 
 /-- A signature copy may refuse either of its two exact empty-vector requests. -/
 def TypeCopyRefusal {A : Type} (allocator : runtime.platform.Alloc A)
-    (ty : Itasca.types.FuncType) : Prop :=
-  allocator.reserve (alloc.vec.Vec.new Itasca.types.ValueType) ty.params.len =
-    .ok (false,alloc.vec.Vec.new Itasca.types.ValueType) ∨
-  allocator.reserve (alloc.vec.Vec.new Itasca.types.ValueType) ty.results.len =
-    .ok (false,alloc.vec.Vec.new Itasca.types.ValueType)
+    (ty : Itasca.wasm_types.FuncType) : Prop :=
+  allocator.reserve (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.params.len =
+    .ok (false,alloc.vec.Vec.new Itasca.wasm_types.ValueType) ∨
+  allocator.reserve (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.results.len =
+    .ok (false,alloc.vec.Vec.new Itasca.wasm_types.ValueType)
 
 theorem copy_type_resource_causes {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (ty : Itasca.types.FuncType) :
+    (law : Platform.AllocCorrect allocator) (ty : Itasca.wasm_types.FuncType) :
     runtime.copy_type allocator ty ⦃ answer => answer = .Ok ty ∨
       (answer = .Err (.Exhausted .Allocation) ∧ TypeCopyRefusal allocator ty) ⦄ := by
   unfold runtime.copy_type
   dsimp only
   obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law
-    (alloc.vec.Vec.new Itasca.types.ValueType) ty.params.len
+    (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.params.len
   rw [wrapped]
   cases answer
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TypeCopyRefusal,called]
   · simp [core.result.Result.Insts.CoreOpsTry.branch]
     obtain ⟨answer,wrapped,called⟩ := reserve_with_cause allocator law
-      (alloc.vec.Vec.new Itasca.types.ValueType) ty.results.len
+      (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.results.len
     rw [wrapped]
     cases answer
     · simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,TypeCopyRefusal,called]
     · simp
-      step with copy_type_loop ty.params (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize
+      step with copy_type_loop ty.params (alloc.vec.Vec.new Itasca.wasm_types.ValueType) 0#usize
         (by scalar_tac) (by simp) as ⟨params,hp⟩
-      step with copy_type_loop_results ty.results (alloc.vec.Vec.new Itasca.types.ValueType) 0#usize
+      step with copy_type_loop_results ty.results (alloc.vec.Vec.new Itasca.wasm_types.ValueType) 0#usize
         (by scalar_tac) (by simp) as ⟨results,hr⟩
       simp [hp,hr]
 end Itasca.Runtime.Store

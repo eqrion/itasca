@@ -27,7 +27,7 @@ theorem check_arguments_error_kind {id values types error}
         exact check_argument_error_kind checked
 
 theorem check_values_error_kind {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (args : Slice runtime.Value) (types : Slice Itasca.types.ValueType)
+    (store : runtime.store.Store M) (args : Slice runtime.Value) (types : Slice Itasca.wasm_types.ValueType)
     (error : runtime.ExecError)
     (rejected : runtime.interp.check_values memory store args types = .ok (.Err error)) :
     error = .BadArguments ∨ error = .WrongStore := by

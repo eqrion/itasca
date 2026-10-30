@@ -11,21 +11,21 @@ open Aeneas Aeneas.Std
 
 abbrev CodeInterpretation := Nat → runtime.compiler.ExecutableModule → Nat → funccode
 
-def decodeFuncType (ty : Itasca.types.FuncType) : functype :=
+def decodeFuncType (ty : Itasca.wasm_types.FuncType) : functype :=
   .mk_functype (.mk_list (ty.params.val.map Interp.sourceType)) (.mk_list (ty.results.val.map Interp.sourceType))
 
-def decodeElemType : Itasca.types.ElemType → reftype
+def decodeElemType : Itasca.wasm_types.ElemType → reftype
   | .FuncRef => .FUNCREF
   | .ExternRef => .EXTERNREF
 
-def decodeMut : Itasca.types.Mut → «mut»
+def decodeMut : Itasca.wasm_types.Mut → «mut»
   | .Const => none
   | .Var => some .MUT
 
 def decodeLimits (length : Nat) (maximum : Option U32) : limits :=
   .mk_limits (.mk_uN length) (maximum.map fun n => .mk_uN n.val)
 
-def decodeRef (ty : Itasca.types.ElemType) (word : U64) : ref :=
+def decodeRef (ty : Itasca.wasm_types.ElemType) (word : U64) : ref :=
   if word.val = 0 then .REF_NULL (decodeElemType ty)
   else match ty with
     | .FuncRef => .REF_FUNC_ADDR (word.val - 1)
@@ -36,7 +36,7 @@ def refVal : ref → val
   | .REF_FUNC_ADDR address => .REF_FUNC_ADDR address
   | .REF_HOST_ADDR address => .REF_HOST_ADDR address
 
-def decodeWords (ty : Itasca.types.ValueType) (lo hi : U64) : val :=
+def decodeWords (ty : Itasca.wasm_types.ValueType) (lo hi : U64) : val :=
   match ty with
   | .I32 => .CONST .I32 (.mk_num__0 .I32 (.mk_uN (lo.val % 2^32)))
   | .I64 => .CONST .I64 (.mk_num__0 .I64 (.mk_uN lo.val))
@@ -85,7 +85,7 @@ def decodeNameChars : List U8 → List char
 
 def decodeName (bytes : List U8) : «name» := .mk_name (decodeNameChars bytes)
 
-def decodeExport (inst : runtime.store.ModuleInst) (e : Itasca.module.Export) : exportinst :=
+def decodeExport (inst : runtime.store.ModuleInst) (e : Itasca.metadata.Export) : exportinst :=
   ⟨decodeName e.name.val, match e.desc with
     | .Func i => .FUNC ((inst.funcs.val.map fun a => a.index.val).getD i.val 0)
     | .Table i => .TABLE ((inst.tables.val.map fun a => a.index.val).getD i.val 0)

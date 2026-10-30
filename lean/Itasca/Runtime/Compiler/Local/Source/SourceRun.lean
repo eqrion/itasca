@@ -20,7 +20,7 @@ private theorem code_guards {env indices codes profile}
       · exact hp.no_data hc
       · exact ih.2 hc entry hm
 
-private theorem assembly_guards {profile env decls codes} {segments : List module.Data}
+private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
     (ha : ModuleBinary.ModuleTypesAllowed profile (decls.module [] []))
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
@@ -57,7 +57,7 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (id : U64) (state : S) (v v' : V) (env : module.Env)
+    (id : U64) (state : S) (v v' : V) (env : metadata.Env)
     (data environment code tail : Slice U8)
     (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
@@ -93,11 +93,11 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     have := he.2
     rw [hend] at this
     simpa using this
-  have hdecoded := module.validate_env_with.accepted_erase visitor.moduleModuleVisitorInst
+  have hdecoded := metadata.validate_env_with.accepted_erase visitor.metadataModuleVisitorInst
     run.environment run.region env run.environmentLength run.decoded run.decode_environment
   obtain ⟨henv, hsignatures, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
   have hresults := hsignatures.1
-  have hsem := module.validate_env.profile_semantic_spec run.environment profile
+  have hsem := metadata.validate_env.profile_semantic_spec run.environment profile
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
   obtain ⟨decls, hrep, hvalid, _, _, before, hprefix, hspan⟩ := hsem
@@ -153,10 +153,10 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     · obtain ⟨bytes, encoded, span⟩ := ModuleCode.Section.encoding codeSection entriesEncoding hcount
       have sameBytes : code.val = bytes := by simpa using span.suffix
       exact ⟨[], code.val, .nil, sameBytes ▸ encoded, rfl⟩
-  have htail := module.validate_tail_with.accepted_erase visitor.moduleModuleVisitorInst
+  have htail := metadata.validate_tail_with.accepted_erase visitor.metadataModuleVisitorInst
     run.remaining.tailBytes 0#usize env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have htailSem := module.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp) profile
+  have htailSem := metadata.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp) profile
   rw [htail] at htailSem
   simp only [WP.spec_ok] at htailSem
   obtain ⟨⟨tailBytes, ht, hts⟩, hsegments, hdataCount⟩ := htailSem

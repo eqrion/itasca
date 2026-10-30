@@ -15,7 +15,7 @@ namespace Itasca.StackSemantics
 /-- The effect of a checked numeric operation: the result is pushed, and a stack realizing the
 remainder extends to one with the input types on top. -/
 def NumericEffect (poly : Bool) (before : List code.StackType)
-    (inputs : List types.ValueType) (output : types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : wasm_types.ValueType)
     (after : List code.StackType) : Prop :=
   ∃ rest, after = rest ++ [.Val output] ∧
     ∀ ts, Sequence.Realizes poly rest ts →
@@ -28,7 +28,7 @@ namespace Itasca
 /-- `code.read_conversion` on an arbitrary frame segment has a `NumericEffect` outcome, or rejects
 with `EmptyStack` or `TypeMismatch`. -/
 theorem code.read_conversion.segment (st : code.OpIterState)
-    (outer segment : List code.StackType) (input output : types.ValueType)
+    (outer segment : List code.StackType) (input output : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max) :
@@ -64,7 +64,7 @@ theorem code.read_conversion.segment (st : code.OpIterState)
 /-- `code.read_binary` on an arbitrary frame segment, with any mix of explicit and polymorphic
 operands, has a `NumericEffect` outcome, or rejects with `EmptyStack` or `TypeMismatch`. -/
 theorem code.read_binary.segment (st : code.OpIterState)
-    (outer segment : List code.StackType) (input output : types.ValueType)
+    (outer segment : List code.StackType) (input output : wasm_types.ValueType)
     (hvals : st.vals.val = outer ++ segment)
     (hbase : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max) :

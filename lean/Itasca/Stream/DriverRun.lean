@@ -22,7 +22,7 @@ including the tail handoff. They describe executions of the extracted driver, no
 validator. -/
 structure Remaining {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (env : module.Env) (environmentLength : Usize) (before after : V)
+    (env : metadata.Env) (environmentLength : Usize) (before after : V)
     (profile : ValidationProfile := .Wasm1) where
   codeLength : Usize
   codeEnd : Usize
@@ -35,7 +35,7 @@ structure Remaining {S V : Type} (source : stream.Source S)
   tailBytes : Slice U8
   moduleEnd : Usize
   region : V
-  tail : module.Tail
+  tail : metadata.Tail
   decodedTail : V
   ready : V
   remaining : alloc.vec.Vec Usize
@@ -51,7 +51,7 @@ structure Remaining {S V : Type} (source : stream.Source S)
   tail_call : source.tail state = .ok (.Ok tailBytes)
   module_bound : limits.add_offset codeEnd (Slice.len tailBytes) = .ok (.Ok moduleEnd)
   region_call : visitor.custom_region ended .Tail = .ok region
-  decode_tail : module.validate_tail_with visitor.moduleModuleVisitorInst tailBytes 0#usize env profile region =
+  decode_tail : metadata.validate_tail_with visitor.metadataModuleVisitorInst tailBytes 0#usize env profile region =
     .ok (.Ok tail, decodedTail)
   ready_call : visitor.tail_ready decodedTail tail = .ok (.Ok (), ready)
   drain_call : stream.retire_all_code_batches visitor id ready pending = .ok (.Ok (), after, remaining)
@@ -60,7 +60,7 @@ structure Remaining {S V : Type} (source : stream.Source S)
 custom-section region callback, the environment decode, and the `Remaining` phases. -/
 structure Accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (before after : V) (env : module.Env)
+    (before after : V) (env : metadata.Env)
     (profile : ValidationProfile := .Wasm1) where
   environment : Slice U8
   environmentLength : Usize
@@ -69,7 +69,7 @@ structure Accepted {S V : Type} (source : stream.Source S)
   environment_call : source.environment state = .ok (.Ok environment)
   environment_bound : limits.add_offset 0#usize (Slice.len environment) = .ok (.Ok environmentLength)
   region_call : visitor.custom_region before .Environment = .ok region
-  decode_environment : module.validate_env_with visitor.moduleModuleVisitorInst environment profile region =
+  decode_environment : metadata.validate_env_with visitor.metadataModuleVisitorInst environment profile region =
     .ok (.Ok (env, environmentLength), decoded)
   remaining : Remaining source visitor id state env environmentLength decoded after profile
 
@@ -80,7 +80,7 @@ namespace Itasca
 /-- An accepted `stream.validate_remaining` yields witnesses for each of its phases. -/
 theorem stream.validate_remaining.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (env : module.Env) (envLen : Usize) (v v' : V)
+    (env : metadata.Env) (envLen : Usize) (v v' : V)
     (h : stream.validate_remaining source visitor id profile state env envLen v = .ok (.Ok (), v')) :
     Nonempty (StreamRun.Remaining source visitor id state env envLen v v' profile) := by
   unfold stream.validate_remaining at h
@@ -153,7 +153,7 @@ set_option maxHeartbeats 600000 in
 performed. No assumption is made that the visitor state keeps any metadata. -/
 theorem stream.validate_streaming.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (v v' : V) (initial env : module.Env)
+    (v v' : V) (initial env : metadata.Env)
     (h : stream.validate_streaming source visitor id profile state v initial = .ok (.Ok (), v', env)) :
     Nonempty (StreamRun.Accepted source visitor id state v v' env profile) := by
   unfold stream.validate_streaming at h

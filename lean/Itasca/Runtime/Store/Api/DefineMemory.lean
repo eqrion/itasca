@@ -3,17 +3,17 @@ import Itasca.Runtime.Store.Api.Define
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-def LimitsFit (limits : Itasca.types.Limits) (maximum : U32) : Prop :=
+def LimitsFit (limits : Itasca.wasm_types.Limits) (maximum : U32) : Prop :=
   limits.min.val ≤ maximum.val ∧
   match limits.max with
   | none => True
   | some high => limits.min.val ≤ high.val ∧ high.val ≤ maximum.val
 
-instance (limits : Itasca.types.Limits) (maximum : U32) : Decidable (LimitsFit limits maximum) := by
+instance (limits : Itasca.wasm_types.Limits) (maximum : U32) : Decidable (LimitsFit limits maximum) := by
   unfold LimitsFit
   cases limits.max <;> infer_instance
 
-@[step] theorem check_limits_spec (limits : Itasca.types.Limits) (maximum : U32) :
+@[step] theorem check_limits_spec (limits : Itasca.wasm_types.Limits) (maximum : U32) :
     runtime.store.check_limits limits maximum ⦃ result => result =
       if LimitsFit limits maximum then .Ok () else .Err .BadArguments ⦄ := by
   rcases limits with ⟨minimum, maximumOption⟩
@@ -27,7 +27,7 @@ requested initial size; every rejected definition leaves the store unchanged. -/
 theorem define_memory_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws ops view)
-    (s : runtime.store.Store M) (ty : Itasca.types.MemType) (buffer : M)
+    (s : runtime.store.Store M) (ty : Itasca.wasm_types.MemType) (buffer : M)
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.define_memory_with ops allocator s ty buffer ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨

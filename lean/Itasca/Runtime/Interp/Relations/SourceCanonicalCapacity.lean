@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std
 
 /-- The complete source module namespace. The data namespace is completed
 from the parsed module tail, as in the canonical function-typing certificate. -/
-def sourceCapacityContext (env : Itasca.module.Env) (dataCount : Nat) : context :=
+def sourceCapacityContext (env : Itasca.metadata.Env) (dataCount : Nat) : context :=
   { Compiler.sourceFunctionContext env [] [] with
     DATAS := List.replicate dataCount datatype.OK, RETURN := none }
 
@@ -13,7 +13,7 @@ def sourceCapacityContext (env : Itasca.module.Env) (dataCount : Nat) : context 
 by semantic bindings to the actual source instance. The function is typed in
 that same context. No compiled slot counter appears in this definition. -/
 def SourceCanonicalFunctionCapacity (store : _root_.store) (address : funcaddr) (words : Nat) : Prop :=
-  ∃ (function : funcinst) (profile : Itasca.ValidationProfile) (env : Itasca.module.Env)
+  ∃ (function : funcinst) (profile : Itasca.ValidationProfile) (env : Itasca.metadata.Env)
       (typeIndex : U32) (dataCount : Nat),
     store.FUNCS[address]? = some function ∧
     SourceCapacityEnvironment store function env typeIndex ∧

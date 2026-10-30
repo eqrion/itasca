@@ -5,7 +5,7 @@ open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
 theorem InitialHostSourceResourceCause.excludes_boundary {M P A : Type}
     {hooks : runtime.platform.Platform P M} {allocator : runtime.platform.Alloc A}
-    {store after : runtime.store.Store M} {identity : U64} {signature : Itasca.types.FuncType} {error : runtime.ExecError}
+    {store after : runtime.store.Store M} {identity : U64} {signature : Itasca.wasm_types.FuncType} {error : runtime.ExecError}
     (signatureFits : signatureWords (Store.decodeFuncType signature)≤store.limits.max_values.val)
     (available : Platform.AllocationAvailable allocator (2*Usize.max))
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after))

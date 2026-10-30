@@ -71,7 +71,7 @@ the entry proof, rather than assumed again for each arbitrary worker. -/
 theorem CompileEntries.capacities {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
     (run : CompileEntries allocator before batch after finalBatch)
-    {profile : ValidationProfile} {env : module.Env} {sources : List funccode} {issued : StreamBatch.Issued}
+    {profile : ValidationProfile} {env : metadata.Env} {sources : List funccode} {issued : StreamBatch.Issued}
     (reachable : StreamBatch.Reachable issued batch)
     (initial : PartialModuleCapacities profile env sources before.functions.val)
     (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
@@ -96,7 +96,7 @@ each newly certified entry at its issued index. -/
 theorem compiler_submit_capacities {A : Type} (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (before after : runtime.compiler.CompileScheduler A)
-    (issued : StreamBatch.Issued) (profile : ValidationProfile) (env : module.Env) (sources : List funccode)
+    (issued : StreamBatch.Issued) (profile : ValidationProfile) (env : metadata.Env) (sources : List funccode)
     (initial : PartialModuleCapacities profile env sources before.functions.val)
     (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
       schedulerStatic current = schedulerStatic before → StreamBatch.Reachable issued worker →
@@ -113,7 +113,7 @@ theorem compiler_submit_capacities {A : Type} (allocator : runtime.platform.Allo
 
 theorem compiler_poll_capacities {A : Type} (allocator : runtime.platform.Alloc A)
     (before after : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
-    {profile : ValidationProfile} {env : module.Env} {sources : List funccode} (initial : PartialModuleCapacities profile env sources before.functions.val)
+    {profile : ValidationProfile} {env : metadata.Env} {sources : List funccode} (initial : PartialModuleCapacities profile env sources before.functions.val)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
       allocator before = .ok (.Ok batch, after)) :
     PartialModuleCapacities profile env sources after.functions.val ∧ schedulerStatic after = schedulerStatic before := by
@@ -230,7 +230,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Captured module tables and the exact source-indexed certificate ledger
 retained throughout actual eager compilation and worker retirement. -/
-structure SchedulerCapacity {A : Type} (profile : ValidationProfile) (env : module.Env) (sources : List funccode)
+structure SchedulerCapacity {A : Type} (profile : ValidationProfile) (env : metadata.Env) (sources : List funccode)
     (scheduler : runtime.compiler.CompileScheduler A) : Prop where
   signatures : SignatureSequence scheduler.signatures.val env.types.val
   functionSlots : scheduler.func_param_slots.val.map (fun word => word.val) =
@@ -265,7 +265,7 @@ open Aeneas Aeneas.Std Itasca
 independently decoded source slice. The entry and opcode theorems discharge
 every compiler-correctness obligation internally. -/
 theorem scheduler_batch_executable_capacity {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (env : module.Env) (profile : ValidationProfile) (raw : ModuleBinary.Module)
+    (env : metadata.Env) (profile : ValidationProfile) (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env)
     (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
@@ -309,7 +309,7 @@ populated slot of the original module source list. No callback, body relation,
 or independently supplied compiler certificate is a premise. -/
 theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (source : stream.Source S) (state : S) (moduleId : U64)
-    (env : module.Env) (code : Slice U8) (profile : ValidationProfile) (config : stream.Config)
+    (env : metadata.Env) (code : Slice U8) (profile : ValidationProfile) (config : stream.Config)
     (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env) (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)

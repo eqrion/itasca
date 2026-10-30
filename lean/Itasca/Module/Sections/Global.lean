@@ -4,7 +4,7 @@ import Itasca.Module.Const.Parser
 /-!
 # Global section parser
 
-Soundness of `module.decode_global_section` and its loop. `GlobalsAdded` says the environment
+Soundness of `metadata.decode_global_section` and its loop. `GlobalsAdded` says the environment
 gains the decoded globals, their types and the function references their initializers declare.
 The span is a `VecEncoding GlobalEncoding` and each initializer is `ModuleConstants.Valid` at its
 global's type. Completeness is in `Module/Sections/GlobalComplete`.
@@ -16,7 +16,7 @@ namespace Itasca.ModuleConstants
 
 /-- Constant validity is preserved when globals are appended after the imported ones. -/
 theorem Valid.append_globals {env result e t} (h : Valid env e t)
-    (suffix : List types.GlobalType)
+    (suffix : List wasm_types.GlobalType)
     (hglobals : result.global_types.val = env.global_types.val ++ suffix)
     (hcount : result.num_imported_globals = env.num_imported_globals)
     (hfuncs : result.func_types = env.func_types) : Valid result e t := by
@@ -41,10 +41,10 @@ namespace Itasca.ModuleSections
 /-- `result` is `env` with the globals `added` appended to the globals and global types, and the
 function references of their initializers appended to the declared functions. Nothing else
 changes. -/
-def GlobalsAdded (env result : module.Env) (added : List module.Global) : Prop :=
+def GlobalsAdded (env result : metadata.Env) (added : List metadata.Global) : Prop :=
   result = { env with globals := result.globals, global_types := result.global_types, declared_funcs := result.declared_funcs } ∧
   result.globals.val = env.globals.val ++ added ∧
-  result.global_types.val = env.global_types.val ++ added.map module.Global.gtype ∧
+  result.global_types.val = env.global_types.val ++ added.map metadata.Global.gtype ∧
   result.declared_funcs.val = env.declared_funcs.val ++ added.flatMap ModuleReferences.global
 
 /-- A global type and an initializer span in sequence form a `GlobalEncoding`. -/
@@ -65,20 +65,20 @@ open ModuleBinary ModuleSections
 /-- The global loop adds `count` globals forming a `Rep GlobalEncoding` span, with valid
 initializers and allowed value types. -/
 @[step]
-theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hglobals : env.globals.val.length ≤ start.val)
     (htypes : env.global_types.val.length ≤ start.val)
     (hreferences : env.declared_funcs.val.length ≤ start.val)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_global_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_global_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ GlobalsAdded env r.2 added ∧
           At (Rep GlobalEncoding) data start added next ∧
           (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) ∧
           r.2.globals.val.length ≤ next.val ∧ r.2.global_types.val.length ≤ next.val ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_global_section_loop
+  unfold metadata.decode_global_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       GlobalsAdded env s.1 added ∧ At (Rep GlobalEncoding) data start added s.2.1 ∧
@@ -87,14 +87,14 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
       s.1.declared_funcs.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hglobals, htypes, hreferences⟩
     dsimp only at hi hlen henv hbytes hvalid hglobals htypes hreferences
-    unfold module.decode_global_section_loop.body
+    unfold metadata.decode_global_section_loop.body
     dsimp only
     split
     · rename_i hstop
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hglobals, htypes, hreferences⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_global_type.allowed_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_global_type.allowed_spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -107,7 +107,7 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
           have := hs.length
           simp only [List.length_cons, List.length_nil] at this
           omega
-        obtain ⟨r, hc, hconst⟩ := WP.spec_imp_exists (module.decode_const_expr.spec data middle current gt.valtype profile)
+        obtain ⟨r, hc, hconst⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data middle current gt.valtype profile)
         cases r with
         | Err e => simp [hc, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -126,7 +126,7 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
           step
           step
           step
-          let entry : module.Global := ⟨gt, init⟩
+          let entry : metadata.Global := ⟨gt, init⟩
           refine ⟨?_, ⟨added ++ [entry], ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩, ?_⟩
           · scalar_tac
           · simp only [List.length_append, List.length_singleton]; scalar_tac
@@ -153,15 +153,15 @@ theorem module.decode_global_section_loop.spec (data : Slice U8) (env : module.E
       ⟨by cases env; rfl, by simp, by simp, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hglobals, htypes, hreferences⟩
 
-/-- `module.decode_global_section` adds the globals of a `VecEncoding GlobalEncoding` span, with
+/-- `metadata.decode_global_section` adds the globals of a `VecEncoding GlobalEncoding` span, with
 valid initializers and allowed value types. -/
 @[step]
-theorem module.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hglobals : env.globals.val.length ≤ pos.val)
     (htypes : env.global_types.val.length ≤ pos.val)
     (hreferences : env.declared_funcs.val.length ≤ pos.val)
     (profile : ValidationProfile := .Wasm1) :
-    module.decode_global_section data pos env profile ⦃ r => match r.1 with
+    metadata.decode_global_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, GlobalsAdded env r.2 added ∧
           At (VecEncoding GlobalEncoding) data pos added next ∧
           (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) ∧
@@ -170,15 +170,15 @@ theorem module.decode_global_section.spec (data : Slice U8) (pos : Usize) (env :
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_global_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_global_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_global_section_loop.spec data env count start hs.2.2 (by omega) (by omega) (by omega) profile)
-    simp [module.decode_global_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_global_section_loop.spec data env count start hs.2.2 (by omega) (by omega) (by omega) profile)
+    simp [metadata.decode_global_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

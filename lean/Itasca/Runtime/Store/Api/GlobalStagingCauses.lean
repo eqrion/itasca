@@ -25,7 +25,7 @@ def GlobalAllocationCause {M A : Type} (allocator : runtime.platform.Alloc A)
 
 theorem define_global_resource_causes {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.GlobalType) (value : runtime.Value)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.GlobalType) (value : runtime.Value)
     (bound : objectCount store ≤ Usize.max) (typed : ty.valtype = Interp.rawType value)
     (owned : ValueInStore store value) :
     runtime.store.Store.define_global_with memory allocator store ty value
@@ -72,7 +72,7 @@ theorem add_global_resource_cause {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (global : Itasca.module.Global)
+    (inst : runtime.store.ModuleInst) (global : Itasca.metadata.Global)
     (function : Usize) (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hg : inst.module.module.env.globals.val[index.val]? = some global)
@@ -99,7 +99,7 @@ theorem add_global_resource_cause {M P F A : Type}
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst hi,
-    runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok] at run
+    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
     Compiler.initializer_vec_index inst.module.global_initializers index function hmapping,
@@ -207,7 +207,7 @@ theorem global_staging_resource_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by

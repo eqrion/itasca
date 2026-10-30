@@ -33,7 +33,7 @@ theorem invoke_defined_world_infinite_source
     (valid : Inv code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
+    (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (owned : ∀ value ∈ args.val, Store.ValueInStore store value)

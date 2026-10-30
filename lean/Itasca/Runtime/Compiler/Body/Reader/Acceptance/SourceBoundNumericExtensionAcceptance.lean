@@ -24,7 +24,7 @@ layout before the numeric callback runs, including extension opcodes. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.numeric_available {data env locals index st out instruction values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
-    {input : List types.ValueType} {output : types.ValueType}
+    {input : List wasm_types.ValueType} {output : wasm_types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
@@ -52,7 +52,7 @@ layout before the float callback runs, including extension opcodes. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.float_available {data env locals index st out instruction values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}
     (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
-    {input : List types.ValueType} {output : types.ValueType}
+    {input : List wasm_types.ValueType} {output : wasm_types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)

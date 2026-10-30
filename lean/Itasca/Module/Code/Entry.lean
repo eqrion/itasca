@@ -7,11 +7,11 @@ import Itasca.Visitor.Total
 /-!
 # Code entry validation
 
-Soundness of `module.validate_code_entry` and `module.validate_code_entry_with`. For any visitor
-with total callbacks they terminate, and `module.validate_code_entry_with.pipeline_of_body_total`
+Soundness of `metadata.validate_code_entry` and `metadata.validate_code_entry_with`. For any visitor
+with total callbacks they terminate, and `metadata.validate_code_entry_with.pipeline_of_body_total`
 decomposes a successful call into a `CodeEntry.Witness`. `Witness.validated` discharges the body
 call with the body soundness theorem to give `CodeEntry.Validated`, an independent `CodeEncoding`
-and a `Typed` certificate. `module.validate_code_entry.spec` is the resulting Wasm 1.0 statement.
+and a `Typed` certificate. `metadata.validate_code_entry.spec` is the resulting Wasm 1.0 statement.
 -/
 
 open Aeneas Aeneas.Std
@@ -22,11 +22,11 @@ namespace Itasca.CodeEntry
 records the size header, the locals bytes and bound, the context handed to the visitor, the
 function-start callback and the body validation on the body slice. -/
 structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (index start finish : Usize) (v v' : V)
+    (env : metadata.Env) (index start finish : Usize) (v v' : V)
     (profile : ValidationProfile) where
   typeIdx : U32
-  ft : types.FuncType
-  groups : List (U32 × types.ValueType)
+  ft : wasm_types.FuncType
+  groups : List (U32 × wasm_types.ValueType)
   ctx : code.Context
   content : Usize
   bodyStart : Usize
@@ -51,7 +51,7 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     .ok (.Ok (), v')
 
 /-- Parameter counts bounded by the maximum module size give `Bounds`. -/
-theorem Bounds.of_module_bound (env : module.Env)
+theorem Bounds.of_module_bound (env : metadata.Env)
     (h : ∀ ft ∈ env.types.val, ft.params.val.length ≤ limits.MAX_MODULE_BYTES.val) : Bounds env := by
   intro ft hm
   have := h ft hm
@@ -62,18 +62,18 @@ theorem Bounds.of_module_bound (env : module.Env)
 
 end CodeEntry
 
-/-- Given a body operation that terminates, `module.validate_code_entry_with` terminates and each
+/-- Given a body operation that terminates, `metadata.validate_code_entry_with` terminates and each
 successful call has a `CodeEntry.Witness`. Rejecting callbacks are ordinary module errors. -/
-theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
+theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
-    (env : module.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
+    (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
     (profile : ValidationProfile)
     (hbody : ∀ body ctx typeIdx started,
       ∃ r, code.validate_body_with visitor body env ctx typeIdx profile started = .ok r) :
-    module.validate_code_entry_with visitor data pos env index profile v ⦃ r =>
+    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r =>
       ∀ finish, r.1 = .Ok finish →
         Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 profile) ⦄ := by
-  unfold module.validate_code_entry_with
+  unfold metadata.validate_code_entry_with
   dsimp only
   split
   · simp
@@ -91,7 +91,7 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
         have hs := hp.span
         simp [core.result.Result.Insts.CoreOpsTry.branch]
         step
-        obtain ⟨r, hh, hhpost⟩ := WP.spec_imp_exists (module.have_bytes.spec data content n hs.2.2)
+        obtain ⟨r, hh, hhpost⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data content n hs.2.2)
         rw [hh]
         cases r with
         | Err e =>
@@ -101,7 +101,7 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
             have hbytes := hhpost.1.mp rfl
             simp
             step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (module.decode_locals.spec data content profile)
+            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content profile)
             rw [hl]
             cases r with
             | Err e =>
@@ -126,10 +126,10 @@ theorem module.validate_code_entry_with.pipeline_of_body_total {V : Type} (visit
                     have hparams := hbound ft hftmem
                     have hroom : ft.params.val.length + declared.val.length ≤ Usize.max := by omega
                     obtain ⟨v1, hv1, v1_post⟩ := WP.spec_imp_exists
-                      (module.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
+                      (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
                         (alloc.vec.Vec.deref declared) (by simpa [alloc.vec.Vec.deref] using hroom))
                     obtain ⟨v2, hv2, v2_post⟩ := WP.spec_imp_exists
-                      (module.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
+                      (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
                     rw [hv1]
                     simp only [bind_ok]
                     rw [hv2]

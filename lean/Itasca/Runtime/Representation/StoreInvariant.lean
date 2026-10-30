@@ -13,7 +13,7 @@ def MemoryShape {M : Type} (view : M → Slice U8) (m : runtime.store.MemInst M)
     (view m.buf).length / 65536 ≤ maximum.val ∧ maximum.val ≤ 65536
 
 def ReferenceShape {M : Type} (s : runtime.store.Store M)
-    (ty : Itasca.types.ElemType) (word : U64) : Prop :=
+    (ty : Itasca.wasm_types.ElemType) (word : U64) : Prop :=
   word.val = 0 ∨ match ty with
     | .FuncRef => word.val - 1 < s.funcs.length
     | .ExternRef => word.val - 1 < s.externs.length

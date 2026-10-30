@@ -20,7 +20,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     obtain ⟨inst, found, rest⟩ := normal_bind_exists _ _ _ run
     clear run
     rename' rest => run
-    simp only [runtime.compiler.ExecutableModule.tail, Itasca.module.Module.impl.tail, bind_ok] at run
+    simp only [runtime.compiler.ExecutableModule.tail, Itasca.metadata.Module.impl.tail, bind_ok] at run
     split at run
     · cases status with
       | Err error =>
@@ -42,7 +42,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator nextStore nextStatus nextIndex instanceIndex =
             .ok (storeStateParts after result) := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop9,
-            runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail, Itasca.module.Module.impl.tail, core.result.Result.is_ok] using tail
+            runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail, Itasca.metadata.Module.impl.tail, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       have statuses := ((store_state_parts_inj _ _ _ _).mp run).2

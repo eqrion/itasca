@@ -16,8 +16,8 @@ namespace Itasca.Wasm2.Simd
 
 /-- Fixed arity operand checking, normalized independently of opcode dispatch.
 Inputs are listed in pop order; there is at most one concrete result. -/
-def readFixed (st : code.OpIterState) (inputs : List types.ValueType)
-    (output : Option types.ValueType) :
+def readFixed (st : code.OpIterState) (inputs : List wasm_types.ValueType)
+    (output : Option wasm_types.ValueType) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) := do
   match inputs with
   | [] =>
@@ -33,16 +33,16 @@ def readFixed (st : code.OpIterState) (inputs : List types.ValueType)
       | .Ok _ => readFixed s rest output
 
 /-- The spec input types for pop-order `inputs`, in stack order. -/
-def inputTypes (inputs : List types.ValueType) : List valtype :=
+def inputTypes (inputs : List wasm_types.ValueType) : List valtype :=
   inputs.reverse.map Translate.valueType
 
 /-- The spec result types of an optional output. -/
-def outputTypes (output : Option types.ValueType) : List valtype :=
+def outputTypes (output : Option wasm_types.ValueType) : List valtype :=
   output.toList.map Translate.valueType
 
 /-- Every interpretation of the resulting stack has the declared fixed effect. -/
 def FixedEffect (poly : Bool) (before : List code.StackType)
-    (inputs : List types.ValueType) (output : Option types.ValueType)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType)
     (after : List code.StackType) : Prop :=
   ∀ ts, Sequence.Realizes poly after ts → ∃ front,
     ts = front ++ outputTypes output ∧
@@ -63,8 +63,8 @@ theorem FixedEffect.wasm2_prefix {poly before inputs output after}
 
 /-- `readFixed` is total, leaves the control frames and cursor unchanged, and on success has the
 fixed stack effect. -/
-theorem readFixed.segment (st : code.OpIterState) (inputs : List types.ValueType)
-    (output : Option types.ValueType) (outer segment : List code.StackType)
+theorem readFixed.segment (st : code.OpIterState) (inputs : List wasm_types.ValueType)
+    (output : Option wasm_types.ValueType) (outer segment : List code.StackType)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max) :
     readFixed st inputs output ⦃ r =>
@@ -116,8 +116,8 @@ theorem readFixed.segment (st : code.OpIterState) (inputs : List types.ValueType
           simpa [inputTypes, List.append_assoc] using hbefore
 
 /-- The fixed checker accepts every stack interpretation with its principal inputs. -/
-theorem readFixed.complete (st : code.OpIterState) (inputs : List types.ValueType)
-    (output : Option types.ValueType) (outer segment : List code.StackType) (front : List valtype)
+theorem readFixed.complete (st : code.OpIterState) (inputs : List wasm_types.ValueType)
+    (output : Option wasm_types.ValueType) (outer segment : List code.StackType) (front : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st) segment (front ++ inputTypes inputs)) :

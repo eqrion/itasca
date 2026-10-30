@@ -288,7 +288,7 @@ premise is numerical and computed over source preparation; no successful target
 trace, target certificate, or universal callback-acceptance premise is required. -/
 theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (data : Slice U8) (env : module.Env) (index start finish : Usize) (profile : ValidationProfile)
+    (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
@@ -302,7 +302,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (demand : EntryResourceDemand budget data env index start profile bound) :
-    module.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    metadata.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       data start env index profile initial ⦃ result => result.1 = .Ok finish ∧
         FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ∧
         ∃ w : CodeEntry.Prepared data env index start profile, w.finish = finish ∧
@@ -335,7 +335,7 @@ actual entry success, all publication header/range checks, and empty fixup
 frames. The final checker and actual compiler finish both succeed. -/
 theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (data : Slice U8) (env : module.Env) (index start finish : Usize) (profile : ValidationProfile)
+    (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
@@ -349,7 +349,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (demand : EntryResourceDemand budget data env index start profile bound) :
-    module.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    metadata.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       data start env index profile initial ⦃ result => result.1 = .Ok finish ∧
         FunctionPublicationRanges result.2.function ∧ FunctionPublicationHeader result.2.function ∧
         result.2.frames.val = [] ∧ result.2.function.code.length ≤ U32.max ∧
@@ -361,7 +361,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
       bounds environment limits encoded signatures functionSlots budget batchStart initial signaturesMatch slotsMatch batchBound created demand)
   dsimp only at accepted ranges instructions effect
   subst reply
-  obtain ⟨w⟩ := module.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds profile called
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds profile called
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt,w.function_type]
   have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after signature

@@ -15,11 +15,11 @@ open Aeneas Aeneas.Std
 namespace Itasca.MemoryMeaning
 
 /-- The operand types of a load or store: the address, and the value for a store. -/
-def Operation.inputs (op : Operation) : List types.ValueType :=
+def Operation.inputs (op : Operation) : List wasm_types.ValueType :=
   if op.store then [.I32, op.ty] else [.I32]
 
 /-- The result types of a load or store: the loaded value, or none for a store. -/
-def Operation.outputs (op : Operation) : List types.ValueType :=
+def Operation.outputs (op : Operation) : List wasm_types.ValueType :=
   if op.store then [] else [op.ty]
 
 /-- The SpecTec memory argument of a Rust `MemArg` is well formed. -/
@@ -39,7 +39,7 @@ def Operation.Typed (op : Operation) : Prop :=
       (.mk_functype (.mk_list (op.inputs.map Translate.valueType))
         (.mk_list (op.outputs.map Translate.valueType)))
 
-theorem fullLoad_typed (ty : types.ValueType) (nt : numtype) (alignment : U32)
+theorem fullLoad_typed (ty : wasm_types.ValueType) (nt : numtype) (alignment : U32)
     (bits : Nat) (hty : valtype_numtype nt = Translate.valueType ty)
     (hbits : size (valtype_numtype nt) = some bits)
     (halign : (2 : Rat) ^ alignment.val ≤ (bits : Rat) / 8) :
@@ -54,7 +54,7 @@ theorem fullLoad_typed (ty : types.ValueType) (nt : numtype) (alignment : U32)
   simpa [Operation.inputs, Operation.outputs, fullLoad, hty, Translate.valueType] using
     Instr_ok.load_val C nt (memArg arg) mt hm he (by simp [hbits]) hp hC hmt hw
 
-theorem fullStore_typed (ty : types.ValueType) (nt : numtype) (alignment : U32)
+theorem fullStore_typed (ty : wasm_types.ValueType) (nt : numtype) (alignment : U32)
     (bits : Nat) (hty : valtype_numtype nt = Translate.valueType ty)
     (hbits : size (valtype_numtype nt) = some bits)
     (halign : (2 : Rat) ^ alignment.val ≤ (bits : Rat) / 8) :
@@ -70,7 +70,7 @@ theorem fullStore_typed (ty : types.ValueType) (nt : numtype) (alignment : U32)
   simpa [Operation.inputs, Operation.outputs, fullStore, hty, Translate.valueType] using
     Instr_ok.store_val C nt (memArg arg) mt hm he (by simp [hbits]) hp hC hmt hw
 
-theorem packedLoad_typed (ty : types.ValueType) (it : Inn) (width : Nat)
+theorem packedLoad_typed (ty : wasm_types.ValueType) (it : Inn) (width : Nat)
     (extension : sx) (alignment : U32)
     (hty : valtype_Inn it = Translate.valueType ty)
     (hw : wf_sz (.mk_sz width)) (hfit : width < sizenn (numtype_Inn it))
@@ -88,7 +88,7 @@ theorem packedLoad_typed (ty : types.ValueType) (it : Inn) (width : Nat)
   simpa [Operation.inputs, Operation.outputs, packedLoad, hty, Translate.valueType] using
     Instr_ok.load_pack C it width extension (memArg arg) mt hm he hp hC hmt hwf
 
-theorem packedStore_typed (ty : types.ValueType) (it : Inn) (width : Nat) (alignment : U32)
+theorem packedStore_typed (ty : wasm_types.ValueType) (it : Inn) (width : Nat) (alignment : U32)
     (hty : valtype_Inn it = Translate.valueType ty)
     (hw : wf_sz (.mk_sz width)) (hfit : width < sizenn (numtype_Inn it))
     (halign : (2 : Rat) ^ alignment.val ≤ (width : Rat) / 8) :

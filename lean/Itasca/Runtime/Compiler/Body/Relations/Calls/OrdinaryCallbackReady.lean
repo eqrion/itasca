@@ -8,14 +8,14 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 structure OrdinaryNamespaces {A} (compiler : runtime.compiler.FunctionCompiler A)
-    (env : module.Env) (ctx : code.Context) : Prop where
+    (env : metadata.Env) (ctx : code.Context) : Prop where
   locals : compiler.function.locals.val.length = ctx.locals.val.length
   offsets : compiler.local_offsets.val.length = ctx.locals.val.length
   functions : compiler.func_param_slots.val.length = env.func_types.val.length
   signatures : compiler.signatures.val.length = env.types.val.length
 
 theorem OrdinaryNamespaces.of_initial {A} {compiler : runtime.compiler.FunctionCompiler A}
-    {env : module.Env} {ctx : code.Context}
+    {env : metadata.Env} {ctx : code.Context}
     (layout : LocalLayout compiler) (locals : compiler.function.locals = ctx.locals)
     (functions : FunctionParameterSlots compiler env)
     (signatures : SignatureSequence compiler.signatures.val env.types.val) :
@@ -27,7 +27,7 @@ theorem OrdinaryNamespaces.of_initial {A} {compiler : runtime.compiler.FunctionC
   · simpa only [List.length_map] using counts
 
 theorem OrdinaryNamespaces.stable {A} {before after : runtime.compiler.FunctionCompiler A}
-    {env : module.Env} {ctx : code.Context}
+    {env : metadata.Env} {ctx : code.Context}
     (names : OrdinaryNamespaces before env ctx) (stable : CompilerStable before after) :
     OrdinaryNamespaces after env ctx := by
   obtain ⟨signatures,functions,_,_,locals,_,_,_,_,offsets⟩ := stable.fields
@@ -37,7 +37,7 @@ theorem OrdinaryNamespaces.stable {A} {before after : runtime.compiler.FunctionC
 /-- All bounds used by ordinary callbacks are numerical invariants of the
 reached compiler; raw stack observation includes polymorphic bottom operands. -/
 structure OrdinaryCallbackReady {A} (compiler : runtime.compiler.FunctionCompiler A)
-    (env : module.Env) (ctx : code.Context) (values : List code.StackType) : Prop where
+    (env : metadata.Env) (ctx : code.Context) (values : List code.StackType) : Prop where
   namespaces : OrdinaryNamespaces compiler env ctx
   observed : ObservedStack compiler values
   codeFits : compiler.function.code.val.length < Usize.max
@@ -50,7 +50,7 @@ structure OrdinaryCallbackReady {A} (compiler : runtime.compiler.FunctionCompile
 theorem ordinary_callback_ready_of_prefix {A} {initial compiler : runtime.compiler.FunctionCompiler A}
     {jumpTables emit types functions returns locals parents current values position}
     (point : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current values position)
-    {env : module.Env} {ctx : code.Context} (length : Nat)
+    {env : metadata.Env} {ctx : code.Context} (length : Nat)
     (namespaces : OrdinaryNamespaces initial env ctx)
     (observed : ObservedStack compiler values)
     (bounded : length ≤ limits.MAX_MODULE_BYTES.val) (positionBound : position ≤ length)

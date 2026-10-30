@@ -50,7 +50,7 @@ theorem CodeEncodingWithinLimits.encoding {profile entry bytes}
 /-- The typing facts about a code entry under the type at `typeIdx`: the signature is allowed, the
 body is typed and meets the profile restrictions, the locals are allowed, and references are
 declared. -/
-structure EntryTyped (profile : ValidationProfile) (env : module.Env)
+structure EntryTyped (profile : ValidationProfile) (env : metadata.Env)
     (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   signature : FuncType profile env.types.val[typeIdx.val]
@@ -67,7 +67,7 @@ structure EntryTyped (profile : ValidationProfile) (env : module.Env)
 /-- The specification of the code entry for function `index` between byte offsets `start` and
 `finish`: it parses as a `CodeEncoding`, satisfies `EntryTyped` against the function's type, and
 stays within the local limit. -/
-def Entry (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
+def Entry (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (index start finish : Usize) : Prop :=
   ∃ entry, ModuleBinary.At (CodeEncoding profile) data start entry finish ∧
     ∃ hi : index.val < env.func_type_indices.val.length,
@@ -142,8 +142,8 @@ theorem codeEncoding_of_parts {profile data start content localEnd last size gro
 
 /-- `Wasm2.functionContext` is the code entry body context when locals are parameters then declared
 locals. -/
-theorem functionContext_entry {env : module.Env} {locals : alloc.vec.Vec types.ValueType}
-    {ft : types.FuncType} {declared : List types.ValueType}
+theorem functionContext_entry {env : metadata.Env} {locals : alloc.vec.Vec wasm_types.ValueType}
+    {ft : wasm_types.FuncType} {declared : List wasm_types.ValueType}
     (hl : locals.val = ft.params.val ++ declared) :
     Wasm2.functionContext env locals ft = CodeEntry.bodyContext env ft.params.val declared ft.results.val := by
   simp [Wasm2.functionContext, Wasm2.bodyContext, EnvTranslation.context,
@@ -173,7 +173,7 @@ theorem EntryTyped.of_body {profile env locals index ft groups ops}
 /-- `EntryTyped` and a body encoding give `Profile.Body`. -/
 theorem EntryTyped.body {profile env index entry}
     (h : EntryTyped profile env index entry) (data : Slice U8)
-    (locals : alloc.vec.Vec types.ValueType)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
     (hl : locals.val = (env.types.val[index.val]'h.type_lt).params.val ++ entry.declared)
     (he : BodyEncoding profile data entry.body) : Body profile data env locals index := by
   refine ⟨env.types.val[index.val]'h.type_lt, entry.body,

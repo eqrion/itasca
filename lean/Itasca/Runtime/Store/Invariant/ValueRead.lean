@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std
 /-- Raw reference words fit the machine index type because they refer to a
 retained object; zero remains the separate null sentinel. -/
 theorem ReferenceShape.word_bound {M : Type} (s : runtime.store.Store M)
-    (ty : Itasca.types.ElemType) (word : U64) (h : ReferenceShape s ty word) :
+    (ty : Itasca.wasm_types.ElemType) (word : U64) (h : ReferenceShape s ty word) :
     word.val ≤ Usize.max := by
   rcases h with hzero | hindex
   · scalar_tac

@@ -7,7 +7,7 @@ open Aeneas Aeneas.Std Itasca
 cursor. Unlike an unrestricted visitor contract, this permits finite numerical
 module budgets and retains actual completed worker identities and finish checks. -/
 structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : module.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
@@ -26,7 +26,7 @@ structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
 /-- A real queued worker retires successfully. Its finish proof comes from
 concrete compilation; dispatch cursors need not match an empty visitor run. -/
 theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : module.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (policy : QueuePolicy visitor config env profile Queued)
     (id : U64) (queue : List StreamBatch.Issued) (cursor : Nat) (before : V)
@@ -60,7 +60,7 @@ theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
 /-- Draining the actual completed-worker queue preserves the source cursor and
 terminates with every pending worker retired. -/
 theorem drain_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : module.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (policy : QueuePolicy visitor config env profile Queued)
     (id : U64) (queue : List StreamBatch.Issued) (cursor : Nat) (before : V)

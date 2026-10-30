@@ -23,7 +23,7 @@ def topTypes : List code.StackType → Nat → List valtype
   | [], n + 1 => .BOT :: topTypes [] n
   | v :: vs, n + 1 => StackSemantics.selectedType v :: topTypes vs n
 
-theorem Fits.subtypes {poly : Bool} {vs : List code.StackType} {ts : List types.ValueType}
+theorem Fits.subtypes {poly : Bool} {vs : List code.StackType} {ts : List wasm_types.ValueType}
     (h : Fits poly vs ts) :
     List.Forall₂ Valtype_sub (topTypes vs ts.length) (ts.map Translate.valueType) := by
   induction ts generalizing vs with
@@ -37,7 +37,7 @@ theorem Fits.subtypes {poly : Bool} {vs : List code.StackType} {ts : List types.
     | cons v vs =>
       exact .cons (StackSemantics.selectedType_sub h.1) (ih h.2)
 
-theorem Fits.realizes {poly : Bool} {vs : List code.StackType} {ts : List types.ValueType}
+theorem Fits.realizes {poly : Bool} {vs : List code.StackType} {ts : List wasm_types.ValueType}
     (h : Fits poly vs ts) :
     ∃ front, Sequence.Realizes poly vs.reverse
       (front ++ (topTypes vs ts.length).reverse) := by
@@ -60,7 +60,7 @@ theorem Fits.realizes {poly : Bool} {vs : List code.StackType} {ts : List types.
 /-- A declaratively compatible stack implies the independent suffix relation;
 the prefix may contain any operands belonging to the current frame. -/
 theorem Fits.of_realizes {poly : Bool} {vs : List code.StackType}
-    {ts : List types.ValueType} (front : List valtype)
+    {ts : List wasm_types.ValueType} (front : List valtype)
     (h : Sequence.Realizes poly vs.reverse
       (front ++ (ts.map Translate.valueType).reverse)) : Fits poly vs ts := by
   induction ts generalizing vs front with
@@ -87,7 +87,7 @@ theorem Fits.of_realizes {poly : Bool} {vs : List code.StackType}
 
 /-- All equally sized accepted targets admit the same least operand vector.
 This is the common-subtype premise in the generated Wasm 2.0 `br_table` rule. -/
-theorem Suffix.common_subtype {st : code.OpIterState} {ts : List types.ValueType}
+theorem Suffix.common_subtype {st : code.OpIterState} {ts : List wasm_types.ValueType}
     (h : Suffix st ts) :
     Resulttype_sub
       (.mk_list (topTypes (st.vals.val.drop (Control.base st).val).reverse ts.length).reverse)
@@ -102,7 +102,7 @@ theorem Suffix.common_subtype {st : code.OpIterState} {ts : List types.ValueType
     simpa using List.rel_reverse ht
   · simpa using hr
 
-theorem Suffix.of_realizes {st : code.OpIterState} {ts : List types.ValueType}
+theorem Suffix.of_realizes {st : code.OpIterState} {ts : List wasm_types.ValueType}
     (front : List valtype)
     (h : Sequence.Realizes (Control.polymorphic st)
       (st.vals.val.drop (Control.base st).val)

@@ -28,7 +28,7 @@ private theorem lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
 /-- A fixed operand effect extends the independently typed prefix in the active frame. -/
 theorem Pending.fixed {data env profile locals index st}
     (p : Pending data env profile locals index st) {V : Type} (v : V)
-    (inputs : List types.ValueType) (output : Option types.ValueType) (op : instr)
+    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (op : instr)
     (hw : wf_instr op)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
     (ht : ∀ C, wf_context C → EnvTranslation.Matches env ⟨locals, p.ft.results⟩ C → Instr_ok C op

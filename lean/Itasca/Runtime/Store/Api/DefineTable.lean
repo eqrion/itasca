@@ -39,7 +39,7 @@ open Aeneas Aeneas.Std
 All validation, resource, and allocator failures retain the original store. -/
 theorem define_table_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)
-    (s : runtime.store.Store M) (ty : Itasca.types.TableType)
+    (s : runtime.store.Store M) (ty : Itasca.wasm_types.TableType)
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.define_table_with ops allocator s ty ⦃ result =>
       (∃ error, result = (.Err error, s)) ∨

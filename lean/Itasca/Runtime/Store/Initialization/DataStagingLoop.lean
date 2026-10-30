@@ -46,7 +46,7 @@ theorem data_staging_loop {M A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok, hsource]
+      Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.tail.data.val.length := by simpa using more

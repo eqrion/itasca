@@ -9,7 +9,7 @@ Main declarations: `valid_offset_shape` and `emit_data_program`. A direct consum
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-theorem valid_offset_shape {env : Itasca.module.Env} {expr : Itasca.types.ConstExpr}
+theorem valid_offset_shape {env : Itasca.metadata.Env} {expr : Itasca.wasm_types.ConstExpr}
     (valid : Itasca.ModuleConstants.Valid env expr .I32) :
     (∃ bits, expr = .I32 bits) ∨ (∃ index, expr = .GlobalGet index) := by
   cases expr with
@@ -22,7 +22,7 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module : runtime.compiler.ExecutableModule)
     (budget afterBudget : runtime.compiler.Budget A)
     (before after : runtime.bytecode.CompiledFunction) (index : Usize)
-    (segment : Itasca.module.Data)
+    (segment : Itasca.metadata.Data)
     (found : module.module.tail.data.val[index.val]? = some segment)
     (valid : ∀ memory offset, segment.mode = .Active memory offset →
       Itasca.ModuleConstants.Valid module.module.env offset .I32)
@@ -35,7 +35,7 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_data at success
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok] at success
+    Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok] at success
   cases mode : segment.mode with
   | Passive =>

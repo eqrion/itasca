@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- The empty-visitor run of `code.validate_body_with` is `code.bodyCore`. -/
-theorem code.validate_body_with.eq_core (data : Slice U8) (env : module.Env)
+theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) :
     (do
       let (r, _) ← code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -46,8 +46,8 @@ theorem code.validate_body_with.eq_core (data : Slice U8) (env : module.Env)
 /-- An accepted visiting body is accepted by the empty-visitor validator, for any result vector
 of the scalar context. The source visitor needs no totality assumption. -/
 theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (results : alloc.vec.Vec types.ValueType) (v v' : V)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (profile : ValidationProfile) (results : alloc.vec.Vec wasm_types.ValueType) (v v' : V)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
     code.bodyCore data env ctx.locals results index profile = .ok (.Ok ()) := by
   obtain ⟨w, hw⟩ := code.validate_body_with.accepted_transfer visitor
@@ -60,9 +60,9 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
 /-- Accepting hooks preserve acceptance by the empty-visitor validator. The scalar context's
 result vector does not constrain the signature selected by the type index. -/
 theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
-    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
+    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
-    (results : alloc.vec.Vec types.ValueType) (v : V)
+    (results : alloc.vec.Vec wasm_types.ValueType) (v : V)
     (h : code.bodyCore data env ctx.locals results index profile = .ok (.Ok ())) :
     ∃ v', code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v') := by
   rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩] at h
@@ -77,7 +77,7 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
 /-- Arbitrary accepted visitors establish `Wasm2.Validated` for the profile, without a callback
 totality premise. -/
 theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v v' : V)
     (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
     Wasm2.Validated profile data env ctx.locals index :=
@@ -87,7 +87,7 @@ theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
 /-- `Wasm2.Validated` bodies are accepted with accepting callbacks, subject to the
 implementation limits. -/
 theorem code.validate_body_with.complete {V : Type} (visitor : code.OpVisitor V)
-    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
+    (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (henv : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)

@@ -18,8 +18,8 @@ open VisitorTrace
 
 /-- Byte provenance and stopping for every ordinary step. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env profile locals index st) v result out v',
     code.step_profile visitor st data env ctx index profile
       (data.val[p.start.val]'p.inbounds) v = .ok (result, out, v') →
@@ -60,8 +60,8 @@ open Wasm2
 supplies strict cursor progress. -/
 theorem code.body_loop_loop.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
     (htrace : CallbackTrace.StepContract visitor observe data env profile locals ctx index)
     (st : code.BodyState) (v v' : V) (result : VisitorTrace.BodyResult)
@@ -186,7 +186,7 @@ theorem code.body_loop_loop.trace_of_contract {V : Type}
 
 /-- Successful initialization selects the actual type entry and the same root frame used by the
 independent syntax invariant. -/
-theorem code.initial_state.start (env : module.Env) (index : U32) :
+theorem code.initial_state.start (env : metadata.Env) (index : U32) :
     code.initial_state env index ⦃ r => match r with
       | .Err _ => True
       | .Ok st => st = initial index ∧ ∃ ft, env.types.val[index.val]? = some ft ⦄ := by
@@ -212,7 +212,7 @@ theorem code.initial_state.start (env : module.Env) (index : U32) :
 an exact whole-body trace for every ordinary public outcome, including errors. -/
 theorem code.validate_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List VisitorTrace.Observation)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile)
     (htrace : CallbackTrace.StepContract visitor observe data env profile ctx.locals ctx index)
     (v v' : V) (result : VisitorTrace.BodyResult)

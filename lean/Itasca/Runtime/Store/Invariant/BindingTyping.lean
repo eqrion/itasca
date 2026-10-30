@@ -9,11 +9,11 @@ theorem decode_global_type_source (global : runtime.store.GlobalInst) :
     (decodeGlobal global).TYPE = Translate.globalType global.ty := by
   cases global.ty.valtype <;> cases global.ty.mutability <;> rfl
 
-theorem decode_elem_type_source (ty : types.ElemType) : decodeElemType ty = Translate.referenceType ty := by
+theorem decode_elem_type_source (ty : wasm_types.ElemType) : decodeElemType ty = Translate.referenceType ty := by
   cases ty <;> rfl
 
 /-- Runtime import matching is exactly the generated limits subtyping rule. -/
-theorem limits_match_sub (size : Nat) (maximum : Option U32) (required : types.Limits)
+theorem limits_match_sub (size : Nat) (maximum : Option U32) (required : wasm_types.Limits)
     (bound : size ≤ U32.max) (matching : LimitsMatch size maximum required) :
     Limits_sub (decodeLimits size maximum) (EnvTranslation.limitsType required) := by
   have actualWf := decode_limits_wf size maximum bound
@@ -52,7 +52,7 @@ theorem limits_match_sub (size : Nat) (maximum : Option U32) (required : types.L
 
 theorem imported_global_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (wellformed : wf_store (decodeStore view code store))
-    (ty : types.GlobalType) (address : runtime.GlobalAddr) (linked : ImportedGlobal store ty address) :
+    (ty : wasm_types.GlobalType) (address : runtime.GlobalAddr) (linked : ImportedGlobal store ty address) :
     Externaddr_ok (decodeStore view code store) (.GLOBAL address.index.val) (.GLOBAL (Translate.globalType ty)) := by
   obtain ⟨_, global, found, typed⟩ := linked
   have read : (decodeStore view code store).GLOBALS[address.index.val]? = some (decodeGlobal global) := by
@@ -65,7 +65,7 @@ theorem imported_global_typed {M : Type} (view : M → Slice U8) (code : CodeInt
 
 theorem imported_table_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (wellformed : wf_store (decodeStore view code store))
-    (shape : Shape view store) (ty : types.TableType) (address : runtime.TableAddr)
+    (shape : Shape view store) (ty : wasm_types.TableType) (address : runtime.TableAddr)
     (linked : ImportedTable store ty address) :
     Externaddr_ok (decodeStore view code store) (.TABLE address.index.val) (.TABLE (EnvTranslation.tableType ty)) := by
   obtain ⟨_, table, found, elementType, matching⟩ := linked
@@ -93,7 +93,7 @@ theorem imported_table_typed {M : Type} (view : M → Slice U8) (code : CodeInte
 
 theorem imported_memory_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (store : runtime.store.Store M) (wellformed : wf_store (decodeStore view code store))
-    (shape : Shape view store) (ty : types.MemType) (address : runtime.MemoryAddr)
+    (shape : Shape view store) (ty : wasm_types.MemType) (address : runtime.MemoryAddr)
     (linked : ImportedMemory view store ty address) :
     Externaddr_ok (decodeStore view code store) (.MEM address.index.val) (.MEM (EnvTranslation.memType ty)) := by
   obtain ⟨_, memory, found, matching⟩ := linked

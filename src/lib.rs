@@ -35,9 +35,12 @@ extern crate alloc;
 
 mod code;
 mod error;
-mod module;
+// Keep extracted namespaces distinct from fields named `module` and `types`.
+#[path = "module.rs"]
+mod metadata;
 mod signature;
-mod types;
+#[path = "types.rs"]
+mod wasm_types;
 
 /// Specification bounds and implementation resource limits.
 mod limits;
@@ -50,7 +53,7 @@ pub use code::{
     VisitResult,
 };
 pub use error::{Error, OpError, VisitError};
-pub use module::{
+pub use metadata::{
     export_types, import_types, validate_module, Data, DataMode, Element, ElementMode, Env, Export,
     ExportDesc, Global, Import, ImportDesc, Module, ModuleVisitor, Tail,
 };
@@ -58,7 +61,7 @@ pub use signature::{BlockType, ResultType, TypePart};
 pub use stream::{
     validate_streaming, CodeBatch, CodeEntry, Config, Region, Result, Source, StreamingVisitor,
 };
-pub use types::{
+pub use wasm_types::{
     ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, Limits, MemType, Mut,
     TableType, ValueType,
 };

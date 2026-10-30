@@ -24,7 +24,7 @@ stack before and after the instruction, including all suspended source prefixes.
 theorem numeric_full_stack_types {before after outer segment result : List code.StackType} {inputs output}
     (known : ConcreteStack before) (old : before = outer ++ segment) (new : after = outer ++ result)
     (effect : StackSemantics.NumericEffect false segment inputs output result) :
-    ∃ (front : List valtype) (types : List Itasca.types.ValueType), Sequence.stackTypes before = front ++ inputs.map Translate.valueType ∧
+    ∃ (front : List valtype) (types : List Itasca.wasm_types.ValueType), Sequence.stackTypes before = front ++ inputs.map Translate.valueType ∧
       after = types.map code.StackType.Val ∧
       types.map Translate.valueType = front ++ [Translate.valueType output] := by
   have both : ConcreteStack outer ∧ ConcreteStack segment := concrete_stack_append.mp (old ▸ known)

@@ -18,7 +18,7 @@ namespace Itasca.Wasm2
 
 /-- Compatibility from the top of an operand stack downwards. Each target is
 compared to the original operands; a `Bot` is never specialized to one target. -/
-def Fits : Bool → List code.StackType → List types.ValueType → Prop
+def Fits : Bool → List code.StackType → List wasm_types.ValueType → Prop
   | _, _, [] => True
   | poly, [], _ :: _ => poly = true
   | poly, v :: vs, t :: ts =>
@@ -27,11 +27,11 @@ def Fits : Bool → List code.StackType → List types.ValueType → Prop
 @[simp] theorem Fits.nil (poly : Bool) (vs : List code.StackType) : Fits poly vs [] := by
   cases vs <;> trivial
 
-@[simp] theorem Fits.unreachable (ts : List types.ValueType) : Fits true [] ts := by
+@[simp] theorem Fits.unreachable (ts : List wasm_types.ValueType) : Fits true [] ts := by
   cases ts <;> trivial
 
 /-- Independent compatibility of a signature with the current operand suffix. -/
-def Suffix (st : code.OpIterState) (ts : List types.ValueType) : Prop :=
+def Suffix (st : code.OpIterState) (ts : List wasm_types.ValueType) : Prop :=
   Fits (Control.polymorphic st)
     (st.vals.val.drop (Control.base st).val).reverse ts.reverse
 
@@ -41,8 +41,8 @@ namespace Itasca
 
 /-- Exact loop contract: rejection is equivalent to incompatibility of the
 remaining signature with the unchanged stack slice. -/
-theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
-    (view : signature.ResultType) (ts : List types.ValueType)
+theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : metadata.Env)
+    (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hts : Wasm2.resolve env view = some ts) (stack i : Usize)
     (hb : (Control.base st).val ≤ stack.val) (hs : stack.val ≤ st.vals.val.length)
     (hi : i.val ≤ ts.length) :
@@ -110,7 +110,7 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
         split
         · rename_i actual hactual
           step with core.cmp.PartialEq.ne.trait_default.spec
-            types.ValueType.Insts.CoreCmpPartialEqValueType _ _ (types.ValueType.eq_spec _ _)
+            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType _ _ (wasm_types.ValueType.eq_spec _ _)
             as ⟨different, hdifferent⟩
           split
           · rename_i hne
@@ -131,7 +131,7 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : module.Env)
 
 /-- The actual non-destructive suffix checker is total, sound, and complete
 for the independently specified operand compatibility relation. -/
-theorem code.check_suffix.spec (st : code.OpIterState) (env : module.Env)
+theorem code.check_suffix.spec (st : code.OpIterState) (env : metadata.Env)
     (view : signature.ResultType) (hshape : Control.Shape st) :
     code.check_suffix st env view ⦃ r =>
       r = .Ok () ↔ ∃ ts, Wasm2.resolve env view = some ts ∧ Wasm2.Suffix st ts ⦄ := by

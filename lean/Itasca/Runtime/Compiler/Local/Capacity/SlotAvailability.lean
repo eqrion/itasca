@@ -20,7 +20,7 @@ theorem slots_fit_accepts (function : runtime.bytecode.CompiledFunction) (start 
 /-- Initializer instructions remain accepted in a larger final slot capacity,
 as needed when composing active segment programs. -/
 theorem initial_instruction_capacity_accepts (function : runtime.bytecode.CompiledFunction)
-    (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType) (instruction : runtime.bytecode.Instr)
+    (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (instruction : runtime.bytecode.Instr)
     (lowered : InitialInstruction function expr ty instruction)
     (capacity : (initializerWidth ty).val ≤ function.slot_count.val)
     (vector : ∀ lo hi, expr = .V128 lo hi → ty = .V128) :

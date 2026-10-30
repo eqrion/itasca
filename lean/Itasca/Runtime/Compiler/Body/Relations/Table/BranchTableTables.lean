@@ -26,7 +26,7 @@ theorem compiler_br_table_tables {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem compiler_reader_table_tables_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (shape : Control.Shape st.core) (depths : List U32) (fallback : U32) (next : Usize)
     (encoded : BrTable.Decoded data st.core.pos depths fallback next)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)

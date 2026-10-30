@@ -115,7 +115,7 @@ theorem Wasm1Frames.unsnoc {root frames f} (h : Wasm1Frames root (frames ++ [f])
     exact ⟨hfs, hf⟩
 
 theorem ProfileFrames.start (profile : ValidationProfile) (root : context) (base : Usize)
-    (bt : signature.BlockType) (ins outs : List types.ValueType) :
+    (bt : signature.BlockType) (ins outs : List wasm_types.ValueType) :
     ProfileFrames profile root [Saved.fresh base .body bt ins outs] := fun _ =>
   .snoc (frames := []) .nil ⟨.nil _, (fun _ _ h => nomatch h), fun h => absurd rfl h⟩
 
@@ -137,7 +137,7 @@ theorem ProfileFrames.advance {profile root parents current} (h : ProfileFrames 
 /-- Opening a `block`, `loop` or `if` with a one-byte block type. -/
 theorem ProfileFrames.enter {profile root parents current} (h : ProfileFrames profile root
     (parents ++ [current])) (form : Form) (hi : form.Initial) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (base : Usize) (remaining : List code.StackType)
+    (ins outs : List wasm_types.ValueType) (base : Usize) (remaining : List code.StackType)
     (hb : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) :
     ProfileFrames profile root ((parents ++ [{ current with vals := remaining }]) ++
       [Saved.fresh base form bt ins outs]) := by

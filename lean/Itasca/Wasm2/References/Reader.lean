@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca
 abbrev MetadataReaderPost {data env profile locals index st}
     (p : Pending data env profile locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr) (value : B) (out : code.OpIterState) : Prop :=
     ∃ a middle values, decode = .ok (.Ok a,middle) ∧ middle.vals = st.core.vals ∧
       middle.ctrls = st.core.ctrls ∧ metadata a = value ∧
@@ -29,7 +29,7 @@ abbrev MetadataReaderPost {data env profile locals index st}
 theorem Pending.metadata_reader {data env profile locals index st}
     (p : Pending data env profile locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr)
     (decoded : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
       ∀ a, r.1 = .Ok a → At data p.start (.plain (operation a)) r.2.pos ⦄)
@@ -89,7 +89,7 @@ theorem Pending.metadata_reader {data env profile locals index st}
 theorem Pending.metadata_reader_accepted {data env locals index st}
     (p : Pending data env .Wasm2 locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr)
     (decoded : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
       ∀ a, r.1 = .Ok a → At data p.start (.plain (operation a)) r.2.pos ⦄)

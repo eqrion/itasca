@@ -3,7 +3,7 @@ import Itasca.Module.Sections.Import
 /-!
 # Import section parser
 
-Soundness of `module.decode_import_section` and its loop. `ImportsAdded` is the ordered sequence
+Soundness of `metadata.decode_import_section` and its loop. `ImportsAdded` is the ordered sequence
 of `ImportAdded` updates, and `ImportAllowed` is the profile condition on a descriptor. The
 decoded span is a `VecEncoding ImportEncoding` of the raw imports. Completeness is in
 `Module/Sections/ImportsComplete`.
@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- `result` is `initial` after adding `entries` one at a time by `ImportAdded`. -/
-inductive ImportsAdded (initial : module.Env) : List module.Import → module.Env →
+inductive ImportsAdded (initial : metadata.Env) : List metadata.Import → metadata.Env →
     (profile : optParam ValidationProfile .Wasm1) → Prop where
   | nil {profile} : ImportsAdded initial [] initial profile
   | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
@@ -22,7 +22,7 @@ inductive ImportsAdded (initial : module.Env) : List module.Import → module.En
 
 /-- The profile allows the descriptor's table element type or global value type. Function and
 memory descriptors are always allowed. -/
-def ImportAllowed (profile : ValidationProfile) (desc : module.ImportDesc) : Prop :=
+def ImportAllowed (profile : ValidationProfile) (desc : metadata.ImportDesc) : Prop :=
   match desc with
   | .Func _ | .Memory _ => True
   | .Table tt => ModuleBinary.ElemTypeAllowed profile tt.elem
@@ -56,15 +56,15 @@ open ModuleBinary ModuleSections
 
 /-- The import loop adds `count` imports forming a `Rep ImportEncoding` span. -/
 @[step]
-theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hbound : ModuleEnv.Bounded env start.val) (profile : ValidationProfile := .Wasm1) :
-    module.decode_import_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_import_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ entries, entries.length = count.val ∧ ImportsAdded env entries r.2 profile ∧
           At (Rep ImportEncoding) data start (entries.map ModuleEnv.rawImport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_import_section_loop
+  unfold metadata.decode_import_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ entries, entries.length = s.2.2.val ∧
       ImportsAdded env entries s.1 profile ∧
@@ -72,14 +72,14 @@ theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.E
       ModuleEnv.Bounded s.1 s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, entries, hlen, henv, hbytes, hbound⟩
     dsimp only at hi hlen henv hbytes hbound
-    unfold module.decode_import_section_loop.body
+    unfold metadata.decode_import_section_loop.body
     dsimp only
     split
     · rename_i hstop
       have heq : i.val = count.val := by scalar_tac
       exact ⟨entries, by omega, henv, hbytes, hbound⟩
     · rename_i hmore
-      obtain ⟨⟨r, updated⟩, hr, hp⟩ := WP.spec_imp_exists (module.decode_import.spec data pos current hbound profile)
+      obtain ⟨⟨r, updated⟩, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_import.spec data pos current hbound profile)
       simp only [hr, bind_ok]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -96,26 +96,26 @@ theorem module.decode_import_section_loop.spec (data : Slice U8) (env : module.E
   · exact ⟨by simp, [], by simp, .nil,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, hbound⟩
 
-/-- `module.decode_import_section` adds the imports of a `VecEncoding ImportEncoding` span. -/
+/-- `metadata.decode_import_section` adds the imports of a `VecEncoding ImportEncoding` span. -/
 @[step]
-theorem module.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :
-    module.decode_import_section data pos env profile ⦃ r => match r.1 with
+    metadata.decode_import_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ entries, ImportsAdded env entries r.2 profile ∧
           At (VecEncoding ImportEncoding) data pos (entries.map ModuleEnv.rawImport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_import_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_import_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_import_section_loop.spec data env count start hs.2.2 (hbound.mono (by omega)) profile)
-    simp [module.decode_import_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_import_section_loop.spec data env count start hs.2.2 (hbound.mono (by omega)) profile)
+    simp [metadata.decode_import_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

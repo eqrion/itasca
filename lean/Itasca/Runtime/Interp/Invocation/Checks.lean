@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem func_type_lookup {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (func : runtime.FuncAddr)
-    (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (signature : Itasca.wasm_types.FuncType)
     (owner : func.store = store.id)
     (hf : store.funcs.val[func.index.val]? = some function)
     (hs : store.types.val[function.signature.val]? = some signature) :

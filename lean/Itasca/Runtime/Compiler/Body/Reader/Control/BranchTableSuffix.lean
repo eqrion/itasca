@@ -10,7 +10,7 @@ Main declarations: `table_suffix_concrete`. A direct consumer is `Compiler.Body.
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-private theorem concrete_fits_prefix (actual expected : List types.ValueType)
+private theorem concrete_fits_prefix (actual expected : List wasm_types.ValueType)
     (fits : Wasm2.Fits false (actual.map code.StackType.Val) expected) :
     ∃ rest, actual=expected++rest := by
   induction expected generalizing actual with
@@ -27,7 +27,7 @@ private theorem concrete_fits_prefix (actual expected : List types.ValueType)
 /-- A successful suffix check on a live concrete segment determines the exact
 source types, rather than only their shared slot widths. -/
 theorem table_suffix_concrete (st : code.OpIterState) (outer segment : List code.StackType)
-    (expected : List types.ValueType) (values : st.vals.val=outer++segment)
+    (expected : List wasm_types.ValueType) (values : st.vals.val=outer++segment)
     (base : (Control.base st).val=outer.length)
     (monomorphic : Control.polymorphic st=false) (known : ConcreteStack segment)
     (suffix : Wasm2.Suffix st expected) :

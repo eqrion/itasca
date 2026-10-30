@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_select_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (C : context) (front : List valtype) (ty : valtype)
     (locals : compilerLocals compiler = C.LOCALS)
     (layout : CompilerLayout compiler (front ++ [ty, ty, .I32]))
@@ -35,8 +35,8 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_global_get_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (front : List Itasca.types.ValueType)
-    (ty : Itasca.types.ValueType) (index : U32) (C : context) (mutability : «mut»)
+    (state : Itasca.code.OpIterState) (front : List Itasca.wasm_types.ValueType)
+    (ty : Itasca.wasm_types.ValueType) (index : U32) (C : context) (mutability : «mut»)
     (locals : compilerLocals compiler = C.LOCALS)
     (globalType : C.GLOBALS[index.val]? = some (.mk_globaltype mutability (Itasca.Translate.valueType ty)))
     (layout : CompilerLayout compiler (front.map Itasca.Translate.valueType))
@@ -60,7 +60,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_global_set_emission {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (types : List Itasca.types.ValueType)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
     (front : List valtype) (ty : valtype) (index : U32) (C : context)
     (locals : compilerLocals compiler = C.LOCALS)
     (globalType : C.GLOBALS[index.val]? = some (.mk_globaltype (some .MUT) ty))

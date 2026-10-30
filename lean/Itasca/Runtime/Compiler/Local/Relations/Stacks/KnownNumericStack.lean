@@ -10,7 +10,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
 
 theorem pop_with_type_known (st after : code.OpIterState) (outer segment : List code.StackType)
-    (expected : types.ValueType) (result : core.result.Result code.StackType error.OpError)
+    (expected : wasm_types.ValueType) (result : core.result.Result code.StackType error.OpError)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (known : ConcreteStack st.vals.val)
     (accepted : code.pop_with_type st expected = .ok (result, after)) :

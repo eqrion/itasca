@@ -17,8 +17,8 @@ namespace Itasca.ModuleEnv
 /-- An ordered history of decoded sections from the initial environment and declarations to the
 final ones, ending at position `next` after a section of rank `id`. It records bytes and semantic
 changes rather than calls to the extracted parser. -/
-inductive Run (data : Slice U8) (initial : module.Env) (decls : Declarations)
-    (start : Usize) (initialId : U8) : module.Env → Declarations → Usize → U8 →
+inductive Run (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
+    (start : Usize) (initialId : U8) : metadata.Env → Declarations → Usize → U8 →
       (profile : optParam ValidationProfile .Wasm1) → Prop where
   | nil {profile} : Run (profile := profile) data initial decls start initialId initial decls start initialId
   | custom {profile} {before beforeDecls pos last next} :

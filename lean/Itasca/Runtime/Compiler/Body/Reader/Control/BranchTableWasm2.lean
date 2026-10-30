@@ -15,7 +15,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 
  theorem table_rest_cont {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (env : module.Env) (count index depth : U32)
+    (st : code.BodyState) (env : metadata.Env) (count index depth : U32)
     (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
     (before after : V) (next : code.OpIterState) (nextArity : Option Usize)
     (nextFirst : signature.ResultType) (nextIndex : U32)
@@ -42,7 +42,7 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
       exact ⟨rfl,rfl,rfl,final,by simpa using arithmetic.2.1⟩
 
 theorem table_rest_done {V : Type} (visitor : code.OpVisitor V)
-    (st final : code.BodyState) (env : module.Env) (count index depth : U32)
+    (st final : code.BodyState) (env : metadata.Env) (count index depth : U32)
     (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
     (before after : V)
     (accepted : tableRest visitor st env count index depth types arity first before =
@@ -112,7 +112,7 @@ set_option maxRecDepth 4096
 
 theorem compiler_table_body_cont {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st : code.BodyState) (next : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (next : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (count index nextIndex : U32) (arity nextArity : Option Usize)
     (first nextFirst : signature.ResultType)
     (accepted : tableBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -155,7 +155,7 @@ theorem compiler_table_body_cont {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem compiler_table_body_done {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (count index : U32) (arity : Option Usize)
     (first : signature.ResultType)
     (accepted : tableBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -210,7 +210,7 @@ set_option maxRecDepth 4096
 labels, then invokes the final callback once with the separately decoded default. -/
 theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (count index : U32) (arity : Option Usize) (first : signature.ResultType)
     (indexBound : index.val ≤ count.val)
     (accepted : code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -281,7 +281,7 @@ set_option maxRecDepth 4096
 actual selector-pop/final-callback equations. No replacement visitor is assumed. -/
 theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env profile before = .ok (.Ok (),final,after)) :
     ∃ (count : U32) (first : Usize) (selector : code.StackType) (popped : code.OpIterState)

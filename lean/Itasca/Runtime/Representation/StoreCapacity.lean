@@ -29,7 +29,7 @@ def FunctionCapacities {M : Type} (code : CodeInterpretation) (store : runtime.s
 
 /-- Canonical type indices decode to exactly the source validation table. -/
 theorem TypeEntries.capacity_decode {M : Type} {store : runtime.store.Store M}
-    {source : List Itasca.types.FuncType} {indices : List Usize}
+    {source : List Itasca.wasm_types.FuncType} {indices : List Usize}
     (entries : TypeEntries store source indices) :
     indices.map (fun index => (store.types.val.map decodeFuncType).getD index.val default) =
       source.map decodeFuncType := by

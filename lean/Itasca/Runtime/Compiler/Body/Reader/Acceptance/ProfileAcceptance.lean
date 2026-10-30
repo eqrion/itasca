@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Lift available Wasm 2 scalar dispatch through its actual profile capacity
 guard, including extension and SIMD dispatch. -/
 theorem profile_scalar_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (out : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) (before : V) (post : V → Prop)
     (capacity : st.core.vals.val.length < Usize.max)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
@@ -37,7 +37,7 @@ theorem profile_scalar_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
 capacity guard and source-context adapter. Only the locals are consulted by
 ordinary base instructions. -/
 theorem profile_base_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (out : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx sourceCtx : code.Context) (index : U32) (opcode : U8) (before : V) (post : V → Prop)
     (capacity : st.core.vals.val.length < Usize.max)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)

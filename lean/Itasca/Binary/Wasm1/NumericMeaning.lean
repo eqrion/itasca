@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Numeric
 
 /-- A SpecTec number type as a Rust value type. -/
-def valueType : numtype → types.ValueType
+def valueType : numtype → wasm_types.ValueType
   | .I32 => .I32
   | .I64 => .I64
   | .F32 => .F32
@@ -29,8 +29,8 @@ def valueType : numtype → types.ValueType
 typed by the generated rules with that effect. -/
 structure Operation where
   instruction : instr
-  input : types.ValueType
-  output : types.ValueType
+  input : wasm_types.ValueType
+  output : wasm_types.ValueType
   binary : Bool
   wellFormed : wf_instr instruction
   typed : ∀ C, wf_context C → Instr_ok C instruction
@@ -38,7 +38,7 @@ structure Operation where
       (.mk_list [Translate.valueType output]))
 
 /-- The operand types of an operation. -/
-def Operation.inputs (op : Operation) : List types.ValueType :=
+def Operation.inputs (op : Operation) : List wasm_types.ValueType :=
   if op.binary then [op.input, op.input] else [op.input]
 
 /-- A unary operation row. -/

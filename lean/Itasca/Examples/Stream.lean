@@ -18,7 +18,7 @@ namespace Itasca.Examples.Stream
 open ModuleSupport (bytes)
 
 /-- A module environment with no types, imports, functions, tables, memories or globals. -/
-def emptyEnv : module.Env where
+def emptyEnv : metadata.Env where
   types := alloc.vec.Vec.new _
   imports := alloc.vec.Vec.new _
   globals := alloc.vec.Vec.new _
@@ -63,7 +63,7 @@ theorem forged_unreachable : ¬ StreamBatch.Reachable impossibleIssued forgedBat
     induction hp with
     | nil => rfl
     | snoc visitor previous index run ih =>
-      simp [impossibleIssued, emptyEnv, module.validate_code_entry_with] at run
+      simp [impossibleIssued, emptyEnv, metadata.validate_code_entry_with] at run
   have hz := hzero h.validation.2.1
   change 1 = 0 at hz
   omega
@@ -176,17 +176,17 @@ theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm1 =
     obtain ⟨sum, hs, hv⟩ := limits.add_offset.complete 0#usize 0#usize (by simp)
     have he : sum = 0#usize := by apply UScalar.eq_of_val_eq; simpa using hv
     simpa [he] using hs
-  have hheader : module.read_header emptyBytes = .ok (.Err (.Read .UnexpectedEof)) := by
-    simp [module.read_header, reader.read_byte, hlen, core.result.Result.Insts.CoreOpsTry.branch,
+  have hheader : metadata.read_header emptyBytes = .ok (.Err (.Read .UnexpectedEof)) := by
+    simp [metadata.read_header, reader.read_byte, hlen, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   unfold stream.validate_module_slice
   rw [empty_split]
   simp only [bind_ok, Std.uncurry, hlen]
-  simp [hslice, module.Env.new, stream.validate_streaming,
+  simp [hslice, metadata.Env.new, stream.validate_streaming,
     stream.SliceSource.Insts.ItascaStreamSource.environment,
     stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, hlen,
-    module.validate_env_with, hheader, hadd, core.result.Result.Insts.CoreOpsTry.branch,
+    metadata.validate_env_with, hheader, hadd, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 end Itasca.Examples.Stream

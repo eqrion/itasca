@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Result ControlFlow
 
 namespace Itasca
 
-theorem code.enter_info.wasm1 (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem code.enter_info.wasm1 (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (kind : code.LabelKind) :
     code.enter_info st data env .Wasm1 kind = code.enter_info st data env .Wasm2 kind ∨
       ∃ e s, code.enter_info st data env .Wasm1 kind = .ok (.Err e, s) := by
@@ -35,7 +35,7 @@ theorem code.enter_info.wasm1 (st : code.BodyState) (data : Slice U8) (env : mod
         left
         simp [hc, code.check_block_type.wasm2, core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.call_indirect_info.wasm1 (st : code.BodyState) (data : Slice U8) (env : module.Env) :
+theorem code.call_indirect_info.wasm1 (st : code.BodyState) (data : Slice U8) (env : metadata.Env) :
     code.call_indirect_info st data env .Wasm1 = code.call_indirect_info st data env .Wasm2 ∨
       ∃ e s, code.call_indirect_info st data env .Wasm1 = .ok (.Err e, s) := by
   unfold code.call_indirect_info
@@ -56,7 +56,7 @@ theorem code.call_indirect_info.wasm1 (st : code.BodyState) (data : Slice U8) (e
         simp [hc, code.check_table_byte.wasm2, core.result.Result.Insts.CoreOpsTry.branch]
 
 private theorem tableLoop_unfold {V : Type} (visitor : code.OpVisitor V) (ois : code.OpIterState)
-    (data : Slice U8) (env : module.Env) (profile : ValidationProfile) (w : V) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (w : V) (count : U32)
     (arity : Option Usize) (first : signature.ResultType) (i : U32) :
     code.branch_table_with_loop visitor ois data env profile w count arity first i =
       (do
@@ -72,7 +72,7 @@ private theorem tableLoop_unfold {V : Type} (visitor : code.OpVisitor V) (ois : 
 
 /-- After a passing target check, the Wasm 1.0 table iteration is the Wasm 2.0 iteration. -/
 private theorem tableBody_wasm1 {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (count : U32) (st : code.BodyState) (w : V) (arity : Option Usize)
+    (env : metadata.Env) (count : U32) (st : code.BodyState) (w : V) (arity : Option Usize)
     (first : signature.ResultType) (i : U32) (cf)
     (h : Wasm2.Visitor.tableBody visitor data env .Wasm1 count st w arity first i = .ok cf) :
     Wasm2.Visitor.tableBody visitor data env .Wasm2 count st w arity first i = .ok cf ∨
@@ -101,7 +101,7 @@ private theorem tableBody_wasm1 {V : Type} (visitor : code.OpVisitor V) (data : 
       simpa [code.check_table_target.wasm2] using h
 
 theorem code.branch_table_with_loop.wasm1 {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (count : U32) :
+    (data : Slice U8) (env : metadata.Env) (count : U32) :
     ∀ (n : Nat) (ois : code.OpIterState) (arity : Option Usize) (first : signature.ResultType)
       (i : U32) (w : V) r, count.val - i.val = n → i.val ≤ count.val →
     code.branch_table_with_loop visitor ois data env .Wasm1 w count arity first i = .ok r →
@@ -150,7 +150,7 @@ theorem code.branch_table_with_loop.wasm1 {V : Type} (visitor : code.OpVisitor V
     simp
 
 theorem code.branch_table_with_loop.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (count : U32) :
+    (data : Slice U8) (env : metadata.Env) (count : U32) :
     ∀ (n : Nat) (ois : code.OpIterState) (arity : Option Usize) (first : signature.ResultType)
       (i : U32) (w : V) r, count.val - i.val = n → i.val ≤ count.val →
     code.branch_table_with_loop visitor ois data env .Wasm2 w count arity first i = .ok r →
@@ -189,7 +189,7 @@ theorem code.branch_table_with_loop.wasm1_returns {V : Type} (visitor : code.OpV
   · exact ⟨res, by rw [tableLoop_unfold, hres]; simp⟩
 
 theorem code.branch_table_with.wasm1 {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (w : V) r
+    (data : Slice U8) (env : metadata.Env) (w : V) r
     (h : code.branch_table_with visitor st data env .Wasm1 w = .ok r) :
     code.branch_table_with visitor st data env .Wasm2 w = .ok r ∨
       (r.1 ≠ .Ok () ∧ ∃ e s, code.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -218,7 +218,7 @@ theorem code.branch_table_with.wasm1 {V : Type} (visitor : code.OpVisitor V) (st
       · exact .inr ⟨hne, e, s, by simpa [hrr, hrp, core.result.Result.Insts.CoreOpsTry.branch] using he⟩
 
 theorem code.branch_table_with.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (w : V) r
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (w : V) r
     (h : code.branch_table_with visitor st data env .Wasm2 w = .ok r) :
     ∃ r', code.branch_table_with visitor st data env .Wasm1 w = .ok r' := by
   unfold code.branch_table_with at h ⊢
@@ -240,7 +240,7 @@ theorem code.branch_table_with.wasm1_returns {V : Type} (visitor : code.OpVisito
       exact ⟨r'.1, r'.2.1, r'.2.2, hr'⟩
 
 private theorem step_br_table {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (w : V)
     (hc : code.check_opcode profile 14#u8 = .ok (.Ok ())) :
     code.step_profile visitor st data env ctx index profile 14#u8 w =
@@ -256,7 +256,7 @@ private theorem step_br_table {V : Type} (visitor : code.OpVisitor V) (st : code
 /-- Outside `br_table`, a step that passes the opcode filter and whose entry or indirect-call
 checks pass runs the same under both profiles. -/
 private theorem step_profile.eq_of_infos {W : Type} (vis : code.OpVisitor W) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (op : U8) (u : W)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : U8) (u : W)
     (hc : code.check_opcode .Wasm1 op = .ok (.Ok ())) (htable : op ≠ 14#u8)
     (hblock : op = 2#u8 →
       code.enter_info st data env .Wasm1 .Block = code.enter_info st data env .Wasm2 .Block)
@@ -276,7 +276,7 @@ private theorem step_profile.eq_of_infos {W : Type} (vis : code.OpVisitor W) (st
 
 /-- A step whose entry or indirect-call check fails rejects under Wasm 1.0 for every visitor. -/
 private theorem step_profile.reject_of_info {W : Type} (vis : code.OpVisitor W)
-    (st s : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context)
+    (st s : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (op : U8) (u : W) (e : error.OpError)
     (hc : code.check_opcode .Wasm1 op = .ok (.Ok ()))
     (hinfo : (op = 2#u8 ∧ code.enter_info st data env .Wasm1 .Block = .ok (.Err e, s)) ∨
@@ -290,7 +290,7 @@ private theorem step_profile.reject_of_info {W : Type} (vis : code.OpVisitor W)
 
 /-- One reader step either runs the same under both profiles for every visitor, rejects under
 Wasm 1.0 for every visitor before any callback, or is a `br_table` that passed the opcode filter. -/
-private theorem step_profile.cases (st : code.BodyState) (data : Slice U8) (env : module.Env)
+private theorem step_profile.cases (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (op : U8) :
     (∀ (W : Type) (vis : code.OpVisitor W) (u : W),
       code.step_profile vis st data env ctx index .Wasm1 op u =
@@ -346,7 +346,7 @@ private theorem step_profile.cases (st : code.BodyState) (data : Slice U8) (env 
 /-- A returned Wasm 1.0 step returns the same under Wasm 2.0, or it is a rejection that the empty
 visitor also reaches. -/
 theorem code.step_profile.wasm1 {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (op : U8) (w : V) r
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : U8) (w : V) r
     (h : code.step_profile visitor st data env ctx index .Wasm1 op w = .ok r) :
     code.step_profile visitor st data env ctx index .Wasm2 op w = .ok r ∨
       (r.1 ≠ .Ok () ∧ ∃ e s, code.step_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
@@ -365,7 +365,7 @@ theorem code.step_profile.wasm1 {V : Type} (visitor : code.OpVisitor V) (st : co
 
 /-- The Wasm 1.0 step returns whenever the Wasm 2.0 step does. -/
 theorem code.step_profile.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (op : U8) (w : V) r
     (h : code.step_profile visitor st data env ctx index .Wasm2 op w = .ok r) :
     ∃ r', code.step_profile visitor st data env ctx index .Wasm1 op w = .ok r' := by
@@ -377,7 +377,7 @@ theorem code.step_profile.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
     exact code.branch_table_with.wasm1_returns visitor st data env w r h
 
 private theorem body_wasm1 {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) (w : V) (st : code.BodyState) cf
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (w : V) (st : code.BodyState) cf
     (h : Wasm2.Visitor.body visitor data env ctx index .Wasm1 w st = .ok cf) :
     Wasm2.Visitor.body visitor data env ctx index .Wasm2 w st = .ok cf ∨
       (∃ e w', cf = .done (.Err e, w')) ∧ ∃ e, Wasm2.Visitor.body
@@ -413,7 +413,7 @@ private theorem body_wasm1 {V : Type} (visitor : code.OpVisitor V) (data : Slice
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 private theorem body_wasm1_returns {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) (w : V) (st : code.BodyState) cf
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (w : V) (st : code.BodyState) cf
     (h : Wasm2.Visitor.body visitor data env ctx index .Wasm2 w st = .ok cf) :
     ∃ cf', Wasm2.Visitor.body visitor data env ctx index .Wasm1 w st = .ok cf' ∧
       (cf' = cf ∨ ∃ e w', cf' = .done (.Err e, w')) := by
@@ -444,7 +444,7 @@ private theorem body_wasm1_returns {V : Type} (visitor : code.OpVisitor V) (data
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual], .inr ⟨e1, w1, rfl⟩⟩
 
 private theorem body_loop_unfold {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile) (w : V)
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile) (w : V)
     (st : code.BodyState) :
     code.body_loop_loop visitor data env ctx index profile w st =
       (do
@@ -460,7 +460,7 @@ private theorem body_loop_unfold {V : Type} (visitor : code.OpVisitor V) (data :
 /-- A returned Wasm 1.0 body loop returns the same under Wasm 2.0, or it is a rejection that the
 empty visitor also reaches. -/
 theorem code.body_loop_loop.wasm1 {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32)
+    (env : metadata.Env) (ctx : code.Context) (index : U32)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     ∀ (n : Nat) (st : code.BodyState) (w : V) r, Usize.max - st.core.pos.val = n →
       Control.Shape st.core → st.blocks.val.length = st.core.ctrls.val.length →
@@ -519,7 +519,7 @@ theorem code.body_loop_loop.wasm1 {V : Type} (visitor : code.OpVisitor V) (data 
 
 /-- The Wasm 1.0 body loop returns whenever the Wasm 2.0 body loop does. -/
 theorem code.body_loop_loop.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
     ∀ (n : Nat) (st : code.BodyState) (w : V) r, Usize.max - st.core.pos.val = n →
       Control.Shape st.core → st.blocks.val.length = st.core.ctrls.val.length →
@@ -560,7 +560,7 @@ theorem code.body_loop_loop.wasm1_returns {V : Type} (visitor : code.OpVisitor V
   · exact ⟨(.Err e, w'), by rw [body_loop_unfold, h1]; simp⟩
 
 private theorem validate_unfold {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile) (w : V) :
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile) (w : V) :
     code.validate_body_with visitor data env ctx index profile w =
       if Slice.len data > limits.MAX_FUNCTION_BYTES then .ok (.Err .BodyTooLarge, w) else (do
         let r ← code.initial_state env index
@@ -579,7 +579,7 @@ private theorem validate_unfold {V : Type} (visitor : code.OpVisitor V) (data : 
 /-- A returned Wasm 1.0 body validation returns the same under Wasm 2.0, or it is a rejection that
 the empty visitor also reaches. -/
 theorem code.validate_body_with.wasm1 {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (w : V) r
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (w : V) r
     (h : code.validate_body_with visitor data env ctx index .Wasm1 w = .ok r) :
     code.validate_body_with visitor data env ctx index .Wasm2 w = .ok r ∨
       (r.1 ≠ .Ok () ∧ ∃ e, code.validate_body_with
@@ -607,7 +607,7 @@ theorem code.validate_body_with.wasm1 {V : Type} (visitor : code.OpVisitor V)
 
 /-- The Wasm 1.0 body validation returns whenever the Wasm 2.0 validation does. -/
 theorem code.validate_body_with.wasm1_returns {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (w : V) r
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (w : V) r
     (h : code.validate_body_with visitor data env ctx index .Wasm2 w = .ok r) :
     ∃ r', code.validate_body_with visitor data env ctx index .Wasm1 w = .ok r' := by
   rw [validate_unfold] at h ⊢
@@ -630,7 +630,7 @@ theorem code.validate_body_with.wasm1_returns {V : Type} (visitor : code.OpVisit
 
 /-- An accepted Wasm 1.0 body validation is the accepted Wasm 2.0 validation. -/
 theorem code.validate_body_with.wasm1_accepted {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (w w' : V)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (w w' : V)
     (h : code.validate_body_with visitor data env ctx index .Wasm1 w = .ok (.Ok (), w')) :
     code.validate_body_with visitor data env ctx index .Wasm2 w = .ok (.Ok (), w') := by
   rcases code.validate_body_with.wasm1 visitor data env ctx index w _ h with h2 | ⟨hne, _⟩
@@ -640,7 +640,7 @@ theorem code.validate_body_with.wasm1_accepted {V : Type} (visitor : code.OpVisi
 /-- Once the empty-visitor Wasm 1.0 validator accepts a body, every visitor gets the same result
 under both profiles. -/
 theorem code.validate_body_with.wasm1_of_accepted {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (w : V) r
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (w : V) r
     (haccepted : code.bodyCore data env ctx.locals ctx.results index .Wasm1 = .ok (.Ok ()))
     (h : code.validate_body_with visitor data env ctx index .Wasm2 w = .ok r) :
     code.validate_body_with visitor data env ctx index .Wasm1 w = .ok r := by

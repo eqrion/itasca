@@ -54,14 +54,14 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
-private def sourceOrdinal (env : module.Env) (index : Nat)
+private def sourceOrdinal (env : metadata.Env) (index : Nat)
     (bounded : index < env.func_type_indices.val.length) : Usize :=
   Usize.ofNatCore index (by have cap := env.func_type_indices.property; scalar_tac)
 
 /-- Independent entry encoding and typing construct the prepared source
 sequence. The remaining assumptions bound only pure source preparation and
 independently validated operand demand. -/
-theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (bodyBytes localCount peak index : Nat) (start finish : Usize) (entries : List ModuleBinary.Code)
     (typed : ModuleCode.EntriesTyped (profile := profile) env index entries)
     (encoded : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncodingWithinLimits profile)) data start entries finish)
@@ -179,7 +179,7 @@ set_option maxHeartbeats 1600000
 /-- Source-only maxima for independently encoded valid prepared entries. These
 bounds concern source bytes, expanded locals, and the independent operand
 analysis; they never quantify over compiler runs or emitted certificates. -/
-def SourcePreparationMaxima (env : module.Env) (profile : ValidationProfile)
+def SourcePreparationMaxima (env : metadata.Env) (profile : ValidationProfile)
     (bodyBytes localCount peak : Nat) : Prop :=
   ∀ (data : Slice U8) (ordinal position next : Usize) (entry : ModuleBinary.Code),
     ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data position entry next →
@@ -189,7 +189,7 @@ def SourcePreparationMaxima (env : module.Env) (profile : ValidationProfile)
     (independentBodyDemand w.body env w.ctx w.typeIdx).operands ≤ peak
 
 /-- The compiler's local numerical and publication state at the source cursor. -/
-structure SchedulerCompilationReady {A : Type} (env : module.Env) (base : runtime.compiler.Budget A)
+structure SchedulerCompilationReady {A : Type} (env : metadata.Env) (base : runtime.compiler.Budget A)
     (bodyBytes localCount cursor : Nat) (scheduler : runtime.compiler.CompileScheduler A) : Prop where
   signatures : SignatureSequence scheduler.signatures.val env.types.val
   functionSlots : scheduler.func_param_slots.val.map (fun word => word.val) =
@@ -201,7 +201,7 @@ structure SchedulerCompilationReady {A : Type} (env : module.Env) (base : runtim
 
 /-- Completed workers remain paired with their exact issued identities while
 source slots and the aggregate module budget advance independently of polling. -/
-def CompilerQueued {A : Type} (env : module.Env) (base : runtime.compiler.Budget A)
+def CompilerQueued {A : Type} (env : metadata.Env) (base : runtime.compiler.Budget A)
     (bodyBytes localCount : Nat) (_id : U64) (queue : List StreamBatch.Issued)
     (cursor : Nat) (scheduler : runtime.compiler.CompileScheduler A) : Prop :=
   SchedulerCompilationReady env base bodyBytes localCount cursor scheduler ∧
@@ -216,7 +216,7 @@ independent source maxima, aggregate numerical demand, and allocation
 availability. The policy uses actual compiler workers and reverse-order polls. -/
 theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (env : module.Env) (profile : ValidationProfile) (base : runtime.compiler.Budget A)
+    (env : metadata.Env) (profile : ValidationProfile) (base : runtime.compiler.Budget A)
     (bodyBytes localCount peak : Nat)
     (envelope : FunctionDemandEnvelope base env.func_type_indices.val.length bodyBytes localCount peak bound)
     (maxima : SourcePreparationMaxima env profile bodyBytes localCount peak)

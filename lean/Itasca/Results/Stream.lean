@@ -30,7 +30,7 @@ theorem stream.validate_streaming.profile_sound {profile : ValidationProfile} {S
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks profile)
-    (id : U64) (state : S) (v v' : V) (storage env : module.Env)
+    (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
     (data environment code tail : Slice U8)
     (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
@@ -48,7 +48,7 @@ is a termination premise. -/
 theorem stream.validate_streaming.profile_total {profile : ValidationProfile} {S V : Type}
     (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
+    (v : V) (storage : metadata.Env)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile) :
     ∃ r, stream.validate_streaming source visitor moduleId profile state v storage = .ok r :=
   stream.validate_streaming.total source visitor moduleId state v storage hs hv
@@ -61,7 +61,7 @@ theorem stream.validate_streaming.profile_complete {profile : ValidationProfile}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (ha : StreamAcceptingScheduler.Accepts visitor config Queued profile)
-    (id : U64) (state : S) (before : V) (storage : module.Env)
+    (id : U64) (state : S) (before : V) (storage : metadata.Env)
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val profile)
     (hsignatures : ModuleSignaturesWithinLimits raw)
@@ -79,7 +79,7 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (hp : StreamScheduler.Provenance visitor Tracks)
-    (id : U64) (state : S) (v v' : V) (storage env : module.Env)
+    (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
     (data environment code tail : Slice U8)
     (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
@@ -94,7 +94,7 @@ theorem stream.validate_streaming.wasm_sound {S V : Type}
 /-- The Wasm 1.0 instance of `stream.validate_streaming.profile_total`. -/
 theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : module.Env)
+    (v : V) (storage : metadata.Env)
     (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor) :
     ∃ r, stream.validate_streaming source visitor moduleId .Wasm1 state v storage = .ok r :=
   stream.validate_streaming.profile_total source visitor moduleId state v storage hs hv
@@ -104,7 +104,7 @@ theorem stream.validate_streaming.wasm_complete {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (ha : StreamAcceptingScheduler.Accepts visitor config Queued)
-    (id : U64) (state : S) (before : V) (storage : module.Env)
+    (id : U64) (state : S) (before : V) (storage : metadata.Env)
     (data : Slice U8) (raw : ModuleBinary.Module)
     (hb : ModuleEncodingWithinLimits raw data.val)
     (hsignatures : ModuleSignaturesWithinLimits raw)

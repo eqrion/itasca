@@ -16,13 +16,13 @@ namespace Itasca.ModuleReferences
 open ModuleElaboration
 
 /-- A global's declared indices agree with the SpecTec collector. -/
-theorem global_indices (entry : module.Global) :
+theorem global_indices (entry : metadata.Global) :
     DeclaredReferences.globalIndices (ModuleConstants.global entry) =
       (global entry).map (fun index => uN.mk_uN index.val) :=
   initializer_indices entry.init
 
 /-- An export's declared indices agree with the SpecTec collector. -/
-theorem export_indices (entry : module.Export) :
+theorem export_indices (entry : metadata.Export) :
     DeclaredReferences.exportIndices (exportDecl (ModuleEnv.rawExport entry)) =
       (exportIndices entry).map (fun index => uN.mk_uN index.val) := by
   cases h : entry.desc <;>
@@ -30,7 +30,7 @@ theorem export_indices (entry : module.Export) :
       ModuleEnv.rawExport, exportIndices, h]
 
 /-- An element initializer's declared index is found by the SpecTec collector. -/
-theorem element_member {entry : module.Element} {idx : U32} (h : idx ∈ element entry) :
+theorem element_member {entry : metadata.Element} {idx : U32} (h : idx ∈ element entry) :
     uN.mk_uN idx.val ∈ DeclaredReferences.elementIndices
       (ModuleElaboration.element (ModuleEnv.rawElement entry)) := by
   obtain ⟨init, hi, hidx⟩ := List.mem_flatMap.mp h
@@ -44,7 +44,7 @@ theorem element_member {entry : module.Element} {idx : U32} (h : idx ∈ element
 /-- A valid `i32` constant expression declares no function. -/
 theorem valid_i32_initializer {env init} (h : ModuleConstants.Valid env init .I32) :
     initializer init = [] := by
-  generalize ht : types.ValueType.I32 = ty at h
+  generalize ht : wasm_types.ValueType.I32 = ty at h
   cases h <;> try rfl
   cases ht
 
@@ -78,7 +78,7 @@ theorem data_indices {env entry} (h : ModuleData.Valid env entry) :
 /-- Every function index collected by the environment is declared in the elaborated module.
 Offset declarations can only enlarge the declared set, so this implication needs no typing
 premise. -/
-theorem collected_declared {env : module.Env} {tables memories codes segments}
+theorem collected_declared {env : metadata.Env} {tables memories codes segments}
     {idx : U32} (h : idx ∈ collected env) :
     uN.mk_uN idx.val ∈ DeclaredReferences.declarations
       (moduleOf (fromEnv env tables memories codes segments)) := by
@@ -102,7 +102,7 @@ theorem collected_declared {env : module.Env} {tables memories codes segments}
     exact Or.inl (Or.inl (Or.inr ⟨entry, hm, element_member hi⟩))
 
 /-- Every index in a coherent `declared_funcs` cache is declared in the elaborated module. -/
-theorem coherent_declared {env : module.Env} {tables memories codes segments}
+theorem coherent_declared {env : metadata.Env} {tables memories codes segments}
     (h : Coherent env) :
     ∀ index ∈ env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val),
       index ∈ DeclaredReferences.declarations
@@ -115,7 +115,7 @@ theorem coherent_declared {env : module.Env} {tables memories codes segments}
 /-- Typing forces every segment offset to be an `i32` constant expression, so all syntactic
 function declarations are in the `declared_funcs` cache, and the cache and the declarations have
 the same members. -/
-theorem coherent_declared_iff {env : module.Env} {tables memories codes segments}
+theorem coherent_declared_iff {env : metadata.Env} {tables memories codes segments}
     (hc : Coherent env) (he : ∀ entry ∈ env.elements.val, ModuleSegments.elementValid env entry)
     (hd : ∀ entry ∈ segments, ModuleData.Valid env entry) (index : funcidx) :
     index ∈ env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val) ↔

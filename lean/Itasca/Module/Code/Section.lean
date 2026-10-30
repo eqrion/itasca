@@ -46,28 +46,28 @@ structure Header where
 
 /-- The header `cs` is the code section header at `start`, with an entry count equal to the number
 of defined functions. -/
-def Section (data : Slice U8) (start : Usize) (env : module.Env) (cs : Header) : Prop :=
+def Section (data : Slice U8) (start : Usize) (env : metadata.Env) (cs : Header) : Prop :=
   ∃ content, ModuleBinary.SectionHeader data start 10#u8 content cs.end ∧
     Leb128.Decoded data content cs.count cs.entries ∧
     cs.count.val = env.func_type_indices.val.length
 
 /-- The code entry is typed against the `i`-th defined function and has a declared local count
 within `limits.MAX_LOCALS`. -/
-def EntryAt (env : module.Env) (i : Nat) (entry : ModuleBinary.Code)
+def EntryAt (env : metadata.Env) (i : Nat) (entry : ModuleBinary.Code)
     (profile : ValidationProfile := .Wasm1) : Prop :=
   ∃ hi : i < env.func_type_indices.val.length,
     CodeEntry.Typed env env.func_type_indices.val[i] entry profile ∧
     entry.declared.length ≤ limits.MAX_LOCALS.val
 
 /-- The entries are `EntryAt` the defined functions in order, starting at function index `i`. -/
-inductive EntriesTypedFor (profile : ValidationProfile) (env : module.Env) : Nat → List ModuleBinary.Code → Prop where
+inductive EntriesTypedFor (profile : ValidationProfile) (env : metadata.Env) : Nat → List ModuleBinary.Code → Prop where
   | nil (i : Nat) : EntriesTypedFor profile env i []
   | cons {i entry entries} : EntryAt (profile := profile) env i entry →
       EntriesTypedFor profile env (i + 1) entries → EntriesTypedFor profile env i (entry :: entries)
 
 /-- `EntriesTypedFor` with `profile` defaulting to Wasm 1.0. The profile selects the instruction
 restrictions of each entry. -/
-abbrev EntriesTyped (env : module.Env) (i : Nat) (entries : List ModuleBinary.Code)
+abbrev EntriesTyped (env : metadata.Env) (i : Nat) (entries : List ModuleBinary.Code)
     (profile : ValidationProfile := .Wasm1) : Prop := EntriesTypedFor profile env i entries
 
 /-- Typed entries extend by one more entry at the next function index. -/

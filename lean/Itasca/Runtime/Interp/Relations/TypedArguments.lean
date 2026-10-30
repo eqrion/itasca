@@ -15,7 +15,7 @@ theorem ValueOwnedFits.owned {id : Usize} {value : runtime.Value}
 /-- Source-typed arguments with issued identities satisfy the concrete checker.
 This is independent of the subsequent call and interpreter execution. -/
 theorem typed_arguments_match {s : _root_.store} {id : Usize}
-    {args : List runtime.Value} {types : List Itasca.types.ValueType}
+    {args : List runtime.Value} {types : List Itasca.wasm_types.ValueType}
     (typed : ResultsTyped s (types.map sourceType) (args.map sourceValue))
     (owned : ∀ value ∈ args, ValueOwnedFits id value) :
     List.Forall₂ (ArgumentMatches id) args types := by
@@ -41,7 +41,7 @@ theorem typed_arguments_match {s : _root_.store} {id : Usize}
 /-- The actual argument-checking function accepts source-typed owned inputs. -/
 theorem typed_arguments_accepted {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (sourceStore : _root_.store)
-    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (typed : ResultsTyped sourceStore (types.val.map sourceType) (args.val.map sourceValue))
     (owned : ∀ value ∈ args.val, ValueOwnedFits store.id value) :
     runtime.interp.check_values memory store args (alloc.vec.Vec.deref types) = .ok (.Ok ()) := by

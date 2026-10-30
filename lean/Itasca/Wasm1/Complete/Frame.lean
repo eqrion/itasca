@@ -81,7 +81,7 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
 
 /-- Common conclusion of a leaf dispatch after its opcode has been read: `code.step` returns
 `Ok` at the cursor `next` and the resulting state realizes the output types. -/
-def StepResult {st} (f : Frame st) (data : Slice U8) (env : module.Env)
+def StepResult {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), s, ()) ∧ s.pos = next ∧ f.Output out s ∧

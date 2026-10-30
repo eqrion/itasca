@@ -25,7 +25,7 @@ theorem code.local_type.spec (ctx : code.Context) (idx : U32) :
   step*
 
 /-- `code.global_type` returns the global's type, or `UnknownGlobal` for an out-of-range index. -/
-theorem code.global_type.spec (env : module.Env) (idx : U32) :
+theorem code.global_type.spec (env : metadata.Env) (idx : U32) :
     code.global_type env idx ⦃ r =>
       match r with
       | .Ok gt => ∃ hi : idx.val < env.global_types.val.length, env.global_types.val[idx.val] = gt
@@ -64,7 +64,7 @@ theorem code.take_local.spec (st : code.OpIterState) (data : Slice U8) (ctx : co
 
 /-- `code.take_global` decodes a global index with exact byte provenance and leaves both stacks
 alone. It rejects with the LEB128 error or `UnknownGlobal`. -/
-theorem code.take_global.spec (st : code.OpIterState) (data : Slice U8) (env : module.Env) :
+theorem code.take_global.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.take_global st data env ⦃ r =>
       r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       match r.1 with
@@ -134,7 +134,7 @@ theorem code.read_reserved_zero.spec (st : code.OpIterState) (data : Slice U8) :
     simpa using Nat.le_of_not_gt hp
 
 /-- `code.require_memory` succeeds exactly when the environment has a memory. -/
-theorem code.require_memory.spec (env : module.Env) :
+theorem code.require_memory.spec (env : metadata.Env) :
     code.require_memory env ⦃ r =>
       match r with
       | .Ok _ => 0 < env.mem_types.val.length
@@ -175,7 +175,7 @@ theorem code.read_memarg.spec (st : code.OpIterState) (data : Slice U8) :
 
 /-- `code.check_memory_and_alignment` requires a memory and an alignment at most `natural`, and
 rejects with `UnknownMemory` or `InvalidAlignment`. -/
-theorem code.check_memory_and_alignment.spec (env : module.Env) (arg : code.MemArg)
+theorem code.check_memory_and_alignment.spec (env : metadata.Env) (arg : code.MemArg)
     (natural : U32) :
     code.check_memory_and_alignment env arg natural ⦃ r =>
       match r with

@@ -62,7 +62,7 @@ theorem global_content_staging_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -179,7 +179,7 @@ theorem global_order_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -295,7 +295,7 @@ theorem global_source_staging_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by
@@ -382,9 +382,9 @@ theorem global_type_staging_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.globals.val.length)
     (mapCapacity : inst.globals.length + (inst.module.module.env.globals.val.length - start.val) ≤ Usize.max)
-    (importTypes : List Itasca.types.GlobalType)
+    (importTypes : List Itasca.wasm_types.GlobalType)
     (matching : status = .Ok () → GlobalTypeMap store
-      (importTypes ++ (inst.module.module.env.globals.val.take start.val).map Itasca.module.Global.gtype) inst.globals.val) :
+      (importTypes ++ (inst.module.module.env.globals.val.take start.val).map Itasca.metadata.Global.gtype) inst.globals.val) :
     runtime.store.instantiate.Store.prepare_instance_loop7 memory hooks floats allocator store platform status start instIndex
       ⦃ out => ∃ after finalStatus,
         out = storeParts after platform finalStatus ∧ StagedPrefix before after ∧
@@ -394,7 +394,7 @@ theorem global_type_staging_loop {M P F A : Type}
           InitializerBindings after next ∧ InitializerImports after next ∧ InitializerSegmentBindings after next ∧
           after.elems = store.elems ∧ after.datas = store.datas ∧ next.elems = inst.elems ∧ next.datas = inst.datas ∧
           (finalStatus = .Ok () → GlobalTypeMap after
-            (importTypes ++ inst.module.module.env.globals.val.map Itasca.module.Global.gtype) next.globals.val) ⦄ := by
+            (importTypes ++ inst.module.module.env.globals.val.map Itasca.metadata.Global.gtype) next.globals.val) ⦄ := by
   unfold runtime.store.instantiate.Store.prepare_instance_loop7
   apply loop.spec_decr_nat (fun state => inst.module.module.env.globals.val.length - state.2.2.2.val)
     (fun state => state.2.1 = platform ∧ StagedPrefix before state.1 ∧ objectCount state.1 ≤ Usize.max ∧ (SegmentAccounting store → SegmentAccounting state.1) ∧
@@ -406,7 +406,7 @@ theorem global_type_staging_loop {M P F A : Type}
         currentInst.globals.length + (inst.module.module.env.globals.val.length - state.2.2.2.val) ≤ Usize.max ∧
         state.1.elems = store.elems ∧ state.1.datas = store.datas ∧ currentInst.elems = inst.elems ∧ currentInst.datas = inst.datas ∧
         (state.2.2.1 = .Ok () → GlobalTypeMap state.1
-          (importTypes ++ (inst.module.module.env.globals.val.take state.2.2.2.val).map Itasca.module.Global.gtype) currentInst.globals.val))
+          (importTypes ++ (inst.module.module.env.globals.val.take state.2.2.2.val).map Itasca.metadata.Global.gtype) currentInst.globals.val))
   · rintro ⟨current, host, result, index⟩ ⟨hhost, hstaged, hobjects, haccounted, hmetadata, hindex,
       currentInst, hfound, hsource, hbindings, himports, hsegments, hcapacity, helements, hdatas, hmapElements, hmapData, htyped⟩
     dsimp only at hhost hstaged hobjects haccounted hmetadata hindex hfound hsource hbindings himports hsegments hcapacity helements hdatas hmapElements hmapData htyped ⊢
@@ -415,7 +415,7 @@ theorem global_type_staging_loop {M P F A : Type}
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.globals, bind_ok, hsource]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.globals.val.length := by

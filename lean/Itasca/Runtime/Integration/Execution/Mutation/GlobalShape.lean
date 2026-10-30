@@ -29,7 +29,7 @@ private theorem encode_i32_small (value : val) (wellFormed : wf_val value)
   | val_case_4 address => simp [Compiler.valueType] at typed
 
 private theorem encoded_reference_shape {M : Type} (store : runtime.store.Store M)
-    (ty : Itasca.types.ElemType) (word : U64) (value : val)
+    (ty : Itasca.wasm_types.ElemType) (word : U64) (value : val)
     (typed : Compiler.valueType value = sourceType (match ty with | .FuncRef => .FuncRef | .ExternRef => .ExternRef))
     (represented : word.val = (Compiler.encodeValue value)[0]!)
     (owned : SourceMachine.Ownership.ValueOwned ⟨store.funcs.length,store.externs.length⟩ value) :

@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std
 /-- Concrete thresholds and reached allocator requests for creating one new
 canonical signature. Existing signatures return before these checks. -/
 def TypeInternResourceCause {M A : Type} (allocator : runtime.platform.Alloc A)
-    (store : runtime.store.Store M) (ty : Itasca.types.FuncType) : runtime.ExecError → Prop
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType) : runtime.ExecError → Prop
   | .Exhausted .Objects =>
       Usize.max < ty.params.length + ty.results.length ∨
       store.limits.max_signature_values.val < store.signature_values.val + ty.params.length + ty.results.length ∨
@@ -17,7 +17,7 @@ def TypeInternResourceCause {M A : Type} (allocator : runtime.platform.Alloc A)
 
 theorem intern_type_resource_causes {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
-    (store : runtime.store.Store M) (ty : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (bound : objectCount store ≤ Usize.max) :
     runtime.store.Store.intern_type memory allocator store ty ⦃ out => ∀ error, out.1 = .Err error →
       out.2 = store ∧ ty ∉ store.types.val ∧ TypeInternResourceCause allocator store ty error ⦄ := by

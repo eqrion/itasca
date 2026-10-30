@@ -20,8 +20,8 @@ namespace Itasca.Wasm2
 
 /-- Every opcode preserves semantic control and exact byte provenance on
 success. Reserved opcodes and malformed immediates need no input premise. -/
-theorem steps (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
-    (locals : alloc.vec.Vec types.ValueType) (ctx : code.Context) (index : U32)
+theorem steps (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hlocals : ctx.locals = locals) : Steps data env profile locals ctx index := by
   intro st p
   generalize hbyte : data.val[p.start.val]'p.inbounds = opcode
@@ -49,15 +49,15 @@ end Itasca.Wasm2
 namespace Itasca
 
 /-- `code.bodyCore` is sound for either profile, on arbitrary bytes and contexts. -/
-theorem code.bodyCore.spec (data : Slice U8) (env : module.Env)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (profile : ValidationProfile) :
+theorem code.bodyCore.spec (data : Slice U8) (env : metadata.Env)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile) :
     code.bodyCore data env locals results index profile ⦃ r =>
       r = .Ok () → Wasm2.Validated profile data env locals index ⦄ :=
   Wasm2.public_spec_of_steps data env profile locals results index
     (Wasm2.steps data env profile locals ⟨locals, results⟩ index rfl)
 
-theorem code.bodyCore.sound (data : Slice U8) (env : module.Env)
-    (locals results : alloc.vec.Vec types.ValueType) (index : U32) (profile : ValidationProfile)
+theorem code.bodyCore.sound (data : Slice U8) (env : metadata.Env)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile)
     (haccepted : code.bodyCore data env locals results index profile = .ok (.Ok ())) :
     Wasm2.Validated profile data env locals index := by
   have hs := code.bodyCore.spec data env locals results index profile

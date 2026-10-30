@@ -22,7 +22,7 @@ set_option maxHeartbeats 2000000 in
 /-- The signature returned to an entry callback is exactly the independently
 decoded block signature, and stack processing preserves its ending cursor. -/
 theorem code.enter_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (profile : ValidationProfile) (kind : code.LabelKind)
+    (env : metadata.Env) (profile : ValidationProfile) (kind : code.LabelKind)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env profile kind ⦃ r => ∀ bt, r.1 = .Ok bt →
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
@@ -67,7 +67,7 @@ theorem code.read_label_info.bytes (st : code.BodyState) (data : Slice U8)
 set_option maxHeartbeats 1000000 in
 /-- Branch operand adjustment preserves the decoded depth and cursor. -/
 theorem code.branch_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : module.Env) (conditional : Bool) (hs : Control.Shape st.core)
+    (env : metadata.Env) (conditional : Bool) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch_info st data env conditional ⦃ r => ∀ depth types,
       r.1 = .Ok (depth, types) → Leb128.Decoded data st.core.pos depth r.2.core.pos ⦄ := by
@@ -176,7 +176,7 @@ namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x02#u8 v =
       bodyRun (code.enter_info st data env profile .Block) visitor (Action.block) v := by
@@ -196,7 +196,7 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x03#u8 v =
       bodyRun (code.enter_info st data env profile .Loop) visitor (Action.loop) v := by
@@ -216,7 +216,7 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x04#u8 v =
       bodyRun (code.enter_info st data env profile .Then) visitor (Action.if_) v := by
@@ -236,7 +236,7 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x05#u8 v =
       bodyRun (code.end_frame_info st env true) visitor (fun a => Action.else_ a.2) v := by
@@ -259,7 +259,7 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x0b#u8 v =
       bodyRun (code.end_frame_info st env false) visitor (fun a => Action.end_ a.1 a.2) v := by
@@ -282,7 +282,7 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x0c#u8 v =
       bodyRun (code.branch_info st data env false) visitor (fun a => Action.br a.1 a.2) v := by
@@ -305,7 +305,7 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x0d#u8 v =
       bodyRun (code.branch_info st data env true) visitor (fun a => Action.br_if a.1 a.2) v := by
@@ -328,7 +328,7 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x10#u8 v =
       bodyRun (code.call_info st data env) visitor (Action.call) v := by
@@ -348,7 +348,7 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
 
 
 theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
     code.step_profile visitor st data env ctx index profile 0x11#u8 v =
       bodyRun (code.call_indirect_info st data env profile) visitor (fun a => Action.call_indirect a.1 a.2) v := by

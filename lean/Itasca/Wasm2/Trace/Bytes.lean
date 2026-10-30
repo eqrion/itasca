@@ -37,7 +37,7 @@ theorem metadata_post {A B : Type} (st : code.OpIterState)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (capacity : st.vals.val.length < Usize.max)
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (P : B → Usize → Prop)
     (decoded : decode ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ a, r.1 = .Ok a → P (metadata a) r.2.pos ⦄)
@@ -68,7 +68,7 @@ theorem metadata_post {A B : Type} (st : code.OpIterState)
 theorem metadata_bytes {data env profile locals index st} (p : Pending data env profile locals index st)
     {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (P : B → Usize → Prop)
     (decoded : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
       ∀ a, r.1 = .Ok a → P (metadata a) r.2.pos ⦄)
@@ -83,7 +83,7 @@ theorem metadata_bytes {data env profile locals index st} (p : Pending data env 
 theorem metadata_bytes_at {data env profile locals index st} (p : Pending data env profile locals index st)
     (next : Usize) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List types.ValueType) (output : A → Option types.ValueType)
+    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (P : B → Usize → Prop)
     (decoded : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
       ∀ a, r.1 = .Ok a → P (metadata a) r.2.pos ⦄)

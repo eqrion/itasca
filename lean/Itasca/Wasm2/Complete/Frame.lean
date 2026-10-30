@@ -17,12 +17,12 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- The SpecTec result type of the label at `depth`, with innermost labels first, if any. -/
-def labelTypes (env : module.Env) (st : code.BodyState) (depth : Nat) : Option resulttype :=
+def labelTypes (env : metadata.Env) (st : code.BodyState) (depth : Nat) : Option resulttype :=
   ((labelAt st depth).bind (resolve env)).map (fun ts => .mk_list (ts.map Translate.valueType))
 
 /-- Exact correspondence between the physical descriptors and declarative
 label types, with innermost labels first. -/
-def Labels (env : module.Env) (st : code.BodyState) (C : context) : Prop :=
+def Labels (env : metadata.Env) (st : code.BodyState) (C : context) : Prop :=
   ∀ depth, C.LABELS[depth]? = labelTypes env st depth
 
 theorem labelAt_congr {st s : code.BodyState}

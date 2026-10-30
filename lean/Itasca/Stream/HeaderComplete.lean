@@ -17,7 +17,7 @@ namespace Itasca
 nonminimal LEB128 prefixes are accepted. An absent region and a present zero-entry section are
 separate cases. -/
 theorem stream.read_code_header.complete {S : Type} (source : stream.Source S) (state : S)
-    (codeLen : Usize) (env : module.Env) (entries : Usize) (data : Slice U8)
+    (codeLen : Usize) (env : metadata.Env) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)
     (havailable : StreamSource.Available source state environment data.val tail)
     (hsize : codeLen.val = data.length)
@@ -88,7 +88,7 @@ theorem stream.read_code_header.complete {S : Type} (source : stream.Source S) (
     have hnotOver : entries.val ≤ codeLen.val := by omega
     simp only [viewEnd] at hexact
     simp [stream.read_code_header, hnonzero, StreamFraming.header_limit, lift,
-      hexact, core.result.Result.Insts.CoreOpsTry.branch, hindex, module.SECTION_CODE,
+      hexact, core.result.Result.Insts.CoreOpsTry.branch, hindex, metadata.SECTION_CODE,
       hlenread, hfinish, hfinishEq, hcountread, hnotOver, hcountEq]
 
 end Itasca

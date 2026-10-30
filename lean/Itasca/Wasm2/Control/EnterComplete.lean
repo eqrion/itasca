@@ -14,8 +14,8 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Wasm2
 
 /-- A block type whose resolved signature is within the limits passes `checkIndex`. -/
-theorem checkIndex.complete (env : module.Env) (bt : signature.BlockType)
-    (ins outs : List types.ValueType)
+theorem checkIndex.complete (env : metadata.Env) (bt : signature.BlockType)
+    (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
     checkIndex env bt = .ok (.Ok ()) := by
@@ -44,8 +44,8 @@ theorem checkIndex.complete (env : module.Env) (bt : signature.BlockType)
 
 /-- A profile-admitted block type whose resolved signature is within the limits passes
 `checkBlock`. -/
-theorem checkBlock.complete (env : module.Env) (profile : ValidationProfile)
-    (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem checkBlock.complete (env : metadata.Env) (profile : ValidationProfile)
+    (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
@@ -62,7 +62,7 @@ theorem checkBlock.complete (env : module.Env) (profile : ValidationProfile)
 /-- Forward realization and exact effects after opening, used by recursive
 independent completeness rather than assuming an accepted handler. -/
 def EnterForward (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
-    (ins outs : List types.ValueType) (outer segment : List code.StackType) (ts : List valtype) : Prop :=
+    (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType) (ts : List valtype) : Prop :=
   ∃ remaining base,
     remaining.length ≤ segment.length ∧ base.val = outer.length + remaining.length ∧
     Sequence.Realizes (Control.polymorphic st.core) remaining ts ∧
@@ -72,8 +72,8 @@ def EnterForward (st s : code.BodyState) (form : Frames.Form) (bt : signature.Bl
 
 /-- A compatible operand segment makes `enterParams` accept and open the frame with effect
 `EnterForward`. -/
-theorem enterParams.complete (st : code.BodyState) (env : module.Env)
-    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem enterParams.complete (st : code.BodyState) (env : metadata.Env)
+    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
@@ -98,8 +98,8 @@ theorem enterParams.complete (st : code.BodyState) (env : module.Env)
   · simpa [hv1, hv'] using hvs
 
 /-- `enterArgs` also accepts when the stack carries the `i32` condition of `if`. -/
-theorem enterArgs.complete (st : code.BodyState) (env : module.Env)
-    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List types.ValueType)
+theorem enterArgs.complete (st : code.BodyState) (env : metadata.Env)
+    (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
@@ -134,9 +134,9 @@ namespace Itasca
 
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
-theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : module.Env)
+theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
-    (bt : signature.BlockType) (next : Usize) (ins outs : List types.ValueType)
+    (bt : signature.BlockType) (next : Usize) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hdecoded : Wasm2.BlockDecoded data st.core.pos bt next)
     (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)

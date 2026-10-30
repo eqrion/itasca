@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 
 inductive ElementValueEffect {M : Type} (sourceStore : _root_.store) (sourceInstance : moduleinst)
     (store : runtime.store.Store M) (instIndex : Usize) (inst : runtime.store.ModuleInst)
-    (source : Itasca.module.Element) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
+    (source : Itasca.metadata.Element) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : ElementValueEffect sourceStore sourceInstance store instIndex inst source (.Err error) store
   | appended (elements : alloc.vec.Vec runtime.store.ElemInst) (addresses : alloc.vec.Vec Usize)
       (values : alloc.vec.Vec U64)
@@ -40,7 +40,7 @@ theorem add_instance_element_value_effect {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (certificates : ElementInitializers store inst index segment)
@@ -57,7 +57,7 @@ theorem add_instance_element_value_effect {M P F A : Type}
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
@@ -125,7 +125,7 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 def ElementSourceSegments (sourceStore : _root_.store) (sourceInstance : moduleinst)
-    (source : List Itasca.module.Element) (values : List runtime.store.ElemInst) : Prop :=
+    (source : List Itasca.metadata.Element) (values : List runtime.store.ElemInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.elem ∧
     ElementSourceValues sourceStore sourceInstance original.elem original.init.val actual.refs.val) source values
 
@@ -149,9 +149,9 @@ theorem ElementStageEffect.source_context {M : Type} {store after : runtime.stor
 
 theorem ElementValueEffect.source_values {M : Type} {store after : runtime.store.Store M}
     {instIndex inst sourceStore sourceInstance status}
-    {original : Itasca.module.Element}
+    {original : Itasca.metadata.Element}
     (effect : ElementValueEffect sourceStore sourceInstance store instIndex inst original status after)
-    {sources : List Itasca.module.Element} {base produced : List runtime.store.ElemInst}
+    {sources : List Itasca.metadata.Element} {base produced : List runtime.store.ElemInst}
     (stored : store.elems.val = base ++ produced)
     (previous : ElementSourceSegments sourceStore sourceInstance sources produced)
     (success : status = .Ok ()) :

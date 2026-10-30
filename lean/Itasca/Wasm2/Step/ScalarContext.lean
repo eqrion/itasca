@@ -19,7 +19,7 @@ def controlOpcodes : List Nat := [2, 3, 4, 5, 11, 12, 13, 14, 15, 16, 17]
 
 /-- Shared scalar dispatch observes local types but never function results. -/
 theorem scalar_context {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (opcode : U8) (v : V)
     (hscalar : opcode.val ∉ controlOpcodes) (hlocals : ctx.locals = ctx'.locals) :
     code.step visitor st data env ctx opcode v =

@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Wasm2
 
 /-- Successful prefixes of the real byte reader and opcode dispatch. -/
-inductive Execution (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+inductive Execution (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) : code.BodyState → code.BodyState → Prop where
   | nil (st) : Execution data env profile ctx index st st
   | cons (st next last : code.BodyState) (opcode : U8) (pos : Usize) :
@@ -45,7 +45,7 @@ theorem Execution.single {data env profile ctx index st next opcode pos}
       .ok (.Ok (), next)) : Execution data env profile ctx index st next :=
   .cons st next next opcode pos hc hr ho hs (.nil next)
 
-theorem run_unfold (data : Slice U8) (env : module.Env) (profile : ValidationProfile)
+theorem run_unfold (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     run data env profile ctx index st = (do
       let r ← loopBody data env profile ctx index st

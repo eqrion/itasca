@@ -18,7 +18,7 @@ use crate::limits::{
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
-use crate::types::{
+use crate::wasm_types::{
     ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, Limits, MemType, Mut,
     TableType, ValueType,
 };
@@ -466,12 +466,12 @@ fn decode_value_types(
     data: &[u8],
     pos: usize,
     limit: usize,
-    error: OpError,
+    count_error: OpError,
     profile: ValidationProfile,
 ) -> Result<(Vec<ValueType>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
     if count as usize > limit {
-        return Err(Error::Read(error));
+        return Err(Error::Read(count_error));
     }
     let mut out = Vec::new();
     let mut q = p;
@@ -570,9 +570,15 @@ fn decode_table_type(
     profile: ValidationProfile,
 ) -> Result<(TableType, usize)> {
     let (elem, p) = decode_elem_type(data, pos, profile)?;
-    let (limits, p1) = decode_limits(data, p)?;
-    validate_limits(&limits, MAX_TABLE_ELEMS)?;
-    Ok((TableType { limits, elem }, p1))
+    let (bounds, p1) = decode_limits(data, p)?;
+    validate_limits(&bounds, MAX_TABLE_ELEMS)?;
+    Ok((
+        TableType {
+            limits: bounds,
+            elem,
+        },
+        p1,
+    ))
 }
 
 /// Enforces the original profile's combined imported and defined table bound.
@@ -590,9 +596,9 @@ fn check_table_count(env: &Env, profile: ValidationProfile) -> Result<()> {
 
 /// Decodes a memory type and checks its page limits.
 fn decode_mem_type(data: &[u8], pos: usize) -> Result<(MemType, usize)> {
-    let (limits, p) = decode_limits(data, pos)?;
-    validate_limits(&limits, MAX_MEMORY_PAGES)?;
-    Ok((MemType { limits }, p))
+    let (bounds, p) = decode_limits(data, pos)?;
+    validate_limits(&bounds, MAX_MEMORY_PAGES)?;
+    Ok((MemType { limits: bounds }, p))
 }
 
 /// Decodes a global's value type and mutability.

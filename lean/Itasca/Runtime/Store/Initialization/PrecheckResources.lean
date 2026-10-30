@@ -39,8 +39,8 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
 
 theorem element_bounds_active_resource_causes (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
-    (tableIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
+    (tableIndex : U32) (offset : Itasca.wasm_types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (addr : runtime.TableAddr) (table : runtime.store.TableInst)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -61,7 +61,7 @@ theorem element_bounds_active_resource_causes (law : Platform.AllocCorrect alloc
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.env,
-    Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
   subst found
@@ -111,8 +111,8 @@ theorem element_bounds_active_resource_causes (law : Platform.AllocCorrect alloc
 theorem data_bounds_active_resource_causes (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
-    (memoryIndex : U32) (offset : Itasca.types.ConstExpr) (function : Usize)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Data)
+    (memoryIndex : U32) (offset : Itasca.wasm_types.ConstExpr) (function : Usize)
     (code : runtime.bytecode.CompiledFunction) (words : List U64)
     (addr : runtime.MemoryAddr) (mem : runtime.store.MemInst M)
     (hi : store.instances.val[instIndex.val]? = some inst)
@@ -133,7 +133,7 @@ theorem data_bounds_active_resource_causes (law : Platform.AllocCorrect allocato
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
   simp only [runtime.compiler.ExecutableModule.tail,
-    Itasca.module.Module.impl.tail, bind_ok]
+    Itasca.metadata.Module.impl.tail, bind_ok]
   step with Interp.vec_index_given inst.module.module.tail.data index segment helem as ⟨found, hfound⟩
   subst found
   rw [active]
@@ -215,7 +215,7 @@ variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (allocator : runtime.platform.Alloc A)
 theorem element_bounds_ready_resource_causes (law : Platform.AllocCorrect allocator) (view : M → Slice U8)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Element)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Element)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (helem : inst.module.module.env.elements.val[index.val]? = some segment)
     (ready : ElementPrecheckReady store inst index segment)
@@ -251,7 +251,7 @@ theorem element_bounds_ready_resource_causes (law : Platform.AllocCorrect alloca
 theorem data_bounds_ready_resource_causes (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (memoryLaws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (platform : P) (instIndex index : Usize)
-    (inst : runtime.store.ModuleInst) (segment : Itasca.module.Data)
+    (inst : runtime.store.ModuleInst) (segment : Itasca.metadata.Data)
     (hi : store.instances.val[instIndex.val]? = some inst)
     (hdata : inst.module.module.tail.data.val[index.val]? = some segment)
     (ready : DataPrecheckReady store inst index segment)
@@ -303,7 +303,7 @@ theorem element_precheck_loop_resource_causes (law : Platform.AllocCorrect alloc
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.env,
-      Itasca.module.Module.impl.env, Itasca.module.Env.impl.elements, bind_ok]
+      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.env.elements.length := by
@@ -349,7 +349,7 @@ theorem data_precheck_loop_resource_causes (law : Platform.AllocCorrect allocato
     step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
     subst found
     simp only [runtime.compiler.ExecutableModule.tail,
-      Itasca.module.Module.impl.tail, bind_ok]
+      Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more
       have hmore : index.val < inst.module.module.tail.data.length := by

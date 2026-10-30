@@ -27,14 +27,14 @@ theorem budget_push_success {A T : Type} (ops : runtime.platform.Alloc A)
       exact ⟨hb.symm, by simpa using hv.symm⟩
     · simp only [bind_fail, fail_not_ok] at success
 
-def initializerSeed (ty : Itasca.types.ValueType) : runtime.bytecode.CompiledFunction :=
+def initializerSeed (ty : Itasca.wasm_types.ValueType) : runtime.bytecode.CompiledFunction :=
   { locals := alloc.vec.Vec.new _, local_slots := 0#u32, param_slots := 0#u32,
     slot_count := initializerWidth ty, max_stack := 0#usize, code := alloc.vec.Vec.new _,
     jump_tables := alloc.vec.Vec.new _, v128_pool := alloc.vec.Vec.new _,
     indirect := alloc.vec.Vec.new _, simd := alloc.vec.Vec.new _, source_offsets := alloc.vec.Vec.new _,
     controls := alloc.vec.Vec.new _, type_index := 0#u32, body_start := 0#usize, body_end := 0#usize }
 
-theorem initializer_synthetic (ty : Itasca.types.ValueType) :
+theorem initializer_synthetic (ty : Itasca.wasm_types.ValueType) :
     runtime.bytecode.CompiledFunction.synthetic (alloc.vec.Vec.new _) (initializerWidth ty) =
       .ok (initializerSeed ty) := rfl
 
@@ -42,7 +42,7 @@ theorem initializer_synthetic (ty : Itasca.types.ValueType) :
 Source expression typing and runtime index resolution are separate obligations. -/
 theorem initializer_expression {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (module : runtime.compiler.ExecutableModule)
-    (budget : runtime.compiler.Budget A) (expr : Itasca.types.ConstExpr) (ty : Itasca.types.ValueType)
+    (budget : runtime.compiler.Budget A) (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType)
     (index : Usize) (after : runtime.compiler.ExecutableModule) (budgetAfter : runtime.compiler.Budget A)
     (success : runtime.compiler.initialize.expression ops module budget expr ty =
       .ok (.Ok index, after, budgetAfter)) :

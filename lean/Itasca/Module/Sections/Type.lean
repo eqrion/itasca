@@ -4,10 +4,10 @@ import Itasca.Module.Readers.Types
 /-!
 # Type section parser
 
-Soundness of `module.decode_type_section` and its loop. `TypesAdded` says the environment gains
+Soundness of `metadata.decode_type_section` and its loop. `TypesAdded` says the environment gains
 exactly the decoded signatures. The `profile_spec` forms give a `VecEncoding FuncTypeEncoding`
 span whose signatures satisfy the profile restrictions, caps and allowed value types, and the
-Wasm 1.0 forms give the single-result bound. `module.check_table_count` enforces the Wasm 1.0
+Wasm 1.0 forms give the single-result bound. `metadata.check_table_count` enforces the Wasm 1.0
 limit of one table. Completeness is in `Module/Sections/TypeComplete`.
 -/
 
@@ -48,7 +48,7 @@ namespace Itasca.ModuleSections
 
 /-- `result` is `env` with the signatures `added` appended to its type table and nothing else
 changed. -/
-def TypesAdded (env result : module.Env) (added : List types.FuncType) : Prop :=
+def TypesAdded (env result : metadata.Env) (added : List wasm_types.FuncType) : Prop :=
   result = { env with types := result.types } ∧ result.types.val = env.types.val ++ added
 
 end Itasca.ModuleSections
@@ -57,42 +57,42 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
-/-- `module.check_table_count` rejects exactly when the profile is Wasm 1.0 and there is more than
+/-- `metadata.check_table_count` rejects exactly when the profile is Wasm 1.0 and there is more than
 one table. -/
 @[step]
-theorem module.check_table_count.spec (env : module.Env) (profile : ValidationProfile) :
-    module.check_table_count env profile ⦃ result => match result with
+theorem metadata.check_table_count.spec (env : metadata.Env) (profile : ValidationProfile) :
+    metadata.check_table_count env profile ⦃ result => match result with
       | .Ok _ => profile = .Wasm1 → env.table_types.val.length ≤ 1
       | .Err _ => profile = .Wasm1 ∧ 1 < env.table_types.val.length ⦄ := by
   cases profile with
-  | Wasm2 => simp [module.check_table_count]
+  | Wasm2 => simp [metadata.check_table_count]
   | Wasm1 =>
-    simp only [module.check_table_count]
+    simp only [metadata.check_table_count]
     split <;> simp_all [global_simps]
 
-/-- `module.check_table_count` accepts when the Wasm 1.0 table limit holds. -/
-theorem module.check_table_count.complete (env : module.Env) (profile : ValidationProfile)
+/-- `metadata.check_table_count` accepts when the Wasm 1.0 table limit holds. -/
+theorem metadata.check_table_count.complete (env : metadata.Env) (profile : ValidationProfile)
     (h : profile = .Wasm1 → env.table_types.val.length ≤ 1) :
-    module.check_table_count env profile = .ok (.Ok ()) := by
+    metadata.check_table_count env profile = .ok (.Ok ()) := by
   cases profile with
-  | Wasm2 => simp [module.check_table_count]
+  | Wasm2 => simp [metadata.check_table_count]
   | Wasm1 =>
     have hb := h rfl
-    simp [module.check_table_count, limits.MAX_TABLES, global_simps, show ¬1 < env.table_types.val.length by omega]
+    simp [metadata.check_table_count, limits.MAX_TABLES, global_simps, show ¬1 < env.table_types.val.length by omega]
 
 /-- The type loop adds `count` signatures forming a `Rep FuncTypeEncoding` span. Each satisfies the
 profile restrictions, caps and allowed value types. -/
 @[step]
-theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : module.Env)
+theorem metadata.decode_type_section_loop.profile_spec (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.types.val.length ≤ start.val) :
-    module.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
           At (Rep FuncTypeEncoding) data start added next ∧
           (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits ft) ∧
             ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ r.2.types.val.length ≤ next.val
       | .Err _ => True ⦄ := by
-  unfold module.decode_type_section_loop
+  unfold metadata.decode_type_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       TypesAdded env s.1 added ∧ At (Rep FuncTypeEncoding) data start added s.2.1 ∧
@@ -100,14 +100,14 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
             ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧ s.1.types.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize⟩
     dsimp only at hi hlen henv hbytes hvalid hsize
-    unfold module.decode_type_section_loop.body
+    unfold metadata.decode_type_section_loop.body
     dsimp only
     split
     · rename_i hstop
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (module.decode_func_type.allowed_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_func_type.allowed_spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -137,12 +137,12 @@ theorem module.decode_type_section_loop.profile_spec (data : Slice U8) (env : mo
   · exact ⟨by simp, [], by simp, ⟨by cases env; rfl, by simp⟩,
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hsize⟩
 
-/-- `module.decode_type_section` adds the signatures of a `VecEncoding FuncTypeEncoding` span, each
+/-- `metadata.decode_type_section` adds the signatures of a `VecEncoding FuncTypeEncoding` span, each
 satisfying the profile restrictions, caps and allowed value types. -/
 @[step]
-theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : module.Env)
+theorem metadata.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (profile : ValidationProfile) (hsize : env.types.val.length ≤ pos.val) :
-    module.decode_type_section data pos env profile ⦃ r => match r.1 with
+    metadata.decode_type_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
           At (VecEncoding FuncTypeEncoding) data pos added next ∧
           (∀ ft ∈ added, (Profile.FuncType profile ft ∧ Profile.FuncTypeWithinLimits ft) ∧
@@ -150,15 +150,15 @@ theorem module.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) 
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
-  | Err e => simp [module.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+  | Err e => simp [metadata.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (module.decode_type_section_loop.profile_spec data env profile count start hs.2.2 (by omega))
-    simp [module.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      (metadata.decode_type_section_loop.profile_spec data env profile count start hs.2.2 (by omega))
+    simp [metadata.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with
     | Err e => simp

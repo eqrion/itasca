@@ -17,7 +17,7 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
     (compiledFunctions : Interp.Machine.CompiledFunctions code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
-    (signature : Itasca.types.FuncType) (instanceIndex functionIndex : Usize)
+    (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value)
     (empty : before.frames.val = []) (identity : before.store = store.id)
     (arguments : Interp.ValuesAt before.slots.val 0 (args.val.map Interp.sourceValue))

@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem host_arguments_loop (words : alloc.vec.Vec U64)
     (store base : Usize) (results : alloc.vec.Vec runtime.Value)
-    (index slot : Usize) (types : alloc.vec.Vec Itasca.types.ValueType) (values : List val)
+    (index slot : Usize) (types : alloc.vec.Vec Itasca.wasm_types.ValueType) (values : List val)
     (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
     (fits : ∀ value ∈ values, ResultIndexFits value)
@@ -89,7 +89,7 @@ open Aeneas Aeneas.Std
 
 /-- Host callbacks receive precisely the represented caller argument region. -/
 @[step] theorem host_arguments (words : alloc.vec.Vec U64) (store base : Usize)
-    (results : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.types.ValueType)
+    (results : alloc.vec.Vec runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (values : List val) (empty : results.val = [])
     (typed : types.val.map sourceType = values.map Compiler.valueType)
     (wellFormed : ∀ value ∈ values, wf_val value)
@@ -112,7 +112,7 @@ section
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-def zeroValue : Itasca.types.ValueType → runtime.Value
+def zeroValue : Itasca.wasm_types.ValueType → runtime.Value
   | .I32 => .I32 0#u32
   | .I64 => .I64 0#u64
   | .F32 => .F32 0#u32
@@ -121,15 +121,15 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
   | .FuncRef => .FuncRef none
   | .ExternRef => .ExternRef none
 
-@[simp] theorem zero_value_type (ty : Itasca.types.ValueType) : rawType (zeroValue ty) = ty := by
+@[simp] theorem zero_value_type (ty : Itasca.wasm_types.ValueType) : rawType (zeroValue ty) = ty := by
   cases ty <;> rfl
 
-@[simp] theorem zero_value_exact (ty : Itasca.types.ValueType) : runtime.Value.zero ty = .ok (zeroValue ty) := by
+@[simp] theorem zero_value_exact (ty : Itasca.wasm_types.ValueType) : runtime.Value.zero ty = .ok (zeroValue ty) := by
   cases ty <;> rfl
 
 /-- Default host results have exactly the signature's arity and raw types. -/
 @[step] theorem host_results_defaults_loop (values : alloc.vec.Vec runtime.Value)
-    (types : alloc.vec.Vec Itasca.types.ValueType) (index : Usize)
+    (types : alloc.vec.Vec Itasca.wasm_types.ValueType) (index : Usize)
     (bound : index.val ≤ types.length)
     (prior : values.val = (types.val.take index.val).map zeroValue) :
     runtime.interp.call_loop1 values types index ⦃ after => after.val = types.val.map zeroValue ⦄ := by
@@ -159,7 +159,7 @@ def zeroValue : Itasca.types.ValueType → runtime.Value
   · exact ⟨bound, prior⟩
 
 @[step] theorem host_results_defaults (values : alloc.vec.Vec runtime.Value)
-    (types : alloc.vec.Vec Itasca.types.ValueType) (empty : values.val = []) :
+    (types : alloc.vec.Vec Itasca.wasm_types.ValueType) (empty : values.val = []) :
     runtime.interp.call_loop1 values types 0#usize ⦃ after => after.val = types.val.map zeroValue ⦄ := by
   exact host_results_defaults_loop values types 0#usize (by simp) (by simpa using empty)
 end Itasca.Runtime.Interp
@@ -180,14 +180,14 @@ def HostPreparationError : runtime.ExecError → Prop
   | _ => False
 
 /-- Words needed at the caller's argument base for either side of the host signature. -/
-def hostSlotDemand (signature : Itasca.types.FuncType) (base : Usize) : Nat :=
+def hostSlotDemand (signature : Itasca.wasm_types.FuncType) (base : Usize) : Nat :=
   base.val + max (typeSlots signature.results.val) (typeSlots signature.params.val)
 
 /-- Each preparation rejection retains its actual hook decision or a bounded
 allocation request. Signature buffers are measured by decoded value counts. -/
 def HostPreparationCause {A M P : Type} (allocator : runtime.platform.Alloc A)
     (hooks : runtime.platform.Platform P M) (exec : runtime.interp.Execution)
-    (store : runtime.store.Store M) (platform : P) (signature : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (platform : P) (signature : Itasca.wasm_types.FuncType)
     (base : Usize) : runtime.ExecError → Prop
   | .Terminated => ∃ next, hooks.interrupt platform = .ok (.Terminate,next)
   | .Exhausted .Values => store.limits.max_values.val < hostSlotDemand signature base
@@ -202,7 +202,7 @@ def HostPreparationCause {A M P : Type} (allocator : runtime.platform.Alloc A)
 
 theorem HostPreparationCause.error {A M P : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {signature : Itasca.types.FuncType}
+    {store : runtime.store.Store M} {platform : P} {signature : Itasca.wasm_types.FuncType}
     {base : Usize} {error : runtime.ExecError}
     (cause : HostPreparationCause allocator hooks exec store platform signature base error) :
     HostPreparationError error := by
@@ -238,7 +238,7 @@ theorem call_host_composition_causes {M P F A : Type}
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (address : runtime.FuncAddr) (base : Usize)
-    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.types.FuncType)
+    (function : runtime.store.FuncInst) (identity : U64) (signature : Itasca.wasm_types.FuncType)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)
     (signatureAt : store.types.val[function.signature.val]? = some signature)

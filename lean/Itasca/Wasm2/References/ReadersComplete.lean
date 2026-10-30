@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 theorem code.take_reference_type.complete (st : code.OpIterState) (data : Slice U8)
-    (rt : types.ElemType) (next : Usize)
+    (rt : wasm_types.ElemType) (next : Usize)
     (hb : Wasm1.BytesAt data st.pos [Wasm2.ReferencesBinary.referenceByte rt] next) :
     code.take_reference_type st data = .ok (.Ok rt, {st with pos := next}) := by
   have hr := hb.read_byte
@@ -25,14 +25,14 @@ theorem code.take_reference_type.complete (st : code.OpIterState) (data : Slice 
     core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem code.take_value_type.complete (st : code.OpIterState) (data : Slice U8)
-    (ty : types.ValueType) (next : Usize)
+    (ty : wasm_types.ValueType) (next : Usize)
     (hb : Wasm1.BytesAt data st.pos [Wasm2.valueByte ty] next) :
     code.take_value_type st data = .ok (.Ok ty, {st with pos := next}) := by
   have hr := hb.read_byte
   cases ty <;> simp [code.take_value_type, hr, Wasm2.valueByte,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (idx : U32) (next : Usize) (hd : Leb128.Decoded data st.pos idx next)
     (hi : idx.val < env.table_types.val.length) :
     code.take_table st data env = .ok (.Ok (idx,
@@ -44,10 +44,10 @@ theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env 
     (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize idx) hix)
   have he : env.table_types.val[idx.val] = tt := by simpa using heq.symm
   have hn := Nat.not_le_of_gt hi
-  simp [code.take_table, hr, lift, hn, hget, he, types.ElemType.value_type.eq,
+  simp [code.take_table, hr, lift, hn, hget, he, wasm_types.ElemType.value_type.eq,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_element.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.take_element.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (idx : U32) (next : Usize) (hd : Leb128.Decoded data st.pos idx next)
     (hi : idx.val < env.elements.val.length) :
     code.take_element st data env = .ok (.Ok (idx,
@@ -59,10 +59,10 @@ theorem code.take_element.complete (st : code.OpIterState) (data : Slice U8) (en
     (alloc.vec.Vec.index_usize_spec env.elements (UScalar.cast .Usize idx) hix)
   have he : env.elements.val[idx.val] = tt := by simpa using heq.symm
   have hn := Nat.not_le_of_gt hi
-  simp [code.take_element, hr, lift, hn, hget, he, types.ElemType.value_type.eq,
+  simp [code.take_element, hr, lift, hn, hget, he, wasm_types.ElemType.value_type.eq,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_data_index.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.take_data_index.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (idx count : U32) (next : Usize) (hd : Leb128.Decoded data st.pos idx next)
     (hc : env.data_count = some count) (hi : idx.val < count.val) :
     code.take_data_index st data env = .ok (.Ok idx, {st with pos := next}) := by
@@ -76,7 +76,7 @@ theorem code.read_reserved_zero.complete (st : code.OpIterState) (data : Slice U
     code.read_reserved_zero st data = .ok (.Ok (), {st with pos := next}) := by
   simp [code.read_reserved_zero, hb.read_byte, core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.read_bulk_memory.complete (st : code.OpIterState) (data : Slice U8) (env : module.Env)
+theorem code.read_bulk_memory.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (next : Usize) (hb : Wasm1.BytesAt data st.pos [0#u8] next)
     (hm : 0 < env.mem_types.val.length) :
     code.read_bulk_memory st data env = .ok (.Ok (), {st with pos := next}) := by

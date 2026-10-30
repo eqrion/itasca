@@ -9,7 +9,7 @@ The exact field effect is available before any publication checker runs. -/
 theorem initializer_offset_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (budget : runtime.compiler.Budget A) (function : runtime.bytecode.CompiledFunction)
-    (env : Itasca.module.Env) (expr : Itasca.types.ConstExpr)
+    (env : Itasca.metadata.Env) (expr : Itasca.wasm_types.ConstExpr)
     (typed : Itasca.ModuleConstants.Valid env expr .I32)
     (room : budget.instructions.val < budget.limits.max_instructions.val)
     (capacity : function.code.length < Usize.max) (request : function.code.length + 1 ≤ bound) :

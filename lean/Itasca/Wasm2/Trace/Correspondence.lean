@@ -22,7 +22,7 @@ open VisitorTrace
 /-- The accepted callbacks spell the same independently encoded and SpecTec-typed body, with
 indexed block signatures and declared references. For Wasm 1.0 the same tokens follow the Wasm 1.0
 grammar and the body meets `Wasm1.Instructions`. -/
-def AcceptedBody (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
+def AcceptedBody (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (observations : List Observation) : Prop :=
   AllAccepted observations ∧ ∃ ft tokens ops next,
     env.types.val[index.val]? = some ft ∧
@@ -43,7 +43,7 @@ partial; an observed rejecting callback is the last one recorded. No valid-input
 premise is needed. -/
 theorem Wasm2.CallbackTrace.body_trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v v' : V) (result : BodyResult)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -56,7 +56,7 @@ theorem Wasm2.CallbackTrace.body_trace {V : Type} (visitor : code.OpVisitor V)
 independent byte grammar. -/
 theorem Wasm2.CallbackTrace.body_trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v v' : V)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -83,7 +83,7 @@ theorem Wasm2.CallbackTrace.body_trace_sound {V : Type} (visitor : code.OpVisito
 recording visitors within the documented resource bounds. -/
 theorem Wasm2.CallbackTrace.body_trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (accepts : FullVisitor.Accepts visitor) (data : Slice U8) (env : module.Env)
+    (accepts : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (environment : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -101,7 +101,7 @@ theorem Wasm2.CallbackTrace.body_trace_complete {V : Type} (visitor : code.OpVis
 /-- Instrumenting an ordinary execution does not change its result or underlying visitor state.
 The added observations satisfy byte provenance. -/
 theorem Wasm2.CallbackTrace.instrument_body_trace {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (profile : ValidationProfile) (v : V)
     (log : List Observation) (result : BodyResult) (v' : V)
     (run : code.validate_body_with visitor data env ctx index profile v = .ok (result, v')) :
@@ -119,7 +119,7 @@ theorem Wasm2.CallbackTrace.instrument_body_trace {V : Type} (visitor : code.OpV
 
 /-- The concrete recorder returns a byte-provenance trace on arbitrary input, including malformed
 instructions and reserved opcodes. -/
-theorem Wasm2.CallbackTrace.recorder_body_total (data : Slice U8) (env : module.Env)
+theorem Wasm2.CallbackTrace.recorder_body_total (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) : ∃ result observations,
     code.validate_body_with recorder data env ctx index profile [] =
       .ok (result, observations) ∧

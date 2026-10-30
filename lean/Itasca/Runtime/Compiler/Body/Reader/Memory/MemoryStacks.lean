@@ -11,8 +11,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Accepted load readers replace exactly the live i32 address with the
 specified numeric result type. Decoding the memory argument preserves operands. -/
-theorem reader_memory_load_stack (st out : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (ty : types.ValueType) (natural : U32) (arg : code.MemArg)
+theorem reader_memory_load_stack (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (ty : wasm_types.ValueType) (natural : U32) (arg : code.MemArg)
     (outer segment : List code.StackType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)
@@ -55,8 +55,8 @@ theorem reader_memory_load_stack (st out : code.OpIterState) (data : Slice U8) (
 
 /-- Accepted stores remove the scalar value and i32 address without disturbing
 the remaining current frame segment. -/
-theorem reader_memory_store_stack (st out : code.OpIterState) (data : Slice U8) (env : module.Env)
-    (ty : types.ValueType) (natural : U32) (arg : code.MemArg)
+theorem reader_memory_store_stack (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (ty : wasm_types.ValueType) (natural : U32) (arg : code.MemArg)
     (outer segment : List code.StackType)
     (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
     (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)

@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem capture_function_slots {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (index : Usize) (ty : Itasca.types.FuncType)
+    (env : Itasca.metadata.Env) (index : Usize) (ty : Itasca.wasm_types.FuncType)
     (lookup : env.func_types.val[index.val]? = some ty)
     (fits : scheduler.func_param_slots.val.length < Usize.max) :
     runtime.compiler.CompileScheduler.capture_func_slots ops scheduler env index ⦃ out =>
@@ -23,7 +23,7 @@ open Aeneas Aeneas.Std
         out.2.func_param_slots.val = scheduler.func_param_slots.val ++ [word] ∧
         word.val = signatureSlots ty.params.val ⦄ := by
   unfold runtime.compiler.CompileScheduler.capture_func_slots
-  simp only [Itasca.module.Env.impl.func_types, bind_ok]
+  simp only [Itasca.metadata.Env.impl.func_types, bind_ok]
   have bound := (List.getElem?_eq_some_iff.mp lookup).1
   have inBounds : index.val < env.func_types.deref.length := by simpa [alloc.vec.Vec.deref] using bound
   step as ⟨actual, hactual⟩
@@ -49,7 +49,7 @@ open Aeneas Aeneas.Std
 which includes imports, and preserve every previously captured type signature. -/
 @[step] theorem capture_function_slots_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
+    (env : Itasca.metadata.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
     (bound : index.val ≤ env.func_types.val.length)
     (prefixMatches : status = .Ok () → scheduler.func_param_slots.val.map (fun word => word.val) =
       (env.func_types.val.take index.val).map (fun ty => signatureSlots ty.params.val)) :
@@ -69,7 +69,7 @@ which includes imports, and preserve every previously captured type signature. -
   · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
     dsimp only at hi certified
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body
-    simp only [Itasca.module.Env.impl.func_types, bind_ok]
+    simp only [Itasca.metadata.Env.impl.func_types, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.func_types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac
@@ -118,7 +118,7 @@ open Aeneas Aeneas.Std
 @[step] theorem prepare_functions_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget : runtime.compiler.Budget A)
     (functions : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction))
-    (env : Itasca.module.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
+    (env : Itasca.metadata.Env) (index : Usize) (status : core.result.Result Unit Itasca.error.Error)
     (bound : index.val ≤ env.func_type_indices.val.length)
     (initialized : status = .Ok () → functions.val = List.replicate index.val none) :
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop2
@@ -131,7 +131,7 @@ open Aeneas Aeneas.Std
   · rintro ⟨functions, budget, i, result⟩ ⟨hi, filled⟩
     dsimp only at hi filled
     unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop2.body
-    simp only [Itasca.module.Env.impl.func_type_indices, bind_ok]
+    simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok]
     split
     · rename_i more
       have hb : i.val < env.func_type_indices.val.length := by
@@ -177,7 +177,7 @@ open Aeneas Aeneas.Std
 
 @[step] theorem compiler_environment_ready_sequence {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (scheduler : runtime.compiler.CompileScheduler A)
-    (env : Itasca.module.Env) (emptyTypes : scheduler.signatures.val = [])
+    (env : Itasca.metadata.Env) (emptyTypes : scheduler.signatures.val = [])
     (emptySlots : scheduler.func_param_slots.val = []) (emptyFunctions : scheduler.functions.val = []) :
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready ops scheduler env ⦃ out =>
       ∀ config, out.1 = .Ok config →
@@ -185,10 +185,10 @@ open Aeneas Aeneas.Std
         out.2.func_param_slots.val.map (fun word => word.val) = env.func_types.val.map (fun ty => signatureSlots ty.params.val) ∧
         out.2.functions.val = List.replicate env.func_type_indices.val.length none ⦄ := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
-  simp only [Itasca.module.Env.impl.func_type_indices, bind_ok]
+  simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok]
   split
   · simp [runtime.compiler.Budget.reject]
-  · simp only [Itasca.module.Env.impl.types, bind_ok]
+  · simp only [Itasca.metadata.Env.impl.types, bind_ok]
     split
     · simp [runtime.compiler.Budget.reject]
     · step with capture_signatures_loop_frame ops law scheduler env 0#usize (.Ok ())

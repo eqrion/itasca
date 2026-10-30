@@ -25,7 +25,7 @@ theorem padded_index : BlockEncoding (.TypeIndex 0#u32) [128#u8, 0#u8] := by
   · norm_num [SignedLeb.finalValue, Leb128.payload]
 
 /-- Padded negative s33 encodings are not inline value-type tags. -/
-theorem padded_negative_not_inline (t : types.ValueType) :
+theorem padded_negative_not_inline (t : wasm_types.ValueType) :
     ¬ BlockEncoding (.Value t) [255#u8, 127#u8] := by
   simp [BlockEncoding]
 
@@ -47,7 +47,7 @@ theorem indexed_body : BodyEncoding bytes [.BLOCK (blockType (.TypeIndex 0#u32))
 
 /-- An `if` without an `else` arm has type `[i32, i64, i32] -> [i32, i64]` when its block type is
 the identity on `[i32, i64]`. Wasm 1.0 frames have no counterpart for this rule. -/
-theorem identity_if (env : module.Env) (C : context) (hC : wf_context C)
+theorem identity_if (env : metadata.Env) (C : context) (hC : wf_context C)
     (htypes : C.TYPES = env.types.val.map EnvTranslation.funcType) (index : U32)
     (hin : resolve env (inputs (.TypeIndex index)) = some [.I32, .I64])
     (hout : resolve env (outputs (.TypeIndex index)) = some [.I32, .I64]) :
@@ -73,25 +73,25 @@ def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice 
   alloc.vec.Vec.deref (alloc.vec.Vec.from xs h)
 
 /-- The empty local list. -/
-def locals : alloc.vec.Vec types.ValueType := alloc.vec.Vec.new _
+def locals : alloc.vec.Vec wasm_types.ValueType := alloc.vec.Vec.new _
 /-- The function type `[] -> [i32, i64]`. -/
-def pairResult : types.FuncType :=
+def pairResult : wasm_types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
 /-- The function type `[i32, i64] -> [i32, i64]`. -/
-def pairIdentity : types.FuncType :=
+def pairIdentity : wasm_types.FuncType :=
   ⟨alloc.vec.Vec.from [.I32, .I64] (by scalar_tac), alloc.vec.Vec.from [.I32, .I64] (by scalar_tac)⟩
 /-- The function type `[i32, i64] -> []`. -/
-def pairLoop : types.FuncType :=
+def pairLoop : wasm_types.FuncType :=
   ⟨alloc.vec.Vec.from [.I32, .I64] (by scalar_tac), alloc.vec.Vec.new _⟩
 /-- The function type `[] -> []`. -/
-def emptyResult : types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
+def emptyResult : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 /-- The function type `[] -> [f32, f64]`. -/
-def floatResult : types.FuncType :=
+def floatResult : wasm_types.FuncType :=
   ⟨alloc.vec.Vec.new _, alloc.vec.Vec.from [.F32, .F64] (by scalar_tac)⟩
 
 /-- An environment whose type section is `pairResult`, `pairIdentity`, `pairLoop`, `emptyResult`
 and `floatResult` (indices 0 to 4), with no functions or other entities. -/
-def env : module.Env where
+def env : metadata.Env where
   types := alloc.vec.Vec.from [pairResult, pairIdentity, pairLoop, emptyResult, floatResult] (by scalar_tac)
   imports := alloc.vec.Vec.new _
   globals := alloc.vec.Vec.new _
@@ -152,10 +152,10 @@ private theorem identity_typed (C : context) (hC : wf_context C) (ts : List valt
     Instrs_ok C [] (.mk_functype (.mk_list ts) (.mk_list ts)) := by
   simpa using Instrs_ok.frame C [] ts [] [] (.empty C hC) hC (by simp [Forall])
 
-private def rootContext (ft : types.FuncType) : context :=
+private def rootContext (ft : wasm_types.FuncType) : context :=
   Control.labelContext (ft.results.val.map Translate.valueType) ++ bodyContext env locals ft
 
-private theorem root_wf (ft : types.FuncType) : wf_context (rootContext ft) :=
+private theorem root_wf (ft : wasm_types.FuncType) : wf_context (rootContext ft) :=
   Control.enter_context_wf _ (EnvTranslation.context_wf env ⟨locals, ft.results⟩) _
 
 /-- A `block` of type index 1 with an empty body. -/

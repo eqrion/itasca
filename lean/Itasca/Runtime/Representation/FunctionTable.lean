@@ -40,7 +40,7 @@ theorem FunctionTable.resolve {M : Type} {store : runtime.store.Store M}
     owned, found, typed, decoded.trans actualType⟩
 
 private theorem decode_function_type {M : Type} (code : Store.CodeInterpretation)
-    (store : runtime.store.Store M) (function : runtime.store.FuncInst) (signature : Itasca.types.FuncType)
+    (store : runtime.store.Store M) (function : runtime.store.FuncInst) (signature : Itasca.wasm_types.FuncType)
     (lookup : store.types.val[function.signature.val]? = some signature) :
     (Store.decodeFunction code store function).TYPE = Store.decodeFuncType signature := by
   unfold Store.decodeFunction

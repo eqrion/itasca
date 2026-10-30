@@ -7,7 +7,7 @@ import Itasca.Wasm2.Trace.Correspondence
 `CodeEntry.AcceptedTrace` ties an entry's independent code encoding, its generated typing and the
 operator stream a recording visitor observed to one instruction tree. `Witness.trace_sound` builds
 it from a `Witness`. `Itasca/Results/Trace` states it for a successful call of
-`module.validate_code_entry_with`.
+`metadata.validate_code_entry_with`.
 -/
 
 open Aeneas Aeneas.Std
@@ -20,9 +20,9 @@ open VisitorTrace
 operator events. The code bytes, generated typing and recorded operators share one instruction
 tree. The start event uses module offsets, and operator states use offsets of the sliced body. For
 Wasm 1.0 the recorded tokens also follow the Wasm 1.0 grammar. -/
-def AcceptedTrace (profile : ValidationProfile) (data : Slice U8) (env : module.Env)
+def AcceptedTrace (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (index start finish : Usize) (observations : List Observation) : Prop :=
-  ∃ (typeIdx : U32) (groups : List (U32 × types.ValueType)) (ctx : code.Context)
+  ∃ (typeIdx : U32) (groups : List (U32 × wasm_types.ValueType)) (ctx : code.Context)
       (bodyStart : Usize) (body : Slice U8) (bodyObservations : List Observation)
       (tokens : List Wasm2.Token) (ops : List instr) (next : Usize),
     (∃ hi : index.val < env.func_type_indices.val.length,

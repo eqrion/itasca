@@ -45,7 +45,7 @@ namespace Itasca.Wasm2
 
 /-- The common continuation of the extracted `code.end_frame` branches. `end_frame_normalized`
 checks this factorization against the extracted code. -/
-def finishFrame (st : code.BodyState) (env : module.Env) (isElse : Bool)
+def finishFrame (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.results bt
@@ -80,7 +80,7 @@ def finishFrame (st : code.BodyState) (env : module.Env) (isElse : Bool)
 
 set_option maxHeartbeats 1200000 in
 /-- Metadata erasure preserves the original closing continuation exactly. -/
-theorem end_frame_normalized (st : code.BodyState) (env : module.Env) (isElse : Bool) :
+theorem end_frame_normalized (st : code.BodyState) (env : metadata.Env) (isElse : Bool) :
     code.end_frame st env isElse = (do
       let n := alloc.vec.Vec.len st.blocks
       if n = 0#usize then .ok (.Err .UnknownLabel, st) else
@@ -134,7 +134,7 @@ theorem end_frame_normalized (st : code.BodyState) (env : module.Env) (isElse : 
 
 /-- `finishFrame` is total and preserves frame alignment and bounds. -/
 @[step]
-theorem finishFrame.total (st : code.BodyState) (env : module.Env) (isElse : Bool)
+theorem finishFrame.total (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (hs : Control.Shape st.core)
     (hi : i.val < st.core.ctrls.val.length) :
@@ -173,7 +173,7 @@ namespace Itasca
 /-- `code.end_frame` is total and preserves frame alignment and bounds, popping at most one frame
 and leaving the cursor unchanged. -/
 @[step]
-theorem code.end_frame.total (st : code.BodyState) (env : module.Env)
+theorem code.end_frame.total (st : code.BodyState) (env : metadata.Env)
     (isElse : Bool) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.end_frame st env isElse ⦃ r =>

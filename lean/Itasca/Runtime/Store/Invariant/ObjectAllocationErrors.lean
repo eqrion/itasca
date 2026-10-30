@@ -16,14 +16,14 @@ set_option maxRecDepth 4096
 theorem add_table_errors_metadata {M A : Type} (memory : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (ty : Itasca.types.TableType)
+    (ty : Itasca.wasm_types.TableType)
     (found : inst.module.module.env.table_types.val[index.val]? = some ty)
     (fit : LimitsFit ty.limits core.num.U32.MAX)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok out) :
     ErrorAllowed ResourceError out.1 ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.table_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok] at run
   obtain ⟨⟨status, after⟩, defined, rest⟩ := normal_bind_exists _ _ _ run
@@ -36,7 +36,7 @@ theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.Memor
     (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (ty : Itasca.types.MemType)
+    (ty : Itasca.wasm_types.MemType)
     (found : inst.module.module.env.mem_types.val[index.val]? = some ty)
     (fit : LimitsFit ty.limits 65536#u32)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
@@ -48,7 +48,7 @@ theorem add_memory_errors_metadata {M A : Type} (memory : runtime.platform.Memor
     scalar_tac
   obtain ⟨size, sizeRun, sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.mem_types.deref index ty (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,
     lift, sizeRun] at run
@@ -102,7 +102,7 @@ theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
     unfold runtime.store.instantiate.Store.prepare_instance_loop5 at run
     rw [loop] at run
     simp only [runtime.store.instantiate.Store.prepare_instance_loop5.body,
-      runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, bind_ok] at run
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, bind_ok] at run
     split at run
     · rename_i more
       have indexBound : index.val < inst.module.module.env.table_types.length := by simpa [alloc.vec.Vec.deref] using more
@@ -130,7 +130,7 @@ theorem table_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffe
         have nextFits : ∀ ty ∈ nextInst.module.module.env.table_types.val, LimitsFit ty.limits core.num.U32.MAX := by simpa only [sameModule] using fits
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop5 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop5, runtime.store.instantiate.Store.prepare_instance_loop5.body,
-            runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.table_types, core.result.Result.is_ok] using tail
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextFits nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       subst out
@@ -150,7 +150,7 @@ theorem memory_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuff
     unfold runtime.store.instantiate.Store.prepare_instance_loop6 at run
     rw [loop] at run
     simp only [runtime.store.instantiate.Store.prepare_instance_loop6.body,
-      runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, bind_ok] at run
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, bind_ok] at run
     split at run
     · rename_i more
       have indexBound : index.val < inst.module.module.env.mem_types.length := by simpa [alloc.vec.Vec.deref] using more
@@ -178,7 +178,7 @@ theorem memory_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuff
         have nextFits : ∀ ty ∈ nextInst.module.module.env.mem_types.val, LimitsFit ty.limits 65536#u32 := by simpa only [sameModule] using fits
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop6 memory allocator nextStore nextStatus nextIndex nextInst = .ok out := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop6, runtime.store.instantiate.Store.prepare_instance_loop6.body,
-            runtime.compiler.ExecutableModule.env, Itasca.module.Module.impl.env, Itasca.module.Env.impl.mem_types, core.result.Result.is_ok] using tail
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextInst nextIndex nextFits nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       subst out

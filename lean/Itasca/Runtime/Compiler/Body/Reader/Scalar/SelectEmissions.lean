@@ -63,7 +63,7 @@ theorem reader_emit_select_wasm2 {data env locals typeIndex st}
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex .Wasm2 code.OP_SELECT before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
-    ∃ (ty : Itasca.types.ValueType) (front : List valtype) (values : List code.StackType),
+    ∃ (ty : Itasca.wasm_types.ValueType) (front : List valtype) (values : List code.StackType),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty, Translate.valueType ty, .I32] ∧
       Wasm2.ReaderPost p out.core (.SELECT none) p.current.ctrl.polymorphic_base values ∧
       ∃ emitted, TypedLowered before after out.core.vals.val emitted (front ++ [Translate.valueType ty]) ∧

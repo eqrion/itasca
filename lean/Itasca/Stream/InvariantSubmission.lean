@@ -10,7 +10,7 @@ variable {profile : ValidationProfile}
 /-- Submission and polling return on reached scheduler states and preserve the
 state predicate after successful callbacks. The issued environment is fixed. -/
 structure CallbacksOn {V : Type} (visitor : stream.StreamingVisitor V)
-    (env : module.Env) (invariant : Nat → V → Prop) (profile : ValidationProfile) : Prop where
+    (env : metadata.Env) (invariant : Nat → V → Prop) (profile : ValidationProfile) : Prop where
   submit : ∀ v (issued : StreamBatch.Issued), invariant issued.first_func.val v → issued.env = env →
     issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
     visitor.submit_code_batch v issued.seed ⦃ out => out.1 = .Ok () → invariant (issued.first_func.val + issued.num_funcs.val) out.2 ⦄
@@ -25,7 +25,7 @@ def PostOn (invariant : Nat → V → Prop) (finish : Nat) (max : Usize) :
 /-- The loop continuation after its optional retirement, written as the extracted subexpression
 so that both generated branches share one proof. -/
 private theorem resume_on {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : module.Env) (codeLen : Usize) (config : stream.Config)
+    (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
     (held : invariant func.val v)
@@ -123,7 +123,7 @@ variable {profile : ValidationProfile}
 
 private theorem submit_body_total_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
     (held : invariant func.val v)
@@ -177,7 +177,7 @@ private theorem submit_body_total_on {S V : Type} (source : stream.Source S)
 vector stays within the configured maximum. -/
 theorem stream.submit_code_batches_loop.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (v : V)
     (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
     (held : invariant func.val v)
@@ -206,7 +206,7 @@ maximum, when the source and scheduler callbacks return. -/
 @[step]
 theorem stream.submit_code_batches.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : module.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
     (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
     (held : invariant 0 v)
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)

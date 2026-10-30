@@ -14,7 +14,7 @@ namespace Itasca.Wasm2.Simd
 
 private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (subopcode : U32) (v v' : V) (w : W)
     (h : subStep visitor st data env subopcode v = .ok (.Ok (), final, v')) :
     ∃ w', subStep replacement st data env subopcode w = .ok (.Ok (), final, w') := by
@@ -63,7 +63,7 @@ private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
 /-- Accepting hooks preserve every successful SIMD state and immediate. -/
 theorem simd_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : module.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
     (v v' : V) (w : W)
     (h : code.step_simd visitor st data env v = .ok (.Ok (), final, v')) :
     ∃ w', code.step_simd replacement st data env w = .ok (.Ok (), final, w') := by

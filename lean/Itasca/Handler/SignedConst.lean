@@ -82,7 +82,7 @@ private theorem forall₂_snoc {vals : List code.StackType} {t : code.StackType}
 /-- If a stack with a concrete operand appended is realized, the last type is that operand's type
 and the rest realizes the remainder. -/
 theorem Realizes.snoc_val {poly : Bool} {vals : List code.StackType} {ts : List valtype}
-    (valueType : types.ValueType) (h : Realizes poly (vals ++ [.Val valueType]) ts) :
+    (valueType : wasm_types.ValueType) (h : Realizes poly (vals ++ [.Val valueType]) ts) :
     ∃ before, ts = before ++ [Translate.valueType valueType] ∧ Realizes poly vals before := by
   rcases h with ⟨front, suffix, hf, hs, rfl⟩
   obtain ⟨before, u, rfl, hb, hu⟩ := forall₂_snoc hs

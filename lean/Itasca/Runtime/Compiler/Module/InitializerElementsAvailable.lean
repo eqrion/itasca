@@ -18,7 +18,7 @@ bounds for retained functions and the temporary initializer-index vector. -/
 theorem initializer_element_value_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (indices : alloc.vec.Vec Usize) (index valueIndex : Usize) (segment : Itasca.module.Element)
+    (indices : alloc.vec.Vec Usize) (index valueIndex : Usize) (segment : Itasca.metadata.Element)
     (lookup : module.module.env.elements.val[index.val]? = some segment)
     (inside : valueIndex.val < segment.init.val.length)
     (typed : Itasca.ModuleConstants.Valid module.module.env segment.init.val[valueIndex.val]
@@ -33,7 +33,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
       initializerSize out.2.1 = initializerSize module + 1 ∧ out.2.2.2.length = indices.length + 1 ⦄ := by
   have segmentBound := (List.getElem?_eq_some_iff.mp lookup).1
   unfold runtime.compiler.initialize.lower_element_value
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
   step as ⟨first,found⟩
   · simpa [alloc.vec.Vec.deref] using segmentBound
   have sameFirst : first = segment := by
@@ -44,7 +44,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
   have sameSecond : second = segment := by
     simpa [alloc.vec.Vec.deref,foundSecond,List.getElem?_eq_getElem segmentBound] using lookup
   rw [sameSecond]
-  have valueType : Itasca.types.ElemType.value_type segment.elem =
+  have valueType : Itasca.wasm_types.ElemType.value_type segment.elem =
       .ok (Itasca.ModuleConstants.referenceValueType segment.elem) := by cases segment.elem <;> rfl
   rw [valueType,bind_ok]
   have valid : Itasca.ModuleConstants.Valid module.module.env expr
@@ -82,7 +82,7 @@ typing and separate retained/scratch demand bounds. -/
 theorem initializer_element_values_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (indices : alloc.vec.Vec Usize) (index valueIndex : Usize) (segment : Itasca.module.Element)
+    (indices : alloc.vec.Vec Usize) (index valueIndex : Usize) (segment : Itasca.metadata.Element)
     (lookup : module.module.env.elements.val[index.val]? = some segment)
     (inside : valueIndex.val ≤ segment.init.val.length)
     (typed : ∀ expr ∈ segment.init.val, Itasca.ModuleConstants.Valid module.module.env expr
@@ -115,7 +115,7 @@ theorem initializer_element_values_available {A : Type} (ops : runtime.platform.
     have currentLookup : current.module.env.elements.val[index.val]? = some segment := by simpa [same] using lookup
     have segmentBound := (List.getElem?_eq_some_iff.mp currentLookup).1
     unfold runtime.compiler.initialize.lower_element_loop.body
-    simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     step as ⟨selected,found⟩
     · simpa [alloc.vec.Vec.deref] using segmentBound
     have sameSegment : selected = segment := by
@@ -161,7 +161,7 @@ bounded retained and scratch demand, including its optional active offset. -/
 theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A)
-    (index : Usize) (segment : Itasca.module.Element)
+    (index : Usize) (segment : Itasca.metadata.Element)
     (lookup : module.module.env.elements.val[index.val]? = some segment)
     (typed : ∀ expr ∈ segment.init.val, Itasca.ModuleConstants.Valid module.module.env expr
       (Itasca.ModuleConstants.referenceValueType segment.elem))
@@ -197,7 +197,7 @@ theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A
     as ⟨status,rowBudget,rows,accepted,sameBudget,appended⟩
   subst status rowBudget
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-    runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env]
+    runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env]
   rw [same,element_offset_found module.module.env index segment lookup,bind_ok]
   have rowSize : initializerSize {middle with module := module.module, element_initializers := rows} = initializerSize middle + 1 := by
     simp only [initializerSize,appended,List.length_append,List.length_singleton]
@@ -298,7 +298,7 @@ theorem initializer_elements_available {A : Type} (ops : runtime.platform.Alloc 
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.env.elements.val.length := by

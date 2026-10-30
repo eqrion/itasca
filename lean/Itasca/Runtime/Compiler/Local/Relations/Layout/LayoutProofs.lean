@@ -13,7 +13,7 @@ Main declarations: `compiler_width` and `observe_value`. A direct consumer is `C
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-@[step] theorem compiler_width (ty : Itasca.types.ValueType) :
+@[step] theorem compiler_width (ty : Itasca.wasm_types.ValueType) :
     runtime.value.width ty ⦃ word => word.val = width (Itasca.Translate.valueType ty) ⦄ := by
   cases ty <;> simp [runtime.value.width, Itasca.Translate.valueType, width, WP.spec_ok]
 

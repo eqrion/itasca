@@ -32,11 +32,11 @@ theorem split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
     have hn : ¬ pos ≥ Slice.len data := by scalar_tac
     simp only [hn, ↓reduceIte]
     step
-    by_cases hnid : id > module.SECTION_CODE
-    · have hidCount : id = module.SECTION_DATA_COUNT := by
+    by_cases hnid : id > metadata.SECTION_CODE
+    · have hidCount : id = metadata.SECTION_DATA_COUNT := by
         apply UScalar.eq_of_val_eq
-        simp only [module.SECTION_DATA_COUNT]
-        simp only [module.SECTION_CODE] at hnid
+        simp only [metadata.SECTION_DATA_COUNT]
+        simp only [metadata.SECTION_CODE] at hnid
         scalar_tac
       simp only [hnid, ↓reduceIte]
       simp only [hidCount, bne_self_eq_false, Bool.false_eq_true, ↓reduceIte]
@@ -49,7 +49,7 @@ theorem split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
       step
       have he : «end» = last := by apply UScalar.eq_of_val_eq; scalar_tac
       subst «end»
-      simp only [module.SECTION_CODE]
+      simp only [metadata.SECTION_CODE]
       split <;> split <;> simp_all
     · simp only [hnid, ↓reduceIte]
       step
@@ -61,7 +61,7 @@ theorem split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
       step
       have he : «end» = last := by apply UScalar.eq_of_val_eq; scalar_tac
       subst «end»
-      simp only [module.SECTION_CODE]
+      simp only [metadata.SECTION_CODE]
       split <;> split <;> simp_all
   obtain ⟨r, hr, he⟩ := WP.spec_imp_exists hs
   exact hr.trans (congrArg Result.ok he)
@@ -104,11 +104,11 @@ private theorem split_after_code (data : Slice U8) (pos first last : Usize) (id 
     have hn : ¬ pos ≥ Slice.len data := by scalar_tac
     simp only [hn, ↓reduceIte]
     step
-    have hnid : id > module.SECTION_CODE := by simp [module.SECTION_CODE]; scalar_tac
-    have hncount : id ≠ module.SECTION_DATA_COUNT := by
+    have hnid : id > metadata.SECTION_CODE := by simp [metadata.SECTION_CODE]; scalar_tac
+    have hncount : id ≠ metadata.SECTION_DATA_COUNT := by
       intro he
       have hv := congrArg UScalar.val he
-      simp only [module.SECTION_DATA_COUNT] at hv
+      simp only [metadata.SECTION_DATA_COUNT] at hv
       scalar_tac
     simp [hnid, hncount]
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
@@ -189,8 +189,8 @@ theorem stream.find_code_region.complete_layout {profile} {data : Slice U8} {raw
         simp only [Slice.len_val] at he
         omega
       · have he : id = id' ∧ first = first' ∧ last = last' := by
-          have hread := (module.read_section_header.complete data codePos id first last hh).symm.trans
-            (module.read_section_header.complete data codePos id' first' last' hh')
+          have hread := (metadata.read_section_header.complete data codePos id first last hh).symm.trans
+            (metadata.read_section_header.complete data codePos id' first' last' hh')
           simpa using hread
         have hid : id = 11#u8 := by
           rcases hge with hc | hd

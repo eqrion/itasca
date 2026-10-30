@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 an empty log; valid inputs are proved below to take the successful branch.
 This proof-level choice contains no compiler run or compiled artifact. -/
 noncomputable def independentBodyLog (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) : List Observation := by
+    (env : metadata.Env) (ctx : code.Context) (index : U32) : List Observation := by
   classical
   exact if successful : ∃ log, code.validate_body_with recorder data env ctx index .Wasm2 [] = .ok (.Ok (),log)
     then Classical.choose successful else []
@@ -17,13 +17,13 @@ noncomputable def independentBodyLog (data : Slice U8)
 proof-level demand, not an executable compiler preflight or a bound on bytes
 allocated by the embedding allocator. -/
 noncomputable def independentBodyDemand (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) : ObservationDemand :=
+    (env : metadata.Env) (ctx : code.Context) (index : U32) : ObservationDemand :=
   observationDemand (independentBodyLog data env ctx index)
 
 /-- All witnesses of successful reference validation give the same log.
 Choice of completeness proof therefore cannot change the source demand. -/
 theorem independentBodyLog.unique (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32) (log : List Observation)
+    (env : metadata.Env) (ctx : code.Context) (index : U32) (log : List Observation)
     (reference : code.validate_body_with recorder data env ctx index .Wasm2 [] = .ok (.Ok (),log)) :
     independentBodyLog data env ctx index = log := by
   classical
@@ -39,7 +39,7 @@ construct the actual successful reference run. No accepted compiler trace or
 completed code certificate is a premise. Both complete profiles are covered: a valid Wasm 1.0 body
 has the same run under both profiles. -/
 theorem independentBodyLog.of_valid (profile : ValidationProfile) (data : Slice U8)
-    (env : module.Env) (ctx : code.Context) (index : U32)
+    (env : metadata.Env) (ctx : code.Context) (index : U32)
     (limits : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ Itasca.limits.MAX_FUNCTION_BYTES.val)
     (body : Profile.Body profile data env ctx.locals index) :

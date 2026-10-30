@@ -23,7 +23,7 @@ private theorem recorder_retains (prior : List Observation) :
 /-- A recorder prefix is retained by the actual common step for either full
 profile, including partial branch tables and ordinary validation errors. -/
 theorem source_step_recorded_prefix (prior before after : List Observation)
-    (st final : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile) (opcode : U8)
     (result : core.result.Result Unit error.OpError)
     (held : ∃ suffix, before = prior ++ suffix)
@@ -38,7 +38,7 @@ theorem source_step_recorded_prefix (prior before after : List Observation)
 The proof uses the loop's least fixed point and requires no compiler, source
 state geometry, visitor-normality, or body-acceptance assumption. -/
 theorem source_body_recorded_prefix (before after : List Observation)
-    (st : code.BodyState) (data : Slice U8) (env : module.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (result : core.result.Result Unit error.OpError)
     (returned : code.body_loop_loop recorder data env ctx index profile before st = .ok (result,after)) :
@@ -76,7 +76,7 @@ the final reference demand. The remaining accepted body is used only to retain
 the event in that source log; it supplies no compiler acceptance premise. -/
 theorem source_callback_demand (before middle final : List Observation)
     (state : code.OpIterState) (action : Action) (reply : VisitResult)
-    (out : code.BodyState) (data : Slice U8) (env : module.Env)
+    (out : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (profile : ValidationProfile)
     (result : core.result.Result Unit error.OpError)
     (called : invoke recorder before (.op state action) = .ok (reply,middle))

@@ -6,7 +6,7 @@ import Itasca.Module.Env.NameFacts
 
 `Effect.represents` and `Run.represents` show that decoding sections keeps `Represents` between
 the environment and the ghost declarations. `Effect.signatureBounded` and `Run.signatureBounded`
-keep the signature bounds. `module.Env.new.profile_declarations` shows that the empty environment
+keep the signature bounds. `metadata.Env.new.profile_declarations` shows that the empty environment
 starts all of these invariants, and `ImportsAdded.represents` covers the import section.
 -/
 
@@ -16,10 +16,10 @@ namespace Itasca
 
 /-- The extracted initial environment represents the empty declaration prefix, is valid and
 bounded, and has phase `0`. -/
-theorem module.Env.new.profile_declarations (profile : ValidationProfile) : module.Env.new ⦃ env =>
+theorem metadata.Env.new.profile_declarations (profile : ValidationProfile) : metadata.Env.new ⦃ env =>
     ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env profile ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ := by
-  unfold module.Env.new
+  unfold metadata.Env.new
   simp only [WP.spec_ok]
   refine ⟨?_, ?_, ?_, ?_, ?_⟩
   · constructor <;> try rfl
@@ -30,11 +30,11 @@ theorem module.Env.new.profile_declarations (profile : ValidationProfile) : modu
   · constructor <;> simp
   · simp [ModuleEnv.Phase]
 
-/-- `module.Env.new.profile_declarations` for Wasm 1.0. -/
-theorem module.Env.new.declarations : module.Env.new ⦃ env =>
+/-- `metadata.Env.new.profile_declarations` for Wasm 1.0. -/
+theorem metadata.Env.new.declarations : metadata.Env.new ⦃ env =>
     ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ :=
-  module.Env.new.profile_declarations .Wasm1
+  metadata.Env.new.profile_declarations .Wasm1
 
 end Itasca
 
@@ -48,16 +48,16 @@ theorem ImportsAdded.types {profile} {env entries result} (h : ImportsAdded env 
       obtain ⟨_, ha⟩ := ha
       cases hd : entry.desc <;> simp only [hd] at ha
       · obtain ⟨_, _, he, _⟩ := ha
-        have ht := congrArg module.Env.types he
+        have ht := congrArg metadata.Env.types he
         change after.types = before.types at ht
         exact ht.trans ih
-      · have ht := congrArg module.Env.types ha.1
+      · have ht := congrArg metadata.Env.types ha.1
         change after.types = before.types at ht
         exact ht.trans ih
-      · have ht := congrArg module.Env.types ha.1
+      · have ht := congrArg metadata.Env.types ha.1
         change after.types = before.types at ht
         exact ht.trans ih
-      · have ht := congrArg module.Env.types ha.1
+      · have ht := congrArg metadata.Env.types ha.1
         change after.types = before.types at ht
         exact ht.trans ih
 
@@ -155,28 +155,28 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
   | types ha hb hv => exact hs.of_types_added ha hb
   | imports ha hb => simpa only [SignatureBounded, ha.types] using hm
   | functions ha hb =>
-      have ht := congrArg module.Env.types ha.1
+      have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
   | tables ha hb hv hc =>
-      have ht := congrArg module.Env.types ha.1
+      have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
   | memories ha hb hv hc =>
-      have ht := congrArg module.Env.types ha.1
+      have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
   | globals ha hb hv =>
-      have ht := congrArg module.Env.types ha.1
+      have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
   | exports ha hb =>
-      have ht := congrArg module.Env.types ha.unchanged
+      have ht := congrArg metadata.Env.types ha.unchanged
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
   | start he hb hv => simpa only [SignatureBounded, he] using hm
   | elements ha hb hv =>
-      have ht := congrArg module.Env.types ha.1
+      have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
 

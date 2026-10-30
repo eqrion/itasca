@@ -13,8 +13,8 @@ open Aeneas Aeneas.Std Itasca
 
 theorem StructuredReaderCompilerStateWasm2.initial {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {A : Type}
     (compiler : runtime.compiler.FunctionCompiler A) (types functions : List functype)
-    (locals : List valtype) (data : Slice U8) (env : module.Env)
-    (sourceLocals : alloc.vec.Vec Itasca.types.ValueType) (index : U32) (ft : Itasca.types.FuncType)
+    (locals : List valtype) (data : Slice U8) (env : metadata.Env)
+    (sourceLocals : alloc.vec.Vec Itasca.wasm_types.ValueType) (index : U32) (ft : Itasca.wasm_types.FuncType)
     (signature : env.types.val[index.val]? = some ft) (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (compiled : StructuredCompilerPrefix jumpTables emit compiler compiler types functions (ft.results.val.map Translate.valueType) locals
       [] (SourceScope.initial (ft.results.val.map Translate.valueType)) [] 0) :

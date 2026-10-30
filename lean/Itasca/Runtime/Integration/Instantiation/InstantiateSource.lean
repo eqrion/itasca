@@ -182,7 +182,7 @@ theorem commit_instance_source {M P F A : Type}
           .ok (.Ok ⟨identity,none⟩,initialized,platform,true) := by
         simp [runtime.store.instantiate.Store.commit_instance,initRun,core.result.Result.Insts.CoreOpsTry.branch,
           alloc.vec.Vec.index_slice_index,read,runtime.compiler.ExecutableModule.env,
-          Itasca.module.Module.impl.env,Itasca.module.Env.impl.start,start]
+          Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.start,start]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩
       · intro instantiated same
@@ -200,7 +200,7 @@ theorem commit_instance_source {M P F A : Type}
       have run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (.Ok ⟨identity,some address⟩,initialized,platform,true) := by
         simp only [runtime.store.instantiate.Store.commit_instance,initRun,lift,bind_ok,uncurry_apply_pair,
-          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env,Itasca.module.Module.impl.env,Itasca.module.Env.impl.start,
+          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.start,
           alloc.vec.Vec.index_slice_index,read,start,addressRun]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩

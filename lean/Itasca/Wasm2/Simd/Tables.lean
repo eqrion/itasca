@@ -29,7 +29,7 @@ def Signature.runtime : Signature → code.SimdSignature
 
 /-- The scalar type, lane count and replace flag that `code.simd_lane_info` returns for a lane
 operation. -/
-def LaneOperation.runtime (op : LaneOperation) : types.ValueType × U8 × Bool :=
+def LaneOperation.runtime (op : LaneOperation) : wasm_types.ValueType × U8 × Bool :=
   (match op.scalar with
    | .I32 => .I32 | .I64 => .I64 | .F32 => .F32 | .F64 => .F64,
    U8.ofNatCore op.count (by cases op <;> decide), op.replace)

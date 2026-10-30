@@ -25,7 +25,7 @@ theorem InitialHostInvocationCause.source_resources {M P F A : Type}
     {view : M → Slice U8} {code : Store.CodeInterpretation}
     {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
     {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
-    {error : runtime.ExecError} {signature : Itasca.types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    {error : runtime.ExecError} {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
     (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after error) :
     InitialHostSourceResourceCause hooks allocator store after identity signature error := by
   cases error with
@@ -50,7 +50,7 @@ theorem invoke_host_world_recorded_resources {M P F A : Type}
     (valid : invariant code store) (sourceWf : wf_store (Store.decodeStore view code store))
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst) (identity : U64)
-    (signature : Itasca.types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
+    (signature : Itasca.wasm_types.FuncType) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (owner : address.store = store.id)
     (functionAt : store.funcs.val[address.index.val]? = some function)
     (host : function.code = .Host identity)

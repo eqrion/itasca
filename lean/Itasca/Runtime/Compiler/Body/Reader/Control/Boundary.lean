@@ -9,8 +9,8 @@ Main declarations: `ReaderBoundaryWasm2` and `ReaderBoundaryWasm2.pending`. A di
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-structure ReaderBoundaryWasm2 (data : Slice U8) (env : module.Env)
-    (locals : alloc.vec.Vec types.ValueType) (index : U32) (ft : types.FuncType)
+structure ReaderBoundaryWasm2 (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (st : code.BodyState) (parents : List Wasm2.Frames.Saved) (current : Wasm2.Frames.Saved) : Prop where
   signature : env.types.val[index.val]? = some ft
   bounds : Wasm2.Bounds data st

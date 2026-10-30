@@ -7,8 +7,8 @@ module metadata before initializer lowering is attempted. -/
 theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
     (limits : runtime.compiler.CompileLimits) (codeStart codeEnd : Usize)
-    (storage env : module.Env) (scheduler : runtime.compiler.CompileScheduler A)
-    (tail : module.Tail)
+    (storage env : metadata.Env) (scheduler : runtime.compiler.CompileScheduler A)
+    (tail : metadata.Tail)
     (bounds : codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length)
     (tailReady : scheduler.tail = some tail)
     (accepted : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource

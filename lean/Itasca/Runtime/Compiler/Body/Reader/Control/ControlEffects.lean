@@ -25,7 +25,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_block_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 2#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -35,7 +35,7 @@ theorem reader_block_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_loop_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 3#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -45,7 +45,7 @@ theorem reader_loop_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 4#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -55,7 +55,7 @@ theorem reader_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_else_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 5#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -65,7 +65,7 @@ theorem reader_else_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_end_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -75,7 +75,7 @@ theorem reader_end_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_br_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -85,7 +85,7 @@ theorem reader_br_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_br_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
@@ -95,7 +95,7 @@ theorem reader_br_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
 
 theorem reader_control_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (control : ScopeOpcode opcode ∨ opcode = 5#u8 ∨ opcode = 11#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :

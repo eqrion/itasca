@@ -14,7 +14,7 @@ theorem function_ref_typed (s : _root_.store) (hwf : wf_store s)
 
 theorem decode_ref_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
-    (ty : Itasca.types.ElemType) (word : U64) (h : ReferenceShape s ty word) :
+    (ty : Itasca.wasm_types.ElemType) (word : U64) (h : ReferenceShape s ty word) :
     Ref_ok (decodeStore view code s) (decodeRef ty word) (decodeElemType ty) := by
   by_cases hz : word.val = 0
   · simp [decodeRef, hz]

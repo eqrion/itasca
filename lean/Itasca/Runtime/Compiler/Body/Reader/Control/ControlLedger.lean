@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca
 
 theorem reader_control_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st out : code.BodyState) (data : Slice U8) (env : module.Env) (ctx : code.Context) (index : U32) (opcode : U8)
+    (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (opcode : U8)
     (covered : opcode.val ∈ [2,3,4,5,11,12,13,14,15])
     (budget : FixupBudget before.frames.val before.function.code.val.length)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
