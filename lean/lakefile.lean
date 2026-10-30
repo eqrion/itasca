@@ -20,3 +20,8 @@ lean_lib Itasca
 
 -- Handwritten specification extensions have an independent audit.
 lean_lib SpecExt
+
+-- This checker loads the current audit dynamically; compiling the graph walk
+-- avoids interpreting it again on each optional `just dead` run.
+lean_exe reachability where
+  root := `scripts.reachability

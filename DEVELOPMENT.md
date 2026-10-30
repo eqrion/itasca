@@ -48,7 +48,8 @@ just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
-just prove            # Build all proofs and check audit coverage, axioms and reachability
+just prove            # Build all proofs and check audit coverage and axioms
+just dead --check     # Optional: check reachability from headline results and examples
 just trust            # Rerun the transitive axiom report
 just spec-check       # Regenerate and compare the specification
 just regressions      # Run patched Aeneas extraction regressions
@@ -81,6 +82,10 @@ changed dependencies and reuses the rest. `just profile Itasca.ModuleName` build
 the imports, then re-elaborates that module with Lean's profiler; it is a
 diagnostic command, not an additional verification requirement. Compare timings
 with warm dependencies and without another build competing for resources.
+`just exec-timing` compares import-only and full runs for a fixed sample of 20
+runtime files. Both measurements include process startup; their difference
+estimates elaboration cost. Use it to distinguish expensive proofs from repeated
+dependency loading before changing the import graph.
 
 For a proof-only change, use targeted checks until the proof works, then run
 `just prove` once for integration. Extraction, specification regeneration, and
@@ -88,6 +93,13 @@ toolchain regressions are required when their inputs change, as listed above;
 they add no new evidence about an edit confined to handwritten proofs.
 `just prove` already checks transitive axioms, so `just trust` is optional unless
 you want the per-declaration report. Ordinary builds print the audit summary.
+
+Reachability is an optional maintenance check, separate from `just prove` and
+`just verify`. `just dead` builds the current audit and compiled checker, then
+reports declarations unused by headline results or examples in
+`lean/.build/dead.txt`. Add `--check` to fail on wholly unused modules outside the
+documented allowlist. This checks proof organization, not logical correctness.
+
 `just verify` retains every full-pipeline check and uses its final integrated
 build to compile the compared specification and `Itasca.Spec.Checks`.
 
@@ -231,9 +243,9 @@ Place new proofs by layer, as described in the
 [Lean guide](lean/README.md#proof-architecture): independent grammar in
 `Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
 in `Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
-`just audit-imports` after adding or moving files. Its declarations must also be
-used by a headline theorem or an example: `just prove` runs the
-reachability check. `just prove` rejects a stale
+`just audit-imports` after adding or moving files. Use the optional
+`just dead --check` maintenance step to find modules disconnected from headline
+theorems and examples. `just prove` rejects a stale
 audit import list and upward imports from the grammar layers. The audit checks
 all local declarations and rejects axioms beyond the three documented logical
 foundations. New proof-bearing adapters receive the same scrutiny as exported

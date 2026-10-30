@@ -85,8 +85,6 @@ audit-imports:
 
 prove: audit-coverage
 	lake build Itasca SpecExt.Audit
-	mkdir -p .build
-	lake env lean --run scripts/reachability.lean --check .build/dead.txt
 
 # Headline theorems first, then every validator declaration.
 trust: prove

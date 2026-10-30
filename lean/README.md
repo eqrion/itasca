@@ -51,7 +51,8 @@ just extract          # Rust -> LLBC -> the validator and runtime Lean model
 just extract-check    # Regenerate separately and reject stale models
 just check Itasca.Results.Validate  # Build specific modules
 just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
-just prove            # Check audit coverage, build all proofs, check reachability
+just prove            # Build all proofs and check audit coverage and axioms
+just dead --check     # Optional: check reachability from headline results and examples
 just audit-imports    # Refresh each library's audit imports
 just trust            # Rerun the detailed axiom report
 just spec-update      # Copy a regenerated specification into the source tree

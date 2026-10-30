@@ -35,7 +35,8 @@ trust:
 # Report declarations unreachable from the library's headline roots.
 dead *flags:
     @mkdir -p lean/.build
-    @cd lean && lake env lean --run scripts/reachability.lean {{ flags }} .build/dead.txt
+    @cd lean && lake build Itasca.Audit reachability
+    @cd lean && lake env .lake/build/bin/reachability {{ flags }} .build/dead.txt
     @echo "Full report: lean/.build/dead.txt"
 
 exec-stats lib="Itasca/Runtime":

@@ -3,7 +3,7 @@ import Lean
 /-!
 # Reachability from the headline theorems
 
-Run with `lake env lean --run scripts/reachability.lean [--check] [--cone NAMES]... [OUT]`. Imports the
+Run with `lake exe reachability [--check] [--cone NAMES]... [OUT]`. Imports the
 `Itasca` audit and walks the constants used by every declaration of the root modules; the runtime
 proofs keep validator facts alive. Reports the source declarations that no root reaches, grouped
 by module.
