@@ -16,19 +16,19 @@ consumer API and checked theorem premises.
   Rust comment and line-number changes also require regeneration.
 - `FunsExternal.lean` is handwritten. The generated external template is ignored
   and must never be imported by a proof.
-- `lean/SpecTec/{Wasm2Prefix,wasm2.0,Wasm2Builtins}.lean` are generated from
-  pinned sources, versioned patches, and `lean/scripts/spec_split.py`. Change
-  source or generator, run `just spec-update`, then `just spec-check`; never
-  patch generated specification files.
-- `lean/SpecExt/` holds handwritten specification extensions. Builtins keep
-  exact generated signatures, checked by `Wasm2Builtins`. Temporary opaque
-  placeholders are permitted only by the staged audit policy; they are not
-  execution correctness proofs.
+- `lean/SpecTec/wasm2.0.lean` is generated from pinned sources and versioned
+  patches, including the handwritten builtin patch applied to generated output.
+  Change source or generator, run `just spec-update`, then `just spec-check`; never
+  edit generated specification files by hand.
+- `patches/spectec-wasm2-builtins.patch` supplies the trusted builtin definitions
+  in the generated specification, including checks against generated signatures.
+  `lean/SpecExt/` holds supporting proofs and handwritten specification extensions.
+  Do not introduce opaque builtin placeholders.
 - `lean/Itasca/Runtime/` holds the runtime proofs. Validator proofs must never
   import `Itasca.Runtime` or `SpecExt`. Runtime changes must preserve the
   validator's extracted definitions and theorem statements.
-- Keep `lean/scripts/`: its audit-import and external-model checks are part of
-  verification. Upstream trackers and archived Rocq records are not build inputs.
+- Keep specification regeneration reproducible through the pinned sources and patches.
+  Upstream trackers and archived Rocq records are not build inputs.
 
 ## Rust and API discipline
 
@@ -46,11 +46,10 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 ## Proof discipline
 
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
-kernel bypasses. `Itasca.Audit` and `SpecExt.Audit` permit only `propext`, `Classical.choice`, and
-`Quot.sound`. Every new proof module must be reachable through its library's audit imports;
-run `just audit-imports` after adding or moving files. Keep `Support/`, `Spec/`,
-`Binary/`, and `Handler/` free of imports from higher layers.
-Audit proof-bearing adapter definitions as well as exported theorems.
+kernel bypasses. Use only the standard logical axioms `propext`, `Classical.choice`,
+and `Quot.sound`. Keep `Support/`, `Spec/`, `Binary/`, and `Handler/` free of
+imports from higher layers. Review proof-bearing adapters as well as exported
+theorems; there is no automatic axiom-allowlist check.
 
 Use `just check Itasca.ModuleName` for iteration and `just prove` for integration.
 Preserve dependency and build caches. Scratch files belong in `$TMPDIR`, outside
@@ -61,12 +60,11 @@ the proof source tree. Report any trust-boundary change explicitly.
 - Handwritten Lean proofs or adapters: `just prove`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
-- Aeneas source patches or pins: the Rust/extraction checks plus `just regressions`.
+- Extraction tool installation or pins: the Rust/extraction checks.
 - SpecTec sources, patches, or pins: `just spec-update`, `just spec-check`, and
   `just prove`.
 - Documentation outside extraction inputs: check links and `git diff --check`.
 
 `just verify` runs both Rust test configurations, Rust/specification regeneration
-checks, toolchain regressions, and the integrated Lean build. `just trust` reruns
-the transitive axiom report. The Rocq implementation is archived under
-`rocq-baseline`; the active branch has no Rocq build requirement.
+checks and the integrated Lean build. The Rocq implementation
+is archived under `rocq-baseline`; the active branch has no Rocq build requirement.

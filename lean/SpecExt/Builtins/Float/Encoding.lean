@@ -1,4 +1,4 @@
-import SpecExt.Builtins.Float.Repr
+import «wasm2.0»
 import Mathlib.Tactic
 
 /-! Bit-field decoding and representation roundtrips for both IEEE widths.

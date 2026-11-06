@@ -11,8 +11,3 @@
 	branch = lean-backend
 	# lean/Makefile applies versioned source patches in place.
 	ignore = dirty
-[submodule "vendor/aeneas-lean"]
-	path = vendor/aeneas-lean
-	url = https://github.com/AeneasVerif/aeneas.git
-	# The patch includes extractor fixes and their regression sources.
-	ignore = dirty

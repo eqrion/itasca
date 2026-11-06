@@ -18,10 +18,10 @@ you are new to Lean, start with [A guide to the itasca proofs](PROOF_GUIDE.md).
 | SpecTec | `edc84f7ec81f927f3fdb952a82ecd38fed8e4f29` |
 | OCaml and Dune | `5.2.0` and `3.23.1`, in the `itasca-lean` opam switch |
 
-From the repository root:
+Install Git, make, opam, rustup, elan, and just first. From the repository root:
 
 ```sh
-git submodule update --init vendor/aeneas-lean vendor/spectec tests/third_party/wasm-spec
+git submodule update --init vendor/spectec tests/third_party/wasm-spec
 
 opam switch create itasca-lean ocaml-base-compiler.5.2.0 --no-switch -y
 opam install --switch=itasca-lean -y dune.3.23.1 dune-build-info.3.23.1 \
@@ -29,12 +29,10 @@ opam install --switch=itasca-lean -y dune.3.23.1 dune-build-info.3.23.1 \
   domainslib easy_logging menhir ocamlgraph ppx_deriving ppx_deriving_yojson \
   progress unionFind visitors yojson zarith pprint
 
-git clone https://github.com/AeneasVerif/charon.git vendor/aeneas-lean/charon
-git -C vendor/aeneas-lean/charon checkout "$(tail -n 1 vendor/aeneas-lean/charon-pin)"
 rustup toolchain install nightly-2026-09-17 --profile minimal \
   --component rustc-dev,rust-src,llvm-tools
 elan toolchain install leanprover/lean4:v4.31.0
-make -C lean tools
+just tools
 cd lean
 lake exe cache get
 ```
@@ -44,6 +42,45 @@ Use the committed `lake-manifest.json`; builds do not need `lake update`.
 3.24 rejects SpecTec's nested legacy Coq project. SpecTec's own Lake project
 selects Lean 4.32, but its generated output compiles here on 4.31.
 
+### Installing and rebuilding extraction tools
+
+`just tools` builds and installs the pinned upstream Aeneas and its matching
+Charon into `${XDG_CACHE_HOME:-$HOME/.cache}/itasca/aeneas-<revision>/bin`.
+The commands above install the build prerequisites first. No PATH changes are
+needed: extraction invokes these installed binaries directly and does not
+rebuild them. A missing installation reports `Run just tools`.
+
+The [installer](install-tools.sh) keeps clean source checkouts and incremental
+build artifacts under that directory's `source/`. It reads Charon's revision
+from Aeneas's `charon-pin`,
+builds both Rust executables (`charon` and `charon-driver`), builds Aeneas with
+Dune, and copies the three executables into `bin/`. Rerun `just tools` to rebuild;
+it refuses modified source checkouts. To relocate the installation, use the same
+`TOOLS_CACHE` override for installation and extraction, for example:
+
+```sh
+make tools TOOLS_CACHE=/absolute/path/to/tool-cache
+make extract-check TOOLS_CACHE=/absolute/path/to/tool-cache
+```
+
+If you already have a compatible opam switch, use it with
+`make tools OPAM_SWITCH=your-switch` instead of creating `itasca-lean`.
+
+`opam` manages OCaml packages; a switch is an isolated OCaml compiler and package
+environment. `dune` is the OCaml build tool. `OPAM_SWITCH` selects the switch used
+for source builds (also used to build SpecTec). Charon is built with Cargo and
+requires the pinned Rust nightly plus its `rustc-dev`, `rust-src`, and `llvm-tools`
+components even after installation.
+
+Lake fetches Aeneas's Lean library as a Git dependency into `.lake/packages/`.
+Ordinary proof builds use the committed manifest. To intentionally change Aeneas,
+update the matching revisions in [toolchain.mk](toolchain.mk),
+[lakefile.lean](lakefile.lean), and the table above, check its `charon-pin` and
+Rust toolchain, run `just tools`, then run
+`cd lean && lake update aeneas` and review the manifest diff. Run both Cargo test
+configurations, `just extract`, `just extract-check`, and `just prove` before
+accepting the update. The extractor and Lean library must use the same revision.
+
 ## Commands
 
 ```sh
@@ -51,13 +88,9 @@ just extract          # Rust -> LLBC -> the validator and runtime Lean model
 just extract-check    # Regenerate separately and reject stale models
 just check Itasca.Results.Validate  # Build specific modules
 just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
-just prove            # Build all proofs and check audit coverage and axioms
-just dead --check     # Optional: check reachability from headline results and examples
-just audit-imports    # Refresh each library's audit imports
-just trust            # Rerun the detailed axiom report
+just prove            # Build every proof module
 just spec-update      # Copy a regenerated specification into the source tree
 just spec-check       # Regenerate, compare, and compile the specification
-just regressions      # Extract and compile Aeneas regression cases
 just verify           # Rust tests and all verification checks
 ```
 
@@ -192,10 +225,14 @@ Aeneas runs unmodified at the pinned revision. Private Rust modules use
 named `module` and `types`; their files remain `src/module.rs` and `src/types.rs`.
 Local binders also avoid namespaces referenced in the same scope, such as
 `limits` and `error`.
-`just regressions` extracts and compiles upstream discriminant and loop cases.
 
-Build targets apply these to the pinned checkouts:
+Build targets apply the source patches to the pinned checkouts and the builtin
+patch to generated Lean output:
 
+- [spectec-wasm2-builtins.patch](../patches/spectec-wasm2-builtins.patch)
+  patches generated `wasm2.0.lean` with the 64 handwritten builtin definitions
+  and their helpers. These definitions are part of the trusted specification.
+  Supporting correctness lemmas remain ordinary Lean modules in `SpecExt/`.
 - [spectec-wasm2-global-mutability.patch](../patches/spectec-wasm2-global-mutability.patch)
   keeps both global mutabilities in typing.
 - [spectec-wasm2-module.patch](../patches/spectec-wasm2-module.patch)
@@ -262,26 +299,12 @@ touch
 [Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean),
 [Module/Elab/Profile](Itasca/Module/Elab/Profile.lean), and the module grammar.
 
-## Audit
+## Proof checking
 
-[Audit.lean](Itasca/Audit.lean) checks every declaration from an imported Itasca
-module, including private helpers, generated auxiliaries, adapters, and external
-models. Only `propext`, `Classical.choice`, and `Quot.sound` are allowed.
-`just trust` sets `ITASCA_AUDIT_VERBOSE=1` to print each declaration's axioms;
-the setting changes only the report.
-
-[scripts/check_audit.py](scripts/check_audit.py) checks that `Itasca.Audit`
-imports exactly the sink modules of the import graph, that the foundation
-layers import only downward, that validator layers never import `Runtime/` or
-`SpecExt`, that only `Main` and `Examples/` import `Results/` (runtime proofs
-may also use the validator results), that examples import only `Main` (`EXAMPLE_IMPORTS` lists the
-exceptions), and that nothing imports the external template.
-[scripts/check_externals.py](scripts/check_externals.py) compares extraction
-requests with the external models. Both run under `just prove` and
-`just extract-check`.
-
-Upstream sources contain unfinished lemmas and opaque execution models; the
-audit ensures the proofs do not depend on them.
+`just prove` compiles every module in `Itasca` and `SpecExt`, including examples.
+Lean checks the proof terms. There is no separate audit-import, dependency-layer,
+external-model coverage, or axiom-allowlist check. Only `propext`,
+`Classical.choice`, and `Quot.sound` are permitted by the project's proof policy.
 
 ## Execution boundary
 
@@ -292,9 +315,12 @@ full under [Results/](Itasca/Results), and [Runtime/Contracts.lean](Itasca/Runti
 lists every premise an embedder must discharge to use the runtime results. The
 [execution proof guide](Itasca/Runtime/README.md) describes how the proofs are assembled.
 
-`SpecExt.Builtins` supplies concrete definitions for all 64 pinned builtin
-signatures. Float rounding uses exact rationals and midpoint comparisons; the
-NaN sets retain permitted nondeterminism. The audit rejects any new opaque builtin placeholder.
+[spectec-wasm2-builtins.patch](../patches/spectec-wasm2-builtins.patch) supplies
+concrete definitions for all 64 pinned builtin signatures directly in the generated
+`wasm2.0.lean`. Float rounding uses exact rationals and midpoint comparisons; the
+NaN sets retain permitted nondeterminism. The patch includes signature-compatibility
+checks, which do not prove agreement with the Wasm prose. The handwritten
+definitions are part of the trusted specification.
 
 `SpecExt.Host` adds atomic host-call steps with explicit typed inputs/results,
 store extension, post-call `Store_ok`, and well-formedness premises. The checked
@@ -369,8 +395,8 @@ space is exhausted. That constructor is outside the extracted no-panic claims
 for compilation, invocation and instantiation. None of this wrapper review is a
 kernel proof of native Rust, `libm`, allocator or atomic semantics.
 
-Runtime import layers and compiler/invocation integration stages are enforced
-by the audit checker, which also rejects import cycles. `Runtime/Compiler/`
+Keep runtime imports within the documented layers and compiler/invocation
+integration stages. Lean rejects import cycles. `Runtime/Compiler/`
 keeps Local → Body → Module stages. `Runtime/Interp/Machine/` groups machine
 proofs by operations, frames, calls, retention and progress;
 `Runtime/Integration/Execution/` assembles ownership, mutation, dispatch,
@@ -379,7 +405,7 @@ capacity contracts live below these constructions in `Runtime/Representation/`.
 `Runtime/SourceMachine/` retains the flat source transition system independently
 of the extracted runtime.
 
-The [execution proof guide](Itasca/Runtime/README.md) gives the enforced layer
+The [execution proof guide](Itasca/Runtime/README.md) gives the layer
 map and concrete [compilation](Itasca/Runtime/README.md#compilation),
 [invocation](Itasca/Runtime/README.md#invocation), and
 [instantiation](Itasca/Runtime/README.md#instantiation) reading paths.

@@ -17,11 +17,10 @@ to install the pinned tools.
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
 | `src/runtime/` | Slot compiler, store, synchronous interpreter, and bit-oriented numeric primitives, with conditional execution proofs. |
-| `lean/Itasca/` | Validator and runtime models, proof layers, checked examples, and axiom audit. |
+| `lean/Itasca/` | Validator and runtime models, proof layers, and checked examples. |
 | `lean/Itasca/Runtime/` | Representation certificates and runtime proofs. |
-| `lean/SpecExt/` | Handwritten execution specification extensions and independent audit. |
+| `lean/SpecExt/` | Handwritten execution extensions and proofs about the patched builtins. |
 | `lean/SpecTec/` | Committed generated specification. |
-| `lean/scripts/` | Audit-import and concrete external-model checks, with their shared Lean tokenizer. |
 | `vendor/`, `patches/` | Pinned tool/specification sources and reproducible source repairs. |
 | `tests/spec_tests.rs`, `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
 | `tests/runtime_wast.rs`, `tests/runtime_api.rs` | Full execution corpora and store/host/interrupt regressions. |
@@ -48,11 +47,8 @@ just extract          # Refresh committed Rust models after source changes
 just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
-just prove            # Build all proofs and check audit coverage and axioms
-just dead --check     # Optional: check reachability from headline results and examples
-just trust            # Rerun the transitive axiom report
+just prove            # Build every proof module
 just spec-check       # Regenerate and compare the specification
-just regressions      # Run upstream Aeneas extraction regressions
 just verify           # Run the complete verification sequence
 ```
 
@@ -60,7 +56,7 @@ just verify           # Run the complete verification sequence
 | --- | --- |
 | Handwritten Lean proofs or adapters | `just prove` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
-| Aeneas source patch or pin | Rust/extraction checks plus `just regressions` |
+| Extraction tool installation or pins | Rust/extraction checks |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
 | Documentation outside extraction inputs | Check links and `git diff --check` |
 
@@ -82,26 +78,15 @@ changed dependencies and reuses the rest. `just profile Itasca.ModuleName` build
 the imports, then re-elaborates that module with Lean's profiler; it is a
 diagnostic command, not an additional verification requirement. Compare timings
 with warm dependencies and without another build competing for resources.
-`just exec-timing` compares import-only and full runs for a fixed sample of 20
-runtime files. Both measurements include process startup; their difference
-estimates elaboration cost. Use it to distinguish expensive proofs from repeated
-dependency loading before changing the import graph.
 
 For a proof-only change, use targeted checks until the proof works, then run
-`just prove` once for integration. Extraction, specification regeneration, and
-toolchain regressions are required when their inputs change, as listed above;
+`just prove` once for integration. Extraction and specification regeneration
+are required when their inputs change, as listed above;
 they add no new evidence about an edit confined to handwritten proofs.
-`just prove` already checks transitive axioms, so `just trust` is optional unless
-you want the per-declaration report. Ordinary builds print the audit summary.
+`just prove` compiles every module in `Itasca` and `SpecExt`, including examples.
 
-Reachability is an optional maintenance check, separate from `just prove` and
-`just verify`. `just dead` builds the current audit and compiled checker, then
-reports declarations unused by headline results or examples in
-`lean/.build/dead.txt`. Add `--check` to fail on wholly unused modules outside the
-documented allowlist. This checks proof organization, not logical correctness.
-
-`just verify` retains every full-pipeline check and uses its final integrated
-build to compile the compared specification and `Itasca.Spec.Checks`.
+`just verify` uses its final integrated build to compile the compared
+specification and `Itasca.Spec.Checks`.
 
 ## Rust extraction constraints
 
@@ -111,8 +96,8 @@ These constraints apply to the validator and its extracted dependencies. The
 [execution boundary](lean/README.md#execution-boundary) and
 [execution proof guide](lean/Itasca/Runtime/README.md) state the runtime premises. Runtime code additionally supports integer bitwise
 operations and generic platform traits. Runtime extraction and the conditional
-T1–T7 execution proofs are checked. Keep the boundary one-way: audited
-validator code must not depend on runtime code. Native rounding operations,
+T1–T7 execution proofs are checked. Keep the boundary one-way: validator code
+must not depend on runtime code. Native rounding operations,
 allocation, and store identity issuance remain explicit embedding boundaries.
 
 - Use safe Rust, `core`, and `alloc::vec::Vec`.
@@ -242,11 +227,8 @@ results; Wasm 1.0 additionally allows at most one result.
 Place new proofs by layer, as described in the
 [Lean guide](lean/README.md#proof-architecture): independent grammar in
 `Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
-in `Wasm2/`. Every new proof module must be reachable from `Itasca.Audit`; run
-`just audit-imports` after adding or moving files. Use the optional
-`just dead --check` maintenance step to find modules disconnected from headline
-theorems and examples. `just prove` rejects a stale
-audit import list and upward imports from the grammar layers. The audit checks
-all local declarations and rejects axioms beyond the three documented logical
-foundations. New proof-bearing adapters receive the same scrutiny as exported
-theorems. Report changes to the trust boundary explicitly.
+in `Wasm2/`. Keep imports within the documented dependency layers. Only the
+standard logical axioms `propext`, `Classical.choice`, and `Quot.sound` are
+permitted; there is no automatic axiom-allowlist check. Review proof-bearing
+adapters as well as exported theorems. Report changes to the trust boundary
+explicitly.

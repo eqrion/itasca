@@ -1,4 +1,4 @@
-import SpecExt.Builtins.Float.Convert
+import «wasm2.0»
 
 /-! Kernel-checked facts about the specification's NaN choices. In particular,
 a wrapper that canonicalizes a permitted arithmetic NaN remains in the result

@@ -4,7 +4,7 @@ import Lean.Elab.Command
 /-! Coverage inventory of every pinned builtin signature. Classification records
 intended source domains and semantic alternatives separately from signature
 agreement. This is a review inventory, not a global reduction-determinism proof.
-The audit also compares its symbols with generated Wasm2Builtins. -/
+The generated specification includes builtin-signature compatibility checks. -/
 namespace SpecExt.Builtins.Review
 
 inductive Family where
@@ -29,7 +29,7 @@ structure BuiltinReview where
   domain : Domain
 
 /-- Each symbol is resolved by Lean; generated-signature coverage is checked
-independently by the audit script. Domain premises remain necessary. -/
+in the generated specification. Domain premises remain necessary. -/
 def inventory : List BuiltinReview :=
   [
     ⟨``inv_concat_,.structural,.unused,.structural⟩,

@@ -1,5 +1,5 @@
 import SpecExt.Builtins.EncodingLemmas
-import SpecExt.Builtins.Int
+import «wasm2.0»
 import Mathlib.Tactic
 
 /-! The prose's most-significant-first bit-list operations agree with natural

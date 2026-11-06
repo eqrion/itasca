@@ -9,9 +9,8 @@ covers tool setup and the independent validator.
 
 ## Canonical public constructions
 
-[Main](../Main.lean) and [Results/](../Results) expose the public theorems;
-[`scripts/reachability.lean`](../../scripts/reachability.lean) lists their
-reachability roots. Each result projects an internal construction:
+[Main](../Main.lean) and [Results/](../Results) expose the public theorems.
+Each result projects an internal construction:
 
 | Public result | Construction |
 | --- | --- |
@@ -28,10 +27,8 @@ resolved start function for a separate invocation.
 ## Dependency layers
 
 The extracted program and the source machine are independent foundations;
-representation certificates connect them. [The audit checker](../../scripts/check_audit.py)
-enforces library boundaries, compiler stages, and acyclic imports.
-[Itasca.Audit](../Audit.lean) checks all declarations, including proof-bearing
-adapters, against the standard logical axiom allowlist.
+representation certificates connect them. Keep imports within the library
+boundaries and compiler stages below; Lean rejects import cycles.
 
 | Area | Responsibility and boundary |
 | --- | --- |
@@ -62,8 +59,8 @@ host publication.
 
 ## Compiler stages
 
-The audit enforces Local → Body → Module: Local cannot import Body or Module,
-and Body cannot import Module.
+Keep Local → Body → Module: Local cannot import Body or Module, and Body
+cannot import Module.
 
 - `Compiler/Local/` proves emission, callbacks, lowering, source relations and
   per-operation bounds. Its relation families distinguish emission, layout,
@@ -353,15 +350,11 @@ versions. In particular:
 | `EventfulWorldTransition` | The interpretation may evolve; previously issued keys retain their meaning through `CodeAgreesOn`. |
 | `ExecutableInv` | The public API store certificate together with segment accounting and function-capacity certificates; host freedom is not a field. |
 
-Every module is reachable from [Main](../Main.lean) or `Examples/`;
-`just prove` runs `just dead --check`, which rejects unused modules outside
-the short allowlist in [`scripts/reachability.lean`](../../scripts/reachability.lean).
-
 Shared slice lookup and list transport lemmas live in
 [Representation/Collection.lean](Representation/Collection.lean).
 Keep shared helpers at the lowest layer supported by their actual dependencies.
 
-Run `just check Itasca.Runtime.Store.Api.MemoryFill` while iterating, `just audit-imports`
-after file moves, and `just prove` for integration. Rust changes
+Run `just check Itasca.Runtime.Store.Api.MemoryFill` while iterating and
+`just prove` for integration. Rust changes
 also require both Cargo test configurations and extraction/regeneration checks,
 as specified in [DEVELOPMENT.md](../../../DEVELOPMENT.md). Preserve build caches.

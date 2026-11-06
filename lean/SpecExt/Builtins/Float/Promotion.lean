@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Float.RoundExact
-import SpecExt.Builtins.Float.Convert
+import «wasm2.0»
 import SpecExt.Builtins.Float.Lemmas
 namespace SpecExt.Builtins.Float
 open SpecExt.Builtins

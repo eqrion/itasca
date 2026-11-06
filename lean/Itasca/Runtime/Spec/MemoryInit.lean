@@ -1,7 +1,7 @@
 import Itasca.Runtime.Spec.TableInit
 import Itasca.Runtime.Spec.Wf
 import Mathlib.Tactic
-import SpecExt.Builtins.Bytes
+import «wasm2.0»
 import Itasca.Runtime.Spec.SegmentCopy
 
 /-!

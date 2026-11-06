@@ -1,4 +1,4 @@
-import SpecExt.Builtins.Bytes
+import «wasm2.0»
 import SpecExt.Builtins.Lanes
 
 /-! Integer encoding roundtrips and lengths. Truncation is explicit: arbitrary

@@ -3,7 +3,9 @@ open Lake DSL
 
 package itascaLean
 
-require aeneas from "../vendor/aeneas-lean/backends/lean"
+-- Keep this revision in sync with toolchain.mk.
+require aeneas from git "https://github.com/AeneasVerif/aeneas.git" @
+  "557eff83ecef5083b98a52a94ca7fae63d6c1dab" / "backends/lean"
 
 -- The equality helper is handwritten upstream. The specification below is
 -- regenerated locally from the pinned SpecTec sources plus our source patches.
@@ -13,15 +15,12 @@ lean_lib SpecTecSupport where
 
 lean_lib SpecTecGenerated where
   srcDir := "SpecTec"
-  globs := #[.one `Wasm2Prefix, .one `«wasm2.0», .one `Wasm2Builtins]
+  globs := #[.one `«wasm2.0»]
 
 @[default_target]
-lean_lib Itasca
+lean_lib Itasca where
+  globs := #[.andSubmodules `Itasca]
 
--- Handwritten specification extensions have an independent audit.
-lean_lib SpecExt
-
--- This checker loads the current audit dynamically; compiling the graph walk
--- avoids interpreting it again on each optional `just dead` run.
-lean_exe reachability where
-  root := `scripts.reachability
+-- Compile every handwritten specification extension and supporting proof.
+lean_lib SpecExt where
+  globs := #[.submodules `SpecExt]

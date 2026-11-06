@@ -1,4 +1,4 @@
-import SpecExt.Builtins.Float.Convert
+import «wasm2.0»
 import Mathlib.Tactic
 namespace SpecExt.Builtins.Float
 open SpecExt.Builtins

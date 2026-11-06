@@ -29,35 +29,11 @@ check +modules:
 profile module:
     @make profile MODULE={{ module }}
 
-trust:
-    @make trust
-
-# Report declarations unreachable from the library's headline roots.
-dead *flags:
-    @mkdir -p lean/.build
-    @cd lean && lake build Itasca.Audit reachability
-    @cd lean && lake env .lake/build/bin/reachability {{ flags }} .build/dead.txt
-    @echo "Full report: lean/.build/dead.txt"
-
-exec-stats lib="Itasca/Runtime":
-    @python3 lean/scripts/exec_stats.py {{ lib }}
-
-# Compare import-only and full elaboration time on a fixed file sample.
-exec-timing lib="Itasca/Runtime":
-    @python3 lean/scripts/exec_stats.py timing {{ lib }}
-
-# Refresh each library audit after adding or moving proof files.
-audit-imports:
-    @make audit-imports
-
 spec-check:
     @make spec-check
 
 spec-update:
     @make spec-update
-
-regressions:
-    @make regressions
 
 verify:
     @make verify

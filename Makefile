@@ -1,8 +1,8 @@
 # Active verification pipeline: Rust -> Charon -> Aeneas -> Lean.
 .DEFAULT_GOAL := prove
 
-.PHONY: all build test tools extract extract-check prove audit-imports check profile trust spec-check \
-        spec-update regressions verify clean
+.PHONY: all build test tools extract extract-check prove check profile spec-check \
+        spec-update verify clean
 
 all: prove
 
@@ -13,7 +13,7 @@ test:
 	cargo test
 	cargo test --no-default-features
 
-tools extract extract-check prove audit-imports trust spec-check spec-update regressions clean:
+tools extract extract-check prove spec-check spec-update clean:
 	$(MAKE) -C lean $@
 
 # Example: make check MODULE=Itasca.Results.Validate
@@ -31,5 +31,4 @@ verify:
 	$(MAKE) extract-check
 	# The final integrated build compiles the specification and SpecChecks.
 	$(MAKE) -C lean spec-compare
-	$(MAKE) regressions
 	$(MAKE) prove

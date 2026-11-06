@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Float.Classify
-import SpecExt.Builtins.Float.Convert
+import «wasm2.0»
 import Mathlib.Data.Rat.Floor
 namespace SpecExt.Builtins.Float
 open SpecExt.Builtins

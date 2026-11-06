@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Float.Decoding
-import SpecExt.Builtins.Float.Round
+import «wasm2.0»
 
 /-! Range facts for rational rounding. The binary search and final adjacent
 choice never construct a NaN encoding, independently of rounding accuracy. -/
