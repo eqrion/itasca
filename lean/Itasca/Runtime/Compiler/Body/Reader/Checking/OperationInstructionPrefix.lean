@@ -1,11 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
@@ -13,7 +12,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
@@ -23,10 +21,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix

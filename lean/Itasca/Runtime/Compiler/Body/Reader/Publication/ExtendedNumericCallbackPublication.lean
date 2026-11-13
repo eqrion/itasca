@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects

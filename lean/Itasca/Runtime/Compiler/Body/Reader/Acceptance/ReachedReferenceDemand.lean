@@ -1,12 +1,11 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks

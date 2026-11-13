@@ -19,17 +19,12 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
@@ -41,7 +36,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack

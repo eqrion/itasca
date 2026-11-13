@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.NumericSafety
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 
 /-!
 Prefix decoding, all eight saturating conversions, and rejected subopcodes return normally; successful callbacks establish the observed operand boundary.

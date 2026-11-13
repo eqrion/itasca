@@ -14,7 +14,7 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
@@ -28,12 +28,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
@@ -44,13 +38,11 @@ import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Effects.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.NumericSafety
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 
 /-!
 Sign-extension readers and callbacks return normally from every reached boundary.

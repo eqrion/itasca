@@ -7,8 +7,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 
 /-!
 Sections, each formerly its own module: Compilation, SaturatingCompilation.
