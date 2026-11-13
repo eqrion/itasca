@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

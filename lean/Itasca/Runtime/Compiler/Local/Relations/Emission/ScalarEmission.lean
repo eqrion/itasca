@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 

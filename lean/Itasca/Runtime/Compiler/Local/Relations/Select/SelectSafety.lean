@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
 /-! SELECT normal return from raw observed offsets. Polymorphic stacks and
 rejected emission/observation outcomes require no final body certificate. -/

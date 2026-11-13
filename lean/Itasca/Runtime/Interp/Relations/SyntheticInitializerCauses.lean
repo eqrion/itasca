@@ -7,7 +7,7 @@ import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.StackPreservation
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
 /-!
 Sections, each formerly its own module: Epilogue, Move, LocalCodePoint, LocalCapacity, TypedArguments, InitializerErrors, SelectSlots, SyntheticInitializerCauses.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 namespace Itasca.Runtime.Compiler
