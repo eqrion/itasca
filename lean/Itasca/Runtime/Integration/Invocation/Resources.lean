@@ -1,12 +1,11 @@
 import Itasca.Runtime.Integration.Invocation.DefinedResources
-import Itasca.Runtime.Integration.Invocation.HostResources
+import Itasca.Runtime.Integration.Invocation.Outcomes
 import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Interp.Invocation.RecordingErasure
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Integration.Invocation.Outcomes
 
 /-!
 Recorded public invocation outcomes and their source resource causes. The cause distinguishes unchanged-state API rejection, defined-function execution and an initial host call. The construction retains one final code interpretation, its invariant and the exact host event log; the behavior and no-spurious-errors proofs consume the resulting certificate.
