@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEventTables
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!
 The exhaustive actual SIMD event classifier supplies source widths and exact metadata appends. Every live form checks its new instruction; dead forms only observe. Both retain the slot regions of earlier forward exits.

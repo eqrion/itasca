@@ -10,8 +10,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Checking.TerminalInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.ScalarExitSlotBounds
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!
 Actual source RETURN checks its full result suffix and retains recorded exits.

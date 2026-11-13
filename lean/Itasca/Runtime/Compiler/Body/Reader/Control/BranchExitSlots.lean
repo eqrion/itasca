@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.SourceBranchInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 

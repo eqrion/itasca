@@ -19,15 +19,13 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
-import Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.ScalarExitSlotBounds
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
-import Itasca.Runtime.Compiler.Local.Checking.LinearEmissionInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions
-import Itasca.Runtime.Compiler.Local.Checking.CoreEmissionInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Checking.CoreInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 

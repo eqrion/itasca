@@ -1,9 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!
 Open-instruction and checked-prefix preservation for typed-select reader steps.

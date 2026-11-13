@@ -1,7 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Checking.NumericInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.InstructionAppendEffect
-import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance

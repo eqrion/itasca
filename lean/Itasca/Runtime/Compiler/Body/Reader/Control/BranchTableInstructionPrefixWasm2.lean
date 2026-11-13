@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceTransferBounds
-import Itasca.Runtime.Compiler.Local.Checking.TableCallbackExitSlots
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.TableCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableDecodePrefix
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed

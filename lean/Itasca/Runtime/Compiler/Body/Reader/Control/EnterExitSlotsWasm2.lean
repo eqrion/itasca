@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
-import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryExitSlots
+import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 

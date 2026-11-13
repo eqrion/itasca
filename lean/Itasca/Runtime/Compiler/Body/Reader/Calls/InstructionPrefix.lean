@@ -1,11 +1,11 @@
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectEmission
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!
 Direct and indirect call instruction-prefix certificates, preserving checked instructions and exit-slot bounds for compiler replay.

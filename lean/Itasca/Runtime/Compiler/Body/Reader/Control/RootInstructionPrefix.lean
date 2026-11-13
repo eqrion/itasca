@@ -1,9 +1,9 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredRootMapPublication
-import Itasca.Runtime.Compiler.Local.Checking.RootCloseInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootCompilation
-import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 
 /-!
 Structured compiler root closure checked instructions and their reader-step lift. The source-prefix argument establishes the concrete reader preservation theorem.

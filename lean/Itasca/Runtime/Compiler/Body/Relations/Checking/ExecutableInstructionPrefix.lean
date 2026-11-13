@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionAcceptance
-import Itasca.Runtime.Compiler.Local.Checking.CoreEmissionInstructionPrefix
+import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 
 /-!
 Captured table appends increase every local checker index space. The contents are separately related to source syntax by emission certificates.
