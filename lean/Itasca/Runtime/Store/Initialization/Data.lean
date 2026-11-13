@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Module.Const.Syntax
+import Itasca.Module.Const.Parser
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.Staging
 

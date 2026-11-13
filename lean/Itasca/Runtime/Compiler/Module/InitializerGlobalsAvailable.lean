@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Module.InitializerTotal
-import Itasca.Module.Const.Syntax
+import Itasca.Module.Const.Parser
 
 /-!
 Sections, each formerly its own module: PreparedFunctionAvailable, SourceEntryPrepared, EntryAvailable, SourceQueuePolicy, EnvironmentReadyAvailable, InitializerGlobalsAvailable.

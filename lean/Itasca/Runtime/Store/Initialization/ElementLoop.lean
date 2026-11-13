@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.FunctionStaging
-import Itasca.Module.Const.Syntax
+import Itasca.Module.Const.Parser
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Representation.Values

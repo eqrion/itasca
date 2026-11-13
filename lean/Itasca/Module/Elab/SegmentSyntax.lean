@@ -1,4 +1,4 @@
-import Itasca.Module.Const.Syntax
+import Itasca.Module.Const.Parser
 
 /-!
 # Segment syntax

@@ -1,4 +1,4 @@
-import Itasca.Module.Const.Typing
+import Itasca.Module.Const.Parser
 import Itasca.Module.Elab.SegmentSyntax
 import Itasca.Module.Env.References
 import Itasca.Module.Env.Externals

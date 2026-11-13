@@ -1,5 +1,186 @@
-import Itasca.Module.Const.Syntax
+import Itasca.Binary.UnicodeUnique
+import Itasca.Module.Elab.Translation
 import Itasca.Module.Readers.Basic
+
+/-!
+Sections, each formerly its own module: Syntax, Typing, Parser.
+-/
+
+/-! ## Syntax -/
+
+section
+
+/-!
+# Constant expression syntax
+
+`ModuleConstants.Valid` is the validator's typing relation for constant initializers
+(`wasm_types.ConstExpr`), independent of parsing. `instruction` and `expression` translate an
+initializer to SpecTec syntax, and `GlobalContext` and `FunctionContext` tie a SpecTec `context`
+to the decoded environment. Typing against `Expr_ok_const` is in `Module/Const/Typing`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.ModuleConstants
+
+/-- The operand type corresponding to a table element type. -/
+def referenceValueType : wasm_types.ElemType → wasm_types.ValueType
+  | .FuncRef => .FuncRef
+  | .ExternRef => .ExternRef
+
+/-- The initializer has the given type in `env`. `ref.func` needs an in-range function index, and
+`global.get` needs an imported immutable global. -/
+inductive Valid (env : metadata.Env) : wasm_types.ConstExpr → wasm_types.ValueType → Prop where
+  | i32 (value : I32) : Valid env (.I32 value) .I32
+  | i64 (value : I64) : Valid env (.I64 value) .I64
+  | f32 (value : U32) : Valid env (.F32 value) .F32
+  | f64 (value : U64) : Valid env (.F64 value) .F64
+  | v128 (low high : U64) : Valid env (.V128 low high) .V128
+  | refNull (ty : wasm_types.ElemType) : Valid env (.RefNull ty) (referenceValueType ty)
+  | refFunc (idx : U32) (hi : idx.val < env.func_types.val.length) :
+      Valid env (.RefFunc idx) .FuncRef
+  | globalGet (idx : U32) (gt : wasm_types.GlobalType)
+      (hi : idx.val < env.global_types.val.length)
+      (hgt : env.global_types.val[idx.val] = gt)
+      (himport : idx.val < env.num_imported_globals.val)
+      (hconst : gt.mutability = .Const) : Valid env (.GlobalGet idx) gt.valtype
+
+/-- Translates an initializer to a SpecTec instruction. `V128` combines the low and high halves in
+little-endian order. -/
+def instruction : wasm_types.ConstExpr → instr
+  | .I32 value => Spec.i32Const value
+  | .I64 value => ScalarConst.i64 value
+  | .F32 bits => ScalarConst.f32 bits
+  | .F64 bits => ScalarConst.f64 bits
+  | .V128 low high => .VCONST .V128 (.mk_uN (low.val + high.val * 2 ^ 64))
+  | .RefNull ty => .REF_NULL (Translate.referenceType ty)
+  | .RefFunc idx => .REF_FUNC (.mk_uN idx.val)
+  | .GlobalGet idx => .GLOBAL_GET (.mk_uN idx.val)
+
+/-- The single-instruction SpecTec expression of an initializer. -/
+def expression (e : wasm_types.ConstExpr) : expr := [instruction e]
+
+/-- The translated instruction is well-formed. -/
+theorem instruction_wf (e : wasm_types.ConstExpr) : wf_instr (instruction e) := by
+  cases e with
+  | I32 value => exact Spec.i32Const_wf value
+  | I64 value => exact ScalarConst.i64_wf value
+  | F32 value => exact ScalarConst.f32_wf value
+  | F64 value => exact ScalarConst.f64_wf value
+  | V128 low high =>
+    apply wf_instr.instr_case_20
+    · decide
+    · constructor
+      have hlo : low.val ≤ 18446744073709551615 := by scalar_tac
+      have hhi : high.val ≤ 18446744073709551615 := by scalar_tac
+      norm_num [size, valtype_vectype]
+      omega
+  | RefNull _ => exact .instr_case_40 _
+  | RefFunc idx => exact .instr_case_41 _ (EnvTranslation.index_wf idx)
+  | GlobalGet idx => exact .instr_case_46 _ (EnvTranslation.index_wf idx)
+
+theorem expression_wf (e : wasm_types.ConstExpr) : Forall wf_instr (expression e) := by
+  simpa [expression, Forall] using instruction_wf e
+
+/-- `C.GLOBALS` is the imported prefix of the environment's global types. -/
+def GlobalContext (env : metadata.Env) (C : context) : Prop :=
+  C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translate.globalType
+
+/-- `C.FUNCS` is the environment's function types, imported and defined. -/
+def FunctionContext (env : metadata.Env) (C : context) : Prop :=
+  C.FUNCS = env.func_types.val.map EnvTranslation.funcType
+
+end Itasca.ModuleConstants
+
+end
+
+/-! ## Typing -/
+
+section
+
+/-!
+# Typing of constant expressions
+
+A valid initializer is generated-typed: `Valid.instruction_typed` gives `Instr_ok` and
+`Instr_const`, `Valid.expr_ok_const` gives `Expr_ok_const`, and `global_typed` gives `Global_ok`
+for a global with a valid initializer. The converse is in `Module/Const/Inversion`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.ModuleConstants
+
+private theorem global_lookup {env C} (hC : GlobalContext env C)
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
+    (hgt : env.global_types.val[idx.val] = gt) (himport : idx.val < env.num_imported_globals.val) :
+    idx.val < C.GLOBALS.length ∧ C.GLOBALS[idx.val]! = Translate.globalType gt := by
+  rw [hC]
+  have hb : idx.val < (env.global_types.val.take env.num_imported_globals.val).length := by simp; omega
+  exact ⟨by simpa using hb, by
+    rw [getElem!_pos _ _ (by simpa using hb), List.getElem_map, List.getElem_take, hgt]⟩
+
+/-- A valid initializer is a constant instruction typed `[] -> [t]` under any context that agrees
+with the environment. -/
+theorem Valid.instruction_typed {env e t} (h : Valid env e t)
+    (C : context) (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
+    Instr_ok C (instruction e) (.mk_functype (.mk_list []) (.mk_list [Translate.valueType t])) ∧
+      Instr_const C (instruction e) := by
+  cases h with
+  | i32 value => exact ⟨Spec.i32Const_typed C hC value, .const C _ _ hC (instruction_wf (.I32 value))⟩
+  | i64 value => exact ⟨ScalarConst.i64_typed C hC value, .const C _ _ hC (instruction_wf (.I64 value))⟩
+  | f32 value => exact ⟨ScalarConst.f32_typed C hC value, .const C _ _ hC (instruction_wf (.F32 value))⟩
+  | f64 value => exact ⟨ScalarConst.f64_typed C hC value, .const C _ _ hC (instruction_wf (.F64 value))⟩
+  | v128 low high =>
+    exact ⟨.vconst C _ hC (instruction_wf (.V128 low high)), .vconst C _ _ hC (instruction_wf (.V128 low high))⟩
+  | refNull ty =>
+    have hv : valtype_reftype (Translate.referenceType ty) = Translate.valueType (referenceValueType ty) := by
+      cases ty <;> rfl
+    exact ⟨hv ▸ Instr_ok.ref_null C _ hC (instruction_wf (.RefNull ty)), .ref_null C _ hC (instruction_wf (.RefNull ty))⟩
+  | refFunc idx hi =>
+    have hb : idx.val < C.FUNCS.length := by rw [hfunctions, List.length_map]; exact hi
+    exact ⟨.ref_func C (.mk_uN idx.val) C.FUNCS[idx.val]! hb rfl hC (instruction_wf (.RefFunc idx)),
+      .ref_func C (.mk_uN idx.val) hC (instruction_wf (.RefFunc idx))⟩
+  | globalGet idx gt hi hgt himport hconst =>
+    obtain ⟨hb, he⟩ := global_lookup hglobals idx gt hi hgt himport
+    refine ⟨.global_get C _ _ (Translate.mutability gt.mutability) hb he hC (instruction_wf (.GlobalGet idx)), ?_⟩
+    apply Instr_const.global_get C _ (Translate.valueType gt.valtype) hb _ hC
+      (instruction_wf (.GlobalGet idx))
+    simpa [Translate.globalType, hconst, Translate.mutability, proj_uN_0] using he
+
+/-- A valid initializer satisfies `Expr_ok_const` at its type. -/
+theorem Valid.expr_ok_const {env e t} (h : Valid env e t)
+    (C : context) (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
+    Expr_ok_const C (expression e) (Translate.valueType t) := by
+  obtain ⟨ht, hc⟩ := h.instruction_typed C hC hglobals hfunctions
+  exact .mk_Expr_ok_const C _ _
+    (.mk_Expr_ok C _ _ (.instr C _ [] _ ht hC (instruction_wf _)) hC (expression_wf _))
+    (.mk_Expr_const C _ (by simpa [Forall, expression] using hc) hC (expression_wf _))
+    hC (expression_wf _)
+
+/-- The SpecTec global of a decoded global. -/
+def global (g : metadata.Global) : _root_.global :=
+  .GLOBAL (Translate.globalType g.gtype) (expression g.init)
+
+/-- A global with a valid initializer satisfies `Global_ok`. -/
+theorem global_typed (env : metadata.Env) (g : metadata.Global)
+    (h : Valid env g.init g.gtype.valtype) (C : context)
+    (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
+    Global_ok C (global g) (Translate.globalType g.gtype) := by
+  apply Global_ok.mk_Global_ok C _ _ (Translate.mutability g.gtype.mutability)
+      (Translate.valueType g.gtype.valtype)
+  · exact Translate.globalType_valid _
+  · rfl
+  · exact h.expr_ok_const C hC hglobals hfunctions
+  · exact hC
+  · exact .global_case_0 _ _ (expression_wf _)
+
+end Itasca.ModuleConstants
+
+end
+
+/-! ## Parser -/
+
+section
 
 /-!
 # Constant expression parser
@@ -371,3 +552,5 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
       error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
 
 end Itasca
+
+end

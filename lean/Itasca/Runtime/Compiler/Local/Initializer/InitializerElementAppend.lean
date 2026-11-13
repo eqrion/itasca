@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
-import Itasca.Module.Const.Syntax
+import Itasca.Module.Const.Parser
 
 /-!
 Sections, each formerly its own module: InitializerProofs, InitializerExpression, InitializerMappings, InitializerMappingLoops, InitializerElementAppend.

@@ -1,5 +1,5 @@
 import Itasca.Module.Elab.SegmentSyntax
-import Itasca.Module.Const.Typing
+import Itasca.Module.Const.Parser
 
 /-!
 # Segment typing
