@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Coordinates.SimdSourceCoordinates
+import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
 import Itasca.Runtime.Compiler.Local.Publication.LiteralMapPublication
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Visitor.Events

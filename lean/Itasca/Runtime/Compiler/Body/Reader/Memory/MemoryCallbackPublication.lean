@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
-import Itasca.Runtime.Compiler.Local.Coordinates.NumericSourceCoordinates
+import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
 import Itasca.Runtime.Compiler.Local.Publication.LoweringMapPublication
 
 namespace Itasca.Runtime.Compiler

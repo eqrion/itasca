@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
 import Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationHeader
 import Itasca.Runtime.Compiler.Module.PreparedExecutableSafety
-import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateCallbacks
+import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Body.Relations.Checking.BodyCheckedWasm2
