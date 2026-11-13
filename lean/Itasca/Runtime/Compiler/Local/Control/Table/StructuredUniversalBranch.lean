@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedBranchPrefix
-import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std

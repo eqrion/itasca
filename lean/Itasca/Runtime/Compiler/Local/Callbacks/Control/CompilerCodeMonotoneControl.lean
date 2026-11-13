@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.OpenPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.FutureFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 

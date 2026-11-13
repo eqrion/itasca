@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
 
 /-!

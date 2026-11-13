@@ -46,7 +46,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
-import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts

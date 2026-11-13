@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableBuild
-import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
