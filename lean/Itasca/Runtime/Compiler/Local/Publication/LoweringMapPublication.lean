@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

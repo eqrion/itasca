@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission

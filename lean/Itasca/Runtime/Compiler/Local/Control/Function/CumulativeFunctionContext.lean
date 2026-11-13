@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 Signature transport across source contexts.

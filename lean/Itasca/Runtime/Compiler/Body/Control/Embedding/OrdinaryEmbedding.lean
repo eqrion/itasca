@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 Checked syntactic inclusion of the scalar, stateful and indirect-call families, which share the function's immutable index-pair table.

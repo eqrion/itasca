@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 Memory growth dispatch and structured execution. Shared growth-slot adapters and handler effects remain below both memory and table growth constructions.

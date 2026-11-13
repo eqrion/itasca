@@ -6,7 +6,7 @@ import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 Memory-fill correspondence from the handler to a machine step.

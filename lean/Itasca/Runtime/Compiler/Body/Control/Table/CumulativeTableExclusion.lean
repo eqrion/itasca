@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std

@@ -15,7 +15,7 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Machine.Coverage.Heads
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 
 /-!

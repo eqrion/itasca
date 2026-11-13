@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
 import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 Sections, each formerly its own module: BranchCallbackSafety, CallSafety, IndirectCallInversion, IndirectCallExclusions.

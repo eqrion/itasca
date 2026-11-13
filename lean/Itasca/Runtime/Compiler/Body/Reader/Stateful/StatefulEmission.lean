@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 
 /-!

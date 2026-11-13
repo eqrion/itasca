@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 
 /-!
 Normal return of plain and complete stateful compiler callbacks.

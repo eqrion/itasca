@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Interp.Machine.Outcomes.ScalarTraps
 import Itasca.Runtime.Integration.Execution.Mutation.Certificate

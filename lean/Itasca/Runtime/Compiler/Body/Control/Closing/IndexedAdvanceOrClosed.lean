@@ -5,7 +5,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.OpcodeClassification
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedFold
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointIndirectCall
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects

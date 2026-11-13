@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmissionTransport
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
 /-!
 A successful callback only appends pair metadata. Live reader typing supplies its operand layout; a dead callback only observes the validator state.

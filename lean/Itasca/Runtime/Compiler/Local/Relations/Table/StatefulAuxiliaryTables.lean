@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 
 namespace Itasca.Runtime.Compiler

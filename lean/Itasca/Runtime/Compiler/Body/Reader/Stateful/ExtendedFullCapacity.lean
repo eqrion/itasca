@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
