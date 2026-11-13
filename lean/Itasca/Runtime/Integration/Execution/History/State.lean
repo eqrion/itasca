@@ -40,7 +40,7 @@ import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.LocalCapacity
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Interp.Machine.Local.MovePrefix
+import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
 import Itasca.Runtime.SourceMachine.Numeric.Decode
