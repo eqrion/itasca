@@ -1,4 +1,341 @@
-import Itasca.Module.Readers.BasicComplete
+import Itasca.Module.Readers.Utf8
+
+/-!
+Sections, each formerly its own module: Names, Utf8Complete, NamesComplete, TypesComplete.
+-/
+
+/-! ## Names -/
+
+section
+
+/-!
+# Name and custom section readers
+
+`metadata.decode_name.spec`: an accepted name is a length-prefixed byte vector of valid UTF-8.
+`metadata.decode_custom_section.spec`: the name lies within the section and the rest of the payload
+is an uninterpreted interval. Completeness is in `Module/Readers/NamesComplete`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca
+
+open ModuleBinary
+
+/-- An accepted name is a `NameEncoding` span and its bytes are returned unchanged. -/
+@[step]
+theorem metadata.decode_name.spec (data : Slice U8) (start : Usize) :
+    metadata.decode_name data start ⦃ r => match r with
+      | .Ok (value, next) => At NameEncoding data start value.val next
+      | .Err _ => True ⦄ := by
+  obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data start)
+  cases r with
+  | Err e =>
+      simp [metadata.decode_name, hr, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+        error.Error.Insts.CoreConvertFromOpError.from]
+  | Ok pair =>
+      obtain ⟨len, pos⟩ := pair
+      have hspan := hd.span
+      simp [metadata.decode_name, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      step*
+      cases r1 with
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | Ok u =>
+          cases u
+          have hbound := r1_post.mp rfl
+          simp only [bind_ok]
+          step*
+          cases r2 with
+          | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          | Ok u =>
+              cases u
+              simp only [bind_ok, WP.spec_ok]
+              have hutf := r2_post rfl
+              have hlength : bytes.val.length = len.val := by
+                have := bytes_post.length
+                scalar_tac
+              obtain ⟨countBytes, hs, hl, hb, he⟩ := hd
+              refine ⟨countBytes ++ bytes.val, ⟨?_, by simpa [alloc.vec.Vec.deref] using hutf⟩, ?_⟩
+              · exact ByteVecEncoding.iff.mpr ⟨countBytes, by simpa [hlength] using he, rfl⟩
+              · exact (show Wasm1.BytesAt data start countBytes pos from ⟨hs, hl, hb⟩).append bytes_post
+
+/-- The custom section name is a `NameEncoding` span within the section. The returned metadata
+gives the name length and the payload interval from the end of the name to `last`. -/
+@[step]
+theorem metadata.decode_custom_section.spec (data : Slice U8) (start last : Usize) :
+    metadata.decode_custom_section data start last ⦃ r => match r with
+      | .Ok custom => ∃ nm, At NameEncoding data start nm custom.payload_start ∧
+          custom.payload_start.val ≤ last.val ∧ custom.payload_end = last ∧
+          custom.name_len.val = nm.length
+      | .Err _ => True ⦄ := by
+  obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (metadata.decode_name.spec data start)
+  cases r with
+  | Err e =>
+      simp [metadata.decode_custom_section, hr, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Ok pair =>
+      obtain ⟨nm, next⟩ := pair
+      simp [metadata.decode_custom_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
+      split
+      · simp
+      · rename_i hbound
+        simp only [WP.spec_ok]
+        exact ⟨nm.val, hd, by scalar_tac, trivial, rfl⟩
+
+end Itasca
+
+end
+
+/-! ## Utf8Complete -/
+
+section
+
+/-!
+# Completeness of UTF-8 validation
+
+`metadata.validate_utf8.complete`: the scanner accepts every independent `Utf8` byte string, through
+`metadata.utf8_sequence_len.complete` and `metadata.validate_utf8_loop.complete`. Soundness is in
+`Module/Readers/Utf8`.
+-/
+
+open Aeneas Aeneas.Std
+
+set_option maxHeartbeats 1600000
+
+namespace Itasca.Wasm1
+
+/-- Indexing a `BytesAt` span reads the corresponding input byte. -/
+theorem BytesAt.get {data start bytes next} (h : BytesAt data start bytes next)
+    (i : Nat) (hi : i < bytes.length) :
+    data.val[start.val + i]'(by have := h.length; have := h.bound; scalar_tac) = bytes[i] := by
+  have hd : i < (data.val.drop start.val).length := by
+    simp only [List.length_drop]
+    have := h.length
+    have := h.bound
+    scalar_tac
+  have he : (data.val.drop start.val)[i] = bytes[i] := by
+    simp only [h.suffix, List.getElem_append_left hi]
+  simpa only [List.getElem_drop] using he
+
+end Itasca.Wasm1
+
+namespace Itasca
+open ModuleBinary
+
+@[local step] private theorem utf8_cont_accepts (data : Slice U8) (pos : Usize) (lo hi : U8)
+    (hp : pos.val < data.length)
+    (hl : lo.val ≤ data.val[pos.val].val) (hh : data.val[pos.val].val ≤ hi.val) :
+    metadata.utf8_cont data pos lo hi ⦃ r => r = .Ok () ⦄ := by
+  unfold metadata.utf8_cont
+  step*
+
+/-- `metadata.utf8_sequence_len` accepts one canonical UTF-8 character and returns its length. -/
+theorem metadata.utf8_sequence_len.complete (data : Slice U8) (pos next : Usize)
+    (encoded : List U8) (hc : Utf8Char encoded) (hb : Wasm1.BytesAt data pos encoded next) :
+    ∃ count, metadata.utf8_sequence_len data pos = .ok (.Ok count) ∧ count.val = encoded.length := by
+  have hs : metadata.utf8_sequence_len data pos ⦃ r =>
+      ∃ count, r = .Ok count ∧ count.val = encoded.length ⦄ := by
+    have hlen := hb.length
+    have hbound := hb.bound
+    have heqval (a b : U8) : a = b ↔ a.val = b.val :=
+      ⟨fun h => congrArg UScalar.val h, UScalar.eq_of_val_eq⟩
+    cases hc with
+    | one a ha =>
+        have h0 := hb.get 0 (by simp)
+        simp only [List.getElem_cons_zero, Nat.add_zero] at h0
+        unfold metadata.utf8_sequence_len
+        step
+        split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind
+    | two a b ha ha' hb0 hb1 =>
+        have h0 := hb.get 0 (by simp)
+        have h1 := hb.get 1 (by simp)
+        simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1
+        unfold metadata.utf8_sequence_len
+        step
+        split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind
+    | three a b c ha hc0 hc1 =>
+        have h0 := hb.get 0 (by simp)
+        have h1 := hb.get 1 (by simp)
+        have h2 := hb.get 2 (by simp)
+        simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2
+        rcases ha with ha | ha | ha | ha
+        all_goals unfold metadata.utf8_sequence_len
+        all_goals step
+        all_goals split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind
+    | four a b c d ha hc0 hc1 hd0 hd1 =>
+        have h0 := hb.get 0 (by simp)
+        have h1 := hb.get 1 (by simp)
+        have h2 := hb.get 2 (by simp)
+        have h3 := hb.get 3 (by simp)
+        simp only [List.getElem_cons_zero, List.getElem_cons_succ, Nat.add_zero] at h0 h1 h2 h3
+        rcases ha with ha | ha | ha
+        all_goals unfold metadata.utf8_sequence_len
+        all_goals step
+        all_goals split
+        all_goals have hbval := congrArg UScalar.val b_post
+        all_goals clear b_post
+        all_goals try simp only [heqval, show (224#8#uscalar : U8).val = 224 from rfl,
+          show (237#8#uscalar : U8).val = 237 from rfl,
+          show (240#8#uscalar : U8).val = 240 from rfl,
+          show (244#8#uscalar : U8).val = 244 from rfl] at *
+        all_goals try (exfalso; scalar_tac)
+        all_goals step* -grind
+  obtain ⟨r, hr, count, rfl, hc⟩ := WP.spec_imp_exists hs
+  exact ⟨count, hr, hc⟩
+
+
+/-- The scan loop accepts a valid UTF-8 suffix that runs to the end of the input. -/
+theorem metadata.validate_utf8_loop.complete (data : Slice U8) (pos : Usize)
+    (encoded : List U8) (hc : Utf8 encoded)
+    (hb : Wasm1.BytesAt data pos encoded (Slice.len data)) :
+    metadata.validate_utf8_loop data pos = .ok (.Ok ()) := by
+  induction hc generalizing pos with
+  | nil =>
+      have he := hb.empty
+      subst pos
+      unfold metadata.validate_utf8_loop
+      rw [loop]
+      simp [metadata.validate_utf8_loop.body]
+  | @cons first rest hchar hrest ih =>
+      obtain ⟨middle, hfirst, htail⟩ := hb.split
+      have hpositive : 0 < first.length := by cases hchar <;> simp
+      have hmore : ¬ pos ≥ Slice.len data := by
+        have := hfirst.length
+        have := hfirst.bound
+        scalar_tac
+      obtain ⟨count, hcount, hlen⟩ := metadata.utf8_sequence_len.complete data pos middle first hchar hfirst
+      obtain ⟨next, hnext, hn⟩ := WP.spec_imp_exists
+        (Usize.add_spec (x := pos) (y := count) (by have := hfirst.length; scalar_tac))
+      have he : next = middle := UScalar.eq_of_val_eq (by have := hfirst.length; omega)
+      subst next
+      have hbody : metadata.validate_utf8_loop.body data pos = .ok (.cont middle) := by
+        simp [metadata.validate_utf8_loop.body, hmore, hcount, hnext,
+          core.result.Result.Insts.CoreOpsTry.branch]
+      have hloop := ih middle htail
+      unfold metadata.validate_utf8_loop at hloop ⊢
+      rw [loop]
+      simp only [hbody, bind_ok]
+      exact hloop
+
+/-- `metadata.validate_utf8` accepts every `Utf8` byte string, including all Unicode scalar values
+through U+10FFFF. -/
+theorem metadata.validate_utf8.complete (data : Slice U8) (h : Utf8 data.val) :
+    metadata.validate_utf8 data = .ok (.Ok ()) := by
+  apply metadata.validate_utf8_loop.complete data 0#usize data.val h
+  constructor <;> simp
+
+end Itasca
+
+end
+
+/-! ## NamesComplete -/
+
+section
+
+/-!
+# Completeness of name readers
+
+Acceptance of `metadata.decode_name` and `metadata.decode_custom_section` from independent name
+encodings (`.complete`, and `.complete_raw` for a name given as a list). Strict UTF-8 acceptance
+comes from `Module/Readers/Utf8Complete`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca
+open ModuleBinary
+
+/-- Given a byte vector span and the UTF-8 scanner's reply on the copied name,
+`metadata.decode_name` returns that reply's verdict with the name and cursor. -/
+theorem metadata.decode_name.from_utf8 (data : Slice U8) (pos : Usize)
+    (nm : alloc.vec.Vec U8) (next : Usize)
+    (h : At ByteVecEncoding data pos nm.val next)
+    (reply : core.result.Result Unit error.Error)
+    (hutf8 : metadata.validate_utf8 (alloc.vec.Vec.deref nm) = .ok reply) :
+    metadata.decode_name data pos = .ok (match reply with
+      | .Ok _ => .Ok (nm, next)
+      | .Err e => .Err e) := by
+  obtain ⟨count, middle, hcount, hlen, encoded, hrep, hbytes⟩ := h.vector_split
+  have hb : Wasm1.BytesAt data middle nm.val next := by simpa only [hrep.bytes] using hbytes
+  have hr := reader.read_u32_leb.complete data pos count middle hlen
+  have hs : metadata.decode_name data pos ⦃ r => r = (match reply with
+      | .Ok _ => .Ok (nm, next)
+      | .Err e => .Err e) ⦄ := by
+    simp [metadata.decode_name, hr, core.result.Result.Insts.CoreOpsTry.branch]
+    step
+    have hroom : middle.val + n.val ≤ data.length := by have := hb.length; have := hb.bound; scalar_tac
+    rw [metadata.have_bytes.complete data middle n hroom]
+    simp only [bind_ok]
+    step
+    have hend : i = next := UScalar.eq_of_val_eq (by have := hb.length; scalar_tac)
+    rw [hend, metadata.copy_bytes.complete data middle next nm hb]
+    simp only [bind_ok, hutf8]
+    cases reply <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
+  exact hr
+
+/-- `metadata.decode_name` accepts a `NameEncoding` span and returns the name and cursor. -/
+theorem metadata.decode_name.complete (data : Slice U8) (pos : Usize)
+    (nm : alloc.vec.Vec U8) (next : Usize) (h : At NameEncoding data pos nm.val next) :
+    metadata.decode_name data pos = .ok (.Ok (nm, next)) := by
+  obtain ⟨bytes, ⟨hvec, hutf8⟩, hs⟩ := h
+  exact metadata.decode_name.from_utf8 data pos nm next ⟨bytes, hvec, hs⟩ (.Ok ())
+    (metadata.validate_utf8.complete _ (by simpa [alloc.vec.Vec.deref] using hutf8))
+
+/-- `metadata.decode_name.complete` for a name given as a list: the returned vector has those
+bytes. -/
+theorem metadata.decode_name.complete_raw (data : Slice U8) (pos : Usize)
+    (nm : List U8) (next : Usize) (h : At NameEncoding data pos nm next) :
+    ∃ value, metadata.decode_name data pos = .ok (.Ok (value, next)) ∧ value.val = nm := by
+  have hsize : nm.length ≤ Usize.max := by
+    obtain ⟨bytes, ⟨hvec, _⟩, _⟩ := h
+    obtain ⟨count, _, hc, _, _⟩ := hvec
+    have := hc.value_lt
+    scalar_tac
+  let value := alloc.vec.Vec.from nm hsize
+  exact ⟨value, metadata.decode_name.complete data pos value next (by simpa [value] using h), by simp [value]⟩
+
+/-- `metadata.decode_custom_section.complete` for a name given as a list. -/
+theorem metadata.decode_custom_section.complete_raw (data : Slice U8) (pos next last : Usize)
+    (nm : List U8) (h : At NameEncoding data pos nm next) (hbefore : next.val ≤ last.val) :
+    ∃ custom, metadata.decode_custom_section data pos last = .ok (.Ok custom) ∧
+      custom.name_len.val = nm.length ∧ custom.payload_start = next ∧ custom.payload_end = last := by
+  obtain ⟨value, hr, hv⟩ := metadata.decode_name.complete_raw data pos nm next h
+  refine ⟨⟨alloc.vec.Vec.len value, next, last⟩, ?_, by simpa using congrArg List.length hv, rfl, rfl⟩
+  simp [metadata.decode_custom_section, hr, hbefore, core.result.Result.Insts.CoreOpsTry.branch]
+
+end Itasca
+
+end
+
+/-! ## TypesComplete -/
+
+section
 
 /-!
 # Completeness of the type readers
@@ -165,3 +502,5 @@ theorem metadata.decode_func_type.profile_complete (data : Slice U8) (pos : Usiz
     core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca
+
+end

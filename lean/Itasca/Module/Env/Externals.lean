@@ -1,6 +1,6 @@
 import Itasca.Module.Const.Parser
 import Itasca.Spec.Checks
-import Itasca.Module.Readers.Copies
+import Itasca.Module.Readers.Utf8
 import Itasca.Module.Elab.Translation
 import Mathlib.Data.List.Forall2
 

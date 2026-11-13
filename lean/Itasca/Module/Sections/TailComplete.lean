@@ -1,6 +1,6 @@
 import Itasca.Module.Sections.Tail
 import Itasca.Module.Sections.DataComplete
-import Itasca.Module.Readers.NamesComplete
+import Itasca.Module.Readers.TypesComplete
 
 /-!
 # Completeness of the tail parser

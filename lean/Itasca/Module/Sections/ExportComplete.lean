@@ -1,5 +1,5 @@
 import Itasca.Module.Sections.Export
-import Itasca.Module.Readers.NamesComplete
+import Itasca.Module.Readers.TypesComplete
 import Mathlib.Data.List.Nodup
 
 /-!

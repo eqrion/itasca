@@ -9,7 +9,7 @@ import Itasca.Module.Sections.GlobalComplete
 import Itasca.Module.Sections.ImportsComplete
 import Itasca.Module.Sections.ElementComplete
 import Itasca.Module.Sections.ExportComplete
-import Itasca.Module.Readers.NamesComplete
+import Itasca.Module.Readers.TypesComplete
 
 /-!
 Sections, each formerly its own module: Slots, Chain, ReadyContexts, DispatchComplete, Replay, Complete.

@@ -1,6 +1,6 @@
 import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Sections.Data
-import Itasca.Module.Readers.Names
+import Itasca.Module.Readers.TypesComplete
 import Itasca.Contracts
 
 /-!

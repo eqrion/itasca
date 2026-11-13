@@ -1,5 +1,5 @@
 import Itasca.Module.Const.ParserComplete
-import Itasca.Module.Readers.FramingComplete
+import Itasca.Module.Readers.Utf8
 import Itasca.Module.Sections.Data
 
 /-!

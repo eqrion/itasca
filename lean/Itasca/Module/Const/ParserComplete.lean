@@ -1,6 +1,6 @@
 import Itasca.Module.Elab.TypingInversion
 import Itasca.Module.Const.Parser
-import Itasca.Module.Readers.BasicComplete
+import Itasca.Module.Readers.Utf8
 
 /-!
 Sections, each formerly its own module: Inversion, ParserComplete.

@@ -1,7 +1,6 @@
 import Itasca.Module.Env.Requirements
 import Itasca.Module.Sections.FunctionComplete
 import Itasca.Module.Sections.Imports
-import Itasca.Module.Readers.NamesComplete
 import Itasca.Module.Readers.TypesComplete
 
 /-!

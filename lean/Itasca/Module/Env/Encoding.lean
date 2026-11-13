@@ -7,7 +7,7 @@ import Itasca.Module.Sections.Element
 import Itasca.Module.Sections.Export
 import Itasca.Module.Sections.DataCount
 import Itasca.Module.Sections.Tail
-import Itasca.Module.Readers.Header
+import Itasca.Module.Readers.Utf8
 import Itasca.Binary.UnicodeUnique
 
 /-!

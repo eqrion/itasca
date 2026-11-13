@@ -1,6 +1,6 @@
 import Itasca.Binary.UnicodeUnique
 import Itasca.Module.Elab.Translation
-import Itasca.Module.Readers.Basic
+import Itasca.Module.Readers.Types
 
 /-!
 Sections, each formerly its own module: Syntax, Typing, Parser.

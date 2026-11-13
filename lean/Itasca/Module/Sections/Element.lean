@@ -2,7 +2,7 @@ import Itasca.Module.Sections.ElementHeader
 import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Sections.Imports
 import Itasca.Module.Sections.Global
-import Itasca.Module.Readers.SegmentIndex
+import Itasca.Module.Readers.Utf8
 
 /-!
 # Element section parser

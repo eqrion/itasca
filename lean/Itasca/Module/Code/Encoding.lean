@@ -1,8 +1,8 @@
 import Itasca.Module.Code.BodyContextComplete
 import Itasca.Binary.UnicodeUnique
 import Itasca.Spec.Checks
-import Itasca.Module.Readers.Copies
-import Itasca.Module.Readers.Basic
+import Itasca.Module.Readers.Utf8
+import Itasca.Module.Readers.Types
 import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!

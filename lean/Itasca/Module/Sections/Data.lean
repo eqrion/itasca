@@ -1,7 +1,7 @@
 import Itasca.Module.Elab.SegmentTyping
-import Itasca.Module.Readers.Basic
+import Itasca.Module.Readers.Types
 import Itasca.Module.Const.Parser
-import Itasca.Module.Readers.SegmentIndex
+import Itasca.Module.Readers.Utf8
 
 /-!
 # Data section parser

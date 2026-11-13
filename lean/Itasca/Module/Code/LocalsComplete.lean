@@ -1,7 +1,6 @@
 import Itasca.Module.Code.Encoding
 import Itasca.Profile.CodeEntry
-import Itasca.Module.Readers.FramingComplete
-import Itasca.Module.Readers.BasicComplete
+import Itasca.Module.Readers.Utf8
 
 /-!
 Sections, each formerly its own module: Section, LocalsComplete.

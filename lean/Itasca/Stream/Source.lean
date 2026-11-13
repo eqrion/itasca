@@ -1,5 +1,5 @@
 import Itasca.Support.Result
-import Itasca.Module.Readers.Basic
+import Itasca.Module.Readers.Types
 import Itasca.Contracts
 
 /-!

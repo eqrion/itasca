@@ -1,6 +1,6 @@
 import Itasca.Module.Env.Declarations
 import Itasca.Module.Sections.Type
-import Itasca.Module.Readers.Names
+import Itasca.Module.Readers.TypesComplete
 
 /-!
 # Export and start section parsers

@@ -1,5 +1,5 @@
-import Itasca.Module.Readers.FramingComplete
-import Itasca.Module.Readers.Names
+import Itasca.Module.Readers.Utf8
+import Itasca.Module.Readers.TypesComplete
 
 /-!
 # Custom section trace definitions

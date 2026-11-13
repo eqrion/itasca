@@ -1,6 +1,6 @@
 import Itasca.Module.Sections.Function
 import Itasca.Module.Env.Declarations
-import Itasca.Module.Readers.Names
+import Itasca.Module.Readers.TypesComplete
 
 /-!
 # Single import parser

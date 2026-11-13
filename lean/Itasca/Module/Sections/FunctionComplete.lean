@@ -1,5 +1,5 @@
 import Itasca.Module.Sections.Function
-import Itasca.Module.Readers.BasicComplete
+import Itasca.Module.Readers.Utf8
 
 /-!
 # Completeness of the function section parser

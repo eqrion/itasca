@@ -1,5 +1,5 @@
 import Itasca.Module.Sections.ElementInit
-import Itasca.Module.Readers.BasicComplete
+import Itasca.Module.Readers.Utf8
 
 /-!
 # Element segment header and entry parser
