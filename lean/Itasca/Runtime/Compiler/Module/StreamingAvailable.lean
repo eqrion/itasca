@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Module.SourceQueuePolicy
+import Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable
 import Itasca.Stream.SubmissionComplete
 import Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame

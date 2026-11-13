@@ -23,7 +23,7 @@ import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Compiler.Module.CompileSlice
+import Itasca.Runtime.Compiler.Module.SchedulerCapacities
 import Itasca.Runtime.Store.Instantiation.NoStart
 import Itasca.Runtime.Store.Instantiation.Linked
 

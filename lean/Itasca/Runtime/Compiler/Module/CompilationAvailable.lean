@@ -1,8 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Module.SourceRegionsAvailable
 import Itasca.Runtime.Compiler.Module.StreamingAvailable
-import Itasca.Runtime.Compiler.Module.CollectionAvailable
-import Itasca.Runtime.Compiler.Module.SourceCompilationDemand
+import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

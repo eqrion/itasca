@@ -4,9 +4,8 @@ import Itasca.Runtime.Store.Preparation.StagingSegmentBounds
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
 import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
-import Itasca.Runtime.Compiler.Module.SegmentPayloadBounds
-import Itasca.Runtime.Compiler.Module.CompileCache
-import Itasca.Runtime.Compiler.Module.CompileSemantic
+import Itasca.Runtime.Compiler.Module.CompileDataCount
+import Itasca.Runtime.Compiler.Module.SegmentSource
 import Itasca.Runtime.Store.Preparation.PreparationTableMemoryBindings
 import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Store.Preparation.StagingCommitShape

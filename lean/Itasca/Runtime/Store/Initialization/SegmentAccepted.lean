@@ -1,7 +1,6 @@
 import Itasca.Runtime.Store.Initialization.SegmentLoop
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Compiler.Module.SegmentSource
-import Itasca.Runtime.Compiler.Module.CompileSemantic
 
 /-!
 Total compiled segment initialization. Synthetic-frame loop execution lifts to complete segment programs and the accepted compiler certificate, returning without invoking the start function.

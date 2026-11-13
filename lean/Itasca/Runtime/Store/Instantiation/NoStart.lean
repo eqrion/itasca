@@ -14,7 +14,7 @@ import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Compiler.Module.SourceInstantiation
+import Itasca.Runtime.Compiler.Module.CompileDataCount
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation

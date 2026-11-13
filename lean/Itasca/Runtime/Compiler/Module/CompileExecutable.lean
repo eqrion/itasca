@@ -1,16 +1,133 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
-import Itasca.Runtime.Compiler.Module.CompileEntry
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
-import Itasca.Runtime.Compiler.Module.ExecutableCollectedFunctions
-import Itasca.Runtime.Compiler.Module.CompileAssembly
-import Itasca.Runtime.Compiler.Module.CompileSourceCertificate
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
+import Itasca.Runtime.Compiler.Module.CodeRegionComplete
+import Itasca.Runtime.Compiler.Module.CompileSubmit
+import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
+import Itasca.Runtime.Compiler.Module.InitializerTotal
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
-import Itasca.Runtime.Compiler.Module.ExecutableSchedulerFunctions
-import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
-import Itasca.Runtime.Compiler.Module.SchedulerSubmission
+import Itasca.Runtime.Compiler.Module.SchedulerCapacities
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
-import Itasca.Runtime.Compiler.Module.CompileSourceSetup
-import Itasca.Runtime.Compiler.Module.CompileSlice
+
+/-!
+Sections, each formerly its own module: ExecutableCollectedFunctions, ExecutableSchedulerFunctions, CompileExecutable.
+-/
+
+/-! ## ExecutableCollectedFunctions -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+structure PendingExecutableModuleFunctions (env : Itasca.metadata.Env)
+    (pending : List (Option runtime.bytecode.CompiledFunction)) (sources : List funccode) : Prop where
+  count : sources.length = env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (typeIndex : U32), env.func_type_indices.val[index]? = some typeIndex →
+    ∃ compiled source, pending[index]? = some (some compiled) ∧ sources[index]? = some source ∧
+      DefinedExecutableFunctionCode env typeIndex source compiled
+
+/-- Source-indexed compiler certificates survive actual dense collection. -/
+theorem PendingExecutableModuleFunctions.collected {env pending sources}
+    (certificate : PendingExecutableModuleFunctions env pending sources)
+    (module : runtime.compiler.ExecutableModule) (sameEnv : module.module.env = env)
+    (collected : pending = module.functions.val.map some) : ExecutableModuleFunctions module sources := by
+  refine ⟨by simpa only [sameEnv] using certificate.count, ?_⟩
+  intro index typeIndex found
+  obtain ⟨compiled, source, codeFound, sourceFound, code⟩ := certificate.entry index typeIndex
+    (by simpa only [sameEnv] using found)
+  refine ⟨compiled, source, ?_, sourceFound, by simpa only [sameEnv] using code⟩
+  rw [collected, List.getElem?_map] at codeFound
+  cases actual : module.functions.val[index]? <;> simp_all
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## ExecutableSchedulerFunctions -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Every occupied scheduler slot carries the corresponding declared function
+certificate. Empty slots are permitted until actual collection succeeds. -/
+structure PartialExecutableModuleFunctions (env : metadata.Env) (sources : List funccode)
+    (pending : List (Option runtime.bytecode.CompiledFunction)) : Prop where
+  count : pending.length = env.func_type_indices.val.length
+  sourceCount : sources.length = env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (compiled : runtime.bytecode.CompiledFunction),
+    pending[index]? = some (some compiled) →
+    ∃ typeIndex source, env.func_type_indices.val[index]? = some typeIndex ∧
+      sources[index]? = some source ∧ DefinedExecutableFunctionCode env typeIndex source compiled
+
+theorem PartialExecutableModuleFunctions.empty (env : metadata.Env) (sources : List funccode)
+    (count : sources.length = env.func_type_indices.val.length) :
+    PartialExecutableModuleFunctions env sources (List.replicate env.func_type_indices.val.length none) := by
+  refine ⟨by simp, count, ?_⟩
+  intro index compiled found
+  have member := List.mem_of_getElem? found
+  simp at member
+
+theorem PartialExecutableModuleFunctions.set {env sources pending}
+    (certificate : PartialExecutableModuleFunctions env sources pending)
+    (index : Nat) (typeIndex : U32) (compiled : runtime.bytecode.CompiledFunction) (source : funccode)
+    (lookup : env.func_type_indices.val[index]? = some typeIndex)
+    (sourceLookup : sources[index]? = some source)
+    (code : DefinedExecutableFunctionCode env typeIndex source compiled) :
+    PartialExecutableModuleFunctions env sources (pending.set index (some compiled)) := by
+  refine ⟨by simpa using certificate.count, certificate.sourceCount, ?_⟩
+  intro other value found
+  by_cases equal : other = index
+  · subst other
+    have bound : index < pending.length := by
+      rw [certificate.count]
+      exact (List.getElem?_eq_some_iff.mp lookup).1
+    have same : compiled = value := by simpa [List.getElem?_set, bound] using found
+    subst value
+    exact ⟨typeIndex, source, lookup, sourceLookup, code⟩
+  · apply certificate.entry other value
+    simpa [List.getElem?_set, equal] using found
+
+/-- The accepted entry's actual source-indexed write preserves all earlier
+certificates and installs precisely its newly checked function. -/
+theorem CompileEntryWitness.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    (w : CompileEntryWitness allocator before after batch finalBatch)
+    {env : metadata.Env} {sources : List funccode}
+    (certificate : PartialExecutableModuleFunctions env sources before.functions.val)
+    (typeIndex : U32) (source : funccode)
+    (lookup : env.func_type_indices.val[w.entry.index.val]? = some typeIndex)
+    (sourceLookup : sources[w.entry.index.val]? = some source)
+    (code : DefinedExecutableFunctionCode env typeIndex source w.final.function) :
+    PartialExecutableModuleFunctions env sources after.functions.val := by
+  rw [w.published]
+  simpa only [alloc.vec.Vec.set_val_eq] using certificate.set w.entry.index.val typeIndex w.final.function source lookup sourceLookup code
+
+/-- Successful dense collection fills every slot, allowing the retained
+per-index source witnesses to be assembled into the complete module list. -/
+theorem PartialExecutableModuleFunctions.complete {env sources pending}
+    (certificate : PartialExecutableModuleFunctions env sources pending)
+    (functions : List runtime.bytecode.CompiledFunction)
+    (collected : pending = functions.map some) :
+    PendingExecutableModuleFunctions env pending sources := by
+  have length : functions.length = env.func_type_indices.val.length := by
+    simpa only [collected, List.length_map] using certificate.count
+  refine ⟨certificate.sourceCount, ?_⟩
+  intro index typeIndex lookup
+  have bound : index < functions.length := by
+    rw [length]
+    exact (List.getElem?_eq_some_iff.mp lookup).1
+  have found : pending[index]? = some (some functions[index]) := by simp [collected, bound]
+  obtain ⟨actualType, source, actualLookup, sourceLookup, code⟩ := certificate.entry index functions[index] found
+  have same : actualType = typeIndex := by simpa [lookup] using actualLookup.symm
+  subst actualType
+  exact ⟨functions[index], source, found, sourceLookup, code⟩
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CompileExecutable -/
+
+section
 
 /-!
 Executable-function certificates through entry compilation, scheduler submission and whole-module assembly. The final result retains source function ordering and each compiled body certificate.
@@ -384,5 +501,7 @@ theorem compile_executable_functions {A : Type} (ops : runtime.platform.Alloc A)
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates.1, certificates.2⟩
 end Itasca.Runtime.Compiler
+
+end
 
 end

@@ -1,11 +1,8 @@
-import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
 import Itasca.Runtime.Compiler.Module.SchedulerCapacities
-import Itasca.Runtime.Compiler.Module.SchedulerSubmission
+import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Body.Capacity.ExecutableFunctionCapacity
-import Itasca.Runtime.Compiler.Module.CompileEntry
+import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
-import Itasca.Runtime.Compiler.Module.CompileSourceSetup
-import Itasca.Runtime.Compiler.Module.CompileSlice
 
 /-!
 Source-derived frame capacities through compiler entry, scheduler submission and module assembly. The resulting certificate relates issued compiled functions to independent source demand.
