@@ -4,7 +4,7 @@ import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Interp.Invocation.Recording
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Generated.Types

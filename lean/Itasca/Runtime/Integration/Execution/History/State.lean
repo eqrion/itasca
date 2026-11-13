@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
@@ -53,12 +53,11 @@ import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Interp.Machine.Frames.FrameDepth

@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Ownership.Extension
-import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Interp.Relations.StackPreservation
 
 namespace Itasca.Runtime.Interp

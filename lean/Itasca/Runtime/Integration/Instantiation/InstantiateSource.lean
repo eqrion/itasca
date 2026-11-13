@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Instantiation.InstantiateSourceOrigin
 import Itasca.Runtime.Integration.Instantiation.StartResolution
 import Itasca.Runtime.Integration.Instantiation.StartAmbient
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
-import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Instantiation.Precommit

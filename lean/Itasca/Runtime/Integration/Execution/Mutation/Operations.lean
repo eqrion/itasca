@@ -12,13 +12,12 @@ import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.ErrorPost
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation

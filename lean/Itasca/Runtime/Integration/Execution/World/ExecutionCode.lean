@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Relations.StackPreservation
 

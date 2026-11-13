@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Interp.Host.HostReturnFrames
 
 namespace Itasca.Runtime.Integration

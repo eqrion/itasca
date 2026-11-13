@@ -3,8 +3,8 @@ import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Host.HostResumeOwned
 import Itasca.Runtime.Integration.Host.HostStructuredResume
 import Itasca.Runtime.Integration.Host.HostIndirectContext
-import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.SourceMachine.Indirect.HostTyping
 
 namespace Itasca.Runtime.Integration

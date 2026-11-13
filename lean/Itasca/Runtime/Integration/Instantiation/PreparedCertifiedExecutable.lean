@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Integration.Execution.MemoryInit
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses

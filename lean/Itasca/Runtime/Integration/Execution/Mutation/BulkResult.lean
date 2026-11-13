@@ -5,11 +5,10 @@ import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.ErrorPost
-import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
 import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Representation.StoreCapacity

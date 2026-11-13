@@ -1,8 +1,6 @@
-import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
-import Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.FrameStep

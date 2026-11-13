@@ -3,8 +3,7 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage

@@ -20,7 +20,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.ErrorPost
