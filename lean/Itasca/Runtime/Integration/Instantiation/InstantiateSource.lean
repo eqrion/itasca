@@ -243,7 +243,7 @@ theorem instantiate_compiled_source {M P F A : Type}
   obtain ⟨actualRaw,actualEncoded,elaborated,matched,typed,origin⟩ :=
     instantiate_compiled_executable_eventful_origin memory hooks floats allocator view laws law before module imports platform
       oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes profile limits accepted
-  have sameRaw := Profile.module_unique encoded actualEncoded
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded actualEncoded
   subst actualRaw
   refine ⟨typed,?_⟩
   rcases origin with ⟨error,staged,returned,retained⟩ |

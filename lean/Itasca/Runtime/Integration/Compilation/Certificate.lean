@@ -41,7 +41,7 @@ theorem compile_accepted_certificate {A} (ops : runtime.platform.Alloc A)
     Compiler.compile_executable_functions ops law bytes profile limits executable accepted
   obtain ⟨other,otherEncoded,_,_,_,_,_,capacities,_⟩ :=
     Compiler.compile_executable_capacities ops law bytes profile limits executable accepted
-  have same := Profile.module_unique encoded otherEncoded
+  have same := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded otherEncoded
   subst other
   exact ⟨raw,encoded,elaborated,typed,restrictions,⟨metadata,accessors,functions,initializers,capacities⟩,selected⟩
 end Itasca.Runtime.Integration

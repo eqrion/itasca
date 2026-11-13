@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.SourceMachine.PureHead
 import Itasca.Module.Soundness
-import Itasca.Results.Unique
+import Itasca.Profile.BinaryUnique
 import Itasca.Profile.EntrySound
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 import Itasca.Runtime.Store.Invariant.CodeAgreement

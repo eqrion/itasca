@@ -156,7 +156,7 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
     Compiler.compile_executable_functions allocator law bytes profile limits module accepted
   obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities,_⟩ :=
     Compiler.compile_executable_capacities allocator law bytes profile limits module accepted
-  have sameRaw := Profile.module_unique encoded capacityEncoded
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded capacityEncoded
   subst capacityRaw
   refine ⟨raw, encoded, elaborated, matched, typed, ?_⟩
   obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted

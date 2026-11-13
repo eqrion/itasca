@@ -384,7 +384,7 @@ theorem compile_executable_capacities {A : Type} (ops : runtime.platform.Alloc A
   obtain ⟨c⟩ := w.source_certificate law
   have certificates := c.executable_capacities law
   obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors⟩ := (w.source_validated law).1
-  have same := Profile.module_unique encoded c.encoded
+  have same := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded c.encoded
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates, (w.initializers law).2.1⟩
