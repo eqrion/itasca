@@ -13,7 +13,7 @@ import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.State.GlobalMutationStep
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Emission.Integer
@@ -109,8 +109,8 @@ import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Integration.Execution.Dispatch.Scalar
 import Itasca.Runtime.Integration.Execution.Dispatch.StoreOperations
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution

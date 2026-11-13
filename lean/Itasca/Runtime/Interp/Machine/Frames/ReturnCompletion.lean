@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Frames.ReturnStack
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
+import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 

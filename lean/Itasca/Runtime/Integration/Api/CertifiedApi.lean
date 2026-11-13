@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
 import Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization
 import Itasca.Runtime.Interp.Machine.Stateful.Projection
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Store.Invariant.TypeStaging

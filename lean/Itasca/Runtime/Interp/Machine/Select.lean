@@ -27,7 +27,7 @@ import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Numeric.Positive
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Select.Emission
 import Itasca.Runtime.Interp.Relations.SelectSlots
 import Itasca.Runtime.Interp.Machine.Select.Operands

@@ -13,7 +13,7 @@ import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.State.GlobalMutationStep
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Emission.Integer

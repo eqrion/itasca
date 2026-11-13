@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Host.HostRecordingSite
 import Itasca.Runtime.Interp.Machine.Frames.FunctionEnd
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

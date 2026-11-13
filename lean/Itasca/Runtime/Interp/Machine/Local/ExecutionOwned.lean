@@ -15,7 +15,7 @@ import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Machine.Local.MovePrefix
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Numeric.Transition

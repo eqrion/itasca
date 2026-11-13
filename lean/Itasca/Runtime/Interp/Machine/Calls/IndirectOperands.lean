@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
+import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Spec.Integer

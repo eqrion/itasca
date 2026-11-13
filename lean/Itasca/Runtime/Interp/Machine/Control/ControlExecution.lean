@@ -14,7 +14,7 @@ import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution

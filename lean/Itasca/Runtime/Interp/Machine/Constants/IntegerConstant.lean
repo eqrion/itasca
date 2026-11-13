@@ -11,7 +11,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution

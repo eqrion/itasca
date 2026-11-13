@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Spec.Integer
 
 /-!
