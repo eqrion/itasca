@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Api.CertifiedApi
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
 import Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization
-import Itasca.Runtime.Interp.Machine.Stateful.Projection
+import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry

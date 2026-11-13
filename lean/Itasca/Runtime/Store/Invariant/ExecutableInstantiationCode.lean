@@ -2,7 +2,7 @@ import Itasca.Runtime.Store.Invariant.FunctionSignatures
 import Itasca.Runtime.Store.Invariant.SupportedFunctionTables
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunctionContext
-import Itasca.Runtime.Interp.Machine.Stateful.Projection
+import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
