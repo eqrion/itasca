@@ -9,8 +9,7 @@ import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
-import Itasca.Runtime.Interp.Machine.Progress.Advance
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions

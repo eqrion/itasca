@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Spec.Integer

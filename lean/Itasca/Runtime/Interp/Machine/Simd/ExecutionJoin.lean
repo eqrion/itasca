@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.SourceMachine.Simd.Step
 
 /-!

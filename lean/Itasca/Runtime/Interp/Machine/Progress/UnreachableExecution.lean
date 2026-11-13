@@ -1,9 +1,107 @@
+import Itasca.Runtime.Interp.Machine.History.Append
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Emission.Unreachable
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.SourceMachine.Stateful.TableSet
+
+/-!
+Sections, each formerly its own module: ActiveLoop, UniformAdvance, UnreachableExecution.
+-/
+
+/-! ## ActiveLoop -/
+
+section
+
+/-!
+Active-frame requirements for divergent execution loops and immediate errors.
+
+Main declarations: `execution_loop_error` and `execution_loop_divergent_active`. A direct consumer is `Integration.Instantiation.InstantiateSourceOrigin`.
+-/
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std
+
+theorem execution_loop_error {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (error : runtime.ExecError) :
+    loop (executionBody memory hooks floats allocator) (exec, store, platform, .Err error) =
+      .ok (finishExecution (exec, store, platform, .Err error)) := by
+  rw [loop.eq_def]
+  simp [executionBody, runtime.interp.invoke_with_loop1.body, core.result.Result.is_ok, finishExecution]
+
+theorem execution_loop_divergent_active {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (divergent : loop (executionBody memory hooks floats allocator) (exec, store, platform, .Ok ()) = .div) :
+    0 < exec.frames.length := by
+  by_contra inactive
+  have empty : ¬exec.frames.len > 0#usize := by scalar_tac
+  rw [loop.eq_def] at divergent
+  simp [executionBody, runtime.interp.invoke_with_loop1.body, empty] at divergent
+
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## UniformAdvance -/
+
+section
+
+/-!
+The existing mutable advance, with the same endpoint and a uniform silent rank.
+
+Main declarations: `UniformAdvance`. A direct consumer is `Interp.Machine.Progress.OrdinaryAdvance`.
+-/
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas.Std
+
+/-- The existing mutable advance, with the same endpoint and a uniform silent rank. -/
+def UniformAdvance
+ {M : Type} (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (store : runtime.store.Store M) (exec : runtime.interp.Execution)
+    (expected : List valtype) (codeLength pc : Nat) (pending : Bool) (before : SourceMachine.AState) : Prop :=
+  ∃ nextPC nextPending after,
+    Execution view code store exec after expected nextPC nextPending ∧
+    ConcreteSim codeLength pc nextPC pending nextPending before after ∧
+    UniformConcreteSim pc nextPC pending nextPending before after [] ∧
+    (∀ bounds, SourceMachine.Ownership.StatefulOwned bounds before → SourceMachine.Ownership.StatefulOwned bounds after) ∧ after.ambient = before.ambient ∧
+    (∀ bound, SourceMachine.CodeBound bound before → SourceMachine.CodeBound bound after)
+
+variable  {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation}
+    {store : runtime.store.Store M} {exec : runtime.interp.Execution}
+    {expected : List valtype} {codeLength pc : Nat} {pending : Bool} {before : SourceMachine.AState}
+
+theorem UniformAdvance.forget
+    (step : UniformAdvance view code store exec expected codeLength pc pending before) :
+    Advance view code store exec expected codeLength pc pending before := by
+  obtain ⟨nextPC,nextPending,after,machine,simulation,uniform,ownership,ambient,bounded⟩ := step
+  exact ⟨nextPC,nextPending,after,machine,simulation,ownership,ambient,bounded⟩
+
+theorem UniformAdvance.of_frame_forward {nextPC : Aeneas.Std.U32} {after : SourceMachine.AState}
+    (machine : Execution view code store exec after expected nextPC.val false)
+    (simulation : ConcreteSim codeLength pc nextPC.val false false before after)
+    (forward : pc < nextPC.val)
+    (ownership : ∀ bounds, SourceMachine.Ownership.StatefulOwned bounds before → SourceMachine.Ownership.StatefulOwned bounds after)
+    (ambient : after.ambient = before.ambient)
+    (bounded : ∀ bound, SourceMachine.CodeBound bound before → SourceMachine.CodeBound bound after) :
+    UniformAdvance view code store exec expected codeLength pc false before :=
+  ⟨nextPC.val,false,after,machine,simulation,
+    simulation.uniform_forward forward (by scalar_tac),ownership,ambient,bounded⟩
+
+end Itasca.Runtime.Interp.Machine
+
+end
+
+/-! ## UnreachableExecution -/
+
+section
 
 /-!
 Unreachable execution with retained ownership.
@@ -87,3 +185,5 @@ theorem step_unreachable_core_execution_owned {M P F A : Type}
     obtain ⟨trapped,sameStore,samePlatform,⟨pc,pcNext,exactState⟩,simulation⟩ := effect
     exact ⟨sameStore,samePlatform,pc,exactState,Or.inr ⟨trapped,simulation⟩⟩
 end Itasca.Runtime.Interp.Machine.Unreachable
+
+end

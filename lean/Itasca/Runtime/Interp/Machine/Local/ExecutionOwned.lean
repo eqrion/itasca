@@ -15,7 +15,7 @@ import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound

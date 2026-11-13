@@ -2,7 +2,8 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Resources.Failure
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
-import Itasca.Runtime.Interp.Machine.Progress.UniformAdvance
+import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 /-- Concrete mutation evidence and the full source/machine outcome of one

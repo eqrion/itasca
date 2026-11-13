@@ -13,7 +13,7 @@ import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
 import Itasca.Runtime.Interp.Relations.EventfulNormalize
-import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
+import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 
 namespace Itasca.Runtime.Integration

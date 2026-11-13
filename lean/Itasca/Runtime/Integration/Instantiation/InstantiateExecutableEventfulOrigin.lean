@@ -31,8 +31,7 @@ import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.PrefixEffect

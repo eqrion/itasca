@@ -11,8 +11,7 @@ import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.PrefixEffect

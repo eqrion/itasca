@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Global.Mutation
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryAdvance
+import Itasca.Runtime.Interp.Machine.Progress.PendingExecution
 import Itasca.Runtime.Interp.Machine.Select
 import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
@@ -48,8 +48,7 @@ import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.PrefixEffect
@@ -110,7 +109,6 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Simd
 import Itasca.Runtime.Integration.Execution.Dispatch.TypedSelect
 import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
-import Itasca.Runtime.Interp.Machine.Progress.PendingExecution
 import Itasca.Runtime.Integration.Execution.Dispatch.Measure
 
 namespace Itasca.Runtime.Integration

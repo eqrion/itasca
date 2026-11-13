@@ -4,7 +4,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Global.Mutation
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryAdvance
+import Itasca.Runtime.Interp.Machine.Progress.PendingExecution
 import Itasca.Runtime.Interp.Machine.Select
 import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
