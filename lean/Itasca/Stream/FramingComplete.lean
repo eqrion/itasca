@@ -1,4 +1,4 @@
-import Itasca.Stream.FramingSound
+import Itasca.Stream.SubmissionSound
 import Itasca.Module.Layout
 
 /-!

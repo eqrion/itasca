@@ -1,4 +1,4 @@
-import Itasca.Stream.SliceSound
+import Itasca.Stream.SyncComplete
 import Itasca.Stream.SliceComplete
 
 /-!

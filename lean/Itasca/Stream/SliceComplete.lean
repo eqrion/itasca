@@ -1,5 +1,3 @@
-import Itasca.Stream.SliceSound
-import Itasca.Stream.DriverComplete
 import Itasca.Stream.SyncComplete
 
 /-!

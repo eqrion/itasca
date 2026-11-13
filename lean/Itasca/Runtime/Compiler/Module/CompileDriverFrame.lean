@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Stream.DriverRun
+import Itasca.Stream.Header
 
 /-!
 Sections, each formerly its own module: InitializerDataAvailable, InitializerElementsAvailable, InitializerOffsetAvailable, CompileDriverFrame.

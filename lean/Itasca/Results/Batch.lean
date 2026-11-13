@@ -1,4 +1,4 @@
-import Itasca.Stream.BatchComplete
+import Itasca.Stream.Source
 
 /-!
 # Worker batches

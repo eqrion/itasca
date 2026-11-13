@@ -1,8 +1,8 @@
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Module.Layout
 import Itasca.Profile.BinaryUnique
-import Itasca.Stream.DriverSound
-import Itasca.Stream.Batch
+import Itasca.Stream.InvariantRetirement
+import Itasca.Stream.Source
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Stream.SubmissionSound
 import Itasca.Stream.FramingComplete

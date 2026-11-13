@@ -6,13 +6,13 @@ import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Body.Relations.Checking.BodyCheckedWasm2
 import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable
-import Itasca.Stream.BatchComplete
+import Itasca.Stream.Source
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
 import Itasca.Binary.Wasm1.EncodingUnique
 import Itasca.Module.Code.Framing
 import Itasca.Module.Code.LocalsComplete
-import Itasca.Stream.EntryFrame
+import Itasca.Stream.Header
 
 /-!
 Sections, each formerly its own module: EntryFinishAvailable, CompileEntryAvailable, PreparedBatchSource, BatchLoopAvailable.

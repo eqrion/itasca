@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Module.CompileSubmit
-import Itasca.Stream.DriverTotal
+import Itasca.Stream.SplitTotal
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 /-!

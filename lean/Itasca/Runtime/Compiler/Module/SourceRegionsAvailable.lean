@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable
 import Itasca.Runtime.Compiler.Module.InitializerCompilationAvailable
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Module.CompileSubmit
-import Itasca.Stream.DriverComplete
+import Itasca.Stream.SyncComplete
 
 /-!
 Sections, each formerly its own module: SourceCompilationDemand, SourceRegionsAvailable.

@@ -1,6 +1,6 @@
-import Itasca.Stream.DriverSound
-import Itasca.Stream.DriverTotal
-import Itasca.Stream.DriverComplete
+import Itasca.Stream.InvariantRetirement
+import Itasca.Stream.SplitTotal
+import Itasca.Stream.SyncComplete
 
 /-!
 # Streaming validation

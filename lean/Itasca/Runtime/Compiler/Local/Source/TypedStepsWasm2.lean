@@ -1,7 +1,7 @@
 import Itasca.Runtime.Equations
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Profile.BinaryUnique
-import Itasca.Stream.Batch
+import Itasca.Stream.Source
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

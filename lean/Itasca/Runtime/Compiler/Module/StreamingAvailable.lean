@@ -1,8 +1,7 @@
 import Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable
-import Itasca.Stream.SubmissionComplete
+import Itasca.Stream.SyncComplete
 import Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
-import Itasca.Stream.DriverComplete
 
 /-!
 Successful compiler streaming from source submission invariants through the remaining driver work. The proof follows actual submit/poll results under availability premises.

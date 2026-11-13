@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Source.SourceBudgetAdvance
 import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
 import Itasca.Profile.BinaryUnique
 import Itasca.Module.Code.Framing
-import Itasca.Stream.SchedulerComplete
+import Itasca.Stream.DriverRegions
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable

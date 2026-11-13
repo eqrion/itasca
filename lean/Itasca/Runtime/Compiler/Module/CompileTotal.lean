@@ -4,9 +4,8 @@ import Itasca.Module.Elab.TypingInversion
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
-import Itasca.Stream.InvariantDriver
+import Itasca.Stream.DriverRegions
 import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
-import Itasca.Stream.ReachedBatch
 import Itasca.Runtime.Compiler.Body.Relations.Table.PreparedTableInitial
 import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedBodySafetyWasm2
