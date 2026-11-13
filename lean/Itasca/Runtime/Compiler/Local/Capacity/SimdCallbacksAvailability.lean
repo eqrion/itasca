@@ -2,11 +2,9 @@ import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMeaningCounts
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Mathlib.Tactic.IntervalCases
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdOpcodeReduction
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 
 /-!

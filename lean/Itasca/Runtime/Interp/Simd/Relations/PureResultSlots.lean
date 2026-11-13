@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 import Itasca.Runtime.Interp.Simd.Lanes.Shuffle
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 
 /-!
 Sections, each formerly its own module: ShuffleRelation, PureResultSlots.

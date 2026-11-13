@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Itasca.Runtime.SourceMachine.Simd.Source
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
@@ -9,15 +9,13 @@ import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.SourceMachine.Simd.Step
 import Itasca.Runtime.Interp.Simd.Execution.PureValuesExecute
 import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSignature
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.Interp.Simd.Execution.PureSound
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 import Itasca.Runtime.Interp.Simd.Memory.ExecuteError
 import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Itasca.Runtime.Interp.Simd.Memory.ValuesExecute
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdPureSignature
 import Itasca.Runtime.Interp.Simd.Execution.ShuffleValuesExecute
 
 /-!

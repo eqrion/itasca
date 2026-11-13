@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 
 /-!

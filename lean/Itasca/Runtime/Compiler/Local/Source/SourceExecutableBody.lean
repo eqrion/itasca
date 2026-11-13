@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Binary.Wasm2.Encoding
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 
 /-!
 Independent instruction encodings belong to the executable source grammar. TokenWasm2 classification covers each profile's immediate encodings before lifting through token consumption and whole bodies.

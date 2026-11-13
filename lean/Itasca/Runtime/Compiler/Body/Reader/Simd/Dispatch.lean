@@ -1,13 +1,12 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdLane
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdMeaning
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Memory
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryTypes
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdConstant
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBits
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Shuffle
 
 /-!

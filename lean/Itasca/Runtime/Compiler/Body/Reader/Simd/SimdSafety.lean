@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSafetyCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance
 import Itasca.Wasm2.Simd.DispatchTotal
 
 /-!

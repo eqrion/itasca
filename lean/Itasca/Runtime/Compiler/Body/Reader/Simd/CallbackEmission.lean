@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdCallbackMeaning
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 
 /-!
 SIMD constant emission and callback lowering certificates, consumed by structured reader prefixes.

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBits
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 
 /-!
 Ordinary lane callbacks encode the checked lane index in the first scalar immediate, outside the separate memory-lane opcode range.

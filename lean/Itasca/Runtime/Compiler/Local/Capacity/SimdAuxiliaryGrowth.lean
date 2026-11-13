@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMeaningCounts
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 
 /-!

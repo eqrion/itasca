@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 
 /-!
 Sections, each formerly its own module: ValueSlots, LaneRelation, InputValues.

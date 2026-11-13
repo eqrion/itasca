@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Simd.Memory.ExtendSource
 import Itasca.Runtime.Spec.Simd.FloatResize
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots

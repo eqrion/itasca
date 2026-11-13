@@ -7,7 +7,7 @@ import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
 import Itasca.Runtime.Interp.Relations.Defaults
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots
 import Itasca.Runtime.Interp.Simd.Execution.PureSound
 

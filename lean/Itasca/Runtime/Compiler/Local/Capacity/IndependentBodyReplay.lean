@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
 import Itasca.Support.Result
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
