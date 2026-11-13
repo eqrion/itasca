@@ -1,8 +1,7 @@
 import Itasca.Wasm2.SoundLoop
 import Itasca.Wasm2.Step.NonControlSound
 import Itasca.Wasm2.Control.EnterStep
-import Itasca.Wasm2.Control.EndStep
-import Itasca.Wasm2.Control.BranchStep
+import Itasca.Wasm2.Control.EnterSound
 import Itasca.Wasm2.Control.Return
 
 /-!

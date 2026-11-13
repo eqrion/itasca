@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Complete.Leaf
 import Itasca.Wasm2.Control.EnterStep
-import Itasca.Wasm2.Control.EndStep
+import Itasca.Wasm2.Control.EnterSound
 
 /-!
 # Completeness of structured control

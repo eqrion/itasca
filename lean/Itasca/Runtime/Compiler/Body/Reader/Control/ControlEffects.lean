@@ -7,7 +7,7 @@ import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.RunTrace
 import Itasca.Handler.RawControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
-import Itasca.Wasm2.Control.BrTableSound
+import Itasca.Wasm2.Control.BranchComplete
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Visitor.Accepts
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks

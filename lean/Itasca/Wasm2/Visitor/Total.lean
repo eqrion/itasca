@@ -1,5 +1,5 @@
 import Itasca.Wasm2.EmptyVisitorLoop
-import Itasca.Wasm2.Control.EndTotal
+import Itasca.Wasm2.Control.EnterSound
 import Itasca.Wasm2.Step.Total
 import Itasca.Visitor.Accepts
 
