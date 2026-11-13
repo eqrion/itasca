@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
-import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
+import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions

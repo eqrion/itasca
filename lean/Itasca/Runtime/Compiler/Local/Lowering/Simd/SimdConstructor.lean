@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerSimdMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Mathlib.Tactic.IntervalCases
 
 /-! Finite constructor/decoder correspondence. Sixteen bounded chunks keep

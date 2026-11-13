@@ -1,8 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
-import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerSimdMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
