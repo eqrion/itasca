@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.Fixups
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 

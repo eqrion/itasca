@@ -22,7 +22,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
@@ -46,7 +46,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCal
 import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanUpdate
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.Fixups
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 
 /-!
 Source and local-layout metadata fixed after the function-start callback. Instruction emission and control-flow patching may change work buffers only.

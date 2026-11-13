@@ -57,7 +57,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata

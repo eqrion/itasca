@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 
 namespace Itasca.Runtime.Compiler

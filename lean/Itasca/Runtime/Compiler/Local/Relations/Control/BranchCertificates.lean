@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.Fixups
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

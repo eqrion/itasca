@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanUpdate
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredUniversalPrefix.branch_forward {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}

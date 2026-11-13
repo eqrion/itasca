@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixChange
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

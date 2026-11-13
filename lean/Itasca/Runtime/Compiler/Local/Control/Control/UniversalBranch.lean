@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanUpdate
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

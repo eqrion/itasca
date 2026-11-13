@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 
