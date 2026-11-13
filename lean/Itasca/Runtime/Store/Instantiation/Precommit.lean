@@ -1,7 +1,6 @@
-import Itasca.Runtime.Store.Instantiation.Classified
+import Itasca.Runtime.Store.Instantiation.Linked
 import Itasca.Runtime.Store.Instantiation.TailCommit
-import Itasca.Runtime.Store.Instantiation.PreparedRunCertificates
-import Itasca.Runtime.Store.Instantiation.ResourceDecomposition
+import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 
 /-!
 Pre-publication instantiation, rollback and resource causes. Publication boundaries and the resolved, unexecuted start function remain explicit.

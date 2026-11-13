@@ -15,7 +15,6 @@ import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Store.Instantiation.PreparedRunCertificates
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
@@ -26,7 +25,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Compiler.Module.CompileSlice
-import Itasca.Runtime.Store.Instantiation.PreparedSourceInstantiation
+import Itasca.Runtime.Store.Instantiation.NoStart
 import Itasca.Runtime.Store.Instantiation.Linked
 
 namespace Itasca.Runtime.Integration
