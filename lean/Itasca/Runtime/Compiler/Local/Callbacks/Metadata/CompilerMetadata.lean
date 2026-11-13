@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
-import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 
 /-!

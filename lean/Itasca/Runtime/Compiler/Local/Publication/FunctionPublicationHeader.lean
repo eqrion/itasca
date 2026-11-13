@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationRanges
-import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
