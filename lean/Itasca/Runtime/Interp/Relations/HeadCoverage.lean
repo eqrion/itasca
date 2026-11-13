@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Memory.Descriptor
+import Itasca.Runtime.SourceMachine.Memory.Decode
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.SourceMachine.Simd.Source
 import Itasca.Runtime.Interp.Machine.Emission.Opcode

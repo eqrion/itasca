@@ -4,7 +4,6 @@ import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.SourceMachine.Sim.Typing
 import Itasca.Runtime.SourceMachine.Sim.Typed
-import Itasca.Runtime.SourceMachine.Memory.Semantics
 import Itasca.Runtime.SourceMachine.Memory.Decode
 import Itasca.Runtime.SourceMachine.Sim.Instruction
 import Itasca.Runtime.SourceMachine.Numeric.Transition

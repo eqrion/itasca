@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryMutation
-import Itasca.Runtime.SourceMachine.Memory.Semantics
+import Itasca.Runtime.SourceMachine.Memory.Decode
 import Itasca.Runtime.Interp.Relations.Regions
 
 /-!
