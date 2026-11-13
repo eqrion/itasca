@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.SourceMachine.Sim.Typed
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
-import Itasca.Runtime.SourceMachine.Core.MemoryTyping
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

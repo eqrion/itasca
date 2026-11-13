@@ -1,4 +1,5 @@
-import Itasca.Runtime.SourceMachine.Core.Select
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.TypedSelect
 open SpecExt Itasca.Runtime.Spec
 

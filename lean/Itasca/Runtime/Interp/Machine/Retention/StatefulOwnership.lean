@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 
 /-!
 Extending frame ownership closure to stateful source states.

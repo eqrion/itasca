@@ -1,16 +1,12 @@
-import Itasca.Runtime.SourceMachine.Core.Bound
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
-import Itasca.Runtime.SourceMachine.Core.Correct
-import Itasca.Runtime.SourceMachine.Core.Extension
 import Itasca.Runtime.SourceMachine.Indirect.Transport
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Step
-import Itasca.Runtime.SourceMachine.Core.Pure
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
-import Itasca.Runtime.SourceMachine.Core.Terminal
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 
 /-!

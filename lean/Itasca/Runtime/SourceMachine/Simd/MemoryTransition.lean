@@ -1,7 +1,5 @@
 import Itasca.Runtime.SourceMachine.Simd.Source
 import Itasca.Runtime.SourceMachine.Simd.Transition
-import Itasca.Runtime.SourceMachine.Core.MemoryTyping
-import Itasca.Runtime.SourceMachine.Core.MemoryMutation
 import Itasca.Runtime.SourceMachine.Core.Trap
 
 /-!

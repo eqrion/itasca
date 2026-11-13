@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 
 /-!
 A retained forward jump is a source stutter with a strictly decreasing administrative measure. It preserves all slot words and mutable store data.

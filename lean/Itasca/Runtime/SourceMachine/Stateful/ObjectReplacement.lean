@@ -1,5 +1,6 @@
-import Itasca.Runtime.SourceMachine.Core.MemoryMutation
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

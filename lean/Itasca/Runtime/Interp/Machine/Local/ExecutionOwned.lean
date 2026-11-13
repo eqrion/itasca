@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
@@ -18,7 +18,6 @@ import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
-import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.Integer

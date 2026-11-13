@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.BrTable
 
 namespace Itasca.Runtime.SourceMachine

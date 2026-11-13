@@ -8,7 +8,6 @@ import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
-import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Spec.Integer
 

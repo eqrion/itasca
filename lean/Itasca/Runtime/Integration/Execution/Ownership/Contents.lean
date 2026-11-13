@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

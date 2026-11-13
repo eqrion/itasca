@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Point
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.StructuredPoint

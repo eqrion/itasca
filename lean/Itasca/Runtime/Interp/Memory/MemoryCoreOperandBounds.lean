@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryCoreStore
-import Itasca.Runtime.SourceMachine.Core.MemoryAccess
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 
 /-!
 Scalar memory operand inversion and bounds. Typed operands supply the address/value facts needed to justify their concrete slot accesses.

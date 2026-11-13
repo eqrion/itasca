@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
-import Itasca.Runtime.SourceMachine.Core.ContentExtension
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.SourceMachine.Stateful

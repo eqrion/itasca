@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.BrTable
 
 /-!

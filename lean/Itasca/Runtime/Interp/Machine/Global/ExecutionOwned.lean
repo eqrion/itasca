@@ -1,11 +1,11 @@
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.SourceMachine.Core.Bound
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Global
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Machine.Control.ForwardJump

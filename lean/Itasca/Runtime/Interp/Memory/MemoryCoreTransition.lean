@@ -1,4 +1,5 @@
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.Interp.MemoryDescriptor
 
 theorem core_step_load_eq (s : store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)

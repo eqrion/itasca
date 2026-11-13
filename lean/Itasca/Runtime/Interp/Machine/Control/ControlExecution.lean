@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.Control.ControlInversion
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.SourceMachine.Core.Bound
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Control.BranchOwned

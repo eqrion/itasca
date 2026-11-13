@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Stateful.Ownership
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.Cumulative
 open Itasca.Runtime.SourceMachine.Ownership
 

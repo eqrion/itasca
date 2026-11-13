@@ -14,7 +14,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
@@ -25,12 +25,11 @@ import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Emission.Integer
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.SourceMachine.Core.Correct
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
-import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
@@ -39,10 +38,8 @@ import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.PrefixEffect
 import Itasca.Runtime.Interp.Control.SkipStack
-import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Pure
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Machine.Emission.Local

@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Slice
-import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.SourceMachine.Core.PureMetadata
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec
 

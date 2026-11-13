@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Memory.MemoryMutation
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
 import Itasca.Runtime.Interp.Memory.MemoryValueSlots
-import Itasca.Runtime.SourceMachine.Core.MemoryStep
+import Itasca.Runtime.SourceMachine.Core.Trap
 
 /-!
 Scalar load dispatch and core execution. Bytecode dispatch equations and destination-slot effects assemble the core scalar load correspondence.

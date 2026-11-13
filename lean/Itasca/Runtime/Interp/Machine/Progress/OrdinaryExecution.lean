@@ -1,8 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Pure
 
 /-!
 Checked local effects assemble into the mutable whole-machine invariant. Typing and syntax facts here are supplied by the independent abstract step proof; the concrete prefix/frame effects preserve every suspended caller.

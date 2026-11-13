@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.SourceMachine.Core.Correct
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
@@ -15,7 +15,6 @@ import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Numeric.Positive
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.SourceMachine.Ownership.Core
 
 /-!

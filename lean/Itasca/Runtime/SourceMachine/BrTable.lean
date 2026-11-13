@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Decode
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Simd.Exclusion
-import Itasca.Runtime.SourceMachine.Core.Typing
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.Typing.HostTyping
 import Itasca.Runtime.SourceMachine.Sim.Compose
 

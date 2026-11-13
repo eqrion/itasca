@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
 
 namespace Itasca.Runtime.SourceMachine.Supported

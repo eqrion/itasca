@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableMutation
-import Itasca.Runtime.SourceMachine.Core.MemoryMutation
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.MemoryGrowth
 

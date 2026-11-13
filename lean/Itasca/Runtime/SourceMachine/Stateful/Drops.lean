@@ -1,7 +1,6 @@
-import Itasca.Runtime.SourceMachine.Core.ContentExtension
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
-import Itasca.Runtime.SourceMachine.Core.Simulation
 
 /-!
 Source data/element segment drops: store effects and typed continuation simulation.

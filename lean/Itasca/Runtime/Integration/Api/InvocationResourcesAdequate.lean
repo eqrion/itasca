@@ -18,7 +18,7 @@ import Itasca.Runtime.SourceMachine.Stateful.Reference
 import Itasca.Runtime.SourceMachine.Decode
 import Itasca.Runtime.Spec.Simd.Pairwise
 import Itasca.Runtime.Spec.Simd.ExtendLanes
-import Itasca.Runtime.SourceMachine.Core.Simulation
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.SourceMachine.Sim.Trap
 import Itasca.Runtime.SourceMachine.Stateful.TableRead
@@ -36,7 +36,7 @@ import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Indirect.Correct
 import Itasca.Runtime.SourceMachine.Sim.Call
-import Itasca.Runtime.SourceMachine.Core.Correct
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Numeric.OperandBounds
 import Itasca.Runtime.SourceMachine.Numeric.Instruction
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
@@ -45,8 +45,6 @@ import Itasca.Runtime.SourceMachine.Sim.Return
 import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Sim.Local
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
-import Itasca.Runtime.SourceMachine.Core.Terminal
-import Itasca.Runtime.SourceMachine.Core.MemoryAccess
 import Itasca.Runtime.SourceMachine.Sim.Terminal
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep

@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
-import Itasca.Runtime.SourceMachine.Core.Simulation
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.FloatPromote
 
 namespace Itasca.Runtime.SourceMachine.Stateful

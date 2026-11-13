@@ -1,5 +1,4 @@
-import Itasca.Runtime.SourceMachine.Core.Select
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.Select.Emission
 
 /-!

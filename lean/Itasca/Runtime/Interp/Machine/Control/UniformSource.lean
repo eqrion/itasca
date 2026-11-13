@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Control.UniformSimulation
-import Itasca.Runtime.SourceMachine.Core.PositiveControl
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
 
 /-!
 An unchanged source state cancels the old source potential. Hence an ordinary-phase silent dispatch must move forward, independent of code size.
