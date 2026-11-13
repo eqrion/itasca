@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.TypedSelect.Step
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Machine.Select.Emission
+import Itasca.Runtime.Interp.Machine.Select.Operands
 
 namespace Itasca.Runtime.Interp.TypedSelect
 open Aeneas Aeneas.Std

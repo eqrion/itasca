@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.Machine.Select.Emission
+import Itasca.Runtime.Interp.Machine.Select.Operands
 import Itasca.Runtime.Interp.Relations.SelectSlots
 import Itasca.Runtime.Interp.Relations.TypedSelectOperands
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
