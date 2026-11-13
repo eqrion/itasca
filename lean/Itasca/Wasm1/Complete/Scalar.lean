@@ -1,5 +1,5 @@
 import Itasca.Wasm1.Complete.Frame
-import Itasca.Handler.ScalarComplete
+import Itasca.Handler.RawControl
 import Itasca.Visitor.StepErasure
 import Itasca.Visitor.Basic
 

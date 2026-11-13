@@ -2,8 +2,8 @@ import Itasca.Wasm2.Control.FuncType
 import Itasca.Wasm2.HandlerAdapters
 import Itasca.Wasm2.SignatureEquality
 import Itasca.Wasm2.Prefix
-import Itasca.Handler.EnvCalls
-import Itasca.Handler.EnvComplete
+import Itasca.Handler.Select
+import Itasca.Handler.RawControl
 
 /-!
 # Calls

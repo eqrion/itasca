@@ -1,5 +1,5 @@
 import Itasca.Support.Result
-import Itasca.Handler.ResumePrefix
+import Itasca.Handler.SimplePrefix
 import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!

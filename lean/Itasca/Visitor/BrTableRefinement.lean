@@ -1,6 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Visitor.Refinement
-import Itasca.Handler.BrTable
+import Itasca.Handler.RawControl
 
 /-!
 # Refinement of the `br_table` reader

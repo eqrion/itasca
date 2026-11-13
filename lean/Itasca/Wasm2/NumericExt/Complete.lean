@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.NumericExt.Total
-import Itasca.Handler.ScalarComplete
+import Itasca.Handler.RawControl
 
 /-!
 # Numeric extension completeness

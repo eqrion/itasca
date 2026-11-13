@@ -1,5 +1,5 @@
 import Itasca.Wasm2.ResultStackSemantics
-import Itasca.Handler.ResumePrefix
+import Itasca.Handler.SimplePrefix
 
 /-!
 # Function type application

@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Control.Total
 import Itasca.Wasm2.Prefix
 import Itasca.Wasm2.SuffixTyping
-import Itasca.Handler.BrTableComplete
+import Itasca.Handler.RawControl
 
 /-!
 # Branch soundness

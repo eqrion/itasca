@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Scalar.ReaderPost
-import Itasca.Handler.ScalarConst
+import Itasca.Handler.Select
 import Itasca.Wasm2.Scalar.Prefix
 import Itasca.Binary.Wasm1.DeclaredReferences
 

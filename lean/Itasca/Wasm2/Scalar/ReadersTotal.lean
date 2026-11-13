@@ -1,7 +1,6 @@
 import Itasca.Wasm2.Control.Total
 import Itasca.Handler.EnvDispatch
 import Itasca.Handler.Select
-import Itasca.Handler.ScalarConst
 
 /-!
 # Totality of the scalar readers

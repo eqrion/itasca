@@ -5,7 +5,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Binary.Wasm1.EncodingUnique
 import Itasca.Visitor.TraceBytes
 import Itasca.Visitor.Recording
-import Itasca.Handler.BrTable
+import Itasca.Handler.RawControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Wasm2.Control.BrTableSound
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects

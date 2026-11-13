@@ -1,5 +1,5 @@
 import Itasca.Wasm2.ResultStack
-import Itasca.Handler.StackComplete
+import Itasca.Handler.SimplePrefix
 
 /-!
 # Descriptor stack operations, semantics and totality

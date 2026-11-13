@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Simd.Shuffle
-import Itasca.Handler.EnvComplete
+import Itasca.Handler.RawControl
 import Itasca.Wasm2.Simd.MemoryReaders
 import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Wasm2.Simd.Decode

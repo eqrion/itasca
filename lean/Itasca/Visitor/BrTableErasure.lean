@@ -1,5 +1,5 @@
 import Itasca.Support.Result
-import Itasca.Handler.BrTable
+import Itasca.Handler.RawControl
 import Itasca.Visitor.Erasure
 
 /-!

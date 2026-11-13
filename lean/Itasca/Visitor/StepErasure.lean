@@ -2,7 +2,6 @@ import Itasca.Support.Result
 import Itasca.Visitor.Dispatch
 import Itasca.Visitor.Erasure
 import Itasca.Visitor.BrTableErasure
-import Itasca.Handler.NumericDispatch
 import Itasca.Handler.Select
 import Itasca.Handler.EnvDispatch
 

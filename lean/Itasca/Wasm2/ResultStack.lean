@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Signature
-import Itasca.Handler.Stack
+import Itasca.Handler.SimplePrefix
 
 /-!
 # Descriptor stack operations

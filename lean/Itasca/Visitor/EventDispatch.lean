@@ -2,7 +2,6 @@ import Itasca.Visitor.Dispatch
 import Itasca.Visitor.EventTables
 import Itasca.Handler.EnvDispatch
 import Itasca.Handler.Select
-import Itasca.Handler.NumericDispatch
 import Itasca.Visitor.Events
 import Itasca.Visitor.Basic
 
