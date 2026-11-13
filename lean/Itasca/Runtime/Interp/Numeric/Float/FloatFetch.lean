@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatDispatch
 import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
-import Itasca.Runtime.Interp.Numeric.Integer.NumericWords
+import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 import Itasca.Runtime.Interp.Relations.PrefixEffect
 

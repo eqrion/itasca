@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
+import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.Interp.Relations.Rel
 import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.Interp.Relations.PrefixDispatch

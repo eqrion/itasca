@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Relations.Ensure
 import Itasca.Runtime.Interp.Relations.InitLocals
 import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.Interp.Numeric.Integer.Interrupt
+import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 
 /-!
 Sections, each formerly its own module: Call, DirectCall.

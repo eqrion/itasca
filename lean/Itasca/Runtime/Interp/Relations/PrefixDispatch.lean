@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.PrefixEffect
-import Itasca.Runtime.Interp.Numeric.Integer.NumericDispatch
+import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 

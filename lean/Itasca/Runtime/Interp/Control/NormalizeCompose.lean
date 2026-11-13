@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Relations.Conditional
 import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Numeric.Integer.Interrupt
+import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.Interp.Relations.Fetch
 
 /-!

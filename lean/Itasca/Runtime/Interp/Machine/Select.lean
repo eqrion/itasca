@@ -20,7 +20,7 @@ import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
-import Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint
+import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Spec.Integer
