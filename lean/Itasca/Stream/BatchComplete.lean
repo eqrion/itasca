@@ -1,5 +1,5 @@
 import Itasca.Stream.BatchTotal
-import Itasca.Profile.EntryComplete
+import Itasca.Profile.BinaryUnique
 
 /-!
 # Worker completeness

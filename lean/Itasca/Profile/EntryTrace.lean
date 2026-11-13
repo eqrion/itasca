@@ -1,4 +1,4 @@
-import Itasca.Profile.EntrySound
+import Itasca.Profile.BinaryUnique
 import Itasca.Wasm2.Trace.Correspondence
 
 /-!

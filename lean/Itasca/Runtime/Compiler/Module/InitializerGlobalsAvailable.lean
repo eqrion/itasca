@@ -3,8 +3,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceStepAcceptanceWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceBudgetAdvance
 import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
-import Itasca.Profile.EntryComplete
-import Itasca.Profile.EntrySound
+import Itasca.Profile.BinaryUnique
 import Itasca.Module.Code.Framing
 import Itasca.Stream.SchedulerComplete
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability

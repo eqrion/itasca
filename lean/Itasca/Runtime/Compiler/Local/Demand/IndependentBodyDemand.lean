@@ -1,7 +1,7 @@
 import Itasca.Visitor.Recording
 import Itasca.Runtime.Platform.Laws
 import Itasca.Wasm2.Trace.ControlRefinement
-import Itasca.Profile.BodyVisitor
+import Itasca.Profile.BinaryUnique
 
 /-!
 Sections, each formerly its own module: ObservationDemand, RecordedDemand, IndependentBodyDemand.

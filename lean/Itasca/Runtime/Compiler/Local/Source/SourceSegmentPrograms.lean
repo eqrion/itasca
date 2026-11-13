@@ -1,7 +1,6 @@
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Module.Soundness
 import Itasca.Profile.BinaryUnique
-import Itasca.Profile.EntrySound
 import Itasca.Stream.DriverSound
 import Itasca.Stream.Batch
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry

@@ -1,6 +1,5 @@
 import Itasca.Module.Env.Requirements
-import Itasca.Profile.EntrySound
-import Itasca.Profile.EntryPipeline
+import Itasca.Profile.BinaryUnique
 import Itasca.Module.Code.BodyContextComplete
 import Itasca.Module.Elab.Profile
 import Itasca.Module.Elab.TypingInversion

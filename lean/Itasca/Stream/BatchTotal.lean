@@ -1,5 +1,5 @@
 import Itasca.Stream.Batch
-import Itasca.Profile.EntryPipeline
+import Itasca.Profile.BinaryUnique
 
 /-!
 # Worker termination

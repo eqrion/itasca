@@ -1,7 +1,8 @@
 import Itasca.Runtime.Equations
 import Itasca.Wasm2.Trace.Correspondence
-import Itasca.Profile.EntrySound
+import Itasca.Profile.BinaryUnique
 import Itasca.Stream.Batch
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.Wasm2

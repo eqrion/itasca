@@ -1,5 +1,5 @@
 import Itasca.Support.Result
-import Itasca.Profile.EntrySound
+import Itasca.Profile.BinaryUnique
 import Itasca.Module.Code.LocalsComplete
 import Itasca.Contracts
 
