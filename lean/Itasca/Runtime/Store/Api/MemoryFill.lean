@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Initialization.BulkMemory
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep

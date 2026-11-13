@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.SegmentDrop
-import Itasca.Runtime.Store.Initialization.SegmentStep
+import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 

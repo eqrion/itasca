@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Initialization.InitializerMetadataCertificates
+import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Preparation.StagingTypeBindings
 
 namespace Itasca.Runtime.Store

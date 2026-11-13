@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Linking.LinkEffects
-import Itasca.Runtime.Store.Initialization.InitializerResolve
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Module.Env.Basic
 
 namespace Itasca.Runtime.Store

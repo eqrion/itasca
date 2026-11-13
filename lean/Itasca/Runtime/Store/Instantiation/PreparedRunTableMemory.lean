@@ -2,7 +2,7 @@ import Itasca.Runtime.Store.Instantiation.PreparedRun
 import Itasca.Runtime.Compiler.Module.CompileCache
 import Itasca.Runtime.Compiler.Module.CompileSemantic
 import Itasca.Runtime.Store.Preparation.PreparationTableMemoryBindings
-import Itasca.Runtime.Store.Initialization.InitializerTableMemoryBindings
+import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Store.Preparation.PreparationAllocatedMaps
 import Itasca.Runtime.Store.Preparation.PreparationCertificates
@@ -11,7 +11,7 @@ import Itasca.Runtime.Store.Preparation.StagingCommitShape
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Preparation.PreparationTableMemoryAllocations
-import Itasca.Runtime.Store.Initialization.StoreParts
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 /-!
 Prepared-run table and memory allocation certificates. Publication boundaries and the resolved, unexecuted start function remain explicit.

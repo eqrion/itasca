@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Invariant.FunctionStaging
-import Itasca.Runtime.Store.Initialization.ElementEffects
+import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.DataEffects
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

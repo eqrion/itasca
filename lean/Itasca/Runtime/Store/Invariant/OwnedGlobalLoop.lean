@@ -1,8 +1,7 @@
 import Itasca.Runtime.Store.Preparation.StagingAddresses
-import Itasca.Runtime.Store.Initialization.InitializerMetadata
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Api.TableInitLists
-import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-! The actual staged global loop preserves pre-existing store objects and the
 linked initializer context through all allocation/refusal branches. -/

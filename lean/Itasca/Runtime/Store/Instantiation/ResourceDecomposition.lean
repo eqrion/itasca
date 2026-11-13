@@ -8,18 +8,16 @@ import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Invariant.InvalidWrite
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Invariant.InstanceItems
-import Itasca.Runtime.Store.Initialization.InitializerMetadata
-import Itasca.Runtime.Store.Initialization.ElementEffects
-import Itasca.Runtime.Store.Initialization.DataStagingLoop
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
+import Itasca.Runtime.Store.Initialization.ElementTypedEffect
+import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
 import Itasca.Runtime.Store.Invariant.ItemErrors
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
-import Itasca.Runtime.Store.Initialization.ElementErrorLoop
-import Itasca.Runtime.Store.Initialization.DataErrorLoop
+import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
-import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Every actual preparation either returns an ordinary precommit rejection retaining the old store prefix, with its resource evidence, or a staged instance whose item charge yields a fully shaped store. This decomposition imposes no normal-return or termination premise on the computation.

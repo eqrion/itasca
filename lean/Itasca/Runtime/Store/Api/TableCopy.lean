@@ -1,7 +1,7 @@
-import Itasca.Runtime.Store.Initialization.BulkTableAt
+import Itasca.Runtime.Store.Initialization.BulkMemoryAt
 import Itasca.Runtime.Store.Api.ApiMetadata
 import Itasca.Runtime.Store.Api.TableInitLists
-import Itasca.Runtime.Store.Initialization.BulkPreservation
+import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
 import Itasca.Runtime.Spec.MemoryGrowth
 import Itasca.Runtime.Store.Api.GrowthLimits

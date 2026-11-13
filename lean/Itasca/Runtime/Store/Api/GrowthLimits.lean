@@ -3,7 +3,7 @@ import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Store.Initialization.BulkPreservation
+import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Store.Preparation.AllocationCauses
 import Itasca.Runtime.Store.Api.DefineTable

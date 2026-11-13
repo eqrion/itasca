@@ -5,7 +5,7 @@ import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Module.Env.Basic
 import Itasca.Module.Elab.Metadata
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Initialization.Initializer
+import Itasca.Runtime.Store.Initialization.ElementLoop
 
 /-!
 Sections, each formerly its own module: MemoryStaging, TableStaging, TableMemoryBindings, ExportBounds, GlobalStaging, MemoryBindingLoop.

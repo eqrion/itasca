@@ -7,7 +7,7 @@ import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Store.Preparation.PreparationCalls
-import Itasca.Runtime.Store.Initialization.StoreParts
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 /-!
 Sections, each formerly its own module: TableAllocationLoop, TableBindingLoop, GlobalStagingCauses.

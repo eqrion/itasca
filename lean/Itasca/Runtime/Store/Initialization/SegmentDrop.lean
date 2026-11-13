@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Spec.FloatTrunc
-import Itasca.Runtime.Store.Initialization.BulkPreservation
+import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Invariant.SourceSyntax
 
 /-!

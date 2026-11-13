@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.PreparedInitializers
-import Itasca.Runtime.Store.Initialization.SegmentAccounting
+import Itasca.Runtime.Store.Initialization.ElementLoop
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

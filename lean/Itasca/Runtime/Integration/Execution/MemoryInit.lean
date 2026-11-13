@@ -3,7 +3,7 @@ import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Store.Initialization.BulkMemoryAt
 import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
-import Itasca.Runtime.Store.Initialization.SegmentStep
+import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Execution

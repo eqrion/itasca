@@ -1,5 +1,5 @@
-import Itasca.Runtime.Store.Initialization.SegmentCompatible
-import Itasca.Runtime.Store.Initialization.SegmentCertificate
+import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
+import Itasca.Runtime.Store.Initialization.SegmentLoop
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

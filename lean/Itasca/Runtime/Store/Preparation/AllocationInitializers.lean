@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.AllocationShape
-import Itasca.Runtime.Store.Initialization.ElementContentEffect
+import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Initialization.DataEffects
 
 namespace Itasca.Runtime.Store

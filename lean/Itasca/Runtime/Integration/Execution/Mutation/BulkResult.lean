@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Initialization.BulkMemory
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 

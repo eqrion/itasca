@@ -83,7 +83,7 @@ import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
-import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Integration.Execution.Dispatch.Simd
 import Itasca.Runtime.Integration.Execution.Dispatch.TypedSelect
 import Itasca.Runtime.Integration.Execution.Dispatch.Normalization

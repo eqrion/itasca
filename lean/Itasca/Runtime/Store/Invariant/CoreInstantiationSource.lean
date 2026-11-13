@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
-import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 
 /-!

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Initialization.BulkTableLoop
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Store.Invariant.ValueRead

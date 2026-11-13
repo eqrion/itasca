@@ -24,7 +24,7 @@ import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
 import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
-import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Compiler.Module.CompileSlice
 import Itasca.Runtime.Store.Instantiation.PreparedSourceInstantiation

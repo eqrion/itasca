@@ -1,12 +1,11 @@
 import Itasca.Runtime.Store.Invariant.DefinitionErrors
 import Itasca.Runtime.Store.Initialization.InitializerErrors
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
-import Itasca.Runtime.Store.Initialization.InitializerMetadata
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Invariant.ErrorPost
-import Itasca.Runtime.Store.Initialization.StoreParts
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
-import Itasca.Runtime.Store.Initialization.SegmentTypes
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.AddressOrder
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Preparation.AllocationTableMemory

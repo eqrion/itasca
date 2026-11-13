@@ -4,8 +4,8 @@ import Itasca.Runtime.Integration.Instantiation.StartResolution
 import Itasca.Runtime.Integration.Instantiation.StartAmbient
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
-import Itasca.Runtime.Store.Initialization.SegmentInitializeSource
-import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
+import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Instantiation.Precommit
 import Itasca.Runtime.Store.Invariant.Rollback
 

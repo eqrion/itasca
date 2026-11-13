@@ -1,8 +1,8 @@
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Invariant.TypeStaging
-import Itasca.Runtime.Store.Initialization.InitializerMetadata
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Initialization.DataStagingLoop
+import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

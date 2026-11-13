@@ -3,8 +3,8 @@ import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
 import Itasca.Runtime.Store.Linking.LinkMaps
 import Itasca.Runtime.Store.Invariant.ValueDecode
-import Itasca.Runtime.Store.Initialization.InitializerSourceContext
-import Itasca.Runtime.Store.Initialization.BulkTableLoop
+import Itasca.Runtime.Store.Initialization.Data
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!

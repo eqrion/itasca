@@ -1,9 +1,8 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeBindings
-import Itasca.Runtime.Store.Initialization.InitializerMetadata
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Initialization.ElementContentEffect
+import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates
-import Itasca.Runtime.Store.Initialization.StoreParts
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -1,8 +1,7 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
-import Itasca.Runtime.Store.Initialization.ElementGlobalTypes
-import Itasca.Runtime.Store.Initialization.DataGlobalTypes
-import Itasca.Runtime.Store.Initialization.StoreParts
+import Itasca.Runtime.Store.Initialization.ElementOrderLoop
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

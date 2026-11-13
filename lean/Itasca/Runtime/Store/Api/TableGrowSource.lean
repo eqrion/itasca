@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.ApiMetadata
-import Itasca.Runtime.Store.Initialization.BulkTable
+import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Store.Api.GrowthLimits

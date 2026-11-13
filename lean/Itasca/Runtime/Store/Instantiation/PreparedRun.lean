@@ -1,5 +1,6 @@
 import Itasca.Runtime.Store.Instantiation.PreparedCommitShape
-import Itasca.Runtime.Store.Initialization.StoreParts
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

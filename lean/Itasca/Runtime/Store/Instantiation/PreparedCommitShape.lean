@@ -5,7 +5,7 @@ import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Preparation.StagingCommitShape
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Linking.LinkedOwners
-import Itasca.Runtime.Store.Initialization.StoreParts
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

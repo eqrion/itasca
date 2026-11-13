@@ -64,7 +64,7 @@ import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
-import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
+import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Interp.Relations.StepActive
