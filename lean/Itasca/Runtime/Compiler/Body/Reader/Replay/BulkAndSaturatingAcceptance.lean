@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.Events
-import Itasca.Wasm2.Step.Dispatch
+import Itasca.Wasm2.Step.Context
 import Itasca.Runtime.Compiler.Local.Control.Syntax.BulkAndSaturating
 import Itasca.Wasm2.Bulk.Total
 

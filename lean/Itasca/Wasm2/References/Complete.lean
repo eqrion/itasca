@@ -3,7 +3,6 @@ import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Support.Result
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.Step.Context
-import Itasca.Wasm2.Step.Dispatch
 import Itasca.Wasm2.Bulk.Total
 
 /-!

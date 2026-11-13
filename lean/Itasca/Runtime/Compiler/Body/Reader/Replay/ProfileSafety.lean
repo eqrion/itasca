@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
-import Itasca.Wasm2.Step.Dispatch
+import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.NumericExt.Total
 import Itasca.Handler.Select
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
