@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ExecutableTokens
 import Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody
 

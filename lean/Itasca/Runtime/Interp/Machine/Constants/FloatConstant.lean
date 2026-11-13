@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint

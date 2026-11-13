@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 
 /-!
 Scalar instructions, including those resolved against the module's globals and memory, with their source typing context. The relation fixes syntax, operand layout and emitted bytecode only.

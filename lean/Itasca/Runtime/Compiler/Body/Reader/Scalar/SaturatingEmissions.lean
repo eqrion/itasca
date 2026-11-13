@@ -1,5 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOperands
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatInstructionComparison
 import Itasca.Runtime.Interp.Numeric.Float.FloatTruncInstruction
 import Itasca.Runtime.Interp.Relations.Defaults
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 import Itasca.Runtime.Interp.Relations.StackPreservation

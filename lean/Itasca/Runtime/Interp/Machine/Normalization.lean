@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels

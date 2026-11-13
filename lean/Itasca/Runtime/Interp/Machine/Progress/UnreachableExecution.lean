@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Emission.Unreachable
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 
 /-!
 Sections, each formerly its own module: ActiveLoop, UniformAdvance, UnreachableExecution.

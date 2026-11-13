@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatSafety
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 

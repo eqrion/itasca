@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 
 /-!
 Reader inversion for saturating floating-point conversions.

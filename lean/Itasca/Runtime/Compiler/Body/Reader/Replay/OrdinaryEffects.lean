@@ -70,7 +70,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Table.LiteralTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Effects.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
 
 /-!
 Every successful ordinary reader step is one compiler callback with
