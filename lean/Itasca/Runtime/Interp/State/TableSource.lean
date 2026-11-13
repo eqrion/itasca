@@ -13,24 +13,6 @@ section
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-private theorem table_access_index_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
-    (found : values.val[index.val]? = some value) :
-    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice T) values index = .ok value := by
-  rw [alloc.vec.Vec.index_slice_index]
-  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
-  subst actual
-  exact read
-
-private theorem table_access_index_mut_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
-    (found : values.val[index.val]? = some value) :
-    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice T) values index =
-      .ok (value, values.set index) := by
-  rw [alloc.vec.Vec.index_mut_slice_index]
-  unfold alloc.vec.Vec.index_mut_usize
-  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
-  subst actual
-  rw [read, bind_tc_ok]
-
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -52,9 +34,9 @@ theorem table_get_effect (exec : runtime.interp.Execution) (store : runtime.stor
           (exec.slots.val.set (base.val+dst.val) object.elements.val[position.val]!)
       else out = (.Err (.Trap .TableOutOfBounds),exec,store) ⦄ := by
   unfold runtime.interp.execute_table_get
-  rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
-  rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address
+  rw [vec_index_eq inst.tables (UScalar.cast .Usize table) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped),bind_ok]
   step as ⟨slot,slotEq⟩
   have slotValue : slot.val = base.val+index.val := by simpa only [U32.cast_Usize_val_eq] using slotEq
@@ -96,9 +78,9 @@ theorem table_set_effect (exec : runtime.interp.Execution) (store : runtime.stor
         out = (.Ok (),exec,{store with tables := store.tables.set address.index ({object with elements := object.elements.set (UScalar.cast .Usize position) exec.slots.val[base.val+value.val]!})})
       else out = (.Err (.Trap .TableOutOfBounds),exec,store) ⦄ := by
   unfold runtime.interp.execute_table_set
-  rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
-  rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address
+  rw [vec_index_eq inst.tables (UScalar.cast .Usize table) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped),bind_ok]
   step as ⟨slot,slotEq⟩
   have slotValue : slot.val = base.val+index.val := by simpa only [U32.cast_Usize_val_eq] using slotEq
@@ -123,12 +105,12 @@ theorem table_set_effect (exec : runtime.interp.Execution) (store : runtime.stor
       rw [positionValue,getElem!_pos exec.slots.val _ valueBound]
       exact List.getElem?_eq_getElem valueBound
     step with vec_index_given exec.slots positionSlot exec.slots.val[base.val+value.val]! referenceFound as ⟨reference,referenceEq⟩
-    have updateObject := table_access_index_mut_given store.tables address.index object issued
+    have updateObject := vec_index_mut_eq store.tables address.index object issued
     rw [alloc.vec.Vec.index_mut_slice_index] at updateObject
     have elementFound : object.elements.val[(UScalar.cast .Usize position).val]? = some object.elements.val[position.val]! := by
       rw [U32.cast_Usize_val_eq,getElem!_pos object.elements.val _ bound]
       exact List.getElem?_eq_getElem bound
-    have updateElement := table_access_index_mut_given object.elements (UScalar.cast .Usize position) object.elements.val[position.val]! elementFound
+    have updateElement := vec_index_mut_eq object.elements (UScalar.cast .Usize position) object.elements.val[position.val]! elementFound
     rw [alloc.vec.Vec.index_mut_slice_index] at updateElement
     simp only [updateObject,updateElement,bind_ok]
     simp [updateElement,bound,referenceEq]
@@ -145,11 +127,11 @@ theorem table_size_effect (exec : runtime.interp.Execution) (store : runtime.sto
       out.1 = .Ok () ∧ out.2.2 = store ∧ SlotsEffect exec out.2.1
         (exec.slots.val.set (base.val+dst.val) (UScalar.cast .U64 object.elements.len)) ⦄ := by
   unfold runtime.interp.execute_table_size
-  rw [table_access_index_given store.instances instanceIndex inst found,bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found,bind_ok]
   simp only [lift,bind_ok]
-  rw [table_access_index_given inst.tables (UScalar.cast .Usize table) address
+  rw [vec_index_eq inst.tables (UScalar.cast .Usize table) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped),bind_ok]
-  rw [table_access_index_given store.tables address.index object issued,bind_ok]
+  rw [vec_index_eq store.tables address.index object issued,bind_ok]
   step* <;> simp_all [SlotsEffect]
 
 end Itasca.Runtime.Interp

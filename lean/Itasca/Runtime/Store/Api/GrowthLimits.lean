@@ -1,3 +1,4 @@
+import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Spec.FloatTrunc
@@ -910,6 +911,93 @@ theorem TableGrowth.shape {M : Type} (view : M → Slice U8)
     rw [hresult]
     apply hs.table_extend index hindex _ htable delta.val ?_ count hcount hlimit
     simpa [hold] using hlength
+
+/-- A raw memory-growth effect extends the decoded store. -/
+theorem MemoryGrowth.extends {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
+    (s : runtime.store.Store M) (shape : Shape view s) (syntaxProof : StoreSyntax code s)
+    (index : Usize) (delta : U32) (inside : index.val < s.memories.length)
+    (result : U32 × runtime.store.Store M) (effect : MemoryGrowth view code s index delta result) :
+    Extend_store (decodeStore view code s) (decodeStore view code result.2) := by
+  have fresh := effect.shape view code s shape index delta inside result
+  have oldWf := decode_store_wf view code s shape syntaxProof
+  rcases effect with ⟨_, decoded, _⟩ |
+    ⟨old, buffer, count, issued, bytes, countEq, limit, pages, maximum, _, resultEq⟩
+  · rw [decoded]
+    exact Spec.extend_store_refl _ oldWf
+  · rw [resultEq] at fresh ⊢
+    have found := (List.getElem?_eq_some_iff.mp issued).2
+    let after := {s with memories := s.memories.set index {old with buf := buffer}, memory_bytes := count}
+    have newWf := decode_store_wf view code after fresh syntaxProof
+    have lengthEq : (view buffer).length = (view old.buf).length + delta.val * 65536 := by
+      simpa only [List.length_append, List.length_replicate, Slice.length] using congrArg List.length bytes
+    have oldMemoryWf : wf_meminst (decodeMemory view old) := by
+      apply wf_meminst.meminst_case_
+      · apply wf_memtype.memtype_case_0
+        apply decode_limits_wf
+        have bound := (shape.memories old (List.mem_of_getElem? issued)).2.1
+        scalar_tac
+      · exact decode_bytes_wf _
+    have newMemoryWf : wf_meminst (decodeMemory view {old with buf := buffer}) := by
+      apply wf_meminst.meminst_case_
+      · apply wf_memtype.memtype_case_0
+        apply decode_limits_wf
+        change (view buffer).length / 65536 ≤ _
+        rw [lengthEq]
+        scalar_tac
+      · exact decode_bytes_wf _
+    have extension := decode_memory_extends view old {old with buf := buffer}
+      rfl (by simp only [lengthEq]; omega) oldMemoryWf newMemoryWf
+    change Extend_store (decodeStore view code s)
+      {decodeStore view code s with MEMS := (s.memories.set index {old with buf := buffer}).val.map (decodeMemory view)}
+    change wf_store {decodeStore view code s with MEMS :=
+      (s.memories.set index {old with buf := buffer}).val.map (decodeMemory view)} at newWf
+    simp only [alloc.vec.Vec.set_val_eq, List.map_set] at newWf ⊢
+    apply Spec.extend_store_set_mem _ _ _ oldWf newWf
+    intro indexBound
+    simpa only [decodeStore, found,
+      getElem!_pos (s.memories.val.map (decodeMemory view)) index.val
+        (by simpa only [List.length_map] using inside), List.getElem_map] using extension
+
+/-- A raw table-growth effect with an owned initializer extends the decoded store. -/
+theorem TableGrowth.extends {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
+    (s : runtime.store.Store M) (shape : Shape view s) (syntaxProof : StoreSyntax code s)
+    (index : Usize) (delta : U32) (value : U64) (inside : index.val < s.tables.length)
+    (reference : ReferenceShape s (s.tables.val[index.val]).ty value)
+    (result : U32 × runtime.store.Store M) (effect : TableGrowth s index delta value result) :
+    Extend_store (decodeStore view code s) (decodeStore view code result.2) := by
+  have fresh := effect.shape view s shape index delta value inside reference result
+  have oldWf := decode_store_wf view code s shape syntaxProof
+  rcases effect with unchanged |
+    ⟨old, elements, count, issued, values, maxSize, countEq, limit, maximum, resultEq⟩
+  · rw [unchanged.2]
+    exact Spec.extend_store_refl _ oldWf
+  · rw [resultEq] at fresh ⊢
+    have found := (List.getElem?_eq_some_iff.mp issued).2
+    let after := {s with tables := s.tables.set index {old with elements}, table_elements := count}
+    have newWf := decode_store_wf view code after fresh syntaxProof
+    have lengthEq : elements.length = old.elements.length + delta.val := by
+      simpa only [List.length_append, List.length_replicate, alloc.vec.Vec.length] using congrArg List.length values
+    have oldTableWf : wf_tableinst (decodeTable old) := by
+      apply wf_tableinst.tableinst_case_
+      apply wf_tabletype.tabletype_case_0
+      exact decode_limits_wf _ _ (shape.tables old (List.mem_of_getElem? issued)).1
+    have newTableWf : wf_tableinst (decodeTable {old with elements}) := by
+      apply wf_tableinst.tableinst_case_
+      apply wf_tabletype.tabletype_case_0
+      apply decode_limits_wf
+      simpa only [lengthEq] using maxSize
+    have extension := decode_table_extends old {old with elements} rfl rfl
+      (by simp only [lengthEq]; omega) oldTableWf newTableWf
+    change Extend_store (decodeStore view code s)
+      {decodeStore view code s with TABLES := (s.tables.set index {old with elements}).val.map decodeTable}
+    change wf_store {decodeStore view code s with TABLES :=
+      (s.tables.set index {old with elements}).val.map decodeTable} at newWf
+    simp only [alloc.vec.Vec.set_val_eq, List.map_set] at newWf ⊢
+    apply Spec.extend_store_set_table _ _ _ oldWf newWf
+    intro indexBound
+    simpa only [decodeStore, found,
+      getElem!_pos (s.tables.val.map decodeTable) index.val
+        (by simpa only [List.length_map] using inside), List.getElem_map] using extension
 
 theorem MemoryGrowth.metadata {M : Type} {view : M → Slice U8} {code : CodeInterpretation}
     {before : runtime.store.Store M} {index delta out} (effect : MemoryGrowth view code before index delta out) :

@@ -695,6 +695,24 @@ theorem vec_index_given {T : Type} (values : alloc.vec.Vec T)
   rw [h] at he
   exact hout.trans (Option.some.inj he).symm
 
+theorem vec_index_eq {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
+    (found : values.val[index.val]? = some value) :
+    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice T) values index = .ok value := by
+  rw [alloc.vec.Vec.index_slice_index]
+  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
+  subst actual
+  exact read
+
+theorem vec_index_mut_eq {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
+    (found : values.val[index.val]? = some value) :
+    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice T) values index =
+      .ok (value, values.set index) := by
+  rw [alloc.vec.Vec.index_mut_slice_index]
+  unfold alloc.vec.Vec.index_mut_usize
+  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
+  subst actual
+  rw [read, bind_tc_ok]
+
 theorem step_fetch_div {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)

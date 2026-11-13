@@ -861,6 +861,8 @@ Stop if: any theorem statement outside the four files above has to change.
 
 ### 3.1 Shared helpers
 
+Completed 2026-11-13: [helpers and validation](notes/step31-results.md).
+
 1. Make the vector index lemmas public once. `global_index_given` /
    `global_index_mut_given` (`Runtime/Interp/State/Globals.lean`) and
    `table_access_index_given` / `table_access_index_mut_given`

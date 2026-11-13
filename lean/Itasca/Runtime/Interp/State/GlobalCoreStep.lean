@@ -24,24 +24,6 @@ section
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
-private theorem global_index_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
-    (found : values.val[index.val]? = some value) :
-    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice T) values index = .ok value := by
-  rw [alloc.vec.Vec.index_slice_index]
-  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
-  subst actual
-  exact read
-
-private theorem global_index_mut_given {T : Type} (values : alloc.vec.Vec T) (index : Usize) (value : T)
-    (found : values.val[index.val]? = some value) :
-    alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice T) values index =
-      .ok (value, values.set index) := by
-  rw [alloc.vec.Vec.index_mut_slice_index]
-  unfold alloc.vec.Vec.index_mut_usize
-  obtain ⟨actual, read, same⟩ := WP.spec_imp_exists (vec_index_given values index value found)
-  subst actual
-  rw [read, bind_tc_ok]
-
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
   (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
   (allocator : runtime.platform.Alloc A)
@@ -59,11 +41,11 @@ theorem global_get_dispatch_effect (exec : runtime.interp.Execution) (store : ru
       ⦃ out => out.1 = .Ok () ∧ SlotsEffect exec out.2.1
         (exec.slots.val.set (base.val + dst.val) value.lo) ∧ out.2.2 = store ⦄ := by
   unfold runtime.interp.execute_global_get
-  rw [global_index_given store.instances instanceIndex inst found, bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
-  rw [global_index_given inst.globals (UScalar.cast .Usize global) address
+  rw [vec_index_eq inst.globals (UScalar.cast .Usize global) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped), bind_ok]
-  rw [global_index_given store.globals address.index value issued, bind_ok]
+  rw [vec_index_eq store.globals address.index value issued, bind_ok]
   step* <;> simp_all [SlotsEffect]
 
 /-- Vector global reads copy both stored words in little-word order. -/
@@ -80,11 +62,11 @@ theorem global_get2_dispatch_effect (exec : runtime.interp.Execution) (store : r
         out.2.2 = store ⦄ := by
   change base.val + dst.val + 2 ≤ exec.slots.val.length at capacity
   unfold runtime.interp.execute_global_get2
-  rw [global_index_given store.instances instanceIndex inst found, bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
-  rw [global_index_given inst.globals (UScalar.cast .Usize global) address
+  rw [vec_index_eq inst.globals (UScalar.cast .Usize global) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped), bind_ok]
-  rw [global_index_given store.globals address.index value issued, bind_ok]
+  rw [vec_index_eq store.globals address.index value issued, bind_ok]
   step* <;> simp_all [SlotsEffect] <;> omega
 
 /-- Scalar global writes change only the selected global's low word. The
@@ -100,11 +82,11 @@ theorem global_set_dispatch_effect (exec : runtime.interp.Execution) (store : ru
       ⦃ out => out = (.Ok (), exec, {store with globals := store.globals.set address.index ({value with lo := exec.slots.val[base.val + src.val]!})}) ⦄ := by
   change base.val + src.val < exec.slots.val.length at capacity
   unfold runtime.interp.execute_global_set
-  rw [global_index_given store.instances instanceIndex inst found, bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
-  rw [global_index_given inst.globals (UScalar.cast .Usize global) address
+  rw [vec_index_eq inst.globals (UScalar.cast .Usize global) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped), bind_ok]
-  rw [global_index_mut_given store.globals address.index value issued, bind_ok]
+  rw [vec_index_mut_eq store.globals address.index value issued, bind_ok]
   have lowFound : exec.slots.val[base.val + src.val]? = some exec.slots.val[base.val + src.val]! := by
     rw [getElem!_pos exec.slots.val _ (by omega)]
     exact List.getElem?_eq_getElem (by omega)
@@ -129,11 +111,11 @@ theorem global_set2_dispatch_effect (exec : runtime.interp.Execution) (store : r
       ⦃ out => out = (.Ok (), exec, {store with globals := store.globals.set address.index ({value with lo := exec.slots.val[base.val + src.val]!, hi := exec.slots.val[base.val + src.val + 1]!})}) ⦄ := by
   change base.val + src.val + 2 ≤ exec.slots.val.length at capacity
   unfold runtime.interp.execute_global_set2
-  rw [global_index_given store.instances instanceIndex inst found, bind_ok]
+  rw [vec_index_eq store.instances instanceIndex inst found, bind_ok]
   simp only [lift, bind_ok]
-  rw [global_index_given inst.globals (UScalar.cast .Usize global) address
+  rw [vec_index_eq inst.globals (UScalar.cast .Usize global) address
     (by simpa only [U32.cast_Usize_val_eq] using mapped), bind_ok]
-  rw [global_index_mut_given store.globals address.index value issued, bind_ok]
+  rw [vec_index_mut_eq store.globals address.index value issued, bind_ok]
   have lowFound : exec.slots.val[base.val + src.val]? = some exec.slots.val[base.val + src.val]! := by
     rw [getElem!_pos exec.slots.val _ (by omega)]
     exact List.getElem?_eq_getElem (by omega)
