@@ -1,5 +1,90 @@
-import Itasca.Runtime.Integration.Host.HostReadyWorld
+import Itasca.Runtime.Integration.Host.HostFrameSiteExecution
+import Itasca.Runtime.Integration.Host.HostDirectWorld
+import Itasca.Runtime.Integration.Execution.World.SourceStep
+import Itasca.Runtime.Integration.Host.HostIndirectWorld
 import Itasca.Runtime.Interp.Relations.StepActive
+
+/-!
+Sections, each formerly its own module: HostReadyWorld, HostSiteWorld.
+-/
+
+/-! ## HostReadyWorld -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+
+/-- A ready host boundary retains enough static and source evidence to execute
+the actual direct or indirect call and construct its eventful successor. The
+callback transport assumptions remain separate from the source host law. -/
+theorem host_ready_world_outcomes {M P F A : Type}
+
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (allocation : Platform.AllocCorrect allocator) (interrupts : ∀p,hooks.interrupt p ⦃ _ => True ⦄)
+    (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop)
+    (certify : ∀ c s,Inv c s → CertifiedSupportedStore view c s)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (valid : Inv code store)
+    (expected : List valtype) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (op : instr) (after : List instr)
+    (site : HostFrameSite view code exec store expected ambient {f with code:=op::after} rest)
+    [Machine.OrdinaryHeads (emission site.compiled)]
+    [Machine.IndirectProjection (emission site.compiled) site.compiled.indirect.val]
+    (kind : DirectHostInstruction store site.raw site.inst site.compiled op ∨
+      ∃table type : U32,op=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val) ∧
+        SourceIndirectHostBoundary store ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩)
+    (callback : ∀ p host args results,
+      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
+        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+    (retains : ∀ host, HostRetention hooks store host) :
+    DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
+      WorldSourceStepResult (view:=view)
+        memory hooks floats allocator Inv code expected exec store platform
+        ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩ site.raw.pc.val false out := by
+  rcases kind with direct | indirect
+  · obtain ⟨index,offset,address,function,host,source,fetch,addressAt,functionAt,hostCode⟩ := direct
+    subst op
+    apply DivSpec.mono (step_host_call_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+      site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest index offset after address function host expected
+      site.last site.frameAt site.instanceAt site.compiledAt fetch addressAt functionAt hostCode site.binding site.slots site.program site.point site.machine
+      (site.eventful (certify code store valid) platform).owned (fun p=>callback p host) (retains host))
+    intro out result
+    exact result.unbundle
+  · obtain ⟨table,type,source,boundary⟩ := indirect
+    subst op
+    obtain ⟨other,callers,sourceTable,sourceType,position,sourceAfter,operands,address,function,host,frames,split,bounded,selected,functionAt,hostCode⟩ := boundary
+    change {f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest =
+      {other with code:=.CALL_INDIRECT (.mk_uN sourceTable) (.mk_uN sourceType)::sourceAfter}::callers at frames
+    obtain ⟨frameEq,restEq⟩ := List.cons.inj frames
+    have codeEq := congrArg SourceMachine.AFrame.code frameEq
+    simp only [List.cons.injEq,instr.CALL_INDIRECT.injEq,uN.mk_uN.injEq] at codeEq
+    obtain ⟨⟨tableEq,typeEq⟩,tailEq⟩ := codeEq
+    have positionSplit : f.vals=operands++[SourceMachine.integerVal .I32 position] := (congrArg SourceMachine.AFrame.vals frameEq).trans split
+    have resolved : SourceMachine.Indirect.resolve (Store.decodeStore view code store) f table.val type.val position=some address.val := by
+      change SourceMachine.Indirect.resolve (Store.decodeStore view code store)
+        {other with code:=.CALL_INDIRECT (.mk_uN sourceTable) (.mk_uN sourceType)::sourceAfter}
+        sourceTable sourceType position=some address.val at selected
+      rw [←frameEq,←tableEq,←typeEq] at selected
+      exact selected
+    apply DivSpec.mono (step_indirect_host_world_outcomes memory hooks floats allocator allocation interrupts view code Inv certify exec store platform valid
+      site.index site.raw site.inst site.compiled site.context site.targets site.next site.output ambient f rest table type after position operands
+      ⟨store.id,address⟩ function host positionSplit resolved functionAt hostCode rfl site.last site.frameAt site.instanceAt site.compiledAt site.moduleEq
+      site.binding site.slots site.program site.point expected site.machine (site.eventful (certify code store valid) platform).owned
+      (fun p=>callback p host) (retains host))
+    intro out result
+    exact result.unbundle
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## HostSiteWorld -/
+
+section
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
@@ -39,3 +124,5 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
     intro out result
     exact result.prepend_normalization chain typed
 end Itasca.Runtime.Integration
+
+end

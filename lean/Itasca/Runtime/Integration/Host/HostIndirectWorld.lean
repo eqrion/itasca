@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld
-import Itasca.Runtime.Integration.Host.HostEventfulReturn
+import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.World.Reinterpretation
 
 namespace Itasca.Runtime.Integration

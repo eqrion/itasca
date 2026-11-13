@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Host.HostCallSource
+import Itasca.Runtime.Integration.Host.HostCallContext
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Interp.Machine.Frames.SourceBase
 import Itasca.Runtime.Integration.Execution.Dispatch.SignatureWords

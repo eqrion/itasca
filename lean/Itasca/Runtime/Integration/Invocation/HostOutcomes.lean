@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Api.InvocationBoundary
-import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
+import Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld
 import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Execution.Ownership.Publication
 import Itasca.Runtime.Store.Invariant.HostSignature

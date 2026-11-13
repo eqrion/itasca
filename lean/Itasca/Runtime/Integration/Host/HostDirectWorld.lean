@@ -1,5 +1,5 @@
-import Itasca.Runtime.Integration.Host.HostCallStructuredWorld
-import Itasca.Runtime.Integration.Host.HostEventfulReturn
+import Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld
+import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.World.Reinterpretation
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 
