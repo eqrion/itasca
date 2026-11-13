@@ -123,3 +123,16 @@ The proofs depend on:
   4. Hand-written binary grammar.
   5. The rustc compiler.
   6. Lean's kernel and standard logical foundations.
+  7. The native runtime wrappers in [`src/runtime/native.rs`](src/runtime/native.rs):
+     `StdAlloc` uses `Vec::try_reserve`, `NativeFloat` uses native arithmetic
+     and `libm`, and store identity issuance uses checked atomic increments.
+     Their behavior is not proved by the Lean kernel.
+  8. Twelve versioned specification patches under [`patches/`](patches/).
+     The largest, [spectec-wasm2-builtins.patch](patches/spectec-wasm2-builtins.patch),
+     supplies handwritten definitions for all 64 pinned builtin signatures.
+  9. The host-call execution extension in
+     [`lean/SpecExt/Host.lean`](lean/SpecExt/Host.lean), which adds atomic host
+     steps to the generated Wasm reduction relation.
+  10. The Lean execution model is sequential. Parallel use of the Rust API relies
+      on Rust ownership and the documented worker-provenance contracts; Lean
+      does not prove concurrent execution.

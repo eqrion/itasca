@@ -236,6 +236,14 @@ The proofs supplement the pinned specification without editing it:
 - Wasm 1.0 requires `br_table` targets to be equal, which Wasm 2.0 typing does
   not; [Examples/Wasm1/ProfileBoundary](Itasca/Examples/Wasm1/ProfileBoundary.lean)
   shows why.
+- The generated specification contains three unproved well-formedness theorems:
+  `Step_is_wf`, `Step_read_is_wf`, and `Step_pure_is_wf`. No handwritten
+  declaration may use them; `just audit` fails if a declaration in `Itasca/` or
+  `SpecExt/` refers to one.
+- SpecTec's Lean output contains abstract syntax and typing judgments, but no
+  binary byte encoding or decoding grammar. The handwritten grammar in
+  [Itasca/Binary/](Itasca/Binary) therefore has no generated binary grammar to
+  cross-check against.
 
 ### Source patches
 
@@ -251,8 +259,9 @@ Build targets apply the source patches to the pinned checkouts and the builtin
 patch to generated Lean output:
 
 - [spectec-wasm2-builtins.patch](../patches/spectec-wasm2-builtins.patch)
-  patches generated `wasm2.0.lean` with the 64 handwritten builtin definitions
-  and their helpers. These definitions are part of the trusted specification.
+  patches generated `wasm2.0.lean` with concrete definitions for all 64 pinned
+  builtin signatures and their helpers. These definitions are part of the
+  trusted specification.
   Supporting correctness lemmas remain ordinary Lean modules in `SpecExt/`.
 - [spectec-wasm2-global-mutability.patch](../patches/spectec-wasm2-global-mutability.patch)
   keeps both global mutabilities in typing.
