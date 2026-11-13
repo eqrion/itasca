@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Module.CollectFunctions
-import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
+import Itasca.Runtime.Compiler.Body.Capacity.ExecutableFunctionCapacity
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

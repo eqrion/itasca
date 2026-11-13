@@ -1,5 +1,9 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
-import Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2
+import Itasca.Runtime.Representation.StoreCapacity
+import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedFullCapacity
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
@@ -7,9 +11,67 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.BulkAndSaturatingEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableCapacity
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
-import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
-import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
-import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
+
+/-!
+Sections, each formerly its own module: CapacityFoldWasm2, FunctionCapacity, ExecutableFunctionCapacity.
+-/
+
+/-! ## CapacityFoldWasm2 -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+theorem ValidatedStacksWasm2.head_width {data env ctx index st samples}
+    (trace : ValidatedStacksWasm2 data env ctx index st samples) :
+    stackWords st.core.vals.val ≤ maximumStackWords samples := by
+  cases trace with
+  | done => simp [maximumStackWords]
+  | step => exact Nat.le_max_left _ _
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## FunctionCapacity -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Source-indexed frame bounds retained for the defined function prefix. -/
+structure ModuleCapacities (module : runtime.compiler.ExecutableModule)
+    (sources : List funccode) : Prop where
+  count : sources.length = module.module.env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (typeIndex : U32),
+    module.module.env.func_type_indices.val[index]? = some typeIndex →
+      ∃ compiled source, module.functions.val[index]? = some compiled ∧
+        sources[index]? = some source ∧
+        FunctionCapacity module.module.env typeIndex source compiled
+
+theorem ModuleCapacities.extend {before after : runtime.compiler.ExecutableModule} {sources}
+    (certificate : ModuleCapacities before sources)
+    (source : after.module = before.module)
+    (preserved : after.functions.val.take before.functions.val.length = before.functions.val) :
+    ModuleCapacities after sources := by
+  refine ⟨by simpa only [source] using certificate.count, ?_⟩
+  intro index typeIndex found
+  obtain ⟨compiled, src, foundCode, sourceLookup, code⟩ := certificate.entry index typeIndex
+    (by simpa only [source] using found)
+  refine ⟨compiled, src, ?_, sourceLookup, by simpa only [source] using code⟩
+  have bound := (List.getElem?_eq_some_iff.mp foundCode).1
+  have same := (List.getElem?_eq_some_iff.mp foundCode).2
+  have retained := congrArg (fun list => list[index]?) preserved
+  simpa [List.getElem?_take, bound, same] using retained
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## ExecutableFunctionCapacity -/
+
+section
 
 /-!
 Executable function capacity from reader-step accounting through the typed body fold and entry witness. The final certificate bounds compiled slots by independently validated source demand.
@@ -191,5 +253,7 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
   · simpa only [List.map_append] using bound
 
 end Itasca.Runtime.Compiler
+
+end
 
 end
