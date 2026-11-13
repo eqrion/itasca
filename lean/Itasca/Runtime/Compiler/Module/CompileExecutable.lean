@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerExecutable
+import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
 import Itasca.Runtime.Compiler.Module.CompileEntry
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Module.ExecutableCollectedFunctions

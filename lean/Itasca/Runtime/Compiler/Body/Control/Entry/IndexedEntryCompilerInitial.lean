@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.CompileTotalDriver
-import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedCompilerStart
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Module.CompileEntryTotal
 import Itasca.Runtime.Compiler.Module.SchedulerProfileSafety
 import Itasca.Stream.ReachedBatch

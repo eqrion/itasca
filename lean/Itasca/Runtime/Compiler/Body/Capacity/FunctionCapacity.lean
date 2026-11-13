@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 
 namespace Itasca.Runtime.Compiler

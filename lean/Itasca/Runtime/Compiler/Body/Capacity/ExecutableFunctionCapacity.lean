@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.BulkAndSaturatingEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableCapacity
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
 
