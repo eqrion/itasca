@@ -12,7 +12,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix

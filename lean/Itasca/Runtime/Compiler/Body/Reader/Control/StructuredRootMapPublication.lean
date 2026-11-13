@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.ElseExitSlotBounds
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs

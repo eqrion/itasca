@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Wasm2.FixedOperands
 
 /-!

@@ -33,7 +33,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

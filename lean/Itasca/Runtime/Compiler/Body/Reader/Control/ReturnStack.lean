@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 
 /-!
 Sections, each formerly its own module: LoopPrefix, ReturnStack.
