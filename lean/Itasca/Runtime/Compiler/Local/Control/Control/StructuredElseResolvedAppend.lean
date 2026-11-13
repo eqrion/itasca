@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixControl
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCompletedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseSource
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixPop
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl

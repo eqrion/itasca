@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
@@ -61,10 +61,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post

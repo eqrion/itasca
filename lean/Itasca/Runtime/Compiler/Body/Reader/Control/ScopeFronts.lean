@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalInitial
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper
 
 /-!

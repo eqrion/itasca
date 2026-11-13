@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std

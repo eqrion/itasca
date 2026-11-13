@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem TerminalEmission.structured_prefix {jumpTables : List Aeneas.Std.U32} {locals returns stack instruction emitted}

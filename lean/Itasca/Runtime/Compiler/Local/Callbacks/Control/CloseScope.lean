@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalInitial
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 

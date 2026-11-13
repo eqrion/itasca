@@ -9,7 +9,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span

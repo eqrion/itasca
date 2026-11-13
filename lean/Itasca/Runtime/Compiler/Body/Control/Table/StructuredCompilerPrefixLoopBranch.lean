@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixTermin
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalLoopBranch
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

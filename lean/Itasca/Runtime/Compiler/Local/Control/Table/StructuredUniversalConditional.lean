@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalBranch
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedConditionalPrefix
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredUniversalPrefix.branch_if_forward {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
