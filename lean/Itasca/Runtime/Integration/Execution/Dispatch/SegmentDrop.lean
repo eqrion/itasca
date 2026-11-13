@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Integration.Execution.SegmentDropStep
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem StatefulDropEffect.mutation_of_shape {M : Type} {view : M → Slice U8} {code : CodeInterpretation}

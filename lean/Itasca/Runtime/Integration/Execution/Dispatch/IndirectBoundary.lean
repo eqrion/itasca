@@ -21,7 +21,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Progress.Advance
-import Itasca.Runtime.Interp.Machine.Control.UniformSimulation
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.SourceMachine.Stateful.TableSet
 
 /-!

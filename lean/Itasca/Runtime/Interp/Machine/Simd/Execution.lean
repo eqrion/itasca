@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Simd.FrameStep
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
 /-!
 All supported SIMD instructions execute inside the generic compiled stack. The only trap is a checked memory bounds failure; opaque buffer writeback is retained explicitly even when the source store does not change.

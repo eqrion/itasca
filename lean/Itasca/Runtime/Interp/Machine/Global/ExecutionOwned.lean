@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Control.UniformSource
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.Interp.Machine.Control.ForwardJump
+import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Spec.Integer
 
 /-!

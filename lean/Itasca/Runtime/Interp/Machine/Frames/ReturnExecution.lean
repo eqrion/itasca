@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Frames.StructuredReturn
 import Itasca.Runtime.Interp.Machine.Frames.ReturnCompletion
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Spec.Integer
 

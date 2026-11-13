@@ -14,7 +14,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Machine.Control.ForwardJump
+import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Core.SelectPositive

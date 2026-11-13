@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
-import Itasca.Runtime.Interp.Machine.Control.BranchTable
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 

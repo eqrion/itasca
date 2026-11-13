@@ -12,18 +12,16 @@ import Itasca.Runtime.Interp.Memory.MemoryCoreTransition
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Interp.Memory.MemoryCoreResult
 import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
-import Itasca.Runtime.Interp.Machine.Control.ForwardJump
+import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
-import Itasca.Runtime.Interp.Machine.Control.UniformSource
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
 import Itasca.Runtime.Interp.Relations.Normalization
-import Itasca.Runtime.Interp.Machine.Control.ControlInversion
-import Itasca.Runtime.Interp.Machine.Control.LabelCompletion
 import Itasca.Runtime.Interp.Relations.ValueLookup
 
 /-!
