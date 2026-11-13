@@ -426,6 +426,36 @@ theorem InstanceShape.mono {M : Type} (before after : runtime.store.Store M)
   · intro index hi; exact Nat.lt_of_lt_of_le (elems index hi) helem
   · intro index hi; exact Nat.lt_of_lt_of_le (datas index hi) hdata
 
+/-- Ownership or type rejection occurs before allocation and retains the store. -/
+theorem define_global_rejected {M A : Type} (ops : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A) (s : runtime.store.Store M)
+    (ty : Itasca.wasm_types.GlobalType) (value : runtime.Value)
+    (hbound : objectCount s ≤ Usize.max)
+    (rejected : (∃ error, runtime.store.Store.check_value ops s value = .ok (.Err error)) ∨
+      (runtime.store.Store.check_value ops s value = .ok (.Ok ()) ∧
+        core.cmp.PartialEq.ne.trait_default
+          Itasca.wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
+          ty.valtype (Interp.rawType value) = .ok true)) :
+    runtime.store.Store.define_global_with ops allocator s ty value ⦃ (result, after) =>
+      ∃ error, result = .Err error ∧ after = s ⦄ := by
+  unfold runtime.store.Store.define_global_with
+  step with room_spec ops s hbound as ⟨room, hroom⟩
+  rw [hroom]
+  split
+  · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    rcases rejected with ⟨error, rejected⟩ | ⟨accepted, mismatch⟩
+    · simp only [rejected, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+        core.convert.FromSame.from, bind_tc_ok, WP.spec_ok]
+      exact ⟨error, rfl, rfl⟩
+    · simp only [accepted, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
+        value_type_exact, mismatch, ite_true, WP.spec_ok]
+      exact ⟨.BadArguments, rfl, rfl⟩
+  · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, bind_tc_ok, WP.spec_ok]
+    exact ⟨.Exhausted .Objects, rfl, rfl⟩
+
 /-- A successful global definition appends precisely the encoded typed value. -/
 theorem define_global_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (allocator : runtime.platform.Alloc A) (ha : Platform.AllocCorrect allocator)

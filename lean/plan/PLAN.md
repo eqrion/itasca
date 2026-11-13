@@ -56,6 +56,10 @@ first thing to do with one is to make it typecheck.
 
 ## Additional decision (2026-11-13)
 
+- Step 3.3 may continue past the three-repair stop for the external-reference
+  scalar-bound proof. The user approved continuing after the remaining goal
+  was identified as `U32.max < U64.max`; retain the other stop conditions.
+
 - Step 1.0 may raise `modules_under_50_lines` from 663 to 665: the new
   foundational `StoreParts.lean` and removal of the Wasm 1.0 wrapper from
   `EntryOfEnv.lean` are approved exceptions. Record 665 as the new ceiling;
@@ -886,6 +890,8 @@ Completed 2026-11-13: [contract and validation](notes/step32-results.md).
 say so in the docstring.
 
 ### 3.3 Definitions
+
+Completed 2026-11-13: [contracts and validation](notes/step33-results.md).
 
 In this order: `define_extern_with` (5.3), `define_host_with` (5.2),
 `define_memory_with` (5.4), `define_table_with` (5.5), `define_global_with`
