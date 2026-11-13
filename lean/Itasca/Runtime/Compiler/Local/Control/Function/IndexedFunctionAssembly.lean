@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunctionBodyClose
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 
 /-!

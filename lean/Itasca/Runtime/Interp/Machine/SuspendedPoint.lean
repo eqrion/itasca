@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission

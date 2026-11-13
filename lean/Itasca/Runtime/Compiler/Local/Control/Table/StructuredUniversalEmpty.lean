@@ -1,5 +1,248 @@
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+
+/-!
+Sections, each formerly its own module: StructuredUniversalCloseLoop, StructuredUniversalCall, StructuredUniversalEmpty.
+-/
+
+/-! ## StructuredUniversalCloseLoop -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas.Std
+
+/-- LOOP END resumes its parent only from the normal body continuation. Loop
+branches retain their backward target and never become forward END fixups. -/
+theorem StructuredUniversalPrefix.close_loop {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals parents parent child}
+    (invariant : StructuredUniversalPrefix (jumpTables := jumpTables) emit before types functions returns locals (parents ++ [parent]) child
+      (child.front ++ child.results))
+    (frame : runtime.compiler.Frame) (target : U32) (bt : blocktype)
+    (frames : before.frames.val = after.frames.val ++ [frame])
+    (kind : frame.kind = .Loop) (noGuard : frame.if_pc = none) (noFixups : frame.fixups.val = [])
+    (height : frame.height.val = slots locals + slots child.front)
+    (inputs : frame.params.val = slots child.params) (width : frame.results.val = slots child.results)
+    (position : target.val = before.function.code.val.length)
+    (codeEq : after.function.code.val = before.function.code.val)
+    (localsEq : compilerLocals after = locals)
+    (layout : CompilerLayout after (child.front ++ child.results))
+    (form : child.form = .loop bt) (entry : child.entry = frame.start_pc.val)
+    (body : child.bodyPc = frame.start_pc.val + 1)
+    (head : before.function.code.val[frame.start_pc.val]? = some .LoopHead)
+    (parentEntered : parent.entered = true) (childEntered : child.entered = true)
+    (signature : BlockSignature types bt child.params child.results) :
+    StructuredUniversalPrefix (jumpTables := jumpTables) emit after types functions returns locals parents
+      (parent.advance (.LOOP bt child.source)) (child.front ++ child.results) := by
+  refine ⟨localsEq, layout, ?_, ?_⟩
+  · intro f member
+    have original := invariant.sites f (by rw [frames]; exact List.mem_append_left _ member)
+    simpa only [codeEq] using original
+  · intro parentLabel labels groups plans shape parentShapes
+    have oldParentShape : ScopeLabel parent parentLabel :=
+      ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
+    let label : LabelTarget := ⟨child.front, child.params, child.results, frame.start_pc,
+      target.val, [.LOOP bt child.source], [], true, true⟩
+    have future : FrameFuture before.function.code.val.length locals frame label 0#u32 := by
+      refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      · intro _; exact height
+      · intro _; exact width
+      · intro _; simpa [kind, label] using inputs
+      · exact Nat.le_of_eq position.symm
+      · simp [kind]
+      · intro _; rfl
+      · intro _; rfl
+      · intro _; rfl
+      · simp [kind]
+      · simp [noGuard]
+    have outer : FramePlans before.function.code.val.length locals after.frames.val (parentLabel :: labels) groups := by
+      simpa only [codeEq] using plans
+    have allPlans := FramePlans.push outer frame label 0#u32 future
+    rw [← frames] at allPlans
+    have normalized : FramePlans before.function.code.val.length locals before.frames.val
+        (label :: parentLabel :: labels) (⟨[], frame.start_pc⟩ :: groups) := by
+      simpa [frameGroups, noGuard, noFixups, label] using allPlans
+    have childShape : ScopeLabel child label := by
+      refine ⟨rfl, ?_, rfl⟩
+      simp [SourceScope.branchTypes, form, label]
+    have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
+      simpa using List.Forall₂.cons oldParentShape parentShapes
+    obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
+    simp only [resolvedCode, patchCode] at saved current
+    have bodyCode := current.finish (by simp [resolved_code_length]) (by simp [NormalLive, label])
+    obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
+    have closed : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
+        (parentLabel :: labels) child.arguments [.LOOP bt child.source] child.entry target.val
+        (child.front ++ child.results) := by
+      have bodyCode' : StructuredCode emit types functions returns locals (resolvedCode before.function.code.val groups) jumpTables
+          (label :: parentLabel :: labels) (child.front ++ child.params) child.source
+          (frame.start_pc.val + 1) target.val (child.front ++ child.results) := by
+        simpa only [SourceScope.input, position, body] using bodyCode
+      simpa [SourceScope.arguments, SourceScope.input, form, entry] using
+        StructuredPrefix.loop signature (resolved_code_loop_head _ groups _ head) bodyCode'
+    have restored := parentSaved.resume parentEntered childEntered closed
+    refine ⟨?_, ?_⟩
+    · rw [codeEq]
+      exact outerSaved.advance_current (.LOOP bt child.source)
+    · simpa only [codeEq, position, SourceScope.advance, SourceScope.input] using restored
+
+/-- A terminal loop body keeps its parent terminal; its live backward branch
+target is independent of the dead normal exit. -/
+theorem StructuredUniversalTerminal.close_loop {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals parents parent child}
+    (invariant : StructuredUniversalTerminal (jumpTables := jumpTables) emit before types functions returns locals (parents ++ [parent]) child)
+    (frame : runtime.compiler.Frame) (target : U32) (bt : blocktype)
+    (frames : before.frames.val = after.frames.val ++ [frame])
+    (kind : frame.kind = .Loop) (noGuard : frame.if_pc = none) (noFixups : frame.fixups.val = [])
+    (height : frame.height.val = slots locals + slots child.front)
+    (inputs : frame.params.val = slots child.params) (width : frame.results.val = slots child.results)
+    (position : target.val = before.function.code.val.length)
+    (codeEq : after.function.code.val = before.function.code.val)
+    (localsEq : compilerLocals after = locals)
+    (form : child.form = .loop bt) (entry : child.entry = frame.start_pc.val)
+    (body : child.bodyPc = frame.start_pc.val + 1)
+    (head : before.function.code.val[frame.start_pc.val]? = some .LoopHead)
+    (parentEntered : parent.entered = true) (childEntered : child.entered = true)
+    (signature : BlockSignature types bt child.params child.results) :
+    StructuredUniversalTerminal (jumpTables := jumpTables) emit after types functions returns locals parents (parent.advance (.LOOP bt child.source)) := by
+  refine ⟨localsEq, ?_, ?_⟩
+  · intro f member
+    have original := invariant.sites f (by rw [frames]; exact List.mem_append_left _ member)
+    simpa only [codeEq] using original
+  · intro parentLabel labels groups plans shape parentShapes
+    have oldParentShape : ScopeLabel parent parentLabel :=
+      ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
+    let label : LabelTarget := ⟨child.front, child.params, child.results, frame.start_pc,
+      target.val, [.LOOP bt child.source], [], false, true⟩
+    have future : FrameFuture before.function.code.val.length locals frame label 0#u32 := by
+      refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+      · intro _; exact height
+      · intro _; exact width
+      · intro _; simpa [kind, label] using inputs
+      · exact Nat.le_of_eq position.symm
+      · simp [kind]
+      · intro _; rfl
+      · intro _; rfl
+      · intro _; rfl
+      · simp [kind]
+      · simp [noGuard]
+    have outer : FramePlans before.function.code.val.length locals after.frames.val (parentLabel :: labels) groups := by
+      simpa only [codeEq] using plans
+    have allPlans := FramePlans.push outer frame label 0#u32 future
+    rw [← frames] at allPlans
+    have normalized : FramePlans before.function.code.val.length locals before.frames.val
+        (label :: parentLabel :: labels) (⟨[], frame.start_pc⟩ :: groups) := by
+      simpa [frameGroups, noGuard, noFixups, label] using allPlans
+    have childShape : ScopeLabel child label := by
+      refine ⟨rfl, ?_, rfl⟩
+      simp [SourceScope.branchTypes, form, label]
+    have allShapes : List.Forall₂ ScopeLabel (parents ++ [parent]).reverse (parentLabel :: labels) := by
+      simpa using List.Forall₂.cons oldParentShape parentShapes
+    obtain ⟨saved, current⟩ := invariant.prefixes label (parentLabel :: labels) _ normalized childShape allShapes
+    simp only [resolvedCode, patchCode] at saved current
+    have bodyCode := current.finish target.val (child.front ++ child.results) (by omega) (by simp [resolved_code_length, position])
+    obtain ⟨outerSaved, _, _, parentSaved⟩ := saved.pop
+    have closed : StructuredDeadPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
+        (parentLabel :: labels) child.arguments [.LOOP bt child.source] child.entry target.val := by
+      have bodyCode' : StructuredCode emit types functions returns locals (resolvedCode before.function.code.val groups) jumpTables
+          (label :: parentLabel :: labels) (child.front ++ child.params) child.source
+          (frame.start_pc.val + 1) target.val (child.front ++ child.results) := by
+        simpa only [SourceScope.input, position, body] using bodyCode
+      simpa [SourceScope.arguments, SourceScope.input, form, entry] using
+        StructuredDeadPrefix.loop signature (resolved_code_loop_head _ groups _ head) bodyCode'
+    have restored := parentSaved.resume_dead parentEntered childEntered closed
+    refine ⟨?_, ?_⟩
+    · rw [codeEq]
+      exact outerSaved.advance_current (.LOOP bt child.source)
+    · simpa only [codeEq, position, SourceScope.advance, SourceScope.input] using restored
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## StructuredUniversalCall -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas.Std
+
+theorem StructuredPrefix.emit_call {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code labels initial source start front params results}
+    (prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals code labels initial source start code.length (front ++ params))
+    (index base : U32)
+    (signature : functions[index.val]? = some ⟨.mk_list params, .mk_list results⟩)
+    (arguments : base.val = slots locals + slots front) :
+    StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (code ++ [runtime.bytecode.Instr.Call index base]) labels initial
+      (source ++ [.CALL (.mk_uN index.val)]) start (code ++ [runtime.bytecode.Instr.Call index base]).length (front ++ results) := by
+  have fetched : (code ++ [runtime.bytecode.Instr.Call index base])[code.length]? = some (runtime.bytecode.Instr.Call index base) := by simp
+  simpa only [List.length_append, List.length_singleton] using
+    (prior.extend [runtime.bytecode.Instr.Call index base]).append (StructuredPrefix.call signature arguments fetched)
+
+theorem Lowered.structured_resolved_call {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals labels groups initial source start front params results index base}
+    (lowered : Lowered before after (.Call index base) (front ++ results))
+    (invariant : StructuredResolvedInv (jumpTables := jumpTables) emit before types functions returns locals labels groups initial source start (front ++ params))
+    (signature : functions[index.val]? = some ⟨.mk_list params, .mk_list results⟩)
+    (arguments : base.val = slots locals + slots front) :
+    StructuredResolvedInv (jumpTables := jumpTables) emit after types functions returns locals labels groups initial
+      (source ++ [.CALL (.mk_uN index.val)]) start (front ++ results) := by
+  refine ⟨lowered.2.2.1.trans invariant.localsEq, lowered.2.1, ?_, ?_⟩
+  · intro group member site atSite
+    have old := invariant.inside group member site atSite
+    simp only [lowered.1, List.length_append, List.length_singleton]
+    omega
+  · have resolved := resolved_code_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups invariant.inside
+    have prior : StructuredPrefix (jumpTables := jumpTables) emit types functions returns locals (resolvedCode before.function.code.val groups)
+        labels initial source start (resolvedCode before.function.code.val groups).length (front ++ params) := by
+      simpa only [resolved_code_length] using invariant.code
+    have advanced := prior.emit_call index base signature arguments
+    simpa only [lowered.1, resolved, List.length_append, resolved_code_length] using advanced
+
+/-- A direct-call callback advances every pending source/control prefix using
+only the source signature and actual argument-base coordinate. -/
+theorem Lowered.structured_universal_call {jumpTables : List Aeneas.Std.U32} {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals parents current front params results index base}
+    (lowered : Lowered before after (.Call index base) (front ++ results))
+    (frames : after.frames = before.frames)
+    (invariant : StructuredUniversalPrefix (jumpTables := jumpTables) emit before types functions returns locals parents current (front ++ params))
+    (signature : functions[index.val]? = some ⟨.mk_list params, .mk_list results⟩)
+    (arguments : base.val = slots locals + slots front) :
+    StructuredUniversalPrefix (jumpTables := jumpTables) emit after types functions returns locals parents
+      (current.advance (.CALL (.mk_uN index.val))) (front ++ results) := by
+  have codeEq := lowered.1
+  have lengthOrder : before.function.code.val.length ≤ after.function.code.val.length := by simp [codeEq]
+  refine ⟨lowered.2.2.1.trans invariant.localsEq, lowered.2.1, ?_, ?_⟩
+  · intro frame member
+    rw [frames] at member
+    simpa only [codeEq] using (invariant.sites frame member).extend [runtime.bytecode.Instr.Call index base]
+  · intro label labels groups plans shape parentShapes
+    have oldPlans : FramePlans before.function.code.val.length locals before.frames.val (label :: labels) groups := by
+      rw [← frames]
+      exact plans.before lengthOrder
+    have oldShape : ScopeLabel current label :=
+      ⟨shape.front, by simpa [SourceScope.advance, SourceScope.branchTypes] using shape.branchTypes, shape.results⟩
+    have old := invariant.resolved oldPlans oldShape parentShapes
+    have next := lowered.structured_resolved_call old signature arguments
+    have saved := (invariant.prefixes label labels groups oldPlans oldShape parentShapes).1
+    have resolved := resolved_code_append_code before.function.code.val [runtime.bytecode.Instr.Call index base] groups old.inside
+    refine ⟨?_, next.code⟩
+    simpa only [codeEq, resolved] using
+      (saved.extend [runtime.bytecode.Instr.Call index base]).advance_current (.CALL (.mk_uN index.val))
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## StructuredUniversalEmpty -/
+
+section
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
@@ -30,3 +273,4 @@ theorem LoweredEmpty.structured_universal_advance {jumpTables : List Aeneas.Std.
 
 end Itasca.Runtime.Compiler
 
+end

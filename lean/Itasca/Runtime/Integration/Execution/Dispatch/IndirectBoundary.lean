@@ -15,7 +15,7 @@ import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.StepActive

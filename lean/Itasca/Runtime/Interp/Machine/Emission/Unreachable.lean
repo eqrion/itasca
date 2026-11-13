@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata

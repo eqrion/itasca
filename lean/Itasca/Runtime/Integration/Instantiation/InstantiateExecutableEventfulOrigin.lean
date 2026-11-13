@@ -26,7 +26,7 @@ import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation

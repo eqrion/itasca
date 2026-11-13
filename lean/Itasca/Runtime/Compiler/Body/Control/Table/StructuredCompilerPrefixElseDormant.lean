@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixElse
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormantElse
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
 namespace Itasca.Runtime.Compiler

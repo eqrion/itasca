@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixAdvance
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

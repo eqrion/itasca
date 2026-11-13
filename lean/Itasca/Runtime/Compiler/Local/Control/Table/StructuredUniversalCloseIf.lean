@@ -1,7 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseSource
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCompletedPrefix
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixPop
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames

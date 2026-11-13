@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCompleted
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalRoot
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunctionBodyClose
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!

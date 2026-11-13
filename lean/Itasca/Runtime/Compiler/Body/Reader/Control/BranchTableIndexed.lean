@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalBranchTable
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackLayout
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableScopeFrames

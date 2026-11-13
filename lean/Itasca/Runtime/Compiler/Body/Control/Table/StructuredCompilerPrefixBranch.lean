@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixTerminal
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalLoopBranch
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseBranches
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormant
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

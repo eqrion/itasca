@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
 import Itasca.Runtime.Interp.Machine.Emission.Local
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Interp.Machine.Frames.ReturnStack
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCall
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalEmpty
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

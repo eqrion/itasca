@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCompleted
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadBlock
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
 namespace Itasca.Runtime.Compiler

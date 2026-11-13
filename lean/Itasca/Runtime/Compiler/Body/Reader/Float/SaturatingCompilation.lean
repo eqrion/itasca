@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions

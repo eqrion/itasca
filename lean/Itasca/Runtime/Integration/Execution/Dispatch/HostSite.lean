@@ -17,7 +17,7 @@ import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Integration.Execution.Dispatch.Scalar
@@ -41,7 +41,6 @@ import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation

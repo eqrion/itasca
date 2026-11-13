@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantLowering
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
