@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
-import Itasca.Runtime.Integration.Execution.SegmentDropStep
+import Itasca.Runtime.Integration.Execution.TableInit
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
 namespace Itasca.Runtime.Integration

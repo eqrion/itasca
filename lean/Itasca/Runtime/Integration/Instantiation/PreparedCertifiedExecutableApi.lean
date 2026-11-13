@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Instantiation.PreparedCertifiedExecutable
 import Itasca.Runtime.Store.Instantiation.NoStart
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
-import Itasca.Runtime.Integration.Execution.InstantiationSource
+import Itasca.Runtime.Integration.Execution.MemoryInit
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
 import Itasca.Runtime.Compiler.Module.CompileDataCount
 

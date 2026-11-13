@@ -1,8 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
-import Itasca.Runtime.Integration.Execution.TableFill
-import Itasca.Runtime.Integration.Execution.TableCopy
 import Itasca.Runtime.Integration.Execution.TableInit
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
