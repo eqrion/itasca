@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
 /-!

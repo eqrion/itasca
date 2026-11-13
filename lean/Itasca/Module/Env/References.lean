@@ -1,5 +1,5 @@
 import Itasca.Module.Const.Syntax
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 # Declared function references

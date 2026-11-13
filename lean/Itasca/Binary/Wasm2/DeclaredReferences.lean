@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm2.Syntax
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 # Declared references in Wasm 2.0 syntax

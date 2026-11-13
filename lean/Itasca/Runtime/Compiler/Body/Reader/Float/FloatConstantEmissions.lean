@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Spec.ScalarConst
+import Itasca.Spec.TypingInversion
 
 /-!
 Sections, each formerly its own module: FloatFacts, FloatEmissions, FloatConstant, FloatConstantLowering, FloatConstantEmissions.

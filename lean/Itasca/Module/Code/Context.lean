@@ -1,7 +1,7 @@
 import Itasca.Module.Code.BodyContext
 import Itasca.Binary.Module
 import Itasca.Module.Code.BodyContextComplete
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 # Code entry typing contexts

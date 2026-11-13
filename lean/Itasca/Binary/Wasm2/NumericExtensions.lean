@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm1.NumericMeaning
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 # Wasm 2.0 numeric additions

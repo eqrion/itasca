@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 Sections, each formerly its own module: FloatEffects, FloatOperands, FloatEncoding.

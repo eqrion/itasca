@@ -5,8 +5,7 @@ import Itasca.Binary.Wasm1.BlockType
 import Itasca.Binary.SignedLeb32
 import Itasca.Binary.SignedLeb64
 import Itasca.Binary.FloatBits
-import Itasca.Spec.Instr
-import Itasca.Spec.ScalarConst
+import Itasca.Spec.TypingInversion
 
 /-!
 # Wasm 1.0 instruction binary grammar

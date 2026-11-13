@@ -1,5 +1,5 @@
 import Itasca.Binary.SignedLeb32
-import Itasca.Spec.Instr
+import Itasca.Spec.TypingInversion
 import Itasca.Handler.Sequence
 import Itasca.Handler.Stack
 

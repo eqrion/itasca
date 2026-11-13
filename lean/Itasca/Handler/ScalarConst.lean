@@ -2,7 +2,7 @@ import Itasca.Handler.SignedConst
 import Itasca.Binary.SignedLeb64
 import Itasca.Binary.FloatBits
 import Itasca.Visitor.Basic
-import Itasca.Spec.ScalarConst
+import Itasca.Spec.TypingInversion
 
 /-!
 # `i64`, `f32` and `f64` constant handlers
