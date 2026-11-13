@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.Dispatch.Host
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-import Itasca.Runtime.Integration.Execution.Dispatch.HostResult
+import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Integration.Host.HostFrameSiteExecution
 import Itasca.Runtime.Integration.Host.HostCallSource
 import Itasca.Runtime.Interp.Relations.StackPreservation
@@ -15,17 +15,16 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
-import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
-import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Api.InvocationBoundary
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Store.Invariant.HostSignature
-import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Integration.Execution.Resources.SourceCauses
 
 /-!

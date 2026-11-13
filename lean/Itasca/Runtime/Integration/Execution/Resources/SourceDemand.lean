@@ -63,7 +63,7 @@ import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.History.Append
-import Itasca.Runtime.Integration.Execution.Dispatch.BranchTable
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Global.Mutation
@@ -78,14 +78,10 @@ import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
-import Itasca.Runtime.Integration.Execution.Dispatch.Scalar
-import Itasca.Runtime.Integration.Execution.Dispatch.StoreOperations
-import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
 import Itasca.Runtime.Integration.Execution.Dispatch.Simd
+import Itasca.Runtime.Integration.Execution.Dispatch.Host
 import Itasca.Runtime.Integration.Execution.Dispatch.TypedSelect
-import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
-import Itasca.Runtime.Integration.Execution.Dispatch.Measure
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind

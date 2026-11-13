@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
 import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.HostSignature
-import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Spec.ModuleMembership
 

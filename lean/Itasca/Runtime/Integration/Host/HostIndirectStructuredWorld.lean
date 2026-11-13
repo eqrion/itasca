@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Host.HostIndirectSelectedWorld
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
-import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp

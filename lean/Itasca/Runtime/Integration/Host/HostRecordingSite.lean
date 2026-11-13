@@ -1,5 +1,5 @@
-import Itasca.Runtime.Integration.Execution.Dispatch.HostSite
-import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
+import Itasca.Runtime.Integration.Execution.Dispatch.Host
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Control.StructuredLinear
