@@ -14,7 +14,7 @@ Each result projects an internal construction:
 
 | Public result | Construction |
 | --- | --- |
-| Compilation soundness and completeness | [Compilation/Certificate](Integration/Compilation/Certificate.lean) and [Compilation/Complete](Integration/Compilation/Complete.lean) |
+| Compilation soundness and completeness | [Compilation/Complete](Integration/Compilation/Complete.lean) |
 | Invocation behavior, termination and no spurious errors | [Invocation/Behaves](Integration/Invocation/Behaves.lean), using [Resources](Integration/Invocation/Resources.lean) and [Outcomes](Integration/Invocation/Outcomes.lean) |
 | Total instantiation and its source outcome | [Instantiation/InstantiateSource](Integration/Instantiation/InstantiateSource.lean) |
 
@@ -41,7 +41,7 @@ boundaries and compiler stages below; Lean rejects import cycles.
 | `Interp/` | Concrete operations, machine relations and preservation, then invocation. |
 | `Store/` | Issued-object APIs, invariants, linking, preparation, initialization and instantiation. |
 | `Integration/` | API certificates and constructions joining compilation, execution, hosts and instantiation. |
-| `Contracts` | Embedder obligations, including `Platform.Laws` and `HostLaws`; its only integration dependency is the exact [Api/ExecutableInv](Integration/Api/ExecutableInv.lean) module. |
+| `Contracts` | Embedder obligations, including `Platform.Laws` and `HostLaws`; its only integration dependency is the exact [Api/InvocationEntryResources](Integration/Api/InvocationEntryResources.lean) module. |
 | `../Results/`, `../Main` | Public statements shared with the validator; only `Main` and examples import runtime results. |
 
 Module paths express dependency placement; namespaces express semantic
@@ -128,8 +128,8 @@ Previously issued keys retain their source interpretation through publication.
 
 ## Source store typing
 
-[`ExecutableInv.source_typed`](Integration/Api/ExecutableInv.lean) and
-[`CertifiedApiStore.source_typed`](Integration/Api/CertifiedApi.lean) derive the
+[`ExecutableInv.source_typed`](Integration/Api/InvocationEntryResources.lean) and
+[`CertifiedApiStore.source_typed`](Integration/Api/InvocationEntryResources.lean) derive the
 generated `Store_ok` judgment. Their bridge uses the existing certificates below;
 it does not assume store typing or execution correctness as another field.
 
@@ -253,7 +253,7 @@ not every transitive import.
 
 1. [Results/Compile](../Results/Compile.lean) states soundness, normal return
    and completeness for the Wasm 2.0 profile.
-2. [Compilation/Certificate](Integration/Compilation/Certificate.lean) constructs
+2. [Compilation/Complete](Integration/Compilation/Complete.lean) constructs
    `CompilationCertificate` and `ModuleCodeRel`;
    [Compilation/Complete](Integration/Compilation/Complete.lean) combines the
    certificate with an actual successful compilation.
@@ -276,14 +276,14 @@ not every transitive import.
    defines the retained store interpretation and certificates.
 3. [Invocation/Recording](Interp/Invocation/Recording.lean) fixes events to
    actual callback arguments and replies. [World/RecordedLoop](Integration/Execution/World/RecordedLoop.lean)
-   and [World/Infinite](Integration/Execution/World/Infinite.lean) connect machine
+   and [World/NonhostStep](Integration/Execution/World/NonhostStep.lean) connect machine
    histories to finite or infinite source execution.
-4. [ExecutableInv](Integration/Api/ExecutableInv.lean),
+4. [ExecutableInv](Integration/Api/InvocationEntryResources.lean),
    [Store](Representation/StoreCapacity.lean) and [StoreCapacity](Representation/StoreCapacity.lean)
    provide the store invariant, decoding and source resource demand.
 
 For one concrete operation, read
-[Execution/MemoryFill](Integration/Execution/MemoryFill.lean), then
+[Execution/MemoryInit](Integration/Execution/MemoryInit.lean), then
 [Store/Api/MemoryFill](Store/Api/MemoryFill.lean) and
 [Spec/MemoryGrowth](Spec/MemoryGrowth.lean). These three proof units follow dispatch,
 store mutation and source meaning. For scalar execution,
