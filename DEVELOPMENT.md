@@ -48,13 +48,15 @@ just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build every proof module
+just lint             # Static proof health checks
+just audit            # Headline theorem axioms and statement cone
 just spec-check       # Regenerate and compare the specification
 just verify           # Run the complete verification sequence
 ```
 
 | Change | Required checks |
 | --- | --- |
-| Handwritten Lean proofs or adapters | `just prove` |
+| Handwritten Lean proofs or adapters | `just prove`, `just lint`, and `just audit` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
 | Extraction tool installation or pins | Rust/extraction checks |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
@@ -229,6 +231,7 @@ Place new proofs by layer, as described in the
 `Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
 in `Wasm2/`. Keep imports within the documented dependency layers. Only the
 standard logical axioms `propext`, `Classical.choice`, and `Quot.sound` are
-permitted; there is no automatic axiom-allowlist check. Review proof-bearing
-adapters as well as exported theorems. Report changes to the trust boundary
-explicitly.
+permitted. `just lint` checks layering and forbidden constructs; `just audit`
+checks the headline theorem axiom allowlist and statement cone. Review
+proof-bearing adapters as well as exported theorems. Report changes to the
+trust boundary explicitly.

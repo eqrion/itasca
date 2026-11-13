@@ -89,6 +89,8 @@ just extract-check    # Regenerate separately and reject stale models
 just check Itasca.Results.Validate  # Build specific modules
 just profile Itasca.Wasm2.Step.ScalarContext  # Profile one file's elaboration
 just prove            # Build every proof module
+just lint             # Layering, forbidden constructs, metric ratchet, and links
+just audit            # Headline theorem axiom allowlist and statement cone
 just spec-update      # Copy a regenerated specification into the source tree
 just spec-check       # Regenerate, compare, and compile the specification
 just verify           # Rust tests and all verification checks
@@ -163,9 +165,10 @@ an exact error for every malformed input.
 
 ## Proof architecture
 
-The directories below are layered top to bottom. `just prove` enforces the
-foundation: `Support/`, `Spec/`, and `Binary/` import only rows above them, and
-`Handler/` adds only `Visitor/`. `Contracts` imports only `Module/` and below.
+The directories below are layered top to bottom. `just lint` checks the import
+layering and forbidden constructs, along with the metric ratchet and links:
+`Support/`, `Spec/`, and `Binary/` import only rows above them, and `Handler/`
+adds only `Visitor/`. `Contracts` imports only `Module/` and below.
 `Results/` and `Main` sit at the top: only `Main` and `Examples/` import them,
 and examples import only `Main`. Between these, the order is a guide.
 
@@ -302,9 +305,10 @@ touch
 ## Proof checking
 
 `just prove` compiles every module in `Itasca` and `SpecExt`, including examples.
-Lean checks the proof terms. There is no separate audit-import, dependency-layer,
-external-model coverage, or axiom-allowlist check. Only `propext`,
-`Classical.choice`, and `Quot.sound` are permitted by the project's proof policy.
+Lean checks the proof terms. `just lint` checks dependency layering and
+forbidden constructs. `just audit` checks the headline theorem axiom allowlist
+and reports the statement cone. Only `propext`, `Classical.choice`, and
+`Quot.sound` are permitted by the project's proof policy.
 
 ## Execution boundary
 

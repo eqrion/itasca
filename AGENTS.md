@@ -48,8 +48,9 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
 kernel bypasses. Use only the standard logical axioms `propext`, `Classical.choice`,
 and `Quot.sound`. Keep `Support/`, `Spec/`, `Binary/`, and `Handler/` free of
-imports from higher layers. Review proof-bearing adapters as well as exported
-theorems; there is no automatic axiom-allowlist check.
+imports from higher layers. `just lint` checks layering and forbidden
+constructs; `just audit` checks the headline theorem axiom allowlist and
+statement cone. Review proof-bearing adapters as well as exported theorems.
 
 Use `just check Itasca.ModuleName` for iteration and `just prove` for integration.
 Preserve dependency and build caches. Scratch files belong in `$TMPDIR`, outside
@@ -57,7 +58,7 @@ the proof source tree. Report any trust-boundary change explicitly.
 
 ## Required checks
 
-- Handwritten Lean proofs or adapters: `just prove`.
+- Handwritten Lean proofs or adapters: `just prove`, `just lint`, and `just audit`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
 - Extraction tool installation or pins: the Rust/extraction checks.
@@ -66,5 +67,5 @@ the proof source tree. Report any trust-boundary change explicitly.
 - Documentation outside extraction inputs: check links and `git diff --check`.
 
 `just verify` runs both Rust test configurations, Rust/specification regeneration
-checks and the integrated Lean build. The Rocq implementation
-is archived under `rocq-baseline`; the active branch has no Rocq build requirement.
+checks and the integrated Lean build. The Rocq implementation is archived under
+`rocq-baseline`; the active branch has no Rocq build requirement.

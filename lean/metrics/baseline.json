@@ -1,0 +1,39 @@
+{
+  "all_goals": 1199,
+  "bare_simp": 9107,
+  "extra_unfold_files": 1793,
+  "extracted_functions_unfolded": 766,
+  "extracted_functions_unfolded_in_3_or_more_files": 278,
+  "handwritten_lines": 278190,
+  "heartbeat_overrides": 266,
+  "layer_violations": 2,
+  "lean_lines_by_area": {
+    "compiler": 92928,
+    "interp": 46164,
+    "store": 28515,
+    "validator": 62550
+  },
+  "lean_lines_per_rust_line": {
+    "compiler": 44.7,
+    "interp": 18.4,
+    "store": 28.5,
+    "validator": 10.9
+  },
+  "max_import_depth": 79,
+  "max_theorem_binders": 56,
+  "max_unfold_files": 71,
+  "median_module_lines": 82.0,
+  "modules": 2418,
+  "modules_over_1500_lines": 1,
+  "modules_under_50_lines": 663,
+  "recdepth_overrides": 335,
+  "rust_lines_by_area": {
+    "compiler": 2080,
+    "interp": 2511,
+    "store": 1002,
+    "validator": 5716
+  },
+  "sorry": 0,
+  "theorems": 9068,
+  "theorems_with_15_or_more_binders": 1036
+}
