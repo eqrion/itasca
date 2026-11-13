@@ -54,14 +54,11 @@ import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.ControlEntry
-import Itasca.Runtime.Interp.Machine.Constants.IntegerEmission
-import Itasca.Runtime.Interp.Machine.Constants.IntegerSlots
+import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
 import Itasca.Runtime.Interp.Machine.Emission.Opcode
 import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
-import Itasca.Runtime.Interp.Machine.Constants.FloatEmission
-import Itasca.Runtime.Interp.Machine.Constants.FloatSlots
 import Itasca.Runtime.Interp.Relations.SelectSlots
 import Itasca.Runtime.Interp.Machine.Select.Operands
 import Itasca.Runtime.Interp.Memory.MemoryCoreTransition

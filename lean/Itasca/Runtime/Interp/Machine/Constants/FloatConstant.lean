@@ -1,14 +1,17 @@
-import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.Machine.Constants.FloatEmission
-import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Interp.Machine.Constants.FloatSlots
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+import Itasca.Runtime.Interp.Relations.Execute
+import Itasca.Runtime.Interp.Relations.Regions
+import Itasca.Runtime.SourceMachine.Sim.Host
+import Itasca.Runtime.Interp.Relations.ConstCodePoint
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
+import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.Control.ForwardJump
@@ -17,6 +20,289 @@ import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Spec.Integer
+
+/-!
+Sections, each formerly its own module: FloatEmission, FloatSlots, IntegerEmission, IntegerSlots, FloatConstant.
+-/
+
+/-! ## FloatEmission -/
+
+section
+
+/-!
+Scalar-emission inversion for floating-point constants.
+
+Main declarations: `linear_emission_not_float` and `scalar_emission_float64_inv`. A direct consumer is `Interp.Machine.Constants.FloatConstant`.
+-/
+
+namespace Itasca.Runtime.Interp.FloatConstant
+open Aeneas Aeneas.Std SpecExt
+
+theorem linear_emission_not_float {locals before after emitted} (ty : Fnn) (value : fN)
+    (emission : Compiler.LinearEmission locals before (.CONST (numtype_Fnn ty) (.mk_num__1 ty value)) emitted after) : False := by
+  generalize equality : instr.CONST (numtype_Fnn ty) (.mk_num__1 ty value) = instruction at emission
+  cases emission with
+  | binary stack type op a b left right => cases op <;> simp [Compiler.IntegerBinary.source] at equality
+  | numeric stack op a b left right =>
+    have decoded := congrArg SourceMachine.Numeric.decodeInstruction equality
+    rw [SourceMachine.Numeric.decode_instruction_source] at decoded
+    cases ty <;> simp [SourceMachine.Numeric.decodeInstruction,numtype_Fnn] at decoded
+  | _ => cases ty <;> cases equality
+
+theorem scalar_emission_float32_inv {C before after emitted} (value : fN)
+    (emission : Compiler.ScalarEmission C before (.CONST .F32 (.mk_num__1 .F32 value)) emitted after) :
+    ∃ dst bits, emitted = [.Const32 dst bits] ∧ after = before ++ [.F32] ∧
+      value = Builtins.floatOfBits 32 bits.val ∧ dst.val = Compiler.slots C.LOCALS + Compiler.slots before := by
+  generalize equality : instr.CONST .F32 (.mk_num__1 .F32 value) = instruction at emission
+  cases emission with
+  | linear pure =>
+    rw [←equality] at pure
+    exact False.elim (linear_emission_not_float .F32 value pure)
+  | float32 stack dst bits slot =>
+    cases equality
+    exact ⟨dst,bits,rfl,rfl,rfl,slot⟩
+  | load => simp [SourceMachine.Memory.Load.source] at equality
+  | store => simp [SourceMachine.Memory.Store.source] at equality
+  | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
+  | _ => cases equality
+
+theorem scalar_emission_float64_inv {C before after emitted} (value : fN)
+    (emission : Compiler.ScalarEmission C before (.CONST .F64 (.mk_num__1 .F64 value)) emitted after) :
+    ∃ dst bits, emitted = [.Const64 dst bits] ∧ after = before ++ [.F64] ∧
+      value = Builtins.floatOfBits 64 bits.val ∧ dst.val = Compiler.slots C.LOCALS + Compiler.slots before := by
+  generalize equality : instr.CONST .F64 (.mk_num__1 .F64 value) = instruction at emission
+  cases emission with
+  | linear pure =>
+    rw [←equality] at pure
+    exact False.elim (linear_emission_not_float .F64 value pure)
+  | float64 stack dst bits slot =>
+    cases equality
+    exact ⟨dst,bits,rfl,rfl,rfl,slot⟩
+  | load => simp [SourceMachine.Memory.Load.source] at equality
+  | store => simp [SourceMachine.Memory.Store.source] at equality
+  | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
+  | _ => cases equality
+
+end Itasca.Runtime.Interp.FloatConstant
+
+end
+
+/-! ## FloatSlots -/
+
+section
+
+/-!
+Floating-point constant encoding and dispatch slot effects.
+
+Main declarations: `encode_float32` and `dispatch_float64_slots`. A direct consumer is `Interp.Machine.Constants.FloatConstant`.
+-/
+
+namespace Itasca.Runtime.Interp.FloatConstant
+open Aeneas Aeneas.Std SpecExt
+
+theorem encode_float32 (bits : U32) :
+    Compiler.encodeValue (.CONST .F32 (.mk_num__1 .F32 (Builtins.floatOfBits 32 bits.val))) = [bits.val] := by
+  change [Builtins.floatBits 32 (Builtins.floatOfBits 32 bits.val)] = [bits.val]
+  rw [Builtins.Float.float_bits_roundtrip_32 bits.val (by scalar_tac)]
+
+theorem dispatch_float32_slots {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (frameIndex : Usize) (raw : runtime.interp.Frame) (dst : U32) (bits : U32)
+    (f : SourceMachine.AFrame) (after : List instr)
+    (slots : FrameSlots exec raw f)
+    (destination : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
+    (capacity : raw.base.val+dst.val < exec.slots.length) :
+    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
+      raw.instance raw.function raw.base (.Const32 dst bits) ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
+      FrameSlots out.2.1 raw {f with code := after,vals := f.vals ++ [.CONST .F32 (.mk_num__1 .F32 (Builtins.floatOfBits 32 bits.val))]} ∧
+      SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) (UScalar.cast .U64 bits)) ⦄ := by
+  have length : (Compiler.encodeValues (f.locals ++ f.vals)).length = dst.val := by
+    rw [Compiler.encode_values_length,destination]
+  have represented := WordsAt.set_append slots (UScalar.cast .U64 bits) (by simpa only [length] using capacity)
+  rw [length] at represented
+  simp only [runtime.interp.dispatch]
+  obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
+    (const32_effect exec raw.base dst bits capacity)
+  rw [result,bind_ok]
+  rcases out with ⟨answer,next⟩
+  with_unfolding_all apply WP.spec.ret
+  refine ⟨success,rfl,rfl,?_,written,unchanged⟩
+  simp only [FrameSlots,ValuesAt,written]
+  simpa only [Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,
+    List.flatMap_nil,List.append_nil,List.append_assoc,encode_float32, U32.cast_U64_val_eq] using represented
+
+theorem encode_float64 (bits : U64) :
+    Compiler.encodeValue (.CONST .F64 (.mk_num__1 .F64 (Builtins.floatOfBits 64 bits.val))) = [bits.val] := by
+  change [Builtins.floatBits 64 (Builtins.floatOfBits 64 bits.val)] = [bits.val]
+  rw [Builtins.Float.float_bits_roundtrip_64 bits.val (by scalar_tac)]
+
+theorem dispatch_float64_slots {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (frameIndex : Usize) (raw : runtime.interp.Frame) (dst : U32) (bits : U64)
+    (f : SourceMachine.AFrame) (after : List instr)
+    (slots : FrameSlots exec raw f)
+    (destination : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
+    (capacity : raw.base.val+dst.val < exec.slots.length) :
+    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
+      raw.instance raw.function raw.base (.Const64 dst bits) ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
+      FrameSlots out.2.1 raw {f with code := after,vals := f.vals ++ [.CONST .F64 (.mk_num__1 .F64 (Builtins.floatOfBits 64 bits.val))]} ∧
+      SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) bits) ⦄ := by
+  have length : (Compiler.encodeValues (f.locals ++ f.vals)).length = dst.val := by
+    rw [Compiler.encode_values_length,destination]
+  have represented := WordsAt.set_append slots bits (by simpa only [length] using capacity)
+  rw [length] at represented
+  simp only [runtime.interp.dispatch]
+  obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
+    (const64_effect exec raw.base dst bits capacity)
+  rw [result,bind_ok]
+  rcases out with ⟨answer,next⟩
+  with_unfolding_all apply WP.spec.ret
+  refine ⟨success,rfl,rfl,?_,written,unchanged⟩
+  simp only [FrameSlots,ValuesAt,written]
+  simpa only [Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,
+    List.flatMap_nil,List.append_nil,List.append_assoc,encode_float64] using represented
+
+end Itasca.Runtime.Interp.FloatConstant
+
+end
+
+/-! ## IntegerEmission -/
+
+section
+
+/-!
+Scalar-emission inversion for integer constants.
+
+Main declarations: `scalar_emission_integer32_inv` and `scalar_emission_integer64_inv`. A direct consumer is `Interp.Machine.Constants.IntegerConstant`.
+-/
+
+namespace Itasca.Runtime.Interp.IntegerConstant
+open Aeneas Aeneas.Std SpecExt
+
+theorem scalar_emission_integer32_inv {C before after emitted} (value : U32)
+    (emission : Compiler.ScalarEmission C before (.CONST .I32 (.mk_num__0 .I32 (.mk_uN value.val))) emitted after) :
+    ∃ dst bits, emitted = [.Const32 dst bits] ∧ after = before ++ [.I32] ∧
+      value = bits ∧ dst.val = Compiler.slots C.LOCALS + Compiler.slots before := by
+  generalize equality : instr.CONST .I32 (.mk_num__0 .I32 (.mk_uN value.val)) = instruction at emission
+  cases emission with
+  | linear pure =>
+    rw [←equality] at pure
+    obtain ⟨dst,emitted,result,position⟩ := linear_emission_const32_inv value pure
+    exact ⟨dst,value,emitted,result,rfl,position⟩
+  | load => simp [SourceMachine.Memory.Load.source] at equality
+  | store => simp [SourceMachine.Memory.Store.source] at equality
+  | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
+  | _ => cases equality
+
+theorem scalar_emission_integer64_inv {C before after emitted} (value : U64)
+    (emission : Compiler.ScalarEmission C before (.CONST .I64 (.mk_num__0 .I64 (.mk_uN value.val))) emitted after) :
+    ∃ dst bits, emitted = [.Const64 dst bits] ∧ after = before ++ [.I64] ∧
+      value = bits ∧ dst.val = Compiler.slots C.LOCALS + Compiler.slots before := by
+  generalize equality : instr.CONST .I64 (.mk_num__0 .I64 (.mk_uN value.val)) = instruction at emission
+  cases emission with
+  | linear pure =>
+    rw [←equality] at pure
+    obtain ⟨dst,emitted,result,position⟩ := linear_emission_const64_inv value pure
+    exact ⟨dst,value,emitted,result,rfl,position⟩
+  | load => simp [SourceMachine.Memory.Load.source] at equality
+  | store => simp [SourceMachine.Memory.Store.source] at equality
+  | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
+  | _ => cases equality
+
+end Itasca.Runtime.Interp.IntegerConstant
+
+end
+
+/-! ## IntegerSlots -/
+
+section
+
+/-!
+Integer constant encoding and dispatch slot effects.
+
+Main declarations: `encode_integer32` and `dispatch_integer64_slots`. A direct consumer is `Interp.Machine.Constants.IntegerConstant`.
+-/
+
+namespace Itasca.Runtime.Interp.IntegerConstant
+open Aeneas Aeneas.Std SpecExt
+
+theorem encode_integer32 (bits : U32) :
+    Compiler.encodeValue (.CONST .I32 (.mk_num__0 .I32 (.mk_uN bits.val))) = [bits.val] := by rfl
+
+theorem dispatch_integer32_slots {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (frameIndex : Usize) (raw : runtime.interp.Frame) (dst : U32) (bits : U32)
+    (f : SourceMachine.AFrame) (after : List instr)
+    (slots : FrameSlots exec raw f)
+    (destination : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
+    (capacity : raw.base.val+dst.val < exec.slots.length) :
+    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
+      raw.instance raw.function raw.base (.Const32 dst bits) ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
+      FrameSlots out.2.1 raw {f with code := after,vals := f.vals ++ [.CONST .I32 (.mk_num__0 .I32 (.mk_uN bits.val))]} ∧
+      SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) (UScalar.cast .U64 bits)) ⦄ := by
+  have length : (Compiler.encodeValues (f.locals ++ f.vals)).length = dst.val := by
+    rw [Compiler.encode_values_length,destination]
+  have represented := WordsAt.set_append slots (UScalar.cast .U64 bits) (by simpa only [length] using capacity)
+  rw [length] at represented
+  simp only [runtime.interp.dispatch]
+  obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
+    (const32_effect exec raw.base dst bits capacity)
+  rw [result,bind_ok]
+  rcases out with ⟨answer,next⟩
+  with_unfolding_all apply WP.spec.ret
+  refine ⟨success,rfl,rfl,?_,written,unchanged⟩
+  simp only [FrameSlots,ValuesAt,written]
+  simpa only [Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,
+    List.flatMap_nil,List.append_nil,List.append_assoc,encode_integer32, U32.cast_U64_val_eq] using represented
+
+theorem encode_integer64 (bits : U64) :
+    Compiler.encodeValue (.CONST .I64 (.mk_num__0 .I64 (.mk_uN bits.val))) = [bits.val] := by rfl
+
+theorem dispatch_integer64_slots {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
+    (frameIndex : Usize) (raw : runtime.interp.Frame) (dst : U32) (bits : U64)
+    (f : SourceMachine.AFrame) (after : List instr)
+    (slots : FrameSlots exec raw f)
+    (destination : dst.val = Compiler.slots ((f.locals ++ f.vals).map Compiler.valueType))
+    (capacity : raw.base.val+dst.val < exec.slots.length) :
+    runtime.interp.dispatch memory hooks floats allocator exec store platform frameIndex
+      raw.instance raw.function raw.base (.Const64 dst bits) ⦃ out =>
+      out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
+      FrameSlots out.2.1 raw {f with code := after,vals := f.vals ++ [.CONST .I64 (.mk_num__0 .I64 (.mk_uN bits.val))]} ∧
+      SlotsEffect exec out.2.1 (exec.slots.val.set (raw.base.val+dst.val) bits) ⦄ := by
+  have length : (Compiler.encodeValues (f.locals ++ f.vals)).length = dst.val := by
+    rw [Compiler.encode_values_length,destination]
+  have represented := WordsAt.set_append slots bits (by simpa only [length] using capacity)
+  rw [length] at represented
+  simp only [runtime.interp.dispatch]
+  obtain ⟨out,result,success,written,unchanged⟩ := WP.spec_imp_exists
+    (const64_effect exec raw.base dst bits capacity)
+  rw [result,bind_ok]
+  rcases out with ⟨answer,next⟩
+  with_unfolding_all apply WP.spec.ret
+  refine ⟨success,rfl,rfl,?_,written,unchanged⟩
+  simp only [FrameSlots,ValuesAt,written]
+  simpa only [Compiler.encode_values_append,Compiler.encodeValues,List.flatMap_append,List.flatMap_cons,
+    List.flatMap_nil,List.append_nil,List.append_assoc,encode_integer64] using represented
+
+end Itasca.Runtime.Interp.IntegerConstant
+
+end
+
+/-! ## FloatConstant -/
+
+section
 
 /-!
 Floating-point constants through structured machine execution.
@@ -607,5 +893,7 @@ theorem step_float64_execution_owned {M P F A : Type}
   exact ⟨success,sameStore,samePlatform,pc,g,rest⟩
 
 end Itasca.Runtime.Interp.Machine.FloatConstant
+
+end
 
 end
