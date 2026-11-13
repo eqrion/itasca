@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctio
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunctionContext
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Interp.Machine.Simd.Point
+import Itasca.Runtime.Interp.Machine.Simd.FrameStep
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 
