@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReachedSafety
-import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedAdvanceOrClosed
+import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
 import Itasca.Visitor.InvariantBodyLoop
 import Itasca.Visitor.ReaderAcceptedProgress
 import Itasca.Wasm2.Trace.Body
