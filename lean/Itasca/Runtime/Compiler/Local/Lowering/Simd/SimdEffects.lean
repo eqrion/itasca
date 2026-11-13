@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts

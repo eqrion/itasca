@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound
+import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBits
 
 /-!

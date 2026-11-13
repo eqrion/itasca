@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableBoundary
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableSourceGrowth
+import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

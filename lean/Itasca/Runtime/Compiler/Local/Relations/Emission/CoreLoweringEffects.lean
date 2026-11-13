@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 /-!
 Discriminates actual scalar mutable callbacks and their binary immediates.

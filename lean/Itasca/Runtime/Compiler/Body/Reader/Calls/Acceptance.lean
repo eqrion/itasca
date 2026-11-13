@@ -1,7 +1,6 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.DeadOpAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Body.Relations.Calls.IndirectCalls

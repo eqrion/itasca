@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
-import Itasca.Runtime.Compiler.Local.Capacity.BranchAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
 namespace Itasca.Runtime.Compiler

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.SimdCapacity
+import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 
 /-!
 SIMD checking accepts from the independently selected opcode shape, concrete input/output slot widths, and immediate-table membership.

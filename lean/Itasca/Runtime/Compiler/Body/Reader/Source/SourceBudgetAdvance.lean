@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.AcceptedAdvance
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

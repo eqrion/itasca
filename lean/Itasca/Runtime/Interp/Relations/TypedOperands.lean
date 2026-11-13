@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.Sim.Control
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
-import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
+import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 
 /-!

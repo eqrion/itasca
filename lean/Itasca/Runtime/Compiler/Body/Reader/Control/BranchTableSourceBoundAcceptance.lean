@@ -1,6 +1,6 @@
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Visitor.ReachedTableLabels
-import Itasca.Runtime.Compiler.Local.Capacity.BranchLabelAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Wasm2.Trace.TableBytes
@@ -13,7 +13,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.BodyReplay
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedBodySafetyWasm2
-import Itasca.Runtime.Compiler.Local.Capacity.BudgetEffects
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 
 /-!
 Reuse the complete accepted-step certificate after acceptance has been constructed from source demand. This retains the executable prefix and all auxiliary ledgers, together with the independently proved resource effect.

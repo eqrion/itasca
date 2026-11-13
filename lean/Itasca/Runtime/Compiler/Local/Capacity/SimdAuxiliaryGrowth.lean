@@ -1,5 +1,38 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMeaningCounts
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
+
+/-!
+Sections, each formerly its own module: SimdMeaningBound, SimdAuxiliaryGrowth.
+-/
+
+/-! ## SimdMeaningBound -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.Wasm2.Simd
+set_option maxRecDepth 4096
+
+theorem SimdImmediateMeaning.opcode_bound {C opcode immediate input source output}
+    (meaning : SimdImmediateMeaning C opcode immediate input source output) : opcode.val < 256 := by
+  cases meaning with
+  | pure opcode immediate op meaning => exact pure_bound meaning
+  | lane opcode immediate op meaning lane position =>
+    unfold laneMeaning at meaning
+    split at meaning <;> first | contradiction | omega
+  | memory opcode immediate op meaning argument lane memory available offset position =>
+    unfold memoryMeaning at meaning
+    split at meaning <;> first | contradiction | omega
+  | shuffle => decide
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## SimdAuxiliaryGrowth -/
+
+section
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 4000000
@@ -133,3 +166,5 @@ theorem compiler_lower_simd_auxiliary_growth {A : Type} (ops : runtime.platform.
     simp [simd, pool, indirect, code]
 
 end Itasca.Runtime.Compiler
+
+end

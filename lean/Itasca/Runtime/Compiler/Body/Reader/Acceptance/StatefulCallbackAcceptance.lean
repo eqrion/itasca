@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
-import Itasca.Runtime.Compiler.Local.Capacity.StatefulAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.DeadOpAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Visitor.Events
 

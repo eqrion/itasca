@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic

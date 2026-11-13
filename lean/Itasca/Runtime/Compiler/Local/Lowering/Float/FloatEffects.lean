@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std SourceMachine.Float

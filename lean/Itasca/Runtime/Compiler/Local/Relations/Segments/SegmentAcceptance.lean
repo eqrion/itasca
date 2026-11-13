@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.SlotAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentProgram
 
 /-!

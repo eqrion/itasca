@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.SegmentBound
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Runtime.Compiler.Module.CompileSource
 
 namespace Itasca.Runtime.Compiler

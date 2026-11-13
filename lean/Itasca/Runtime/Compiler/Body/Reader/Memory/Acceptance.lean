@@ -1,5 +1,5 @@
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.MemoryAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryTypes

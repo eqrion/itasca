@@ -1,5 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound
+import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Mathlib.Tactic.IntervalCases
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096

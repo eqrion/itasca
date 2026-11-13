@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableCapacity
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableWasm2
 import Itasca.Wasm2.Trace.TableBytes
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSuffix

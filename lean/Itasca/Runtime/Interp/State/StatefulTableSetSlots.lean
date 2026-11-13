@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.SourceMachine.Stateful.Bound
-import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
+import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare

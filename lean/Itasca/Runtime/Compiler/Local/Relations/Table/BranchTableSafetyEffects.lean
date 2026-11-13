@@ -1,9 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableGrowth
+import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000

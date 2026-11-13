@@ -1,5 +1,5 @@
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.LiteralBudgetAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Visitor.EventDispatch
 
 /-!

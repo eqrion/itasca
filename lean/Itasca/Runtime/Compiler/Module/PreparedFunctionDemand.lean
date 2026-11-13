@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Capacity.FunctionStartAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 
 namespace Itasca.Runtime.Compiler

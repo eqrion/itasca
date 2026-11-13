@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateCallbacks
-import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.MemoryAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

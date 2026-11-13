@@ -16,7 +16,7 @@ import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.Interp.Simd.Execution.PureSound
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
 import Itasca.Runtime.Interp.Simd.Memory.ExecuteError
-import Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound
+import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Itasca.Runtime.Interp.Simd.Memory.ValuesExecute
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdPureSignature

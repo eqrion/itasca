@@ -1,6 +1,5 @@
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.SelectAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectTypes

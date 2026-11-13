@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
-import Itasca.Runtime.Compiler.Local.Capacity.SegmentBound
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 
 /-!
 Sections, each formerly its own module: SegmentInstruction, SegmentCertificate, SegmentLoop.

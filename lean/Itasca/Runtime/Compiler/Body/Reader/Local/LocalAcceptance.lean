@@ -1,6 +1,5 @@
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.LocalVariableAvailability
-import Itasca.Runtime.Compiler.Local.Capacity.DeadOpAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 
 /-!

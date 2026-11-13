@@ -1,13 +1,12 @@
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdCallbackMeaning
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdTypes
-import Itasca.Runtime.Compiler.Local.Capacity.SimdOpAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdPrefixAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 

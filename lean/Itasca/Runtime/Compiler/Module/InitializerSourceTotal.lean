@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.InitializerTotal
-import Itasca.Runtime.Compiler.Local.Capacity.SegmentBound
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Module.Elab.Metadata
 import Itasca.Runtime.Compiler.Module.CompileAssembly
 

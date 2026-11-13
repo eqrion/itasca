@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.EndDispatchAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 
 namespace Itasca.Runtime.Compiler

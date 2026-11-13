@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSites
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableOperands
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableBounds
+import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback

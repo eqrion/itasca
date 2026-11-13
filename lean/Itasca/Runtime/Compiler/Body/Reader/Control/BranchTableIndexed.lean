@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppen
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackLayout
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableScopeFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
-import Itasca.Runtime.Compiler.Local.Capacity.BranchTableGrowth
+import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePost
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2

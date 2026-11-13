@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.ElseDispatchAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2

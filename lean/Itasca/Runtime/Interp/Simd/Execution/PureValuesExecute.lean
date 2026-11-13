@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
-import Itasca.Runtime.Compiler.Local.Capacity.SimdCapacity
+import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup

@@ -8,7 +8,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.Signatures
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
-import Itasca.Runtime.Compiler.Local.Capacity.ControlGrowth
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 /-!

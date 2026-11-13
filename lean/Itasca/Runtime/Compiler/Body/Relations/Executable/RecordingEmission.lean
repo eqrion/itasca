@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
-import Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound
+import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 
 /-!
 The emitted call-tag shape needed for exact event recording.

@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterSafety
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
-import Itasca.Runtime.Compiler.Local.Capacity.ScopeAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 
 namespace Itasca.Runtime.Compiler

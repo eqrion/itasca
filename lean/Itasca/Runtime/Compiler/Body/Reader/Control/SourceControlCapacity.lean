@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.BodyReplay
 
 namespace Itasca.Runtime.Compiler

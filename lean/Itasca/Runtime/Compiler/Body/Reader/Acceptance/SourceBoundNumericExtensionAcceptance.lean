@@ -1,10 +1,9 @@
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
-import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 

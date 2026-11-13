@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry
 import Itasca.Runtime.Compiler.Body.Relations.Table.BranchTableTables
-import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth
+import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 
 /-!
 Auxiliary allocation accounting for br_table compilation.

@@ -1,5 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth
-import Itasca.Runtime.Compiler.Local.Capacity.StatefulAuxiliaryGrowth
+import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedCodeMonotone
