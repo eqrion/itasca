@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Binary.Wasm2.Simd

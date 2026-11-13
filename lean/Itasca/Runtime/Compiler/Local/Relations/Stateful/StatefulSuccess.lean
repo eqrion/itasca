@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
-import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 
 /-!

@@ -1,6 +1,119 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalOperands
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+
+/-!
+Sections, each formerly its own module: PairSuccess, DeadCode, CoreBasicEmissions.
+-/
+
+/-! ## PairSuccess -/
+
+section
+
+/-!
+Successful pair allocation retains the whole compiler frame and appends exactly the two supplied source indices at the returned entry.
+
+Main declarations: `compiler_pair_success`. A direct consumer is `Compiler.Local.Relations.Calls.IndirectCallLowering`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.ResultFacts
+
+/-- Successful pair allocation retains the whole compiler frame and appends
+exactly the two supplied source indices at the returned entry. -/
+theorem compiler_pair_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (a b entry : U32)
+    (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (.Ok entry, after)) :
+    ∃ budget pairs,
+      after = { before with budget, function := {before.function with indirect := pairs} } ∧
+      pairs.val = before.function.indirect.val ++ [(a,b)] ∧
+      entry.val = before.function.indirect.val.length := by
+  unfold runtime.compiler.FunctionCompiler.pair at accepted
+  obtain ⟨result, indexRun, rest⟩ := bind_ok_inv _ _ _ accepted
+  cases result with
+  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
+  | Ok value =>
+    have index := bounded_index (alloc.vec.Vec.len before.function.indirect)
+    rw [indexRun, WP.spec_ok] at index
+    have valueEq := index value rfl
+    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
+    obtain ⟨⟨result,budget,pairs⟩, pushed, rest⟩ := bind_ok_inv _ _ _ rest
+    cases result with
+    | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
+    | Ok unitValue =>
+      cases unitValue
+      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
+        Result.ok.injEq, Prod.mk.injEq, core.result.Result.Ok.injEq] at rest
+      obtain ⟨rfl,rfl⟩ := rest
+      exact ⟨budget,pairs,rfl,(budget_push_success ops law before.budget budget before.function.indirect pairs (a,b) pushed).2,
+        by simpa using valueEq⟩
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## DeadCode -/
+
+section
+
+/-!
+Code and reachability effects of observation and unreachable callbacks.
+
+Main declarations: `ObserveFrame.code` and `callback_unreachable_dead`. A direct consumer is `Compiler.Module.CompileSlice`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+theorem ObserveFrame.code {A : Type} {a b : runtime.compiler.FunctionCompiler A}
+    (frame : ObserveFrame a b) : b.function.code = a.function.code := by rw [frame]
+
+theorem ObserveFrame.reachable {A : Type} {a b : runtime.compiler.FunctionCompiler A}
+    (frame : ObserveFrame a b) : b.reachable = a.reachable := by rw [frame]
+
+set_option maxRecDepth 4096 in
+/-- Every scalar opcode callback in a dead source region only observes the
+validator state, preserving code, labels, immutable metadata and deadness. -/
+@[step] theorem compiler_op_dead {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (opcode : U16) (a b : U32) (bits : U128)
+    (dead : compiler.reachable = false) :
+    runtime.compiler.lower.FunctionCompiler.op ops compiler state opcode a b bits ⦃ out =>
+      ObserveFrame compiler out.2 ⦄ := by
+  unfold runtime.compiler.lower.FunctionCompiler.op
+  rw [if_neg (by simp [dead])]
+  exact compiler_observe_frame ops law compiler state
+
+@[step] theorem callback_return_dead {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (dead : compiler.reachable = false) :
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return ops compiler state ⦃ out =>
+      ObserveFrame compiler out.2 ⦄ := by
+  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
+  simp only [dead, Bool.false_eq_true, ite_false]
+  exact compiler_observe_frame ops law compiler state
+
+@[step] theorem callback_unreachable_dead {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (dead : compiler.reachable = false) :
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops compiler state ⦃ out =>
+      ObserveFrame compiler out.2 ⦄ := by
+  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
+  simp only [dead, Bool.false_eq_true, ite_false]
+  exact compiler_observe_frame ops law compiler state
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CoreBasicEmissions -/
+
+section
 
 /-!
 Emission certificates for select and global operations.
@@ -81,3 +194,5 @@ open Aeneas Aeneas.Std
   obtain ⟨source, position, lowered⟩ := result success
   exact ⟨_, lowered, .globalSet front ty index source globalType (by simpa only [locals] using position)⟩
 end Itasca.Runtime.Compiler
+
+end

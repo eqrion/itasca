@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety
 import Itasca.Wasm2.Trace.ControlRecords
-import Itasca.Runtime.Compiler.Local.Relations.Operations.TerminalSafety
+import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
 import Itasca.Runtime.Compiler.Body.Relations.Control.ReachedControlSafety
 import Itasca.Wasm2.Control.Total
 

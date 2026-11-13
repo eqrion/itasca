@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursor
-import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering

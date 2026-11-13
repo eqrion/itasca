@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixObserve
-import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack

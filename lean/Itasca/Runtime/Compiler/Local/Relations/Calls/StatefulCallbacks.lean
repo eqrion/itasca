@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOpcode
 import Itasca.Runtime.Equations

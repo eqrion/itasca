@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSafety
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalSafety
-import Itasca.Runtime.Compiler.Local.Relations.Operations.TerminalSafety
+import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Visitor.EventDispatch
 
