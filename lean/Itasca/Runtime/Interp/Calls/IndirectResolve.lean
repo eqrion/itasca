@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt

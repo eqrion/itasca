@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Encoding
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.SourceMachine.Float.Results
 
 namespace Itasca.Runtime.Compiler

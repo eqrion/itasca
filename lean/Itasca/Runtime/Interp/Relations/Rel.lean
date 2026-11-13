@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.ScalarDispatch
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 
 /-! Concrete slot and frame correspondences. These predicates describe data,

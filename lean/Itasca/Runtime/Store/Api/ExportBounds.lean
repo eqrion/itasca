@@ -1,7 +1,8 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Module.Env.Basic
 import Itasca.Module.Elab.Metadata
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

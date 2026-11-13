@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.TypeEntries
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Preparation.Staging
 
 /-!

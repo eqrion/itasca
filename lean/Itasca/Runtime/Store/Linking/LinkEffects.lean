@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.TypeEquality
 import Itasca.Runtime.Platform.Memory
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.Write
 
 /-!

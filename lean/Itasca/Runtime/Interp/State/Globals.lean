@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

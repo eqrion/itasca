@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.Initializer
 
 namespace Itasca.Runtime.Store

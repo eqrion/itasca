@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.InstanceItems
 import Itasca.Runtime.Store.Preparation.AllocationShape
 import Itasca.Runtime.Store.Invariant.FunctionSignatures

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.InitializerSourceContext
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 
 /-!
 Source values of allocated element segments. Constant evaluation and encoded pushes establish the source-element initializer loop relation.

@@ -89,7 +89,7 @@ import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Interp.Memory.MemoryMutation
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext

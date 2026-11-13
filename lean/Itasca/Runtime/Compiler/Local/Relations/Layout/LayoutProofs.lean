@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.StackLayout
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Platform.Alloc

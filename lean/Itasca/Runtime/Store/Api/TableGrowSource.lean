@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.Grow
 import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Interp.State.TableSource

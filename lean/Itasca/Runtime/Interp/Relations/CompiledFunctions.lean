@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.FrameBindings
-import Itasca.Runtime.Representation.FunctionTable
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.FrameStack
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.SourceMachine.Measure

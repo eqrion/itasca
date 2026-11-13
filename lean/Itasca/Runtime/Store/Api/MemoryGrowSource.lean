@@ -1,8 +1,9 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.Grow
 import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Interp.Memory.MemoryDecode
 import Itasca.Runtime.Spec.MemoryGrowth
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std SpecExt
 

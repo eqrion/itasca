@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Representation.NameSource
+import Itasca.Runtime.Representation.StoreCapacity
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

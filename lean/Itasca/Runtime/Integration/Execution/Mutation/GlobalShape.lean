@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.State.GlobalMutation
 import Itasca.Runtime.SourceMachine.Ownership.Extension
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

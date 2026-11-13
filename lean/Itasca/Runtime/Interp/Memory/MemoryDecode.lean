@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Memory.MemoryEncoding
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.FloatPromote
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 
 /-!
 Scalar memory source decoding. Load-word decoding and store-payload byte correspondence establish how concrete lookup, unchanged memory and writes appear in the decoded source store.

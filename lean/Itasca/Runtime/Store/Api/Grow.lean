@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Platform.Alloc
 
 namespace Itasca.Runtime.Store

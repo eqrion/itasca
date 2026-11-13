@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLower
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 

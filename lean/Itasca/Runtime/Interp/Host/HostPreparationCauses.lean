@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Readback
 import Itasca.Runtime.Interp.Relations.Marshal
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Platform.DivSpec
 import Itasca.Runtime.Interp.Host.HostResume
 import Itasca.Runtime.Interp.Relations.TypeSlots

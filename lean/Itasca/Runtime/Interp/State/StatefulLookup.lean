@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.State.StatefulPrepare
 import Itasca.Runtime.SourceMachine.Stateful.TableRead
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt

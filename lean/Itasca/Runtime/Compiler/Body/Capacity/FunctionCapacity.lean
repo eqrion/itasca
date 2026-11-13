@@ -1,7 +1,8 @@
-import Itasca.Runtime.Representation.FunctionCapacity
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

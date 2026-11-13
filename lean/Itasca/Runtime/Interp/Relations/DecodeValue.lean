@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Store
+import Itasca.Runtime.Representation.StoreCapacity
 
 /-! Primitive result decoding, independent of structural store invariants. -/
 namespace Itasca.Runtime.Interp

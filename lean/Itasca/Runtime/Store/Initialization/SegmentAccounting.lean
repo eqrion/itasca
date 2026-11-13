@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 
 /-! Every stored element/data segment is retained by one instance map. This
 reachable-store invariant supplies allocation bounds not implied by Shape

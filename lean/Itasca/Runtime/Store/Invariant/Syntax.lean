@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 
 /-! Syntactic well-formedness of the decoded store. The named source certificates
 below are supplied by compilation: export-name syntax and source function syntax.

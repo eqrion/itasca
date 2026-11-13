@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.State.Globals
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Interp.Relations.WordEncoding

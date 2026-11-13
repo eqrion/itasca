@@ -1,6 +1,7 @@
-import Itasca.Runtime.Representation.StoreInvariant
+import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.Grow
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 /-- The retained raw growth effect suffices to preserve shape, independently

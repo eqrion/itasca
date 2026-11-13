@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata

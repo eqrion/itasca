@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
 import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext

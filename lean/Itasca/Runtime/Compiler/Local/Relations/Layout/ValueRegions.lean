@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Encoding
+import Itasca.Runtime.Representation.Values
 
 /-! Local value boundaries in the mathematical word encoding. These lemmas
 apply uniformly to one-word scalar/reference values and two-word vectors. -/

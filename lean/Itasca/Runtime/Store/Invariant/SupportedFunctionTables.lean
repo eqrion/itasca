@@ -1,6 +1,7 @@
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

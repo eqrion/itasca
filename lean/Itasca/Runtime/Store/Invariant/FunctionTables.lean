@@ -1,4 +1,4 @@
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Linking.LinkMaps
 import Itasca.Runtime.Store.Invariant.Extension
 import Itasca.Runtime.Interp.Relations.CompiledFunctions

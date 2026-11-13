@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 
 /-! The extracted compiler rebuilds operand offsets from the validator's current
 stack before each callback. These proofs cover the allocation-aware loop, its

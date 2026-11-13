@@ -16,7 +16,7 @@ import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext

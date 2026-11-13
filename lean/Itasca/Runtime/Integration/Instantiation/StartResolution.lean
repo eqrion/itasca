@@ -11,7 +11,7 @@ import Itasca.Runtime.Interp.Relations.Readback
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Invocation.Checks
 import Itasca.Runtime.Interp.Relations.Marshal
-import Itasca.Runtime.Representation.Collection
+import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.Relations.TypeSlots
 import Itasca.Runtime.Interp.Relations.Ensure
 import Itasca.Runtime.Interp.Relations.ExecutionLoop
