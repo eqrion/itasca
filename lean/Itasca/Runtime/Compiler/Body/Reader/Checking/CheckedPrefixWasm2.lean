@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Checking.OperationInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
+import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedFullCapacity
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
