@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Complete.Program
+import Itasca.Wasm2.Complete.Leaf
 import Itasca.Wasm2.Control.EnterStep
 import Itasca.Wasm2.Control.EndStep
 
