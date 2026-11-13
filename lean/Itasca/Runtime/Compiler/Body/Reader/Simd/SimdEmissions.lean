@@ -1,4 +1,3 @@
-import Itasca.Wasm2.Simd.Reader
 import Itasca.Wasm2.Simd.Sound
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance

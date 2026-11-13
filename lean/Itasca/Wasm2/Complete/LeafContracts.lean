@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Bulk.Complete
-import Itasca.Wasm2.Simd.Complete
+import Itasca.Wasm2.Simd.Sound
 import Itasca.Wasm2.Complete.Leaf
 import Itasca.Wasm2.Control.Return
 import Itasca.Support.Result

@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Bulk.Total
-import Itasca.Wasm2.Simd.DispatchTotal
+import Itasca.Wasm2.Simd.LaneReaders
 
 /-!
 # Totality of `step_wasm2`
