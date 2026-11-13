@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions

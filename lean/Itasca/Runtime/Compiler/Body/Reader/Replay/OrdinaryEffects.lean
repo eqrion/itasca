@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
@@ -23,7 +23,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement

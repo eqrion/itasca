@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.ConstantPrefix

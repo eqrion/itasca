@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixAdvance
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 

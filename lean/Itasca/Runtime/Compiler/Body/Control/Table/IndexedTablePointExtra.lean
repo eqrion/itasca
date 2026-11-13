@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem IndexedTableReaderCompilerPointWasm2.core_extra {A : Type}

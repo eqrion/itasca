@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
