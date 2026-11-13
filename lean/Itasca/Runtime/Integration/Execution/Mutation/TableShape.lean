@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.State.TableMutation
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function

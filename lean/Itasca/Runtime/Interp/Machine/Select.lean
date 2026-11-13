@@ -1,7 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.State.GlobalCoreEmission
-import Itasca.Runtime.Interp.State.GlobalCoreOperands
+import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
@@ -10,7 +9,6 @@ import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
-import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Interp.Machine.Emission.Local

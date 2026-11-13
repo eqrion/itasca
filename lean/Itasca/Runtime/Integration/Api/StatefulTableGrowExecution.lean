@@ -1,7 +1,6 @@
 import Itasca.Runtime.Integration.Api.StatefulGrowthSlots
-import Itasca.Runtime.Interp.State.StatefulOperandValues
-import Itasca.Runtime.Interp.State.StatefulLookup
-import Itasca.Runtime.Interp.State.StatefulContinue
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step

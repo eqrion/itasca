@@ -2,11 +2,9 @@ import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 import Itasca.Runtime.Store.Api.MemoryInit
 import Itasca.Runtime.Store.Initialization.BulkMemoryAt
 import Itasca.Runtime.Interp.State.StatefulIntegerOperands
-import Itasca.Runtime.Interp.State.StatefulLookup
-import Itasca.Runtime.Store.Initialization.SegmentStep
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
+import Itasca.Runtime.Store.Initialization.SegmentStep
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Interp.State.StatefulContinue
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step

@@ -1,6 +1,7 @@
 import Itasca.Runtime.Integration.Api.StatefulMemoryGrow
 import Itasca.Runtime.Integration.Api.StatefulTableGrow
-import Itasca.Runtime.Interp.State.StatefulOperandSlots
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem stateful_memory_grow_slots {M : Type}

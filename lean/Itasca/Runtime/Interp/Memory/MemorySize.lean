@@ -6,7 +6,7 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.State.TableAccess
+import Itasca.Runtime.Interp.State.TableSource
 
 /-!
 Sections, each formerly its own module: MemoryAddress, MemoryScalar, MemoryEncoding, MemoryDecode, MemoryDispatch, MemoryCoreTransition, MemorySize.

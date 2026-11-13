@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Execution.SegmentDrop
 import Itasca.Runtime.Store.Initialization.SegmentStep
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
-import Itasca.Runtime.Interp.State.StatefulOperandSlots
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 

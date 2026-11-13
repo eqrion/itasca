@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
-import Itasca.Runtime.Interp.State.TableAccess
+import Itasca.Runtime.Interp.State.TableSource
 
 /-!
 Sections, each formerly its own module: MemoryLoadStepFootprint, MemoryGrow.

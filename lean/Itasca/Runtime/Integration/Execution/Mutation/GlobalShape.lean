@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.State.GlobalMutation
+import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Representation.StoreCapacity
 

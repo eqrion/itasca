@@ -1,6 +1,7 @@
 import Itasca.Runtime.Interp.State.StatefulTableSetSlots
-import Itasca.Runtime.Interp.State.StatefulOperandValues
-import Itasca.Runtime.Interp.State.StatefulLookup
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp Itasca.Runtime.Interp.Stateful
 

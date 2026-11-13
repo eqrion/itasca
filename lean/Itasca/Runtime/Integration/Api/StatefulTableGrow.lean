@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Api.StatefulGrowthChoice
-import Itasca.Runtime.Interp.State.TableGrow
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 import Itasca.Runtime.Store.Api.TableGrowSource
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 

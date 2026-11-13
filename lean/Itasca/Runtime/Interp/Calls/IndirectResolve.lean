@@ -6,7 +6,7 @@ import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.Interp.Relations.TypedOperands
-import Itasca.Runtime.Interp.State.StatefulOperandSlots
+import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 import Itasca.Runtime.Representation.StoreCapacity
 
 /-!

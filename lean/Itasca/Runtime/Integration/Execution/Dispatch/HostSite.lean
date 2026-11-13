@@ -35,7 +35,7 @@ import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Interp.State.GlobalMutationStep
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.Emission.Local
@@ -60,7 +60,6 @@ import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.State.GlobalCoreStep
-import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Interp.Machine.Select.Operands
 import Itasca.Runtime.Interp.Memory.MemorySize

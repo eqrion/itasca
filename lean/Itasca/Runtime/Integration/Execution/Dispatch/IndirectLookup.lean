@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.State.StatefulLookup
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.State.TableSource
 import Itasca.Runtime.Representation.StoreCapacity
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
-import Itasca.Runtime.Interp.State.GlobalMutation
+import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 
 /-!

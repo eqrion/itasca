@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Interp.State.StatefulPrepare
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 
 /-!
 Sections, each formerly its own module: Projection, Prepare.
