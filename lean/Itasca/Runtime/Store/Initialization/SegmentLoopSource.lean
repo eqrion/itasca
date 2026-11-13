@@ -2,9 +2,8 @@ import Itasca.Runtime.Store.Initialization.BulkTable
 import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Store.Initialization.SegmentInstruction
-import Itasca.Runtime.Store.Api.TableInit
+import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Store.Api.MemoryInit
 import Itasca.Runtime.Store.Initialization.SegmentDrop
 import Itasca.Runtime.Store.Initialization.SegmentCompatible
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation

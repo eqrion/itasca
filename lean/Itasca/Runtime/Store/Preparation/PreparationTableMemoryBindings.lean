@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.PreparationResults
 import Itasca.Runtime.Store.Invariant.FunctionPreparation
-import Itasca.Runtime.Store.Api.TableBindingLoop
+import Itasca.Runtime.Store.Api.GlobalStagingCauses
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 
 namespace Itasca.Runtime.Store

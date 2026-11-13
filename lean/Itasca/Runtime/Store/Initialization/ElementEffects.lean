@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.ElementLoop
-import Itasca.Runtime.Store.Api.GlobalStaging
-import Itasca.Runtime.Store.Api.GlobalEffects
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
+import Itasca.Runtime.Store.Api.TableInitLists
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

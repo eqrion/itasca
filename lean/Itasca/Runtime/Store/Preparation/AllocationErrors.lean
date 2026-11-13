@@ -1,8 +1,9 @@
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Invariant.NormalResult
-import Itasca.Runtime.Store.Api.Define
+import Itasca.Runtime.Store.Api.DefineTable
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096

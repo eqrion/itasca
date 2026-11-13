@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.TableMemoryBindings
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 
 namespace Itasca.Runtime.Store

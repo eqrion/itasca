@@ -1,13 +1,13 @@
 import Itasca.Runtime.Store.Instantiation.LinkedPreparedRun
 import Itasca.Runtime.Store.Invariant.TypeStagingCauses
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
-import Itasca.Runtime.Store.Api.TableStagingCauses
-import Itasca.Runtime.Store.Api.MemoryStagingCauses
+import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Store.Api.GlobalStagingCauses
 import Itasca.Runtime.Store.Initialization.ElementStagingCauses
 import Itasca.Runtime.Store.Initialization.DataStagingCauses
 import Itasca.Runtime.Store.Invariant.InstanceItemCauses
 import Itasca.Runtime.Store.Initialization.StoreParts
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

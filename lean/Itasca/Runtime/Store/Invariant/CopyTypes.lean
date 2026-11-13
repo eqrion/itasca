@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.Define
+import Itasca.Runtime.Store.Api.DefineTable
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

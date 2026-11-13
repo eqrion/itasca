@@ -14,7 +14,7 @@ import Itasca.Runtime.Store.Invariant.ItemErrors
 import Itasca.Runtime.Store.Linking.LinkErrors
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
-import Itasca.Runtime.Store.Api.GlobalErrorLoop
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.ElementErrorLoop
 import Itasca.Runtime.Store.Initialization.DataErrorLoop
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.DataEffects
-import Itasca.Runtime.Store.Api.GlobalLoop
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

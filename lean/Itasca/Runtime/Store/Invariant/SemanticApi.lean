@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.Write
+import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Invariant.ValueDecode
 
 namespace Itasca.Runtime.Store

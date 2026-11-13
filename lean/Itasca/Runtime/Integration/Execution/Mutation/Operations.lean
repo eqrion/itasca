@@ -3,10 +3,8 @@ import Itasca.Runtime.Integration.Execution.Mutation.Certificate
 import Itasca.Runtime.Integration.Execution.Mutation.TableShape
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Store.Invariant.ObjectExtension
-import Itasca.Runtime.Store.Api.GrowthEffects
 import Itasca.Runtime.Store.Api.MemoryFill
-import Itasca.Runtime.Store.Api.TableFill
-import Itasca.Runtime.Store.Api.MemoryCopy
+import Itasca.Runtime.Store.Api.TableGrowSource
 import Itasca.Runtime.Store.Api.TableCopy
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
 import Itasca.Runtime.Store.Invariant.SemanticApi

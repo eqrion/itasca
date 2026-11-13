@@ -1,8 +1,9 @@
 import Itasca.Runtime.Store.Initialization.ElementValues
-import Itasca.Runtime.Store.Api.GlobalEffects
+import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Invariant.BindingTyping
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

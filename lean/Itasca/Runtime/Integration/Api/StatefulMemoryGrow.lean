@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Api.StatefulGrowthChoice
 import Itasca.Runtime.Interp.Memory.MemoryGrow
-import Itasca.Runtime.Store.Api.MemoryGrowSource
+import Itasca.Runtime.Store.Api.TableGrowSource
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 

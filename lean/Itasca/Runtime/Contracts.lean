@@ -1,5 +1,5 @@
 import Itasca.Runtime.Platform.Laws
-import Itasca.Runtime.Store.Api.Grow
+import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Api.ExecutableInv

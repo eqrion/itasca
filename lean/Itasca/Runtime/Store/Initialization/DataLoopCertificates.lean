@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Initialization.DataStagingLoop
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.DataEffects
-import Itasca.Runtime.Store.Api.GlobalLoop
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.SegmentBoundsEffects
 import Itasca.Runtime.Store.Initialization.SegmentInstructionShape
 import Itasca.Runtime.Store.Initialization.ElementTypes

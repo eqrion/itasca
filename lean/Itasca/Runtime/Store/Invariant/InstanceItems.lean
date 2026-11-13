@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.GlobalLoop
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.SegmentAccounting
 
 namespace Itasca.Runtime.Store

@@ -11,7 +11,7 @@ import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Invariant.InternTypes
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
-import Itasca.Runtime.Store.Api.ExportBounds
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Invariant.SourceStoreTyping
 
 namespace Itasca.Runtime.Integration

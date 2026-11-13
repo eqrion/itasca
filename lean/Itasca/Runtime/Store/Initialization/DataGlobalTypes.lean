@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Api.GlobalMapPreservation
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.DataStagingLoop
 
 namespace Itasca.Runtime.Store

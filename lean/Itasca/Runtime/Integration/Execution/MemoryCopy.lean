@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
-import Itasca.Runtime.Store.Api.MemoryCopy
+import Itasca.Runtime.Store.Api.MemoryFill
 import Itasca.Runtime.Interp.State.StatefulIntegerOperands
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Store.Initialization.SegmentStep

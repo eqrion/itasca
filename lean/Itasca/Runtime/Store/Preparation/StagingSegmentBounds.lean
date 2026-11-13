@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
-import Itasca.Runtime.Store.Api.GlobalLoopCertificates
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.ElementBoundsLoop
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Initialization.StoreParts

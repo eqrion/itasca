@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.PreparationInputs
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
-import Itasca.Runtime.Store.Api.Define
+import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Preparation.Staging
 
 namespace Itasca.Runtime.Store

@@ -5,7 +5,7 @@ import Itasca.Runtime.Store.Preparation.PreparationFunctionPayload
 import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Linking.LinkedOwners
-import Itasca.Runtime.Store.Api.GlobalLoopCertificates
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates

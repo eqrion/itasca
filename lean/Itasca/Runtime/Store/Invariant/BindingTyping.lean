@@ -1,7 +1,8 @@
-import Itasca.Runtime.Store.Api.GlobalTypeMap
-import Itasca.Runtime.Store.Api.TableMemoryBindings
+import Itasca.Runtime.Store.Api.TableInitLists
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Invariant.FunctionTables
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

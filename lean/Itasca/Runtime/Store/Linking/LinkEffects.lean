@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Invariant.TypeEquality
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Representation.StoreCapacity
-import Itasca.Runtime.Store.Api.Write
+import Itasca.Runtime.Store.Api.DefineTable
 
 /-!
 Import linking and its issued-object effect. Per-kind signature/type/limit checks and wrong-kind or foreign-store rejection establish the complete linked-step result.

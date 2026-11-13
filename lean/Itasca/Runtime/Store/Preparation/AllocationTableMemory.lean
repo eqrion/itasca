@@ -1,5 +1,4 @@
-import Itasca.Runtime.Store.Api.TableStaging
-import Itasca.Runtime.Store.Api.MemoryStaging
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Invariant.BindingTyping
 import Itasca.Runtime.Spec.ModuleMembership
 

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Api.TableTypes
+import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
