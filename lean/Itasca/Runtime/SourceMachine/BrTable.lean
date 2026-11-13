@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Decode
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Simd.Exclusion
+import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.Typing.HostTyping
 

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Simd.Continue
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSignature
-import Itasca.Runtime.SourceMachine.Simd.Transition
+import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 
 /-!
 Source operands and head preparation for a SIMD frame instruction.

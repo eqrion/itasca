@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Simd.Relations.LaneRelation
 import Itasca.Runtime.Interp.Simd.Relations.ShuffleRelation
 import Itasca.Runtime.Interp.Simd.Memory.Transition
-import Itasca.Runtime.SourceMachine.Simd.Transition
+import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.Interp.Control.StructuredPoint
 
 /-!

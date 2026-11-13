@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
-import Itasca.Runtime.SourceMachine.Simd.Signature
+import Itasca.Runtime.SourceMachine.Simd.Source
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096

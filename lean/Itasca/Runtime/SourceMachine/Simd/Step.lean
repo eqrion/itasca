@@ -1,7 +1,6 @@
-import Itasca.Runtime.SourceMachine.Simd.Transition
+import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
