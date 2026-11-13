@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
-import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelect
+import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
