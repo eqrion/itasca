@@ -1,11 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 Sections, each formerly its own module: UniversalConditional, UniversalRoot.

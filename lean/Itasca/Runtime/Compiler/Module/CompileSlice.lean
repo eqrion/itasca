@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
@@ -16,8 +16,7 @@ import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
@@ -69,7 +68,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature
 import Itasca.Runtime.Compiler.Module.CompileEntry
 import Itasca.Runtime.Compiler.Local.Source.SourceSubmission

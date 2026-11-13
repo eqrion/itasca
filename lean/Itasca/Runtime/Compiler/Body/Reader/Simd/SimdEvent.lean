@@ -2,11 +2,8 @@ import Itasca.Runtime.Compiler.Local.Control.Simd.StructuredSimdEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

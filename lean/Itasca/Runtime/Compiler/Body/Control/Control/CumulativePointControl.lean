@@ -1,10 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
@@ -40,14 +37,12 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneContr
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
 

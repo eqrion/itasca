@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackProduction
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSites
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.DormantFrames
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

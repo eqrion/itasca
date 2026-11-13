@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.FutureFrames
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 
 /-!
 Sections, each formerly its own module: FrameSites, FramePlanPop, FramePlanUpdate, FixupBudget.

@@ -4,8 +4,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantLowering
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 
 /-!

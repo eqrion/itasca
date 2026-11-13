@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

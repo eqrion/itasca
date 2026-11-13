@@ -2,8 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 All non-extension integer instructions use the canonical scalar reader and visitor dispatch table, with exactly the descriptor's operand types.

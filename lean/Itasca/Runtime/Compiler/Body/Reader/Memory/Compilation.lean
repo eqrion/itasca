@@ -4,8 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix

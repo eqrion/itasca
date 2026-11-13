@@ -1,8 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty

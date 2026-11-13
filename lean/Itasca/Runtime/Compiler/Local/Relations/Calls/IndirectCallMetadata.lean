@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConditionalCertificates
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

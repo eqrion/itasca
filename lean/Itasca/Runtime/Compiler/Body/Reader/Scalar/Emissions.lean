@@ -8,8 +8,7 @@ import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 
 /-!

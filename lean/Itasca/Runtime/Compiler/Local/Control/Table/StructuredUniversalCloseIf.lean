@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadE
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget

@@ -2,10 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayoutAlgebra
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant

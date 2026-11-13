@@ -5,8 +5,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 Scalar memory load/store emission from accepted reader steps.

@@ -2,8 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Relations.Emission.EmissionSources
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 Sections, each formerly its own module: ControlHeightSuccess, BranchSuccessEmit, ResolvedBranchPrefix.
