@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
-import Itasca.Runtime.Integration.Api.CertifiedApi
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Compiler.Module.CompileExecutableCapacities
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Compiler.Module.CompileExecutable

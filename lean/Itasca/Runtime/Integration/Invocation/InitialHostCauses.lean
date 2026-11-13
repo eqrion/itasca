@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Api.InvocationObjectExclusion
+import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.Dispatch.Host
@@ -20,14 +20,13 @@ import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.Recording
-import Itasca.Runtime.Integration.Api.ReadbackIssued
+import Itasca.Runtime.Integration.Api.InvocationBoundary
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Integration.Api.ExecutableInv
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Integration.Execution.Resources.SourceCauses
-import Itasca.Runtime.Integration.Api.InvocationEntryResources
 
 /-!
 Source resource causes for an invocation whose initial issued function is a host function.

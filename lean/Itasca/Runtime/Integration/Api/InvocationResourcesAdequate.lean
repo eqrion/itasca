@@ -1,4 +1,6 @@
-import Itasca.Runtime.Integration.Api.InvocationCanonicalResources
+import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
+import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Execution.Resources.Failure
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Execution
@@ -35,6 +37,55 @@ import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 
+/-!
+Sections, each formerly its own module: InvocationObjectExclusion, InvocationResourcesAdequate.
+-/
+
+/-! ## InvocationObjectExclusion -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+
+/-- Invocation does not allocate store objects. Every initial host failure is
+setup/readback allocation, signature capacity, interrupt, or a host reply. -/
+theorem InitialHostInvocationCause.no_objects {M P F A : Type}
+    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
+    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
+    {view : M → Slice U8} {code : Store.CodeInterpretation}
+    {exec : runtime.interp.Execution} {store after : runtime.store.Store M}
+    {ambient : frame} {address : runtime.FuncAddr} {identity : U64}
+    {signature : Itasca.wasm_types.FuncType} {args : Slice runtime.Value} {results : alloc.vec.Vec runtime.Value}
+    (cause : InitialHostInvocationCause memory hooks floats allocator view code exec store ambient address identity signature args results after (.Exhausted .Objects)) : False := by
+  rcases cause with ⟨_,setup⟩ | ⟨impossible,_⟩ | ⟨prepared,p,called,_,_,_,_,failed,_,refused⟩
+  · exact setup
+  · cases impossible
+  · simpa only [HostCallCauses,failed,HostPreparationCause] using refused
+
+/-- A failed actual dispatch has no object-limit refusal branch. Store growth
+instructions report their specified numeric failure result instead. -/
+theorem EventfulDispatchCause.no_objects
+
+    {M P F A : Type}
+    {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
+    {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
+    {view : M → Slice U8} {code : Store.CodeInterpretation} {expected : List valtype}
+    {machine : EventfulMachine M P view code expected} {out}
+    (cause : EventfulDispatchCause memory hooks floats allocator machine out (.Exhausted .Objects)) : False := by
+  rcases cause with ordinary | host
+  · have impossible := ordinary.1.kind
+    simp at impossible
+  · obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := host
+    simpa only [HostCallCauses,failed,HostPreparationCause] using refused
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## InvocationResourcesAdequate -/
+
+section
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp
 
@@ -48,3 +99,5 @@ theorem reserve_ne_refusal_of_universal_bound {A T : Type} {allocator : runtime.
   simp
 
 end Itasca.Runtime.Integration
+
+end

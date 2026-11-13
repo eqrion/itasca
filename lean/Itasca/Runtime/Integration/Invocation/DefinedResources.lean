@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Execution.Resources.WorldLoop
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.RecordingErasure
-import Itasca.Runtime.Integration.Api.ReadbackIssued
+import Itasca.Runtime.Integration.Api.InvocationBoundary
 import Itasca.Runtime.Spec.ModuleMembership
 
 /-!

@@ -3,8 +3,8 @@ import Itasca.Runtime.Integration.Execution.Dispatch.MemoryBulk
 import Itasca.Runtime.Integration.Execution.Dispatch.TableBulk
 import Itasca.Runtime.Integration.Execution.Dispatch.SegmentDrop
 import Itasca.Runtime.Integration.Execution.Dispatch.TableSet
-import Itasca.Runtime.Integration.Api.SupportedMemoryGrowExecution
-import Itasca.Runtime.Integration.Api.SupportedTableGrowExecution
+import Itasca.Runtime.Integration.Api.InvocationBoundary
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem stateful_execution_supported

@@ -1,7 +1,8 @@
-import Itasca.Runtime.Integration.Api.InvocationObjectExclusion
+import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

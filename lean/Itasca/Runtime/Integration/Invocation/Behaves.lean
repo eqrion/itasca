@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Invocation.HostOutcomes
-import Itasca.Runtime.Integration.Api.ExecutableCallEntry
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Invocation.Resources
 import Itasca.Runtime.Integration.Invocation.DefinedDivergence
 import Itasca.Runtime.Integration.Invocation.SourceDemand

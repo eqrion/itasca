@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Api.ReadbackIssued
+import Itasca.Runtime.Integration.Api.InvocationBoundary
 import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
 import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Execution.Ownership.Entry

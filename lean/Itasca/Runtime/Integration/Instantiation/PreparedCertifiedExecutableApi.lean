@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Api.CertifiedApi
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Instantiation.PreparedCertifiedExecutable
 import Itasca.Runtime.Store.Instantiation.NoStart
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
