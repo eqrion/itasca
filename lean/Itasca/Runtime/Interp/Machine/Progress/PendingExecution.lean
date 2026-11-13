@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Machine.Control.ControlExecution
 import Itasca.Runtime.Interp.Machine.Constants.IntegerConstant
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Emission.Local
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Spec.Integer
 
 /-!

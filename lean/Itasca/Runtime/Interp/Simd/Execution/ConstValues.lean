@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.InitializerExecute
+import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Simd.Relations.ValueSlots
 
 /-!

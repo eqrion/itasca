@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Control.BrTableSource
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound

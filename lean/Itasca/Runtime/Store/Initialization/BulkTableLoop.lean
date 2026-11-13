@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.BulkDrop
 import Itasca.Runtime.Store.Invariant.InvalidWrite
-import Itasca.Runtime.Interp.Relations.Range
+import Itasca.Runtime.Interp.Relations.SourceClosure
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

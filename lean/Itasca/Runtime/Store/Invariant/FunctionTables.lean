@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Linking.LinkMaps
 import Itasca.Runtime.Store.Invariant.Extension
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

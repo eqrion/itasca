@@ -5,14 +5,13 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Numeric.Decode
-import Itasca.Runtime.Interp.Relations.Execute
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.SourceMachine.Sim.Host
-import Itasca.Runtime.Interp.Relations.ConstCodePoint
+import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads

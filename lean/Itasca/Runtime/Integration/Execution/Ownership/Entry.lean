@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Store.Invariant.ValueShape
-import Itasca.Runtime.Interp.Relations.ReferenceArguments
+import Itasca.Runtime.Interp.Relations.SuspendedPoint
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

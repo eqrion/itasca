@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Host.HostReadyWorld
-import Itasca.Runtime.Interp.Relations.EventfulNormalize
+import Itasca.Runtime.Interp.Relations.StepActive
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 

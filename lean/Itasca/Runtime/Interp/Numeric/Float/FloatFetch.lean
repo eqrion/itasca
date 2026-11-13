@@ -1,9 +1,9 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatDispatch
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
-import Itasca.Runtime.Interp.Relations.PrefixEffect
+import Itasca.Runtime.Interp.Relations.StackPreservation
 
 /-!
 Floating-point instruction execution from source values through word operands and fetch. Word effects, decoded value effects and dispatch equations establish the concrete step result.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Sim.Host
 
 namespace Itasca.Runtime.Interp

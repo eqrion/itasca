@@ -1,8 +1,9 @@
 import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Host.HostCallSource
 import Itasca.Runtime.Integration.Execution.World.ExecutionCode
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Host.HostResumeOwned
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

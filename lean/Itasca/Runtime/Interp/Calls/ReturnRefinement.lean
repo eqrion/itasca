@@ -2,7 +2,6 @@ import Itasca.Runtime.Interp.Calls.DirectCall
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.SourceMachine.Sim.Host
-import Itasca.Runtime.Interp.Relations.Fetch
 
 /-!
 Sections, each formerly its own module: CallRegions, CallFrames, ReturnRegions, ReturnRefinement.

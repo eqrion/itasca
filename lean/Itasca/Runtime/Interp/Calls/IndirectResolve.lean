@@ -1,13 +1,12 @@
 import Itasca.Runtime.Interp.Calls.DirectCall
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.SourceMachine.Sim.Host
-import Itasca.Runtime.Interp.Relations.StackRelation
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.State.StatefulOperandSlots
-import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Representation.StoreCapacity
 
 /-!

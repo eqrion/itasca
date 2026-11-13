@@ -2,8 +2,9 @@ import Itasca.Runtime.Integration.Execution.World.RecordedStep
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.Dispatch.Host
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-import Itasca.Runtime.Interp.Relations.StepRecording
+import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Integration.Host.HostRecordingBoundary
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

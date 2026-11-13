@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
 
 /-!

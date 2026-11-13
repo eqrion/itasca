@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Execution.ExecutePure
-import Itasca.Runtime.Interp.Relations.WordEncoding
+import Itasca.Runtime.Interp.Relations.ReferenceSource
 
 /-!
 Vector/scalar source values represented by runtime slots.

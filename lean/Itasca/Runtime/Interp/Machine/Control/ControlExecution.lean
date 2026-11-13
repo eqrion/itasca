@@ -2,21 +2,19 @@ import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
-import Itasca.Runtime.Interp.Relations.ControlEntry
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
-import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Spec.Integer
 
 /-!

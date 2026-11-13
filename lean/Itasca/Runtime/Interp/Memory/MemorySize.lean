@@ -1,9 +1,9 @@
-import Itasca.Runtime.Interp.Relations.Range
+import Itasca.Runtime.Interp.Relations.SourceClosure
 import SpecExt.Builtins.Examples
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.State.TableAccess

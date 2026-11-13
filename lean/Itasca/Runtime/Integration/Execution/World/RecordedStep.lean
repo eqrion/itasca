@@ -1,7 +1,8 @@
 import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Execution.World.State
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
-import Itasca.Runtime.Interp.Relations.StepRecording
+import Itasca.Runtime.Interp.Relations.StepActive
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatInstructionBasic
 import Itasca.Runtime.Interp.Numeric.Float.FloatInstructionComparison
 import Itasca.Runtime.Interp.Numeric.Float.FloatTruncInstruction
-import Itasca.Runtime.Interp.Relations.ScalarDispatch
+import Itasca.Runtime.Interp.Relations.Defaults
 
 /-!
 Floating-point opcode dispatch and its complete instruction effect. The dispatcher selects the separately proved arithmetic, comparison and conversion instruction cases.

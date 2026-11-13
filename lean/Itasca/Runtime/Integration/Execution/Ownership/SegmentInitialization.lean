@@ -13,7 +13,7 @@ import Itasca.Runtime.Store.Invariant.FunctionSignatures
 import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation

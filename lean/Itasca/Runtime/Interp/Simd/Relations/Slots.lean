@@ -1,5 +1,5 @@
-import Itasca.Runtime.Interp.Relations.Synthetic
-import Itasca.Runtime.Interp.Relations.ScalarDispatch
+import Itasca.Runtime.Interp.Relations.SourceClosure
+import Itasca.Runtime.Interp.Relations.Defaults
 
 /-!
 Two little-endian slot words, including the interpreter's zero padding.

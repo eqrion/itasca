@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Interp.Relations.Normalization
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition

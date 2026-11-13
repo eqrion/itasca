@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Api.InvocationCanonicalResources
-import Itasca.Runtime.Interp.Relations.SourceCanonicalCapacity
-import Itasca.Runtime.Interp.Relations.SourceAllocationCauses
+import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Interp.Invocation.MutableCauses
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

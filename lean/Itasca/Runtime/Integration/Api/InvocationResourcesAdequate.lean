@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Api.InvocationCanonicalResources
 import Itasca.Runtime.Integration.Execution.Resources.Failure
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Spec.FloatTrunc

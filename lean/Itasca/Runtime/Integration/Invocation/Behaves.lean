@@ -3,7 +3,7 @@ import Itasca.Runtime.Integration.Api.ExecutableCallEntry
 import Itasca.Runtime.Integration.Invocation.Resources
 import Itasca.Runtime.Integration.Invocation.DefinedDivergence
 import Itasca.Runtime.Integration.Invocation.SourceDemand
-import Itasca.Runtime.Interp.Relations.TypedArguments
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 
 /-!
 Public invocation behavior, termination recovery and exclusion of spurious errors. Divergence reflection and exact recorded return correspondence establish InvocationBehaves; the final theorem excludes resource errors under the separate all-source-runs resource bounds. Results.Invoke projects these constructions with their original premises.

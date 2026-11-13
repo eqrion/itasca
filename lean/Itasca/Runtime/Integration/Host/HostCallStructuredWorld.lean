@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Host.HostCallSource
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Host.HostResumeOwned
 import Itasca.Runtime.Integration.Host.HostStructuredResume
 import Itasca.Runtime.Integration.Host.HostCallContext

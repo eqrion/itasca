@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.SimdCapacity
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Interp.Relations.TypedOperands
 
 /-!
 Frame-capacity bounds for SIMD operands and results.

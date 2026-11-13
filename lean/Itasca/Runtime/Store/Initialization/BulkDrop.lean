@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.InitializerExecute
+import Itasca.Runtime.Interp.Relations.SourceClosure
 
 /-! Exact effects of the two segment-drop instructions, including ordinary
 termination for issued local segment indices. -/

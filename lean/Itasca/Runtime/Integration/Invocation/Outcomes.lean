@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 
 /-! Shared public invocation outcomes and erasure. These predicates retain a

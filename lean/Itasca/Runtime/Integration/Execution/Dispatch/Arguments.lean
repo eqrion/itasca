@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Interp.Relations.Arguments
+import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.Interp.Relations.FrameBindings
+import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.SourceMachine.BrTable
 
 /-! Invocation entry bridges checked API arguments and retained function

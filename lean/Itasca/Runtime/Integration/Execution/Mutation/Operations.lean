@@ -18,7 +18,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape

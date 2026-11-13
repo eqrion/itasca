@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.IssuedValues
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Interp.Relations.Arguments
+import Itasca.Runtime.Interp.Relations.TypedOperands
 
 /-!
 Issued-value checking, decoded source typing and argument ownership. The lightweight IssuedValue contract remains independently available.

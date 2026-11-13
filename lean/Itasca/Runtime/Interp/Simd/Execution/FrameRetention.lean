@@ -1,8 +1,8 @@
 import Itasca.Runtime.Interp.Simd.Relations.ValueSlots
-import Itasca.Runtime.Interp.Relations.PrefixEffect
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.State.StatefulLookup
 import Itasca.Runtime.Interp.Simd.Execution.FrameCapacity
-import Itasca.Runtime.Interp.Relations.FrameStack
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
 
 /-!

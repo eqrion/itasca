@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.State.GlobalCoreWrite
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 
 /-!
 Global instruction dispatch through decoded values to a concrete step. Scalar and two-word global representations retain their separate width obligations.

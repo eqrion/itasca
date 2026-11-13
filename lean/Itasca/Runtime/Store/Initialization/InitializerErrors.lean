@@ -1,5 +1,6 @@
 import Itasca.Runtime.Store.Initialization.Initializer
-import Itasca.Runtime.Interp.Relations.InitializerErrors
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)

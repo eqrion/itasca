@@ -1,42 +1,30 @@
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Control.StructuredLinear
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Control.NormalizeCompose
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.Machine.Emission.Local
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.TypedOperands
-import Itasca.Runtime.Interp.Relations.Rel
 import Itasca.Runtime.SourceMachine.Sim.Structured
-import Itasca.Runtime.Interp.Relations.ConstCodePoint
-import Itasca.Runtime.Interp.Relations.LocalCodePoint
-import Itasca.Runtime.Interp.Relations.ValueLookup
-import Itasca.Runtime.Interp.Relations.ControlEntry
-import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Interp.Relations.LocalCapacity
-import Itasca.Runtime.Interp.Relations.Normalization
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Interp.Control.LabelCompletion
-import Itasca.Runtime.Interp.Relations.Epilogue
-import Itasca.Runtime.Interp.Relations.HeadCoverage
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
-import Itasca.Runtime.Interp.Relations.ExecutionLoop
 
 /-!
 Appending execution history while retaining its recorded source trace.

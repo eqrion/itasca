@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Interp.Machine.SuspendedPoint

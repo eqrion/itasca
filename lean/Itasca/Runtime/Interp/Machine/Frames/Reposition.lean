@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.StackRelation
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.BrTable
 
 /-!

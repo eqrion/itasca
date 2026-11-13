@@ -11,14 +11,14 @@ import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.State.GlobalCoreStep
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.Interp.Relations.ControlPoint
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
@@ -28,7 +28,7 @@ import Itasca.Runtime.SourceMachine.Numeric.Positive
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Select.Operands
-import Itasca.Runtime.Interp.Relations.SelectSlots
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 

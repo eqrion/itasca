@@ -1,6 +1,4 @@
-import Itasca.Runtime.Interp.Relations.Ensure
-import Itasca.Runtime.Interp.Relations.InitLocals
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 
 /-!

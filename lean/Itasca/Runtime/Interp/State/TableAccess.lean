@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Interp

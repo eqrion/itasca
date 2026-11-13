@@ -1,5 +1,5 @@
-import Itasca.Runtime.Interp.Relations.InitializerResolution
-import Itasca.Runtime.Interp.Relations.DecodeValue
+import Itasca.Runtime.Interp.Relations.SourceClosure
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.ValueRead
 

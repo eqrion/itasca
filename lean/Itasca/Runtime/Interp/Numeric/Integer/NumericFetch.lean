@@ -1,10 +1,8 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntegerBinary
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
-import Itasca.Runtime.Interp.Relations.ScalarDispatch
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
-import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.Interp.Relations.Rel
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 
 /-!

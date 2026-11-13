@@ -1,5 +1,5 @@
 import Itasca.Runtime.Platform.Laws
-import Itasca.Runtime.Interp.Relations.StepRecording
+import Itasca.Runtime.Interp.Relations.StepActive
 
 /-!
 Proof-only recording of interpreter-loop events, with erasure back to the extracted loop.

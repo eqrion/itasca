@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Invariant.ValueShape
-import Itasca.Runtime.Interp.Relations.DecodeValue
+import Itasca.Runtime.Interp.Relations.Defaults
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

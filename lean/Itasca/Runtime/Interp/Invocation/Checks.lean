@@ -1,5 +1,5 @@
-import Itasca.Runtime.Interp.Relations.Arguments
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Relations.TypedOperands
+import Itasca.Runtime.Interp.Relations.Defaults
 
 /-! Public invocation rejection before execution begins. These conclusions
 preserve execution state, store, platform, and the caller's result vector. -/

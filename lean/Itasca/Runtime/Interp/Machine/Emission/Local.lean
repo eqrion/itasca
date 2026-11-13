@@ -5,9 +5,9 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
-import Itasca.Runtime.Interp.Relations.Rel
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.SourceMachine.Sim.Structured
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
+import Itasca.Runtime.Interp.Relations.StackPreservation
 
 /-!
 Sections, each formerly its own module: Integer, Empty, Binary, Opcode, Local.

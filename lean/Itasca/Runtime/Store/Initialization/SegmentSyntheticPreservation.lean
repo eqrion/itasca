@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.SegmentLoopPreservation
-import Itasca.Runtime.Interp.Relations.Synthetic
+import Itasca.Runtime.Interp.Relations.SourceClosure
 
 /-!
 Synthetic initializer execution preserves object metadata and store shape. The totality and source-resource paths remain independent consumers of the lower loop.

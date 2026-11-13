@@ -1,10 +1,9 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.State.Globals
 import Itasca.Runtime.Spec.FloatTrunc
-import Itasca.Runtime.Interp.Relations.WordEncoding
-import Itasca.Runtime.Interp.Relations.PrefixEffect
+import Itasca.Runtime.Interp.Relations.ReferenceSource
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Relations.WordDecoding
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 
 /-!

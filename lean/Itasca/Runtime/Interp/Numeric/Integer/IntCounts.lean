@@ -1,6 +1,6 @@
 import Itasca.Runtime.Equations
 import Itasca.Generated.Types
-import Itasca.Runtime.Interp.Relations.Rel
+import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.Interp.Numeric.Integer.Int

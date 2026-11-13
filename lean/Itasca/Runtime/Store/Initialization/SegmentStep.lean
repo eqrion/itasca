@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.BulkPreservation
-import Itasca.Runtime.Interp.Relations.Initializer
+import Itasca.Runtime.Interp.Relations.SourceClosure
 
 /-! Straight-line initialization steps reuse the actual interpreter fetch and
 dispatch path, with exact program-counter and metadata effects. -/

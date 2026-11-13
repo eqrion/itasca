@@ -1,9 +1,8 @@
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.Numeric.Decode
-import Itasca.Runtime.Interp.Relations.Unreachable
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Relations.Conditional
+import Itasca.Runtime.Interp.Relations.TypedOperands
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.BrTable
 
 /-!

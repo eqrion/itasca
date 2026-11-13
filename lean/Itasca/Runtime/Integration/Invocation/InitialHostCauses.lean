@@ -6,7 +6,7 @@ import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Integration.Execution.Dispatch.HostResult
 import Itasca.Runtime.Integration.Host.HostFrameSiteExecution
 import Itasca.Runtime.Integration.Host.HostCallSource
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Host.HostResumeOwned
 import Itasca.Runtime.Integration.Host.HostStructuredResume
 import Itasca.Runtime.Integration.Host.HostCallContext
@@ -16,7 +16,7 @@ import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
-import Itasca.Runtime.Interp.Relations.EventfulNormalize
+import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.ResourceCauses

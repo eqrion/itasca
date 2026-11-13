@@ -1,4 +1,5 @@
-import Itasca.Runtime.Interp.Relations.StepRecording
+import Itasca.Runtime.Interp.Relations.StepActive
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.SegmentLoopSource
-import Itasca.Runtime.Interp.Relations.Synthetic
+import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 
 /-!

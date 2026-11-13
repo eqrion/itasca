@@ -5,7 +5,7 @@ import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.SourceMachine.Ownership.Extension
-import Itasca.Runtime.Interp.Relations.Normalization
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
 /-!

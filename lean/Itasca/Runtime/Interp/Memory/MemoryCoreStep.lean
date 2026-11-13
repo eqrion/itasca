@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemorySize
-import Itasca.Runtime.Interp.Relations.PackedMemorySource
+import Itasca.Runtime.Interp.Relations.ReferenceSource
 import Itasca.Runtime.SourceMachine.Memory.Decode
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
@@ -12,7 +12,7 @@ import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Relations.Readback
+import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 
 /-!

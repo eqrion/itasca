@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
 import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
-import Itasca.Runtime.Interp.Relations.Epilogue
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Interp.Machine.Frames.ReturnStack
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Interp.Machine.Execution
@@ -10,15 +10,15 @@ import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.DecodeDepth
 
 /-!

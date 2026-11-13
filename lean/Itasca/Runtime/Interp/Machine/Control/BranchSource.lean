@@ -3,8 +3,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable
 import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.SourceMachine.DecodeDepth
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Relations.EventfulControl
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 

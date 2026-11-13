@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Relations.SourceClosure

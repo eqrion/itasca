@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
+import Itasca.Runtime.Interp.Relations.StackPreservation
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std Itasca.Runtime.Interp

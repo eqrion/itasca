@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.SegmentLoop
-import Itasca.Runtime.Interp.Relations.Synthetic
+import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Compiler.Module.SegmentSource
 import Itasca.Runtime.Compiler.Module.CompileSemantic
 

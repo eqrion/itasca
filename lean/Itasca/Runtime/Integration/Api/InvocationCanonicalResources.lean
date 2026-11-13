@@ -1,6 +1,7 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.SignatureWords
 import Itasca.Runtime.Integration.Api.InvocationBoundary
-import Itasca.Runtime.Interp.Relations.SourceIndirectResources
+import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 
