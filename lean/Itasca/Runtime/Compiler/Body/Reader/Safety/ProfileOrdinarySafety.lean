@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ScalarDispatchSafety
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ReferenceSafety
-import Itasca.Wasm2.Scalar.Total
+import Itasca.Wasm2.Scalar.Env
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ExtendedNumericSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.SaturatingSafety
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication

@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Scalar.BasicReader
+import Itasca.Wasm2.Scalar.IndexReader
 
 /-!
 Shared exact source-prefix and operand facts for drop and untyped select.

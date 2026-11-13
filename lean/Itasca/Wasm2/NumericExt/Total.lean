@@ -1,7 +1,7 @@
 import Itasca.Binary.Wasm2.DeclaredReferences
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Visitor.Accepts
-import Itasca.Wasm2.Scalar.Total
+import Itasca.Wasm2.Scalar.Env
 
 /-!
 Sections, each formerly its own module: Dispatch, Total.

@@ -1,6 +1,5 @@
 import Itasca.Wasm2.EmptyVisitorLoop
-import Itasca.Wasm2.Scalar.NumericReader
-import Itasca.Wasm2.Scalar.BasicReader
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.Events

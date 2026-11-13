@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Scalar.ReadersTotal
+import Itasca.Wasm2.Scalar.Env
 import Itasca.Module.Env.Externals
 import Itasca.Binary.Wasm2.DeclaredReferences
 

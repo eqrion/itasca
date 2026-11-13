@@ -2,7 +2,7 @@ import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.NumericExt.Total
 import Itasca.Handler.RawControl
-import Itasca.Wasm2.Scalar.NumericReader
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Wasm2.Scalar.Step
 
 /-!

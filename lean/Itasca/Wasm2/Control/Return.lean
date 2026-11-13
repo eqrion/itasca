@@ -4,7 +4,7 @@ import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Handler.Select
 import Itasca.Handler.RawControl
 import Itasca.Binary.Wasm1.DeclaredReferences
-import Itasca.Wasm2.Scalar.ReaderPost
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Wasm2.Control.BranchComplete
 import Itasca.Wasm2.LoopDispatch
 

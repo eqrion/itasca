@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Wasm2.Control.Total
-import Itasca.Wasm2.Scalar.ReadersTotal
+import Itasca.Wasm2.Scalar.Env
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions

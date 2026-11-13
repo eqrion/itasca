@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Scalar.ReaderPost
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Wasm2.Simd.Operands
 
 /-!

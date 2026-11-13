@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
-import Itasca.Wasm2.Scalar.NumericReader
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
 import Itasca.Wasm2.NumericExt.Sound
@@ -24,7 +24,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Runtime.Compiler.Body.Reader.Local.Wasm2Local
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
-import Itasca.Wasm2.Scalar.BasicReader
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 
 /-!

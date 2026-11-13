@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemorySafety
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
-import Itasca.Wasm2.Scalar.ReadersTotal
+import Itasca.Wasm2.Scalar.Env
 
 /-!
 Normal return of scalar memory reader callbacks.

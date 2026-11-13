@@ -5,7 +5,7 @@ import Itasca.Visitor.Events
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalSafety
-import Itasca.Wasm2.Scalar.ReadersTotal
+import Itasca.Wasm2.Scalar.Env
 
 /-!
 Local-index bounds and normal return of local get/set/tee reader callbacks.

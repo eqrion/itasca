@@ -1,7 +1,7 @@
 import Itasca.Wasm2.References.Readers
 import Itasca.Wasm2.SuffixTyping
 import Itasca.Binary.Wasm2.DeclaredReferences
-import Itasca.Wasm2.Scalar.ReaderPost
+import Itasca.Wasm2.Scalar.IndexReader
 
 /-!
 Sections, each formerly its own module: Operands, EnvMatches, Reader.
