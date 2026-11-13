@@ -1,0 +1,51 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  rust:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: git submodule update --init tests/third_party/wasm-spec
+      - run: cargo test
+      - run: cargo test --no-default-features
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - uses: extractions/setup-just@v4
+      - run: just lint
+
+  prove:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v7
+      - run: git submodule update --init vendor/spectec
+      # Cache dependencies only. Every run builds this project's proofs afresh.
+      - uses: actions/cache@v6
+        with:
+          path: lean/.lake/packages
+          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean/lake-manifest.json', 'lean/lean-toolchain') }}
+      - uses: leanprover/lean-action@v1
+        with:
+          lake-package-directory: lean
+          auto-config: false
+          build: true
+          build-args: "Itasca SpecExt"
+          use-github-cache: false
+          use-mathlib-cache: true
+      - name: Audit axioms and statement cone
+        working-directory: lean
+        run: |
+          lake env lean scripts/Audit.lean > metrics/audit.txt
+          git diff --exit-code -- metrics/audit.txt
