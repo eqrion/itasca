@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Lanes.Splat
 import Itasca.Runtime.Interp.Simd.Lanes.Packing
-import Itasca.Runtime.Spec.Simd.FloatBinary
+import Itasca.Runtime.Spec.Simd.IntegerMinMax
 import Itasca.Runtime.Interp.Simd.Float.CompareWords
 import Itasca.Runtime.Interp.Numeric.Float.FloatMinMax
 

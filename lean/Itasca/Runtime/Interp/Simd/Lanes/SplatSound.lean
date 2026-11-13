@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.Packing
-import Itasca.Runtime.Spec.Simd.Shape
+import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!
 Opcode, input and source correspondence for scalar splatting.

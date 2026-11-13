@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Relations.ValueSlots
-import Itasca.Runtime.Spec.Simd.PureValues
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
 
 /-!

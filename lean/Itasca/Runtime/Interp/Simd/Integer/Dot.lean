@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.Q15Word
-import Itasca.Runtime.Spec.Simd.Dot
+import Itasca.Runtime.Spec.Simd.Pairwise
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
 
 /-!

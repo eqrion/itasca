@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.Plain
 import Itasca.Runtime.Interp.Simd.Memory.Encoding
-import Itasca.Runtime.Spec.Simd.MemoryLoad
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Byte well-formedness and source reduction for full-vector loads.

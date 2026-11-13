@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Integer.Q15Word
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
-import Itasca.Runtime.Spec.Simd.Q15
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Rounded saturating Q15 multiplication through lane iteration, packed words and source dispatch. The shared scalar Q15 word lemma remains separate for dot products.

@@ -270,7 +270,7 @@ patch to generated Lean output:
 - [spectec-wasm2-lane-store.patch](../patches/spectec-wasm2-lane-store.patch)
   checks lane stores in bytes and adds an explicit success bound. Generated
   memory splicing alone does not enforce that bound. General guard partition
-  and boundary lemmas in [Runtime/Spec/Simd/MemoryLaneStore](Itasca/Runtime/Spec/Simd/MemoryLaneStore.lean)
+  and boundary lemmas in [Runtime/Spec/Simd/FloatResize](Itasca/Runtime/Spec/Simd/FloatResize.lean)
   cover all supported widths and unbounded effective addresses. This repairs
   the execution target without changing validator typing or runtime behavior.
 - [spectec-wasm2-memory-write-bounds.patch](../patches/spectec-wasm2-memory-write-bounds.patch)
@@ -286,7 +286,7 @@ patch to generated Lean output:
 - [spectec-wasm2-load-value-bounds.patch](../patches/spectec-wasm2-load-value-bounds.patch)
   bounds words decoded by packed scalar and widening SIMD loads before
   extension. Byte equality alone truncates higher bits and admitted distinct
-  results. [Runtime/Spec/ByteEncoding](Itasca/Runtime/Spec/ByteEncoding.lean) proves bounded
+  results. [Runtime/Spec/FloatTrunc](Itasca/Runtime/Spec/FloatTrunc.lean) proves bounded
   decoding is unique. This repairs execution rules without changing
   validator typing or runtime decoding.
 - [spectec-wasm2-integer-domains.patch](../patches/spectec-wasm2-integer-domains.patch)
@@ -294,7 +294,7 @@ patch to generated Lean output:
   division overflow. Without these explicit source guards, the generated
   relations overlap trapping clauses because Lean rational division is total.
   The checked `division_zero_only` and `remainder_zero_only` lemmas in
-  [Runtime/Spec/IntegerDiv](Itasca/Runtime/Spec/IntegerDiv.lean) prevent that overlap from
+  [Runtime/Spec/SegmentInitCases](Itasca/Runtime/Spec/SegmentInitCases.lean) prevent that overlap from
   returning. This repairs the execution specification; validator typing rules
   are unchanged.
 - [spectec-wasm2-memory-boundary.patch](../patches/spectec-wasm2-memory-boundary.patch)

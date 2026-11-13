@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.Saturation
-import Itasca.Runtime.Spec.Simd.Q15
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Word-level rounded saturating Q15 multiplication.

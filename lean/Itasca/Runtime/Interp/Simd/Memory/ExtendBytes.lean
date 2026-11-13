@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.LaneBytes
-import Itasca.Runtime.Spec.Simd.MemoryChunks
-import Itasca.Runtime.Spec.Simd.Widen
+import Itasca.Runtime.Spec.Simd.FloatResize
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Byte decoding of widening vector loads.

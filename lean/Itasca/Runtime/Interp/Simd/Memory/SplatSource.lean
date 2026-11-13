@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.Splat
-import Itasca.Runtime.Spec.Simd.MemorySplat
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Source reduction for vector splat loads.

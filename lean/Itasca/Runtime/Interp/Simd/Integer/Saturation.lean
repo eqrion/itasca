@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.BinaryLoop
-import Itasca.Runtime.Spec.Simd.Saturation
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Runtime lane casts and saturation bounds.

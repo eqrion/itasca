@@ -285,7 +285,7 @@ not every transitive import.
 For one concrete operation, read
 [Execution/MemoryFill](Integration/Execution/MemoryFill.lean), then
 [Store/Api/MemoryFill](Store/Api/MemoryFill.lean) and
-[Spec/MemoryFill](Spec/MemoryFill.lean). These three proof units follow dispatch,
+[Spec/MemoryGrowth](Spec/MemoryGrowth.lean). These three proof units follow dispatch,
 store mutation and source meaning. For scalar execution,
 [Constants/IntegerConstant](Interp/Machine/Constants/IntegerConstant.lean)
 contains fetch inversion, capacity, the step and ownership preservation in order;

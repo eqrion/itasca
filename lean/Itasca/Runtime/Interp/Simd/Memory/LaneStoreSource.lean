@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.LaneBytes
 import Itasca.Runtime.Interp.Simd.Memory.StoreEncoding
-import Itasca.Runtime.Spec.Simd.MemoryLaneStore
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Lane selection and source reduction for vector lane stores.

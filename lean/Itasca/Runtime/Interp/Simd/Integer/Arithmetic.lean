@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
-import Itasca.Runtime.Spec.Simd.IntegerArithmetic
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Wrapping integer lane arithmetic from scalar word calculations to packed source correspondence. Shared word calculations and lane iteration remain separate for conversion, saturation and reduction operations.

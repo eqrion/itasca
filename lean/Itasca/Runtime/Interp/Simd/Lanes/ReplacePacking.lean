@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.Packing
-import Itasca.Runtime.Spec.Simd.Shape
+import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!
 Packed-vector effects of lane replacement.

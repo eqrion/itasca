@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.BinaryLoop
-import Itasca.Runtime.Spec.Simd.IntegerArithmetic
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Word-level dispatch indices for integer lane arithmetic.

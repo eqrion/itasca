@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Interp.Simd.Integer.Signed
-import Itasca.Runtime.Spec.Simd.Extract
+import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!
 Lane extraction: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.

@@ -1,7 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Lanes.ShuffleBytes
-import Itasca.Runtime.Spec.Simd.ByteSelect
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import SpecExt.Builtins.Examples
-import Itasca.Runtime.Spec.Simd.Shuffle
 
 /-!
 Shuffle packing and source dispatch, above the shared shuffle/swizzle byte loop.

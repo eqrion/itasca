@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Interp.Simd.Lanes.ReplacePacking
-import Itasca.Runtime.Spec.Simd.Replace
+import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!
 Lane replacement execution and source correspondence. Shared replacement packing remains below memory-lane stores.

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.BinaryLoop
-import Itasca.Runtime.Spec.Simd.Average
+import Itasca.Runtime.Spec.Simd.IntegerMinMax
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
 
 /-!

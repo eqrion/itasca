@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Integer.Saturation
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
-import Itasca.Runtime.Spec.Simd.Narrow
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Narrowing lane arithmetic: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.

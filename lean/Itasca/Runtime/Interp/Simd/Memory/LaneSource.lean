@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.LaneBytes
-import Itasca.Runtime.Spec.Simd.MemoryLane
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Source reduction for vector lane loads.

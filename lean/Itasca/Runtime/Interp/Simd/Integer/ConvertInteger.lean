@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Float
 import Itasca.Runtime.Interp.Simd.Float.CompareLanes
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
-import Itasca.Runtime.Spec.Simd.ConvertInteger
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Integer-to-floating-point lane conversion: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.

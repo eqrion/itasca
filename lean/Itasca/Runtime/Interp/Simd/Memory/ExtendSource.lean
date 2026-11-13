@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.Extend
 import Itasca.Runtime.Interp.Simd.Memory.ExtendBytes
-import Itasca.Runtime.Spec.Simd.MemoryExtend
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Source reduction for widening vector loads.

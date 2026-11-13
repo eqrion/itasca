@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.UnaryAll
-import Itasca.Runtime.Spec.Simd.AllTrue
+import Itasca.Runtime.Spec.Simd.IntegerMinMax
 
 /-!
 Lane and dispatch correspondence for all-true reduction.

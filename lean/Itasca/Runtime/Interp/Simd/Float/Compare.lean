@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Float.CompareLanes
 import Itasca.Runtime.Interp.Simd.Integer.CompareMaskBits
-import Itasca.Runtime.Spec.Simd.CompareFloat
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Floating-point comparison masks and packed source dispatch. Scalar comparison and shared lane iteration remain independently available to arithmetic and conversion proofs.

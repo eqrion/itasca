@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.ShuffleBytes
-import Itasca.Runtime.Spec.Simd.Swizzle
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import SpecExt.Builtins.Examples
 
 /-!

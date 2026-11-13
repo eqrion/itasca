@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatCompare
-import Itasca.Runtime.Spec.Simd.CompareFloat
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Floating-point comparison widths and word-level dispatch indices.

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission
-import Itasca.Runtime.Spec.Simd.PureValues
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import Itasca.Runtime.Interp.Simd.Bitwise.Whole
 import Itasca.Runtime.Interp.Simd.Lanes.Swizzle
 

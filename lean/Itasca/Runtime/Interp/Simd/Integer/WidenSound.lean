@@ -1,5 +1,4 @@
 import Itasca.Runtime.Interp.Simd.Integer.WidenLanes
-import Itasca.Runtime.Spec.Simd.Widen
 import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!

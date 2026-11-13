@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.ShiftBits
-import Itasca.Runtime.Spec.Simd.Shift
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Integer lane shifts from scalar words through the lane loop. Bit extraction and the final source-dispatch result remain separate for their distinct consumers.

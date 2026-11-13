@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.Shift
-import Itasca.Runtime.Spec.Simd.Shift
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Packed lane and dispatch correspondence for shifts.

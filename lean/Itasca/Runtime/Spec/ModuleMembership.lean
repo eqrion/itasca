@@ -4,7 +4,7 @@ import Mathlib.Data.List.Forall2
 import Mathlib.Tactic
 import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.FloatTrunc
-import Itasca.Runtime.Spec.Simd.Shape
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import SpecExt.Builtins
 
 /-!

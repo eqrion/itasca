@@ -8,7 +8,7 @@ import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.MemoryGrowth
 import Mathlib.Data.List.Forall2
-import Itasca.Runtime.Spec.Simd.MemoryExtend
+import Itasca.Runtime.Spec.Simd.FloatResize
 import Itasca.Runtime.SourceMachine.Sim.Typed
 import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
@@ -16,10 +16,8 @@ import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.SourceMachine.Stateful.Transition
 import Itasca.Runtime.SourceMachine.Stateful.Reference
 import Itasca.Runtime.SourceMachine.Decode
-import Itasca.Runtime.Spec.Simd.FloatResize
-import Itasca.Runtime.Spec.Simd.ConvertInteger
-import Itasca.Runtime.Spec.Simd.TruncSat
-import Itasca.Runtime.Spec.Simd.Widen
+import Itasca.Runtime.Spec.Simd.Pairwise
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 import Itasca.Runtime.SourceMachine.Core.Simulation
 import Itasca.Runtime.SourceMachine.Sim.Basic
 import Itasca.Runtime.SourceMachine.Sim.Trap

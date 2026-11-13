@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.Access
-import Itasca.Runtime.Spec.Simd.Bitwise
-import Itasca.Runtime.Spec.Simd.AnyTrue
+import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!
 Whole-vector bit operations: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.

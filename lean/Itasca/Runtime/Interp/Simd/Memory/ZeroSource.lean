@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.LoadSource
-import Itasca.Runtime.Spec.Simd.MemoryZero
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Source reduction for zero-extending vector loads.

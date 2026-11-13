@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.FullStore
 import Itasca.Runtime.Interp.Simd.Memory.StoreEncoding
-import Itasca.Runtime.Spec.Simd.MemoryStore
+import Itasca.Runtime.Spec.Simd.FloatResize
 
 /-!
 Source reduction for full-vector stores.

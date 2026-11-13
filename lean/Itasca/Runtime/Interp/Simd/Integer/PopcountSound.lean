@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Integer.UnaryWords
 import Itasca.Runtime.Interp.Simd.Integer.UnaryBits
-import Itasca.Runtime.Spec.Simd.Popcount
+import Itasca.Runtime.Spec.Simd.IntegerMinMax
 import SpecExt.Builtins.Examples
 
 /-!

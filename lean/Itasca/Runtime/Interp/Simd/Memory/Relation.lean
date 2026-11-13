@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Simd.Memory.LaneStoreSource
 import Itasca.Runtime.Interp.Simd.Memory.SplatSource
 import Itasca.Runtime.Interp.Simd.Memory.ExtendSource
 import Itasca.Runtime.Interp.Simd.Memory.Dispatch
-import Itasca.Runtime.Spec.Simd.PureValues
+import Itasca.Runtime.Spec.Simd.CompareInteger
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
 
 /-!

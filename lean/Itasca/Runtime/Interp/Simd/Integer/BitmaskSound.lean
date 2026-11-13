@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Integer.UnarySigns
-import Itasca.Runtime.Spec.Simd.Bitmask
+import Itasca.Runtime.Spec.Simd.IntegerMinMax
 
 /-!
 Lane and dispatch correspondence for sign-bit masks.

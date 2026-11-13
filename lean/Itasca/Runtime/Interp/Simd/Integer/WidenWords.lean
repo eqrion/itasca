@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Integer.BinaryLoop
 import Itasca.Runtime.Interp.Simd.Integer.ShiftBits
-import Itasca.Runtime.Spec.Simd.Widen
+import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
 Widening integer lane calculations and their loop. Memory extension and pairwise addition consume these word facts without importing the final widening source correspondence.
