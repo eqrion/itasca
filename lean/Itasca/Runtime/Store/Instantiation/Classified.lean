@@ -27,7 +27,7 @@ theorem instantiate_inner_classified_decomposition {M P F A : Type}
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (outcome : Result (core.result.Result runtime.Instantiated runtime.ExecError × runtime.store.Store M × P × Bool))
     (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false = outcome) :
-    (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged ∧ PrecommitError module.profile error ∧ PrecommitOrigins memory view before staged module imports error) ∨
+    (∃ error staged, outcome = .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged ∧ PrecommitError error ∧ PrecommitOrigins memory view before staged module imports error) ∨
     ∃ ready inst, Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
       inst.module = module ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧ SegmentAccounting ready ∧ InstantiationCode before ready inst ∧
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧

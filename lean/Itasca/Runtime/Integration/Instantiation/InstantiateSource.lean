@@ -8,7 +8,6 @@ import Itasca.Runtime.Store.Initialization.SegmentInitializeSource
 import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
 import Itasca.Runtime.Store.Instantiation.Precommit
 import Itasca.Runtime.Store.Invariant.Rollback
-import Itasca.Runtime.Store.Instantiation.PrecommitSource
 
 /-! Public instantiation links, allocates and initializes a module and returns its start
 function without running it. The construction is total and uses no host callback. -/
@@ -32,21 +31,15 @@ def InitializedSource (initial : config) (store : _root_.store) (ambient : frame
   | .Err (.Exhausted _) | .Err .Terminated => ∃ body,StepsH initial [] ⟨⟨store,ambient⟩,body⟩
   | .Err _ => False
 
-/-- A rejection before publication leaves the store unchanged; Wasm 1.0 bounds failures match the
-source rollback. Otherwise the new instance follows the generated source instantiation. -/
+/-- A rejection before publication leaves the store unchanged and never reports a trap.
+Otherwise the new instance follows the generated source instantiation. -/
 def InstantiationSourceOutcome {M P : Type} (view : M → Slice U8)
     (oldCode code : CodeInterpretation) (before : runtime.store.Store M)
     (module : runtime.compiler.ExecutableModule) (imports : Slice runtime.Extern)
     (raw : ModuleBinary.Module) (platform : P)
     (result : core.result.Result runtime.Instantiated runtime.ExecError)
     (after : runtime.store.Store M) (host : P) : Prop :=
-  (∃ error,result=.Err error ∧ PrecommitError module.profile error ∧ after=before ∧ host=platform ∧
-    ∀ trap,error=.Trap trap → module.profile=.Wasm1 ∧
-      ∃ (staged : runtime.store.Store M) (inst : runtime.store.ModuleInst),
-        staged.instances.val[before.instances.length]?=some inst ∧ inst.module=module ∧
-        SpecExt.Wasm1.BoundsRollback (decodeStore view oldCode before) (decodeStore view code staged)
-          (decodeInstance staged inst) (raw.elements.map ModuleElaboration.element)
-          (raw.data.map ModuleData.translate) (decodeStore view oldCode after)) ∨
+  (∃ error,result=.Err error ∧ PrecommitError error ∧ after=before ∧ host=platform) ∨
   ∃ inst initial,
     after.instances.val[before.instances.len.val]?=some inst ∧ inst.module=module ∧ host=platform ∧
     fun_instantiate (decodeStore view oldCode before) (ModuleElaboration.moduleOf raw)
@@ -249,13 +242,11 @@ theorem instantiate_compiled_source {M P F A : Type}
   rcases origin with ⟨error,staged,returned,retained⟩ |
     ⟨ready,inst,found,source,readyCertified,readyCapacities,readyAccounting,initializers,types,table,allocated,
       preparedExtension,preparedPrefix,continued⟩
-  · obtain ⟨cause,_,_,origins⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
+  · obtain ⟨cause,_,_,_⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
       before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles
       error staged platform returned
     obtain ⟨_,_,evidence⟩ := instantiate_compiled_precommit_resource_causes memory hooks floats allocator law view laws
       before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles error staged platform returned
-    obtain ⟨compiledWitness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
-    have profileEq := (compiledWitness.initializers law).2.1
     obtain ⟨out,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
       (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained returned)
     rw [run,WP.spec_ok]
@@ -267,23 +258,12 @@ theorem instantiate_compiled_source {M P F A : Type}
       rw [storeEq,decode_store_code_agrees view (install_code_agrees before oldCode (Compiler.sourceFunctions raw))]
       exact Spec.extend_store_refl _ old.well_formed
     refine ⟨(by simpa only [storeEq] using rollbackInv),(by simpa only [storeEq] using Interp.FrameStorePrefix.refl before),
-      rollbackExtension,Or.inl ⟨error,resultEq,by simpa only [profileEq] using cause,storeEq,hostEq,?_⟩,?_⟩
-    · intro trap failed
-      subst error
-      have wasm1 : module.profile = .Wasm1 := by
-        rw [profileEq]
-        cases trap <;> simp only [PrecommitError] at cause <;> exact cause
-      obtain ⟨stagedInst,selected,stagedSource,bounds⟩ :=
-        origins.source_bounds retained oldCode old.storeSyntax raw elaborated typed matched
-      refine ⟨wasm1,staged,stagedInst,selected,stagedSource,?_⟩
-      rw [storeEq]
-      exact .reject bounds
+      rollbackExtension,Or.inl ⟨error,resultEq,cause,storeEq,hostEq⟩,?_⟩
     · intro failed rejected
       have same : error = failed := core.result.Result.Err.inj (resultEq.symm.trans rejected)
       subst failed
       cases error <;> try trivial
-      · rename_i limit
-        exact Or.inl ⟨storeEq,limit,rfl,staged,returned,evidence⟩
+      · exact Or.inl ⟨storeEq,_,rfl,staged,returned,evidence⟩
   · have initialWf : wf_config (sourceInstantiationConfiguration view
         (installCode oldCode before.instances.len.val (Compiler.sourceFunctions raw)) ready inst raw) := by
       have wf : ∀ s m xs c, fun_instantiate s m xs c → wf_config c := by

@@ -18,9 +18,9 @@ Itasca.Runtime.runtime.interp.invoke_with.no_spurious_errors: standard axioms on
 no handwritten declaration uses sorry or an unproved specification theorem
 
 # Statement cone totals (declarations, lines)
-handwritten: 1728 declarations, 9786 lines
+handwritten: 1720 declarations, 9705 lines
 spectec: 2616 declarations, 25640 lines
-extracted: 2743 declarations, 63394 lines
+extracted: 2734 declarations, 62901 lines
 
 # Handwritten statement cone (module, declaration, lines)
 Itasca.Binary.FloatBits	Itasca.FloatBits.payload	4
@@ -957,7 +957,7 @@ Itasca.Runtime.Integration.Execution.World.State	Itasca.Runtime.Integration.Even
 Itasca.Runtime.Integration.Host.HostDispatchCauses	Itasca.Runtime.Integration.HostSignatureAllocation	10
 Itasca.Runtime.Integration.Instantiation.InstantiateSource	Itasca.Runtime.Integration.StartResolved	7
 Itasca.Runtime.Integration.Instantiation.InstantiateSource	Itasca.Runtime.Integration.InitializedSource	8
-Itasca.Runtime.Integration.Instantiation.InstantiateSource	Itasca.Runtime.Integration.InstantiationSourceOutcome	22
+Itasca.Runtime.Integration.Instantiation.InstantiateSource	Itasca.Runtime.Integration.InstantiationSourceOutcome	16
 Itasca.Runtime.Integration.Instantiation.InstantiateSource	Itasca.Runtime.Integration.InstantiationResourceCause	23
 Itasca.Runtime.Integration.Instantiation.InstantiateSourceOrigin	Itasca.Runtime.Integration.sourceInstantiationConfiguration	8
 Itasca.Runtime.Integration.Instantiation.StartResolution	Itasca.Runtime.Integration.moduleStartFrame	3
@@ -1348,19 +1348,17 @@ Itasca.Runtime.Store.Api.TableStagingCauses	Itasca.Runtime.Store.TableStagingCau
 Itasca.Runtime.Store.Initialization.DataStagingCauses	Itasca.Runtime.Store.DataAllocationCause	6
 Itasca.Runtime.Store.Initialization.DataStagingCauses	Itasca.Runtime.Store.dataStageCall	4
 Itasca.Runtime.Store.Initialization.DataStagingCauses	Itasca.Runtime.Store.DataStagingCause	9
-Itasca.Runtime.Store.Initialization.DataStagingLoop	Itasca.Runtime.Store.storeStateParts	5
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.ElementInitializerCause	12
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.ElementAllocationCause	9
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.elementStageCall	5
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.ElementStagingCause	11
-Itasca.Runtime.Store.Initialization.PrecheckResources	Itasca.Runtime.Store.OffsetInitializerCause	12
 Itasca.Runtime.Store.Initialization.SegmentAccounting	Itasca.Runtime.Store.SegmentAccounting	3
 Itasca.Runtime.Store.Initialization.SegmentInitializeSource	Itasca.Runtime.Store.SegmentSetupCause	7
 Itasca.Runtime.Store.Initialization.StoreParts	Itasca.Runtime.Store.storeParts	7
 Itasca.Runtime.Store.Instantiation.LinkedPreparedRun	Itasca.Runtime.Store.emptyInstance	6
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationPhase.casesOn	2
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationPhase.memories	1
-Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath	57
+Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath	51
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.initial	2
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.linked	3
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.typed	5
@@ -1370,8 +1368,7 @@ Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.published	5
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.globals	6
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.elements	6
-Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationResourcePath.data	6
-Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationRefusal	33
+Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PreparationRefusal	32
 Itasca.Runtime.Store.Instantiation.PreparationResourcePath	Itasca.Runtime.Store.PrecommitResourceEvidence	10
 Itasca.Runtime.Store.Invariant.FunctionStagingCauses	Itasca.Runtime.Store.functionStageCall	4
 Itasca.Runtime.Store.Invariant.FunctionStagingCauses	Itasca.Runtime.Store.FunctionStagingCause	7
@@ -1381,7 +1378,7 @@ Itasca.Runtime.Store.Invariant.FunctionTypeCauses	Itasca.Runtime.Store.FunctionA
 Itasca.Runtime.Store.Invariant.InstanceItems	Itasca.Runtime.Store.moduleItems	7
 Itasca.Runtime.Store.Invariant.InternTypeCauses	Itasca.Runtime.Store.TypeInternResourceCause	11
 Itasca.Runtime.Store.Invariant.IssuedValues	Itasca.Runtime.Store.IssuedValue	7
-Itasca.Runtime.Store.Invariant.PrecommitError	Itasca.Runtime.Store.PrecommitError	8
+Itasca.Runtime.Store.Invariant.PrecommitError	Itasca.Runtime.Store.PrecommitError	7
 Itasca.Runtime.Store.Invariant.Syntax	Itasca.Runtime.Store.InstanceSyntax	7
 Itasca.Runtime.Store.Invariant.Syntax	Itasca.Runtime.Store.InstanceSyntax.mk	1
 Itasca.Runtime.Store.Invariant.Syntax	Itasca.Runtime.Store.StoreSyntax	3
@@ -1746,8 +1743,3 @@ SpecExt.Host	SpecExt.StepH.ctxt_instrs	10
 SpecExt.Host	SpecExt.StepsH	5
 SpecExt.Host	SpecExt.StepsH.refl	1
 SpecExt.Host	SpecExt.StepsH.cons	2
-SpecExt.Wasm1	SpecExt.Wasm1.SegmentBoundsFailure	19
-SpecExt.Wasm1	SpecExt.Wasm1.SegmentBoundsFailure.element	9
-SpecExt.Wasm1	SpecExt.Wasm1.SegmentBoundsFailure.data	8
-SpecExt.Wasm1	SpecExt.Wasm1.BoundsRollback	6
-SpecExt.Wasm1	SpecExt.Wasm1.BoundsRollback.reject	2

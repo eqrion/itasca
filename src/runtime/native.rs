@@ -75,8 +75,8 @@ impl<M: MemoryBuffer> Store<M> {
     /// Links and initializes segments, returning the start function for the
     /// caller to invoke.
     ///
-    /// Link errors and Wasm 1.0 segment bounds errors leave the store unchanged.
-    /// Wasm 2.0 traps preserve completed segment writes and allocated objects.
+    /// Link errors leave the store unchanged. Segment traps preserve completed
+    /// writes and allocated objects.
     pub fn instantiate<P: Platform<M>>(
         &mut self,
         module: ExecutableModule,

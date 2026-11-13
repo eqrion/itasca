@@ -6,7 +6,7 @@ use super::platform::Alloc;
 use super::*;
 use crate::{
     DataMode, ElemType, ElementMode, ExportDesc, FuncType, GlobalType, ImportDesc, Limits, MemType,
-    Mut, TableType, ValidationProfile,
+    Mut, TableType,
 };
 use alloc::vec::Vec;
 
@@ -490,12 +490,6 @@ fn instantiation_failed(result: &Result<Instantiated, ExecError>) -> bool {
     match result {
         Ok(_) => false,
         Err(_) => true,
-    }
-}
-fn wasm1(profile: ValidationProfile) -> bool {
-    match profile {
-        ValidationProfile::Wasm1 => true,
-        ValidationProfile::Wasm2 => false,
     }
 }
 fn check_limits(l: Limits, max: u32) -> Result<(), ExecError> {

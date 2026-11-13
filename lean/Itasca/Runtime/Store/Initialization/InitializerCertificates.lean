@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
 import Itasca.Runtime.Store.Initialization.InitializerResolve
 import Itasca.Runtime.Store.Initialization.ElementLoop
-import Itasca.Runtime.Store.Initialization.PrecheckLoop
 import Itasca.Module.Elab.SegmentSyntax
 
 /-! Compiler map certificates and canonical validator constant typing discharge
@@ -67,65 +66,5 @@ structure InitializerSegmentBindings {M : Type} (store : runtime.store.Store M)
   memoryCount : inst.module.module.env.mem_types.val.length ≤ inst.memories.val.length
   tables : ∀ addr ∈ inst.tables.val, addr.index.val < store.tables.val.length
   memories : ∀ addr ∈ inst.memories.val, addr.index.val < store.memories.val.length
-
-theorem element_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Element)
-    (compiled : Compiler.InitializerMappings inst.module)
-    (found : inst.module.module.env.elements.val[index.val]? = some segment)
-    (valid : Itasca.ModuleSegments.elementValid inst.module.module.env segment)
-    (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
-    (segments : InitializerSegmentBindings store inst) :
-    ElementPrecheckReady store inst index segment := by
-  cases mode : segment.mode with
-  | Passive => simp [ElementPrecheckReady, mode]
-  | Declarative => simp [ElementPrecheckReady, mode]
-  | Active tableIndex expr =>
-    simp only [ElementPrecheckReady, mode]
-    obtain ⟨offset, mapped, certificate⟩ := related_lookup compiled.elementOffsets found
-    simp only [Compiler.OffsetInitializer, Compiler.sourceElementOffset, mode] at certificate
-    cases offset with
-    | none => contradiction
-    | some function =>
-      obtain ⟨code, codeFound, codeCert⟩ := certificate
-      obtain ⟨tableBound, tableType, typed⟩ := (show ∃ bound : tableIndex.val < inst.module.module.env.table_types.val.length,
-        inst.module.module.env.table_types.val[tableIndex.val].elem = segment.elem ∧
-        Itasca.ModuleConstants.Valid inst.module.module.env expr .I32 from by simpa [mode] using valid.1)
-      obtain ⟨words, resolved⟩ := initializer_resolves store inst expr .I32 typed bindings imports
-      have mapBound : tableIndex.val < inst.tables.val.length := by have := segments.tableCount; omega
-      let addr := inst.tables.val[tableIndex.val]
-      have addrFound : inst.tables.val[tableIndex.val]? = some addr := List.getElem?_eq_getElem mapBound
-      have issued := segments.tables addr (List.mem_of_getElem? addrFound)
-      let table := store.tables.val[addr.index.val]
-      refine ⟨function, code, words, addr, table, mapped, codeFound, codeCert, resolved, addrFound, ?_⟩
-      exact List.getElem?_eq_getElem issued
-
-theorem data_precheck_certificate {M : Type} (store : runtime.store.Store M)
-    (inst : runtime.store.ModuleInst) (index : Usize) (segment : Itasca.metadata.Data)
-    (compiled : Compiler.InitializerMappings inst.module)
-    (found : inst.module.module.tail.data.val[index.val]? = some segment)
-    (valid : Itasca.ModuleData.Valid inst.module.module.env segment)
-    (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
-    (segments : InitializerSegmentBindings store inst) :
-    DataPrecheckReady store inst index segment := by
-  cases mode : segment.mode with
-  | Passive => simp [DataPrecheckReady, mode]
-  | Active memoryIndex expr =>
-    simp only [DataPrecheckReady, mode]
-    obtain ⟨offset, mapped, certificate⟩ := related_lookup compiled.dataOffsets found
-    simp only [Compiler.OffsetInitializer, Compiler.sourceDataOffset, mode] at certificate
-    cases offset with
-    | none => contradiction
-    | some function =>
-      obtain ⟨code, codeFound, codeCert⟩ := certificate
-      obtain ⟨memoryBound, typed⟩ := (show memoryIndex.val < inst.module.module.env.mem_types.val.length ∧
-        Itasca.ModuleConstants.Valid inst.module.module.env expr .I32 from by simpa [Itasca.ModuleData.Valid, mode] using valid)
-      obtain ⟨words, resolved⟩ := initializer_resolves store inst expr .I32 typed bindings imports
-      have mapBound : memoryIndex.val < inst.memories.val.length := by have := segments.memoryCount; omega
-      let addr := inst.memories.val[memoryIndex.val]
-      have addrFound : inst.memories.val[memoryIndex.val]? = some addr := List.getElem?_eq_getElem mapBound
-      have issued := segments.memories addr (List.mem_of_getElem? addrFound)
-      let memory := store.memories.val[addr.index.val]
-      refine ⟨function, code, words, addr, memory, mapped, codeFound, codeCert, resolved, addrFound, ?_⟩
-      exact List.getElem?_eq_getElem issued
 
 end Itasca.Runtime.Store

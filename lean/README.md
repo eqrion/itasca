@@ -396,9 +396,11 @@ yields a coherent infinite source execution, or a source run that reaches a
 store on which a callback diverges. `terminates` gives a return when neither
 exists.
 [Instantiation](Itasca/Results/Instantiate.lean) is total and runs no callback.
-It links, allocates and initializes the module, retains rollback before
-publication, classifies every resource error, and returns the resolved start
-function, which the embedder runs with `invoke_with`. Success reaches the call of
+It links, allocates and initializes the module. Rejection before publication
+leaves the store unchanged and never reports a trap. Segment traps preserve
+completed writes and allocated objects under either validation profile. It
+classifies every resource error and returns the resolved start function, which
+the embedder runs with `invoke_with`. Success reaches the call of
 that function in the source instantiation, so instantiate-then-invoke follows
 the source module start. [No spurious errors](Itasca/Results/Invoke.lean) shows
 that an owned, typed call reports only traps when every source run of the

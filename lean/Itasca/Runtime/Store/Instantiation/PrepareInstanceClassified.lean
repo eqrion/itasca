@@ -17,7 +17,6 @@ import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Api.GlobalErrorLoop
 import Itasca.Runtime.Store.Initialization.ElementErrorLoop
 import Itasca.Runtime.Store.Initialization.DataErrorLoop
-import Itasca.Runtime.Store.Initialization.PrecheckCertifiedWitness
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
 import Itasca.Runtime.Store.Initialization.StoreParts
 
@@ -81,7 +80,7 @@ theorem prepare_instance_classified {M P F A : Type}
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (outcome : Result (core.result.Result (runtime.InstanceAddr × Usize) runtime.ExecError × runtime.store.Store M × P))
     (run : runtime.store.instantiate.Store.prepare_instance memory hooks floats allocator before module imports platform = outcome) :
-    (∃ error staged, outcome = .ok (.Err error, staged, platform) ∧ StagedPrefix before staged ∧ PrecommitError module.profile error ∧ PrecommitOrigins memory view before staged module imports error) ∨
+    (∃ error staged, outcome = .ok (.Err error, staged, platform) ∧ StagedPrefix before staged ∧ PrecommitError error ∧ PrecommitOrigins memory view before staged module imports error) ∨
     ∃ staged items charged ready inst, staged.instance_items + items = .ok charged ∧
       ready = {staged with instance_items := charged} ∧
       Shape view ready ∧ ready.instances.val[before.instances.len.val]? = some inst ∧
@@ -108,7 +107,6 @@ theorem prepare_instance_classified {M P F A : Type}
   · rename_i mismatch
     exact Or.inl ⟨_, _, run.symm, .refl _, by trivial, by
       constructor
-      · intro trap impossible; cases impossible
       · intro link equal
         cases equal
         left
@@ -117,8 +115,7 @@ theorem prepare_instance_classified {M P F A : Type}
         have same : imports.len = module.module.env.imports.deref.len := by
           apply UScalar.eq_of_val_eq
           simpa [alloc.vec.Vec.deref] using lengths
-        simp [same] at mismatch
-      · intro trap impossible; cases impossible⟩
+        simp [same] at mismatch⟩
   · rename_i importCount
     split at run
     · exact Or.inl ⟨_, _, run.symm, .refl _, by trivial, by exact PrecommitOrigins.resource True.intro⟩
@@ -252,7 +249,7 @@ theorem prepare_instance_classified {M P F A : Type}
                       simp only [
                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                         core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                      exact Or.inl ⟨_, _, run.symm, .refl _, by exact link_staging_errors memory module.profile imports before seed 0#usize (.Ok ()) True.intro linkedRun, by exact PrecommitOrigins.linked inst linkedRun (link_staging_errors memory .Wasm2 imports before seed 0#usize (.Ok ()) True.intro linkedRun)⟩
+                      exact Or.inl ⟨_, _, run.symm, .refl _, by exact link_staging_errors memory imports before seed 0#usize (.Ok ()) True.intro linkedRun, by exact PrecommitOrigins.linked inst linkedRun⟩
                     | Ok value =>
                       cases value
                       have maps : LinkedMaps view before inst.module inst.module.module.env.imports.val inst := by
@@ -589,160 +586,45 @@ theorem prepare_instance_classified {M P F A : Type}
                                           | Ok value =>
                                             cases value
                                             simp only [bind_ok] at run
-                                            rw [index_given dataStore.instances before.instances.len dataInst dataFound, bind_ok] at run
-                                            simp only [runtime.compiler.ExecutableModule.impl.profile, bind_ok] at run
-                                            have finalSource : dataInst.module = module :=
-                                              dataSource.trans (elementSource.trans (globalSource.trans (preparedSource.trans source)))
-                                            have finalCompiled : Compiler.InitializerMappings dataInst.module := by simpa only [finalSource] using compiled
-                                            have finalElements : ∀ segment ∈ dataInst.module.module.env.elements.val,
-                                                Itasca.ModuleSegments.elementValid dataInst.module.module.env segment := by
-                                              simpa only [finalSource] using valid.elements
-                                            have finalData : ∀ segment ∈ dataInst.module.module.tail.data.val,
-                                                Itasca.ModuleData.Valid dataInst.module.module.env segment := by
-                                              simpa only [finalSource] using dataValid
-                                            cases profile : dataInst.module.profile with
-                                            | Wasm2 =>
-                                              simp only [runtime.store.wasm1, profile, bind_ok, Bool.false_eq_true, ↓reduceIte] at run
-                                              have chargeBound : dataStore.instance_items.val + total.val ≤ Usize.max := by
-                                                rw [dataPrefix.instanceItems]
-                                                exact itemFits.trans (usize_limit _)
-                                              obtain ⟨charged, chargeRun, chargeSpec⟩ := WP.spec_imp_exists
-                                                (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
-                                              have counted : charged.val = before.instance_items.val + moduleItems inst.module := by
-                                                simpa only [dataPrefix.instanceItems, exactItems, source] using chargeSpec
-                                              have limited : charged.val ≤ before.limits.max_instance_items.val := by
-                                                rw [chargeSpec, dataPrefix.instanceItems]
-                                                exact itemFits
-                                              have actualRoom : before.instances.length < before.limits.max_instances.val := by
-                                                simpa only [alloc.vec.Vec.len_val] using below_actual_limit _ _ instanceSpace
-                                              obtain ⟨next, nextFound, nextSource, readyShape, typeBindings, retained, segmentsAccounted, readyCode⟩ :=
-                                                prepared_commit_shape memory hooks floats allocator law view laws before inst platform shape accounted maps instCache
-                                                  (by simpa only [source] using valid) (by simpa only [source] using compiled) actualRoom
-                                                  (by simpa only [source] using elementCapacity) (by simpa only [source] using dataCapacity)
-                                                  charged counted limited typed functions tabled prepared typeInst funcInst tableInst preparedInst
-                                                  typedRun functionRun tableRun memoryRun publishedInstances publishedRun
-                                                  globalStore elementStore dataStore globalRun elementStageRun dataStageRun
-                                              let ready := {dataStore with instance_items := charged}
-                                              refine Or.inr ⟨dataStore, total, charged, ready, next, chargeRun, rfl, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
-                                              · have same : next = dataInst := Option.some.inj (nextFound.symm.trans dataFound)
-                                                subst next
-                                                exact ⟨dataImports.funcs, dataImports.globals⟩
-                                              · exact ⟨typeBindings.tables, typeBindings.elements⟩
-                                              · exact ⟨segmentsAccounted.elements, segmentsAccounted.datas⟩
-                                              · exact readyCode
-                                              · exact ⟨{
-                                                  seed := inst, source := source, maps := maps, instanceRoom := actualRoom,
-                                                  importsLength := importLengths, linkRun := linkedRun,
-                                                  elementCapacity := by simpa only [source] using elementCapacity,
-                                                  dataCapacity := by simpa only [source] using dataCapacity,
-                                                  typed := typed, functions := functions, tabled := tabled, prepared := prepared,
-                                                  typeInst := typeInst, funcInst := funcInst, tableInst := tableInst, inst := preparedInst,
-                                                  typeRun := typedRun, functionRun := functionRun, tableRun := tableRun, memoryRun := memoryRun,
-                                                  publishedInstances := publishedInstances, publicationRun := publishedRun,
-                                                  globalStore := globalStore, elementStore := elementStore, dataStore := dataStore,
-                                                  globalRun := globalRun, elementRun := elementStageRun, dataRun := dataStageRun,
-                                                  charged := charged, counted := counted, limited := limited, committed := rfl }⟩
-                                              · exact run.symm
-                                            | Wasm1 =>
-                                              simp only [runtime.store.wasm1, profile, bind_ok, ↓reduceIte] at run
-                                              have chargeBound : dataStore.instance_items.val + total.val ≤ Usize.max := by
-                                                rw [dataPrefix.instanceItems]
-                                                exact itemFits.trans (usize_limit _)
-                                              obtain ⟨ghostCharge, ghostChargeRun, ghostChargeSpec⟩ := WP.spec_imp_exists
-                                                (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
-                                              have ghostCounted : ghostCharge.val = before.instance_items.val + moduleItems inst.module := by
-                                                simpa only [dataPrefix.instanceItems, exactItems, source] using ghostChargeSpec
-                                              have ghostLimited : ghostCharge.val ≤ before.limits.max_instance_items.val := by
-                                                rw [ghostChargeSpec, dataPrefix.instanceItems]
-                                                exact itemFits
-                                              have actualRoom : before.instances.length < before.limits.max_instances.val := by
-                                                simpa only [alloc.vec.Vec.len_val] using below_actual_limit _ _ instanceSpace
-                                              obtain ⟨ghostInst, ghostFound, ghostSource, ghostShape, ghostTypes, ghostRetained, ghostSegments, ghostCode⟩ :=
-                                                prepared_commit_shape memory hooks floats allocator law view laws before inst platform shape accounted maps instCache
-                                                  (by simpa only [source] using valid) (by simpa only [source] using compiled) actualRoom
-                                                  (by simpa only [source] using elementCapacity) (by simpa only [source] using dataCapacity)
-                                                  ghostCharge ghostCounted ghostLimited typed functions tabled prepared typeInst funcInst tableInst preparedInst
-                                                  typedRun functionRun tableRun memoryRun publishedInstances publishedRun
-                                                  globalStore elementStore dataStore globalRun elementStageRun dataStageRun
-                                              have finalCount : dataStore.instances.length = before.instances.length + 1 := by
-                                                rw [(dataMetadata.resolve dataFound).instanceCount,
-                                                  (elementMetadata.resolve elementFound).instanceCount,
-                                                  (globalMetadata.resolve globalFound).instanceCount]
-                                                simp only [published, alloc.vec.Vec.length, appended, List.length_append,
-                                                  List.length_singleton, preparedInstances]
-                                              have stageEvidence (error : runtime.ExecError) (cause : PrecheckCause view dataStore dataInst error) :
-                                                  PrecommitStageEvidence view before dataStore module error := by
-                                                intro trap equal
-                                                exact ⟨ghostCharge, dataInst, ghostShape, finalCount, dataFound, finalSource, cause⟩
-                                              obtain ⟨out, elementCheckRun, elementCheckStatus, parts, elementCheckErrors⟩ := WP.spec_imp_exists
-                                                (element_precheck_certified_witness memory hooks floats allocator law view dataStore platform before.instances.len
-                                                  dataInst (.Ok ()) True.intro dataFound finalCompiled finalElements dataBindings dataImports dataSegments)
-                                              subst out
-                                              rw [elementCheckRun] at run
-                                              simp only [storeParts, bind_ok, uncurry_apply_pair] at run
-                                              cases elementCheckStatus with
-                                              | Err error =>
-                                                simp only [
-                                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                                                  core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                                                exact Or.inl ⟨_, _, run.symm, dataPrefix, by simpa only [ErrorAllowed, ← finalSource, profile] using (PrecheckCause.precommit elementCheckErrors), by exact PrecommitOrigins.precheck before.instances.len dataInst dataFound finalSource elementCheckErrors (stageEvidence _ elementCheckErrors)⟩
-                                              | Ok value =>
-                                                cases value
-                                                simp only [bind_ok] at run
-                                                obtain ⟨out, dataCheckRun, dataCheckStatus, parts, dataCheckErrors⟩ := WP.spec_imp_exists
-                                                  (data_precheck_certified_witness memory hooks floats allocator law view laws dataStore platform before.instances.len
-                                                    dataInst (.Ok ()) True.intro dataFound finalCompiled finalData dataBindings dataImports dataSegments)
-                                                subst out
-                                                rw [dataCheckRun] at run
-                                                simp only [storeParts, bind_ok, uncurry_apply_pair] at run
-                                                cases dataCheckStatus with
-                                                | Err error =>
-                                                  simp only [
-                                                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                                                    core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
-                                                  exact Or.inl ⟨_, _, run.symm, dataPrefix, by simpa only [ErrorAllowed, ← finalSource, profile] using (PrecheckCause.precommit dataCheckErrors), by exact PrecommitOrigins.precheck before.instances.len dataInst dataFound finalSource dataCheckErrors (stageEvidence _ dataCheckErrors)⟩
-                                                | Ok value =>
-                                                  cases value
-                                                  simp only [bind_ok] at run
-                                                  have chargeBound : dataStore.instance_items.val + total.val ≤ Usize.max := by
-                                                    rw [dataPrefix.instanceItems]
-                                                    exact itemFits.trans (usize_limit _)
-                                                  obtain ⟨charged, chargeRun, chargeSpec⟩ := WP.spec_imp_exists
-                                                    (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
-                                                  have counted : charged.val = before.instance_items.val + moduleItems inst.module := by
-                                                    simpa only [dataPrefix.instanceItems, exactItems, source] using chargeSpec
-                                                  have limited : charged.val ≤ before.limits.max_instance_items.val := by
-                                                    rw [chargeSpec, dataPrefix.instanceItems]
-                                                    exact itemFits
-                                                  have actualRoom : before.instances.length < before.limits.max_instances.val := by
-                                                    simpa only [alloc.vec.Vec.len_val] using below_actual_limit _ _ instanceSpace
-                                                  obtain ⟨next, nextFound, nextSource, readyShape, typeBindings, retained, segmentsAccounted, readyCode⟩ :=
-                                                    prepared_commit_shape memory hooks floats allocator law view laws before inst platform shape accounted maps instCache
-                                                      (by simpa only [source] using valid) (by simpa only [source] using compiled) actualRoom
-                                                      (by simpa only [source] using elementCapacity) (by simpa only [source] using dataCapacity)
-                                                      charged counted limited typed functions tabled prepared typeInst funcInst tableInst preparedInst
-                                                      typedRun functionRun tableRun memoryRun publishedInstances publishedRun
-                                                      globalStore elementStore dataStore globalRun elementStageRun dataStageRun
-                                                  let ready := {dataStore with instance_items := charged}
-                                                  refine Or.inr ⟨dataStore, total, charged, ready, next, chargeRun, rfl, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
-                                                  · have same : next = dataInst := Option.some.inj (nextFound.symm.trans dataFound)
-                                                    subst next
-                                                    exact ⟨dataImports.funcs, dataImports.globals⟩
-                                                  · exact ⟨typeBindings.tables, typeBindings.elements⟩
-                                                  · exact ⟨segmentsAccounted.elements, segmentsAccounted.datas⟩
-                                                  · exact readyCode
-                                                  · exact ⟨{
-                                                      seed := inst, source := source, maps := maps, instanceRoom := actualRoom,
-                                                      importsLength := importLengths, linkRun := linkedRun,
-                                                      elementCapacity := by simpa only [source] using elementCapacity,
-                                                      dataCapacity := by simpa only [source] using dataCapacity,
-                                                      typed := typed, functions := functions, tabled := tabled, prepared := prepared,
-                                                      typeInst := typeInst, funcInst := funcInst, tableInst := tableInst, inst := preparedInst,
-                                                      typeRun := typedRun, functionRun := functionRun, tableRun := tableRun, memoryRun := memoryRun,
-                                                      publishedInstances := publishedInstances, publicationRun := publishedRun,
-                                                      globalStore := globalStore, elementStore := elementStore, dataStore := dataStore,
-                                                      globalRun := globalRun, elementRun := elementStageRun, dataRun := dataStageRun,
-                                                      charged := charged, counted := counted, limited := limited, committed := rfl }⟩
-                                                  · exact run.symm
+                                            have chargeBound : dataStore.instance_items.val + total.val ≤ Usize.max := by
+                                              rw [dataPrefix.instanceItems]
+                                              exact itemFits.trans (usize_limit _)
+                                            obtain ⟨charged, chargeRun, chargeSpec⟩ := WP.spec_imp_exists
+                                              (Usize.add_spec (x := dataStore.instance_items) (y := total) chargeBound)
+                                            have counted : charged.val = before.instance_items.val + moduleItems inst.module := by
+                                              simpa only [dataPrefix.instanceItems, exactItems, source] using chargeSpec
+                                            have limited : charged.val ≤ before.limits.max_instance_items.val := by
+                                              rw [chargeSpec, dataPrefix.instanceItems]
+                                              exact itemFits
+                                            have actualRoom : before.instances.length < before.limits.max_instances.val := by
+                                              simpa only [alloc.vec.Vec.len_val] using below_actual_limit _ _ instanceSpace
+                                            obtain ⟨next, nextFound, nextSource, readyShape, typeBindings, retained, segmentsAccounted, readyCode⟩ :=
+                                              prepared_commit_shape memory hooks floats allocator law view laws before inst platform shape accounted maps instCache
+                                                (by simpa only [source] using valid) (by simpa only [source] using compiled) actualRoom
+                                                (by simpa only [source] using elementCapacity) (by simpa only [source] using dataCapacity)
+                                                charged counted limited typed functions tabled prepared typeInst funcInst tableInst preparedInst
+                                                typedRun functionRun tableRun memoryRun publishedInstances publishedRun
+                                                globalStore elementStore dataStore globalRun elementStageRun dataStageRun
+                                            let ready := {dataStore with instance_items := charged}
+                                            refine Or.inr ⟨dataStore, total, charged, ready, next, chargeRun, rfl, readyShape, nextFound, nextSource.trans source, ?_, ?_, ?_, ?_, ?_, ?_⟩
+                                            · have same : next = dataInst := Option.some.inj (nextFound.symm.trans dataFound)
+                                              subst next
+                                              exact ⟨dataImports.funcs, dataImports.globals⟩
+                                            · exact ⟨typeBindings.tables, typeBindings.elements⟩
+                                            · exact ⟨segmentsAccounted.elements, segmentsAccounted.datas⟩
+                                            · exact readyCode
+                                            · exact ⟨{
+                                                seed := inst, source := source, maps := maps, instanceRoom := actualRoom,
+                                                importsLength := importLengths, linkRun := linkedRun,
+                                                elementCapacity := by simpa only [source] using elementCapacity,
+                                                dataCapacity := by simpa only [source] using dataCapacity,
+                                                typed := typed, functions := functions, tabled := tabled, prepared := prepared,
+                                                typeInst := typeInst, funcInst := funcInst, tableInst := tableInst, inst := preparedInst,
+                                                typeRun := typedRun, functionRun := functionRun, tableRun := tableRun, memoryRun := memoryRun,
+                                                publishedInstances := publishedInstances, publicationRun := publishedRun,
+                                                globalStore := globalStore, elementStore := elementStore, dataStore := dataStore,
+                                                globalRun := globalRun, elementRun := elementStageRun, dataRun := dataStageRun,
+                                                charged := charged, counted := counted, limited := limited, committed := rfl }⟩
+                                            · exact run.symm
 
 end Itasca.Runtime.Store

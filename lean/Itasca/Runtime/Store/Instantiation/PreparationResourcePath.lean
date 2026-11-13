@@ -6,14 +6,13 @@ import Itasca.Runtime.Store.Api.MemoryStagingCauses
 import Itasca.Runtime.Store.Api.GlobalStagingCauses
 import Itasca.Runtime.Store.Initialization.ElementStagingCauses
 import Itasca.Runtime.Store.Initialization.DataStagingCauses
-import Itasca.Runtime.Store.Initialization.PrecheckCertifiedResourceCauses
 import Itasca.Runtime.Store.Invariant.InstanceItemCauses
 import Itasca.Runtime.Store.Initialization.StoreParts
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
 inductive PreparationPhase where
-  | initial | linked | typed | functions | tables | memories | published | globals | elements | data
+  | initial | linked | typed | functions | tables | memories | published | globals | elements
 
 /-- Exact successful store-changing preparation computations. Reservations are
 not transitions: their checked allocator law leaves their vectors unchanged.
@@ -66,12 +65,6 @@ inductive PreparationResourcePath {M P F A : Type}
         .ok (storeParts after platform (.Ok ())))
       (found : after.instances.val[before.instances.len.val]? = some next) :
       PreparationResourcePath memory hooks floats allocator before module imports platform .elements after next
-  | data {store inst after next}
-      (prior : PreparationResourcePath memory hooks floats allocator before module imports platform .elements store inst)
-      (run : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator store (.Ok ()) 0#usize before.instances.len =
-        .ok (storeStateParts after (.Ok ())))
-      (found : after.instances.val[before.instances.len.val]? = some next) :
-      PreparationResourcePath memory hooks floats allocator before module imports platform .data after next
 
 /-- Concrete refusal at a fixed phase, before further preparation occurs. -/
 def PreparationRefusal {M P F A : Type}
@@ -105,10 +98,9 @@ def PreparationRefusal {M P F A : Type}
   | .elements =>
     (error = .Exhausted .Allocation ∧ allocator.reserve inst.datas inst.module.module.tail.data.len = .ok (false,inst.datas)) ∨
     DataStagingCause memory allocator store before.instances.len 0#usize error
-  | .data => OffsetInitializerCause allocator store inst error
 
 /-- Resource errors retain a concrete source-order preparation path and its
-exact refusal. Nonresource errors have separate linking/bounds predicates. -/
+exact refusal. Nonresource errors have a separate linking predicate. -/
 def PrecommitResourceEvidence {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)

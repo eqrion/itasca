@@ -12,16 +12,15 @@ def ErrorAllowed {α : Type} (allowed : runtime.ExecError → Prop) : core.resul
   | .Ok _ => True
   | .Err error => allowed error
 
-/-- A precommit trap is restricted to the Wasm1 segment-bound precheck. All
-other precommit rejections are linking, foreign-store handles, or embedding-resource failures. -/
-def PrecommitError (profile : Itasca.ValidationProfile) : runtime.ExecError → Prop
+/-- Precommit rejections are linking, foreign-store handles, or embedding-resource
+failures. Segment traps arise only after publication. -/
+def PrecommitError : runtime.ExecError → Prop
   | .Link _ => True
   | .WrongStore => True
   | .Exhausted _ => True
-  | .Trap .MemoryOutOfBounds | .Trap .TableOutOfBounds => profile = .Wasm1
   | _ => False
 
-theorem ResourceError.precommit {profile error} (resource : ResourceError error) : PrecommitError profile error := by
+theorem ResourceError.precommit {error} (resource : ResourceError error) : PrecommitError error := by
   cases error <;> simp_all [ResourceError, PrecommitError]
 
 end Itasca.Runtime.Store

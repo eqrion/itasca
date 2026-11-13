@@ -113,6 +113,10 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
+Runtime instantiation uses Wasm 2.0 segment semantics under either validation
+profile: segment traps preserve completed writes and allocated objects.
+Rejection before publication leaves the store unchanged and never reports a trap.
+
 ### Trust boundary
 
 The proofs depend on:

@@ -37,11 +37,11 @@ macro "link_error_step " h:ident : tactic => `(tactic|
 indexing is excluded by normal return here, and by issued-handle invariants in
 the surrounding total staging theorem. -/
 theorem link_import_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (profile : Itasca.ValidationProfile) (store : runtime.store.Store M)
+    (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
     (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
     (run : runtime.store.instantiate.Store.link_import memory store inst index external = .ok out) :
-    ErrorAllowed (PrecommitError profile) out.1 ∧ out.2.1 = store ∧ out.2.2.module = inst.module := by
+    ErrorAllowed PrecommitError out.1 ∧ out.2.1 = store ∧ out.2.2.module = inst.module := by
   unfold runtime.store.instantiate.Store.link_import at run
   repeat' link_error_step run
 
@@ -57,11 +57,11 @@ namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 set_option maxRecDepth 8192
 theorem link_staging_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (profile : Itasca.ValidationProfile) (imports : Slice runtime.Extern)
+    (imports : Slice runtime.Extern)
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
-    (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed (PrecommitError profile) status)
+    (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed PrecommitError status)
     {out} (run : runtime.store.instantiate.Store.prepare_instance_loop2 memory store imports status index inst = .ok out) :
-    ErrorAllowed (PrecommitError profile) out.2.1 := by
+    ErrorAllowed PrecommitError out.2.1 := by
   generalize size : Usize.max - index.val = count
   induction count using Nat.strong_induction_on generalizing store inst index status with
   | h count ih =>
@@ -87,7 +87,7 @@ theorem link_staging_errors {M : Type} (memory : runtime.platform.MemoryBuffer M
         have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
         have nextMax := nextIndex.hmax
         have smaller : Usize.max - nextIndex.val < count := by scalar_tac
-        have nextAllowed := (link_import_errors memory profile store inst index external _ called).1
+        have nextAllowed := (link_import_errors memory store inst index external _ called).1
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory nextStore imports nextStatus nextIndex nextInst = .ok out := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop2, runtime.store.instantiate.Store.prepare_instance_loop2.body,
             runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
