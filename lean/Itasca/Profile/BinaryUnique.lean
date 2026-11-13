@@ -1,6 +1,6 @@
 import Itasca.Profile.CodeEntry
 import Itasca.Wasm2.Completeness
-import Itasca.Wasm2.Visitor.Body
+import Itasca.Wasm2.Visitor.ReachedTableLoop
 import Itasca.Module.Code.Framing
 import Itasca.Wasm2.Visitor.Total
 import Itasca.Module.Code.LocalsComplete

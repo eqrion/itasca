@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.BytesDispatch
 import Itasca.Wasm2.Trace.ControlRecords
 import Itasca.Wasm2.Trace.BytesScalar
 import Itasca.Wasm2.Trace.TableBytes
-import Itasca.Wasm2.Visitor.Body
+import Itasca.Wasm2.Visitor.ReachedTableLoop
 
 /-!
 Sections, each formerly its own module: Step, Correspondence, Acceptance.

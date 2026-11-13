@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Trace.BytesReferences
-import Itasca.Wasm2.Visitor.Transfer
+import Itasca.Wasm2.Visitor.ReachedTableLoop
 import Itasca.Wasm2.Control.EnterStep
 import Itasca.Wasm2.Control.Return
 
