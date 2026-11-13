@@ -38,7 +38,7 @@ interpretation and chooses the next one, agreeing on previously issued keys. `Ho
 | `HostWorldSound` | Each call that returns preserves the invariant, extends the decoded source store and leaves it typed (`Store_ok`). |
 | frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/StackPreservation.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
 | extern retention | A call never shrinks `store.externs`. |
-| issued results, [`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) | Every value a call returns is issued by the post-call store. |
+| issued results, [`Store.IssuedValue`](Store/Invariant/HostSignature.lean) | Every value a call returns is issued by the post-call store. |
 | limit retention | A call keeps `store.limits`. `no_spurious_errors` only. |
 | `NoHostStackOverflow` | No call reports stack exhaustion. `no_spurious_errors` only. |
 
@@ -65,9 +65,9 @@ extension.
 
 The invariant `ExecutableInv` (in `Integration/Api/`) is established by instantiation and preserved
 by every result; it is a certificate, not an embedder obligation.
-Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Store/Linking/LinkEffects.lean),
-[`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) and
-[`Store.ValueInStore`](Store/Invariant/ValueShape.lean).
+Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Store/Linking/LinkedOwners.lean),
+[`Store.IssuedValue`](Store/Invariant/HostSignature.lean) and
+[`Store.ValueInStore`](Store/Invariant/Typing.lean).
 -/
 
 namespace Itasca.Runtime.Integration

@@ -343,7 +343,7 @@ definitions are part of the trusted specification.
 
 The Host section of `SpecExt.Builtins` adds atomic host-call steps with explicit typed inputs/results,
 store extension, post-call `Store_ok`, and well-formedness premises. The checked
-[decoded-store bridge](Itasca/Runtime/Store/Invariant/SourceStoreTyping.lean) now derives
+[decoded-store bridge](Itasca/Runtime/Store/Invariant/OwnedInitializerErrors.lean) now derives
 source store typing from the public API certificate, including host functions,
 without adding `Store_ok` as a certificate field. It retains source-name
 uniqueness from validation alongside export bounds. Fixed and evolving-world

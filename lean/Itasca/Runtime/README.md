@@ -141,7 +141,7 @@ it does not assume store typing or execution correctness as another field.
 | Export membership and unique source names | `ExportBounds` retains descriptor bounds and decoded-name uniqueness, constructed from validator `ModuleEnv.Valid`. Completed instance maps resolve each export into its own module namespace. |
 | Host functions | The repaired generated host `Funcinst_ok` rule types signatures without Wasm bodies; the decoder's empty module environment is well formed. |
 
-[Invariant/SourceStoreTyping](Store/Invariant/SourceStoreTyping.lean) assembles
+[Invariant/SourceStoreTyping](Store/Invariant/OwnedInitializerErrors.lean) assembles
 these facts. Existing API preservation theorems retain their certificates on
 success and error, including committed effects and evolving code interpretations.
 Intermediate preparation states need typing only where that invariant is
@@ -301,12 +301,12 @@ floating-point premises.
    `StartResolved` identifies the returned function; `InitializedSource` stops
    at its source call, before execution.
 3. [Precommit](Store/Instantiation/Precommit.lean) combines staging-error origins
-   and resource causes. [PreparedSourceInstantiation](Store/Instantiation/PreparedSourceInstantiation.lean)
+   and resource causes. [NoStart](Store/Instantiation/NoStart.lean)
    constructs source allocation and instantiation;
-   [SegmentInitializeSource](Store/Initialization/SegmentInitializeSource.lean)
+   [InitializerResourceCauses](Store/Initialization/InitializerResourceCauses.lean)
    supplies initialization steps and traps.
-4. [InstantiationCode](Store/Invariant/InstantiationCode.lean) records staged
-   type/function tables; [FunctionTables](Store/Invariant/FunctionTables.lean)
+4. [PrecommitError](Store/Invariant/PrecommitError.lean) records staged
+   type/function tables; [CodeAgreement](Store/Invariant/CodeAgreement.lean)
    defines `installCode` at the new instance key. [Rollback](Store/Invariant/Rollback.lean)
    preserves the old store before publication. Their common decoding contract
    is [Representation/StoreCapacity](Representation/StoreCapacity.lean).
