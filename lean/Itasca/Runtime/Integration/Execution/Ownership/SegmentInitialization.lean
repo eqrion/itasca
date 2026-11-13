@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.SourceSyntax
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Module.Soundness
 import Itasca.Profile.BinaryUnique

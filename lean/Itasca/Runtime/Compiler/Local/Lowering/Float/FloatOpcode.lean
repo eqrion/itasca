@@ -1,5 +1,6 @@
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.Equations
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

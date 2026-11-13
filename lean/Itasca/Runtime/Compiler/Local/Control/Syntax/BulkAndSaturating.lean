@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatSaturatingSupport

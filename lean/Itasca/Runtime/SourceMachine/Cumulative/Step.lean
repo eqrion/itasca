@@ -8,7 +8,7 @@ import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 

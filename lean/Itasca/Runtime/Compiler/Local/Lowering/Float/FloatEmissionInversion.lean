@@ -1,5 +1,6 @@
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

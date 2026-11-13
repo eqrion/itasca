@@ -1,5 +1,6 @@
 import Itasca.Runtime.Representation.Encoding
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
+
 namespace Itasca.Runtime.Compiler
 open SpecExt.Builtins SpecExt.Builtins.Float
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Simd.Source
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.SourceMachine.Memory.Descriptor
 import Itasca.Runtime.SourceMachine.Numeric.Semantics

@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.State.GlobalCoreEmission
 import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Float.Descriptor
+import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
