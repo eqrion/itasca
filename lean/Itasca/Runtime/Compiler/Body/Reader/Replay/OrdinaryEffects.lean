@@ -60,7 +60,6 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
-import Itasca.Runtime.Compiler.Local.Lowering.Table.LiteralTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Effects.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
