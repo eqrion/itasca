@@ -341,7 +341,7 @@ NaN sets retain permitted nondeterminism. The patch includes signature-compatibi
 checks, which do not prove agreement with the Wasm prose. The handwritten
 definitions are part of the trusted specification.
 
-`SpecExt.Host` adds atomic host-call steps with explicit typed inputs/results,
+The Host section of `SpecExt.Builtins` adds atomic host-call steps with explicit typed inputs/results,
 store extension, post-call `Store_ok`, and well-formedness premises. The checked
 [decoded-store bridge](Itasca/Runtime/Store/Invariant/SourceStoreTyping.lean) now derives
 source store typing from the public API certificate, including host functions,

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float
-import SpecExt.Builtins.Float.TruncRange
+import SpecExt.Builtins.Float.PromotionFirst
 
 /-!
 Floating-point truncation boundary and result classification. Overflow facts justify checked magnitudes, negative encodings and the final truncation outcome.

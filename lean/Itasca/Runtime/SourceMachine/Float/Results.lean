@@ -5,7 +5,7 @@ import Itasca.Runtime.Spec.FloatSigns
 import Itasca.Runtime.Spec.FloatMinMax
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.FloatComparison
-import SpecExt.Builtins.Float.Canonical
+import SpecExt.Builtins.Float.Sign
 import Itasca.Runtime.Spec.FloatReinterpret
 
 /-!

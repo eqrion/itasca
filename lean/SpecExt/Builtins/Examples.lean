@@ -2,7 +2,7 @@ import «wasm2.0»
 import Mathlib.Tactic
 import Mathlib.Data.List.Rotate
 import Mathlib.Data.Nat.Log
-import SpecExt.Builtins.Float.Decoding
+import SpecExt.Builtins.Float.Sign
 import Mathlib.Data.Nat.Basic
 
 /-!

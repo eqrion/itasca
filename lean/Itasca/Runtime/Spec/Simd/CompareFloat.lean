@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import SpecExt.Builtins.Float.RawCompare
+import SpecExt.Builtins.Float.MinMax
 
 /-!
 Floating-point SIMD comparison and its lane-mask source step. This preserves the generated floating-point comparison relation used by interpreter correspondence.

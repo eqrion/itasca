@@ -1,5 +1,5 @@
 import Itasca.Runtime.Representation.Layout
-import SpecExt.Builtins.Float.Decoding
+import SpecExt.Builtins.Float.Sign
 
 /-! Mathematical slot encoding used by the compiler/interpreter relation.
 Slot words are naturals here; the concrete relation separately bounds them by

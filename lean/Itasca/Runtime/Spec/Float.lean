@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Wf
-import SpecExt.Builtins.Float.Wf
+import SpecExt.Builtins.Float.Sign
 
 /-! The concrete arithmetic result lists satisfy the generated numeric rules.
 Membership in these lists is the nondeterministic choice consumed by Step. -/

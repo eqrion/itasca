@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float
-import SpecExt.Builtins.Float.Promotion
+import SpecExt.Builtins.Float.PromotionFirst
 import Itasca.Runtime.Interp.Numeric.Float.FloatCompareBits
 
 /-!

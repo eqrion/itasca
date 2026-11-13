@@ -1,7 +1,7 @@
 import Itasca.Runtime.Spec.Wf
 import SpecExt.Builtins.Examples
-import SpecExt.Builtins.Float.Decoding
-import SpecExt.Builtins.Float.Storage
+import SpecExt.Builtins.Float.Sign
+import SpecExt.Builtins.Float.MinMax
 import Mathlib.Tactic
 
 namespace Itasca.Runtime.Spec

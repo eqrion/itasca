@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatCompareBits
-import SpecExt.Builtins.Float.RawCompare
+import SpecExt.Builtins.Float.MinMax
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins.Float

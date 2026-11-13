@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.CompareFloat
-import SpecExt.Builtins.Float.Wf
+import SpecExt.Builtins.Float.Sign
 import Itasca.Runtime.Spec.Simd.Choices
 
 /-!

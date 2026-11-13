@@ -1,6 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatTruncTail
 import Itasca.Runtime.Interp.Numeric.Float.FloatCompareBits
-import SpecExt.Builtins.Float.TruncBounds
+import SpecExt.Builtins.Float.PromotionFirst
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float
 

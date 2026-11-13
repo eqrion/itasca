@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.State
-import SpecExt.Builtins.Float.Decoding
+import SpecExt.Builtins.Float.Sign
 
 /-!
 Scalar floating-point source instructions and their decoding. This cheap descriptor layer specifies types, opcodes and source syntax independently of transition correctness.

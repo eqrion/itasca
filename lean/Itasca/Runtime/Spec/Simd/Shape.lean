@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.Simd.Bitwise
 import Itasca.Runtime.Spec.Float
-import SpecExt.Builtins.Float.Decoding
+import SpecExt.Builtins.Float.Sign
 
 /-!
 Source lane shapes and scalar input types.

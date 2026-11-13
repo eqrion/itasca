@@ -1,5 +1,5 @@
 import Itasca.Generated.Types
-import SpecExt.Builtins.Float.Canonical
+import SpecExt.Builtins.Float.Sign
 
 /-! Exact embedding contract for the extracted float dictionary. Every method
 returns normally. Finite/infinite results must belong to the specification set;
