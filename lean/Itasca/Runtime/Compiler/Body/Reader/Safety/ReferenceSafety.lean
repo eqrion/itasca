@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
-import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
+import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSafety
 import Itasca.Wasm2.Bulk.Total
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSafety

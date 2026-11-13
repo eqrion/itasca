@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedScratch
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedCodeMonotone
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
-import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
+import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance
 import Itasca.Wasm2.Simd.DispatchTotal
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
