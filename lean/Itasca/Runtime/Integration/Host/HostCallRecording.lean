@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Host.HostRecording
+import Itasca.Runtime.Interp.Host.HostReturnFrames
 import Itasca.Runtime.Integration.Host.HostCallSource
 
 namespace Itasca.Runtime.Integration

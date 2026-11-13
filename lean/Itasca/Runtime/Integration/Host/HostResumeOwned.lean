@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
-import Itasca.Runtime.Interp.Host.HostResume
+import Itasca.Runtime.Interp.Host.HostReturnFrames
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp

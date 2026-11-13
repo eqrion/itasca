@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Host.HostRecording
+import Itasca.Runtime.Interp.Host.HostReturnFrames
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt

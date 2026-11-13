@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
-import Itasca.Runtime.Interp.Host.HostPreparationCauses
+import Itasca.Runtime.Interp.Host.HostReturnFrames
 import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Integration.Host.HostCallContext
 

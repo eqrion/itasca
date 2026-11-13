@@ -1,8 +1,7 @@
 import Itasca.Runtime.Interp.Control.StructuredLinear
-import Itasca.Runtime.Interp.Host.HostPreparationCauses
+import Itasca.Runtime.Interp.Host.HostReturnFrames
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Interp.Host.HostResume
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Generated.Types
 import Itasca.Runtime.Spec.Integer
