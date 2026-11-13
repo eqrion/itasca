@@ -32,8 +32,7 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable

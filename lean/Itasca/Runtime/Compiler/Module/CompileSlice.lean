@@ -49,8 +49,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
@@ -61,7 +60,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackEnter
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
@@ -71,15 +69,12 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackDead
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackIf
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2

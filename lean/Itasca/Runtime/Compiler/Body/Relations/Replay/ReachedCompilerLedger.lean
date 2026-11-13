@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryLedger
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlLedger
 

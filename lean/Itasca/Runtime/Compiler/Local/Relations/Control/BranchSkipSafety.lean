@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 
 /-!
 Safety of skipped forward and loop branches, combining the distinct branch encodings under one callback safety argument.

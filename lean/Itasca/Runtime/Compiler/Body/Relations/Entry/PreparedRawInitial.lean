@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedCompilerStart
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
 /-!

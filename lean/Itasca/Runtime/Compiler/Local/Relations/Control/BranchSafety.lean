@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000

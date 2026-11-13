@@ -16,7 +16,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
 import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFronts
 import Itasca.Runtime.Compiler.Body.Reader.Replay.PostDeclared
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackIndirect
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
@@ -24,7 +24,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackEnter
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
@@ -33,17 +32,12 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackDead
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackIf
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
@@ -76,6 +70,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

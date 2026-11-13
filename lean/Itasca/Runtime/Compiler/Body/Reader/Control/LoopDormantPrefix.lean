@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackDead
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor

@@ -4,7 +4,6 @@ import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

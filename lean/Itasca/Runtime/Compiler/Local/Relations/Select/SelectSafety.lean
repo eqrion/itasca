@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
 
 /-! SELECT normal return from raw observed offsets. Polymorphic stacks and

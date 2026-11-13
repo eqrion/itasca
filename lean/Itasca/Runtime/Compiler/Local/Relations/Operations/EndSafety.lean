@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseGuardedScope
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservation
 
 /-!

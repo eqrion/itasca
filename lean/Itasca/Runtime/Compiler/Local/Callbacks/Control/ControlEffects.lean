@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Effects.OrdinaryEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCapacity
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.FixupCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.FixupElsePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables

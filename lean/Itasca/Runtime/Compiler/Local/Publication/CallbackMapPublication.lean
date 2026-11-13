@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Publication.BranchMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 

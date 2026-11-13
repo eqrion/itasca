@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixTerminal
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
