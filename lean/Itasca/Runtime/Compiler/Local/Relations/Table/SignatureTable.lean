@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Relations.Function.Signatures
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
+
 /-! The actual scheduler loop constructs a source-aligned signature table
 from every module type, retaining exact value and word arities. -/
 namespace Itasca.Runtime.Compiler

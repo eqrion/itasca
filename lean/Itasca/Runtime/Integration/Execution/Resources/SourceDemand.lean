@@ -46,7 +46,7 @@ import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Calls.IndirectResolve
-import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Machine.Emission.Unreachable
 import Itasca.Runtime.Interp.Control.LabelCompletion
@@ -56,7 +56,6 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.CodeAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
 
 /-!

@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Module.CompileAssembly
-import Itasca.Runtime.Compiler.Local.Relations.Function.Environment
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Compiler.Module.CompilerDrain
 import Itasca.Stream.DriverRun
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

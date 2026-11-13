@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
 namespace Itasca.Runtime.Compiler

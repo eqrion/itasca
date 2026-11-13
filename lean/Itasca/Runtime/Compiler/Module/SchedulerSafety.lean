@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Function.Environment
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Compiler.Module.EnvironmentFrame
 import Itasca.Runtime.Compiler.Module.SchedulerSubmission
 

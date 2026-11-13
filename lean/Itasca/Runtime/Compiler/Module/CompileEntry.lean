@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 
 /-!
 Compilation-entry bounds and its retained certificate, used by the module scheduler construction.

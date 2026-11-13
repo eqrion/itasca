@@ -3,8 +3,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 
 /-!
 The compiler instruction-prefix certificate, its monotone checks and append operations. PendingInstructionSite and CompilerInstructionPrefix connect low-level open checks to the compiler start invariant.

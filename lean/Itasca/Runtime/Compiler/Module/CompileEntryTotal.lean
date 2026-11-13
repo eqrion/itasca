@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.FinishTotal
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Module.SchedulerSafety
 import Itasca.Stream.BatchBounds
 

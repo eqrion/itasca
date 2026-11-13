@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Source.JumpTableBounds
 
 namespace Itasca.Runtime.Compiler

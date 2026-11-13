@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 import Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 

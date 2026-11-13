@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

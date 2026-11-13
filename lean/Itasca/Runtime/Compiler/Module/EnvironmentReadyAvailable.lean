@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
-import Itasca.Runtime.Compiler.Local.Relations.Function.Signatures
+import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 
 /-!
 Successful compiler environment capture, from signature and function slots through the completed function vector. EnvironmentDemand bounds the requests needed to reach the ready compiler environment.

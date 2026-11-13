@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 
 /-!

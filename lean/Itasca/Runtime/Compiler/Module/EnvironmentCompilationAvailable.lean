@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.EnvironmentReadyAvailable
 import Itasca.Runtime.Compiler.Module.CompilerQueueAvailable
-import Itasca.Runtime.Compiler.Local.Relations.Function.Environment
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Compiler.Module.EnvironmentFrame
 
 namespace Itasca.Runtime.Compiler
