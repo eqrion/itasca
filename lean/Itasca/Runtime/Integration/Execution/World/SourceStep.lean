@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.World.RecordedStep
+import Itasca.Runtime.Integration.Execution.World.Reinterpretation
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Interp.Relations.StepActive
 

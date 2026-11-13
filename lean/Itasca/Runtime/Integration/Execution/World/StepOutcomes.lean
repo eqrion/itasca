@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.World.NonhostStep
 import Itasca.Runtime.Integration.Host.HostSiteWorld
-import Itasca.Runtime.Integration.Execution.World.ExecutionCode
+import Itasca.Runtime.Integration.Execution.World.State
 import Itasca.Generated.Types
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Contracts

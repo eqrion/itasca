@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
-import Itasca.Runtime.Integration.Execution.World.RecordedStep
 import Itasca.Runtime.Integration.Execution.World.Reinterpretation
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 open Itasca.Runtime.Interp.Machine

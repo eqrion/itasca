@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
-import Itasca.Runtime.Integration.Execution.World.ExecutionCode
+import Itasca.Runtime.Integration.Execution.World.State
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 open Itasca.Runtime.Interp.Machine

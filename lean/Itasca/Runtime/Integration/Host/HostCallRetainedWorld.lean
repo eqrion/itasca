@@ -1,6 +1,6 @@
 import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Host.HostCallSource
-import Itasca.Runtime.Integration.Execution.World.ExecutionCode
+import Itasca.Runtime.Integration.Execution.World.State
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Host.HostResumeOwned
 

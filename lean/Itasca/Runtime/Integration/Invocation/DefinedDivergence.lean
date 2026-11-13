@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.World.StepOutcomes
-import Itasca.Runtime.Integration.Execution.World.Infinite
+import Itasca.Runtime.Integration.Execution.World.NonhostStep
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Interp.Invocation.Recording
 
