@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Lanes.ShuffleBytes
 import Itasca.Runtime.Spec.Simd.Swizzle
-import SpecExt.Builtins.LaneMap
+import SpecExt.Builtins.Examples
 
 /-!
 Byte swizzle: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.

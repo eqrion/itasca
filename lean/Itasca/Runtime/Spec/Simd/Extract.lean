@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Replace
-import SpecExt.Builtins.LaneLaws
+import SpecExt.Builtins.Examples
 
 /-!
 Scalar output types and signedness for lane extraction.

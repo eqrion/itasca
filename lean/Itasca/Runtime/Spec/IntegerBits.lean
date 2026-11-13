@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.IntegerDiv
-import SpecExt.Builtins.Bitwise
+import SpecExt.Builtins.Examples
 
 namespace Itasca.Runtime.Spec
 open SpecExt.Builtins

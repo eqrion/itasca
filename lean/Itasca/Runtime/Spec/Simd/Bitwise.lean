@@ -1,4 +1,4 @@
-import SpecExt.Builtins.BitwiseVector
+import SpecExt.Builtins.Examples
 import Itasca.Runtime.Spec.IntegerBits
 
 /-!

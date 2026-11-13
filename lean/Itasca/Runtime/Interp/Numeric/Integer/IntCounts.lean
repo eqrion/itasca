@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntRotate
-import SpecExt.Builtins.Counts
+import SpecExt.Builtins.Examples
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

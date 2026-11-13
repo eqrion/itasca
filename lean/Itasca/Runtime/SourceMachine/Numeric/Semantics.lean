@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.State
-import SpecExt.Builtins.Counts
+import SpecExt.Builtins.Examples
 
 namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt.Builtins

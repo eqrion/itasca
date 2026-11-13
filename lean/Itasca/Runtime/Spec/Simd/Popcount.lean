@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Shift
-import SpecExt.Builtins.Counts
+import SpecExt.Builtins.Examples
 
 /-!
 Lane-word and source interpretations of population count.

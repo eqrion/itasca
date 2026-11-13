@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Simd.Integer.UnaryWords
 import Itasca.Runtime.Interp.Simd.Integer.UnaryBits
 import Itasca.Runtime.Spec.Simd.Unary
-import SpecExt.Builtins.LaneMap
+import SpecExt.Builtins.Examples
 
 /-!
 Packed and source correspondence for signed unary lane actions.

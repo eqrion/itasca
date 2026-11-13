@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.Simd.Shape
 import Itasca.Runtime.Spec.IntegerShift
-import SpecExt.Builtins.LaneMap
+import SpecExt.Builtins.Examples
 
 /-!
 Source-rule algebra for lane shifts. Lane/list calculations establish the generated source operation and its reduction step, consumed by source-machine and interpreter correspondence proofs.

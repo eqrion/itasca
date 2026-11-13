@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.Bytes
-import SpecExt.Builtins.EncodingLemmas
+import SpecExt.Builtins.Examples
 
 /-!
 Byte decoding and source values of vector loads.

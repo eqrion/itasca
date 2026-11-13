@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Memory.MemoryScalar
-import SpecExt.Builtins.EncodingLemmas
+import SpecExt.Builtins.Examples
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

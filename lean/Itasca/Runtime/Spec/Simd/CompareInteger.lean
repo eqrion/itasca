@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.IntegerSigned
 import Itasca.Runtime.Spec.Simd.Shape
-import SpecExt.Builtins.LaneMap
+import SpecExt.Builtins.Examples
 import Itasca.Runtime.Spec.IntegerExtend
 
 /-!

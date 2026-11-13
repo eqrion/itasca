@@ -1,7 +1,6 @@
 import «wasm2.0»
 import Batteries.Data.List.Basic
-import SpecExt.Builtins.Lanes
-import SpecExt.Builtins.Misc
+import SpecExt.Builtins.Examples
 
 /-!
 Sections, each formerly its own module: Host, Builtins.

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Wf
-import SpecExt.Builtins.EncodingLemmas
+import SpecExt.Builtins.Examples
 import SpecExt.Builtins.Float.Decoding
 import SpecExt.Builtins.Float.Storage
 import Mathlib.Tactic

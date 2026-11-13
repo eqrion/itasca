@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.Splat
-import SpecExt.Builtins.LaneView
+import SpecExt.Builtins.Examples
 
 /-!
 Relating packed lane bits to source vectors.

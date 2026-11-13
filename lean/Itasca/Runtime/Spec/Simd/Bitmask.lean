@@ -1,4 +1,4 @@
-import SpecExt.Builtins.Rotations
+import SpecExt.Builtins.Examples
 import Itasca.Runtime.Spec.Simd.Shift
 import Itasca.Runtime.Spec.IntegerSigned
 

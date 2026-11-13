@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Integer.Int
-import SpecExt.Builtins.Lanes
+import SpecExt.Builtins.Examples
 
 /-!
 Runtime lane masks, extraction and insertion.

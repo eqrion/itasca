@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Float.Encoding
-import SpecExt.Builtins.EncodingLemmas
+import SpecExt.Builtins.Examples
 
 /-! Bit-list and little-endian byte-list float roundtrips, including both zeros,
 infinities, and all well-formed NaN payloads. -/
