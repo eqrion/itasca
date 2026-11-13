@@ -1,7 +1,7 @@
 import Itasca.Stream.DriverRun
 import Itasca.Stream.SubmissionSound
 import Itasca.Module.Code.FuncTyping
-import Itasca.Module.Soundness
+import Itasca.Module.Layout
 
 /-!
 # Streaming driver soundness

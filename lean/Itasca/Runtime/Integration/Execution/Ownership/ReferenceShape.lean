@@ -11,7 +11,7 @@ import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Signature
-import Itasca.Module.Soundness
+import Itasca.Module.Layout
 import Itasca.Profile.BinaryUnique
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.PrecommitError

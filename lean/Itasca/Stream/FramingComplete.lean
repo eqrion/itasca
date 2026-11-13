@@ -1,5 +1,5 @@
 import Itasca.Stream.FramingSound
-import Itasca.Module.Limits
+import Itasca.Module.Layout
 
 /-!
 # Batch framing completeness
