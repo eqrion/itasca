@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Simd.Execution.ShuffleValuesExecute
 import Itasca.Runtime.Interp.Machine.Simd.Prepare
 import Itasca.Runtime.Interp.Machine.Simd.ExecutionJoin
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
-import Itasca.Runtime.Interp.Simd.Memory.ValuesTransition
+import Itasca.Runtime.Interp.Simd.Memory.ExecuteError
 import Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound
 
 /-!
