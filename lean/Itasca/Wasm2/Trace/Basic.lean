@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm2.EncodingUnique
-import Itasca.Visitor.TraceBytes
+import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.RunTrace
 
 /-!

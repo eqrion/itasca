@@ -2,8 +2,8 @@ import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Wasm2.Scalar.BasicReader
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
-import Itasca.Visitor.EventDispatch
-import Itasca.Visitor.Erasure
+import Itasca.Visitor.BodyReplay
+import Itasca.Visitor.Events
 import Itasca.Wasm2.Scalar.Step
 
 /-!

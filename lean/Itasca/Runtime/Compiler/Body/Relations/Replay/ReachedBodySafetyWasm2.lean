@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
 import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
-import Itasca.Visitor.InvariantBodyLoop
-import Itasca.Visitor.ReaderAcceptedProgress
+import Itasca.Visitor.BodyReplay
 import Itasca.Wasm2.Trace.Body
 
 /-!

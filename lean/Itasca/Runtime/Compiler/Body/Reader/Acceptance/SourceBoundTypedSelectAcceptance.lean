@@ -3,7 +3,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Memory.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
-import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger

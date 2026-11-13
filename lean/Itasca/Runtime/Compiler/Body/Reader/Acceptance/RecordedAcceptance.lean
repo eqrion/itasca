@@ -1,6 +1,5 @@
-import Itasca.Visitor.ReaderAcceptance
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
-import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
@@ -9,7 +8,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Visitor.Events
-import Itasca.Visitor.Recording
+import Itasca.Visitor.RunTrace
 
 /-!
 Sections, each formerly its own module: LiteralAcceptance, ReachedSimpleAcceptance, ScalarAcceptance, StatefulCallbackAcceptance, RecordedAcceptance.

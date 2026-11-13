@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Trace.Bytes
 import Itasca.Wasm2.Scalar.Step
 import Itasca.Wasm2.NumericExt.Dispatch
-import Itasca.Visitor.EventDispatch
+import Itasca.Visitor.BodyReplay
 
 /-!
 # Byte provenance for scalar callbacks

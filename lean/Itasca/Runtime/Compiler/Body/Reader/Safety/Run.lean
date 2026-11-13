@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectSafety
-import Itasca.Visitor.Basic
+import Itasca.Visitor.Total
 
 /-!
 Only a reader's actual successful result needs a returning compiler hook. Parser and callback rejections are included in the normal-return conclusion.

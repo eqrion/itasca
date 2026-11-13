@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Binary.Wasm1.EncodingUnique
 import Itasca.Wasm2.Trace.Acceptance
-import Itasca.Visitor.ReaderAcceptance
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish

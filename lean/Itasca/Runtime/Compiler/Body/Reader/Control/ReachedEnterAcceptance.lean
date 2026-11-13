@@ -1,5 +1,4 @@
-import Itasca.Visitor.ReaderAcceptance
-import Itasca.Visitor.ReachedTableLabels
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
@@ -14,7 +13,6 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDo
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Visitor.BodyReplay
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchesCompilation

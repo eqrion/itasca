@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Bulk.Visitor
-import Itasca.Visitor.Refinement
-import Itasca.Visitor.StepRefinement
+import Itasca.Visitor.EventTables
+import Itasca.Visitor.BodyReplay
 
 /-!
 # Exact visitor refinement for Wasm 2.0 dispatch

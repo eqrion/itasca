@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
-import Itasca.Visitor.EventDispatch
-import Itasca.Visitor.Erasure
+import Itasca.Visitor.BodyReplay
+import Itasca.Visitor.Events
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalSafety

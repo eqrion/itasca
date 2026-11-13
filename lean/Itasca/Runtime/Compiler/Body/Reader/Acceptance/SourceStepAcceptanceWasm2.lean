@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Control.SourceBoundControlAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEnterAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix
-import Itasca.Visitor.ReaderAcceptedProgress
+import Itasca.Visitor.BodyReplay
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

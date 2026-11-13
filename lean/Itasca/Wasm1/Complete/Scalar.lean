@@ -1,7 +1,7 @@
 import Itasca.Wasm1.Complete.Frame
 import Itasca.Handler.RawControl
-import Itasca.Visitor.StepErasure
-import Itasca.Visitor.Basic
+import Itasca.Visitor.RunTrace
+import Itasca.Visitor.Total
 
 /-!
 # Wasm 1.0 scalar instruction completeness

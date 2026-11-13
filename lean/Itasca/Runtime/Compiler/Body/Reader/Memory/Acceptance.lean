@@ -1,7 +1,6 @@
-import Itasca.Visitor.ReaderAcceptance
+import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
-import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 
 /-!

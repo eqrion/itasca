@@ -3,8 +3,8 @@ import Itasca.Wasm2.Visitor.BrTable
 import Itasca.Binary.Leb128
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Binary.Wasm1.EncodingUnique
-import Itasca.Visitor.TraceBytes
-import Itasca.Visitor.Recording
+import Itasca.Visitor.BodyReplay
+import Itasca.Visitor.RunTrace
 import Itasca.Handler.RawControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Wasm2.Control.BrTableSound

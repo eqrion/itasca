@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Simd.ReadersTotal
-import Itasca.Visitor.Basic
+import Itasca.Visitor.Total
 import Itasca.Wasm2.Simd.Tables
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Wasm2.FixedOperands
-import Itasca.Visitor.Basic
+import Itasca.Visitor.Total
 
 /-!
 # Fixed operand effects that carry an immediate

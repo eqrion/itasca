@@ -3,7 +3,7 @@ import Itasca.Handler.RawControl
 import Itasca.Support.Result
 import Itasca.Handler.EnvDispatch
 import Itasca.Binary.Wasm1.DeclaredReferences
-import Itasca.Visitor.StepErasure
+import Itasca.Visitor.RunTrace
 
 /-!
 # Wasm 1.0 environment instruction completeness

@@ -1,4 +1,4 @@
-import Itasca.Visitor.ReaderAcceptance
+import Itasca.Visitor.BodyReplay
 import Itasca.Wasm2.Trace.ControlRefinement
 
 /-!

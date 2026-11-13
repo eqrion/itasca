@@ -6,7 +6,6 @@ import Itasca.Handler.EnvReaders
 import Itasca.Binary.SignedLeb32
 import Itasca.Spec.TypingInversion
 import Itasca.Binary.SignedLeb64
-import Itasca.Visitor.Basic
 
 /-!
 Sections, each formerly its own module: NumericDispatch, EnvCalls, SignedConst, ScalarConst, Select.

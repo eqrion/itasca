@@ -1,4 +1,4 @@
-import Itasca.Visitor.Recording
+import Itasca.Visitor.RunTrace
 import Itasca.Runtime.Platform.Laws
 import Itasca.Wasm2.Trace.ControlRefinement
 import Itasca.Profile.BinaryUnique

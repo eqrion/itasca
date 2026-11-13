@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Handler.Select
-import Itasca.Visitor.Dispatch
+import Itasca.Visitor.Events
 
 /-!
 # Scalar totality

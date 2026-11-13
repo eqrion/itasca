@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Visitor.BrTable
 import Itasca.Wasm2.Step.Visitor
-import Itasca.Visitor.StepLift
+import Itasca.Visitor.RunTrace
 
 /-!
 # Visitor transfer for one Wasm 2.0 step

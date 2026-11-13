@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Simd.DispatchTotal
-import Itasca.Visitor.StepLift
+import Itasca.Visitor.RunTrace
 
 /-!
 # Visitor transfer for SIMD instructions

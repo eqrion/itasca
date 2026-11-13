@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CallbackProfile
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
-import Itasca.Visitor.ReaderAcceptedProgress
+import Itasca.Visitor.BodyReplay
 import Itasca.Wasm2.Trace.TableBytes
 
 /-!
