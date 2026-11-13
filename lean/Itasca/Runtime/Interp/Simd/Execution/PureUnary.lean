@@ -6,7 +6,6 @@ import Itasca.Runtime.Interp.Simd.Integer.Narrow
 import Itasca.Runtime.Interp.Simd.Integer.Dot
 import Itasca.Runtime.Interp.Simd.Float.TruncSat
 import Itasca.Runtime.Interp.Simd.Integer.ConvertInteger
-import Itasca.Runtime.Interp.Simd.Float.Resize
 import Itasca.Runtime.Interp.Simd.Integer.UnarySound
 import Itasca.Runtime.Interp.Simd.Integer.PopcountSound
 import Itasca.Runtime.Interp.Simd.Integer.ShiftSound
