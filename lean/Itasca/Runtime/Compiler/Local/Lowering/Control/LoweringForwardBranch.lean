@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
+
 /-! Actual forward BR emission for every non-loop label kind and arbitrary
 label depth. Covers all transfer widths and both copy-elision cases, retaining
 typed branch holes and exact fixup-list extensions for the closing callback. -/

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

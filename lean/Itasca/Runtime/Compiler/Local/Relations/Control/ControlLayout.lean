@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
+
 /-! Exact word heights for validator control-stack prefixes, including bottom
 stack entries, using the extracted integer-width and accumulation loops. -/
 namespace Itasca.Runtime.Compiler

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 
 /-!

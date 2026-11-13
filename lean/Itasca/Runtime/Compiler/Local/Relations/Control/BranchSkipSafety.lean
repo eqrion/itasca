@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 
 /-!

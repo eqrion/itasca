@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
+
 /-! Exact backward loop-branch emission for arbitrary label depth, including
 zero-arity and identity-copy elision. Loop targets are already resolved and
 construct a source branch certificate without a forward-fixup assumption. -/

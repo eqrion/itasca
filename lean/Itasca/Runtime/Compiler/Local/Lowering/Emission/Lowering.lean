@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 
 /-! Checked source callbacks construct straight-line code certificates. The
 current slice proves both integer constants through the actual extracted
