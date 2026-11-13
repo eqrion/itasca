@@ -1,13 +1,11 @@
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.CallSafety
-import Itasca.Runtime.SourceMachine.Sim.Basic
-import Itasca.Runtime.SourceMachine.Sim.Typing
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Control
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Memory.Decode
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.Sim.Trap
 
 /-!
 Sections, each formerly its own module: Typing, ContentExtension, GlobalContents, GlobalTyping, Simulation, Globals, Select, MemoryStep, Step, Pure, PureMetadata, MemoryTyping, MemoryMutation, Trap.

@@ -1,8 +1,7 @@
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.Sim.Int
+import Itasca.Runtime.SourceMachine.Sim.Control
 import Itasca.Runtime.Spec.SegmentInitCases
 import SpecExt.Builtins.Examples
-import Itasca.Runtime.SourceMachine.Sim.Trap
 import Itasca.Runtime.SourceMachine.CallSafety
 
 /-!

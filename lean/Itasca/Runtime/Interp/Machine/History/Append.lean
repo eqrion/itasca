@@ -18,7 +18,7 @@ import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.Interp.Relations.ConstCodePoint
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
 import Itasca.Runtime.Interp.Relations.ValueLookup

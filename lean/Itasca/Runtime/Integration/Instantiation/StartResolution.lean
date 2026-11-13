@@ -22,7 +22,7 @@ import Itasca.Runtime.Interp.Relations.TypedArguments
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Integration.Instantiation.StartAmbient
-import Itasca.Runtime.SourceMachine.Sim.Call
+import Itasca.Runtime.SourceMachine.Sim.Structured
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt

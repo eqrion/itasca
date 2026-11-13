@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.SourceMachine.Sim.Trace
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Control
+import Itasca.Runtime.SourceMachine.Sim.Structured
 
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec

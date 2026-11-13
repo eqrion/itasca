@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Core.Trap
 
 namespace Itasca.Runtime.SourceMachine.Stateful

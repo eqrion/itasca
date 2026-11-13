@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.CallSafety
-import Itasca.Runtime.SourceMachine.Sim.Trap
+import Itasca.Runtime.SourceMachine.Sim.Control
 
 /-!
 Floating-point source-machine transition from typed operands through preservation, simulation and positivity. Descriptor and result selection remain independently available.

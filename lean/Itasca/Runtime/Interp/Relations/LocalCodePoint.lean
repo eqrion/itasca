@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.Move
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 

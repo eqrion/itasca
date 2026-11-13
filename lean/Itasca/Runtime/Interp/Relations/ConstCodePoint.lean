@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.Execute
 import Itasca.Runtime.Interp.Relations.Regions
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 
 namespace Itasca.Runtime.Interp
 open Aeneas.Std

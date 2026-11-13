@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Execute
 import Itasca.Runtime.Interp.Relations.Regions
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 
 /-!
 Floating-point constant encoding and dispatch slot effects.

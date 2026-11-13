@@ -1,8 +1,6 @@
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.SourceMachine.Sim.Step
-import Itasca.Runtime.SourceMachine.Sim.Terminal
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 
 /-!
 Sections, each formerly its own module: Bound, MemoryAccess, Correct, Extension, Terminal, PositiveControl, MemoryPositive, SelectPositive.

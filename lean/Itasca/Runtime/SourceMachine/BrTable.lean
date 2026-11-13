@@ -1,6 +1,5 @@
-import Itasca.Runtime.SourceMachine.Sim.Step
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Sim.Terminal
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Decode
@@ -8,7 +7,6 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Simd.Exclusion
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Spec.Typing.HostTyping
-import Itasca.Runtime.SourceMachine.Sim.Compose
 
 /-!
 Sections, each formerly its own module: Invoke, Results, ReferenceBounds, LabelHeights, SupportedState, ExecutableExclusion, StoreTyping, BrTable.

@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Supported.CoreStuck
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.SourceMachine.Sim.Call
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.SourceMachine.Decode

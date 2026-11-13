@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Conditional
 import Itasca.Runtime.Interp.Control.BranchNoCopy
-import Itasca.Runtime.SourceMachine.Sim.Compose
+import Itasca.Runtime.SourceMachine.Sim.Host
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Structured
 
 /-!
 Binary instructions in the initial proved abstract slice.

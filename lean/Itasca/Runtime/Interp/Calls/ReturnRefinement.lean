@@ -1,7 +1,6 @@
 import Itasca.Runtime.Interp.Calls.ReturnRegions
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Relations.Fetch
-
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

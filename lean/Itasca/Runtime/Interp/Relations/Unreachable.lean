@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.SourceMachine.Sim.Trap
-import Itasca.Runtime.SourceMachine.Sim.Typing
+import Itasca.Runtime.SourceMachine.Sim.Control
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -9,7 +9,7 @@ import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.MemoryGrowth
 import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Spec.Simd.FloatResize
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 import Itasca.Runtime.SourceMachine.Cumulative.Step
@@ -19,8 +19,7 @@ import Itasca.Runtime.SourceMachine.Decode
 import Itasca.Runtime.Spec.Simd.Pairwise
 import Itasca.Runtime.Spec.Simd.ExtendLanes
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.SourceMachine.Sim.Basic
-import Itasca.Runtime.SourceMachine.Sim.Trap
+import Itasca.Runtime.SourceMachine.Sim.Control
 import Itasca.Runtime.SourceMachine.Stateful.TableRead
 import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
@@ -35,16 +34,11 @@ import Itasca.Runtime.SourceMachine.Stateful.TableGrow
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
-import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
-import Itasca.Runtime.SourceMachine.Sim.Branch
-import Itasca.Runtime.SourceMachine.Sim.Return
-import Itasca.Runtime.SourceMachine.Sim.Structured
-import Itasca.Runtime.SourceMachine.Sim.Local
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
-import Itasca.Runtime.SourceMachine.Sim.Terminal
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors

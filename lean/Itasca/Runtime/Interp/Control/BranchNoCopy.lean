@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.SourceMachine.Sim.Instruction
+import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Control.PendingJump
 
 /-!
