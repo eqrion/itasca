@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Host.HostRecordingSite
-import Itasca.Runtime.Interp.Machine.Frames.FunctionEnd
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 

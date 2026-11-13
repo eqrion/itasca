@@ -86,7 +86,7 @@ import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
-import Itasca.Runtime.Interp.Machine.Frames.Finished
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Relations.ExecutionLoop
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Interp.Relations.EventfulControl

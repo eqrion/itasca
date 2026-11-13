@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Host.HostReturnFrames
-import Itasca.Runtime.Interp.Machine.Frames.FrameStorePrefix
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 
 /-!
 Sections, each formerly its own module: IndirectSelected, CallExecution, HostReturnFrames, HostCallStack.

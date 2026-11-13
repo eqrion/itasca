@@ -10,7 +10,7 @@ import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
 import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
-import Itasca.Runtime.Interp.Machine.Frames.ReturnExecution
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step

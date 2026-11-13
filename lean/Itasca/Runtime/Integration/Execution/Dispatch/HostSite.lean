@@ -9,7 +9,7 @@ import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
 import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
-import Itasca.Runtime.Interp.Machine.Frames.ReturnExecution
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
@@ -109,7 +109,6 @@ import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
 import Itasca.Runtime.Integration.Execution.Dispatch.Simd
 import Itasca.Runtime.Integration.Execution.Dispatch.TypedSelect
-import Itasca.Runtime.Interp.Machine.Frames.EpilogueExecution
 import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
 import Itasca.Runtime.Interp.Machine.Progress.PendingExecution
