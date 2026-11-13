@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Module.WellFormedTotal
 
 namespace Itasca.Runtime.Compiler

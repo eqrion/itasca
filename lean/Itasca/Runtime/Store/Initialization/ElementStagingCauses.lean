@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Initialization.Data
 import Itasca.Runtime.Store.Invariant.PrecommitError
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses

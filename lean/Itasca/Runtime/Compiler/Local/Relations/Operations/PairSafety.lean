@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerProofs
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 /-!
 Normal return of index-pair insertion.

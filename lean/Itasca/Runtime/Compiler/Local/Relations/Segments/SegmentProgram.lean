@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 /-! Syntactic programs emitted for active and declarative segments. The
 certificate records source segment indices and actual embedded descriptor

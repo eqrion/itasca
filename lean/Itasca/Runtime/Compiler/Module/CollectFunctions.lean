@@ -1,6 +1,7 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Support.EnvTranslation
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

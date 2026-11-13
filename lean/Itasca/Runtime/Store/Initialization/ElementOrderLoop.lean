@@ -3,7 +3,7 @@ import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.Store.Initialization.ElementLoop
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Invariant.ErrorPost

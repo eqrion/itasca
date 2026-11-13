@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 
 /-! Exact backward loop-branch emission for arbitrary label depth, including

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerExecutable
 import Itasca.Runtime.Compiler.Module.CompileEntry
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Module.ExecutableCollectedFunctions
 import Itasca.Runtime.Compiler.Module.CompileAssembly
 import Itasca.Runtime.Compiler.Module.CompileSourceCertificate

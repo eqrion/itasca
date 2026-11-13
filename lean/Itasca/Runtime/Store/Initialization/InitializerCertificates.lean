@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Module.Elab.SegmentSyntax
 

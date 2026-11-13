@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappingLoops
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

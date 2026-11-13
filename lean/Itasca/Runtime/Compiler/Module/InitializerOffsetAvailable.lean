@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerAcceptance
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 
 namespace Itasca.Runtime.Compiler

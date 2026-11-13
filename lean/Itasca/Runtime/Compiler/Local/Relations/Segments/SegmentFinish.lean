@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementLoop
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 
 /-!
 Element/data initializer program prefixes, loops and finishing. SegmentProgram.change_module transports the completed segment certificate to its final module context.

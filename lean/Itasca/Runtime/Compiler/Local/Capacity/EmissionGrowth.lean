@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts

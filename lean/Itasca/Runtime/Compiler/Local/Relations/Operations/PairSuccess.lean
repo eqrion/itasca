@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 /-!
 Successful pair allocation retains the whole compiler frame and appends exactly the two supplied source indices at the returned entry.

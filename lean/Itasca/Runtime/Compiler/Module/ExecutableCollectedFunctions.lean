@@ -1,6 +1,7 @@
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions
 import Itasca.Runtime.Compiler.Module.CollectFunctions
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 structure PendingExecutableModuleFunctions (env : Itasca.metadata.Env)

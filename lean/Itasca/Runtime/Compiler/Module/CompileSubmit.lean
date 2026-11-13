@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CompileEntries
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts

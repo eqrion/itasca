@@ -8,7 +8,7 @@ import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Invariant.ErrorPost
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 
 /-!
 Sections, each formerly its own module: AllocatedDataLoop, AllocatedElementLoop, AllocatedGlobalLoop, ObjectAllocationErrors.
