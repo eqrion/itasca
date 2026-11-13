@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Visitor.EventDispatch
 import Itasca.Visitor.Erasure

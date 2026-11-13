@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
 

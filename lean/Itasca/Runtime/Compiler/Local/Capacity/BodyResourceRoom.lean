@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.ScopeDemand
 import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
-import Itasca.Runtime.Compiler.Local.Demand.ObservationDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata
 
 /-!

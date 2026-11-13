@@ -6,7 +6,7 @@ import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
 /-!
 Sign-extension and saturating reader replay from source-only bounds. Numeric postconditions and reached-step availability establish the final indexed replay theorem.

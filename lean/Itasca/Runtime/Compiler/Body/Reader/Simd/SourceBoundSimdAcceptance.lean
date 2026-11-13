@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
 /-!
 Complete SIMD reader replay from source bounds. Scalar, lane, bitwise and memory callback availability compose with the actual recorded source event.

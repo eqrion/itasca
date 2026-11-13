@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
 /-!
 Base and bulk stateful reader replay from independent source bounds. The two dispatch families retain their distinct source and allocation obligations.

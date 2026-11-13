@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
 import Itasca.Visitor.BodyReplay
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 
 /-!
 Typed-select replay from reached source state and independently bounded demand.

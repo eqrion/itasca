@@ -2,7 +2,7 @@ import Itasca.Visitor.ReaderAcceptance
 import Itasca.Visitor.ReachedTableLabels
 import Itasca.Runtime.Compiler.Local.Capacity.BranchLabelAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
-import Itasca.Runtime.Compiler.Local.Demand.RecordedDemand
+import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Wasm2.Trace.TableBytes
 import Itasca.Wasm2.Visitor.AcceptedTable
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableDecodePrefix
