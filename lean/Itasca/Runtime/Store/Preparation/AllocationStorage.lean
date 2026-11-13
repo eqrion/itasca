@@ -26,11 +26,11 @@ cannot manufacture a link, trap, or argument failure. -/
 theorem room_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
     (store : runtime.store.Store M) (out : core.result.Result Unit runtime.ExecError)
     (run : runtime.store.Store.room memory store = .ok out) : ErrorAllowed ResourceError out := by
-  unfold runtime.store.Store.room at run
-  repeat' first
-    | (obtain ⟨value, called, rest⟩ := normal_bind_exists _ _ _ run; clear run; rename' rest => run)
-    | split at run
-    | (simp only [Result.ok.injEq] at run; subst out; trivial)
+  rcases runtime.store.Store.room.result_cases memory store out run with success | exhausted
+  · subst out
+    trivial
+  · subst out
+    trivial
 
 theorem reserve_errors {A T : Type} (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize)

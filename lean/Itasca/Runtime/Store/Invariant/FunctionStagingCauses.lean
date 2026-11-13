@@ -718,12 +718,11 @@ theorem intern_type_resource_causes {M A : Type} (memory : runtime.platform.Memo
     (bound : objectCount store ≤ Usize.max) :
     runtime.store.Store.intern_type memory allocator store ty ⦃ out => ∀ error, out.1 = .Err error →
       out.2 = store ∧ ty ∉ store.types.val ∧ TypeInternResourceCause allocator store ty error ⦄ := by
-  obtain ⟨scanned,run,index,state,indexBound,priorTypes,found⟩ :=
-    WP.spec_imp_exists (intern_scan store ty 0#usize (by scalar_tac) (by simp))
-  rw [state] at run
+  obtain ⟨index,run,indexBound,priorTypes,found⟩ :=
+    WP.spec_imp_exists (runtime.store.Store.find_type.spec memory store ty)
   unfold runtime.store.Store.intern_type
   rw [run]
-  simp [scanState]
+  simp only [bind_ok]
   split
   · simp
   · rename_i notLess

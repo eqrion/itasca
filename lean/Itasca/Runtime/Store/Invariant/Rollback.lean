@@ -207,25 +207,20 @@ section
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
-def scanState {M : Type} (s : runtime.store.Store M) (i : Usize) :=
-  (s.id, s.limits, s.funcs, s.types, s.tables, s.memories, s.globals, s.instances,
-    s.elems, s.datas, s.externs, s.instance_items, s.signature_values,
-    s.memory_bytes, s.table_elements, i)
-
 /-- Signature search returns the first matching retained signature, or its
 exact end index, without changing any store field. -/
-theorem intern_scan {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
+theorem find_type_loop_spec {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (position : Usize) (hpos : position.val ≤ s.types.length)
     (hprefix : ty ∉ s.types.val.take position.val) :
-    runtime.store.Store.intern_type_loop s ty position ⦃ result =>
-      ∃ index : Usize, result = scanState s index ∧ index.val ≤ s.types.length ∧
+    runtime.store.Store.find_type_loop s ty position ⦃ index =>
+      index.val ≤ s.types.length ∧
         ty ∉ s.types.val.take index.val ∧
         (s.types.val[index.val]? = some ty ∨ index.val = s.types.length) ⦄ := by
-  unfold runtime.store.Store.intern_type_loop
+  unfold runtime.store.Store.find_type_loop
   apply loop.spec_decr_nat (fun index => s.types.length - index.val)
     (fun index => index.val ≤ s.types.length ∧ ty ∉ s.types.val.take index.val)
   · intro index ⟨hindex, hprefix⟩
-    unfold runtime.store.Store.intern_type_loop.body
+    unfold runtime.store.Store.find_type_loop.body
     dsimp only
     split
     · rename_i hmore
@@ -241,14 +236,23 @@ theorem intern_scan {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_typ
         simp only [List.mem_append, List.mem_singleton, not_or]
         exact ⟨hprefix, ne_comm.mp hne⟩
       · simp
-        refine ⟨index, rfl, hindex, hprefix, Or.inl ?_⟩
+        refine ⟨hindex, hprefix, Or.inl ?_⟩
         have heq : s.types.val[index.val] = ty := by simpa [hexisting] using hsame
         simp [List.getElem?_eq_getElem hi, heq]
     · rename_i hstop
       have heq : index.val = s.types.length := by scalar_tac
       simp only [WP.spec_ok]
-      exact ⟨index, rfl, hindex, hprefix, Or.inr heq⟩
+      exact ⟨hindex, hprefix, Or.inr heq⟩
   · exact ⟨hpos, hprefix⟩
+
+/-- The read-only lookup returns the first matching signature or the end index. -/
+@[step] theorem _root_.Itasca.runtime.store.Store.find_type.spec {M : Type}
+    (ops : runtime.platform.MemoryBuffer M) (s : runtime.store.Store M)
+    (ty : Itasca.wasm_types.FuncType) :
+    runtime.store.Store.find_type ops s ty ⦃ index =>
+      index.val ≤ s.types.length ∧ ty ∉ s.types.val.take index.val ∧
+        (s.types.val[index.val]? = some ty ∨ index.val = s.types.length) ⦄ := by
+  exact find_type_loop_spec s ty 0#usize (by scalar_tac) (by simp)
 
 def InternEffect {M : Type} (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (result : core.result.Result Usize runtime.ExecError × runtime.store.Store M) : Prop :=
@@ -268,12 +272,11 @@ theorem intern_type_effect {M A : Type} (ops : runtime.platform.MemoryBuffer M)
     (s : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType)
     (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.intern_type ops allocator s ty ⦃ result => InternEffect s ty result ⦄ := by
-  obtain ⟨scanned, hscan, index, hstate, hi, hprefix, hfound⟩ :=
-    WP.spec_imp_exists (intern_scan s ty 0#usize (by scalar_tac) (by simp))
-  rw [hstate] at hscan
+  obtain ⟨index, hscan, hi, hprefix, hfound⟩ :=
+    WP.spec_imp_exists (runtime.store.Store.find_type.spec ops s ty)
   unfold runtime.store.Store.intern_type
   rw [hscan]
-  simp [scanState]
+  simp only [bind_ok]
   split
   · rename_i hless
     simp only [WP.spec_ok]

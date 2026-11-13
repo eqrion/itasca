@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsStore
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Invariant.Typing
@@ -292,18 +293,73 @@ theorem Shape.object_count_bound {M : Type} {view : M → Slice U8}
   unfold objectCount
   omega
 
+@[step] theorem _root_.Itasca.runtime.store.Store.room_for.spec {M : Type}
+    (ops : runtime.platform.MemoryBuffer M) (s : runtime.store.Store M) (count : Usize)
+    (hbound : objectCount s ≤ Usize.max) :
+    runtime.store.Store.room_for ops s count ⦃ answer => answer =
+      if objectCount s < s.limits.max_objects.val ∧
+          objectCount s + count.val ≤ s.limits.max_objects.val
+      then .Ok () else .Err (.Exhausted .Objects) ⦄ := by
+  unfold runtime.store.Store.room_for
+  unfold objectCount at hbound
+  step as ⟨functionsTables, hfunctionsTables⟩
+  step as ⟨withMemories, hwithMemories⟩
+  step as ⟨withGlobals, hwithGlobals⟩
+  step as ⟨withExterns, hwithExterns⟩
+  step as ⟨total, htotal⟩
+  split
+  · rename_i full
+    have noRoom : ¬(objectCount s < s.limits.max_objects.val ∧
+        objectCount s + count.val ≤ s.limits.max_objects.val) := by unfold objectCount; scalar_tac
+    simp only [if_neg noRoom, WP.spec_ok]
+  · rename_i available
+    step as ⟨remaining, hremaining⟩
+    split
+    · rename_i insufficient
+      have noRoom : ¬(objectCount s < s.limits.max_objects.val ∧
+          objectCount s + count.val ≤ s.limits.max_objects.val) := by unfold objectCount; scalar_tac
+      simp only [if_neg noRoom, WP.spec_ok]
+    · rename_i enough
+      have room : objectCount s < s.limits.max_objects.val ∧
+          objectCount s + count.val ≤ s.limits.max_objects.val := by unfold objectCount; constructor <;> scalar_tac
+      simp only [if_pos room, WP.spec_ok]
+
 @[step] theorem room_spec {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (s : runtime.store.Store M) (hbound : objectCount s ≤ Usize.max) :
     runtime.store.Store.room ops s ⦃ answer => answer =
       if objectCount s < s.limits.max_objects.val then .Ok () else .Err (.Exhausted .Objects) ⦄ := by
   unfold runtime.store.Store.room
-  unfold objectCount at hbound ⊢
-  step
-  step
-  step
-  step
-  step
-  split <;> split <;> simp_all <;> scalar_tac
+  have guard : (objectCount s < s.limits.max_objects.val ∧
+      objectCount s + (1#usize).val ≤ s.limits.max_objects.val) ↔
+      objectCount s < s.limits.max_objects.val := by change (_ ∧ _ + 1 ≤ _) ↔ _; omega
+  simpa only [guard] using runtime.store.Store.room_for.spec ops s 1#usize hbound
+
+/-- Every normal result is either success or object exhaustion, even without a sum bound. -/
+theorem _root_.Itasca.runtime.store.Store.room_for.result_cases {M : Type}
+    (ops : runtime.platform.MemoryBuffer M) (s : runtime.store.Store M) (count : Usize)
+    (answer : core.result.Result Unit runtime.ExecError)
+    (run : runtime.store.Store.room_for ops s count = .ok answer) :
+    answer = .Ok () ∨ answer = .Err (.Exhausted .Objects) := by
+  unfold runtime.store.Store.room_for at run
+  obtain ⟨functionsTables, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ run
+  obtain ⟨withMemories, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ next
+  obtain ⟨withGlobals, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ next
+  obtain ⟨withExterns, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ next
+  obtain ⟨total, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ next
+  split at next
+  · exact Or.inr (Result.ok.injEq.mp next).symm
+  · obtain ⟨remaining, _, next⟩ := ResultFacts.bind_ok_inv _ _ _ next
+    split at next
+    · exact Or.inr (Result.ok.injEq.mp next).symm
+    · exact Or.inl (Result.ok.injEq.mp next).symm
+
+/-- The single-object wrapper has the same two normal outcomes. -/
+theorem _root_.Itasca.runtime.store.Store.room.result_cases {M : Type}
+    (ops : runtime.platform.MemoryBuffer M) (s : runtime.store.Store M)
+    (answer : core.result.Result Unit runtime.ExecError)
+    (run : runtime.store.Store.room ops s = .ok answer) :
+    answer = .Ok () ∨ answer = .Err (.Exhausted .Objects) :=
+  runtime.store.Store.room_for.result_cases ops s 1#usize answer run
 
 theorem reserve_wrapper_eq {A T : Type} (allocator : runtime.platform.Alloc A)
     (ha : Platform.AllocCorrect allocator) (values : alloc.vec.Vec T) (extra : Usize) :

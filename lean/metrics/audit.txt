@@ -20,7 +20,7 @@ no handwritten declaration uses sorry or an unproved specification theorem
 # Statement cone totals (declarations, lines)
 handwritten: 1682 declarations, 9486 lines
 spectec: 2616 declarations, 25640 lines
-extracted: 2720 declarations, 62484 lines
+extracted: 2722 declarations, 62349 lines
 
 # Handwritten statement cone (module, declaration, lines)
 Itasca.Binary.Leb128	Itasca.Leb128.payload	4

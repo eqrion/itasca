@@ -196,6 +196,25 @@ fn wrong_store_and_foreign_references_are_rejected() {
 }
 
 #[test]
+fn failed_host_type_allocation_leaves_object_capacity_available() {
+    let mut store: Store = Store::with_limits(StoreLimits {
+        max_objects: 1,
+        ..Default::default()
+    });
+    assert_eq!(
+        store.define_host(
+            FuncType {
+                params: vec![],
+                results: vec![],
+            },
+            0,
+        ),
+        Err(ExecError::Exhausted(ResourceLimit::Objects))
+    );
+    assert!(store.define_extern(1).is_ok());
+}
+
+#[test]
 fn frame_exhaustion_is_distinct_from_interrupt_termination() {
     let mut store = Store::with_limits(StoreLimits {
         max_frames: 3,

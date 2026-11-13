@@ -791,6 +791,8 @@ Facts every step needs (all verified in the code):
 
 ### 3.0 Make `define_host` atomic (Rust, one extraction)
 
+Completed 2026-11-13: [implementation and validation](notes/step30-results.md).
+
 Today `define_host_with` (`src/runtime/store.rs`) interns the type first and
 checks the object limit and reserves afterwards. If one of those later checks
 fails, the store keeps a newly interned type. The user decided to fix this.

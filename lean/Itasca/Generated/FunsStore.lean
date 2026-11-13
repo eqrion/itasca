@@ -299,11 +299,11 @@ def runtime.store.copy_bytes
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       (alloc.vec.Vec Std.U8) (core.convert.FromSame runtime.ExecError) residual
 
-/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::room]:
+/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::room_for]:
     Source: 'src/runtime/store.rs' -/
-def runtime.store.Store.room
+def runtime.store.Store.room_for
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
-  (self : runtime.store.Store M) :
+  (self : runtime.store.Store M) (count : Std.Usize) :
   Result (core.result.Result Unit runtime.ExecError)
   := do
   let i := alloc.vec.Vec.len self.funcs
@@ -321,7 +321,22 @@ def runtime.store.Store.room
   then
     ok (core.result.Result.Err (runtime.ExecError.Exhausted
       runtime.ResourceLimit.Objects))
-  else ok (core.result.Result.Ok ())
+  else
+    let i10 ← self.limits.max_objects - n
+    if count > i10
+    then
+      ok (core.result.Result.Err (runtime.ExecError.Exhausted
+        runtime.ResourceLimit.Objects))
+    else ok (core.result.Result.Ok ())
+
+/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::room]:
+    Source: 'src/runtime/store.rs' -/
+def runtime.store.Store.room
+  {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
+  (self : runtime.store.Store M) :
+  Result (core.result.Result Unit runtime.ExecError)
+  := do
+  runtime.store.Store.room_for platformMemoryBufferInst self 1#usize
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_global_with]:
     Source: 'src/runtime/store.rs' -/
@@ -653,20 +668,13 @@ def runtime.store.same_func_type
         runtime.store.same_func_type_loop0 a.params b.params 0#usize true
       runtime.store.same_func_type_loop1 a.results b.results 0#usize same
 
-/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]: loop body 0:
+/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::find_type]: loop body 0:
     Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
-def runtime.store.Store.intern_type_loop.body
+def runtime.store.Store.find_type_loop.body
   {M : Type} (self : runtime.store.Store M) (ty : wasm_types.FuncType)
   (i : Std.Usize) :
-  Result (ControlFlow Std.Usize (Std.Usize × runtime.store.StoreLimits ×
-    (alloc.vec.Vec runtime.store.FuncInst) × (alloc.vec.Vec
-    wasm_types.FuncType) × (alloc.vec.Vec runtime.store.TableInst) ×
-    (alloc.vec.Vec (runtime.store.MemInst M)) × (alloc.vec.Vec
-    runtime.store.GlobalInst) × (alloc.vec.Vec runtime.store.ModuleInst) ×
-    (alloc.vec.Vec runtime.store.ElemInst) × (alloc.vec.Vec
-    runtime.store.DataInst) × (alloc.vec.Vec Std.U64) × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize))
+  Result (ControlFlow Std.Usize Std.Usize)
   := do
   let i1 := alloc.vec.Vec.len self.types
   if i < i1
@@ -676,37 +684,32 @@ def runtime.store.Store.intern_type_loop.body
         wasm_types.FuncType) self.types i
     let b ← runtime.store.same_func_type ft ty
     if b
-    then
-      ok (done (self.id, self.limits, self.funcs, self.types, self.tables,
-        self.memories, self.globals, self.instances, self.elems, self.datas,
-        self.externs, self.instance_items, self.signature_values,
-        self.memory_bytes, self.table_elements, i))
+    then ok (done i)
     else let i2 ← i + 1#usize
          ok (cont i2)
-  else
-    ok (done (self.id, self.limits, self.funcs, self.types, self.tables,
-      self.memories, self.globals, self.instances, self.elems, self.datas,
-      self.externs, self.instance_items, self.signature_values,
-      self.memory_bytes, self.table_elements, i))
+  else ok (done i)
 
-/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]: loop 0:
+/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::find_type]: loop 0:
     Source: 'src/runtime/store.rs' -/
 @[rust_loop]
-def runtime.store.Store.intern_type_loop
+def runtime.store.Store.find_type_loop
   {M : Type} (self : runtime.store.Store M) (ty : wasm_types.FuncType)
   (i : Std.Usize) :
-  Result (Std.Usize × runtime.store.StoreLimits × (alloc.vec.Vec
-    runtime.store.FuncInst) × (alloc.vec.Vec wasm_types.FuncType) ×
-    (alloc.vec.Vec runtime.store.TableInst) × (alloc.vec.Vec
-    (runtime.store.MemInst M)) × (alloc.vec.Vec runtime.store.GlobalInst) ×
-    (alloc.vec.Vec runtime.store.ModuleInst) × (alloc.vec.Vec
-    runtime.store.ElemInst) × (alloc.vec.Vec runtime.store.DataInst) ×
-    (alloc.vec.Vec Std.U64) × Std.Usize × Std.Usize × Std.Usize × Std.Usize
-    × Std.Usize)
+  Result Std.Usize
   := do
   loop
-    (fun i1 => runtime.store.Store.intern_type_loop.body self ty i1)
+    (fun i1 => runtime.store.Store.find_type_loop.body self ty i1)
     i
+
+/-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::find_type]:
+    Source: 'src/runtime/store.rs' -/
+@[reducible]
+def runtime.store.Store.find_type
+  {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
+  (self : runtime.store.Store M) (ty : wasm_types.FuncType) :
+  Result Std.Usize
+  := do
+  runtime.store.Store.find_type_loop self ty 0#usize
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]:
     Source: 'src/runtime/store.rs' -/
@@ -717,65 +720,30 @@ def runtime.store.Store.intern_type
   Result ((core.result.Result Std.Usize runtime.ExecError) ×
     (runtime.store.Store M))
   := do
-  let (i, sl, v, v1, v2, v3, v4, v5, v6, v7, v8, i1, i2, i3, i4, i5) ←
-    runtime.store.Store.intern_type_loop self ty 0#usize
-  let i6 := alloc.vec.Vec.len v1
-  if i5 < i6
-  then
-    ok (core.result.Result.Ok i5,
-      {
-        id := i,
-        limits := sl,
-        funcs := v,
-        types := v1,
-        tables := v2,
-        memories := v3,
-        globals := v4,
-        instances := v5,
-        elems := v6,
-        datas := v7,
-        externs := v8,
-        instance_items := i1,
-        signature_values := i2,
-        memory_bytes := i3,
-        table_elements := i4
-      })
+  let i ← runtime.store.Store.find_type platformMemoryBufferInst self ty
+  let i1 := alloc.vec.Vec.len self.types
+  if i < i1
+  then ok (core.result.Result.Ok i, self)
   else
-    let i7 := alloc.vec.Vec.len ty.params
-    let i8 := alloc.vec.Vec.len ty.results
-    let o ← lift (Usize.checked_add i7 i8)
+    let i2 := alloc.vec.Vec.len ty.params
+    let i3 := alloc.vec.Vec.len ty.results
+    let o ← lift (Usize.checked_add i2 i3)
     let r ←
       core.option.Option.ok_or o (runtime.ExecError.Exhausted
         runtime.ResourceLimit.Objects)
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      let b ← runtime.store.within i2 val sl.max_signature_values
+      let b ←
+        runtime.store.within self.signature_values val
+          self.limits.max_signature_values
       if b
       then
-        let r1 ←
-          runtime.store.Store.room platformMemoryBufferInst
-            {
-              id := i,
-              limits := sl,
-              funcs := v,
-              types := v1,
-              tables := v2,
-              memories := v3,
-              globals := v4,
-              instances := v5,
-              elems := v6,
-              datas := v7,
-              externs := v8,
-              instance_items := i1,
-              signature_values := i2,
-              memory_bytes := i3,
-              table_elements := i4
-            }
+        let r1 ← runtime.store.Store.room platformMemoryBufferInst self
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue _ =>
-          let (r2, v9) ← runtime.reserve platformAllocInst v1 1#usize
+          let (r2, v) ← runtime.reserve platformAllocInst self.types 1#usize
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -783,134 +751,33 @@ def runtime.store.Store.intern_type
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue val1 =>
-              let v10 ← alloc.vec.Vec.push v9 val1
-              let i9 ← i2 + val
-              ok (core.result.Result.Ok i5,
-                {
-                  id := i,
-                  limits := sl,
-                  funcs := v,
-                  types := v10,
-                  tables := v2,
-                  memories := v3,
-                  globals := v4,
-                  instances := v5,
-                  elems := v6,
-                  datas := v7,
-                  externs := v8,
-                  instance_items := i1,
-                  signature_values := i9,
-                  memory_bytes := i3,
-                  table_elements := i4
-                })
+              let v1 ← alloc.vec.Vec.push v val1
+              let i4 ← self.signature_values + val
+              ok (core.result.Result.Ok i,
+                { self with types := v1, signature_values := i4 })
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r4 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   Std.Usize (core.convert.FromSame runtime.ExecError) residual
-              ok (r4,
-                {
-                  id := i,
-                  limits := sl,
-                  funcs := v,
-                  types := v9,
-                  tables := v2,
-                  memories := v3,
-                  globals := v4,
-                  instances := v5,
-                  elems := v6,
-                  datas := v7,
-                  externs := v8,
-                  instance_items := i1,
-                  signature_values := i2,
-                  memory_bytes := i3,
-                  table_elements := i4
-                })
+              ok (r4, { self with types := v })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 Std.Usize (core.convert.FromSame runtime.ExecError) residual
-            ok (r3,
-              {
-                id := i,
-                limits := sl,
-                funcs := v,
-                types := v9,
-                tables := v2,
-                memories := v3,
-                globals := v4,
-                instances := v5,
-                elems := v6,
-                datas := v7,
-                externs := v8,
-                instance_items := i1,
-                signature_values := i2,
-                memory_bytes := i3,
-                table_elements := i4
-              })
+            ok (r3, { self with types := v })
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
               Std.Usize (core.convert.FromSame runtime.ExecError) residual
-          ok (r2,
-            {
-              id := i,
-              limits := sl,
-              funcs := v,
-              types := v1,
-              tables := v2,
-              memories := v3,
-              globals := v4,
-              instances := v5,
-              elems := v6,
-              datas := v7,
-              externs := v8,
-              instance_items := i1,
-              signature_values := i2,
-              memory_bytes := i3,
-              table_elements := i4
-            })
+          ok (r2, self)
       else
         ok (core.result.Result.Err (runtime.ExecError.Exhausted
-          runtime.ResourceLimit.Objects),
-          {
-            id := i,
-            limits := sl,
-            funcs := v,
-            types := v1,
-            tables := v2,
-            memories := v3,
-            globals := v4,
-            instances := v5,
-            elems := v6,
-            datas := v7,
-            externs := v8,
-            instance_items := i1,
-            signature_values := i2,
-            memory_bytes := i3,
-            table_elements := i4
-          })
+          runtime.ResourceLimit.Objects), self)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           Std.Usize (core.convert.FromSame runtime.ExecError) residual
-      ok (r1,
-        {
-          id := i,
-          limits := sl,
-          funcs := v,
-          types := v1,
-          tables := v2,
-          memories := v3,
-          globals := v4,
-          instances := v5,
-          elems := v6,
-          datas := v7,
-          externs := v8,
-          instance_items := i1,
-          signature_values := i2,
-          memory_bytes := i3,
-          table_elements := i4
-        })
+      ok (r1, self)
 
 /-- [itasca::runtime::store::matches_limits]:
     Source: 'src/runtime/store.rs' -/
@@ -991,42 +858,47 @@ def runtime.store.Store.define_host_with
   Result ((core.result.Result runtime.FuncAddr runtime.ExecError) ×
     (runtime.store.Store M))
   := do
-  let (r, self1) ←
-    runtime.store.Store.intern_type platformMemoryBufferInst platformAllocInst
-      self ty
+  let i ← runtime.store.Store.find_type platformMemoryBufferInst self ty
+  let i1 := alloc.vec.Vec.len self.types
+  let i2 ← if i = i1
+             then ok 2#usize
+             else ok 1#usize
+  let r ← runtime.store.Store.room_for platformMemoryBufferInst self i2
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← runtime.store.Store.room platformMemoryBufferInst self1
+  | core.ops.control_flow.ControlFlow.Continue _ =>
+    let (r1, v) ← runtime.reserve platformAllocInst self.funcs 1#usize
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      let (r2, v) ← runtime.reserve platformAllocInst self1.funcs 1#usize
+      let (r2, self1) ←
+        runtime.store.Store.intern_type platformMemoryBufferInst
+          platformAllocInst { self with funcs := v } ty
       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf2 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let i := alloc.vec.Vec.len v
+      | core.ops.control_flow.ControlFlow.Continue val =>
+        let i3 := alloc.vec.Vec.len self1.funcs
         let v1 ←
-          alloc.vec.Vec.push v
+          alloc.vec.Vec.push self1.funcs
             ({ signature := val, code := (runtime.store.FuncCode.Host host_id)
              } : runtime.store.FuncInst)
-        ok (core.result.Result.Ok { store := self1.id, index := i },
+        ok (core.result.Result.Ok { store := self1.id, index := i3 },
           { self1 with funcs := v1 })
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             runtime.FuncAddr (core.convert.FromSame runtime.ExecError) residual
-        ok (r3, { self1 with funcs := v })
+        ok (r3, self1)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           runtime.FuncAddr (core.convert.FromSame runtime.ExecError) residual
-      ok (r2, self1)
+      ok (r2, { self with funcs := v })
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
         runtime.FuncAddr (core.convert.FromSame runtime.ExecError) residual
-    ok (r1, self1)
+    ok (r1, self)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_extern_with]:
     Source: 'src/runtime/store.rs' -/
