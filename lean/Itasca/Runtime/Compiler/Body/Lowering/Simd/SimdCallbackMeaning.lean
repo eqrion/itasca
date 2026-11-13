@@ -1,6 +1,5 @@
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdMeaning
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
-import Itasca.Runtime.Compiler.Body.Reader.Simd.Shuffle
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

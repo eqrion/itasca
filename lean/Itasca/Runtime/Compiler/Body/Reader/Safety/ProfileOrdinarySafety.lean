@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.ReferenceSafety
 import Itasca.Wasm2.Scalar.Total
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ExtendedNumericSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.SaturatingSafety
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdSafety
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication
 import Itasca.Wasm2.Step.Total
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Safety

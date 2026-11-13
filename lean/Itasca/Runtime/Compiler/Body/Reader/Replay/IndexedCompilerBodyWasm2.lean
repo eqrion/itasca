@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointTypedSelect
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointRoot
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixStart
-import Itasca.Runtime.Compiler.Body.Reader.Simd.IndexedTableCompilerSimd
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableIndexed

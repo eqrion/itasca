@@ -12,7 +12,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent
+import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
@@ -53,7 +53,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
-import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 
 /-!
 Allocation accounting for ordinary reader steps. Auxiliary-table growth and fixup budgets establish the ReaderAllocationLedger used by reached-body resource proofs.

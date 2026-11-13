@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdTypes
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 
 /-!
 Sections, each formerly its own module: SourceBoundPointAcceptance, SourceBoundBaseAcceptance, SourceBoundScalarAcceptance, SourceBoundStatefulAcceptance, SourceBoundTypedSelectAcceptance.

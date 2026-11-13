@@ -1,9 +1,8 @@
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdLane
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Wasm2.References.Step
 import Itasca.Wasm2.References.Reader
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdTypes
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
