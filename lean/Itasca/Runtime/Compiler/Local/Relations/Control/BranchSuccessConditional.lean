@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringConditionalTransfer
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessLoop
 
 /-!

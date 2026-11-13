@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame

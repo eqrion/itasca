@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringConditionalTransfer
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMeaningCounts
 import Mathlib.Tactic.IntervalCases

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringConditionalTransfer
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 
 /-!
 A forward conditional branch keeps its false-edge resume distinct from the fixups for its selected source label.

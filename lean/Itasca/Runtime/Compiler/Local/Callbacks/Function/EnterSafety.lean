@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservation

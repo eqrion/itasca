@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringForwardBranch
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringLoopBranch
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 3000000

@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Local.Checking.NumericInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral

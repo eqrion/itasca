@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringConditionalTransfer
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget

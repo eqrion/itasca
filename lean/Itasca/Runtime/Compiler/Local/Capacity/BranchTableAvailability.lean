@@ -1,12 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringForwardBranch
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringLoopBranch
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 
 /-!
