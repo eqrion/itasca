@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneScalar
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneStateful
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects
 
 namespace Itasca.Runtime.Compiler

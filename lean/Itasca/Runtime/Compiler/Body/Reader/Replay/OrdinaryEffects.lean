@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneScalar
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantLowering
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
@@ -35,7 +35,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata

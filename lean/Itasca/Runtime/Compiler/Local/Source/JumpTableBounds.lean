@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

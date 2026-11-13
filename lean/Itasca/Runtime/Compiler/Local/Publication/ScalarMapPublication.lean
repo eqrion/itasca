@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts

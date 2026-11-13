@@ -3,7 +3,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneStateful
 import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 

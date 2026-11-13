@@ -1,6 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneStateful
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneScalar
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions

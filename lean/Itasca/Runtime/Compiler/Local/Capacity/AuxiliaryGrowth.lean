@@ -1,8 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
