@@ -1,5 +1,5 @@
 import Itasca.Stream.SubmissionTotal
-import Itasca.Module.Code.EntryOfEnv
+import Itasca.Module.Code.FuncTyping
 import Itasca.Module.Custom.Visitor
 
 /-!

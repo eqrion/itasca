@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
-import Itasca.Module.Code.ReachedEntry
+import Itasca.Module.Code.Framing
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget

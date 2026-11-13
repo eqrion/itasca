@@ -1,6 +1,6 @@
 import Itasca.Module.Env.NameFacts
 import Itasca.Binary.UnicodeUnique
-import Itasca.Module.Code.Context
+import Itasca.Module.Code.Encoding
 import Itasca.Module.Elab.SegmentTyping
 
 /-!

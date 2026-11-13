@@ -10,7 +10,7 @@ import Itasca.Stream.BatchComplete
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
 import Itasca.Binary.Wasm1.EncodingUnique
-import Itasca.Module.Code.ReachedEntry
+import Itasca.Module.Code.Framing
 import Itasca.Module.Code.LocalsComplete
 import Itasca.Stream.EntryFrame
 

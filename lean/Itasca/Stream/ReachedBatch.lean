@@ -1,4 +1,4 @@
-import Itasca.Module.Code.ReachedEntry
+import Itasca.Module.Code.Framing
 import Itasca.Stream.BatchTotal
 
 namespace Itasca

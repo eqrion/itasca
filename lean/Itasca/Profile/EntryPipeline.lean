@@ -1,5 +1,5 @@
 import Itasca.Profile.CodeEntry
-import Itasca.Module.Code.EntryWitness
+import Itasca.Module.Code.Framing
 import Itasca.Wasm2.Visitor.Total
 
 /-!

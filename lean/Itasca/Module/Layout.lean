@@ -1,6 +1,6 @@
 import Itasca.Module.Limits
 import Itasca.Module.Env.NameFacts
-import Itasca.Module.Code.Section
+import Itasca.Module.Code.LocalsComplete
 import Itasca.Module.Composition
 import Itasca.Module.Env.Requirements
 import Itasca.Module.Env.ReadyContexts

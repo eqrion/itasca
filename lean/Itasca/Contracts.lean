@@ -1,4 +1,4 @@
-import Itasca.Module.Code.Section
+import Itasca.Module.Code.LocalsComplete
 import Itasca.Profile.Types
 
 /-!

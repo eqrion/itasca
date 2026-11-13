@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Source.SourceBudgetAdvance
 import Itasca.Runtime.Compiler.Module.PreparedFunctionDemand
 import Itasca.Profile.EntryComplete
 import Itasca.Profile.EntrySound
-import Itasca.Module.Code.ReachedEntry
+import Itasca.Module.Code.Framing
 import Itasca.Stream.SchedulerComplete
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment

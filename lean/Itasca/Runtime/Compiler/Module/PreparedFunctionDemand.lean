@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
-import Itasca.Module.Code.ReachedEntry
+import Itasca.Module.Code.Framing
 import Itasca.Module.Code.LocalsComplete
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability

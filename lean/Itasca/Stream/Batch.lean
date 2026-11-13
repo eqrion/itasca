@@ -1,6 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Profile.EntrySound
-import Itasca.Module.Code.Section
+import Itasca.Module.Code.LocalsComplete
 import Itasca.Contracts
 
 /-!

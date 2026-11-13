@@ -6,7 +6,7 @@ import Itasca.Module.Env.ReadyContexts
 import Itasca.Module.Layout
 import Itasca.Module.Sections.DataMaterialize
 import Itasca.Module.Sections.TailComplete
-import Itasca.Module.Code.EntryOfEnv
+import Itasca.Module.Code.FuncTyping
 import Itasca.Contracts
 
 /-!

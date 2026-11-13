@@ -1,6 +1,6 @@
 import Itasca.Stream.DriverRun
 import Itasca.Stream.SubmissionSound
-import Itasca.Module.Code.EntryOfEnv
+import Itasca.Module.Code.FuncTyping
 import Itasca.Module.Soundness
 
 /-!
