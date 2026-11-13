@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Preparation.AllocationErrors
+import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors

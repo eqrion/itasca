@@ -14,9 +14,8 @@ import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.FrameStep
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
-import Itasca.Runtime.Store.Preparation.AllocationCauses
-import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Store.Preparation.PreparationCalls
+import Itasca.Runtime.Store.Invariant.Rollback
 
 /-!
 Sections, each formerly its own module: SourceExports, FunctionPayload, FunctionSourceAllocation, SourceFunctionAllocation, FunctionOrderLoop, ExecutableInstantiationCode, OwnedInitializerCauses, InternTypeCauses, FunctionTypeCauses, FunctionStagingCauses.

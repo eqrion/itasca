@@ -1,12 +1,10 @@
 import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Invariant.FunctionStaging
-import Itasca.Runtime.Store.Preparation.StagingAddresses
+import Itasca.Runtime.Store.Preparation.PreparationResults
 import Itasca.Runtime.Store.Invariant.PrecommitError
-import Itasca.Runtime.Store.Preparation.PreparationInputs
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Preparation.AllocationShape
 import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.DataEffects

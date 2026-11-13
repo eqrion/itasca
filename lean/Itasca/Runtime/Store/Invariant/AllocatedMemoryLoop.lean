@@ -3,7 +3,7 @@ import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
-import Itasca.Runtime.Store.Preparation.StagingAddresses
+import Itasca.Runtime.Store.Preparation.PreparationResults
 
 /-!
 Sections, each formerly its own module: AddressOrder, AllocatedMemoryLoop.

@@ -4,12 +4,11 @@ import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Spec.FloatPromote
-import Itasca.Runtime.Store.Preparation.AllocationCauses
+import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
-import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 

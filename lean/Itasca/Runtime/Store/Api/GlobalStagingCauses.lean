@@ -2,11 +2,10 @@ import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.PreparationResults
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
-import Itasca.Runtime.Store.Preparation.AllocationCauses
+import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
-import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 /-!

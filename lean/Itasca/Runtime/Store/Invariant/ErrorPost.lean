@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Store.Invariant.CodeAgreement
-import Itasca.Runtime.Store.Preparation.AllocationErrors
+import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Api.DefineTable
 
 /-!

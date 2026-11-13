@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Preparation.PreparedInitializers
+import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Initialization.ElementLoop
 
 namespace Itasca.Runtime.Store
