@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CompileSource
-import Itasca.Runtime.Compiler.Local.Source.SourceRun
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

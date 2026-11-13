@@ -3,9 +3,8 @@ import Itasca.Runtime.Compiler.Module.SchedulerCapacities
 import Itasca.Runtime.Compiler.Module.SchedulerSubmission
 import Itasca.Runtime.Compiler.Body.Capacity.ExecutableFunctionCapacity
 import Itasca.Runtime.Compiler.Module.CompileEntry
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
-import Itasca.Runtime.Compiler.Local.Source.SourceSubmission
 import Itasca.Runtime.Compiler.Module.CompileSourceSetup
 import Itasca.Runtime.Compiler.Module.CompileSlice
 

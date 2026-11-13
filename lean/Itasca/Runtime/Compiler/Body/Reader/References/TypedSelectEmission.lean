@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelect
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdTypes
-import Itasca.Runtime.Compiler.Local.Source.TypedSelectLowering
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 

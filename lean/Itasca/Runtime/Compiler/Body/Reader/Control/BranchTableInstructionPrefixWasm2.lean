@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceTransferBoun
 import Itasca.Runtime.Compiler.Local.Checking.TableCallbackExitSlots
 import Itasca.Runtime.Compiler.Local.Checking.TableCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableDecodePrefix
-import Itasca.Runtime.Compiler.Local.Source.SourceBudget
+import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2
 

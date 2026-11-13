@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.CodeAgreement
-import Itasca.Runtime.Compiler.Local.Source.SourceSlice
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions

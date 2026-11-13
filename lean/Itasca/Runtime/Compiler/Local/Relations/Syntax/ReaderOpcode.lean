@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ExecutableTokens
-import Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!
 Opcode bytes a body reader step can start with, grouped by the compiler entry

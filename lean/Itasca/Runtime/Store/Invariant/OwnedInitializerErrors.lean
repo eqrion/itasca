@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Representation.StoreCapacity

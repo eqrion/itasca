@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
-import Itasca.Runtime.Compiler.Local.Source.TableTransferBounds
+import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots
 

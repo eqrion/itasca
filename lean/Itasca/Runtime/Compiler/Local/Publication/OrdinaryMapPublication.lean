@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Local.Control.Simd.StructuredSimdEmbedding
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
-import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!
 Every emitted ordinary instruction, with the function-local index-pair, SIMD and constant tables it uses, and the branch-table control gate. A branch-table gate can only enter `StructuredCode` through its structural constructor, which retains the actual target-table layout.

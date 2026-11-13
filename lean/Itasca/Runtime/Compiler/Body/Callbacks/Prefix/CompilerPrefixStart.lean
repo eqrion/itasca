@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial
-import Itasca.Runtime.Compiler.Local.Source.SourceStartFrame
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!
 Actual construction and successful function-start establish every component of the compiler prefix invariant, before the first source opcode is read.

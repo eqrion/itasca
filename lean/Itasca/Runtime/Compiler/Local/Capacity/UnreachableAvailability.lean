@@ -3,9 +3,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
-import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
-import Itasca.Runtime.Compiler.Local.Source.SourceBudget
-import Itasca.Runtime.Compiler.Local.Source.SourceLengths
+import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
+import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission

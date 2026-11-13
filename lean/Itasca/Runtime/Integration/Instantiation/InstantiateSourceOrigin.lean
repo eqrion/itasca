@@ -20,8 +20,7 @@ import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
-import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Compiler.Module.CompileSlice

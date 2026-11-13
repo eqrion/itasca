@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial
-import Itasca.Runtime.Compiler.Local.Source.SourceStartFrame
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!
 Initial structured prefixes and the compiler function-start callback. The initial prefix certificate is lifted to the actual started compiler state.

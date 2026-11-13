@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
-import Itasca.Runtime.Compiler.Local.Source.TableTransferBounds
+import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 
 /-!
 Source typing of every table label supplies overlap-safe transfer bounds and already opened loop targets, including repeated and outer labels.

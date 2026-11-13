@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Integration.Execution.Ownership.Publication
-import Itasca.Runtime.Compiler.Local.Source.SourceExecutable
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 theorem InstantiationCode.source_executable {M : Type} {view : M → Slice U8}

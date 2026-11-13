@@ -9,7 +9,7 @@ import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Invariant.SemanticApi
-import Itasca.Runtime.Compiler.Local.Source.SourceSlice
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 
 /-!
 Sections, each formerly its own module: AllocatedTableLoop, AllocatedTypeLoop, AllocatedFunctionLoop, FunctionAllocatedPreparation, FunctionPreparation, InstanceItems, ShapeAssembly, ItemErrors, SourceAllocationLists.

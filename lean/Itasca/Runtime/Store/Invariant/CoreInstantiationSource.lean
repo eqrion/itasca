@@ -2,13 +2,11 @@ import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
-import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 
 /-!
 Sections, each formerly its own module: BindingMaps, SourceBindings, CoreInstantiationSource.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Source.JumpTableBounds
+import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks

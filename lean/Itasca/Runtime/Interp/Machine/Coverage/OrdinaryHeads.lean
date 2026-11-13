@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
-import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 
 /-!

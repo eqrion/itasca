@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
-import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableProjection
 

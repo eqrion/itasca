@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Module.CompileSourceSetup
 import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
 import Itasca.Runtime.Compiler.Module.SchedulerSubmission
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
@@ -22,7 +22,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
@@ -36,7 +36,6 @@ import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
-import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
@@ -70,7 +69,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature
 import Itasca.Runtime.Compiler.Module.CompileEntry
-import Itasca.Runtime.Compiler.Local.Source.SourceSubmission
 
 /-! Source-ordered slice certificates from the actual compiler driver.
 Shared setup fixes reader coordinates; this module discharges its own submission fold. -/

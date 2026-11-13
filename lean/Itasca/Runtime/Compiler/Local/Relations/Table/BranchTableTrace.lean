@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableDepths
-import Itasca.Runtime.Compiler.Local.Source.SourceStartFrame
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 
 /-!
 Sections, each formerly its own module: TableSources, BranchTableTrace.

@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

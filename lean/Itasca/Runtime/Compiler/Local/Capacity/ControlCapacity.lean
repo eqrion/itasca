@@ -1,6 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Source.SourceLengths
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
 import Mathlib.Tactic.FailIfNoProgress

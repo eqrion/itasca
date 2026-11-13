@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
-import Itasca.Runtime.Compiler.Local.Source.SourceStartFrame
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!
 Source-coordinate order and bounds, with preservation by the compiler primitives. SourceCoordinates is the common certificate used by callback coordinate proofs.

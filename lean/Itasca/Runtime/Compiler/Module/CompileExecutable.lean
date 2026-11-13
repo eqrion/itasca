@@ -8,9 +8,7 @@ import Itasca.Runtime.Compiler.Module.CompileDriverFrame
 import Itasca.Runtime.Compiler.Module.ExecutableSchedulerFunctions
 import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
 import Itasca.Runtime.Compiler.Module.SchedulerSubmission
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
-import Itasca.Runtime.Compiler.Local.Source.SourceExecutable
-import Itasca.Runtime.Compiler.Local.Source.SourceSubmission
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Module.CompileSourceSetup
 import Itasca.Runtime.Compiler.Module.CompileSlice
 
