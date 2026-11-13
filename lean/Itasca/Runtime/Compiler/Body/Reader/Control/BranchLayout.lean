@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 
 /-!
 Direct and conditional branch reader layouts and source target correspondence, used by structured compilation.

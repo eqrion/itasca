@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredLinearEmbedding
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic

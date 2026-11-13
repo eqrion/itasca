@@ -13,7 +13,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableIndexed
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointTypedSelect
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.BulkAndSaturatingEncoding
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
 import Itasca.Runtime.Compiler.Module.SchedulerSubmission
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps

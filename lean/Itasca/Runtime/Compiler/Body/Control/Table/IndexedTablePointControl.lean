@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps

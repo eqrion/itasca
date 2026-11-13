@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper

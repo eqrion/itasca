@@ -15,7 +15,7 @@ import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelect
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic

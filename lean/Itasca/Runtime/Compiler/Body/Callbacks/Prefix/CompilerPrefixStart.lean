@@ -1,5 +1,104 @@
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
+import Itasca.Runtime.Compiler.Body.Source.TypedLowering
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
+import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStart
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
+
+/-!
+Sections, each formerly its own module: CompilerPrefix, CompilerPrefixInitial, CompilerPrefixStart.
+-/
+
+/-! ## CompilerPrefix -/
+
+section
+
+/-!
+Reachability selects a retained executable prefix, a terminal prefix, or an unentered subtree. No continuation is assumed for an omitted subtree.
+
+Main declarations: `PrefixMode` and `CompilerPrefix`. A direct consumer is `Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Reachability selects a retained executable prefix, a terminal prefix, or
+an unentered subtree. No continuation is assumed for an omitted subtree. -/
+inductive PrefixMode {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
+    (types functions : List functype) (returns locals : List valtype)
+    (parents : List SourceScope) (current : SourceScope) (stack : List valtype) : Prop where
+  | live (reachable : compiler.reachable = true) (entered : current.entered = true)
+      (retained : UniversalPrefix compiler types functions returns locals parents current stack)
+  | terminal (reachable : compiler.reachable = false) (entered : current.entered = true)
+      (retained : UniversalTerminal compiler types functions returns locals parents current)
+  | dormant (reachable : compiler.reachable = false)
+      (retained : UniversalDormant compiler types functions returns locals parents current)
+
+/-- The retained compiler invariant at an actual source-reader boundary. Its
+components concern source syntax, physical frames, emitted code, and byte/slot
+accounting; none assumes execution correctness. -/
+structure CompilerPrefix {A : Type} (initial compiler : runtime.compiler.FunctionCompiler A)
+    (types functions : List functype) (returns locals : List valtype)
+    (parents : List SourceScope) (current : SourceScope)
+    (raw : List code.StackType) (position : Nat) : Prop where
+  metadata : CompilerStable initial compiler
+  frames : ScopeFrameStack locals compiler parents current
+  entryChain : SourceEntryChain parents current
+  dormant : DormantFrames compiler.frames.val
+  conditions : ScopeConditions locals parents current
+  known : ConcreteStack raw
+  mode : PrefixMode compiler types functions returns locals parents current (Sequence.stackTypes raw)
+  arms : UniversalElse compiler types functions returns locals parents current
+  sources : SourceAligned compiler
+  codeBudget : SourceCodeBudget compiler position
+  controlBudget : SourceControlBudget compiler position
+  cursor : compiler.next_source.val ≤ position
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CompilerPrefixInitial -/
+
+section
+
+/-!
+The root scope starts with an empty concrete operand stack and a live empty source prefix. All budgets and alignment are physical compiler facts.
+
+Main declarations: `CompilerPrefix.initial`. A direct consumer is `Compiler.Body.Callbacks.Prefix.CompilerPrefixStart`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+/-- The root scope starts with an empty concrete operand stack and a live
+empty source prefix. All budgets and alignment are physical compiler facts. -/
+theorem CompilerPrefix.initial {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
+    (types functions : List functype) (returns locals : List valtype)
+    (frames : ScopeFrameStack locals compiler [] (SourceScope.initial returns))
+    (retained : UniversalPrefix compiler types functions returns locals [] (SourceScope.initial returns) [])
+    (arms : UniversalElse compiler types functions returns locals [] (SourceScope.initial returns))
+    (sources : SourceAligned compiler) (codeBudget : SourceCodeBudget compiler 0)
+    (controlBudget : SourceControlBudget compiler 0) (cursor : compiler.next_source.val = 0)
+    (reachable : compiler.reachable = true) :
+    CompilerPrefix compiler compiler types functions returns locals [] (SourceScope.initial returns) [] 0 := by
+  refine ⟨.refl _, frames, .root _ rfl, frames.dormant_initial rfl, ScopeConditions.initial, ?_, .live reachable rfl retained, arms, sources, codeBudget, controlBudget, ?_⟩
+  · simp [ConcreteStack]
+  · omega
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CompilerPrefixStart -/
+
+section
 
 /-!
 Actual construction and successful function-start establish every component of the compiler prefix invariant, before the first source opcode is read.
@@ -42,3 +141,5 @@ theorem compiler_function_start_prefix {A : Type} (ops : runtime.platform.Alloc 
     (sourceFrame.sources.aligned initialSources) codeBudget controlBudget
     (by rw [sourceFrame.cursor, newCursor]; rfl) live
 end Itasca.Runtime.Compiler
+
+end

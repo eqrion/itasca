@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 
 /-!

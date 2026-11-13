@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames

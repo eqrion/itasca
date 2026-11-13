@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
