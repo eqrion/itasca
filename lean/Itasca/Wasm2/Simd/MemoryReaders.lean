@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Simd.LaneReaders
-import Itasca.Binary.Wasm1.MemoryTyping
+import Itasca.Binary.Wasm1.DeclaredReferences
 
 /-!
 # Constant and memory reader factorization

@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm1.NumericMeaning
+import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Spec.Checks
 
 /-!

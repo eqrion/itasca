@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Control.BranchSound
-import Itasca.Binary.Wasm1.BrTableLabels
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # `br_table` soundness

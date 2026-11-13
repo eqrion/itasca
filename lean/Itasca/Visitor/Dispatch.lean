@@ -1,5 +1,5 @@
 import Itasca.Visitor.Basic
-import Itasca.Binary.Wasm1.MemoryMeaning
+import Itasca.Binary.Wasm1.EncodingComplete
 import Mathlib.Tactic.IntervalCases
 
 /-!

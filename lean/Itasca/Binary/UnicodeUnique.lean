@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 Sections, each formerly its own module: Module, PrefixUnique, Unicode, UnicodeUnique.

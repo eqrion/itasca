@@ -1,7 +1,7 @@
 import Itasca.Handler.StackSemantics
 import Itasca.Handler.ResumePrefix
 import Itasca.Visitor.Total
-import Itasca.Binary.Wasm1.BrTableLabels
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Branch table handlers

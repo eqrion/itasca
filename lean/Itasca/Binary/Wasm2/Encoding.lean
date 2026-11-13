@@ -4,7 +4,7 @@ import Itasca.Binary.Wasm2.Bulk
 import Itasca.Binary.Wasm2.NumericExtensions
 import Itasca.Binary.Wasm2.Syntax
 import Itasca.Binary.Wasm2.BlockType
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Wasm 2.0 instruction binary grammar

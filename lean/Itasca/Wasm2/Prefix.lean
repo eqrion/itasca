@@ -1,6 +1,6 @@
 import Itasca.Support.Result
 import Itasca.Handler.ResumePrefix
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Typed instruction prefixes

@@ -1,5 +1,5 @@
 import Itasca.Handler.EnvCalls
-import Itasca.Binary.Wasm1.MemoryTyping
+import Itasca.Binary.Wasm1.DeclaredReferences
 import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete
 

@@ -1,5 +1,5 @@
 import Itasca.Visitor.EventMeaning
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Callback traces and byte provenance

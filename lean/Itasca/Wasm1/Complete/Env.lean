@@ -2,7 +2,7 @@ import Itasca.Wasm1.Complete.Frame
 import Itasca.Handler.EnvComplete
 import Itasca.Support.Result
 import Itasca.Handler.EnvDispatch
-import Itasca.Binary.Wasm1.MemoryTyping
+import Itasca.Binary.Wasm1.DeclaredReferences
 import Itasca.Visitor.StepErasure
 
 /-!

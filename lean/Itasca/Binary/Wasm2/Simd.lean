@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm2.SimdMemoryMeaning
-import Itasca.Binary.Wasm1.MemoryMeaning
+import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Binary.SignedLeb32
 import Itasca.Binary.UnicodeUnique
 

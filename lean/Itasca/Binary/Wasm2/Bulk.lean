@@ -1,5 +1,5 @@
 import Itasca.Support.Result
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Wasm 2.0 bulk memory and table bytes

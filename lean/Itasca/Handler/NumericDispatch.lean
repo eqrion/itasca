@@ -1,6 +1,6 @@
 import Itasca.Handler.SimplePrefix
 import Itasca.Visitor.Total
-import Itasca.Binary.Wasm1.NumericMeaning
+import Itasca.Binary.Wasm1.EncodingComplete
 import Mathlib.Tactic.IntervalCases
 
 /-!

@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.Simd
 import Itasca.Visitor.Events
-import Itasca.Binary.Wasm1.Encoding
+import Itasca.Binary.Wasm1.EncodingComplete
 
 /-!
 # Meaning of visitor callbacks
