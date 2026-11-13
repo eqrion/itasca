@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
 import Mathlib.Tactic.IntervalCases
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
-import Itasca.Binary.Wasm2.SimdBitsMeaning
+import Itasca.Binary.Wasm2.SyntaxUnique
 
 /-!
 Sections, each formerly its own module: SimdConstructor, SimdSignature, SimdMemoryValid.

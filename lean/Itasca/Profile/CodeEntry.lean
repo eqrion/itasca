@@ -1,5 +1,5 @@
 import Itasca.Profile.BodySpec
-import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Module.Code.Context
 import Itasca.Module.Code.Encoding
 

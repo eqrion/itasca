@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.Simd
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Binary.Wasm1.EncodingComplete
 import Itasca.Wasm2.Simd.ReadersTotal
 

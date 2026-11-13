@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.Execution
-import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Binary.Wasm2.SyntaxUnique
 
 /-!
 # Programs and atoms for completeness

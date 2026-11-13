@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.NumericExtensions
+import Itasca.Binary.Wasm2.DeclaredReferences
 import Itasca.Visitor.EventMeaning
 import Mathlib.Tactic.IntervalCases
 

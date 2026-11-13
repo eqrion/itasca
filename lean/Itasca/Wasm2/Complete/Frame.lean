@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Wasm2.Invariant
 import Itasca.Wasm1.Complete.Frame
 import Itasca.Profile.Types

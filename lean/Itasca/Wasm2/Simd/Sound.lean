@@ -5,7 +5,7 @@ import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Simd.LaneReaders
 import Itasca.Wasm2.Simd.Decode
 import Itasca.Wasm2.Simd.Dispatch
-import Itasca.Binary.Wasm2.SimdBitsMeaning
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Wasm2.Simd.MemoryReaders
 
 /-!

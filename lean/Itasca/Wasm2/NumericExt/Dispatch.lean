@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.NumericExtensions
+import Itasca.Binary.Wasm2.DeclaredReferences
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Visitor.Accepts
 

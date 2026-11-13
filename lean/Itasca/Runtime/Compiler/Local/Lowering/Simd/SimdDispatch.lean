@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Binary.Wasm2.Simd
+import Itasca.Binary.Wasm2.SyntaxUnique
 
 /-!
 Sections, each formerly its own module: SimdLowering, SimdEmission, SimdMeaningCounts, SimdLoweringSuccess, SimdOpcodeReduction, SimdLowered, SimdDispatch.

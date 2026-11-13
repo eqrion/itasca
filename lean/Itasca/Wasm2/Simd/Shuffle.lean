@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Simd.Decode
 import Itasca.Wasm2.Simd.MemoryReaders
-import Itasca.Binary.Wasm2.SimdBitsMeaning
+import Itasca.Binary.Wasm2.SyntaxUnique
 
 /-!
 # The `i8x16.shuffle` reader

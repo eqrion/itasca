@@ -1,5 +1,4 @@
-import Itasca.Binary.Wasm2.References
-import Itasca.Binary.Wasm2.Bulk
+import Itasca.Binary.Wasm2.DeclaredReferences
 
 /-!
 # Environment matching for reference and bulk instructions

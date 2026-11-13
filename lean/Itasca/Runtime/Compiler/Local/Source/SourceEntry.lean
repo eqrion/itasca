@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Binary.Wasm2.Encoding
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands

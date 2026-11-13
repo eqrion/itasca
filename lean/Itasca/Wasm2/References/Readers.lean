@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.References
+import Itasca.Binary.Wasm2.DeclaredReferences
 import Itasca.Wasm2.References.ReadersTotal
 
 /-!

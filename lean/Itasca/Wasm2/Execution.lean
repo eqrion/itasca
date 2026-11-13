@@ -1,6 +1,6 @@
 import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Control.FuncType
-import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Wasm2.Step.Context
 
 /-!

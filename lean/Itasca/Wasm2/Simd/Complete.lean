@@ -3,7 +3,7 @@ import Itasca.Handler.EnvComplete
 import Itasca.Wasm2.Simd.MemoryReaders
 import Itasca.Wasm2.Simd.Dispatch
 import Itasca.Wasm2.Simd.Decode
-import Itasca.Binary.Wasm2.SimdBitsMeaning
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Complete.Frame

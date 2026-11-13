@@ -1,4 +1,4 @@
-import Itasca.Binary.Wasm2.Encoding
+import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Binary.Wasm2.DeclaredReferences
 import Itasca.Support.Result
 
