@@ -4,7 +4,7 @@ import Itasca.Wasm2.Control.Total
 import Itasca.Wasm2.Scalar.ReadersTotal
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
-import Itasca.Runtime.Compiler.Local.Relations.Calls.CallSafety
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 
 /-!
 Direct-call reader bounds and callback safety, composing accepted reader steps with compiler resource obligations.

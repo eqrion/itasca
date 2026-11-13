@@ -1,8 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntrySignatures
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallOperands
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission
+import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 
 /-!
 Indirect-call signature selection, callback effects and lowering certificates used by reader replay.

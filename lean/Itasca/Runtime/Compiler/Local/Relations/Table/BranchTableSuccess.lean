@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 
 namespace Itasca.Runtime.Compiler

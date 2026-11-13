@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
+import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 
 /-!
 Sections, each formerly its own module: CompilerCodeMonotone, CompilerCodeMonotoneTactic, CompilerCodeMonotoneScalar, CompilerCodeMonotoneStateful, CompilerCodeMonotoneLiteral.

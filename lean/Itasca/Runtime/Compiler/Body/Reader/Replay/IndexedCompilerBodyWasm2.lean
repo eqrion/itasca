@@ -63,14 +63,13 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
 
 /-!

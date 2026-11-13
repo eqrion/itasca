@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbac
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
+import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 

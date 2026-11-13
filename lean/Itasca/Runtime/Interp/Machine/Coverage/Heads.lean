@@ -3,9 +3,8 @@ import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
 import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableProjection

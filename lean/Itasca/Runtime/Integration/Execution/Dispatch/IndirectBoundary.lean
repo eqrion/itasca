@@ -4,7 +4,6 @@ import Itasca.Runtime.Integration.Execution.Dispatch.IndirectLookup
 import Itasca.Runtime.Integration.Execution.Resources.Failure
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission

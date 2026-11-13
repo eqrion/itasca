@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOperands
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
 import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
+import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 
 /-!
 Sections, each formerly its own module: DeadOpAvailability, LocalVariableAvailability, StatefulAvailability, BranchLabelAvailability, TransferAvailability, CallAvailability.

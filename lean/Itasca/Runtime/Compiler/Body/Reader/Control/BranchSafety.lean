@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchCallbackSafety
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchInfo
 import Itasca.Wasm2.Visitor.Total
 

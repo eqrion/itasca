@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack

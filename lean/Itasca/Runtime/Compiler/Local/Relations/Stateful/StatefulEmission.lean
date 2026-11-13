@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmissionTransport
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 
 /-!
 Reference and bulk instructions retain their exact function-local pair table. This is syntactic compiler evidence, independent of execution correctness.
