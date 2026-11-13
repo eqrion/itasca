@@ -8,9 +8,9 @@ theorem witness_compiler_table_boundary {A : Type} (ops : runtime.platform.Alloc
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial) :
     CompilerTableBoundary w.startedState := by
   have boundary := compiler_new_table_boundary ops signatures functionSlots budget batchStart
@@ -23,9 +23,9 @@ theorem indexed_table_witness_compiler_initial_wasm2
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val)=
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))

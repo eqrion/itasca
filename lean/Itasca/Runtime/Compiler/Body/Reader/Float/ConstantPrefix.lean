@@ -20,7 +20,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -29,7 +29,7 @@ theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourc
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Wasm2.ReaderPost p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f32 value))
@@ -47,7 +47,7 @@ theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourc
   simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const, lift, bind_ok] using callback
 
 theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -56,7 +56,7 @@ theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourc
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Wasm2.ReaderPost p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f64 value))
@@ -85,7 +85,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -97,7 +97,7 @@ theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLoca
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Wasm2.ReaderPost p out.core (ScalarConst.f32 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F32]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f32 value))
@@ -121,7 +121,7 @@ theorem reader_prefix_float32_wasm2 {jumpTables : List U32} {data env sourceLoca
   · rw [cursor]
 
 theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -133,7 +133,7 @@ theorem reader_prefix_float64_wasm2 {jumpTables : List U32} {data env sourceLoca
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Wasm2.ReaderPost p out.core (ScalarConst.f64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .F64]) ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (ScalarConst.f64 value))
@@ -179,7 +179,7 @@ theorem StructuredReaderCompilerStateWasm2.float32 {jumpTables : List U32} {A : 
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 67#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 67#u8 before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index 67#u8 before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
   cases live : before.reachable with
@@ -205,7 +205,7 @@ theorem StructuredReaderCompilerStateWasm2.float64 {jumpTables : List U32} {A : 
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 68#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 68#u8 before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index 68#u8 before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
   cases live : before.reachable with

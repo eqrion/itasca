@@ -19,24 +19,24 @@ open ModuleBinary ModuleSections ModuleEnv
 success returns the `Effect` that relates the section's bytes to the resulting environment. -/
 @[step]
 theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize) (id : U8)
-    (env : metadata.Env) (before : Declarations) (profile : ValidationProfile) (hb : Bounded env pos.val) :
-    metadata.decode_env_section data pos id env profile ⦃ r => match r.1 with
-      | .Ok next => ∃ after, Effect (profile := profile) data pos env before id next r.2 after ∧ Bounded r.2 next.val
+    (env : metadata.Env) (before : Declarations) (hb : Bounded env pos.val) :
+    metadata.decode_env_section data pos id env ⦃ r => match r.1 with
+      | .Ok next => ∃ after, Effect data pos env before id next r.2 after ∧ Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   unfold metadata.decode_env_section
   split
-  · apply WP.spec_mono (metadata.decode_type_section.profile_spec data pos env profile hb.types)
+  · apply WP.spec_mono (metadata.decode_type_section.profile_spec data pos env hb.types)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
     | Ok next =>
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
-      refine ⟨_, .types hadd hbytes (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm)), ?_⟩
+      refine ⟨_, .types hadd hbytes (by intro ft hm; exact (Profile.funcTypeAdmissible_iff ft).mpr (hv ft hm)), ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_import_section.spec data pos env hb profile)
+  · apply WP.spec_mono (metadata.decode_import_section.spec data pos env hb)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -55,7 +55,7 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_table_section.spec data pos env hb.tables profile)
+  · apply WP.spec_mono (metadata.decode_table_section.spec data pos env hb.tables)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -77,7 +77,7 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_global_section.spec data pos env hb.globals hb.globalTypes hb.declaredFuncs profile)
+  · apply WP.spec_mono (metadata.decode_global_section.spec data pos env hb.globals hb.globalTypes hb.declaredFuncs)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -107,7 +107,7 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
       rw [he]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_element_section.profile_spec data pos env profile hb.elements hb.declaredFuncs)
+  · apply WP.spec_mono (metadata.decode_element_section.profile_spec data pos env hb.elements hb.declaredFuncs)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial
@@ -118,7 +118,7 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_data_count.spec data pos env profile)
+  · apply WP.spec_mono (metadata.decode_data_count.spec data pos env)
     rintro ⟨r, result⟩ hp
     cases r with
     | Err e => trivial

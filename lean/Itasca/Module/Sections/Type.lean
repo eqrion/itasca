@@ -6,8 +6,7 @@ import Itasca.Module.Readers.Types
 
 Soundness of `metadata.decode_type_section` and its loop. `TypesAdded` says the environment gains
 exactly the decoded signatures. The `profile_spec` forms give a `VecEncoding FuncTypeEncoding`
-span whose signatures satisfy the completeness caps. `metadata.check_table_count` accepts every
-table count in the supported profile. Completeness is in `Module/Sections/TypeComplete`.
+span whose signatures satisfy the completeness caps. Completeness is in `Module/Sections/TypeComplete`.
 -/
 
 open Aeneas Aeneas.Std
@@ -56,24 +55,13 @@ namespace Itasca
 
 open ModuleBinary ModuleSections
 
-/-- Table counts are unrestricted by the supported profile. -/
-@[step]
-theorem metadata.check_table_count.spec (env : metadata.Env) (profile : ValidationProfile) :
-    metadata.check_table_count env profile ⦃ result => result = .Ok () ⦄ := by
-  simp [metadata.check_table_count]
-
-/-- The table-count check accepts every environment. -/
-theorem metadata.check_table_count.complete (env : metadata.Env) (profile : ValidationProfile) :
-    metadata.check_table_count env profile = .ok (.Ok ()) := by
-  rfl
-
 /-- The type loop adds `count` signatures forming a `Rep FuncTypeEncoding` span. Each satisfies the
 completeness caps. -/
 @[step]
 theorem metadata.decode_type_section_loop.profile_spec (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
+     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.types.val.length ≤ start.val) :
-    metadata.decode_type_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_type_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TypesAdded env r.2 added ∧
           At (Rep FuncTypeEncoding) data start added next ∧
           (∀ ft ∈ added, Profile.FuncTypeWithinLimits ft) ∧ r.2.types.val.length ≤ next.val
@@ -92,7 +80,7 @@ theorem metadata.decode_type_section_loop.profile_spec (data : Slice U8) (env : 
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_func_type.profile_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_func_type.profile_spec data pos)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -126,8 +114,8 @@ theorem metadata.decode_type_section_loop.profile_spec (data : Slice U8) (env : 
 satisfying the completeness caps. -/
 @[step]
 theorem metadata.decode_type_section.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (profile : ValidationProfile) (hsize : env.types.val.length ≤ pos.val) :
-    metadata.decode_type_section data pos env profile ⦃ r => match r.1 with
+     (hsize : env.types.val.length ≤ pos.val) :
+    metadata.decode_type_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
           At (VecEncoding FuncTypeEncoding) data pos added next ∧
           (∀ ft ∈ added, Profile.FuncTypeWithinLimits ft) ∧ r.2.types.val.length ≤ next.val
@@ -141,7 +129,7 @@ theorem metadata.decode_type_section.profile_spec (data : Slice U8) (pos : Usize
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_type_section_loop.profile_spec data env profile count start hs.2.2 (by omega))
+      (metadata.decode_type_section_loop.profile_spec data env count start hs.2.2 (by omega))
     simp [metadata.decode_type_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with

@@ -55,7 +55,7 @@ namespace Itasca.ModuleEnv
 open ModuleBinary
 
 /-- Import module and field names in an encoded prefix are well-formed Unicode names. -/
-theorem PrefixEncoding.import_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
+theorem PrefixEncoding.import_names_wf {decls bytes} (h : PrefixEncoding decls bytes) :
     ∀ entry ∈ decls.imports,
       wf_name (nameOfBytes entry.moduleName) ∧ wf_name (nameOfBytes entry.name) := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, hi, _⟩ := h
@@ -64,7 +64,7 @@ theorem PrefixEncoding.import_names_wf {decls bytes profile} (h : PrefixEncoding
   exact he.names_wf
 
 /-- Export names in an encoded prefix are well-formed Unicode names. -/
-theorem PrefixEncoding.export_names_wf {decls bytes profile} (h : PrefixEncoding decls bytes profile) :
+theorem PrefixEncoding.export_names_wf {decls bytes} (h : PrefixEncoding decls bytes) :
     ∀ entry ∈ decls.exports, wf_name (nameOfBytes entry.name) := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, he, _⟩ := h
   intro entry hm

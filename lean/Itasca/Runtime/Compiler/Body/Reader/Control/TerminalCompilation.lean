@@ -149,7 +149,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions locals parents current}
@@ -161,7 +161,7 @@ theorem structured_reader_prefix_return_wasm2 {jumpTables : List U32} {data env 
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
     Wasm2.ReaderPost p out.core .RETURN true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions (p.ft.results.val.map Translate.valueType)
         locals parents (current.advance .RETURN) out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
@@ -197,7 +197,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -205,7 +205,7 @@ theorem structured_reader_prefix_unreachable_wasm2 {jumpTables : List U32} {data
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
     Wasm2.ReaderPost p out.core .UNREACHABLE true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .UNREACHABLE)
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
@@ -240,7 +240,7 @@ theorem StructuredReaderCompilerStateWasm2.unreachable {jumpTables : List U32} {
     (out : code.BodyState)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_UNREACHABLE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance (.UNREACHABLE)) savedParents
       (savedCurrent.advance (.plain (.UNREACHABLE)) (.UNREACHABLE)
@@ -262,7 +262,7 @@ theorem StructuredReaderCompilerStateWasm2.return_ {jumpTables : List U32} {A : 
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_RETURN)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_RETURN before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_RETURN before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out
       parents (current.advance (.RETURN)) savedParents
       (savedCurrent.advance (.plain (.RETURN)) (.RETURN)

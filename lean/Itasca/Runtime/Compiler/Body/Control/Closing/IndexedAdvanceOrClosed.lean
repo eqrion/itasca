@@ -49,9 +49,9 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closed_of_opcode {A : Ty
     (bodyBound : initial.function.body_start.val + data.length ≤ Usize.max)
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
-    (allowed : ReaderOpcode .Wasm2 data.val[st.core.pos.val])
+    (allowed : ReaderOpcode data.val[st.core.pos.val])
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2
+      {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     out.core.ctrls.val = [] ∨
     IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial middle
@@ -129,7 +129,7 @@ theorem IndexedTableReaderCompilerPointWasm2.advance_or_closed {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2
+      {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     out.core.ctrls.val = [] ∨
     IndexedTableReaderCompilerPointWasm2 (fun tables => ExecutableEmission tables C) initial middle

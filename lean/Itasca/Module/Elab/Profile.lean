@@ -3,10 +3,10 @@ import Itasca.Support.ControlTranslation
 import Mathlib.Data.List.Nodup
 
 /-!
-# Module-level profile
+# Module-level restrictions
 
-`Profile` collects the explicit conditions on a raw module under a `ValidationProfile` that the
-generated 2.0 judgment does not express: `ModuleConditions` and declared function references. The theorem `profile`
+`Restrictions` collects the explicit conditions on a raw module that the
+generated 2.0 judgment does not express: `ModuleConditions` and declared function references. The theorem `restrictions`
 derives it for a valid cached environment with typed code entries, and `elaborates` shows such a
 module elaborates with in-bounds type references.
 -/
@@ -15,14 +15,14 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleElaboration
 
-/-- The explicit profile-specific conditions that supplement the generated 2.0 judgment. Neither
+/-- The explicit restrictions that supplement the generated 2.0 judgment. Neither
 these conditions nor elaboration mention validator calls. -/
-structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile) : Prop
-    extends ModuleConditions raw validationProfile where
+structure Restrictions (raw : ModuleBinary.Module) : Prop
+    extends ModuleConditions raw where
   declared : DeclaredReferences.Module (moduleOf raw)
 
 /-- Distinct export byte names in a valid environment have distinct decoded names. -/
-theorem export_names_distinct {env : metadata.Env} {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile) :
+theorem export_names_distinct {env : metadata.Env} (hv : ModuleEnv.Valid env) :
     (env.exports.val.map (fun e => ModuleBinary.nameOfBytes e.name.val)).Nodup := by
   have h := hv.distinctExports.map_on (f := ModuleBinary.nameOfBytes) ?_
   · simpa [List.map_map, Function.comp_def] using h
@@ -31,12 +31,12 @@ theorem export_names_distinct {env : metadata.Env} {validationProfile : Validati
     obtain ⟨ey, hey, rfl⟩ := List.mem_map.mp hy
     exact (hv.exportNames ex hex).nameOfBytes_injective (hv.exportNames ey hey) he
 
-/-- A valid cached environment with typed code entries gives the module-level `Profile` of the
+/-- A valid cached environment with typed code entries gives the module-level `Restrictions` of the
 module it describes. -/
-theorem profile {env tables memories codes segments}
-    (hc : ModuleEnv.Cache env tables memories) {validationProfile : ValidationProfile} (hv : ModuleEnv.Valid env validationProfile)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :
-    Profile (fromEnv env tables memories codes segments) validationProfile := by
+theorem restrictions {env tables memories codes segments}
+    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes) :
+    Restrictions (fromEnv env tables memories codes segments) := by
   constructor
   · constructor
     · simpa [fromEnv, ModuleEnv.rawExport, List.map_map, Function.comp_def] using export_names_distinct hv
@@ -62,9 +62,9 @@ theorem profile {env tables memories codes segments}
 
 /-- A cached environment with typed code entries elaborates its module with in-bounds type
 references and matching code counts. -/
-theorem elaborates {env tables memories codes segments} {validationProfile : ValidationProfile}
+theorem elaborates {env tables memories codes segments}
     (hc : ModuleEnv.Cache env tables memories)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes) :
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes) :
     Elaborates (fromEnv env tables memories codes segments)
       (moduleOf (fromEnv env tables memories codes segments)) := by
   constructor

@@ -16,7 +16,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_nop_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_NOP before =
@@ -31,7 +31,7 @@ theorem reader_nop_wasm2 {data env locals index st}
   exact ⟨callback, p.nop_reader byte⟩
 
 theorem reader_i32_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
@@ -50,7 +50,7 @@ theorem reader_i32_const_wasm2 {data env locals index st}
   exact ⟨value, callback, read, values, post⟩
 
 theorem reader_i64_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
@@ -69,7 +69,7 @@ theorem reader_i64_const_wasm2 {data env locals index st}
   exact ⟨value, callback, read, values, post⟩
 
 theorem reader_numeric_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (opcode : U8)
     (operation : Numeric.Operation) (hook : NumericHook)
     (capacity : st.core.vals.val.length < Usize.max)

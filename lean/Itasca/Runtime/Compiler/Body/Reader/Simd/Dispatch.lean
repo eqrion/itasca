@@ -29,13 +29,13 @@ theorem simd_compiler_opcode_val (sub : U32) (bound : sub.val < 256) :
   omega
 
 section
-variable {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+variable {data env locals index st} (p : Wasm2.Pending data env locals index st) {A : Type}
   (ops : runtime.platform.Alloc A) (before after : runtime.compiler.FunctionCompiler A)
   (out : code.BodyState) (ctx : code.Context) (C : context)
   (sub : U32) (next : Usize) (decoded : Leb128.Decoded data st.core.pos sub next)
   (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
   (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-    st data env ctx index .Wasm2 0xfd#u8 before = .ok (.Ok (),out,after))
+    st data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after))
 include decoded byte accepted
 
 theorem simd_reader_event_pure (op : Wasm2.Simd.Operation)
@@ -177,13 +177,13 @@ open Aeneas Aeneas.Std Itasca
 /-- Every accepted SIMD-prefixed reader is one of the independently classified
 families and retains a complete canonical reader/callback witness. -/
 theorem reader_simd_event_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (before after : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (C : context)
     (contextMemories : C.MEMS = env.mem_types.val.map EnvTranslation.memType)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 0xfd#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     Nonempty (SimdReaderEvent ops p before after out.core C) := by
   obtain ⟨capacity,sub,next,decoded,called⟩ := simd_prefix_success
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx index before after accepted

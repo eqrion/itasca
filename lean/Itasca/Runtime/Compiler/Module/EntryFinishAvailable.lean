@@ -20,22 +20,22 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-/-- Complete-profile source encoding and the actual unfinished body establish
+/-- Source encoding and the actual unfinished body establish
 all header checks, including the final return. No successful finish or completed
 function certificate is needed. -/
 theorem witness_header_publication {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish}
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val+finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source) :
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source) :
     FunctionPublicationHeader final.function ∧ final.frames.val = [] ∧ final.function.code.length ≤ U32.max := by
   have bodyFacts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body ∧
       StructuredCompiledBody final.function.jump_tables.val
@@ -87,8 +87,8 @@ theorem prepared_start_publication {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start}
+    (w : CodeEntry.Prepared data env index start)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
@@ -135,10 +135,10 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start}
+    (w : CodeEntry.Prepared data env index start)
     (limits : Profile.EnvironmentWithinLimits env)
-    (body : Profile.Body profile w.body env w.ctx.locals w.typeIdx)
+    (body : Wasm2.Validated w.body env w.ctx.locals w.typeIdx)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ty => signatureSlots ty.params.val))
@@ -149,7 +149,7 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     (room : BodyResourceRoom started w.body.length
       (independentBodyDemand w.body env w.ctx w.typeIdx).operands bound) :
     code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body env w.ctx
-      w.typeIdx profile started ⦃ result => result.1 = .Ok () ∧
+      w.typeIdx started ⦃ result => result.1 = .Ok () ∧
         SourceCompilationBudget started.budget result.2.budget bodyResourceRate w.body.length ∧
         FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
@@ -175,11 +175,11 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
   have accepted := compiler_body_wasm2_checked_available ops law bound allocation started (EnvTranslation.context env w.ctx)
     (w.ctx.locals.val.map Translate.valueType) w.body env w.ctx.locals w.typeIdx w.ft point facts.localLayout
     facts.locals facts.functionSlots matched rfl facts.signatures ⟨observed,indirect,simd,pool,fixups⟩
-    limits body.to_wasm2 (by simpa only [← contextEq] using room) coordinates maps targets
+    limits body (by simpa only [← contextEq] using room) coordinates maps targets
     (by simp only [compilerLocals,facts.locals]) (by rw [facts.capacity]) instructions exits extent
   rw [← contextEq] at accepted
   have checked : code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body
-      env w.ctx w.typeIdx .Wasm2 started ⦃ result => result.1 = .Ok () ∧
+      env w.ctx w.typeIdx started ⦃ result => result.1 = .Ok () ∧
         SourceCompilationBudget started.budget result.2.budget bodyResourceRate w.body.length ∧
         FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
     apply WP.spec_mono accepted
@@ -187,8 +187,7 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     obtain ⟨closed,reached,closedState,finished⟩ := held.2
     refine ⟨held.1,?_,reached.1.final_ranges closedState,reached.2.2.2 closedState⟩
     simpa [finished,Slice.len] using reached.1.1.2
-  cases profile with
-  | Wasm2 => exact checked
+  exact checked
 end Itasca.Runtime.Compiler
 
 end
@@ -208,10 +207,10 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial : runtime.compiler.FunctionCompiler A} {data env index start}
+    (w : CodeEntry.Prepared data env index start)
     (limits : Profile.EnvironmentWithinLimits env)
-    (body : Profile.Body profile w.body env w.ctx.locals w.typeIdx)
+    (body : Wasm2.Validated w.body env w.ctx.locals w.typeIdx)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ty => signatureSlots ty.params.val))
@@ -223,7 +222,7 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
       runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
         ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started) ∧
       code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) w.body env w.ctx
-        w.typeIdx profile started ⦃ result => result.1 = .Ok () ∧
+        w.typeIdx started ⦃ result => result.1 = .Ok () ∧
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ∧
           FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ⦄ := by
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
@@ -283,12 +282,12 @@ premise is numerical and computed over source preparation; no successful target
 trace, target certificate, or universal callback-acceptance premise is required. -/
 theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
+    (data : Slice U8) (env : metadata.Env) (index start finish : Usize)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
-    (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
+    (typed : Profile.EntryTyped env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env)
     (limits : Profile.EnvironmentWithinLimits env)
-    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
+    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
@@ -296,13 +295,13 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
       env.func_types.val.map (fun ty => signatureSlots ty.params.val))
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    (demand : EntryResourceDemand budget data env index start profile bound) :
+    (demand : EntryResourceDemand budget data env index start bound) :
     metadata.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data start env index profile initial ⦃ result => result.1 = .Ok finish ∧
+      data start env index initial ⦃ result => result.1 = .Ok finish ∧
         FunctionPublicationRanges result.2.function ∧ CheckedInstructionPrefix result.2.function ∧
-        ∃ w : CodeEntry.Prepared data env index start profile, w.finish = finish ∧
+        ∃ w : CodeEntry.Prepared data env index start, w.finish = finish ∧
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ⦄ := by
-  obtain ⟨w,ending,body⟩ := source_entry_prepared data env index start finish profile entry indexBound typed bounds
+  obtain ⟨w,ending,body⟩ := source_entry_prepared data env index start finish entry indexBound typed bounds
     limits encoded
   obtain ⟨started,begun,bodyAvailable⟩ := prepared_function_checked_available ops law bound allocation w limits body
     signaturesMatch slotsMatch batchBound created (demand w)
@@ -325,17 +324,17 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
-/-- Independent complete-profile source validity and numerical demand construct
+/-- Independent source validity and numerical demand construct
 actual entry success, all publication header/range checks, and empty fixup
 frames. The final checker and actual compiler finish both succeed. -/
 theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
+    (data : Slice U8) (env : metadata.Env) (index start finish : Usize)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
-    (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
+    (typed : Profile.EntryTyped env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env)
     (limits : Profile.EnvironmentWithinLimits env)
-    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
+    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
@@ -343,23 +342,23 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
       env.func_types.val.map (fun ty => signatureSlots ty.params.val))
     (batchBound : batchStart.val+data.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    (demand : EntryResourceDemand budget data env index start profile bound) :
+    (demand : EntryResourceDemand budget data env index start bound) :
     metadata.validate_code_entry_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data start env index profile initial ⦃ result => result.1 = .Ok finish ∧
+      data start env index initial ⦃ result => result.1 = .Ok finish ∧
         FunctionPublicationRanges result.2.function ∧ FunctionPublicationHeader result.2.function ∧
         result.2.frames.val = [] ∧ result.2.function.code.length ≤ U32.max ∧
         runtime.compiler.FunctionCompiler.finish ops result.2 (.Ok ()) = .ok (.Ok result.2.function,result.2.budget) ∧
-        ∃ w : CodeEntry.Prepared data env index start profile, w.finish = finish ∧
+        ∃ w : CodeEntry.Prepared data env index start, w.finish = finish ∧
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ⦄ := by
   obtain ⟨⟨reply,after⟩,called,accepted,ranges,instructions,effect⟩ := WP.spec_imp_exists
-    (compiler_entry_checked_available ops law bound allocation data env index start finish profile entry indexBound typed
+    (compiler_entry_checked_available ops law bound allocation data env index start finish entry indexBound typed
       bounds limits encoded signatures functionSlots budget batchStart initial signaturesMatch slotsMatch batchBound created demand)
   dsimp only at accepted ranges instructions effect
   subst reply
-  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds profile called
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds called
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt,w.function_type]
-  have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.startedState after
+  have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx w.startedState after
     w.body_accepted
   obtain ⟨_,source,_,bodyEncoding,_,_⟩ := valid
   have endFits : batchStart.val+finish.val ≤ Usize.max := by

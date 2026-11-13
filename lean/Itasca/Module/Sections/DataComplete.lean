@@ -16,24 +16,22 @@ namespace Itasca
 
 open ModuleBinary
 
-private theorem data_active_parts {profile idx offset init bytes}
-    (h : DataEncodingFor profile ⟨.Active idx offset, init⟩ bytes) :
+private theorem data_active_parts {idx offset init bytes}
+    (h : DataEncodingFor ⟨.Active idx offset, init⟩ bytes) :
     ∃ flags explicit fb mb ob ib, IndexEncoding flags fb ∧
-      SegmentIndexEncoding profile flags idx explicit mb ∧ ConstEncoding offset ob ∧
+      SegmentIndexEncoding flags idx explicit mb ∧ ConstEncoding offset ob ∧
       ByteVecEncoding init ib ∧ bytes = fb ++ mb ++ ob ++ ib := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | active hi ho hb =>
-      obtain ⟨flags, fb, mb, hf, hm, rfl⟩ := hi.parts
-      exact ⟨flags, _, fb, mb, _, _, hf, hm, ho, hb, rfl⟩
+  cases h with
+  | active hi ho hb =>
+    obtain ⟨flags, fb, mb, hf, hm, rfl⟩ := hi.parts
+    exact ⟨flags, _, fb, mb, _, _, hf, hm, ho, hb, rfl⟩
 
 private theorem data_active_complete {data : Slice U8} {pos next : Usize}
     {env : metadata.Env} (idx : U32) (offset : wasm_types.ConstExpr) (init : alloc.vec.Vec U8)
-    (profile : ValidationProfile)
-    (hb : At (DataEncodingFor profile) data pos ⟨.Active idx offset, init.val⟩ next)
+
+    (hb : At (DataEncodingFor) data pos ⟨.Active idx offset, init.val⟩ next)
     (hv : idx.val < env.mem_types.val.length ∧ ModuleConstants.Valid env offset .I32) :
-    metadata.decode_data_segment data pos env profile = .ok (.Ok (⟨.Active idx offset, init⟩, next)) := by
+    metadata.decode_data_segment data pos env = .ok (.Ok (⟨.Active idx offset, init⟩, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   obtain ⟨flags, explicit, flagBytes, memory, encodedOffset, encodedInit, hf, hm, ho, hi, rfl⟩ := data_active_parts he
   obtain ⟨afterOffset, hbefore, hinit⟩ := hs.split
@@ -44,40 +42,38 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
   obtain ⟨first, hflags, hindex⟩ := hmemory.split
   have hrf := hflags.read_u32 flags hf
   have hrm := metadata.decode_segment_index.profile_complete
-    (show At (fun pair => SegmentIndexEncoding profile flags pair.1 pair.2)
+    (show At (fun pair => SegmentIndexEncoding flags pair.1 pair.2)
       data first (idx, explicit) afterMemory from ⟨memory, hm, hindex⟩)
   have hro := metadata.decode_const_expr.complete (env := env) ⟨encodedOffset, ho, hoffset⟩ hv.2
-    profile
+
   have hrc := reader.read_u32_leb.complete data afterOffset count content hcount
-  have hx : metadata.decode_data_segment data pos env profile ⦃ r =>
+  have hx : metadata.decode_data_segment data pos env ⦃ r =>
       r = .Ok (⟨.Active idx offset, init⟩, next) ⦄ := by
-    cases profile with
-    | Wasm2 =>
-      have hpass : flags ≠ 1#u32 := by
-        rcases hm with ⟨rfl, _, _, _⟩ | ⟨rfl, _, _⟩ <;> decide
-      simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
-      split <;> try contradiction
-      step
-      have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
-      simp [hguard, hro, hrc]
-      step
-      have havail : content.val + n.val ≤ data.length := by
-        have := hpayload.length
-        have := hpayload.bound
-        scalar_tac
-      rw [metadata.have_bytes.complete data content n havail]
-      simp only [bind_ok]
-      step
-      have hend : i2 = next := UScalar.eq_of_val_eq (by have := hpayload.length; scalar_tac)
-      rw [hend, metadata.copy_bytes.complete data content next init hpayload]
-      simp
+    have hpass : flags ≠ 1#u32 := by
+      rcases hm with ⟨rfl, _, _, _⟩ | ⟨rfl, _, _⟩ <;> decide
+    simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
+    split <;> try contradiction
+    step
+    have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
+    simp [hguard, hro, hrc]
+    step
+    have havail : content.val + n.val ≤ data.length := by
+      have := hpayload.length
+      have := hpayload.bound
+      scalar_tac
+    rw [metadata.have_bytes.complete data content n havail]
+    simp only [bind_ok]
+    step
+    have hend : i2 = next := UScalar.eq_of_val_eq (by have := hpayload.length; scalar_tac)
+    rw [hend, metadata.copy_bytes.complete data content next init hpayload]
+    simp
   obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hx
   exact hr
 
 private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
     {env : metadata.Env} (init : alloc.vec.Vec U8)
-    (hb : At (DataEncodingFor .Wasm2) data pos ⟨.Passive, init.val⟩ next) :
-    metadata.decode_data_segment data pos env .Wasm2 = .ok (.Ok (⟨.Passive, init⟩, next)) := by
+    (hb : At (DataEncodingFor) data pos ⟨.Passive, init.val⟩ next) :
+    metadata.decode_data_segment data pos env = .ok (.Ok (⟨.Passive, init⟩, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   cases he with
   | passive hf hi =>
@@ -87,7 +83,7 @@ private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
     have hpayload : Wasm1.BytesAt data content init.val next := by simpa only [hrep.bytes] using hbytes
     have hrf := hflags.read_u32 1#u32 hf
     have hrc := reader.read_u32_leb.complete data first count content hcount
-    have hx : metadata.decode_data_segment data pos env .Wasm2 ⦃ r =>
+    have hx : metadata.decode_data_segment data pos env ⦃ r =>
         r = .Ok (⟨.Passive, init⟩, next) ⦄ := by
       simp [metadata.decode_data_segment, hrf, hrc, core.result.Result.Insts.CoreOpsTry.branch]
       step
@@ -104,27 +100,26 @@ private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hx
     exact hr
 
-/-- `metadata.decode_data_segment` accepts a `DataEncodingFor profile` span of a valid segment. -/
+/-- `metadata.decode_data_segment` accepts a `DataEncodingFor` span of a valid segment. -/
 theorem metadata.decode_data_segment.profile_complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} (segment : metadata.Data) (profile : ValidationProfile)
-    (hb : At (DataEncodingFor profile) data pos (ModuleData.raw segment) next)
+    {env : metadata.Env} (segment : metadata.Data)
+    (hb : At (DataEncodingFor) data pos (ModuleData.raw segment) next)
     (hv : ModuleData.Valid env segment) :
-    metadata.decode_data_segment data pos env profile = .ok (.Ok (segment, next)) := by
+    metadata.decode_data_segment data pos env = .ok (.Ok (segment, next)) := by
   obtain ⟨mode, init⟩ := segment
   cases mode with
-  | Active idx offset => exact data_active_complete idx offset init profile hb hv
+  | Active idx offset => exact data_active_complete idx offset init hb hv
   | Passive =>
-    cases profile with
-    | Wasm2 => exact data_passive_complete init hb
+    exact data_passive_complete init hb
 /-- The data loop accepts the remaining valid segments of a repetition span and appends them to
 `out`. -/
-theorem metadata.decode_data_section_loop.profile_complete (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem metadata.decode_data_section_loop.profile_complete (data : Slice U8) (env : metadata.Env)
     (count : U32) (out : alloc.vec.Vec metadata.Data) (pos : Usize) (i : U32)
     (segments : List metadata.Data) (next : Usize)
-    (hb : At (Rep (DataEncodingFor profile)) data pos (segments.map ModuleData.raw) next)
+    (hb : At (Rep (DataEncodingFor)) data pos (segments.map ModuleData.raw) next)
     (hc : i.val + segments.length = count.val) (hlen : out.val.length ≤ i.val)
     (hv : ∀ s ∈ segments, ModuleData.Valid env s) :
-    ∃ result, metadata.decode_data_section_loop data env profile count out pos i = .ok (.Ok (result, next)) ∧
+    ∃ result, metadata.decode_data_section_loop data env count out pos i = .ok (.Ok (result, next)) ∧
       result.val = out.val ++ segments := by
   induction segments generalizing out pos i with
   | nil =>
@@ -137,7 +132,7 @@ theorem metadata.decode_data_section_loop.profile_complete (data : Slice U8) (en
   | cons segment segments ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hread := metadata.decode_data_segment.profile_complete segment profile hfirst (hv segment (by simp))
+    have hread := metadata.decode_data_segment.profile_complete segment hfirst (hv segment (by simp))
     obtain ⟨updated, hpush, hupdated⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec out segment (by simp only [List.length_cons] at hc; scalar_tac))
     obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
@@ -154,14 +149,14 @@ theorem metadata.decode_data_section_loop.profile_complete (data : Slice U8) (en
     exact hloop
 
 /-- `metadata.decode_data_section` accepts a vector span of valid segments. -/
-theorem metadata.decode_data_section.profile_complete (data : Slice U8) (pos : Usize) (env : metadata.Env) (profile : ValidationProfile)
+theorem metadata.decode_data_section.profile_complete (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (segments : alloc.vec.Vec metadata.Data) (next : Usize)
-    (hb : At (VecEncoding (DataEncodingFor profile)) data pos (segments.val.map ModuleData.raw) next)
+    (hb : At (VecEncoding (DataEncodingFor)) data pos (segments.val.map ModuleData.raw) next)
     (hv : ∀ s ∈ segments.val, ModuleData.Valid env s) :
-    metadata.decode_data_section data pos env profile = .ok (.Ok (segments, next)) := by
+    metadata.decode_data_section data pos env = .ok (.Ok (segments, next)) := by
   obtain ⟨count, first, hn, hc, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, he⟩ := metadata.decode_data_section_loop.profile_complete
-    data env profile count (alloc.vec.Vec.new _) first 0#u32 segments.val next hentries
+    data env count (alloc.vec.Vec.new _) first 0#u32 segments.val next hentries
     (by simpa using hn.symm) (by simp) hv
   have heq : result = segments := alloc.vec.Vec.ext _ _ (by simpa using he)
   simp [metadata.decode_data_section, reader.read_u32_leb.complete data pos count first hc,

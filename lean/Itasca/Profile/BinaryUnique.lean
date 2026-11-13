@@ -17,17 +17,15 @@ namespace Itasca.Profile
 
 open ModuleBinary
 
-/-- The profile's body bytes determine one instruction tree, independently of typing and
+/-- The body bytes determine one instruction tree, independently of typing and
 implementation bounds. -/
-theorem BodyBytes.unique (profile : ValidationProfile) : Unique (BodyBytes profile) := by
-  cases profile with
-  | Wasm2 =>
-    rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
-    obtain rfl := Wasm2.tokens_unique hx hy
-    exact hxs.unique hys
+theorem BodyBytes.unique : Unique BodyBytes := by
+  rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
+  obtain rfl := Wasm2.tokens_unique hx hy
+  exact hxs.unique hys
 
 /-- Code entries, with their size prefix and local declarations, are prefix-unique under Wasm 2.0. -/
-theorem code_prefix_unique (profile : ValidationProfile) : PrefixUnique (CodeEncoding profile) := by
+theorem code_prefix_unique : PrefixUnique CodeEncoding := by
   intro x y a b rest tail hx hy he
   obtain ⟨xn, xl, xb, hn, hl, hb, rfl⟩ := hx
   obtain ⟨yn, yl, yb, hn', hl', hb', rfl⟩ := hy
@@ -37,7 +35,7 @@ theorem code_prefix_unique (profile : ValidationProfile) : PrefixUnique (CodeEnc
     (by simpa [List.append_assoc] using hcontent : (xl ++ xb) ++ rest = (yl ++ yb) ++ tail)
     (by simpa using hlen)
   obtain ⟨hlv, rfl, rfl⟩ := local_prefix_unique.vec hl hl' hpayload
-  have hbv := BodyBytes.unique profile hb hb'
+  have hbv := BodyBytes.unique hb hb'
   have hv : x = y := by cases x; cases y; simp_all
   exact ⟨hv, rfl, rfl⟩
 

@@ -16,7 +16,7 @@ the start function to an owned actual function with no parameters or results. -/
 theorem start_function_resolves {M : Type} {store : runtime.store.Store M}
     {inst : runtime.store.ModuleInst}
     (table : Interp.FunctionTable store inst (inst.module.module.env.func_types.val.map decodeFuncType))
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (index : U32) (start : inst.module.module.env.start = some index) :
     ∃ address function signature, inst.funcs.val[index.val]? = some address ∧
       address.store = store.id ∧ store.funcs.val[address.index.val]? = some function ∧

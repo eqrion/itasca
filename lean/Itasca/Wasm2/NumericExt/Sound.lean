@@ -16,8 +16,8 @@ namespace Itasca.Wasm2
 
 /-- A unary numeric extension preserves the control zipper while recording
 its independently encoded instruction, including any consumed prefix bytes. -/
-theorem Pending.extended_numeric {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (v : V)
+theorem Pending.extended_numeric {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (v : V)
     (operation : Numeric.Operation) (hunary : operation.binary = false)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction)
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)
@@ -41,7 +41,7 @@ theorem Pending.extended_numeric {data env profile locals index st}
     exact post.after
 
 /-- Scalar extensions and the base dispatcher share the same successful-step certificate. -/
-theorem Pending.extended_scalar {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.extended_scalar {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (ctx : code.Context) (hlocals : ctx.locals = locals)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)

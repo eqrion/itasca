@@ -17,15 +17,15 @@ theorem witness_compile_executable {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val)=
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val+finish.val≤Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ())=.ok (.Ok compiled,finalBudget)) :
     DefinedExecutableFunctionCode env w.typeIdx (.FUNC (.mk_uN w.typeIdx.val)

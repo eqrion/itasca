@@ -28,8 +28,8 @@ def Frames.Form.opcode (form : Frames.Form) : U8 :=
   | _ => 0x02#u8
 
 /-- Entry retains the exact supplied parent zipper and decoded callback signature. -/
-structure ReaderEnterPost {data env profile locals index st}
-    (p : Pending data env profile locals index st) (out : code.BodyState)
+structure ReaderEnterPost {data env locals index st}
+    (p : Pending data env locals index st) (out : code.BodyState)
     (form : Frames.Form) (bt : signature.BlockType)
     (ins outs : List wasm_types.ValueType) (remaining : List code.StackType) (base : Usize) : Prop where
   inputs : resolve env (Wasm2.inputs bt) = some ins
@@ -45,17 +45,17 @@ structure ReaderEnterPost {data env profile locals index st}
   after : p.After out
 
 /-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
-theorem Pending.enter_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.enter_reader {data env locals index st} (p : Pending data env locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
-    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs remaining newBase,
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs remaining newBase,
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
       ReaderEnterPost p r.2 form bt ins outs remaining newBase ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := p.opened
   have hcap : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  apply WP.spec_mono (code.enter.sound st data env profile form initial outer p.current.vals vals
+  apply WP.spec_mono (code.enter.sound st data env form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core hcap)
   intro r hr hok
   obtain ⟨bt, ins, outs, hdecoded, hin, hout, hip, hop, remaining, newBase,
@@ -84,10 +84,10 @@ theorem Pending.enter_reader {data env profile locals index st} (p : Pending dat
   · simp [hblocks]
 
 /-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
-theorem Pending.enter_after {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.enter_after {data env locals index st} (p : Pending data env locals index st)
     (form : Frames.Form) (initial : form.Initial)
     (hbyte : data.val[p.start.val]'p.inbounds = form.opcode) :
-    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.enter_reader form initial hbyte)
   intro r effect accepted
   obtain ⟨_, _, _, _, _, _, post⟩ := effect accepted

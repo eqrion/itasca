@@ -18,13 +18,13 @@ open ModuleBinary ModuleSections
 
 /-- The type loop accepts the remaining signatures of a repetition span and adds them. -/
 theorem metadata.decode_type_section_loop.profile_complete
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32) (pos : Usize) (i : U32)
     (types : List wasm_types.FuncType) (next : Usize)
     (hb : At (Rep FuncTypeEncoding) data pos types next)
     (hc : i.val + types.length = count.val)
     (ht : ∀ ft ∈ types, Profile.FuncTypeWithinLimits ft)
     (hsize : env.types.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_type_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_type_section_loop data env count pos i = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
   induction types generalizing env pos i with
   | nil =>
@@ -39,7 +39,7 @@ theorem metadata.decode_type_section_loop.profile_complete
     have hprogress := hfirst.funcType_progress
     have hbound := hfirst.span.2
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hread := metadata.decode_func_type.profile_complete data pos ft middle profile hfirst
+    have hread := metadata.decode_func_type.profile_complete data pos ft middle hfirst
       (ht ft (by simp))
     obtain ⟨updatedTypes, hpush, htypes⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.types ft (by scalar_tac))
@@ -62,15 +62,15 @@ theorem metadata.decode_type_section_loop.profile_complete
 
 /-- `metadata.decode_type_section` accepts a vector span of admissible signatures and adds them. -/
 theorem metadata.decode_type_section.profile_complete (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) (types : List wasm_types.FuncType) (next : Usize)
+    (env : metadata.Env) (types : List wasm_types.FuncType) (next : Usize)
     (hb : At (VecEncoding FuncTypeEncoding) data pos types next)
     (ht : ∀ ft ∈ types, Profile.FuncTypeWithinLimits ft)
     (hsize : env.types.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_type_section data pos env profile = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_type_section data pos env = .ok (.Ok next, result) ∧
       TypesAdded env result types := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, hp⟩ := metadata.decode_type_section_loop.profile_complete
-    data env profile count middle 0#u32 types next hentries (by simpa using hc.symm) ht
+    data env count middle 0#u32 types next hentries (by simpa using hc.symm) ht
     (by have := hcount.span; omega)
   refine ⟨result, ?_, hp⟩
   simp [metadata.decode_type_section, reader.read_u32_leb.complete data pos count middle hcount,

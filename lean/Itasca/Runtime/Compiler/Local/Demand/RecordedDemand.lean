@@ -24,14 +24,14 @@ private theorem recorder_retains (prior : List Observation) :
 profile, including partial branch tables and ordinary validation errors. -/
 theorem source_step_recorded_prefix (prior before after : List Observation)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (opcode : U8)
+    (ctx : code.Context) (index : U32) (opcode : U8)
     (result : core.result.Result Unit error.OpError)
     (held : ∃ suffix, before = prior ++ suffix)
-    (called : code.step_profile recorder st data env ctx index profile opcode before = .ok (result,final,after)) :
+    (called : code.step_profile recorder st data env ctx index opcode before = .ok (result,final,after)) :
     ∃ suffix, after = prior ++ suffix := by
   obtain ⟨_,_,retained⟩ := code.step_profile.refines recorder
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor _ (recorder_retains prior)
-    st data env ctx index profile opcode before () held result final after called
+    st data env ctx index opcode before () held result final after called
   exact retained
 
 /-- Every normal body-loop result retains all observations already recorded.
@@ -39,13 +39,13 @@ The proof uses the loop's least fixed point and requires no compiler, source
 state geometry, visitor-normality, or body-acceptance assumption. -/
 theorem source_body_recorded_prefix (before after : List Observation)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
     (result : core.result.Result Unit error.OpError)
-    (returned : code.body_loop_loop recorder data env ctx index profile before st = .ok (result,after)) :
+    (returned : code.body_loop_loop recorder data env ctx index before st = .ok (result,after)) :
     ∃ suffix, after = before ++ suffix := by
   apply Platform.loop_returned_invariant
     (fun state : List Observation × code.BodyState =>
-      code.body_loop_loop.body recorder data env ctx index profile state.1 state.2)
+      code.body_loop_loop.body recorder data env ctx index state.1 state.2)
     (fun state => ∃ suffix, state.1 = before ++ suffix)
     (fun answer => ∃ suffix, answer.2 = before ++ suffix) ?_
     (before,st) ⟨[],by simp⟩ (result,after) returned
@@ -65,7 +65,7 @@ theorem source_body_recorded_prefix (before after : List Observation)
       obtain ⟨opcode,next⟩ := pair
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Std.uncurry] at tail
       obtain ⟨⟨reply,out,middle⟩,step,tail⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ tail
-      have retained := source_step_recorded_prefix before log middle _ out data env ctx index profile
+      have retained := source_step_recorded_prefix before log middle _ out data env ctx index
         opcode reply held step
       cases reply <;>
         simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at tail <;>
@@ -77,15 +77,15 @@ the event in that source log; it supplies no compiler acceptance premise. -/
 theorem source_callback_demand (before middle final : List Observation)
     (state : code.OpIterState) (action : Action) (reply : VisitResult)
     (out : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
     (result : core.result.Result Unit error.OpError)
     (called : invoke recorder before (.op state action) = .ok (reply,middle))
-    (tail : code.body_loop_loop recorder data env ctx index profile middle out = .ok (result,final)) :
+    (tail : code.body_loop_loop recorder data env ctx index middle out = .ok (result,final)) :
     state.vals.length ≤ (observationDemand final).operands ∧
     state.ctrls.length ≤ (observationDemand final).controls := by
   have appended := recorder_records before (.op state action) reply middle called
   dsimp only [id] at appended
-  obtain ⟨suffix,retained⟩ := source_body_recorded_prefix middle final out data env ctx index profile result tail
+  obtain ⟨suffix,retained⟩ := source_body_recorded_prefix middle final out data env ctx index result tail
   apply observationDemand.recorded_op (prior := before) (suffix := suffix)
   rw [retained,appended,List.append_assoc]
   rfl

@@ -7,32 +7,32 @@ open Aeneas Aeneas.Std Itasca
 public compilation. Keeping the accepted driver run fixes the configuration,
 submission and tail states used by module certificate assembly. -/
 structure CompileSourceCertificate {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness ops bytes profile limits executable) where
+    {bytes limits executable} (w : CompileWitness ops bytes limits executable) where
   environment : Slice U8
   code : Slice U8
   tail : Slice U8
   run : StreamRun.Accepted runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
-    (initialScheduler A limits w.codeStart) w.scheduler w.env profile
+    (initialScheduler A limits w.codeStart) w.scheduler w.env
   coherent : StreamSource.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} environment.val code.val tail.val
   recombined : bytes.val = environment.val ++ code.val ++ tail.val
   raw : ModuleBinary.Module
-  encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile
+  encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes.val
   matched : ModuleElaboration.Matches w.env run.remaining.tail raw
-  valid : ModuleEnv.Valid w.env profile
+  valid : ModuleEnv.Valid w.env
   entryBounds : CodeEntry.Bounds w.env
   functions : raw.functions = w.env.func_type_indices.val
   types : raw.types = w.env.types.val
   codeCount : raw.codes.length = w.env.func_type_indices.val.length
   header : StreamFraming.HeaderAt code w.env run.remaining.entries
-  entries : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) code run.remaining.entries raw.codes (Slice.len code)
+  entries : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) code run.remaining.entries raw.codes (Slice.len code)
   codeBound : code.length ≤ Itasca.limits.MAX_MODULE_BYTES.val
   moduleBound : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val
 
 theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness ops bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness ops bytes limits executable)
     (law : Platform.AllocCorrect ops) : Nonempty (CompileSourceCertificate w) := by
   have bounds := code_region_spec bytes
   rw [w.region, WP.spec_ok] at bounds
@@ -63,7 +63,7 @@ theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.All
     header, entries, codeBound, moduleBound⟩ := stream_run_source
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-    SchedulerTracks (compiler_provenance ops law profile) 0#u64 source
+    SchedulerTracks (compiler_provenance ops law) 0#u64 source
     (initialScheduler A limits w.codeStart) w.scheduler w.env bytes environment code tail coherent recombine initial run
   exact ⟨⟨environment, code, tail, run, coherent, recombine, raw, encoded, matched, valid,
     entryBounds, functions, types, codeCount, header, entries, codeBound, moduleBound⟩⟩

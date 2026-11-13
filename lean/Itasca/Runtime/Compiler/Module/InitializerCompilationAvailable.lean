@@ -21,7 +21,7 @@ structure InitializerSourceTyping (module : runtime.compiler.ExecutableModule) :
 /-- The existing independent environment and data judgments discharge every
 initializer typing premise; no emitted code or compiler observation is needed. -/
 theorem InitializerSourceTyping.of_valid {module : runtime.compiler.ExecutableModule}
-    {profile : Itasca.ValidationProfile} (valid : Itasca.ModuleEnv.Valid module.module.env profile)
+     (valid : Itasca.ModuleEnv.Valid module.module.env)
     (dataValid : ∀ segment ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env segment) :
     InitializerSourceTyping module := by
   refine ⟨valid.globals,?_,?_,?_⟩

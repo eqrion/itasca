@@ -77,7 +77,7 @@ namespace Itasca.Wasm2.Completeness
 /-- Scalar dispatch accepts an independently encoded principal typing and
 preserves the current block descriptor. The semantic return vector can
 differ from the runtime scalar context's unused return vector. -/
-theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx semantic : code.Context) (index : U32) (C : context)
     (opcode : U8) (op : instr) (bytes : List U8) (next : Usize)
     (front input output : List valtype)
@@ -87,13 +87,13 @@ theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : S
     (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
-    ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧
+    ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧
       s.core.pos = next ∧ f.Output (front ++ output) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨out, hrun, hpos, hout, hlen⟩ := scalar_complete data env semantic C st.core f.core
     opcode op bytes next front input output hmatch hsize hscalar hi hb hr ht
   refine ⟨{st with core := out}, ?_, hpos, ⟨hout, ?_⟩, hlen⟩
-  · rw [step.scalar_eq st data env profile ctx index opcode hscalar]
+  · rw [step.scalar_eq st data env ctx index opcode hscalar]
     have hn : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by scalar_tac
     rw [if_neg hn, code.step_wasm2.base _ _ _ _ _ _ _ (wasm2_base_immediate hi),
       code.step_extended.base _ _ _ _ _ _ _ (base_immediate hi).1 (base_immediate hi).2,
@@ -105,7 +105,7 @@ theorem Frame.scalar {st} {profile : ValidationProfile} (f : Frame st) (data : S
 /-- A leaf contract uses a principal generated typing and an independent
 Wasm 2.0 immediate encoding.
 Growth is bounded by the full token's encoded byte count. -/
-def LeafContract (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+def LeafContract (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
@@ -115,20 +115,19 @@ def LeafContract (data : Slice U8) (env : metadata.Env) (profile : ValidationPro
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
-    ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 500 * (bytes.length + 1)
 
 /-- Reading the opcode and running a leaf contract produces an actual execution
 and preserves the byte-weighted capacity bound for the surrounding program. -/
-theorem atom_of_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem atom_of_leaf (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32)
-    (hstep : LeafContract data env profile ctx index) (op : instr) :
-    AtomProgram data env profile ctx index [.plain op] op := by
+    (hstep : LeafContract data env ctx index) (op : instr) :
+    AtomProgram data env ctx index [.plain op] op := by
   intro C st f next front input output hmatch hlabels hbounds hbytes hreal htyped hdecl
   have hat := hbytes.single
   obtain ⟨opcode, pos, bytes, hread, hpos, himmediate, hspan, hp, hbyte⟩ := hat.read_byte
-  have hcheck := code.check_opcode.complete profile opcode
   let decoded : code.BodyState := {st with core := {st.core with pos := pos}}
   let g : Frame decoded :=
     ⟨⟨f.core.parents, f.core.current, f.core.outer, f.core.operands,
@@ -138,7 +137,7 @@ theorem atom_of_leaf (data : Slice U8) (env : metadata.Env) (profile : Validatio
     hstep C decoded g opcode op bytes next front input output hmatch hlabels hcap
       himmediate hspan hreal htyped hdecl
   have hout' : f.Output (front ++ output) s := hout
-  refine ⟨s, .single f.nonempty hread hcheck hrun, hcursor, hout', ?_⟩
+  refine ⟨s, .single f.nonempty hread hrun, hcursor, hout', ?_⟩
   apply bounds_after hbounds hat hcursor
   · have hlenbytes : bytes.length + 1 = next.val - st.core.pos.val := by
       have := hspan.length
@@ -148,7 +147,7 @@ theorem atom_of_leaf (data : Slice U8) (env : metadata.Env) (profile : Validatio
     simp [hb]
 
 /-- The scalar family discharges the shared leaf growth contract. -/
-theorem scalar_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem scalar_leaf (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -158,7 +157,7 @@ theorem scalar_leaf (data : Slice U8) (env : metadata.Env) (profile : Validation
     (hi : Wasm1.Immediate opcode (.plain op) bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
-    ∃ s, step st data env profile ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
+    ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 500 * (bytes.length + 1) := by
   obtain ⟨s, hs, hp, ho, hl⟩ := f.scalar data env ctx ctx index C opcode op bytes next front input output

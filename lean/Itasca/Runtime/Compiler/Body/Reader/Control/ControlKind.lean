@@ -69,16 +69,16 @@ def Parameter : ControlReaderKind → Type
 def read (kind : ControlReaderKind) (st : code.BodyState) (data : Slice U8)
     (env : metadata.Env) (index : U32) : Result (core.result.Result kind.Parameter error.OpError × code.BodyState) :=
   match kind with
-  | .block => code.enter_info st data env .Wasm2 .Block
-  | .loop => code.enter_info st data env .Wasm2 .Loop
-  | .if_ => code.enter_info st data env .Wasm2 .Then
+  | .block => code.enter_info st data env .Block
+  | .loop => code.enter_info st data env .Loop
+  | .if_ => code.enter_info st data env .Then
   | .else_ => code.end_frame_info st env true
   | .end_ => code.end_frame_info st env false
   | .br => code.branch_info st data env false
   | .br_if => code.branch_info st data env true
   | .return_ => Wasm2.returnStep st env index
   | .call => code.call_info st data env
-  | .call_indirect => code.call_indirect_info st data env .Wasm2
+  | .call_indirect => code.call_indirect_info st data env
 
 def action : (kind : ControlReaderKind) → kind.Parameter → Action
   | .block => .block
@@ -95,24 +95,24 @@ def action : (kind : ControlReaderKind) → kind.Parameter → Action
 /-- Every inventory entry agrees with actual complete-profile dispatch. -/
 theorem dispatch {V : Type} (kind : ControlReaderKind) (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (before : V) :
-    code.step_profile visitor st data env ctx index .Wasm2 kind.opcode before =
+    code.step_profile visitor st data env ctx index kind.opcode before =
       Wasm2.CallbackTrace.bodyRun (kind.read st data env index) visitor kind.action before := by
   cases kind
-  · exact Wasm2.CallbackTrace.dispatch_block visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_loop visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_if visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_else visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_end visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_br visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_br_if visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_return visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_call visitor st data env ctx index .Wasm2 before
-  · exact Wasm2.CallbackTrace.dispatch_call_indirect visitor st data env ctx index .Wasm2 before
+  · exact Wasm2.CallbackTrace.dispatch_block visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_loop visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_if visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_else visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_end visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_br visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_br_if visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_return visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_call visitor st data env ctx index before
+  · exact Wasm2.CallbackTrace.dispatch_call_indirect visitor st data env ctx index before
 
 /-- Source byte provenance for every metadata-producing reader in this
 inventory. This also bounds its accepted final cursor by input length. -/
 theorem records {data env locals index st} (kind : ControlReaderKind)
-    (pending : Wasm2.Pending data env .Wasm2 locals index st) {V : Type}
+    (pending : Wasm2.Pending data env locals index st) {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List Observation)
     (recorded : Records visitor observe) (ctx : code.Context)
     (byte : data.val[pending.start.val]'pending.inbounds = kind.opcode) :

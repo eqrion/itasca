@@ -21,15 +21,15 @@ namespace Itasca
 
 /-- `stream.validate_module_slice` returns on arbitrary input bytes. Its slice source and
 synchronous scheduler satisfy every callback premise. -/
-theorem stream.validate_module_slice.profile_total (bytes : Slice U8) (profile : ValidationProfile) :
-    ∃ r, stream.validate_module_slice bytes profile = .ok r := by
+theorem stream.validate_module_slice.profile_total (bytes : Slice U8) :
+    ∃ r, stream.validate_module_slice bytes = .ok r := by
   obtain ⟨⟨first, last⟩, hsplit, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec bytes)
   obtain ⟨environment, code, tail, he, hc, ht, _⟩ := stream.find_code_region.slices bytes first last hsplit
   obtain ⟨env, henv, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
-  obtain ⟨⟨r, visitor, decoded⟩, hr⟩ := stream.validate_streaming.total
+  obtain ⟨⟨r, visitor, decoded⟩, hr⟩ := stream.validate_streaming.total_core
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     0#u64 ⟨environment, code, tail⟩ ⟨none, none⟩ env
-    (stream.SliceSource.callbacks_total _) (StreamSync.callbacks_total (profile := profile))
+    (stream.SliceSource.callbacks_total _) StreamSync.callbacks_total
   unfold stream.validate_module_slice
   simp only [hsplit, bind_ok, Std.uncurry]
   simp only [he, hc, ht, henv, bind_ok, hr, Std.uncurry]
@@ -45,9 +45,8 @@ theorem stream.validate_module_slice.profile_total (bytes : Slice U8) (profile :
 /-- If `stream.validate_module_slice` accepts, the returned environment and tail are those of the
 accepted streaming run, and they validate the input bytes. -/
 theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded : metadata.Module)
-    (profile : ValidationProfile)
-    (h : stream.validate_module_slice bytes profile = .ok (.Ok decoded)) :
-    ModuleSound.Validated bytes decoded profile := by
+    (h : stream.validate_module_slice bytes = .ok (.Ok decoded)) :
+    ModuleSound.Validated bytes decoded := by
   obtain ⟨⟨first, last⟩, hsplit, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec bytes)
   obtain ⟨environment, code, tail, he, hc, ht, hbytes⟩ := stream.find_code_region.slices bytes first last hsplit
   obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
@@ -65,9 +64,9 @@ theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded :
     | some stored =>
       simp [hstored] at h
       subst decoded
-      obtain ⟨run, hvalid, _⟩ := stream.validate_streaming.sound
+      obtain ⟨run, hvalid, _⟩ := stream.validate_streaming.sound_core
         stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
-        StreamSync.Tracks (StreamSync.provenance (profile := profile)) 0#u64 ⟨environment, code, tail⟩ ⟨none, none⟩ visitor
+        StreamSync.Tracks StreamSync.provenance 0#u64 ⟨environment, code, tail⟩ ⟨none, none⟩ visitor
         storage env bytes environment code tail (stream.SliceSource.coherent _) hbytes
         (StreamSync.tracks_empty _ _) hrun
       have hready := run.remaining.ready_call
@@ -82,15 +81,15 @@ theorem stream.validate_module_slice.profile_sound (bytes : Slice U8) (decoded :
 
 /-- Arbitrary inputs return normally, and every accepted result is `ModuleSound.Validated`, which
 includes the independent module certificate and the returned metadata. -/
-theorem stream.validate_module_slice.profile_spec (bytes : Slice U8) (profile : ValidationProfile) :
-    stream.validate_module_slice bytes profile ⦃ r => match r with
-      | .Ok decoded => ModuleSound.Validated bytes decoded profile
+theorem stream.validate_module_slice.profile_spec (bytes : Slice U8) :
+    stream.validate_module_slice bytes ⦃ r => match r with
+      | .Ok decoded => ModuleSound.Validated bytes decoded
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr⟩ := stream.validate_module_slice.profile_total bytes profile
+  obtain ⟨r, hr⟩ := stream.validate_module_slice.profile_total bytes
   rw [hr]
   simp only [WP.spec_ok]
   cases r with
   | Err _ => trivial
-  | Ok decoded => exact stream.validate_module_slice.profile_sound bytes decoded profile hr
+  | Ok decoded => exact stream.validate_module_slice.profile_sound bytes decoded hr
 
 end Itasca

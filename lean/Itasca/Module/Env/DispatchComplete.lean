@@ -28,27 +28,27 @@ open ModuleBinary ModuleSections ModuleEnv
 returns success at the end of the payload together with the `Effect` of the matching slot update.
 The premises do not assume any parser execution. -/
 theorem metadata.decode_env_section.profile_complete (data : Slice U8) (pos : Usize) (id : U8)
-    (env : metadata.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize) (profile : ValidationProfile)
+    (env : metadata.Env) (decls : Declarations) (raw : ModuleBinary.Module) (next : Usize)
     (hlo : 1 ≤ (sectionRank id).val) (hhi : (sectionRank id).val ≤ 10)
-    (hb : At (fun u bs => Payload raw (sectionRank id).val u bs profile) data pos () next)
-    (hv : SectionValid raw (sectionRank id).val env profile) (hready : Ready raw ((sectionRank id).val - 1) decls env)
+    (hb : At (fun u bs => Payload raw (sectionRank id).val u bs) data pos () next)
+    (hv : SectionValid raw (sectionRank id).val env) (hready : Ready raw ((sectionRank id).val - 1) decls env)
     (hbound : Bounded env pos.val) :
-    ∃ result, metadata.decode_env_section data pos id env profile = .ok (.Ok next, result) ∧
-      Effect (profile := profile) data pos env decls id next result (update raw (sectionRank id).val decls) := by
+    ∃ result, metadata.decode_env_section data pos id env = .ok (.Ok next, result) ∧
+      Effect data pos env decls id next result (update raw (sectionRank id).val decls) := by
   have hc := sectionRank_prefix hlo hhi
   rcases hc with h | h | h | h | h | h | h | h | h | h
   · have he : id = 1#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_type_section.profile_complete data pos env profile raw.types next hb
-      (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mp (hv ft hm)) hbound.types
+    obtain ⟨result, hr, ha⟩ := metadata.decode_type_section.profile_complete data pos env raw.types next hb
+      (by intro ft hm; exact (Profile.funcTypeAdmissible_iff ft).mp (hv ft hm)) hbound.types
     exact ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr,
       .types ha hb hv⟩
   · have he : id = 2#u8 := UScalar.eq_of_val_eq h
     subst id
     change At (VecEncoding ImportEncoding) data pos raw.imports next at hb
-    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_import_section.complete data pos env profile raw.imports next hb hv hbound
+    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_import_section.complete data pos env raw.imports next hb hv hbound
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
-    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.imports (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
+    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.imports (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
   · have he : id = 3#u8 := UScalar.eq_of_val_eq h
     subst id
     obtain ⟨result, sigs, hr, ha⟩ := metadata.decode_function_section.complete data pos env raw.functions next hb hv hbound.funcs hbound.funcIndices
@@ -56,7 +56,7 @@ theorem metadata.decode_env_section.profile_complete (data : Slice U8) (pos : Us
       .functions ha hb⟩
   · have he : id = 4#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_table_section.complete data pos env profile raw.tables next hb hv hbound.tables
+    obtain ⟨result, hr, ha⟩ := metadata.decode_table_section.complete data pos env raw.tables next hb hv hbound.tables
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, .tables ha hb ?_⟩
     intro tt ht
     simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hv tt ht
@@ -70,7 +70,7 @@ theorem metadata.decode_env_section.profile_complete (data : Slice U8) (pos : Us
       exact hc.trans (Nat.le_max_right _ _)
   · have he : id = 6#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_global_section.complete data pos env profile raw.globals next hb hv hbound.globals hbound.globalTypes hbound.declaredFuncs
+    obtain ⟨result, hr, ha⟩ := metadata.decode_global_section.complete data pos env raw.globals next hb hv hbound.globals hbound.globalTypes hbound.declaredFuncs
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, .globals ha hb ?_⟩
     intro g hg
     exact (hv g hg).append_globals _ ha.2.2.1 (by rw [ha.1]) (by rw [ha.1])
@@ -82,7 +82,7 @@ theorem metadata.decode_env_section.profile_complete (data : Slice U8) (pos : Us
       exact List.map_eq_nil_iff.mp hx
     obtain ⟨result, actual, hr, ha, hraw⟩ := metadata.decode_export_section.complete data pos env raw.exports next hb hempty hv.1 hv.2 hbound.declaredFuncs
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
-    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.exports (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
+    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.exports (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
   · have he : id = 8#u8 := UScalar.eq_of_val_eq h
     subst id
     obtain ⟨bs, ⟨idx, hstart, hi⟩, hs⟩ := hb
@@ -90,17 +90,17 @@ theorem metadata.decode_env_section.profile_complete (data : Slice U8) (pos : Us
     obtain ⟨hidx, hp, hr⟩ := hv idx hstart
     have hread := metadata.decode_start_section.complete data pos env idx next hbytes hidx hp hr
     refine ⟨{env with start := some idx}, by simpa [metadata.decode_env_section, global_simps] using hread, ?_⟩
-    simpa [update, hstart, sectionRank, global_simps] using (Effect.start (profile := profile) (before := decls) rfl hbytes ⟨hidx, hp, hr⟩)
+    simpa [update, hstart, sectionRank, global_simps] using (Effect.start (before := decls) rfl hbytes ⟨hidx, hp, hr⟩)
   · have he : id = 9#u8 := UScalar.eq_of_val_eq h
     subst id
-    change At (VecEncoding (ElementEncodingFor profile)) data pos raw.elements next at hb
-    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_element_section.profile_complete data pos env profile raw.elements next hb hv hbound.elements hbound.declaredFuncs
+    change At (VecEncoding (ElementEncodingFor)) data pos raw.elements next at hb
+    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_element_section.profile_complete data pos env raw.elements next hb hv hbound.elements hbound.declaredFuncs
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
     have hva : ∀ e ∈ actual, ElementValid env e := by
       intro e he
       have hm : ModuleEnv.rawElement e ∈ raw.elements := by rw [← hraw]; exact List.mem_map.mpr ⟨e, he, rfl⟩
       exact hv _ hm
-    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.elements (profile := profile) (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb) hva)
+    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.elements (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb) hva)
   · have he : id = 12#u8 := UScalar.eq_of_val_eq h
     subst id
     change At (fun (_ : Unit) bs => StartEncoding raw.dataCount bs) data pos () next at hb

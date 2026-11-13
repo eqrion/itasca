@@ -106,7 +106,7 @@ theorem code.apply_func_type.realizes (st : code.OpIterState) (ft : wasm_types.F
         simp_all [alloc.vec.Vec.deref, List.append_assoc]
 
 /-- Declarative operand compatibility forces call acceptance within the
-profile's signature limits and available stack capacity. -/
+signature limits and available stack capacity. -/
 theorem code.apply_func_type.complete (st : code.OpIterState) (ft : wasm_types.FuncType)
     (outer segment : List code.StackType) (before : List valtype)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)

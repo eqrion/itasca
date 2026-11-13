@@ -14,7 +14,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_simd_constant_fixed_emission {data env locals index st values position}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (C : context) (a b : U32) (bits : U128)
@@ -63,7 +63,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Every independently classified SIMD callback yields typed emitted code
 and an exact append to the four syntactic function tables. -/
 theorem reader_simd_callback_emission {data env locals index st source values position inputs output}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
     (C : context) (opcode : U16) (sub a b : U32) (bits : U128)

@@ -33,13 +33,13 @@ theorem source_bound_base_available_wasm2 {A R : Type}
       code.step (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         {st.core with pos := next} data env ctx opcode compiler ⦃ result => result.1 = .Ok () ∧
           result.2.1 = out.core ∧ CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env ctx index .Wasm2
+    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ctx index .Wasm2 before st = .ok (.Ok (),final)) :
+    (suffix : code.body_loop_loop recorder data env ctx index before st = .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 data.val[st.core.pos.val] compiler ⦃ result =>
+      {core := {st.core with pos := next}} data env ctx index data.val[st.core.pos.val] compiler ⦃ result =>
         result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄ := by
-  have tail := code.body_loop_loop.accepted_tail recorder data env ctx index .Wasm2 st out before after final nonempty
+  have tail := code.body_loop_loop.accepted_tail recorder data env ctx index st out before after final nonempty
     inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -48,7 +48,7 @@ theorem source_bound_base_available_wasm2 {A R : Type}
   have recorded := raw
   rw [description] at recorded
   have demand := reference_reader_demand final room budget metadata codeBudget sources cursor inbounds read action
-    before after out recorded data env ctx index .Wasm2 tail
+    before after out recorded data env ctx index tail
   rw [byte]
   exact profile_base_available_wasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
     _ out.core data env ctx ctx index opcode compiler

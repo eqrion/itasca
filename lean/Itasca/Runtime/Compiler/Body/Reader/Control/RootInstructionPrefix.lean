@@ -124,7 +124,7 @@ theorem StructuredReaderCompilerStateWasm2.root_checked_instructions {jumpTables
     (exits : FrameExitSlotBounds before)
     (byte : data.val[st.core.pos.val]'inbounds = 0x0b#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 0x0b#u8 before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after)) :
     CheckedInstructionPrefix after.function ∧ after.frames.val = [] := by
   let p := state.boundary.pending next advance inbounds
   obtain ⟨callback, read, encoded, realizes, zipper, afterState⟩ := reader_end_wasm2 p

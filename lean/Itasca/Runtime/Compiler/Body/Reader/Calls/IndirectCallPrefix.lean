@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A fixed future pair table suffices for both sides of indirect-call lowering.
 Dead paths retain the exact reader advance without requiring concrete operands. -/
 theorem structured_reader_prefix_indirect_call_wasm2 {jumpTables : List U32} {data env sourceLocals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (future : List (U32 × U32))
@@ -31,7 +31,7 @@ theorem structured_reader_prefix_indirect_call_wasm2 {jumpTables : List U32} {da
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     ∃ (index table : U32) (values : List code.StackType) (extra : List (U32 × U32)),
       after.function.indirect.val = before.function.indirect.val ++ extra ∧
       Wasm2.ReaderPost p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN index.val)) p.current.ctrl.polymorphic_base values ∧

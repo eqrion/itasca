@@ -17,7 +17,7 @@ theorem IndexedTableReaderCompilerPointWasm2.finish_root {A : Type}
     (encodedBody : Wasm2.BodyEncoding data source)
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after))
+      {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after))
     (rest : TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out after final) :
     StructuredCompiledBody final.function.jump_tables.val (emit (CompilerTables.ofFunction final.function)) initial final types functions
       (ft.results.val.map Translate.valueType) locals source := by

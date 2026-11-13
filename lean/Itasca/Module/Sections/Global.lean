@@ -69,9 +69,8 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hglobals : env.globals.val.length ≤ start.val)
     (htypes : env.global_types.val.length ≤ start.val)
-    (hreferences : env.declared_funcs.val.length ≤ start.val)
-    (profile : ValidationProfile) :
-    metadata.decode_global_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    (hreferences : env.declared_funcs.val.length ≤ start.val) :
+    metadata.decode_global_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ GlobalsAdded env r.2 added ∧
           At (Rep GlobalEncoding) data start added next ∧
           (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype) ∧
@@ -94,7 +93,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hglobals, htypes, hreferences⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data pos)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -106,7 +105,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
           have := hs.length
           simp only [List.length_cons, List.length_nil] at this
           omega
-        obtain ⟨r, hc, hconst⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data middle current gt.valtype profile)
+        obtain ⟨r, hc, hconst⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data middle current gt.valtype)
         cases r with
         | Err e => simp [hc, core.result.Result.Insts.CoreOpsTry.branch,
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -158,9 +157,8 @@ valid initializers. -/
 theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hglobals : env.globals.val.length ≤ pos.val)
     (htypes : env.global_types.val.length ≤ pos.val)
-    (hreferences : env.declared_funcs.val.length ≤ pos.val)
-    (profile : ValidationProfile) :
-    metadata.decode_global_section data pos env profile ⦃ r => match r.1 with
+    (hreferences : env.declared_funcs.val.length ≤ pos.val) :
+    metadata.decode_global_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, GlobalsAdded env r.2 added ∧
           At (VecEncoding GlobalEncoding) data pos added next ∧
           (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype) ∧
@@ -176,7 +174,7 @@ theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_global_section_loop.spec data env count start hs.2.2 (by omega) (by omega) (by omega) profile)
+      (metadata.decode_global_section_loop.spec data env count start hs.2.2 (by omega) (by omega) (by omega))
     simp [metadata.decode_global_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with

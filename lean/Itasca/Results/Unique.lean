@@ -12,11 +12,11 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- A complete module has one decoding under either supported profile. -/
-theorem Profile.module_unique {profile : ValidationProfile} {x y : ModuleBinary.Module}
+/-- A complete module has one decoding under the WebAssembly Core 2.0 grammar. -/
+theorem Profile.module_unique {x y : ModuleBinary.Module}
     {bytes : List U8}
-    (hx : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) x bytes profile)
-    (hy : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) y bytes profile) : x = y :=
-  ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique profile) hx hy
+    (hx : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) x bytes)
+    (hy : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) y bytes) : x = y :=
+  ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique) hx hy
 
 end Itasca

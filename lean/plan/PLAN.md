@@ -64,6 +64,10 @@ first thing to do with one is to make it typecheck.
   obsolete Wasm 1.0 proofs shortened five existing modules below 50 lines,
   offset by deleting one short module. This increase is approved; retain
   every other metric ratchet unchanged.
+- Step 1.3 may raise `modules_under_50_lines` from 669 to 670: removing
+  the redundant body certificate shortened `Profile/Body.lean` from 51 to
+  42 lines. This increase is approved; retain every other metric ratchet
+  unchanged.
 
 ## Rules for whoever executes this plan
 

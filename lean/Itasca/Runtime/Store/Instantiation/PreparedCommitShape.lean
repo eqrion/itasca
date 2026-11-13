@@ -22,7 +22,7 @@ theorem prepared_commit_shape {M P F A : Type}
     (shape : Shape view before) (accounted : SegmentAccounting before)
     (maps : LinkedMaps view before seed.module seed.module.module.env.imports.val seed)
     {tables memories} (cache : Cache seed.module.module.env tables memories)
-    (valid : Valid seed.module.module.env seed.module.profile)
+    (valid : Valid seed.module.module.env)
     (compiled : Compiler.InitializerMappings seed.module)
     (instanceRoom : before.instances.length < before.limits.max_instances.val)
     (elementCapacity : before.elems.length + seed.module.module.env.elements.val.length ≤ Usize.max)

@@ -129,12 +129,11 @@ structure Issued where
   code_offset : Usize
   first_func : Usize
   num_funcs : Usize
-  profile : ValidationProfile
 
 /-- Workers begin with independent zeroed dispatch and validation cursors. -/
 def Issued.seed (issued : Issued) : stream.CodeBatch :=
   { module_id := issued.module_id, batch_id := issued.batch_id,
-    profile := issued.profile, env := issued.env, code := issued.code, code_offset := issued.code_offset,
+    env := issued.env, code := issued.code, code_offset := issued.code_offset,
     first_func := issued.first_func, num_funcs := issued.num_funcs,
     num_dispatched := 0#usize, dispatch_end := 0#usize,
     num_validated := 0#usize, validated_end := 0#usize, error := none }
@@ -173,15 +172,14 @@ end Itasca.StreamRetirement
 namespace Itasca.StreamScheduler
 
 /-- Termination premise on the scheduler: every callback of the visitor returns an ordinary
-result. Submission is only required to return for seeds of bounded issued batches of the selected
-profile. Rust errors and malformed returned worker records are allowed, and nothing is assumed
+result. Submission is only required to return for seeds of bounded issued batches. Rust errors and malformed returned worker records are allowed, and
+nothing is assumed
 about the workers. This is independent of the soundness provenance contract. -/
-structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
-    (profile : ValidationProfile) : Prop where
+structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V) : Prop where
   custom : ModuleTail.HooksTotal visitor.metadataModuleVisitorInst
   region : ∀ v region, ∃ v', visitor.custom_region v region = .ok v'
   environment : ∀ v env, ∃ r, visitor.environment_ready v env = .ok r
-  submit : ∀ v (issued : StreamBatch.Issued), issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
+  submit : ∀ v (issued : StreamBatch.Issued), issued.Bounded → CodeEntry.Bounds issued.env →
     ∃ r, visitor.submit_code_batch v issued.seed = .ok r
   poll : StreamRetirement.PollTotal visitor
   code_end : ∀ v, ∃ r, visitor.code_end v = .ok r
@@ -194,8 +192,7 @@ reachable from it through actual batch operations, which does not mean the worke
 Unknown, foreign, unfinished and replayed batches are permitted. The driver checks pending IDs and
 finish. -/
 structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (profile : ValidationProfile) : Prop where
+    (Tracks : U64 → List StreamBatch.Issued → V → Prop) : Prop where
   custom : ∀ id history, ModuleTail.PreservesInvariant
     visitor.metadataModuleVisitorInst (Tracks id history)
   region : ∀ id history v region v', Tracks id history v →
@@ -203,7 +200,7 @@ structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
   environment : ∀ id history v env config v', Tracks id history v →
     visitor.environment_ready v env = .ok (.Ok config, v') → Tracks id history v'
   submit : ∀ id history issued v v', Tracks id history v →
-    issued.module_id = id → issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
+    issued.module_id = id → issued.Bounded → CodeEntry.Bounds issued.env →
     (∀ old ∈ history, old.batch_id ≠ issued.batch_id) →
     visitor.submit_code_batch v issued.seed = .ok (.Ok (), v') →
     Tracks id (history ++ [issued]) v'
@@ -222,20 +219,17 @@ end Itasca.StreamScheduler
 namespace Itasca.StreamAcceptingScheduler
 
 /-- Independent byte, typing, and size premises for an issued batch. -/
-structure Valid (issued : StreamBatch.Issued)
-    (validationProfile : ValidationProfile) : Prop where
-  validation_profile : issued.profile = validationProfile
+structure Valid (issued : StreamBatch.Issued) : Prop where
   bounded : issued.Bounded
   entry_bounds : CodeEntry.Bounds issued.env
   limits : Profile.EnvironmentWithinLimits issued.env
   entries : ∃ entries, entries.length = issued.num_funcs.val ∧
-    ModuleCode.EntriesTyped (profile := validationProfile) issued.env issued.first_func.val entries ∧
-    ModuleBinary.Rep (Profile.CodeEncodingWithinLimits validationProfile) entries issued.code.val
+    ModuleCode.EntriesTyped issued.env issued.first_func.val entries ∧
+    ModuleBinary.Rep Profile.CodeEncodingWithinLimits entries issued.code.val
 
 /-- Every batch in the queue belongs to module `id` and is `Valid`. -/
-def ValidQueue (id : U64) (queue : List StreamBatch.Issued)
-    (validationProfile : ValidationProfile) : Prop :=
-  ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued validationProfile
+def ValidQueue (id : U64) (queue : List StreamBatch.Issued) : Prop :=
+  ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued
 
 /-- Completeness premise on the scheduler: positive batch settings, accepting callbacks, and
 actual `stream.CodeBatch.validate_all` results in any order. Each returned worker is the actual
@@ -244,8 +238,7 @@ required of polling. This is one sufficient policy and does not characterize eve
 strategy. The visitor state is tracked by `Queued`, which lists the issued batches not yet
 polled. -/
 structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (validationProfile : ValidationProfile) : Prop where
+    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
   custom_accepts : ModuleTail.HooksAccept visitor.metadataModuleVisitorInst
@@ -255,11 +248,11 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
     ∃ v', visitor.custom_region v region = .ok v' ∧ Queued id queue v'
   environment : ∀ id queue v env, Queued id queue v →
     ∃ v', visitor.environment_ready v env = .ok (.Ok config, v') ∧ Queued id queue v'
-  submit : ∀ id queue issued v, Queued id queue v → Valid issued validationProfile →
+  submit : ∀ id queue issued v, Queued id queue v → Valid issued →
     issued.module_id = id → queue.length < config.max_batches.val →
     ∃ v', visitor.submit_code_batch v issued.seed = .ok (.Ok (), v') ∧
       Queued id (queue ++ [issued]) v'
-  poll : ∀ id queue v, Queued id queue v → ValidQueue id queue validationProfile → queue ≠ [] →
+  poll : ∀ id queue v, Queued id queue v → ValidQueue id queue → queue ≠ [] →
     ∃ issued rest after v', (issued :: rest).Perm queue ∧
       visitor.poll_code_batch v = .ok (.Ok after, v') ∧
       stream.CodeBatch.validate_all issued.seed = .ok after ∧ Queued id rest v'

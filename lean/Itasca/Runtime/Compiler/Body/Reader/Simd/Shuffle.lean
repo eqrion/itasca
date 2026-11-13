@@ -14,11 +14,11 @@ open Aeneas Aeneas.Std Itasca
 /-- Shuffle validation retains its checked lane vector, exact source bytes,
 compiler callback, and polymorphic operand effect. -/
 theorem reader_simd_shuffle_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (next : Usize) (decoded : Leb128.Decoded data st.core.pos 13#u32 next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ low high, Wasm2.Simd.BitsDecoded data next low high out.core.pos ∧
       (∀ lane ∈ Wasm2.Simd.shuffleIndices low high, proj_uN_0 lane < 32) ∧

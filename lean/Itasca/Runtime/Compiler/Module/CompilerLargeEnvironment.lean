@@ -6,11 +6,11 @@ open Aeneas Aeneas.Std Itasca
 /-- An oversized scanned environment is rejected before any compiler callback.
 This covers custom compile limits larger than the validator's module cap. -/
 theorem compiler_stream_large_environment {V : Type} (visitor : stream.StreamingVisitor V)
-    (profile : ValidationProfile) (source : runtime.compiler.CompileSource)
+     (source : runtime.compiler.CompileSource)
     (bounds : SourceBounds source) (large : limits.MAX_MODULE_BYTES.val < source.code_start.val)
     (state : V) (storage : metadata.Env) :
     stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource visitor
-      0#u64 profile source state storage = .ok (.Err .ModuleTooLarge,state,storage) := by
+      0#u64 source state storage = .ok (.Err .ModuleTooLarge,state,storage) := by
   obtain ⟨_,environment,bytes,rfl,decoded⟩ := WP.spec_imp_exists (source_environment_spec source bounds)
   have length : bytes.length = source.code_start.val := by
     simp only [Slice.length,decoded,sourceEnvironment,List.length_take]

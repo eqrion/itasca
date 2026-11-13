@@ -12,16 +12,16 @@ def initialScheduler (A : Type) (limits : runtime.compiler.CompileLimits) (codeS
     code_start := codeStart,
     budget := {marker := (), limits, instructions := 0#usize, branches := 0#usize, controls := 0#usize, locals := 0#usize, error := none} }
 
-def uninitializedModule (env : metadata.Env) (tail : metadata.Tail) (profile : ValidationProfile)
+def uninitializedModule (env : metadata.Env) (tail : metadata.Tail)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) : runtime.compiler.ExecutableModule :=
-  { module := {env, tail}, profile, functions, global_initializers := alloc.vec.Vec.new _,
+  { module := {env, tail}, functions, global_initializers := alloc.vec.Vec.new _,
     element_initializers := alloc.vec.Vec.new _, element_offsets := alloc.vec.Vec.new _,
     data_offsets := alloc.vec.Vec.new _, initialization := 0#usize }
 
 /-- A successful public compiler run retains the actual canonical streaming
 validation, source-ordered function collection, and initializer-lowering calls. -/
 structure CompileWitness {A : Type} (allocator : runtime.platform.Alloc A)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
     (executable : runtime.compiler.ExecutableModule) where
   codeStart : Usize
   codeEnd : Usize
@@ -37,19 +37,19 @@ structure CompileWitness {A : Type} (allocator : runtime.platform.Alloc A)
   initialized : metadata.Env.new = .ok initialEnv
   validated : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
-    0#u64 profile {bytes, code_start := codeStart, code_end := codeEnd}
+    0#u64 {bytes, code_start := codeStart, code_end := codeEnd}
     (initialScheduler A limits codeStart) initialEnv = .ok (.Ok (), scheduler, env)
   tailReady : scheduler.tail = some tail
   collected : runtime.compiler.collect_functions allocator scheduler.budget scheduler.functions =
     .ok (.Ok functions, collectedBudget, pending)
-  lowered : runtime.compiler.initialize.lower allocator (uninitializedModule env tail profile functions)
+  lowered : runtime.compiler.initialize.lower allocator (uninitializedModule env tail functions)
     collectedBudget = .ok (.Ok (), executable, finalBudget)
 
 theorem compile_accepted {A : Type} (allocator : runtime.platform.Alloc A)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
     (executable : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok executable)) :
-    Nonempty (CompileWitness allocator bytes profile limits executable) := by
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok executable)) :
+    Nonempty (CompileWitness allocator bytes limits executable) := by
   unfold runtime.compiler.compile_with at accepted
   dsimp only at accepted
   split at accepted
@@ -85,7 +85,7 @@ theorem compile_accepted {A : Type} (allocator : runtime.platform.Alloc A)
 
 /-- The actual collection witness fixes the exact order of the defined code. -/
 theorem CompileWitness.function_order {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) : w.scheduler.functions.val = w.functions.val.map some := by
   have collected := collect_functions_spec allocator law w.scheduler.budget w.scheduler.functions
   rw [w.collected, WP.spec_ok] at collected
@@ -94,11 +94,11 @@ theorem CompileWitness.function_order {A : Type} {allocator : runtime.platform.A
 /-- Successful initializer lowering preserves the validated module and all
 defined functions, and establishes the concrete read-only initializer maps. -/
 theorem CompileWitness.initializers {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
-    executable.module = ⟨w.env, w.tail⟩ ∧ executable.profile = profile ∧
+    executable.module = ⟨w.env, w.tail⟩ ∧
       executable.functions.val.take w.functions.length = w.functions.val ∧ InitializerMappings executable := by
-  exact initializer_lower allocator law (uninitializedModule w.env w.tail profile w.functions) executable
+  exact initializer_lower allocator law (uninitializedModule w.env w.tail w.functions) executable
     w.collectedBudget w.finalBudget (by rfl) (by rfl) (by rfl) (by rfl) w.lowered
 
 end Itasca.Runtime.Compiler

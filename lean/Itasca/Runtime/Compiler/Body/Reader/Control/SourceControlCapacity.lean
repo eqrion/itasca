@@ -22,14 +22,14 @@ theorem IndexedTableReaderCompilerPointWasm2.control_capacity_from_source {A : T
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (kind : ControlReaderKind) (byte : data.val[st.core.pos.val] = kind.opcode)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     CallbackCapacity compiler out.core bound 3 ∧ ScopeDemand compiler out.core bound ∧
       compiler.function.body_start.val+out.core.pos.val ≤ Usize.max ∧ st.core.pos.val < out.core.pos.val := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -41,7 +41,7 @@ theorem IndexedTableReaderCompilerPointWasm2.control_capacity_from_source {A : T
   rw [kind.dispatch] at canonical
   obtain ⟨value,_,called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ canonical
   have operands := (source_callback_demand before after final out.core (kind.action value) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) called tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) called tail).1
   have capacity := room.capacity budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor (bytes := 1) (count := 3) (by omega) (by decide) out.core operands
   have scope := room.scope budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources

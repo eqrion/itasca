@@ -22,10 +22,10 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
     (noError : batch.error = none) (remaining : batch.num_validated.val < batch.num_funcs.val)
     (position : index.val = batch.first_func.val+batch.num_validated.val)
     (indexBound : index.val < batch.env.func_type_indices.val.length)
-    (typed : Profile.EntryTyped batch.profile batch.env batch.env.func_type_indices.val[index.val] entry)
+    (typed : Profile.EntryTyped batch.env batch.env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds batch.env)
     (limits : Profile.EnvironmentWithinLimits batch.env)
-    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits batch.profile) batch.code batch.validated_end entry finish)
+    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits) batch.code batch.validated_end entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
     (budget : runtime.compiler.Budget A) (batchStart : Usize) (initial : runtime.compiler.FunctionCompiler A)
     (signaturesMatch : SignatureSequence signatures.val batch.env.types.val)
@@ -33,15 +33,15 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
       batch.env.func_types.val.map (fun ty => signatureSlots ty.params.val))
     (batchBound : batchStart.val+batch.code.length ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    (demand : EntryResourceDemand budget batch.code batch.env index batch.validated_end batch.profile bound) :
+    (demand : EntryResourceDemand budget batch.code batch.env index batch.validated_end bound) :
     ∃ count after, count.val = batch.num_validated.val+1 ∧
       stream.CodeBatch.validate_func (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         batch index initial = .ok (.Ok (),{batch with num_validated := count,validated_end := finish},after) ∧
       runtime.compiler.FunctionCompiler.finish ops after (.Ok ()) = .ok (.Ok after.function,after.budget) ∧
-      ∃ w : CodeEntry.Prepared batch.code batch.env index batch.validated_end batch.profile,
+      ∃ w : CodeEntry.Prepared batch.code batch.env index batch.validated_end,
         w.finish = finish ∧ CompilationBudgetEffect budget after.budget (preparedFunctionAllowance w.ctx w.body.length) := by
   obtain ⟨⟨reply,after⟩,called,accepted,ranges,header,closed,codeBound,finished,effect⟩ := WP.spec_imp_exists
-    (compiler_entry_finish_available ops law bound allocation batch.code batch.env index batch.validated_end finish batch.profile
+    (compiler_entry_finish_available ops law bound allocation batch.code batch.env index batch.validated_end finish
       entry indexBound typed bounds limits encoded signatures functionSlots budget batchStart initial
       signaturesMatch slotsMatch batchBound created demand)
   dsimp only at accepted ranges header closed codeBound finished effect
@@ -81,10 +81,10 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (noError : dispatched.error = none) (remaining : dispatched.num_validated.val < dispatched.num_funcs.val)
     (position : frame.index.val = dispatched.first_func.val+dispatched.num_validated.val)
     (indexBound : frame.index.val < dispatched.env.func_type_indices.val.length)
-    (typed : Profile.EntryTyped dispatched.profile dispatched.env dispatched.env.func_type_indices.val[frame.index.val] entry)
+    (typed : Profile.EntryTyped dispatched.env dispatched.env.func_type_indices.val[frame.index.val] entry)
     (bounds : CodeEntry.Bounds dispatched.env)
     (limits : Profile.EnvironmentWithinLimits dispatched.env)
-    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits dispatched.profile)
+    (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits)
       dispatched.code dispatched.validated_end entry finish)
     (signaturesMatch : SignatureSequence before.signatures.val dispatched.env.types.val)
     (slotsMatch : before.func_param_slots.val.map (fun word => word.val) =
@@ -93,13 +93,13 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (slotBound : frame.index.val < before.functions.val.length)
     (vacant : before.functions.val[frame.index.val]? = some none)
     (demand : EntryResourceDemand (A := A) {before.budget with marker := ()} dispatched.code dispatched.env
-      frame.index dispatched.validated_end dispatched.profile bound) :
+      frame.index dispatched.validated_end bound) :
     ∃ (count : Usize) (final : runtime.compiler.FunctionCompiler A),
       count.val = dispatched.num_validated.val+1 ∧
       runtime.compiler.CompileScheduler.compile_entry ops before batch = .ok (.Ok (),
         {before with functions := before.functions.set frame.index (some final.function),budget := final.budget},
         {dispatched with num_validated := count,validated_end := finish}) ∧
-      ∃ w : CodeEntry.Prepared dispatched.code dispatched.env frame.index dispatched.validated_end dispatched.profile,
+      ∃ w : CodeEntry.Prepared dispatched.code dispatched.env frame.index dispatched.validated_end,
         w.finish = finish ∧ CompilationBudgetEffect before.budget final.budget (preparedFunctionAllowance w.ctx w.body.length) := by
   obtain ⟨batchStart,added,startValue⟩ := WP.spec_imp_exists
     (Usize.add_spec (x := before.code_start) (y := dispatched.code_offset) (by omega))

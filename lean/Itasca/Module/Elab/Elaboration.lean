@@ -85,7 +85,7 @@ structure Elaborates (raw : ModuleBinary.Module) (spec : _root_.module) : Prop w
 /-- The module-level conditions that `Module_ok` does not express: unique export names, the
 at most one memory.
 Instruction syntax itself is restricted by `ModuleBinary`. -/
-structure ModuleConditions (raw : ModuleBinary.Module) (profile : ValidationProfile) : Prop where
+structure ModuleConditions (raw : ModuleBinary.Module) : Prop where
   unique_exports : (raw.exports.map (fun entry => ModuleBinary.nameOfBytes entry.name)).Nodup
   memory_count : (ModuleTranslation.mems (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.memories.length ≤ 1

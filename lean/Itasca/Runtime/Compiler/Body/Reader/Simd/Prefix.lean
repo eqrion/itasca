@@ -18,7 +18,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem _root_.Itasca.Wasm2.ReaderPost.simd_dead_prefix {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
+    {p : Wasm2.Pending data env sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     {emit types functions returns locals parents current source poly values}
@@ -49,7 +49,7 @@ open Aeneas Aeneas.Std Itasca
 /-- The complete SIMD prefix step handles live emission and polymorphic dead
 code, retaining an exact append witness for all function tables. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.simd_callback_prefix {jumpTables : List U32} {data env sourceLocals index st source values position inputs output}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
+    {p : Wasm2.Pending data env sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     (C : context) {emit} [SimdEmbedding after.function.simd.val after.function.v128_pool.val C emit]

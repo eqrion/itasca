@@ -18,7 +18,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_memory_load_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -33,7 +33,7 @@ theorem reader_emit_memory_load_wasm2 {data env locals index st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ arg front values, Sequence.stackTypes st.core.vals.val = front ++ [.I32] ∧
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
@@ -72,7 +72,7 @@ theorem reader_emit_memory_load_wasm2 {data env locals index st}
   exact ⟨arg,front,values,oldTypes,post,emitted,⟨lower,SourceStack.of_map types concrete newTypes⟩,emission⟩
 
 theorem reader_emit_memory_store_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -87,7 +87,7 @@ theorem reader_emit_memory_store_wasm2 {data env locals index st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ arg front values, Sequence.stackTypes st.core.vals.val = front ++ [.I32,valtype_numtype op.type] ∧
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧

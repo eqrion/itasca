@@ -148,20 +148,20 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_table_decoded_wasm2 {V : Type} (visitor : code.OpVisitor V)
-    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
+    {data env locals index st} (p : Wasm2.Pending data env locals index st)
     (before after : V) (final : code.BodyState)
-    (accepted : code.branch_table_with visitor st data env .Wasm2 before=.ok (.Ok (),final,after)) :
+    (accepted : code.branch_table_with visitor st data env before=.ok (.Ok (),final,after)) :
     ∃ depths fallback, BrTable.Decoded data st.core.pos depths fallback final.core.pos := by
   obtain ⟨unit,empty⟩ := code.branch_table_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts st data env before () final after _ accepted
+    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts st data env before () final after accepted
   cases unit
-  have erased : code.branch_table st data env .Wasm2 =.ok (.Ok (),final) := by
+  have erased : code.branch_table st data env =.ok (.Ok (),final) := by
     simp only [code.branch_table,empty,bind_ok,uncurry_apply_pair]
   obtain ⟨C,outer,spine,header,base,typed,controls,blocks,values⟩ := p.opened
   have contextWf := Wasm2.Frames.enter_wf C
     (spine.context_wf (EnvTranslation.context_wf env ⟨locals,p.ft.results⟩)) p.current.form p.current.ins p.current.outs
   have labels := p.opened.branchLabels rfl C outer spine
-  have effect := code.branch_table.prefix st data env .Wasm2 _ p.current.ctrl outer p.current.vals controls values base
+  have effect := code.branch_table.prefix st data env _ p.current.ctrl outer p.current.vals controls values base
     p.opened.shape.core _ contextWf _ p.current.ops typed labels
   rw [erased,WP.spec_ok] at effect
   obtain ⟨depths,fallback,decoded,_⟩ := effect rfl
@@ -178,7 +178,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     {jumpTables emit types functions returns locals parents current}
@@ -195,7 +195,7 @@ theorem structured_reader_prefix_table_wasm2 {data env sourceLocals index st}
       [.JumpTable selector start len] stack)
     (byte : data.val[p.start.val]'p.inbounds=0x0e#u8)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before=.ok (.Ok (),out,after)) :
+      st data env before=.ok (.Ok (),out,after)) :
     Wasm2.ReaderPost p out.core (BrTable.instruction depths fallback) true [] ∧
     StructuredCompilerPrefix jumpTables emit initial after types functions returns locals parents
       (current.advance (BrTable.instruction depths fallback)) out.core.vals.val out.core.pos.val ∧
@@ -260,7 +260,7 @@ theorem StructuredReaderCompilerStateWasm2.br_table {A : Type}
       [.JumpTable selector start len] stack)
     (byte : data.val[st.core.pos.val]'inbounds=0x0e#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core:={st.core with pos:=next}} data env ctx index .Wasm2 0x0e#u8 before=.ok (.Ok (),out,after)) :
+      {core:={st.core with pos:=next}} data env ctx index 0x0e#u8 before=.ok (.Ok (),out,after)) :
     StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals
       data env ctx.locals index ft out parents (current.advance (BrTable.instruction depths fallback)) savedParents
       (savedCurrent.advance (.plain (BrTable.instruction depths fallback)) (BrTable.instruction depths fallback) true []) ∧
@@ -295,7 +295,7 @@ theorem IndexedTableReaderCompilerPointWasm2.br_table {A : Type}
       emit tables (stack++[.I32]) (BrTable.instruction depths fallback) [.JumpTable selector start len] stack)
     (byte : data.val[st.core.pos.val]'inbounds=0x0e#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core:={st.core with pos:=next}} data env ctx index .Wasm2 0x0e#u8 before=.ok (.Ok (),out,after)) :
+      {core:={st.core with pos:=next}} data env ctx index 0x0e#u8 before=.ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds

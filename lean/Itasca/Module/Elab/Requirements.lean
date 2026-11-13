@@ -5,7 +5,7 @@ import Mathlib.Tactic.IntervalCases
 # Requirements from typing
 
 `profile_requirements_of_typing` derives `ModuleEnv.Requirements`, the semantic requirements of
-every declaration section, from the generated typing of the sections, the module-level profile
+every declaration section, from the generated typing of the sections, the module-level restrictions
 conditions and the signature limits.
 -/
 
@@ -46,16 +46,16 @@ theorem external_index_valid {env : metadata.Env} {C : context} {desc : metadata
   cases desc <;> cases h <;>
     simp_all [ModuleSections.ExportDescValid, hc.funcs, hc.globals, hc.tables, hc.mems, proj_uN_0]
 
-/-- Generated typing, the module-level profile conditions and the signature limits discharge every
+/-- Generated typing, the module-level restrictions and the signature limits discharge every
 semantic prerequisite of the environment parser at every declaration prefix. -/
-theorem profile_requirements_of_typing {profile : ValidationProfile} {raw : ModuleBinary.Module}
-    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : ModuleConditions raw profile)
+theorem profile_requirements_of_typing {raw : ModuleBinary.Module}
+    (he : Elaborates raw (moduleOf raw)) (hs : SectionsTyped raw) (hp : ModuleConditions raw)
     (hl : ∀ ft ∈ raw.types, Itasca.Profile.FuncTypeWithinLimits ft) :
-    ModuleEnv.Requirements raw profile := by
+    ModuleEnv.Requirements raw := by
   intro id decls env hlo hhi hr
   interval_cases id
   · intro ft hm
-    exact (Itasca.Profile.funcTypeAdmissible_iff profile ft).mpr (hl ft hm)
+    exact (Itasca.Profile.funcTypeAdmissible_iff ft).mpr (hl ft hm)
   · constructor
     · intro entry hm
       have ht := hs.imports entry hm

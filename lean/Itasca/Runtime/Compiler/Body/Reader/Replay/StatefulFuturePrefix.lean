@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A fixed future metadata table can be used on both sides of one actual
 stateful callback. Its current entries are retained by list append. -/
 theorem StatefulReaderPost.future_prefix_generic {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
+    {p : Wasm2.Pending data env sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (C : context) (future : List (U32 × U32))

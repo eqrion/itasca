@@ -17,10 +17,10 @@ theorem compiler_custom_preserves {A : Type} (ops : runtime.platform.Alloc A)
 /-- Parsing the environment only delivers custom-section notifications, so the
 actual compiler scheduler is unchanged before its environment-ready callback. -/
 theorem compiler_driver_decoded {A S : Type} (ops : runtime.platform.Alloc A)
-    {source : stream.Source S} {id state before after env profile}
+    {source : stream.Source S} {id state before after env}
     (run : StreamRun.Accepted source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      id state before after env profile) : run.decoded = before := by
+      id state before after env) : run.decoded = before := by
   have region : run.region = before := (Result.ok_injective run.region_call).symm
   have decoded := metadata.validate_env_with.accepted_invariant
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops).metadataModuleVisitorInst
@@ -31,10 +31,10 @@ theorem compiler_driver_decoded {A S : Type} (ops : runtime.platform.Alloc A)
 /-- Code-end, tail parsing/delivery and final worker retirement preserve the
 function array and captured tables produced by submission. -/
 theorem compiler_driver_after_submission {A S : Type} (ops : runtime.platform.Alloc A)
-    {source : stream.Source S} {id state env environmentLength before after profile}
+    {source : stream.Source S} {id state env environmentLength before after}
     (run : StreamRun.Remaining source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      id state env environmentLength before after profile) :
+      id state env environmentLength before after) :
     after = {run.submitted with completed := after.completed, tail := some run.tail} := by
   have ended : run.ended = run.submitted := by
     have same := congrArg Prod.snd (Result.ok_injective run.end_call)
@@ -54,10 +54,10 @@ theorem compiler_driver_after_submission {A S : Type} (ops : runtime.platform.Al
 parameter tables and the empty source-indexed result array. -/
 theorem compiler_driver_configured {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
-    {source : stream.Source S} {id state before after env profile}
+    {source : stream.Source S} {id state before after env}
     (run : StreamRun.Accepted source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      id state before after env profile)
+      id state before after env)
     (emptyTypes : before.signatures.val = []) (emptySlots : before.func_param_slots.val = [])
     (emptyFunctions : before.functions.val = []) :
     SignatureSequence run.remaining.configured.signatures.val env.types.val ∧

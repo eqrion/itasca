@@ -23,7 +23,7 @@ set_option maxRecDepth 4096
 including unreachable code, bulk operations, typed select, and all SIMD forms.
 The excluded control cases have separate source-frame adapters. -/
 theorem reader_noncontrol_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals) (C : context)
@@ -40,7 +40,7 @@ theorem reader_noncontrol_checked_prefix_wasm2 {jumpTables : List U32} {data env
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+      st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   cases source_opcode_family opcode with
   | scalar kind same =>

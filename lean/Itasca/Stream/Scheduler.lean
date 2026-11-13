@@ -16,70 +16,64 @@ certificates (exact byte coverage and typed entries) for every pending issued ba
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
-
-variable {profile : ValidationProfile}
-
 /-- A completed batch has exact byte coverage and ordered entry certificates. This is derived at
 successful retirement and is never a premise on polls. -/
-def Completed (issued : StreamBatch.Issued) (profile : ValidationProfile) : Prop :=
+def Completed (issued : StreamBatch.Issued) : Prop :=
   ∃ entries, entries.length = issued.num_funcs.val ∧
-    ModuleBinary.Rep (Profile.CodeEncoding profile) entries issued.code.val ∧
-    ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries
+    ModuleBinary.Rep (Profile.CodeEncoding) entries issued.code.val ∧
+    ModuleCode.EntriesTyped issued.env issued.first_func.val entries
 
 theorem Provenance.environment_preserves {V : Type} {visitor : stream.StreamingVisitor V}
-    {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks profile)
+    {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks)
     (id : U64) (history : List StreamBatch.Issued) (data : Slice U8)
     (v v' : V) (env : metadata.Env) (next : Usize)
-    (h : metadata.validate_env_with visitor.metadataModuleVisitorInst data profile v = .ok (.Ok (env, next), v')) :
+    (h : metadata.validate_env_with visitor.metadataModuleVisitorInst data v = .ok (.Ok (env, next), v')) :
     Tracks id history v → Tracks id history v' :=
   metadata.validate_env_with.accepted_invariant _ _ (hp.custom id history) data v env next v' h
 
 theorem Provenance.tail_preserves {V : Type} {visitor : stream.StreamingVisitor V}
-    {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks profile)
+    {Tracks : U64 → List StreamBatch.Issued → V → Prop} (hp : Provenance visitor Tracks)
     (id : U64) (history : List StreamBatch.Issued) (data : Slice U8) (pos : Usize)
     (v v' : V) (env : metadata.Env) (tail : metadata.Tail)
-    (h : metadata.validate_tail_with visitor.metadataModuleVisitorInst data pos env profile v = .ok (.Ok tail, v')) :
+    (h : metadata.validate_tail_with visitor.metadataModuleVisitorInst data pos env v = .ok (.Ok tail, v')) :
     Tracks id history v → Tracks id history v' :=
   metadata.validate_tail_with.accepted_invariant _ _ (hp.custom id history) data pos env v tail v' h
 
 /-- After a successful retirement, every historical issued batch matching the removed pending ID
 is completed, and provenance is preserved. Polls need not be replay-free. -/
 theorem retire_sound {V : Type} (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
+    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
     (pending remaining : alloc.vec.Vec Usize) (hv : Tracks id history v)
     (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env)
-    (hprofiles : ∀ issued ∈ history, issued.profile = profile)
+
     (h : stream.retire_code_batch visitor id v pending = .ok (.Ok (), v', remaining)) :
     Tracks id history v' ∧ ∃ batchId,
       (batchId :: remaining.val).Perm pending.val ∧
-      ∀ issued ∈ history, issued.module_id = id → issued.batch_id = batchId → Completed issued profile := by
+      ∀ issued ∈ history, issued.module_id = id → issued.batch_id = batchId → Completed issued := by
   obtain ⟨batch, hpolled, hmodule, hfinish, hperm⟩ :=
     stream.retire_code_batch.accepted visitor id v v' pending remaining h
   obtain ⟨hv', hr⟩ := hp.poll id history v batch v' hv hpolled
   refine ⟨hv', batch.batch_id, hperm, ?_⟩
   intro issued hm hid hbatch
-  exact (hr issued hm (hid.trans hmodule.symm) hbatch).finished (henv issued hm) (hprofiles issued hm) hfinish
+  exact (hr issued hm (hid.trans hmodule.symm) hbatch).finished (henv issued hm) hfinish
 
 end Itasca.StreamScheduler
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
-
-variable {profile : ValidationProfile}
-
 /-- An accepted drain empties the pending vector and completes every historical issued batch
 whose ID was pending, while provenance is preserved across every poll. -/
 theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
+    (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
     (pending remaining : alloc.vec.Vec Usize) (hv : Tracks id history v)
     (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env)
-    (hprofiles : ∀ issued ∈ history, issued.profile = profile)
+
     (h : stream.retire_all_code_batches visitor id v pending = .ok (.Ok (), v', remaining)) :
     Tracks id history v' ∧ remaining.val = [] ∧
-      ∀ issued ∈ history, issued.module_id = id → issued.batch_id ∈ pending.val → Completed issued profile := by
+      ∀ issued ∈ history, issued.module_id = id → issued.batch_id ∈ pending.val → Completed issued := by
   generalize hn : pending.val.length = n
   induction n using Nat.strong_induction_on generalizing v pending with
   | h n ih =>
@@ -100,7 +94,7 @@ theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
       | Ok u =>
         cases u
         obtain ⟨hvNext, batchId, hperm, hcomplete⟩ :=
-          retire_sound visitor Tracks hp id history v next pending rest hv henv hprofiles hretire
+          retire_sound visitor Tracks hp id history v next pending rest hv henv hretire
         have hlen := hperm.length_eq
         simp only [List.length_cons] at hlen
         have hlt : rest.val.length < n := by omega

@@ -5,17 +5,17 @@ open Aeneas Aeneas.Std Itasca
 /-- The actual successful streaming phase supplies source encoding and exact
 module metadata before initializer lowering is attempted. -/
 theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
+    (law : Platform.AllocCorrect ops) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) (codeStart codeEnd : Usize)
     (storage env : metadata.Env) (scheduler : runtime.compiler.CompileScheduler A)
     (tail : metadata.Tail)
     (bounds : codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length)
     (tailReady : scheduler.tail = some tail)
     (accepted : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource
-      (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile
+      (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
       {bytes,code_start := codeStart,code_end := codeEnd}
       (initialScheduler A limits codeStart) storage = .ok (.Ok (),scheduler,env)) :
-    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
+    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes.val ∧
       ModuleElaboration.Matches env tail raw ∧ raw.functions = env.func_type_indices.val ∧
       bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
   let source : runtime.compiler.CompileSource := {bytes,code_start := codeStart,code_end := codeEnd}
@@ -45,7 +45,7 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
     header,entries,codeBound,moduleBound⟩ := stream_run_source
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-    SchedulerTracks (compiler_provenance ops law profile) 0#u64 source
+    SchedulerTracks (compiler_provenance ops law) 0#u64 source
     (initialScheduler A limits codeStart) scheduler env bytes environment code tailBytes coherent recombine initial run
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
     simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,

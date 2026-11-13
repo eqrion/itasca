@@ -48,5 +48,5 @@ theorem structured_callback_end_dormant_prefix {jumpTables : List U32} {emit : L
   have sources := compiler_end_sources ops law before after state kind bt accepted
   have cursor := compiler_end_cursor ops law before after state kind bt accepted
   exact ⟨deadAfter, invariant.close_dormant unentered deadAfter stable maps frame target instruction framesEq
-    targetAt codeEq  sources consumed (by rw [cursor])⟩
+    targetAt codeEq sources consumed (by rw [cursor])⟩
 end Itasca.Runtime.Compiler

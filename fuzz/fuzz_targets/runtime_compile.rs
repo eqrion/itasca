@@ -4,7 +4,7 @@ mod differential;
 
 libfuzzer_sys::fuzz_target!(|data: &[u8]| {
     let bytes = data;
-    let Ok(module) = itasca::runtime::compile(bytes, itasca::ValidationProfile::Wasm2) else {
+    let Ok(module) = itasca::runtime::compile(bytes) else {
         differential::record(differential::Coverage::Invalid);
         return;
     };

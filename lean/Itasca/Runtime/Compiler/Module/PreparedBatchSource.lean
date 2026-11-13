@@ -94,8 +94,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Pure entry decoding determines all inputs to source body demand. Grouping
 of declared locals does not affect the expanded context consumed by compilation. -/
-theorem prepared_entry_unique {data env index start profile}
-    (first second : CodeEntry.Prepared data env index start profile) :
+theorem prepared_entry_unique {data env index start}
+    (first second : CodeEntry.Prepared data env index start) :
     first.typeIdx = second.typeIdx ∧ first.ctx = second.ctx ∧ first.body = second.body ∧
       first.bodyStart = second.bodyStart ∧ first.finish = second.finish := by
   have typeEq : first.typeIdx = second.typeIdx := first.index_type.symm.trans second.index_type
@@ -109,9 +109,9 @@ theorem prepared_entry_unique {data env index start profile}
     have right := second.extent
     rw [sizeEq,contentEq] at left
     omega)
-  obtain ⟨declaredLeft,decodedLeft,valuesLeft⟩ := metadata.decode_locals.complete data first.content profile first.groups
+  obtain ⟨declaredLeft,decodedLeft,valuesLeft⟩ := metadata.decode_locals.complete data first.content first.groups
     first.bodyStart first.locals_bytes first.locals_bound
-  obtain ⟨declaredRight,decodedRight,valuesRight⟩ := metadata.decode_locals.complete data second.content profile second.groups
+  obtain ⟨declaredRight,decodedRight,valuesRight⟩ := metadata.decode_locals.complete data second.content second.groups
     second.bodyStart second.locals_bytes second.locals_bound
   rw [contentEq,decodedRight] at decodedLeft
   have localsEq : declaredLeft = declaredRight ∧ first.bodyStart = second.bodyStart := by
@@ -148,11 +148,11 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 resource eligibility. Pure decoding fixes every operand of the numeric demand,
 so no compiler run or universal family of callback proofs is supplied. -/
 theorem EntryResourceDemand.of_prepared {A : Type} {budget : runtime.compiler.Budget A}
-    {data env index start profile bound}
-    (prepared : CodeEntry.Prepared data env index start profile)
+    {data env index start bound}
+    (prepared : CodeEntry.Prepared data env index start)
     (demand : PreparedFunctionDemand budget prepared.ctx prepared.body.length
       (independentBodyDemand prepared.body env prepared.ctx prepared.typeIdx).operands bound) :
-    EntryResourceDemand budget data env index start profile bound := by
+    EntryResourceDemand budget data env index start bound := by
   intro other
   obtain ⟨typeEq,ctxEq,bodyEq,_,_⟩ := prepared_entry_unique prepared other
   simpa only [← typeEq,← ctxEq,← bodyEq] using demand
@@ -171,19 +171,19 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Independently prepared, encoded, and typed source entries in byte/index
 order, with conservative source maxima. Preparation contains only source
 metadata and decoding facts, never a compiler callback or target certificate. -/
-inductive PreparedBatchSource (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+inductive PreparedBatchSource (data : Slice U8) (env : metadata.Env)
     (bodyBytes localCount peak : Nat) : Nat → Usize → List ModuleBinary.Code → Usize → Prop where
-  | nil (index start) : PreparedBatchSource data env profile bodyBytes localCount peak index start [] start
+  | nil (index start) : PreparedBatchSource data env bodyBytes localCount peak index start [] start
   | cons {index start next finish entry entries}
       (ordinal : Usize) (ordinalValue : ordinal.val = index)
       (indexBound : ordinal.val < env.func_type_indices.val.length)
-      (typed : Profile.EntryTyped profile env env.func_type_indices.val[ordinal.val] entry)
-      (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry next)
-      (prepared : CodeEntry.Prepared data env ordinal start profile) (ending : prepared.finish = next)
+      (typed : Profile.EntryTyped env env.func_type_indices.val[ordinal.val] entry)
+      (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits) data start entry next)
+      (prepared : CodeEntry.Prepared data env ordinal start) (ending : prepared.finish = next)
       (bytes : prepared.body.length ≤ bodyBytes) (locals : prepared.ctx.locals.val.length ≤ localCount)
       (operands : (independentBodyDemand prepared.body env prepared.ctx prepared.typeIdx).operands ≤ peak)
-      (rest : PreparedBatchSource data env profile bodyBytes localCount peak (index+1) next entries finish) :
-      PreparedBatchSource data env profile bodyBytes localCount peak index start (entry::entries) finish
+      (rest : PreparedBatchSource data env bodyBytes localCount peak (index+1) next entries finish) :
+      PreparedBatchSource data env bodyBytes localCount peak index start (entry::entries) finish
 
 end Itasca.Runtime.Compiler
 

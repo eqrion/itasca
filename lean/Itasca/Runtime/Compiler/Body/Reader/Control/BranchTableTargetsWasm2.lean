@@ -19,7 +19,7 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (cs : List code.Ctrl) (c : code.Ctrl)
     (controls : st.core.ctrls.val=cs++[c]) (shape : Control.Shape st.core)
-    (accepted : code.branch_table_with visitor st data env .Wasm2 before=.ok (.Ok (),final,after)) :
+    (accepted : code.branch_table_with visitor st data env before=.ok (.Ok (),final,after)) :
     ∃ (count : U32) (first : Usize) (selector : code.StackType) (popped : code.OpIterState)
       (all : List U32) (arity : Usize),
       Leb128.Decoded data st.core.pos count first ∧
@@ -28,7 +28,7 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
       all.length=count.val+1 ∧ BrTable.LabelsDecoded data first all final.core.pos ∧
       Wasm2.TableTargets env ⟨popped⟩ all (some arity) := by
   obtain ⟨unit,erased⟩ := code.branch_table_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts st data env before () final after _ accepted
+    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts st data env before () final after accepted
   cases unit
   unfold code.branch_table_with at erased
   obtain ⟨read,readCall,readSpec⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
@@ -49,9 +49,9 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
     | Ok selector =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair] at rest
-      have loopCall : Wasm2.branchTableLoop popped data env .Wasm2 count none .Empty 0#u32=.ok (.Ok (),final) := by
+      have loopCall : Wasm2.branchTableLoop popped data env count none 0#u32=.ok (.Ok (),final) := by
         simp only [Wasm2.branchTableLoop,rest,bind_ok,uncurry_apply_pair]
-      have checked := Wasm2.branchTableLoop.spec ⟨popped⟩ data env .Wasm2 count cs c
+      have checked := Wasm2.branchTableLoop.spec ⟨popped⟩ data env count cs c
         (by simpa only [popSpec.2.1] using controls) popSpec.1
       rw [loopCall,WP.spec_ok] at checked
       obtain ⟨all,arity,length,decoded,targets,_,_,_⟩ := checked rfl

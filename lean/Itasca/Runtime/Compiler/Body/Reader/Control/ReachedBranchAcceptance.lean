@@ -12,7 +12,7 @@ set_option maxRecDepth 4096
 frame and proves its argument width. Allocation and instruction room then
 establish actual callback acceptance for every depth and label kind. -/
 theorem reached_profile_br_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Pending data env .Wasm2 sourceLocals index st) {A V : Type}
+    (p : Pending data env sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
@@ -26,9 +26,9 @@ theorem reached_profile_br_available_wasm2 {jumpTables : List U32} {data env sou
     (capacity : CallbackCapacity compiler out.core bound 2)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (byte : data.val[p.start.val]'p.inbounds = 12#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 12#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 12#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 12#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
   rw [CallbackTrace.dispatch_br] at reference ⊢

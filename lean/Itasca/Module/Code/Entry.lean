@@ -21,7 +21,7 @@ records the size header, the locals bytes and bound, the context handed to the v
 function-start callback and the body validation on the body slice. -/
 structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (env : metadata.Env) (index start finish : Usize) (v v' : V)
-    (profile : ValidationProfile) where
+     where
   typeIdx : U32
   ft : wasm_types.FuncType
   groups : List (U32 × wasm_types.ValueType)
@@ -44,7 +44,7 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   context_results : ctx.results.val = ft.results.val
   body_bytes : Wasm1.BytesAt data bodyStart body.val finish
   function_start : visitor.on_function_start v ctx typeIdx bodyStart finish = .ok (.Ok (), startedState)
-  body_accepted : code.validate_body_with visitor body env ctx typeIdx profile startedState =
+  body_accepted : code.validate_body_with visitor body env ctx typeIdx startedState =
     .ok (.Ok (), v')
 
 /-- Parameter counts bounded by the maximum module size give `Bounds`. -/
@@ -64,12 +64,12 @@ successful call has a `CodeEntry.Witness`. Rejecting callbacks are ordinary modu
 theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
-    (profile : ValidationProfile)
+
     (hbody : ∀ body ctx typeIdx started,
-      ∃ r, code.validate_body_with visitor body env ctx typeIdx profile started = .ok r) :
-    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r =>
+      ∃ r, code.validate_body_with visitor body env ctx typeIdx started = .ok r) :
+    metadata.validate_code_entry_with visitor data pos env index v ⦃ r =>
       ∀ finish, r.1 = .Ok finish →
-        Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 profile) ⦄ := by
+        Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 ) ⦄ := by
   unfold metadata.validate_code_entry_with
   dsimp only
   split
@@ -98,7 +98,7 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
             have hbytes := hhpost.1.mp rfl
             simp
             step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content profile)
+            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content )
             rw [hl]
             cases r with
             | Err e =>

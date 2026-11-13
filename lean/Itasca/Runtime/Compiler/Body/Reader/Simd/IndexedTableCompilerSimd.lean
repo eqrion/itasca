@@ -34,7 +34,7 @@ theorem StructuredReaderCompilerStateWasm2.simd {jumpTables : List U32} {A : Typ
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 0xfd#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 0xfd#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     ∃ extra, CompilerTables.ofFunction after.function = (CompilerTables.ofFunction before.function).append extra ∧
       StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
@@ -70,7 +70,7 @@ theorem IndexedTableReaderCompilerPointWasm2.simd {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 0xfd#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 0xfd#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds

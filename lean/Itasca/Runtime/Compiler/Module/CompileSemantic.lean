@@ -8,8 +8,8 @@ open Aeneas Aeneas.Std Itasca
 semantic facts before compiler assembly. No binary typing inversion or compiler
 correctness premise is needed to recover these actual validator postconditions. -/
 theorem CompileWitness.semantic_input {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable) :
-    ModuleEnv.Valid w.env profile ∧
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable) :
+    ModuleEnv.Valid w.env ∧
       (∀ segment ∈ w.tail.data.val, ModuleData.Valid w.env segment) := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
@@ -19,14 +19,14 @@ theorem CompileWitness.semantic_input {A : Type} {allocator : runtime.platform.A
   have decoded := metadata.validate_env_with.accepted_erase
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.environment run.region w.env run.environmentLength run.decoded run.decode_environment
-  have semantic := metadata.validate_env.profile_semantic_spec run.environment profile
+  have semantic := metadata.validate_env.profile_semantic_spec run.environment
   rw [decoded, WP.spec_ok] at semantic
   obtain ⟨decls, represented, valid, _, _, before, sourcePrefix, span⟩ := semantic
   have tailDecoded := metadata.validate_tail_with.accepted_erase
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.remaining.tailBytes 0#usize w.env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have tailSemantic := metadata.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp) profile
+  have tailSemantic := metadata.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp)
   rw [tailDecoded, WP.spec_ok] at tailSemantic
   obtain ⟨_, segments, _⟩ := tailSemantic
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
@@ -43,9 +43,9 @@ theorem CompileWitness.semantic_input {A : Type} {allocator : runtime.platform.A
 /-- Canonical validity belongs to the exact metadata retained in the accepted
 executable, including the data tail actually delivered to the compiler. -/
 theorem CompileWitness.semantic {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
-    ModuleEnv.Valid executable.module.env profile ∧
+    ModuleEnv.Valid executable.module.env ∧
       (∀ segment ∈ executable.module.tail.data.val, ModuleData.Valid executable.module.env segment) := by
   rw [(w.initializers law).1]
   exact w.semantic_input
@@ -53,7 +53,7 @@ theorem CompileWitness.semantic {A : Type} {allocator : runtime.platform.Alloc A
 /-- Actual successful public compilation constructs the retained segment program
 certificate, using the canonical validator's checked active-offset typing. -/
 theorem CompileWitness.segment_program {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
     ∃ function, executable.functions.val[executable.initialization.val]? = some function ∧
       SegmentProgram executable function := by
@@ -72,6 +72,6 @@ theorem CompileWitness.segment_program {A : Type} {allocator : runtime.platform.
     exact (show memory.val < w.env.mem_types.val.length ∧ ModuleConstants.Valid w.env offset .I32 from
       by simpa [ModuleData.Valid, mode] using typed).2
   have result := initializer_lower_segments allocator law _ _ _ _ rfl rfl rfl rfl elements dataOffsets w.lowered
-  exact result.2.2.2.2
+  exact result.2.2.2
 
 end Itasca.Runtime.Compiler

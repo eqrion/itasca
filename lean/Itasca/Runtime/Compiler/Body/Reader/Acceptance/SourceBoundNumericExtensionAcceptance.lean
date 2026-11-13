@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the numeric callback runs, including extension opcodes. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.numeric_available {data env locals index st out instruction values}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
     {input : List wasm_types.ValueType} {output : wasm_types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
@@ -50,7 +50,7 @@ theorem _root_.Itasca.Wasm2.ReaderPost.numeric_available {data env locals index 
 /-- A source numeric effect and exact reader post supply the live operand
 layout before the float callback runs, including extension opcodes. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.float_available {data env locals index st out instruction values}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderPost p out instruction p.current.ctrl.polymorphic_base values)
     {input : List wasm_types.ValueType} {output : wasm_types.ValueType}
     (effect : StackSemantics.NumericEffect p.current.ctrl.polymorphic_base p.current.vals input output values)
@@ -90,7 +90,7 @@ set_option maxRecDepth 4096
 /-- Every Wasm 2 sign extension accepts from the independently validated
 reader effect and source-paid numeric demand. -/
 theorem reached_profile_sign_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -100,10 +100,10 @@ theorem reached_profile_sign_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile source st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before =
+    (reference : code.step_profile source st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before =
       .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨operation,hook,meaning,_,inputs,_,encoding,hookEq,ordinary,base⟩ :=
@@ -137,7 +137,7 @@ theorem reached_profile_sign_available_wasm2 {data env locals index st}
 /-- Every saturating conversion accepts through its real prefix decoder and
 source-validated conversion reader. Compilation assumes no native FP law. -/
 theorem reached_profile_saturating_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -149,9 +149,9 @@ theorem reached_profile_saturating_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 0xfc#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 0xfc#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 0xfc#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 0xfc#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨sub,operation,hook,subEq,small,meaning,_,inputs,_,encoding,hookEq⟩ :=
@@ -212,17 +212,17 @@ theorem IndexedTableReaderCompilerPointWasm2.sign_available_from_source {A : Typ
     (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -238,7 +238,7 @@ theorem IndexedTableReaderCompilerPointWasm2.sign_available_from_source {A : Typ
   dsimp only at dispatch
   rw [dispatch] at callback
   have operands := (source_callback_demand before after final out.core (.extendedNumeric hook) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) callback tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) callback tail).1
   have demand := room.demand budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor inbounds out.core operands
   rw [byte]
@@ -264,17 +264,17 @@ theorem IndexedTableReaderCompilerPointWasm2.saturating_available_from_source {A
     (decoded : Leb128.Decoded data next subopcode prefixEnd)
     (byte : data.val[st.core.pos.val] = 252#u8)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -292,7 +292,7 @@ theorem IndexedTableReaderCompilerPointWasm2.saturating_available_from_source {A
   dsimp only at dispatch
   rw [dispatch] at callback
   have operands := (source_callback_demand before after final out.core (.extendedNumeric hook) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) callback tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) callback tail).1
   have demand := room.demand budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor inbounds out.core operands
   rw [byte]

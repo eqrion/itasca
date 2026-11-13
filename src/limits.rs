@@ -12,23 +12,13 @@ pub const MAX_MEMORY_PAGES: u32 = 65536;
 // A table is indexed by a `u32`, so this is its bound (spec 4.2.7).
 pub const MAX_TABLE_ELEMS: u32 = u32::MAX;
 
-// Wasm 1.0 has at most one table, counting imports and definitions together.
-pub const MAX_TABLES: usize = 1;
-
-// Wasm 1.0 has at most one memory, counting imports and definitions together.
+// Wasm 2.0 has at most one memory, counting imports and definitions together.
 pub const MAX_MEMORIES: usize = 1;
 
-// Wasm 1.0 function types return at most one value; multi-value arrived
-// later. `code` enforces this bound itself because `call`'s push count comes
-// from the callee's type rather than from the opcode, so nothing else bounds
-// the operand stack.
-pub const MAX_RESULTS: usize = 1;
-
-/// The maximum parameters per function signature, in either profile.
+/// The maximum parameters per function signature.
 pub const MAX_MULTI_VALUE_PARAMS: usize = 1000;
 
-/// The maximum results per function signature. Wasm 1.0 also applies
-/// `MAX_RESULTS`.
+/// The maximum results per function signature.
 pub const MAX_MULTI_VALUE_RESULTS: usize = 1000;
 
 // Implementation cap on function body size, chosen so position tracking in

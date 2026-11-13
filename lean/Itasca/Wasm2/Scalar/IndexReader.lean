@@ -10,8 +10,8 @@ preservation and compiler inversion use this construction.
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
-theorem Pending.index_reader_post {data env profile locals index st}
-    (p : Pending data env profile locals index st) (C : context) (outer : List code.StackType)
+theorem Pending.index_reader_post {data env locals index st}
+    (p : Pending data env locals index st) (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)

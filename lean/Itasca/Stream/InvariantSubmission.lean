@@ -4,15 +4,12 @@ import Itasca.Stream.InvariantRetirement
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamSubmission
-
-variable {profile : ValidationProfile}
-
 /-- Submission and polling return on reached scheduler states and preserve the
 state predicate after successful callbacks. The issued environment is fixed. -/
 structure CallbacksOn {V : Type} (visitor : stream.StreamingVisitor V)
-    (env : metadata.Env) (invariant : Nat → V → Prop) (profile : ValidationProfile) : Prop where
+    (env : metadata.Env) (invariant : Nat → V → Prop) : Prop where
   submit : ∀ v (issued : StreamBatch.Issued), invariant issued.first_func.val v → issued.env = env →
-    issued.Bounded → CodeEntry.Bounds issued.env → issued.profile = profile →
+    issued.Bounded → CodeEntry.Bounds issued.env →
     visitor.submit_code_batch v issued.seed ⦃ out => out.1 = .Ok () → invariant (issued.first_func.val + issued.num_funcs.val) out.2 ⦄
   poll : ∀ cursor, StreamRetirement.PollTotalOn visitor (invariant cursor)
 
@@ -27,7 +24,7 @@ so that both generated branches share one proof. -/
 private theorem resume_on {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
-    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
+    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant )
     (held : invariant func.val v)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -47,7 +44,7 @@ private theorem resume_on {S V : Type} (source : stream.Source S) (visitor : str
           let pending1 ← alloc.vec.Vec.push pending batchId
           let count ← next - func
           let (r2, v') ← visitor.submit_code_batch v
-            { module_id := moduleId, batch_id := batchId, profile := profile, env := env, code := bytes,
+            { module_id := moduleId, batch_id := batchId, env := env, code := bytes,
               code_offset := pos, first_func := func, num_funcs := count,
               num_dispatched := 0#usize, dispatch_end := 0#usize,
               num_validated := 0#usize, validated_end := 0#usize, error := none }
@@ -93,11 +90,11 @@ private theorem resume_on {S V : Type} (source : stream.Source S) (visitor : str
       simp
       step
       step
-      let issued : StreamBatch.Issued := ⟨moduleId, batchId, env, bytes, pos, func, count, profile⟩
+      let issued : StreamBatch.Issued := ⟨moduleId, batchId, env, bytes, pos, func, count⟩
       have hb : issued.Bounded := by
         dsimp [issued, StreamBatch.Issued.Bounded]
         scalar_tac
-      obtain ⟨⟨reply, v'⟩, hsubmit, retained⟩ := WP.spec_imp_exists (hv.submit v issued held rfl hb henv rfl)
+      obtain ⟨⟨reply, v'⟩, hsubmit, retained⟩ := WP.spec_imp_exists (hv.submit v issued held rfl hb henv)
       dsimp only [issued, StreamBatch.Issued.seed] at hsubmit
       rw [hsubmit]
       cases reply with
@@ -118,19 +115,16 @@ private theorem resume_on {S V : Type} (source : stream.Source S) (visitor : str
 end Itasca.StreamSubmission
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 private theorem submit_body_total_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
+    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant )
     (held : invariant func.val v)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : StreamSubmission.Invariant codeLen num config.max_batches pending pos func batchId) :
-    stream.submit_code_batches_loop.body source visitor moduleId profile state env.types env.imports
+    stream.submit_code_batches_loop.body source visitor moduleId state env.types env.imports
       env.globals env.exports env.elements env.data_count env.declared_funcs env.start
       env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
@@ -179,12 +173,12 @@ theorem stream.submit_code_batches_loop.spec_on {S V : Type} (source : stream.So
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (v : V)
     (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
-    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
+    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant )
     (held : invariant func.val v)
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : StreamSubmission.Invariant codeLen num config.max_batches pending pos func batchId) :
-    stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
+    stream.submit_code_batches_loop source visitor moduleId state env.types env.imports
       env.globals env.exports env.elements env.data_count env.declared_funcs env.start
       env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
@@ -207,11 +201,11 @@ maximum, when the source and scheduler callbacks return. -/
 theorem stream.submit_code_batches.spec_on {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant profile)
+    (hs : StreamSource.CallbacksTotal source state) (invariant : Nat → V → Prop) (hv : StreamSubmission.CallbacksOn visitor env invariant )
     (held : invariant 0 v)
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
-    stream.submit_code_batches source visitor moduleId profile state env codeLen pos config v
+    stream.submit_code_batches source visitor moduleId state env codeLen pos config v
       ⦃ StreamSubmission.PostOn invariant env.func_type_indices.val.length config.max_batches ⦄ := by
   unfold stream.submit_code_batches
   apply stream.submit_code_batches_loop.spec_on source visitor moduleId state env codeLen config v

@@ -6,7 +6,7 @@ namespace CodeEntry
 
 /-- Decoded entry metadata before the function-start callback. No body or callback acceptance is assumed. -/
 structure Prepared (data : Slice U8) (env : metadata.Env) (index start : Usize)
-    (profile : ValidationProfile) where
+     where
   finish : Usize
   typeIdx : U32
   ft : wasm_types.FuncType
@@ -35,13 +35,13 @@ end CodeEntry
 Only the actual prepared function-start and body calls need normal-return proofs. -/
 theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (index : Usize) (v : V)
-    (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
-    (start : ∀ prepared : CodeEntry.Prepared data env index pos profile,
+    (hbound : CodeEntry.Bounds env)
+    (start : ∀ prepared : CodeEntry.Prepared data env index pos ,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
-    (bodyTotal : ∀ (prepared : CodeEntry.Prepared data env index pos profile) started,
+    (bodyTotal : ∀ (prepared : CodeEntry.Prepared data env index pos ) started,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-      code.validate_body_with visitor prepared.body env prepared.ctx prepared.typeIdx profile started ⦃ _ => True ⦄) :
-    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ _ => True ⦄ := by
+      code.validate_body_with visitor prepared.body env prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄) :
+    metadata.validate_code_entry_with visitor data pos env index v ⦃ _ => True ⦄ := by
   unfold metadata.validate_code_entry_with
   dsimp only
   split
@@ -70,7 +70,7 @@ theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.Op
             have hbytes := hhpost.1.mp rfl
             simp
             step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content profile)
+            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content )
             rw [hl]
             cases r with
             | Err e =>
@@ -109,7 +109,7 @@ theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.Op
                     obtain ⟨body,sliced,bodyValue⟩ := WP.spec_imp_exists hslice
                     have sliced : core.slice.index.SliceIndexRangeUsizeSlice.index
                         ⟨bodyStart,«end»⟩ data = .ok body := by simpa using sliced
-                    let prepared : CodeEntry.Prepared data env index pos profile := {
+                    let prepared : CodeEntry.Prepared data env index pos := {
                       finish := «end», typeIdx := type_idx, ft := ft, groups := groups, ctx := ⟨v1,v2⟩
                       content := content, bodyStart := bodyStart, body := body, size := size
                       index_lt := hi, index_type := type_idx_post.symm, type_lt := hti

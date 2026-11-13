@@ -38,7 +38,7 @@ open ModuleBinary ModuleSections
 
 /-- The global loop accepts the remaining valid globals of a repetition span and adds them. -/
 theorem metadata.decode_global_section_loop.complete
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32) (pos : Usize) (i : U32)
     (added : List metadata.Global) (next : Usize)
     (hb : At (Rep GlobalEncoding) data pos added next)
     (hc : i.val + added.length = count.val)
@@ -46,7 +46,7 @@ theorem metadata.decode_global_section_loop.complete
     (hg : env.globals.val.length ≤ pos.val)
     (ht : env.global_types.val.length ≤ pos.val)
     (href : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_global_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_global_section_loop data env count pos i = .ok (.Ok next, result) ∧
       GlobalsAdded env result added := by
   induction added generalizing env pos i with
   | nil =>
@@ -62,8 +62,8 @@ theorem metadata.decode_global_section_loop.complete
     have hprogress := htype.globalType_progress
     have hspan := hexpr.span
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hreadtype := metadata.decode_global_type.complete data pos g.gtype initStart htype profile
-    have hreadexpr := metadata.decode_const_expr.complete hexpr (hv g (by simp)) profile
+    have hreadtype := metadata.decode_global_type.complete data pos g.gtype initStart htype
+    have hreadexpr := metadata.decode_const_expr.complete hexpr (hv g (by simp))
     obtain ⟨declared, hdeclare, hdeclared⟩ := WP.spec_imp_exists
       (metadata.declare_initializer.spec env g.init (by scalar_tac))
     have hrefsLength : declared.declared_funcs.val.length ≤ middle.val := by
@@ -100,17 +100,17 @@ theorem metadata.decode_global_section_loop.complete
 
 /-- `metadata.decode_global_section` accepts a vector span of valid globals and adds them. -/
 theorem metadata.decode_global_section.complete (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) (added : List metadata.Global) (next : Usize)
+    (env : metadata.Env) (added : List metadata.Global) (next : Usize)
     (hb : At (VecEncoding GlobalEncoding) data pos added next)
     (hv : ∀ g ∈ added, ModuleConstants.Valid env g.init g.gtype.valtype)
     (hg : env.globals.val.length ≤ pos.val)
     (ht : env.global_types.val.length ≤ pos.val)
     (href : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_global_section data pos env profile = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_global_section data pos env = .ok (.Ok next, result) ∧
       GlobalsAdded env result added := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, hp⟩ := metadata.decode_global_section_loop.complete
-    data env profile count middle 0#u32 added next hentries (by simpa using hc.symm) hv
+    data env count middle 0#u32 added next hentries (by simpa using hc.symm) hv
     (by have := hcount.span; omega) (by have := hcount.span; omega)
     (by have := hcount.span; omega)
   refine ⟨result, ?_, hp⟩

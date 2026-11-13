@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 /-- The complete post-reader stack recovers a live Wasm 2 child front by
 cancelling its exact translated parameter suffix. -/
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.scope_fronts {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
@@ -33,7 +33,7 @@ theorem _root_.Itasca.Wasm2.ReaderEnterPost.scope_fronts {data env locals index 
 /-- A dormant Wasm 2 entry retains the exact saved prefix even when operand
 popping used the polymorphic stack rule. -/
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.scope_fronts_dormant {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial)
     {parents current} (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))

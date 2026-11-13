@@ -111,16 +111,16 @@ A retained source body suffix therefore bounds that state by the independent
 whole-body demand, without an accepted compiler callback premise. -/
 theorem source_table_loop_demand
     (before after final : List Observation) (st : code.OpIterState) (out : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (shape : Control.Shape st) (count : U32)
-    (reference : code.branch_table_with_loop recorder st data env profile before count none .Empty 0#u32 =
+    (reference : code.branch_table_with_loop recorder st data env before count none 0#u32 =
       .ok (.Ok (),out,after))
-    (tail : code.body_loop_loop recorder data env ctx index profile after out = .ok (.Ok (),final)) :
+    (tail : code.body_loop_loop recorder data env ctx index after out = .ok (.Ok (),final)) :
     out.core.vals.length ≤ (observationDemand final).operands ∧
     out.core.ctrls.length ≤ (observationDemand final).controls := by
   obtain ⟨observations,recorded,trace⟩ := Wasm2.CallbackTrace.table_loop_records recorder id recorder_records
-    ⟨st⟩ data env profile shape (by simp) count 0#u32 none .Empty (by simp) before (.Ok ()) out after reference
-  obtain ⟨suffix,retained⟩ := source_body_recorded_prefix after final out data env ctx index profile (.Ok ()) tail
+    ⟨st⟩ data env shape (by simp) count 0#u32 none (by simp) before (.Ok ()) out after reference
+  obtain ⟨suffix,retained⟩ := source_body_recorded_prefix after final out data env ctx index (.Ok ()) tail
   obtain ⟨prior,action,reply,events⟩ := table_suffix_final_observation trace rfl
   apply observationDemand.recorded_op (prior := before ++ prior) (suffix := suffix) (action := action) (reply := reply)
   dsimp only [id] at recorded
@@ -145,7 +145,7 @@ theorem compiler_table_loop_collect_available {A V : Type}
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (st : code.OpIterState) (out : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (all : List U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32) (all : List U32)
     (empty : compiler.table_depths.val = []) (length : all.length = count.val+1)
     (decoded : BrTable.LabelsDecoded data st.pos all out.core.pos)
     (branches : compiler.budget.branches.val+count.val ≤ compiler.budget.limits.max_branch_table_entries.val)
@@ -159,10 +159,10 @@ theorem compiler_table_loop_collect_available {A V : Type}
       source.on_br_table sourceBefore marked depth ts = .ok (.Ok (),sourceAfter) →
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_br_table current marked depth ts
         ⦃ result => result.1 = .Ok () ∧ post {state with core := marked} sourceAfter result.2 ⦄)
-    (reference : code.branch_table_with_loop source st data env profile before count none .Empty 0#u32 =
+    (reference : code.branch_table_with_loop source st data env before count none 0#u32 =
       .ok (.Ok (),out,after)) :
     code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env profile compiler count none .Empty 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env compiler count none 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         post out after result.2.2 ⦄ := by
   let related := fun index state (_ : V) current =>
     LabelCollectionPrefix compiler current index ∧
@@ -198,10 +198,10 @@ theorem compiler_table_loop_collect_available {A V : Type}
     refine ⟨(.Ok (),targetAfter),called,rfl,collected,?_,held.2.2⟩
     simpa only [frame,appended] using decodedPrefix
   obtain ⟨targetAfter,called,retained⟩ := Wasm2.Visitor.table_loop_reader_accepted_replay source
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) related readRelated post data env profile count
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) related readRelated post data env count
     readMoves label (fun state sourceBefore current marked depth ts sourceAfter held mark call =>
       finish state current marked depth ts sourceBefore sourceAfter held.1 held.2.1 held.2.2.1 held.2.2.2 mark call)
-    0#u32 (by simp) none .Empty st out before after compiler
+    0#u32 (by simp) none st out before after compiler
     ⟨LabelCollectionPrefix.initial compiler,by simpa [empty] using TableDecodePrefix.initial st decoded,rfl,rfl⟩ reference
   apply WP.exists_imp_spec
   exact ⟨(.Ok (),out,targetAfter),called,rfl,rfl,retained⟩
@@ -221,11 +221,11 @@ open Aeneas Aeneas.Std Itasca
 single final unreachable transformation. This describes the source reader,
 without any compiler-success or target callback assumption. -/
 theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count index : U32)
-    (arity : Option Usize) (first : signature.ResultType)
+    (data : Slice U8) (env : metadata.Env) (count index : U32)
+    (arity : Option Usize)
     (st : code.OpIterState) (out : code.BodyState) (before after : V)
     (bounded : index.val ≤ count.val)
-    (reference : code.branch_table_with_loop source st data env profile before count arity first index =
+    (reference : code.branch_table_with_loop source st data env before count arity index =
       .ok (.Ok (),out,after)) :
     ∃ last, last.vals = st.vals ∧ last.ctrls = st.ctrls ∧ code.mark_unreachable last = .ok out.core := by
   let related := fun (_ : Nat) (state : code.OpIterState) (left right : V) =>
@@ -244,7 +244,7 @@ theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
     obtain ⟨values,controls,_,_⟩ := actual depth ts rfl
     exact ⟨values.trans held.1,controls.trans held.2.1,held.2.2⟩
   obtain ⟨targetAfter,_,retained⟩ := Wasm2.Visitor.table_loop_reader_accepted_replay source source related readRelated post
-    data env profile count readMoves
+    data env count readMoves
     (by
       intro i state left right depth ts next _ held called
       obtain ⟨values,controls,rfl⟩ := held
@@ -255,22 +255,22 @@ theorem source_table_loop_frame {V : Type} (source : code.OpVisitor V)
       obtain ⟨values,controls,rfl⟩ := held
       rw [called,WP.spec_ok]
       exact ⟨rfl,state.core,values,controls,mark⟩)
-    index bounded arity first st out before after before ⟨rfl,rfl,rfl⟩ reference
+    index bounded arity st out before after before ⟨rfl,rfl,rfl⟩ reference
   exact retained
 
 /-- Source frame preservation and the independently decoded final cursor fix
 the final marked state uniquely, including unreachable operand truncation. -/
 theorem source_table_loop_marked {V : Type} (source : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count index : U32)
-    (arity : Option Usize) (first : signature.ResultType)
+    (data : Slice U8) (env : metadata.Env) (count index : U32)
+    (arity : Option Usize)
     (st : code.OpIterState) (out : code.BodyState) (before after : V)
     (bounded : index.val ≤ count.val) (shape : Control.Shape st)
-    (reference : code.branch_table_with_loop source st data env profile before count arity first index =
+    (reference : code.branch_table_with_loop source st data env before count arity index =
       .ok (.Ok (),out,after))
     (state marked : code.OpIterState) (values : state.vals = st.vals) (controls : state.ctrls = st.ctrls)
     (position : state.pos = out.core.pos) (mark : code.mark_unreachable state = .ok marked) :
     marked = out.core := by
-  obtain ⟨last,lastValues,lastControls,lastMark⟩ := source_table_loop_frame source data env profile count index arity first
+  obtain ⟨last,lastValues,lastControls,lastMark⟩ := source_table_loop_frame source data env count index arity
     st out before after bounded reference
   have lastShape : Control.Shape last :=
     ⟨by simpa only [lastControls] using shape.ordered,
@@ -323,20 +323,20 @@ theorem compiler_table_reader_loop_available {A V : Type}
     (tables : compiler.reachable = true → compiler.function.jump_tables.val.length ≤ compiler.function.code.val.length)
     (selector : U32)
     (selectorAt : compiler.reachable = true → compiler.before.val[compiler.before.val.length-1]? = some selector)
-    (reference : code.branch_table_with_loop source st data env .Wasm2 before count none .Empty 0#u32 =
+    (reference : code.branch_table_with_loop source st data env before count none 0#u32 =
       .ok (.Ok (),out,after)) :
     code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 compiler count none .Empty 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env compiler count none 0#u32 ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => match counter with
             | .instructions => 2*(count.val+1)+1 | .branches => count.val+1 | _ => 0) ⦄ := by
   refine compiler_table_loop_collect_available ops law bound allocation source before after compiler st out data env
-    .Wasm2 count all empty length decoded (by omega) (by omega) (by omega)
+     count all empty length decoded (by omega) (by omega) (by omega)
     (fun _ _ targetAfter => CompilationBudgetEffect compiler.budget targetAfter.budget
       (fun counter => match counter with
         | .instructions => 2*(count.val+1)+1 | .branches => count.val+1 | _ => 0)) ?_ reference
   intro state current marked depth ts sourceBefore sourceAfter collected read values controls mark _
-  have markedEq := source_table_loop_marked source data env .Wasm2 count 0#u32 none .Empty st out before after (by simp)
+  have markedEq := source_table_loop_marked source data env count 0#u32 none st out before after (by simp)
     shape reference state.core marked values controls (read.cursor length) mark
   subst marked
   have whole := read.complete length
@@ -398,7 +398,7 @@ set_option maxRecDepth 4096
 retained frame/operand geometry, and explicit numeric resource bounds. Both
 live and dead tables include every label and the separately decoded fallback. -/
 theorem reached_profile_br_table_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A V : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
@@ -417,9 +417,9 @@ theorem reached_profile_br_table_available_wasm2 {jumpTables : List U32} {data e
     (depthCount : depths.length+1 ≤ U32.max)
     (boundary : CompilerTableBoundary compiler)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
-    (reference : code.step_profile source st data env ctx index .Wasm2 14#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 14#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 14#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 14#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => match counter with
             | .instructions => 2*(depths.length+1)+1 | .branches => depths.length+1 | _ => 0) ⦄ := by
@@ -526,17 +526,17 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (byte : data.val[st.core.pos.val] = 14#u8)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -560,7 +560,7 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
       ⟨pending.opened.shape.core.ordered,pending.opened.shape.core.bounded⟩)
   rw [popCall,WP.spec_ok] at poppedSpec
   have readCount := reader.read_u32_leb.complete data next count first countDecoded
-  have loopReference : code.branch_table_with_loop recorder popped data env .Wasm2 before count none .Empty 0#u32 =
+  have loopReference : code.branch_table_with_loop recorder popped data env before count none 0#u32 =
       .ok (.Ok (),out,after) := by
     unfold code.branch_table_with at raw
     rw [readCount] at raw
@@ -568,7 +568,7 @@ theorem IndexedTableReaderCompilerPointWasm2.table_available_from_source {A : Ty
     rw [popCall] at raw
     simpa only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Std.uncurry] using raw
   have operands := (source_table_loop_demand before after final popped out data env ⟨sourceLocals,ft.results⟩
-    index .Wasm2 poppedSpec.1 count loopReference tail).1
+    index poppedSpec.1 count loopReference tail).1
   have countSpan := countDecoded.span
   change next.val < first.val ∧ first.val ≤ next.val+5 ∧ first.val ≤ data.length at countSpan
   have labelSpan := table_labels_length_span allDecoded

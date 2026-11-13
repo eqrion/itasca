@@ -27,7 +27,7 @@ theorem StructuredReaderCompilerStateWasm2.finish_root {jumpTables : List U32} {
     (encodedBody : Wasm2.BodyEncoding data source)
     (byte : data.val[st.core.pos.val]'inbounds = 0x0b#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 0x0b#u8 before = .ok (.Ok (), out, after))
+      {core := {st.core with pos := next}} data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after))
     (rest : TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out after final) :
     StructuredCompiledBody jumpTables emit initial final types functions (ft.results.val.map Translate.valueType) locals source := by
   let p := state.boundary.pending next advance inbounds

@@ -82,8 +82,8 @@ namespace Itasca
 `Valid` at `initializerType`. -/
 @[step]
 theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile) :
-    metadata.decode_element_initializer data pos env elem expressions profile ⦃ r => match r with
+    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) :
+    metadata.decode_element_initializer data pos env elem expressions ⦃ r => match r with
       | .Ok (value, next) =>
           ModuleBinary.At (ModuleElements.InitializerEncoding expressions) data pos value next ∧
           ModuleConstants.Valid env value (ModuleElements.initializerType elem expressions)
@@ -93,7 +93,7 @@ theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
     have ht : wasm_types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
       cases elem <;> rfl
     simp only [metadata.decode_element_initializer, ↓reduceIte, ht, bind_ok]
-    apply WP.spec_mono (metadata.decode_const_expr.spec data pos env (ModuleConstants.referenceValueType elem) profile)
+    apply WP.spec_mono (metadata.decode_const_expr.spec data pos env (ModuleConstants.referenceValueType elem))
     intro r hp
     cases r with
     | Err _ => trivial
@@ -118,10 +118,10 @@ theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
 /-- The initializer loop returns `count` initializers forming a `Rep` span, all valid, and extends
 only the declared functions, by their references. -/
 theorem metadata.decode_element_initializers_loop.spec (data : Slice U8) (env : metadata.Env)
-    (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile)
+    (elem : wasm_types.ElemType) (expressions : Bool)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hrefs : env.declared_funcs.val.length ≤ start.val) :
-    metadata.decode_element_initializers_loop data env elem expressions profile count start
+    metadata.decode_element_initializers_loop data env elem expressions count start
       (alloc.vec.Vec.new _) 0#u32 ⦃ r => match r.1 with
       | .Ok (values, next) => values.val.length = count.val ∧
           ModuleReferences.Added env r.2 (values.val.flatMap ModuleReferences.initializer) ∧
@@ -146,7 +146,7 @@ theorem metadata.decode_element_initializers_loop.spec (data : Slice U8) (env : 
     · have heq : i.val = count.val := by scalar_tac
       exact ⟨by omega, henv, hbytes, hvalid, hbound⟩
     · obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists
-        (metadata.decode_element_initializer.spec data pos current elem expressions profile)
+        (metadata.decode_element_initializer.spec data pos current elem expressions)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -192,9 +192,9 @@ theorem metadata.decode_element_initializers_loop.spec (data : Slice U8) (env : 
 /-- `metadata.decode_element_initializers` returns the initializers of a `VecEncoding` span, all
 valid, and extends only the declared functions, by their references. -/
 theorem metadata.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) (profile : ValidationProfile)
+    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool)
     (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    metadata.decode_element_initializers data pos env elem expressions profile ⦃ r => match r.1 with
+    metadata.decode_element_initializers data pos env elem expressions ⦃ r => match r.1 with
       | .Ok (values, next) =>
           ModuleBinary.At (ModuleBinary.VecEncoding (ModuleElements.InitializerEncoding expressions))
             data pos values.val next ∧
@@ -211,7 +211,7 @@ theorem metadata.decode_element_initializers.spec (data : Slice U8) (pos : Usize
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨r, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_element_initializers_loop.spec data env elem expressions profile count start
+      (metadata.decode_element_initializers_loop.spec data env elem expressions count start
         hs.2.2 (by omega))
     obtain ⟨res, result⟩ := r
     simp [metadata.decode_element_initializers, hr, hloop, core.result.Result.Insts.CoreOpsTry.branch]

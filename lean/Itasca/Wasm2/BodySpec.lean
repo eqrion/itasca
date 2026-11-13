@@ -35,7 +35,7 @@ def FunctionTyped (env : metadata.Env) (locals : alloc.vec.Vec wasm_types.ValueT
 
 /-- The whole-body certificate used by both soundness and completeness. It contains no
 validator-success premise. -/
-def Validated (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
+def Validated (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : Prop :=
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ BodyEncoding data ops ∧
     FunctionTyped env locals ft ops ∧

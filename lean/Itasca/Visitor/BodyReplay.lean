@@ -18,14 +18,14 @@ bound the sizes of all remaining source observations. This supplies source
 validation evidence only, never an accepted target run. -/
 def AcceptingSuffixRefinement {V W : Type} (source : code.OpVisitor V) (target : code.OpVisitor W)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (final : V) (related : code.BodyState → V → W → Prop) : Prop :=
+     (final : V) (related : code.BodyState → V → W → Prop) : Prop :=
   ∀ st v w, related st v w →
-    code.body_loop_loop source data env ctx typeIndex profile v st = .ok (.Ok (),final) →
+    code.body_loop_loop source data env ctx typeIndex v st = .ok (.Ok (),final) →
     st.core.ctrls.val ≠ [] →
     ∀ (inbounds : st.core.pos.val < data.length) (next : Usize), next.val = st.core.pos.val+1 →
-    ∀ out middle, code.step_profile source {core := {st.core with pos := next}} data env ctx typeIndex profile
+    ∀ out middle, code.step_profile source {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] v = .ok (.Ok (),out,middle) →
-    code.step_profile target {core := {st.core with pos := next}} data env ctx typeIndex profile
+    code.step_profile target {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] w ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         related out middle result.2.2 ∧ next.val ≤ out.core.pos.val ⦄
 end ReachedBody
@@ -34,14 +34,14 @@ end ReachedBody
 byte read and source step are the actual extracted loop operations. -/
 theorem code.body_loop_loop.accepted_tail {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
-    (typeIndex : U32) (profile : ValidationProfile) (st out : code.BodyState)
+    (typeIndex : U32) (st out : code.BodyState)
     (before middle final : V) (nonempty : st.core.ctrls.val ≠ [])
     (inbounds : st.core.pos.val < data.length) (next : Usize)
     (advance : next.val = st.core.pos.val+1)
-    (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx typeIndex profile
+    (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle))
-    (reference : code.body_loop_loop visitor data env ctx typeIndex profile before st = .ok (.Ok (),final)) :
-    code.body_loop_loop visitor data env ctx typeIndex profile middle out = .ok (.Ok (),final) := by
+    (reference : code.body_loop_loop visitor data env ctx typeIndex before st = .ok (.Ok (),final)) :
+    code.body_loop_loop visitor data env ctx typeIndex middle out = .ok (.Ok (),final) := by
   obtain ⟨result,read,position,resultEq,positionEq⟩ := WP.spec_imp_exists
     (reader.read_byte.spec data st.core.pos inbounds)
   have same : position = next := UScalar.eq_of_val_eq (by omega)
@@ -59,12 +59,12 @@ loop. The theorem assumes neither target body success nor a target trace. -/
 theorem code.body_loop_loop.accepted_suffix_replay_on {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
+     (related : code.BodyState → V → W → Prop)
     (final : V)
-    (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex profile final related)
+    (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex final related)
     (st : code.BodyState) (v : V) (w : W) (initial : related st v w)
-    (reference : code.body_loop_loop source data env ctx typeIndex profile v st = .ok (.Ok (),final)) :
-    code.body_loop_loop target data env ctx typeIndex profile w st ⦃ result =>
+    (reference : code.body_loop_loop source data env ctx typeIndex v st = .ok (.Ok (),final)) :
+    code.body_loop_loop target data env ctx typeIndex w st ⦃ result =>
       result.1 = .Ok () ∧ ∃ closed, related closed final result.2 ∧
         closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
   generalize measure : Usize.max-st.core.pos.val = remaining
@@ -104,7 +104,7 @@ theorem code.body_loop_loop.accepted_suffix_replay_on {V W : Type}
           have smaller : Usize.max-out.core.pos.val < remaining := by
             have maximum := out.core.pos.hmax
             scalar_tac
-          have tail' : code.body_loop_loop source data env ctx typeIndex profile middle out = .ok (.Ok (),final) := by
+          have tail' : code.body_loop_loop source data env ctx typeIndex middle out = .ok (.Ok (),final) := by
             simpa [code.body_loop_loop,code.body_loop_loop.body,alloc.vec.Vec.is_empty,Std.bind_assoc,Std.uncurry,
               core.result.Result.Insts.CoreOpsTry.branch] using tail
           simpa [code.body_loop_loop,code.body_loop_loop.body,alloc.vec.Vec.is_empty,Std.bind_assoc,Std.uncurry,
@@ -120,14 +120,14 @@ validator's accepting recorder; no successful target run is assumed. -/
 theorem code.validate_body_with.accepted_suffix_replay_on {V W : Type}
     (source : code.OpVisitor V) (target : code.OpVisitor W)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
-    (profile : ValidationProfile) (related : code.BodyState → V → W → Prop)
+     (related : code.BodyState → V → W → Prop)
     (final : V)
-    (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex profile final related)
+    (stepRefinement : ReachedBody.AcceptingSuffixRefinement source target data env ctx typeIndex final related)
     (v : V) (w : W)
     (initial : ∀ st, code.initial_state env typeIndex = .ok (.Ok st) → related st v w)
-    (reference : code.validate_body_with source data env ctx typeIndex profile v =
+    (reference : code.validate_body_with source data env ctx typeIndex v =
       .ok (.Ok (),final)) :
-    code.validate_body_with target data env ctx typeIndex profile w ⦃ result =>
+    code.validate_body_with target data env ctx typeIndex w ⦃ result =>
       result.1 = .Ok () ∧ ∃ closed, related closed final result.2 ∧
         closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
   unfold code.validate_body_with at reference ⊢
@@ -144,7 +144,7 @@ theorem code.validate_body_with.accepted_suffix_replay_on {V W : Type}
     | Ok st =>
       rw [started]
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      apply code.body_loop_loop.accepted_suffix_replay_on source target data env ctx typeIndex profile related final
+      apply code.body_loop_loop.accepted_suffix_replay_on source target data env ctx typeIndex related final
         stepRefinement st v w (initial st started)
       simpa [core.result.Result.Insts.CoreOpsTry.branch,code.body_loop] using tail
 

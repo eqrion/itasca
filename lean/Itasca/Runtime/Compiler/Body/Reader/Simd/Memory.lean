@@ -14,13 +14,13 @@ open Aeneas Aeneas.Std Itasca
 /-- Full SIMD memory readers retain both encoded immediates, validated memory
 availability and alignment, the exact callback, and the source prefix. -/
 theorem reader_simd_memory_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.MemoryOperation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Wasm2.Simd.memoryMeaning subopcode.val = some op) (full : op.laneCount = 0)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ arg middle position, Leb128.Decoded data next arg.align middle ∧
       Leb128.Decoded data middle arg.offset position ∧
@@ -92,13 +92,13 @@ private theorem simd_memory_lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := b
 /-- Lane SIMD memory readers retain both encoded immediates, validated memory
 availability and alignment, the exact callback, and the source prefix. -/
 theorem reader_simd_memory_lane_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.MemoryOperation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Wasm2.Simd.memoryMeaning subopcode.val = some op) (laned : op.laneCount ≠ 0)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ arg middle ending lane position, Leb128.Decoded data next arg.align middle ∧
       Leb128.Decoded data middle arg.offset ending ∧

@@ -5,7 +5,7 @@ import Itasca.Module.Readers.BasicComplete
 # Completeness of the constant expression parser
 
 `metadata.decode_const_expr.complete`: the parser accepts every independently encoded initializer
-that is `Valid` at the expected type and allowed by the profile. The helpers
+that is `Valid` at the expected type. The helpers
 `metadata.expect_const_type`, `metadata.read_expr_end` and `metadata.const_global` have `.complete`
 lemmas. Soundness is in `Module/Const/Parser`.
 -/
@@ -53,8 +53,8 @@ theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted 
 theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     {env : metadata.Env} {expr : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hb : ModuleBinary.At ModuleBinary.ConstEncoding data pos expr next)
-    (hv : ModuleConstants.Valid env expr ty) (profile : ValidationProfile) :
-    metadata.decode_const_expr data pos env ty profile = .ok (.Ok (expr, next)) := by
+    (hv : ModuleConstants.Valid env expr ty) :
+    metadata.decode_const_expr data pos env ty = .ok (.Ok (expr, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   cases he with
   | @i32 value immediate hi =>
@@ -106,52 +106,46 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
 
   | refNull refTy =>
     cases hv
-    cases profile with
-    | Wasm2 =>
-      obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
-        (first := [0xD0#u8]) (rest := [ModuleBinary.elemByte refTy, 0x0B#u8]) hs
-      obtain ⟨beforeEnd, himm, hend⟩ := Wasm1.BytesAt.split
-        (first := [ModuleBinary.elemByte refTy]) (rest := [0x0B#u8]) hrest
-      have hr := metadata.decode_elem_type.complete data afterOp refTy beforeEnd
-        ⟨_, rfl, himm⟩ .Wasm2
-      have ht : wasm_types.ElemType.value_type refTy = .ok (ModuleConstants.referenceValueType refTy) := by
-        cases refTy <;> rfl
-      simp [metadata.decode_const_expr, hop.read_byte, hr, ht,
-        metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
-        core.result.Result.Insts.CoreOpsTry.branch]
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
+      (first := [0xD0#u8]) (rest := [ModuleBinary.elemByte refTy, 0x0B#u8]) hs
+    obtain ⟨beforeEnd, himm, hend⟩ := Wasm1.BytesAt.split
+      (first := [ModuleBinary.elemByte refTy]) (rest := [0x0B#u8]) hrest
+    have hr := metadata.decode_elem_type.complete data afterOp refTy beforeEnd
+      ⟨_, rfl, himm⟩
+    have ht : wasm_types.ElemType.value_type refTy = .ok (ModuleConstants.referenceValueType refTy) := by
+      cases refTy <;> rfl
+    simp [metadata.decode_const_expr, hop.read_byte, hr, ht,
+      metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
+      core.result.Result.Insts.CoreOpsTry.branch]
   | @refFunc idx immediate hi =>
     cases hv with
     | refFunc _ hidx =>
-      cases profile with
-      | Wasm2 =>
-        obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
-          (first := [0xD2#u8]) (rest := immediate ++ [0x0B#u8]) hs
-        obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
-        have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
-        have hn : ¬idx.val ≥ env.func_types.val.length := by omega
-        simp [metadata.decode_const_expr, hop.read_byte, hr, lift, hn,
-          metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
-          core.result.Result.Insts.CoreOpsTry.branch]
-  | @v128 low high subBytes lowBytes highBytes hsub hlo hhi =>
-    cases hv
-    cases profile with
-    | Wasm2 =>
       obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
-        (first := [0xFD#u8]) (rest := subBytes ++ lowBytes ++ highBytes ++ [0x0B#u8]) hs
-      have hrest' : Wasm1.BytesAt data afterOp
-          (subBytes ++ (lowBytes ++ (highBytes ++ [0x0B#u8]))) next := by
-        simpa [List.append_assoc] using hrest
-      obtain ⟨afterSub, hsubspan, hrest⟩ := hrest'.split
-      obtain ⟨afterLow, hlospan, hrest⟩ := hrest.split
-      obtain ⟨beforeEnd, hhispan, hend⟩ := hrest.split
-      have hs := reader.read_u32_leb.complete data afterOp 12#u32 afterSub
-        (hsubspan.u32_decoded 12#u32 hsub)
-      have hl := reader.read_f64_bits.complete data afterSub low afterLow
-        ⟨lowBytes, hlospan.suffix, by simpa [hlo.1] using hlospan.length, hlospan.bound, hlo⟩
-      have hh := reader.read_f64_bits.complete data afterLow high beforeEnd
-        ⟨highBytes, hhispan.suffix, by simpa [hhi.1] using hhispan.length, hhispan.bound, hhi⟩
-      simp [metadata.decode_const_expr, hop.read_byte, hs, hl, hh,
+        (first := [0xD2#u8]) (rest := immediate ++ [0x0B#u8]) hs
+      obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
+      have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
+      have hn : ¬idx.val ≥ env.func_types.val.length := by omega
+      simp [metadata.decode_const_expr, hop.read_byte, hr, lift, hn,
         metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
         core.result.Result.Insts.CoreOpsTry.branch]
+  | @v128 low high subBytes lowBytes highBytes hsub hlo hhi =>
+    cases hv
+    obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
+      (first := [0xFD#u8]) (rest := subBytes ++ lowBytes ++ highBytes ++ [0x0B#u8]) hs
+    have hrest' : Wasm1.BytesAt data afterOp
+        (subBytes ++ (lowBytes ++ (highBytes ++ [0x0B#u8]))) next := by
+      simpa [List.append_assoc] using hrest
+    obtain ⟨afterSub, hsubspan, hrest⟩ := hrest'.split
+    obtain ⟨afterLow, hlospan, hrest⟩ := hrest.split
+    obtain ⟨beforeEnd, hhispan, hend⟩ := hrest.split
+    have hs := reader.read_u32_leb.complete data afterOp 12#u32 afterSub
+      (hsubspan.u32_decoded 12#u32 hsub)
+    have hl := reader.read_f64_bits.complete data afterSub low afterLow
+      ⟨lowBytes, hlospan.suffix, by simpa [hlo.1] using hlospan.length, hlospan.bound, hlo⟩
+    have hh := reader.read_f64_bits.complete data afterLow high beforeEnd
+      ⟨highBytes, hhispan.suffix, by simpa [hhi.1] using hhispan.length, hhispan.bound, hhi⟩
+    simp [metadata.decode_const_expr, hop.read_byte, hs, hl, hh,
+      metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
+      core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

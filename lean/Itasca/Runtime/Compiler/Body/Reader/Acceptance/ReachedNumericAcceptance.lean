@@ -99,7 +99,7 @@ set_option maxRecDepth 4096
 /-- The independently accepted Wasm 2 reader supplies the live operand
 layout needed by numeric lowering. No accepted compiler callback is assumed. -/
 theorem reached_reader_numeric_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -134,7 +134,7 @@ theorem reached_reader_numeric_available_wasm2 {data env locals index st}
 /-- The independently accepted Wasm 2 reader supplies the live operand
 layout needed by float lowering. No accepted compiler callback is assumed. -/
 theorem reached_reader_float_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -169,7 +169,7 @@ theorem reached_reader_float_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 profile dispatcher accepts this reached numeric
 step, deriving its capacity check from independent reference acceptance. -/
 theorem reached_profile_numeric_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
@@ -180,10 +180,10 @@ theorem reached_profile_numeric_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile source st data env ctx index .Wasm2
+    (reference : code.step_profile source st data env ctx index
       (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨_,_,_,_,_,_,_,_,ordinary,plain,sign,misc⟩ := integer_reader_facts ops compiler out.core op base
@@ -200,7 +200,7 @@ theorem reached_profile_numeric_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 profile dispatcher accepts this reached float
 step, deriving its capacity check from independent reference acceptance. -/
 theorem reached_profile_float_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
@@ -211,10 +211,10 @@ theorem reached_profile_float_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (reference : code.step_profile source st data env ctx index .Wasm2
+    (reference : code.step_profile source st data env ctx index
       (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) compiler ⦃ result =>
+      st data env ctx index (UScalar.cast .U8 (floatOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨_,_,_,_,_,_,_,_,ordinary,plain,sign,misc⟩ := float_reader_facts ops compiler out.core op base

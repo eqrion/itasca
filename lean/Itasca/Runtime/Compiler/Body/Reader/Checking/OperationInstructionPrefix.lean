@@ -49,7 +49,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual unreachable numeric reading preserves both maintained checks. -/
 theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -58,7 +58,7 @@ theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨operation, hook, meaning, handler, instruction, inputs, output,
     hookEq, ordinary, baseOpcode, sign, misc⟩ := integer_reader_facts ops before out.core op standard
@@ -73,7 +73,7 @@ theorem reader_dead_numeric_checked_prefix_wasm2 {data env sourceLocals index st
 
 /-- Actual unreachable float reading preserves both maintained checks. -/
 theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -82,7 +82,7 @@ theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨operation, hook, meaning, handler, instruction, inputs, output,
     hookEq, ordinary, baseOpcode, sign, misc⟩ := float_reader_facts ops before out.core op standard
@@ -97,7 +97,7 @@ theorem reader_dead_float_checked_prefix_wasm2 {data env sourceLocals index st}
 
 /-- Actual unreachable memory load reading preserves both maintained checks. -/
 theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -105,7 +105,7 @@ theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals inde
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_load_reader_facts ops before out.core op ⟨0#u32,0#u32⟩
   obtain ⟨capacity,run⟩ := profile_base_success_wasm2
@@ -121,7 +121,7 @@ theorem reader_dead_memory_load_checked_prefix_wasm2 {data env sourceLocals inde
 
 /-- Actual unreachable memory store reading preserves both maintained checks. -/
 theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -129,7 +129,7 @@ theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals ind
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨meaning,_,_,_,_,ordinary,base,sign,misc⟩ := memory_store_reader_facts ops before out.core op ⟨0#u32,0#u32⟩
   obtain ⟨capacity,run⟩ := profile_base_success_wasm2
@@ -145,7 +145,7 @@ theorem reader_dead_memory_store_checked_prefix_wasm2 {data env sourceLocals ind
 
 /-- Actual unreachable saturating reading preserves both maintained checks. -/
 theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -157,7 +157,7 @@ theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (0xfc#u8) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (0xfc#u8) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨operation,instruction,inputs,output,callback,_,_,_,_,values,effect,post⟩ :=
     reader_float_saturating_wasm2 p ops before after out ctx op extension subopcode next subopcodeEq decoded byte accepted
@@ -165,14 +165,14 @@ theorem reader_dead_saturating_checked_prefix_wasm2 {data env sourceLocals index
 
 /-- Sign-extension reading in dead code only observes the returned stack. -/
 theorem reader_dead_sign_checked_prefix_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (dead : before.reachable = false) (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨operation,instruction,inputs,output,callback,_⟩ := reader_integer_sign_wasm2 p ops before after out ctx op extension byte accepted
   exact compiler_dead_op_checked_prefix ops law before after out.core (integerOpcode op) 0#u32 0#u32 0#u128 dead held exits callback
@@ -190,7 +190,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed integer reader progress preserves all stored instruction checks. -/
 theorem reader_numeric_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -204,7 +204,7 @@ theorem reader_numeric_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_numeric_wasm2 p ops law before after out ctx contextLocals op baseOpcode known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -214,7 +214,7 @@ theorem reader_numeric_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual typed integer reader progress preserves all stored instruction checks. -/
 theorem reader_sign_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -228,7 +228,7 @@ theorem reader_sign_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_sign_wasm2 p ops law before after out ctx contextLocals op extension known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -249,7 +249,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed floating-point reader progress preserves all stored instruction checks. -/
 theorem reader_float_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -264,7 +264,7 @@ theorem reader_float_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_float_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode baseOpcode known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -274,7 +274,7 @@ theorem reader_float_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual typed floating-point reader progress preserves all stored instruction checks. -/
 theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -292,7 +292,7 @@ theorem reader_saturating_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (0xfc#u8) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (0xfc#u8) before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_saturating_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode extension subopcode next subopcodeEq decoded known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -313,7 +313,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -327,7 +327,7 @@ theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env so
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -343,7 +343,7 @@ theorem reader_numeric_checked_prefix_wasm2 {jumpTables : List U32} {data env so
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -358,7 +358,7 @@ theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sour
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -374,7 +374,7 @@ theorem reader_float_checked_prefix_wasm2 {jumpTables : List U32} {data env sour
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -390,7 +390,7 @@ theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data en
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -406,7 +406,7 @@ theorem reader_memory_load_checked_prefix_wasm2 {jumpTables : List U32} {data en
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -422,7 +422,7 @@ theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data e
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -438,7 +438,7 @@ theorem reader_memory_store_checked_prefix_wasm2 {jumpTables : List U32} {data e
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -452,7 +452,7 @@ theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -468,7 +468,7 @@ theorem reader_sign_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
 
 /-- Source-prefix geometry supplies live operation checks; dead reading only observes. -/
 theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals)
@@ -485,7 +485,7 @@ theorem reader_saturating_checked_prefix_wasm2 {jumpTables : List U32} {data env
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (0xfc#u8) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (0xfc#u8) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live

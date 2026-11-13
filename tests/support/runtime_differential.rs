@@ -8,7 +8,7 @@
 use itasca::runtime::{
     self as rt, ExecError, Execution, Extern, Instantiated, MemoryBuffer, Store, Trap, Value,
 };
-use itasca::{ElemType, ImportDesc, Mut, ValidationProfile, ValueType};
+use itasca::{ElemType, ImportDesc, Mut, ValueType};
 use wasmi::{Nullable, Val};
 
 const INTERRUPTS: u64 = 5_000_000;
@@ -424,7 +424,7 @@ impl Pair {
     /// Instantiates a module, optionally resolving imports from an earlier module.
     pub fn instantiate(&mut self, bytes: &[u8], provider: Option<usize>) -> Coverage {
         let input = bytes;
-        let module = match rt::compile(input, ValidationProfile::Wasm2) {
+        let module = match rt::compile(input) {
             Ok(module) => module,
             Err(_) => return Coverage::Invalid,
         };

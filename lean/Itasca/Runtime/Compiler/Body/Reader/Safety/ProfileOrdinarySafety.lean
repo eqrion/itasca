@@ -19,7 +19,7 @@ theorem compiler_reader_profile_wasm2_ordinary_total {A} (ops : runtime.platform
     (shape : Control.Shape st.core)
     (ordinary : opcode.val ∉ [2,3,4,5,11,12,13,14,15]) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 opcode compiler ⦃ out =>
+      st data env ctx index opcode compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   by_cases call : opcode = 16#u8
   · subst opcode

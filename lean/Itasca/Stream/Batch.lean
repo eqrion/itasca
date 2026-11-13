@@ -13,7 +13,7 @@ seed through actual batch operations, are defined in `Itasca/Contracts`.
 validations from any reachable worker, `StreamBatch.Reachable.finished` shows that a worker
 accepted by `stream.CodeBatch.finish` has validated every entry in order and consumed exactly its
 bytes, and `stream.CodeBatch.validate_func.cases` gives the complete case split of one validation
-call. Both profiles are covered through the `profile` parameter.
+call.
 -/
 
 open Aeneas Aeneas.Std
@@ -26,7 +26,7 @@ inductive Prefix (issued : Issued) : Nat → Usize → Prop where
   | nil : Prefix issued 0 0#usize
   | snoc {V : Type} (visitor : code.OpVisitor V) {v v' count pos index finish} :
       Prefix issued count pos → index.val = issued.first_func.val + count →
-      metadata.validate_code_entry_with visitor issued.code pos issued.env index issued.profile v =
+      metadata.validate_code_entry_with visitor issued.code pos issued.env index v =
         .ok (.Ok finish, v') →
       Prefix issued (count + 1) finish
 
@@ -35,7 +35,7 @@ def Identity (issued : Issued) (batch : stream.CodeBatch) : Prop :=
   batch.module_id = issued.module_id ∧ batch.batch_id = issued.batch_id ∧
   batch.env = issued.env ∧ batch.code = issued.code ∧
   batch.code_offset = issued.code_offset ∧ batch.first_func = issued.first_func ∧
-  batch.num_funcs = issued.num_funcs ∧ batch.profile = issued.profile
+  batch.num_funcs = issued.num_funcs
 
 end Itasca.StreamBatch
 
@@ -70,7 +70,7 @@ theorem stream.CodeBatch.validate_next.accepted {V : Type} (visitor : code.OpVis
     (h : stream.CodeBatch.validate_next visitor batch index v = .ok (.Ok finish, v')) :
     batch.num_validated.val < batch.num_funcs.val ∧
     index.val = batch.first_func.val + batch.num_validated.val ∧
-    metadata.validate_code_entry_with visitor batch.code batch.validated_end batch.env index batch.profile v =
+    metadata.validate_code_entry_with visitor batch.code batch.validated_end batch.env index v =
       .ok (.Ok finish, v') := by
   unfold stream.CodeBatch.validate_next at h
   split at h
@@ -190,12 +190,12 @@ theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
       obtain ⟨hcount, hindex, hentry⟩ :=
         stream.CodeBatch.validate_next.accepted visitor before index finish v v' hnext
       have hid := ih.1
-      obtain ⟨_, _, henv, hcode, _, hfirst, hnum, hprofile⟩ := hid
+      obtain ⟨_, _, henv, hcode, _, hfirst, hnum⟩ := hid
       refine ⟨ih.1, ?_, ?_⟩
       · change Prefix issued count.val finish
         rw [hn]
         exact ih.2.1.snoc visitor (by simpa [hfirst] using hindex)
-          (by simpa [henv, hcode, hprofile] using hentry)
+          (by simpa [henv, hcode] using hentry)
       · change count.val ≤ issued.num_funcs.val
         rw [hn]
         rw [hnum] at hcount
@@ -203,38 +203,37 @@ theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
 
 /-- The successful prefix yields independent encodings and generated typing
 by applying entry soundness to every actual successful validation call. -/
-theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Nat} {finish : Usize}
-    (h : Prefix issued count finish) (hbound : CodeEntry.Bounds issued.env)
-    (hprofile : issued.profile = profile) :
+theorem Prefix.typed {issued : Issued} {count : Nat} {finish : Usize}
+    (h : Prefix issued count finish) (hbound : CodeEntry.Bounds issued.env) :
     ∃ entries, entries.length = count ∧
-      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile))
+      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding))
         issued.code 0#usize entries finish ∧
-      ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries := by
+      ModuleCode.EntriesTyped issued.env issued.first_func.val entries := by
   induction h with
   | nil => exact ⟨[], rfl, ⟨[], .nil, Wasm1.BytesAt.nil _ _ (by simp)⟩, .nil _⟩
   | @snoc V visitor v v' count pos index finish previous hindex hentry ih =>
     have hs := metadata.validate_code_entry_with.profile_sound visitor issued.code pos
-      issued.env index finish v v' hbound profile (by simpa [hprofile] using hentry)
+      issued.env index finish v v' hbound hentry
     obtain ⟨entries, hlen, hbytes, htyped⟩ := ih
     obtain ⟨entry, he, hi, ht, hl⟩ := hs
     refine ⟨entries ++ [entry], by simp [hlen], ModuleCode.entries_at_snoc hbytes he,
       htyped.snoc ?_⟩
-    have hentryAt : ModuleCode.EntryAt (profile := profile) issued.env index.val entry := ⟨hi, ht.core, hl⟩
+    have hentryAt : ModuleCode.EntryAt issued.env index.val entry := ⟨hi, ht.core, hl⟩
     simpa [hindex, hlen] using hentryAt
 
 /-- Finishing a reachable batch implies validation of every entry, in order,
 and consumption of exactly its issued bytes. No premise prevalidates workers. -/
-theorem Reachable.finished {profile : ValidationProfile} {issued : Issued} {batch : stream.CodeBatch}
+theorem Reachable.finished {issued : Issued} {batch : stream.CodeBatch}
     (h : Reachable issued batch) (hbound : CodeEntry.Bounds issued.env)
-    (hprofile : issued.profile = profile)
+
     (hfinish : stream.CodeBatch.finish batch = .ok (.Ok ())) :
     ∃ entries, entries.length = issued.num_funcs.val ∧
-      ModuleBinary.Rep (Profile.CodeEncoding profile) entries issued.code.val ∧
-      ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries := by
+      ModuleBinary.Rep (Profile.CodeEncoding) entries issued.code.val ∧
+      ModuleCode.EntriesTyped issued.env issued.first_func.val entries := by
   obtain ⟨hid, hp, _⟩ := h.validation
   have hf := (stream.CodeBatch.finish.accepted_iff batch).mp hfinish
-  obtain ⟨entries, hn, hbytes, ht⟩ := hp.typed hbound hprofile
-  obtain ⟨_, _, _, hcode, _, _, hnum, _⟩ := hid
+  obtain ⟨entries, hn, hbytes, ht⟩ := hp.typed hbound
+  obtain ⟨_, _, _, hcode, _, _, hnum⟩ := hid
   have hn' : entries.length = issued.num_funcs.val := by rw [hn, hf.2.1, hnum]
   obtain ⟨bytes, he, hb⟩ := hbytes
   have hlast : batch.validated_end = Slice.len issued.code := by simpa [hcode] using hf.2.2

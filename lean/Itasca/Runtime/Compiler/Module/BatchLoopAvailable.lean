@@ -113,7 +113,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     (base : runtime.compiler.Budget A) (bodyBytes localCount peak : Nat)
     (before : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
     (loopIndex finish : Usize) (entries : List ModuleBinary.Code)
-    (source : PreparedBatchSource batch.code batch.env batch.profile bodyBytes localCount peak
+    (source : PreparedBatchSource batch.code batch.env bodyBytes localCount peak
       (batch.first_func.val+batch.num_validated.val) batch.validated_end entries finish)
     (envelope : FunctionDemandEnvelope base batch.env.func_type_indices.val.length bodyBytes localCount peak bound)
     (paid : CompilationBudgetEffect base before.budget
@@ -154,9 +154,9 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     | cons ordinal ordinalValue indexBound typed encoded prepared ending bytes locals operands rest =>
       have more : batch.num_validated.val < batch.num_funcs.val := by simp only [List.length_cons] at count; omega
       obtain ⟨raw,encoding,span⟩ := encoded
-      have encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits batch.profile) batch.code batch.validated_end entry prepared.finish :=
+      have encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits) batch.code batch.validated_end entry prepared.finish :=
         ending ▸ ⟨raw,encoding,span⟩
-      have rawEncoded : ModuleBinary.At (Profile.CodeEncoding batch.profile) batch.code batch.validated_end entry prepared.finish :=
+      have rawEncoded : ModuleBinary.At (Profile.CodeEncoding) batch.code batch.validated_end entry prepared.finish :=
         ⟨raw,encoding.encoding,by simpa only [ending] using span⟩
       obtain ⟨content,extent⟩ := rawEncoded.code_extent
       obtain ⟨index,dispatchedCount,frame,indexValue,dispatchedValue,frameIndex,dispatch⟩ :=
@@ -168,7 +168,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
       cases selected
       let dispatched := {batch with num_dispatched := dispatchedCount,dispatch_end := prepared.finish}
       have localDemand : EntryResourceDemand (A := A) {before.budget with marker := ()} batch.code batch.env
-          frame.index batch.validated_end batch.profile bound := by
+          frame.index batch.validated_end bound := by
         apply EntryResourceDemand.of_prepared prepared
         exact envelope.prepared (by simpa only [CompilationBudgetEffect] using paid) (by omega)
           prepared.ctx prepared.body.length _ bytes locals operands
@@ -199,7 +199,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
           (nextBatch.first_func.val+nextBatch.num_validated.val) nextScheduler.functions.val := by
         have published := slots.publish (by omega) final.function
         simpa only [nextBatch,dispatched,nextScheduler,alloc.vec.Vec.set_val_eq,ordinalValue,validatedValue,Nat.add_assoc] using published
-      have restSource : PreparedBatchSource nextBatch.code nextBatch.env nextBatch.profile bodyBytes localCount peak
+      have restSource : PreparedBatchSource nextBatch.code nextBatch.env bodyBytes localCount peak
           (nextBatch.first_func.val+nextBatch.num_validated.val) nextBatch.validated_end entries finish := by
         simpa only [nextBatch,dispatched,validatedValue,Nat.add_assoc,ending] using rest
       obtain ⟨after,worker,continued,validated,ended,error,queue,published,charged⟩ := ih nextScheduler nextBatch validatedCount restSource

@@ -26,8 +26,8 @@ def resumedSource (parent child : Frames.Saved) (instruction : instr) : Frames.S
     tokens := parent.tokens ++ child.trace ++ [.end_] }
 
 /-- The supplied source zipper after END, including the root completion alternative. -/
-def ReaderEndZipper {data env profile locals index st}
-    (p : Pending data env profile locals index st) (out : code.BodyState) : Prop :=
+def ReaderEndZipper {data env locals index st}
+    (p : Pending data env locals index st) (out : code.BodyState) : Prop :=
   (p.current.form = .body ∧ p.parents = [] ∧
     BodyTokens (Frames.trace p.parents p.current ++ [.end_]) p.current.ops ∧
     Instrs_ok (Frames.enter (bodyContext env locals p.ft) .body p.current.ins p.current.outs)
@@ -38,8 +38,8 @@ def ReaderEndZipper {data env profile locals index st}
       (resumedSource parent p.current instruction)
 
 /-- Exact source resumption and operand results for either closing handler. -/
-def ReaderClosePost {data env profile locals index st}
-    (p : Pending data env profile locals index st) (out : code.BodyState) (isElse : Bool) : Prop :=
+def ReaderClosePost {data env locals index st}
+    (p : Pending data env locals index st) (out : code.BodyState) (isElse : Bool) : Prop :=
   if isElse then
     p.current.form = .then_ ∧ At data p.start .else_ out.core.pos ∧
       Sequence.Realizes p.current.ctrl.polymorphic_base p.current.vals
@@ -51,7 +51,7 @@ def ReaderClosePost {data env profile locals index st}
         (p.current.outs.map Translate.valueType) ∧ ReaderEndZipper p out ∧ p.After out
 
 /-- The actual closing handlers preserve the independent typed zipper. -/
-theorem Pending.end_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.end_reader {data env locals index st} (p : Pending data env locals index st)
     (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
     code.end_frame st env isElse ⦃ r => r.1 = .Ok () → ReaderClosePost p r.2 isElse ⦄ := by
@@ -112,7 +112,7 @@ theorem Pending.end_reader {data env profile locals index st} (p : Pending data 
     · simp [hb]
 
 /-- The actual closing handlers preserve the independent typed zipper. -/
-theorem Pending.end_after {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.end_after {data env locals index st} (p : Pending data env locals index st)
     (isElse : Bool) (opcode : U8) (hop : opcode = if isElse then 0x05#u8 else 0x0B#u8)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
     code.end_frame st env isElse ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by

@@ -14,7 +14,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.boundary {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) :
     ReaderBoundaryWasm2 data env locals index p.ft out
@@ -34,7 +34,7 @@ theorem _root_.Itasca.Wasm2.ReaderEnterPost.boundary {data env locals index st o
     exact ⟨p.declared, by cases form <;> simp [Wasm2.Frames.Form.token, Wasm2.Token.Declared]⟩
 
 theorem reader_else_boundary_wasm2 {data env locals index st out}
-    (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (p : Wasm2.Pending data env locals index st)
     (form : p.current.form = .then_)
     (encoded : Wasm2.At data p.start .else_ out.core.pos)
     (opened : Wasm2.Frames.Open env (Wasm2.bodyContext env locals p.ft) out p.parents p.current.nextElse)
@@ -51,7 +51,7 @@ theorem reader_else_boundary_wasm2 {data env locals index st out}
     exact ⟨p.declared, trivial⟩
 
 theorem reader_end_boundary_wasm2 {data env locals index st out grandparents parent instruction}
-    (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (p : Wasm2.Pending data env locals index st)
     (parents : p.parents = grandparents ++ [parent])
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
     (opened : Wasm2.Frames.Open env (Wasm2.bodyContext env locals p.ft) out grandparents
@@ -69,7 +69,7 @@ theorem reader_end_boundary_wasm2 {data env locals index st out grandparents par
     exact ⟨p.declared, trivial⟩
 
 theorem reader_root_end_encoding_wasm2 {data env locals index st out}
-    (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (p : Wasm2.Pending data env locals index st)
     (root : p.current.form = .body)
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
     (zipper : Wasm2.ReaderEndZipper p out)
@@ -84,7 +84,7 @@ theorem reader_root_end_encoding_wasm2 {data env locals index st out}
     exact False.elim (notBody closed root)
 
 theorem reader_root_end_source_wasm2 {data env locals index st out source}
-    (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (p : Wasm2.Pending data env locals index st)
     (root : p.current.form = .body)
     (encoded : Wasm2.At data p.start .end_ out.core.pos)
     (zipper : Wasm2.ReaderEndZipper p out)

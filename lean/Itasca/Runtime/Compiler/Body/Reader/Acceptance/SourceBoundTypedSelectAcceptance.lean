@@ -23,7 +23,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Explicit-select source typing supplies the full live operand layout.
 The actual profile reader and callback accept with one instruction of room. -/
 theorem reached_profile_typed_select_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (before after : List Observation) (compiler : runtime.compiler.FunctionCompiler A)
     (out : code.BodyState) (ctx : code.Context) (demand : CallbackDemand compiler out.core bound)
@@ -31,9 +31,9 @@ theorem reached_profile_typed_select_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (reference : code.step_profile recorder st data env ctx index .Wasm2 28#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile recorder st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 28#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 28#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨capacity,raw⟩ := profile_scalar_success recorder st out data env ctx index 28#u8 before after (by decide) reference
@@ -89,24 +89,24 @@ theorem IndexedTableReaderCompilerPointWasm2.typed_select_available_from_source 
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (byte : data.val[st.core.pos.val] = 28#u8)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
   obtain ⟨ty,position,callback,_⟩ := reader_typed_select_wasm2 pending recorder before after out
     ⟨sourceLocals,ft.results⟩ byte canonical
   have operands := (source_callback_demand before after final out.core (.select_typed ty) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) callback tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) callback tail).1
   have demand := room.demand budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor inbounds out.core operands
   rw [byte]

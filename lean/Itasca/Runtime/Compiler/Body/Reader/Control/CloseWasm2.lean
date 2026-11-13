@@ -58,10 +58,10 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 /-- END reveals the exact closed source instruction, rather than an unrelated existential zipper. -/
 theorem reader_end_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0b#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0b#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0x0b#u8 before =
       .ok (.Ok (), out, after)) :
     visitor.on_end before out.core p.current.ctrl.kind p.current.bt = .ok (.Ok (), after) ∧
       code.end_frame_info st env false = .ok (.Ok (p.current.ctrl.kind, p.current.bt), out) ∧
@@ -86,10 +86,10 @@ theorem reader_end_wasm2 {data env locals index st}
 
 /-- ELSE retains the complete then arm and restarts precisely the supplied IF source frame. -/
 theorem reader_else_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x05#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0x05#u8 before =
       .ok (.Ok (), out, after)) :
     visitor.on_else before out.core p.current.bt = .ok (.Ok (), after) ∧
       code.end_frame_info st env true = .ok (.Ok (p.current.ctrl.kind, p.current.bt), out) ∧

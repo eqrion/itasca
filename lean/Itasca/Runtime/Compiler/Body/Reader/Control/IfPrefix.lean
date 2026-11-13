@@ -85,7 +85,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- An accepted canonical IF reader constructs the complete live child
 compiler prefix, its source zipper, and validator reachability correspondence. -/
 theorem structured_reader_prefix_if_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env localTypes index st}
-    (p : Wasm2.Pending data env .Wasm2 localTypes index st) {A : Type}
+    (p : Wasm2.Pending data env localTypes index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -98,7 +98,7 @@ theorem structured_reader_prefix_if_wasm2 {jumpTables : List U32} {emit : List v
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_IF)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_IF before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front condition,
       let child := SourceScope.enterIf (Wasm2.blockType bt) condition front (ins.map Translate.valueType)
         (outs.map Translate.valueType) before.function.code.val.length true

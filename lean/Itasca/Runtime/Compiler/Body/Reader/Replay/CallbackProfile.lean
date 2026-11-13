@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Wasm2.Trace.ControlRecords
 
 /-!
-Complete-profile single-callback replay, composing scalar and SIMD replay and transporting the result across validator profiles.
+Single-callback replay for the complete Wasm 2.0 dispatcher, composing scalar and SIMD replay.
 -/
 
 /-! ## Single Callback Wasm2 -/
@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
 set_option maxHeartbeats 4000000
 
-/-- Every accepted complete-profile noncontrol dispatcher step selects one
+/-- Every accepted Wasm 2.0 noncontrol dispatcher step selects one
 actual callback at its returned state, with source-bounded SIMD arguments. -/
 theorem reader_single_callback_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
@@ -91,7 +91,7 @@ theorem reader_single_callback_profile_wasm2 {V : Type} (visitor : code.OpVisito
     (index : U32) (opcode : U8) (before after : V)
     (blocked : opcode ≠ code.OP_BLOCK ∧ opcode ≠ code.OP_LOOP ∧ opcode ≠ code.OP_IF ∧
       opcode ≠ code.OP_END ∧ opcode ≠ code.OP_BR_TABLE)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
       invoke visitor before (.op out.core action) = .ok (.Ok (),after) := by
   by_cases h5 : opcode = 5#u8

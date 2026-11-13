@@ -23,7 +23,7 @@ set_option maxRecDepth 4096
 signature and live layout. Captured scheduler metadata then justifies actual
 compiler call acceptance and its single instruction charge. -/
 theorem reached_profile_call_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -32,9 +32,9 @@ theorem reached_profile_call_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 16#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 16#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 16#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨callee,_,_,read,_⟩ := reader_call_wasm2 p source before after out ctx byte reference
@@ -81,7 +81,7 @@ set_option maxRecDepth 4096
 indices and the full live parameter/selector layout. Captured signatures and
 bounded pair storage then establish actual compiler acceptance. -/
 theorem reached_profile_indirect_call_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -92,9 +92,9 @@ theorem reached_profile_indirect_call_available_wasm2 {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (pairs : compiler.function.indirect.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 17#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 17#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨callee,table,_,_,read,_⟩ := reader_indirect_call_wasm2 p source before after out ctx byte reference

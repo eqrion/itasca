@@ -42,15 +42,13 @@ theorem checkIndex.complete (env : metadata.Env) (bt : signature.BlockType)
     obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hspec
     exact hr
 
-/-- A profile-admitted block type whose resolved signature is within the limits passes
+/-- A block type whose resolved signature is within the limits passes
 `checkBlock`. -/
-theorem checkBlock.complete (env : metadata.Env) (profile : ValidationProfile)
+theorem checkBlock.complete (env : metadata.Env)
     (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
-    checkBlock env profile bt = .ok (.Ok ()) := by
-  have hcheck := code.check_block_type.complete profile bt
-  simp only [checkBlock, hcheck, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    checkBlock env bt = .ok (.Ok ()) := by
   exact checkIndex.complete env bt ins outs hin hout hip hop
 
 /-- Forward realization and exact effects after opening, used by recursive
@@ -129,7 +127,7 @@ namespace Itasca
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
 theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
+     (form : Wasm2.Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (next : Usize) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hdecoded : Wasm2.BlockDecoded data st.core.pos bt next)
@@ -140,11 +138,11 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metad
     (hcap : st.blocks.val.length < Usize.max)
     (hvalsCap : st.core.vals.val.length + ins.length ≤ Usize.max)
     (ht : Sequence.Realizes (Control.polymorphic st.core) segment (ts ++ form.args ins)) :
-    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () ∧ r.2.core.pos = next ∧
       Wasm2.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   rw [Wasm2.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [Wasm2.checkBlock.complete env profile bt ins outs hin hout hip hop]
+  rw [Wasm2.checkBlock.complete env bt ins outs hin hout hip hop]
   simp only [bind_ok]
   exact Wasm2.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
     ins outs outer segment ts initial hin hv hb hcap hvalsCap ht

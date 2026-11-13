@@ -21,14 +21,14 @@ theorem prepared_certified_executable_api {M P F A : Type}
     (oldCode : CodeInterpretation) (old : CertifiedExecutableApiStore view oldCode before)
     (accounted : SegmentAccounting before)
     {tables memories} (cache : ModuleEnv.Cache module.module.env tables memories)
-    (valid : ModuleEnv.Valid module.module.env module.profile)
+    (valid : ModuleEnv.Valid module.module.env)
     (initializers : Compiler.InitializerMappings module)
     (raw : ModuleBinary.Module)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
-    {profile bytes}
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile)
+    {bytes}
+    (encoded : ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes)
     (functions : Compiler.ExecutableModuleFunctions module (Compiler.sourceFunctions raw))
     (dataCount : ∀ count, module.module.env.data_count = some count →
       count.val = module.module.tail.data.val.length)

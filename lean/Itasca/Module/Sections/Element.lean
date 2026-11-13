@@ -9,7 +9,7 @@ import Itasca.Module.Readers.SegmentIndex
 
 Soundness of `metadata.decode_element_section`, its loop and `metadata.decode_func_indices`.
 `ElementsAdded` says the environment gains the decoded elements and their function references. The
-span is a `VecEncoding (ElementEncodingFor profile)` and every element is `ElementValid`. The
+span is a `VecEncoding (ElementEncodingFor)` and every element is `ElementValid`. The
 `element_encoded` lemmas build element encodings from their parts. Completeness is in
 `Module/Sections/ElementComplete`.
 -/
@@ -58,12 +58,12 @@ private theorem element_valid_caches {env result entry}
 
 /-- The element loop adds `count` elements forming a `Rep` span, each `ElementValid`. -/
 @[step]
-theorem metadata.decode_element_section_loop.profile_spec (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem metadata.decode_element_section_loop.profile_spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.elements.val.length ≤ start.val) (hrefs : env.declared_funcs.val.length ≤ start.val) :
-    metadata.decode_element_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    metadata.decode_element_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ ElementsAdded env r.2 added ∧
-          At (Rep (ElementEncodingFor profile)) data start (added.map ModuleEnv.rawElement) next ∧
+          At (Rep (ElementEncodingFor)) data start (added.map ModuleEnv.rawElement) next ∧
           (∀ entry ∈ added, ElementValid env entry) ∧ r.2.elements.val.length ≤ next.val ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by
@@ -71,7 +71,7 @@ theorem metadata.decode_element_section_loop.profile_spec (data : Slice U8) (env
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       ElementsAdded env s.1 added ∧
-      At (Rep (ElementEncodingFor profile)) data start (added.map ModuleEnv.rawElement) s.2.1 ∧
+      At (Rep (ElementEncodingFor)) data start (added.map ModuleEnv.rawElement) s.2.1 ∧
       (∀ entry ∈ added, ElementValid env entry) ∧ s.1.elements.val.length ≤ s.2.1.val ∧
       s.1.declared_funcs.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hsize, hrefs⟩
@@ -84,7 +84,7 @@ theorem metadata.decode_element_section_loop.profile_spec (data : Slice U8) (env
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize, hrefs⟩
     · rename_i hmore
       obtain ⟨⟨r, updated⟩, hr, hp⟩ := WP.spec_imp_exists
-        (metadata.decode_element.spec data pos current profile hrefs)
+        (metadata.decode_element.spec data pos current hrefs)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -127,11 +127,11 @@ theorem metadata.decode_element_section_loop.profile_spec (data : Slice U8) (env
 /-- `metadata.decode_element_section` adds the elements of a `VecEncoding` span, each
 `ElementValid`. -/
 @[step]
-theorem metadata.decode_element_section.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env) (profile : ValidationProfile)
+theorem metadata.decode_element_section.profile_spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hsize : env.elements.val.length ≤ pos.val) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    metadata.decode_element_section data pos env profile ⦃ r => match r.1 with
+    metadata.decode_element_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, ElementsAdded env r.2 added ∧
-          At (VecEncoding (ElementEncodingFor profile)) data pos (added.map ModuleEnv.rawElement) next ∧
+          At (VecEncoding (ElementEncodingFor)) data pos (added.map ModuleEnv.rawElement) next ∧
           (∀ entry ∈ added, ElementValid env entry) ∧ r.2.elements.val.length ≤ next.val ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by
@@ -144,7 +144,7 @@ theorem metadata.decode_element_section.profile_spec (data : Slice U8) (pos : Us
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_element_section_loop.profile_spec data env profile count start hs.2.2 (by omega) (by omega))
+      (metadata.decode_element_section_loop.profile_spec data env count start hs.2.2 (by omega) (by omega))
     simp [metadata.decode_element_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with

@@ -25,7 +25,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_drop_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_DROP before =
@@ -53,7 +53,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_nop_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -61,7 +61,7 @@ theorem reader_emit_nop_wasm2 {data env locals index st}
     (layout : CompilerLayout before (types.map Translate.valueType))
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_NOP before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_NOP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (Wasm2.ReaderPost p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
@@ -98,7 +98,7 @@ theorem popped_concrete_exact {segment rest : List code.StackType} {value}
     | Val raw => exact ⟨raw, rfl, rfl⟩
 
 theorem reader_emit_drop_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -106,7 +106,7 @@ theorem reader_emit_drop_wasm2 {data env locals index st}
     (layout : CompilerLayout before (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_DROP before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_DROP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ (front : List valtype) (ty : wasm_types.ValueType) (values : List code.StackType),

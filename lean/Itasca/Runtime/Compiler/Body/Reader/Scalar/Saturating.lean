@@ -13,7 +13,7 @@ set_option maxHeartbeats 2000000
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_saturating_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (ctx : code.Context) (subopcode : U32) (next : Usize)
     (operation : Numeric.Operation)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -98,7 +98,7 @@ theorem float_saturating_reader_facts {A : Type} (ops : runtime.platform.Alloc A
 /-- Saturating float lowering consumes the canonical complete LEB immediate
 and advances the same pending source zipper as the actual profile reader. -/
 theorem reader_float_saturating_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (op : SourceMachine.Float.Instruction)
@@ -108,7 +108,7 @@ theorem reader_float_saturating_wasm2 {data env locals index st}
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 0xfc#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 0xfc#u8 before = .ok (.Ok (),out,after)) :
     ∃ operation : Numeric.Operation,
       operation.instruction = op.source ∧
       operation.inputs.map Translate.valueType = List.replicate op.arity (valtype_numtype op.input) ∧

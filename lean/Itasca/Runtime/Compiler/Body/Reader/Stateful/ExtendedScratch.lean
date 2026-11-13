@@ -17,26 +17,26 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_indirect_call_depths_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     after.table_depths = before.table_depths := by
   obtain ⟨idx,table,values,callback,rest⟩ := reader_indirect_call_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   exact compiler_indirect_call_depths ops law before after out.core idx table (.Ok ()) callback
 
 theorem reader_typed_select_depths_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 28#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     after.table_depths = before.table_depths := by
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

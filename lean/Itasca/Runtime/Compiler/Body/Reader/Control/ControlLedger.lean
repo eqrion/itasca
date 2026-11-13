@@ -18,7 +18,7 @@ theorem reader_control_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     (covered : opcode.val ∈ [2,3,4,5,11,12,13,14,15])
     (budget : FixupBudget before.frames.val before.function.code.val.length)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+      st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     AuxiliaryGrowth before after ∧ FixupBudget after.frames.val after.function.code.val.length := by
   simp only [List.mem_cons,List.not_mem_nil,or_false] at covered
   rcases covered with h | h | h | h | h | h | h | h | h

@@ -7,26 +7,20 @@ import Itasca.Profile.EntryPipeline
 Termination of `stream.CodeBatch.validate_next`, `stream.CodeBatch.validate_func` and the
 whole-batch loop `stream.CodeBatch.validate_all` on arbitrary bytes, given a total visitor
 (`FullVisitor.Total`). `stream.CodeBatch.validate_all.reachable` also shows that the final state is
-reachable from the issued seed by actual batch operations. Both profiles are covered through the
-`profile` variable.
+reachable from the issued seed by actual batch operations.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 /-- `stream.CodeBatch.validate_next` returns an ordinary result for arbitrary indices and
 malformed entry bytes. The declared function interval gives room to compute the expected index. -/
 theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisitor V)
     (htotal : FullVisitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
-    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (hprofile : batch.profile = profile) :
+    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
     ∃ r, stream.CodeBatch.validate_next visitor batch index v = .ok r := by
   unfold stream.CodeBatch.validate_next
-  rw [hprofile]
   split
   · exact ⟨_, rfl⟩
   · rename_i hcount
@@ -37,21 +31,20 @@ theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisito
     split
     · exact ⟨_, rfl⟩
     · exact metadata.validate_code_entry_with.profile_total visitor htotal batch.code
-        batch.validated_end batch.env index v hbound profile
+        batch.validated_end batch.env index v hbound
 
 /-- `stream.CodeBatch.validate_func` returns an ordinary result, stores worker errors, and cannot
 overflow its counter because a successful entry validation occurs only before the batch end. -/
 theorem stream.CodeBatch.validate_func.returns {V : Type} (visitor : code.OpVisitor V)
     (htotal : FullVisitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
-    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (hprofile : batch.profile = profile) :
+    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
     ∃ r, stream.CodeBatch.validate_func visitor batch index v = .ok r := by
   cases he : batch.error with
   | some e => exact ⟨_, stream.CodeBatch.validate_func.sticky visitor batch index v e he⟩
   | none =>
     obtain ⟨⟨r, v'⟩, hr⟩ :=
-      stream.CodeBatch.validate_next.total visitor htotal batch index v hbound hrange hprofile
+      stream.CodeBatch.validate_next.total visitor htotal batch index v hbound hrange
     cases r with
     | Err e =>
       exact ⟨(.Err e, { batch with error := some e }, v'), by
@@ -85,10 +78,10 @@ and a successful iteration decreases the number of remaining functions. -/
 theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (running : Bool)
     (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
-    (hreach : StreamBatch.Reachable issued batch) (hprofile : issued.profile = profile) :
+    (hreach : StreamBatch.Reachable issued batch) :
     stream.CodeBatch.validate_all_loop batch running ⦃ result =>
       ∃ after : stream.CodeBatch, StreamBatch.Reachable issued after ∧
-        result = (after.module_id, after.batch_id, after.profile, after.env, after.code,
+        result = (after.module_id, after.batch_id, after.env, after.code,
           after.code_offset, after.first_func, after.num_funcs, after.num_dispatched,
           after.dispatch_end, after.num_validated, after.validated_end, after.error) ⦄ := by
   unfold stream.CodeBatch.validate_all_loop
@@ -98,7 +91,7 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
   · rintro ⟨current, running⟩ hcurrent
     dsimp only
     have hidentity := hcurrent.validation.1
-    obtain ⟨_, _, henv, _, _, hfirst, hnum, hp⟩ := hidentity
+    obtain ⟨_, _, henv, _, _, hfirst, hnum⟩ := hidentity
     dsimp only at henv hfirst hnum
     have hrange : current.first_func.val + current.num_funcs.val ≤
         current.env.func_type_indices.val.length := by
@@ -111,7 +104,7 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : StreamBatch.Issued)
       · step
         obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.CodeBatch.validate_func.returns
           code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-          current index () (by simpa [henv] using hbound) hrange (hp.trans hprofile)
+          current index () (by simpa [henv] using hbound) hrange
         cases v
         have hafter : StreamBatch.Reachable issued after :=
           .validate code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor hcurrent hr
@@ -140,11 +133,10 @@ bytes and stored errors. -/
 @[step]
 theorem stream.CodeBatch.validate_all.reachable (issued : StreamBatch.Issued)
     (batch : stream.CodeBatch) (hissued : issued.Bounded)
-    (hbound : CodeEntry.Bounds issued.env) (hreach : StreamBatch.Reachable issued batch)
-    (hprofile : issued.profile = profile) :
+    (hbound : CodeEntry.Bounds issued.env) (hreach : StreamBatch.Reachable issued batch) :
     stream.CodeBatch.validate_all batch ⦃ after => StreamBatch.Reachable issued after ⦄ := by
   obtain ⟨result, hr, after, hafter, rfl⟩ := WP.spec_imp_exists
-    (stream.CodeBatch.validate_all_loop.spec issued batch true hissued hbound hreach hprofile)
+    (stream.CodeBatch.validate_all_loop.spec issued batch true hissued hbound hreach)
   simpa [stream.CodeBatch.validate_all, hr] using hafter
 
 end Itasca

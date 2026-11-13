@@ -13,14 +13,14 @@ def sourceCapacityContext (env : Itasca.metadata.Env) (dataCount : Nat) : contex
 by semantic bindings to the actual source instance. The function is typed in
 that same context. No compiled slot counter appears in this definition. -/
 def SourceCanonicalFunctionCapacity (store : _root_.store) (address : funcaddr) (words : Nat) : Prop :=
-  ∃ (function : funcinst) (profile : Itasca.ValidationProfile) (env : Itasca.metadata.Env)
+  ∃ (function : funcinst) (env : Itasca.metadata.Env)
       (typeIndex : U32) (dataCount : Nat),
     store.FUNCS[address]? = some function ∧
     SourceCapacityEnvironment store function env typeIndex ∧
     SourceMachine.ModuleBindings store function.MODULE (sourceCapacityContext env dataCount) ∧
     (∃ index locals body, function.CODE = .FUNC index locals body ∧
       Func_ok (sourceCapacityContext env dataCount) (.FUNC index locals body) function.TYPE) ∧
-    Compiler.SourceFrameCapacity profile env typeIndex function.CODE words
+    Compiler.SourceFrameCapacity env typeIndex function.CODE words
 
 /-- Canonical module typing supplies every namespace required by full-profile
 capacity traces, including mutable globals, tables, memories and segments. -/
@@ -51,7 +51,7 @@ theorem function_canonical_capacity_decoded {M : Type} (view : M → Slice U8)
   subst typedInst
   have contextEq : Compiler.moduleSourceContext inst.module =
       sourceCapacityContext inst.module.module.env inst.module.module.tail.data.length := by rfl
-  refine ⟨words,⟨Store.decodeFunction code store function,inst.module.profile,
+  refine ⟨words,⟨Store.decodeFunction code store function,
     inst.module.module.env,typeIndex,inst.module.module.tail.data.length,?_,?_,?_,?_,?_⟩,bound⟩
   · simp only [Store.decodeStore,List.getElem?_map,found,Option.map_some]
   · constructor

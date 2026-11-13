@@ -5,24 +5,23 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
-/-- Signature limits retained from actual profile environment decoding. -/
-def ProfileEnvironment (profile : ValidationProfile) (env : metadata.Env) : Prop :=
+/-- Signature limits retained from actual environment decoding. -/
+def ProfileEnvironment (env : metadata.Env) : Prop :=
   Profile.EnvironmentWithinLimits env
 
-def ReachedProfileEntriesTotal {A : Type} (ops : runtime.platform.Alloc A)
-    (profile : ValidationProfile) : Prop :=
+def ReachedProfileEntriesTotal {A : Type} (ops : runtime.platform.Alloc A) : Prop :=
   ∀ (env : metadata.Env) (issued : StreamBatch.Issued) (scheduler : CompileScheduler A)
     (worker : stream.CodeBatch), issued.env = env → issued.Bounded → CodeEntry.Bounds env →
-    issued.profile = profile → ProfileEnvironment profile env →
+    ProfileEnvironment env →
     SchedulerReady env issued.first_func.val scheduler →
     StreamBatch.Reachable issued worker → CompileScheduler.compile_entry ops scheduler worker ⦃ _ => True ⦄
 
 theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (profile : ValidationProfile)
-    (entries : ReachedProfileEntriesTotal ops profile) :
+    (law : Platform.AllocCorrect ops)
+    (entries : ReachedProfileEntriesTotal ops) :
     StreamScheduler.CallbacksOn (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      SchedulerInitial (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment profile env)
-      (ProfileEnvironment profile) profile := by
+      SchedulerInitial (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment env)
+      (ProfileEnvironment) := by
   constructor
   · intro scheduler chunk
     exact ⟨(.Ok (),scheduler),rfl⟩
@@ -48,10 +47,10 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
     exact ⟨fresh config accepted,admitted⟩
   · intro env
     constructor
-    · intro scheduler issued held sameEnv bounded bounds selected
+    · intro scheduler issued held sameEnv bounded bounds
       apply WP.spec_mono (compiler_submit_safety ops law env issued sameEnv bounded scheduler held.1
         (fun current worker ready reached => entries env issued current worker sameEnv bounded
-          (by simpa only [sameEnv] using bounds) selected held.2 ready reached))
+          (by simpa only [sameEnv] using bounds) held.2 ready reached))
       intro out fresh accepted
       exact ⟨fresh accepted,held.2⟩
     · intro cursor scheduler held
@@ -70,20 +69,20 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
 /-- Actual environment decoding supplies the signature limits before any
 worker is issued. It is retained through every reached scheduler state. -/
 theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (profile : ValidationProfile)
-    (entries : ReachedProfileEntriesTotal ops profile) (source : CompileSource)
+    (law : Platform.AllocCorrect ops)
+    (entries : ReachedProfileEntriesTotal ops) (source : CompileSource)
     (sourceBounds : SourceBounds source) (scheduler : CompileScheduler A)
     (initial : SchedulerInitial scheduler) (storage : metadata.Env) :
     stream.validate_streaming CompileSource.Insts.ItascaStreamSource
-      (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile source scheduler storage ⦃ out =>
+      (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage ⦃ out =>
         out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
   apply WP.spec_mono (stream.validate_streaming.spec_on CompileSource.Insts.ItascaStreamSource
     (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage
     (source_callbacks_total source sourceBounds) SchedulerInitial
-    (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment profile env)
-    (ProfileEnvironment profile) (compiler_scheduler_profile_callbacks_on ops law profile entries) initial
+    (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment env)
+    (ProfileEnvironment) (compiler_scheduler_profile_callbacks_on ops law entries) initial
     (by intro bytes env next bounded accepted
-        exact (ModuleEnv.profile_accepted_entry_conditions bytes env next profile bounded accepted).2))
+        exact (ModuleEnv.profile_accepted_entry_conditions bytes env next bounded accepted).2))
   intro out fresh accepted
   exact (fresh accepted).1
 end Itasca.Runtime.Compiler

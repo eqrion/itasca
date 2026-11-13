@@ -27,10 +27,10 @@ theorem SchedulerTracks.queue {A : Type} {id history} {before after : runtime.co
 /-- The concrete compiler satisfies the canonical streaming scheduler's
 provenance contract. Allocation decisions remain unrestricted. -/
 theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (profile : ValidationProfile) :
+    (law : Platform.AllocCorrect allocator) :
     StreamScheduler.Provenance
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
-      SchedulerTracks profile := by
+      SchedulerTracks := by
   constructor
   · intro id history before chunk after accepted tracked
     have same : before = after := by
@@ -46,7 +46,7 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
     exact tracked
   · intro id history before env config after tracked accepted
     exact tracked.queue (congrArg Prod.fst (compiler_environment_frame allocator before after env config accepted))
-  · intro id history issued before after tracked moduleId bounded envBounds selected fresh accepted
+  · intro id history issued before after tracked moduleId bounded envBounds fresh accepted
     obtain ⟨middle, worker, run, queue, _⟩ := compiler_submit_accepted allocator law before after issued.seed accepted
     constructor
     · intro left hl right hr equal

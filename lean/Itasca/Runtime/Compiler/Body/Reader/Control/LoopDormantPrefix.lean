@@ -57,7 +57,7 @@ theorem structured_callback_loop_dead_prefix {jumpTables : List U32} {emit : Lis
   have sources := compiler_enter_sources ops law before after state .Loop bt accepted
   have cursor := compiler_enter_cursor ops law before after state .Loop bt accepted
   exact invariant.open_dormant dead deadAfter child frame stable aligned codeEq framesEq
-    (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl  rfl rfl sources consumed (by rw [cursor])
+    (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl rfl rfl sources consumed (by rw [cursor])
 
 end Itasca.Runtime.Compiler
 
@@ -71,7 +71,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_loop_dead_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env localTypes index st}
-    (p : Wasm2.Pending data env .Wasm2 localTypes index st) {A : Type}
+    (p : Wasm2.Pending data env localTypes index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -84,7 +84,7 @@ theorem structured_reader_prefix_loop_dead_wasm2 {jumpTables : List U32} {emit :
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_LOOP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_LOOP before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_LOOP before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterLoop (Wasm2.blockType bt) front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length false
       Wasm2.ReaderEnterPost p out .loop bt ins outs remaining base ∧

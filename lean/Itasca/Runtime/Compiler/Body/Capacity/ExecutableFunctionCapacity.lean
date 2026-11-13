@@ -25,12 +25,12 @@ open Aeneas Aeneas.Std Itasca
 /-- A successful reader step in a fully encoded body retains the exact local
 layout and bounds slot growth by the canonical post-step operand stack. -/
 theorem reader_executable_capacity_wasm2 {data env ctx index st source}
-    (p : Wasm2.Pending data env .Wasm2 ctx.locals index st) {A : Type}
+    (p : Wasm2.Pending data env ctx.locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (encoded : Wasm2.BodyEncoding data source)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   have allowed := encoded.next_reader_opcode p.consumed p.inbounds
   rcases allowed with ordinary | scope | isElse | isEnd | extra | floatBase | memory | indirect | table |
@@ -83,7 +83,7 @@ theorem TypedRunWasm2.executable_capacity_bound {A : Type}
     obtain ⟨reply, erased⟩ := Wasm2.Visitor.step_transfer
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
-      data env ctx ctx rfl index .Wasm2 _ {core := {st.core with pos := next}} out before () middle called
+      data env ctx ctx rfl index _ {core := {st.core with pos := next}} out before () middle called
     cases reply
     refine ⟨st.core.vals.val :: samples, .step typed pending start advance erased trace,
       localEq.trans capacity.1, ?_⟩
@@ -109,11 +109,11 @@ open Aeneas Aeneas.Std Itasca
 and the maximum word width of a source-only validation trace. -/
 theorem witness_compiler_executable_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (facts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (budget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, budget)) :
     ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
@@ -137,15 +137,15 @@ theorem witness_compile_executable_capacity {A : Type} (ops : runtime.platform.A
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, finalBudget)) :
     ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
@@ -168,18 +168,18 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, finalBudget)) :
-    FunctionCapacity profile env w.typeIdx
+    FunctionCapacity env w.typeIdx
       (.FUNC (.mk_uN w.typeIdx.val)
         ((ModuleLocals.declared w.groups).map Translate.valueType |>.map local.LOCAL) source) compiled := by
   obtain ⟨samples, trace, bound⟩ := witness_compile_executable_capacity ops law w signatureTable functionTable

@@ -38,17 +38,17 @@ theorem PaddedEncoding.imp {α : Type} {R S : α → List U8 → Prop} {id absen
     obtain ⟨size, payload, hn, hval, hb⟩ := hp
     exact .present ⟨size, payload, hn, hs _ _ hval, hb⟩
 
-theorem ModuleEncodingWith.imp {profile} {R S : Code → List U8 → Prop} {raw bytes}
-    (h : ModuleEncodingWith R raw bytes profile) (hs : ∀ code bs, R code bs → S code bs) :
-    ModuleEncodingWith S raw bytes profile := by
+theorem ModuleEncodingWith.imp {R S : Code → List U8 → Prop} {raw bytes}
+    (h : ModuleEncodingWith R raw bytes) (hs : ∀ code bs, R code bs → S code bs) :
+    ModuleEncodingWith S raw bytes := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, hv⟩ := h
   exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount,
     hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb, hv⟩
 
-theorem ModuleEncodingWith.guards {profile R raw bytes}
-    (h : ModuleEncodingWith R raw bytes profile) :
+theorem ModuleEncodingWith.guards {R raw bytes}
+    (h : ModuleEncodingWith R raw bytes) :
     DataCountValid raw := by
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hc⟩ := h
   exact hc
@@ -56,15 +56,14 @@ theorem ModuleEncodingWith.guards {profile R raw bytes}
 /-- A module encoding of at most `limits.MAX_MODULE_BYTES` bytes whose code entries satisfy
 `CodeEncodingWithinLimits`. Only the code entries' encoding witnesses are strengthened. Padded
 LEB encodings stay admitted, and the caps constrain the actual encoded body bytes. -/
-def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8)
-    (profile : ValidationProfile) : Prop :=
+def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8) : Prop :=
   bytes.length ≤ limits.MAX_MODULE_BYTES.val ∧
-    ModuleEncodingWith (Profile.CodeEncodingWithinLimits profile) raw bytes profile
+    ModuleEncodingWith (Profile.CodeEncodingWithinLimits) raw bytes
 
-/-- Forgetting the caps leaves a `ModuleEncodingWith` the profile's plain code encoding. -/
-theorem ModuleEncodingWithinLimits.encoding {profile raw bytes}
-    (h : ModuleEncodingWithinLimits raw bytes profile) :
-    ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile :=
+/-- Forgetting the caps leaves a `ModuleEncodingWith` the plain code encoding. -/
+theorem ModuleEncodingWithinLimits.encoding {raw bytes}
+    (h : ModuleEncodingWithinLimits raw bytes) :
+    ModuleEncodingWith (Profile.CodeEncoding) raw bytes :=
   h.2.imp (fun _ _ hc => hc.encoding)
 
 /-- Every signature in the type section satisfies `Profile.FuncTypeWithinLimits`. This is an

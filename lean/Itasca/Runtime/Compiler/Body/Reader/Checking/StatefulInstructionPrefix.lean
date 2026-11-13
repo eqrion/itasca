@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Source-typed stateful metadata readers check every newly emitted word and
 retain both pending instruction checks and the slots of recorded exits. -/
 theorem StatefulReaderPost.instruction_prefix {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
+    {p : Wasm2.Pending data env sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (C : context)

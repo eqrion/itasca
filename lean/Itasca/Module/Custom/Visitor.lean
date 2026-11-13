@@ -24,9 +24,6 @@ theorem empty_hooks_accept : HooksAccept metadata.EmptyModuleVisitor.Insts.Itasc
 end Itasca.ModuleTail
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 /-- A successful run of the environment loop with one visitor gives a successful run with the same
 result for any accepting visitor. -/
 theorem metadata.validate_env_with_loop.accepted_transfer {V W : Type}
@@ -34,9 +31,9 @@ theorem metadata.validate_env_with_loop.accepted_transfer {V W : Type}
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
     (v : V) (w : W) (env : metadata.Env) (pos : Usize) (lastId : U8)
     (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with_loop visitor data profile v env pos lastId =
+    (h : metadata.validate_env_with_loop visitor data v env pos lastId =
       .ok (.Ok (result, next), v')) :
-    ∃ w', metadata.validate_env_with_loop replacement data profile w env pos lastId =
+    ∃ w', metadata.validate_env_with_loop replacement data w env pos lastId =
       .ok (.Ok (result, next), w') := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v w env pos lastId with
@@ -127,8 +124,8 @@ theorem metadata.validate_env_with.accepted_transfer {V W : Type}
     (visitor : metadata.ModuleVisitor V) (replacement : metadata.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8)
     (v : V) (w : W) (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
-    ∃ w', metadata.validate_env_with replacement data profile w = .ok (.Ok (result, next), w') := by
+    (h : metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
+    ∃ w', metadata.validate_env_with replacement data w = .ok (.Ok (result, next), w') := by
   unfold metadata.validate_env_with at h ⊢
   obtain ⟨initial, hi, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   rw [hi]
@@ -150,8 +147,8 @@ theorem metadata.validate_env_with.accepted_transfer {V W : Type}
 theorem metadata.validate_env_with.accepted_erase {V : Type}
     (visitor : metadata.ModuleVisitor V) (data : Slice U8) (v : V)
     (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
-    metadata.validate_env data profile = .ok (.Ok (result, next)) := by
+    (h : metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
+    metadata.validate_env data = .ok (.Ok (result, next)) := by
   obtain ⟨w', hw⟩ := metadata.validate_env_with.accepted_transfer visitor
     metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor ModuleTail.empty_hooks_accept
     data v () result next v' h
@@ -161,8 +158,8 @@ theorem metadata.validate_env_with.accepted_erase {V : Type}
 theorem metadata.validate_env_with.accepted_lift {V : Type}
     (visitor : metadata.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (v : V) (result : metadata.Env) (next : Usize)
-    (h : metadata.validate_env data profile = .ok (.Ok (result, next))) :
-    ∃ v', metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v') := by
+    (h : metadata.validate_env data = .ok (.Ok (result, next))) :
+    ∃ v', metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v') := by
   unfold metadata.validate_env at h
   obtain ⟨⟨read, w⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   have ht : read = .Ok (result, next) := by simpa using ht
@@ -178,9 +175,9 @@ theorem metadata.validate_tail_with_loop.accepted_transfer {V W : Type}
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (env : metadata.Env)
     (v : V) (w : W) (segments : alloc.vec.Vec metadata.Data) (pos : Usize) (seen : Bool)
     (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with_loop visitor data env profile v segments pos seen =
+    (h : metadata.validate_tail_with_loop visitor data env v segments pos seen =
       .ok (.Ok result, v')) :
-    ∃ w', metadata.validate_tail_with_loop replacement data env profile w segments pos seen =
+    ∃ w', metadata.validate_tail_with_loop replacement data env w segments pos seen =
       .ok (.Ok result, w') := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v w segments pos seen with
@@ -269,8 +266,8 @@ theorem metadata.validate_tail_with.accepted_transfer {V W : Type}
     (visitor : metadata.ModuleVisitor V) (replacement : metadata.ModuleVisitor W)
     (haccept : ModuleTail.HooksAccept replacement) (data : Slice U8) (start : Usize)
     (env : metadata.Env) (v : V) (w : W) (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with visitor data start env profile v = .ok (.Ok result, v')) :
-    ∃ w', metadata.validate_tail_with replacement data start env profile w = .ok (.Ok result, w') :=
+    (h : metadata.validate_tail_with visitor data start env v = .ok (.Ok result, v')) :
+    ∃ w', metadata.validate_tail_with replacement data start env w = .ok (.Ok result, w') :=
   metadata.validate_tail_with_loop.accepted_transfer visitor replacement haccept data env
     v w (alloc.vec.Vec.new _) start false result v' h
 
@@ -279,8 +276,8 @@ for the source visitor. -/
 theorem metadata.validate_tail_with.accepted_erase {V : Type}
     (visitor : metadata.ModuleVisitor V) (data : Slice U8) (start : Usize) (env : metadata.Env)
     (v : V) (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with visitor data start env profile v = .ok (.Ok result, v')) :
-    metadata.validate_tail data start env profile = .ok (.Ok result) := by
+    (h : metadata.validate_tail_with visitor data start env v = .ok (.Ok result, v')) :
+    metadata.validate_tail data start env = .ok (.Ok result) := by
   obtain ⟨w', hw⟩ := metadata.validate_tail_with.accepted_transfer visitor
     metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor ModuleTail.empty_hooks_accept
     data start env v () result v' h
@@ -290,8 +287,8 @@ theorem metadata.validate_tail_with.accepted_erase {V : Type}
 theorem metadata.validate_tail_with.accepted_lift {V : Type}
     (visitor : metadata.ModuleVisitor V) (haccept : ModuleTail.HooksAccept visitor)
     (data : Slice U8) (start : Usize) (env : metadata.Env) (v : V) (result : metadata.Tail)
-    (h : metadata.validate_tail data start env profile = .ok (.Ok result)) :
-    ∃ v', metadata.validate_tail_with visitor data start env profile v = .ok (.Ok result, v') := by
+    (h : metadata.validate_tail data start env = .ok (.Ok result)) :
+    ∃ v', metadata.validate_tail_with visitor data start env v = .ok (.Ok result, v') := by
   unfold metadata.validate_tail at h
   obtain ⟨⟨read, w⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
   have ht : read = .Ok result := by simpa using ht

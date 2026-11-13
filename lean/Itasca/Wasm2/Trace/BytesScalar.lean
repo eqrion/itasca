@@ -20,7 +20,7 @@ namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
 /-- The Wasm 1.0 scalar dispatcher records independently decoded tokens. -/
-def BaseRecords {data env profile locals index st} (p : Pending data env profile locals index st)
+def BaseRecords {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (opcode : U8) : Prop :=
   ∀ v result final v', code.step visitor st.core data env ⟨locals, p.ft.results⟩ opcode v =
@@ -28,7 +28,7 @@ def BaseRecords {data env profile locals index st} (p : Pending data env profile
     ∃ observations, observe v' = observe v ++ observations ∧
       CallbackTrace.StepTrace data p.start observations result final
 
-theorem step_nop {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_nop {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
@@ -43,7 +43,7 @@ theorem step_nop {data env profile locals index st} (p : Pending data env profil
   exact ⟨.plain .NOP, rfl, by simp only [Action.opcode]; decide,
     .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop)⟩
 
-theorem step_i32_const {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_i32_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST) :
@@ -59,7 +59,7 @@ theorem step_i32_const {data env profile locals index st} (p : Pending data env 
   exact ⟨.plain (Spec.i32Const a), rfl, by simp only [Action.opcode]; decide,
     .plain (.of_s32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
 
-theorem step_i64_const {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_i64_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST) :
@@ -75,7 +75,7 @@ theorem step_i64_const {data env profile locals index st} (p : Pending data env 
   exact ⟨.plain (ScalarConst.i64 a), rfl, by simp only [Action.opcode]; decide,
     .plain (.of_s64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
 
-theorem step_f32_const {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_f32_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST) :
@@ -91,7 +91,7 @@ theorem step_f32_const {data env profile locals index st} (p : Pending data env 
   exact ⟨.plain (ScalarConst.f32 a), rfl, by simp only [Action.opcode]; decide,
     .plain (.of_f32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
 
-theorem step_f64_const {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_f64_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST) :
@@ -107,7 +107,7 @@ theorem step_f64_const {data env profile locals index st} (p : Pending data env 
   exact ⟨.plain (ScalarConst.f64 a), rfl, by simp only [Action.opcode]; decide,
     .plain (.of_f64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
 
-theorem step_drop {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_drop {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
@@ -127,7 +127,7 @@ theorem step_drop {data env profile locals index st} (p : Pending data env profi
     .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hs.2.1] using p.pos) .drop)⟩
 
-theorem step_select {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_select {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
@@ -146,7 +146,7 @@ theorem step_select {data env profile locals index st} (p : Pending data env pro
     .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hs.2.1] using p.pos) .select)⟩
 
-theorem step_unreachable {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_unreachable {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
@@ -167,7 +167,7 @@ theorem step_unreachable {data env profile locals index st} (p : Pending data en
     .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
       (by simpa [hp] using p.pos) .unreachable)⟩
 
-theorem step_local_get {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_local_get {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_GET) :
@@ -192,7 +192,7 @@ theorem step_local_get {data env profile locals index st} (p : Pending data env 
     .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localGet a encoding) ⟨suffix, length, bound⟩)⟩
 
-theorem step_local_set {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_local_set {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_SET) :
@@ -217,7 +217,7 @@ theorem step_local_set {data env profile locals index st} (p : Pending data env 
     .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localSet a encoding) ⟨suffix, length, bound⟩)⟩
 
-theorem step_local_tee {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_local_tee {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_TEE) :
@@ -243,7 +243,7 @@ theorem step_local_tee {data env profile locals index st} (p : Pending data env 
     .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.localTee a encoding) ⟨suffix, length, bound⟩)⟩
 
-theorem step_global_get {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_global_get {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_GET) :
@@ -268,7 +268,7 @@ theorem step_global_get {data env profile locals index st} (p : Pending data env
     .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.globalGet a encoding) ⟨suffix, length, bound⟩)⟩
 
-theorem step_global_set {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_global_set {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_SET) :
@@ -293,7 +293,7 @@ theorem step_global_set {data env profile locals index st} (p : Pending data env
     .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
       (.globalSet a encoding) ⟨suffix, length, bound⟩)⟩
 
-theorem step_memory_size {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_memory_size {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_SIZE) :
@@ -318,7 +318,7 @@ theorem step_memory_size {data env profile locals index st} (p : Pending data en
   exact ⟨.plain .MEMORY_SIZE, rfl, by simp only [Action.opcode]; decide,
     .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memorySize hb hv hn)⟩
 
-theorem step_memory_grow {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_memory_grow {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_GROW) :
@@ -344,7 +344,7 @@ theorem step_memory_grow {data env profile locals index st} (p : Pending data en
   exact ⟨.plain .MEMORY_GROW, rfl, by simp only [Action.opcode]; decide,
     .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memoryGrow hb hv hn)⟩
 
-theorem step_numeric {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_numeric {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max) (opcode : U8) (operation : Numeric.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
@@ -370,7 +370,7 @@ theorem step_numeric {data env profile locals index st} (p : Pending data env pr
   have hb := Numeric.NumericOp.bounds hrow
   omega
 
-theorem step_memory {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem step_memory {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max) (opcode : U8) (operation : MemoryMeaning.Operation)
     (hbyte : data.val[p.start.val]'p.inbounds = opcode)
@@ -420,7 +420,7 @@ private theorem memory_meaning_exists (opcode : U8)
   interval_cases n <;> exact ⟨_, rfl⟩
 
 /-- All Wasm 1.0 scalar opcode bytes, including reserved-opcode rejection, satisfy `BaseRecords`. -/
-theorem base_scalar_records {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem base_scalar_records {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
@@ -499,7 +499,7 @@ theorem base_scalar_records {data env profile locals index st} (p : Pending data
   exact ⟨[], by simp, .silent _ _ (.empty _)⟩
 
 /-- Unary checking preserves a decoded cursor even when the callback rejects. -/
-theorem conversion_trace {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem conversion_trace {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (operation : Numeric.Operation) (unary : operation.binary = false)
@@ -527,7 +527,7 @@ theorem conversion_trace {data env profile locals index st} (p : Pending data en
 
 /-- Sign-extension and saturating conversion callbacks record their complete opcode and prefix
 bytes. -/
-theorem extended_scalar_records {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem extended_scalar_records {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
     (ctx : code.Context) (hlocals : ctx.locals = locals)

@@ -76,17 +76,17 @@ theorem StructuredReaderCompilerStateWasm2.ordinary_base {jumpTables : List U32}
     (opcode : U8) (ordinary : opcode ∈ readerBaseOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   simp only [readerBaseOrdinaryOpcodes, List.mem_cons, List.mem_nil_iff, or_false] at ordinary
   rcases ordinary with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-  · exact (state.unreachable ops law next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
-  · obtain ⟨_, changed⟩ := state.nop ops law embedding next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
+  · exact (state.unreachable ops law next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
+  · obtain ⟨_, changed⟩ := state.nop ops law embedding next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
   · exact (state.return_ ops law next advance inbounds out sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
   · obtain ⟨_, _, changed⟩ := state.call ops law metadata next advance inbounds out sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
-  · obtain ⟨_, changed⟩ := state.drop ops law embedding next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
+  · obtain ⟨_, changed⟩ := state.drop ops law embedding next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
   · obtain ⟨_, _, changed⟩ := state.local_get ops law embedding next advance inbounds out localsMatch sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
@@ -145,7 +145,7 @@ theorem StructuredReaderCompilerStateWasm2.ordinary {jumpTables : List U32} {A :
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   rcases List.mem_append.mp ordinary with base | numeric
   · exact state.ordinary_base ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode base byte accepted
@@ -168,7 +168,7 @@ theorem StructuredReaderCompilerPointWasm2.ordinary {jumpTables : List U32} {A :
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point
   exact state.ordinary ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode ordinary byte accepted

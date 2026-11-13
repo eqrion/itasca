@@ -25,7 +25,7 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
     (validDatas : ∀ segment ∈ module.module.tail.data.val, ∀ memory offset,
       segment.mode = .Active memory offset → Itasca.ModuleConstants.Valid module.module.env offset .I32)
     (success : runtime.compiler.initialize.lower ops module budget = .ok (.Ok (), after, budgetAfter)) :
-    after.module = module.module ∧ after.profile = module.profile ∧
+    after.module = module.module ∧
       after.functions.val.take module.functions.length = module.functions.val ∧ InitializerMappings after ∧
       ∃ function, after.functions.val[after.initialization.val]? = some function ∧ SegmentProgram after function := by
   unfold runtime.compiler.initialize.lower at success
@@ -44,11 +44,10 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
       budget b1 0#usize initialGlobals (by simp) globalsCall
     simp only [List.take_length] at globalsCert
     have globalSource := congrArg runtime.compiler.ExecutableModule.module globalsChanged
-    have globalProfile := congrArg runtime.compiler.ExecutableModule.profile globalsChanged
     have globalRows := congrArg runtime.compiler.ExecutableModule.element_initializers globalsChanged
     have globalOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets globalsChanged
     have globalData := congrArg runtime.compiler.ExecutableModule.data_offsets globalsChanged
-    dsimp only at globalSource globalProfile globalRows globalOffsets globalData
+    dsimp only at globalSource globalRows globalOffsets globalData
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
     obtain ⟨⟨elementsModule, b2, result⟩, elementsCall, rest⟩ := initializer_bind_success rest
     cases result with
@@ -67,10 +66,9 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
         initializer_elements_loop ops law globalsModule globalsModule elementsModule b1 b2 0#usize initialElements (by simp) elementsCall
       simp only [List.take_length] at elementsCert elementOffsetsCert
       have elementSource := congrArg runtime.compiler.ExecutableModule.module elementsChanged
-      have elementProfile := congrArg runtime.compiler.ExecutableModule.profile elementsChanged
       have elementGlobals := congrArg runtime.compiler.ExecutableModule.global_initializers elementsChanged
       have elementData := congrArg runtime.compiler.ExecutableModule.data_offsets elementsChanged
-      dsimp only at elementSource elementProfile elementGlobals elementData
+      dsimp only at elementSource elementGlobals elementData
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
       obtain ⟨⟨dataModule, b3, result⟩, dataCall, rest⟩ := initializer_bind_success rest
       cases result with
@@ -87,11 +85,10 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
           b2 b3 0#usize initialData (by simp) dataCall
         simp only [List.take_length] at dataCert
         have dataSource := congrArg runtime.compiler.ExecutableModule.module dataChanged
-        have dataProfile := congrArg runtime.compiler.ExecutableModule.profile dataChanged
         have dataGlobals := congrArg runtime.compiler.ExecutableModule.global_initializers dataChanged
         have dataRows := congrArg runtime.compiler.ExecutableModule.element_initializers dataChanged
         have dataOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets dataChanged
-        dsimp only at dataSource dataProfile dataGlobals dataRows dataOffsets
+        dsimp only at dataSource dataGlobals dataRows dataOffsets
         have allPrefix := initializer_prefix_trans (initializer_prefix_trans globalsPrefix elementsPrefix) dataPrefix
         have allGlobals := globalsCert.extend (initializer_prefix_trans elementsPrefix dataPrefix)
         have allElements := elementsCert.extend dataPrefix
@@ -154,7 +151,7 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
                 have prefixFinal : functions.val.take dataModule.functions.length = dataModule.functions.val := by
                   simp [functionsEq]
                 refine ⟨dataSource.trans (elementSource.trans globalSource),
-                  dataProfile.trans (elementProfile.trans globalProfile),
+
                   initializer_prefix_trans allPrefix prefixFinal, ?_, ?_⟩
                 · exact ⟨mapped.globals.extend prefixFinal, mapped.elementValues.extend prefixFinal,
                     mapped.elementOffsets.extend prefixFinal, mapped.dataOffsets.extend prefixFinal⟩

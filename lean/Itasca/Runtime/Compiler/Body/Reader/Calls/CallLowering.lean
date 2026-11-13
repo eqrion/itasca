@@ -35,7 +35,7 @@ theorem FunctionParameterSlots.lookup {A : Type} {compiler : runtime.compiler.Fu
 /-- The accepted reader determines both the direct-call signature and its
 literal emitted CALL. Parameter slot metadata is the actual scheduler table. -/
 theorem reader_emit_call_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -47,7 +47,7 @@ theorem reader_emit_call_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 16#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex 16#u8 before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ (index : U32) (ft : wasm_types.FuncType) (values : List code.StackType) (front : List valtype) (base : U32),

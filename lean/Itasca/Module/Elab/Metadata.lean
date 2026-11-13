@@ -58,7 +58,7 @@ def AccessorTypes (env : metadata.Env) (raw : ModuleBinary.Module) : Prop :=
 /-- A valid cached environment with well-formed export names has `AccessorTypes` for the module it
 describes. -/
 theorem accessorTypes {env tables memories codes segments}
-    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
+    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
     (hn : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val)) :
     AccessorTypes env (fromEnv env tables memories codes segments) := by
   obtain ⟨ixts, hi⟩ := hc.imports_resolve

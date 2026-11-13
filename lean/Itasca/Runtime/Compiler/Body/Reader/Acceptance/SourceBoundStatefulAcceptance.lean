@@ -25,7 +25,7 @@ set_option maxRecDepth 4096
 independent source typing and the retained live layout discharge their hooks.
 Only the current independently accepted source result is replayed. -/
 theorem reached_profile_stateful_base_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -37,9 +37,9 @@ theorem reached_profile_stateful_base_available_wasm2 {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (pairs : compiler.function.indirect.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (reference : code.step_profile source st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 opcode compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index opcode compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   have ordinary : opcode.val ∉ Wasm2.controlOpcodes := by
@@ -160,7 +160,7 @@ set_option maxRecDepth 4096
 independent source typing and the retained live layout discharge their hooks.
 Only the current independently accepted source result is replayed. -/
 theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type}
+    (p : Wasm2.Pending data env locals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
@@ -173,9 +173,9 @@ theorem reached_profile_stateful_bulk_available_wasm2 {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (pairs : compiler.function.indirect.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 252#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 252#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 252#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   have ordinary : (252#u8).val ∉ Wasm2.controlOpcodes := by simp only [Wasm2.controlOpcodes]; decide
@@ -326,17 +326,17 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_base_available_from_source
     (opcode : U8) (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[st.core.pos.val] = opcode)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -344,7 +344,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_base_available_from_source
     ⟨sourceLocals,ft.results⟩ opcode member byte canonical
   rw [stateful_callback_invoke] at callback
   have operands := (source_callback_demand before after final out.core (statefulAction op a b) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) callback tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) callback tail).1
   have demand := room.demand budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor inbounds out.core operands
   rw [byte]
@@ -371,17 +371,17 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk_available_from_source
     (decoded : Leb128.Decoded data next subopcode prefixEnd)
     (byte : data.val[st.core.pos.val] = 252#u8)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let pending := state.boundary.pending next advance inbounds
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -389,7 +389,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk_available_from_source
     ⟨sourceLocals,ft.results⟩ subopcode prefixEnd member byte decoded canonical
   rw [stateful_callback_invoke] at callback
   have operands := (source_callback_demand before after final out.core (statefulAction op a b) (.Ok ()) out data env
-    ⟨sourceLocals,ft.results⟩ index .Wasm2 (.Ok ()) callback tail).1
+    ⟨sourceLocals,ft.results⟩ index (.Ok ()) callback tail).1
   have demand := room.demand budget state.compiled.metadata state.compiled.codeBudget state.compiled.sources
     state.compiled.cursor inbounds out.core operands
   rw [byte]

@@ -18,8 +18,8 @@ theorem prepared_compiler_raw_initial {A : Type} (ops : runtime.platform.Alloc A
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (endFits : batchStart.val + w.finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)

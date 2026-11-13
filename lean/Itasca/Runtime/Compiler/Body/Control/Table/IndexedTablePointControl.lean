@@ -64,7 +64,7 @@ theorem IndexedTableReaderCompilerPointWasm2.scope_step {A : Type}
     (opcode : U8) (supported : ScopeOpcode opcode)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
@@ -86,7 +86,7 @@ theorem IndexedTableReaderCompilerPointWasm2.else_ {A : Type}
     (out : code.BodyState) (initialLocals : LocalLayout initial)
     (byte : data.val[st.core.pos.val]'inbounds = 5#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 5#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 5#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds
@@ -112,7 +112,7 @@ theorem IndexedTableReaderCompilerPointWasm2.end_nested {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds

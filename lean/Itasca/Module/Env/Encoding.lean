@@ -49,8 +49,7 @@ def Layout.Future (last : Nat) (l : Layout) : Prop :=
 
 /-- Each chunk of `l` is the canonical padded encoding of the matching slot of `decls`, the
 trailing customs are well formed, and slots after `last` are empty. -/
-structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
-    (profile : ValidationProfile) : Prop where
+structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout) : Prop where
   types : PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] decls.types l.types
   imports : PaddedEncoding 2#u8 (VecEncoding ImportEncoding) [] decls.imports l.imports
   functions : PaddedEncoding 3#u8 (VecEncoding IndexEncoding) [] decls.functions l.functions
@@ -59,14 +58,14 @@ structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
   globals : PaddedEncoding 6#u8 (VecEncoding GlobalEncoding) [] decls.globals l.globals
   exports : PaddedEncoding 7#u8 (VecEncoding ExportEncoding) [] decls.exports l.exports
   start : PaddedEncoding 8#u8 StartEncoding none decls.start l.start
-  elements : PaddedEncoding 9#u8 (VecEncoding (ElementEncodingFor profile)) [] decls.elements l.elements
-  dataCount : DataCountSectionEncoding profile decls.dataCount l.dataCount
+  elements : PaddedEncoding 9#u8 (VecEncoding (ElementEncodingFor)) [] decls.elements l.elements
+  dataCount : DataCountSectionEncoding decls.dataCount l.dataCount
   customs : CustomsEncoding l.customs
   future : l.Future last
 
 /-- The empty layout encodes the empty declarations. -/
-theorem Layout.valid_empty (profile : ValidationProfile) :
-    Layout.Valid 0 ({} : Declarations) ({} : Layout) profile := by
+theorem Layout.valid_empty :
+    Layout.Valid 0 ({} : Declarations) ({} : Layout) := by
   constructor
   · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact ⟨[], [], .nil, .absent, rfl⟩
@@ -81,21 +80,21 @@ theorem Layout.valid_empty (profile : ValidationProfile) :
   · exact .nil
   · simp [global_simps, Layout.Future]
 
-theorem Layout.Valid.custom {profile last decls l bytes} (h : Layout.Valid last decls l profile)
+theorem Layout.Valid.custom {last decls l bytes} (h : Layout.Valid last decls l)
     (hc : CustomEncoding bytes) :
-    Layout.Valid last decls { l with customs := l.customs ++ bytes } profile := by
+    Layout.Valid last decls {l with customs := l.customs ++ bytes} := by
   exact ⟨h.types, h.imports, h.functions, h.tables, h.memories, h.globals,
     h.exports, h.start, h.elements, h.dataCount,
     by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future⟩
 
 /-- A section effect extends a valid layout, whose bytes end at the section header, to a valid
 layout ending at the end of the section. -/
-theorem Effect.append_layout {profile} {data origin pos first next env result before after id last l}
-    (h : Effect (profile := profile) data first env before id next result after)
+theorem Effect.append_layout {data origin pos first next env result before after id last l}
+    (h : Effect data first env before id next result after)
     (hh : SectionHeader data pos id first next)
-    (hl : Layout.Valid last before l profile) (ho : last < (sectionRank id).val)
+    (hl : Layout.Valid last before l) (ho : last < (sectionRank id).val)
     (hs : Wasm1.BytesAt data origin l.bytes pos) :
-    ∃ updated, Layout.Valid (sectionRank id).val after updated profile ∧ Wasm1.BytesAt data origin updated.bytes next := by
+    ∃ updated, Layout.Valid (sectionRank id).val after updated ∧ Wasm1.BytesAt data origin updated.bytes next := by
   rcases hl.future with ⟨hf1, hf2, hf3, hf4, hf5, hf6, hf7, hf8, hf9, hf10⟩
   cases h with
   | types hadd hb hv =>
@@ -346,25 +345,25 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
 
 /-- A run of the section loop extends a valid layout to a valid layout of the final declarations
 that ends where the run ends. -/
-theorem Run.append_layout {profile} {data initial decls start initialId after afterDecls next id origin l}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
-    (hl : Layout.Valid initialId.val decls l profile)
+theorem Run.append_layout {data initial decls start initialId after afterDecls next id origin l}
+    (h : Run data initial decls start initialId after afterDecls next id)
+    (hl : Layout.Valid initialId.val decls l)
     (hs : Wasm1.BytesAt data origin l.bytes start) :
-    ∃ updated, Layout.Valid id.val afterDecls updated profile ∧ Wasm1.BytesAt data origin updated.bytes next := by
+    ∃ updated, Layout.Valid id.val afterDecls updated ∧ Wasm1.BytesAt data origin updated.bytes next := by
   induction h with
   | nil => exact ⟨l, hl, hs⟩
   | custom _ hc ih =>
-    obtain ⟨current, hv, hb⟩ := ih hl
+    obtain ⟨current, hv, hb⟩ := ih
     obtain ⟨bytes, he, hs⟩ := hc
     exact ⟨{ current with customs := current.customs ++ bytes }, hv.custom he,
       by simpa only [Layout.bytes, List.append_assoc] using hb.append hs⟩
   | step _ ho hh he ih =>
-    obtain ⟨current, hv, hb⟩ := ih hl
+    obtain ⟨current, hv, hb⟩ := ih
     exact he.append_layout hh hv ho hb
 
 /-- A valid layout is a `PrefixEncoding` of its declarations after the module header. -/
-theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decls l profile) :
-    PrefixEncoding decls (magicVersion ++ l.bytes) profile := by
+theorem Layout.Valid.encoding {last decls l} (h : Layout.Valid last decls l) :
+    PrefixEncoding decls (magicVersion ++ l.bytes) := by
   exact ⟨l.types, l.imports, l.functions, l.tables, l.memories, l.globals, l.exports,
     l.start, l.elements, l.dataCount, l.customs, h.types, h.imports, h.functions, h.tables,
     h.memories, h.globals, h.exports, h.start, h.elements, h.dataCount, h.customs,
@@ -372,11 +371,11 @@ theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decl
 
 /-- A run from the end of the module header consumes exactly the independent encoding of the
 resulting declarations. -/
-theorem Run.encoding {profile} {data initial start after decls next id}
-    (h : Run (profile := profile) data initial {} start 0#u8 after decls next id)
+theorem Run.encoding {data initial start after decls next id}
+    (h : Run data initial {} start 0#u8 after decls next id)
     (hh : Wasm1.BytesAt data 0#usize magicVersion start) :
-    At (fun decls bytes => PrefixEncoding decls bytes profile) data 0#usize decls next := by
-  obtain ⟨layout, hv, hb⟩ := h.append_layout (Layout.valid_empty profile)
+    At (fun decls bytes => PrefixEncoding decls bytes) data 0#usize decls next := by
+  obtain ⟨layout, hv, hb⟩ := h.append_layout (Layout.valid_empty)
     (show Wasm1.BytesAt data start (Layout.bytes {}) start from Wasm1.BytesAt.nil data start hh.bound)
   exact ⟨magicVersion ++ layout.bytes, hv.encoding, hh.append hb⟩
 

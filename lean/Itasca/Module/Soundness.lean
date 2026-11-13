@@ -17,18 +17,17 @@ namespace Itasca.ModuleSound
 
 open ModuleElaboration
 
-/-- A raw module from the independent grammar that encodes exactly `data` under the profile's
+/-- A raw module from the independent grammar that encodes exactly `data` under the
 code encoding, elaborates to `moduleOf raw`, matches the returned environment and tail, satisfies
-the generated `Module_ok`, meets the profile restrictions, and has the types returned by the
+the generated `Module_ok`, meets the module restrictions, and has the types returned by the
 public external-type accessors. -/
-def Validated (data : Slice U8) (decoded : metadata.Module)
-    (validationProfile : ValidationProfile) : Prop :=
-  ∃ raw, ModuleBinary.ModuleEncodingWith (Itasca.Profile.CodeEncoding validationProfile) raw data.val validationProfile ∧
+def Validated (data : Slice U8) (decoded : metadata.Module) : Prop :=
+  ∃ raw, ModuleBinary.ModuleEncodingWith (Itasca.Profile.CodeEncoding) raw data.val ∧
     Elaborates raw (moduleOf raw) ∧ Matches decoded.env decoded.tail raw ∧
-    Module_ok (moduleOf raw) ∧ Profile raw validationProfile ∧ AccessorTypes decoded.env raw
+    Module_ok (moduleOf raw) ∧ Restrictions raw ∧ AccessorTypes decoded.env raw
 
-private theorem code_guards {env indices codes profile}
-    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes) :
+private theorem code_guards {env indices codes}
+    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) indices codes) :
     env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false := by
   induction h with
   | nil => simp
@@ -38,9 +37,9 @@ private theorem code_guards {env indices codes profile}
     · exact hp.no_data hc
     · exact ih hc entry hm
 
-private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
+private theorem assembly_guards {env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
     ModuleBinary.DataCountValid (decls.module codes (segments.map ModuleData.raw)) := by
   unfold ModuleBinary.DataCountValid
@@ -55,18 +54,18 @@ private theorem assembly_guards {profile env decls codes} {segments : List metad
 /-- Like `assembled`, from byte lists that tile `data` exactly as `before ++ codeBytes ++
 tailBytes` instead of spans of one slice. Every semantic witness still belongs to one raw
 module. -/
-theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice U8} {env : metadata.Env} {tail : metadata.Tail}
+theorem assembled_regions {data : Slice U8} {env : metadata.Env} {tail : metadata.Tail}
     {decls : ModuleEnv.Declarations} {codes before codeBytes tailBytes}
     (hbytes : data.val = before ++ codeBytes ++ tailBytes)
-    (henv : ModuleEnv.PrefixEncoding decls before validationProfile)
-    (hrep : ModuleEnv.Represents env decls) (hv : ModuleEnv.Valid env validationProfile)
+    (henv : ModuleEnv.PrefixEncoding decls before)
+    (hrep : ModuleEnv.Represents env decls) (hv : ModuleEnv.Valid env)
     (hcode : ModuleBinary.PaddedEncoding 10#u8
-      (ModuleBinary.VecEncoding (Itasca.Profile.CodeEncoding validationProfile)) [] codes codeBytes)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry validationProfile) env.func_type_indices.val codes)
-    (htail : ModuleTail.Encoding (tail.data.val.map ModuleData.raw) tailBytes validationProfile)
+      (ModuleBinary.VecEncoding (Itasca.Profile.CodeEncoding)) [] codes codeBytes)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
+    (htail : ModuleTail.Encoding (tail.data.val.map ModuleData.raw) tailBytes)
     (hsegments : ∀ segment ∈ tail.data.val, ModuleData.Valid env segment)
     (hdataCount : ∀ count, env.data_count = some count → count.val = tail.data.val.length) :
-    Validated data ⟨env, tail⟩ validationProfile := by
+    Validated data ⟨env, tail⟩ := by
   have hiNames : ∀ entry ∈ env.imports.val,
       wf_name (ModuleBinary.nameOfBytes entry.module.val) ∧ wf_name (ModuleBinary.nameOfBytes entry.name.val) := by
     intro e he
@@ -80,7 +79,7 @@ theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice 
   refine ⟨fromEnv env decls.tables decls.memories codes tail.data.val, ?_,
     elaborates hrep.cache hcodes, matches_fromEnv tail hrep.cache,
     typed hrep.cache hv hiNames heNames hcodes hsegments hdataCount hxts,
-    profile hrep.cache hv hcodes, accessorTypes hrep.cache hv heNames⟩
+    restrictions hrep.cache hv hcodes, accessorTypes hrep.cache hv heNames⟩
   rw [hbytes, ← represents_module hrep]
   have hg := assembly_guards hrep hcodes hdataCount
   exact ModuleComposition.encoding henv hcode htail hg

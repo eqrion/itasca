@@ -13,12 +13,12 @@ def sourceInitializerInstructions (env : metadata.Env) (tail : metadata.Tail) : 
 Environment metadata, source body maxima, aggregate function/initializer
 charges, scratch requests, and intrinsic publication bounds are all explicit. -/
 structure SourceCompilationDemand (A : Type) (env : metadata.Env) (tail : metadata.Tail)
-    (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
+     (limits : runtime.compiler.CompileLimits)
     (bodyBytes localCount peak bound : Nat) : Prop where
   environment : EnvironmentDemand (initialScheduler A limits 0#usize) env bound
   functions : FunctionDemandEnvelope (initialScheduler A limits 0#usize).budget
     env.func_type_indices.val.length bodyBytes localCount peak bound
-  maxima : SourcePreparationMaxima env profile bodyBytes localCount peak
+  maxima : SourcePreparationMaxima env bodyBytes localCount peak
   instructions : env.func_type_indices.val.length*(3*bodyBytes)+sourceInitializerInstructions env tail ≤ limits.max_instructions.val
   mappingCapacity : env.func_type_indices.val.length+initializerMappingCost ⟨env,tail⟩+1 ≤ Usize.max
   mappingReserve : env.func_type_indices.val.length+initializerMappingCost ⟨env,tail⟩+1 ≤ bound
@@ -33,13 +33,13 @@ structure SourceCompilationDemand (A : Type) (env : metadata.Env) (tail : metada
 
 /-- Aggregate source demand supplies the actual initializer phase after all
 functions have consumed at most their conservative source-paid allowances. -/
-theorem SourceCompilationDemand.initializers {A env tail profile limits bodyBytes localCount peak bound}
-    (demand : SourceCompilationDemand A env tail profile limits bodyBytes localCount peak bound)
+theorem SourceCompilationDemand.initializers {A env tail limits bodyBytes localCount peak bound}
+    (demand : SourceCompilationDemand A env tail limits bodyBytes localCount peak bound)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
     (count : functions.length = env.func_type_indices.val.length) (budget : runtime.compiler.Budget A)
     (paid : CompilationBudgetEffect (initialScheduler A limits 0#usize).budget budget
       (fun counter => env.func_type_indices.val.length*functionDemandRate bodyBytes localCount counter)) :
-    InitializerCompilationDemand (uninitializedModule env tail profile functions) budget bound := by
+    InitializerCompilationDemand (uninitializedModule env tail functions) budget bound := by
   have limitEq : budget.limits = limits := paid.limits
   have instructions := (paid.counts .instructions).2
   simp only [initialScheduler,ChargeCounter.used,functionDemandRate,show (0#usize).val = 0 from rfl,Nat.zero_add] at instructions
@@ -61,8 +61,8 @@ theorem SourceCompilationDemand.initializers {A env tail profile limits bodyByte
 
 /-- Fresh scheduler metadata demand is independent of the source coordinate
 chosen by the scanner. -/
-theorem SourceCompilationDemand.environment_at {A env tail profile limits bodyBytes localCount peak bound}
-    (demand : SourceCompilationDemand A env tail profile limits bodyBytes localCount peak bound) (start : Usize) :
+theorem SourceCompilationDemand.environment_at {A env tail limits bodyBytes localCount peak bound}
+    (demand : SourceCompilationDemand A env tail limits bodyBytes localCount peak bound) (start : Usize) :
     EnvironmentDemand (initialScheduler A limits start) env bound := by
   have ready := demand.environment
   exact ⟨ready.functionLimit,ready.typeLimit,ready.signatureWidths,ready.functionWidths,

@@ -29,9 +29,9 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
     (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (hrelated : related v w) (cf)
-    (h : body visitor data env ctx index profile v st = .ok cf) :
-    ∃ cf', body replacement data env ctx index profile w st = .ok cf' ∧
+     (st : code.BodyState) (v : V) (w : W) (hrelated : related v w) (cf)
+    (h : body visitor data env ctx index v st = .ok cf) :
+    ∃ cf', body replacement data env ctx index w st = .ok cf' ∧
       bodyObserve cf' = bodyObserve cf ∧ related (bodyVisitor cf) (bodyVisitor cf') := by
   unfold body code.body_loop_loop.body at h ⊢
   simp only [alloc.vec.Vec.is_empty, bind_ok] at h ⊢
@@ -62,7 +62,7 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at h ⊢
       obtain ⟨⟨r, s, v1⟩, hs, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
       obtain ⟨w1, hw, hr1⟩ := code.step_profile.refines visitor replacement related hrefines
-        { core := {st.core with pos} } data env ctx index profile opcode v w hrelated r s v1 hs
+        { core := {st.core with pos} } data env ctx index opcode v w hrelated r s v1 hs
       rw [hw]
       cases r <;> simp [
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h ⊢
@@ -80,13 +80,13 @@ theorem code.body_loop_loop.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (hrelated : related v w)
+     (st : code.BodyState) (v : V) (w : W) (hrelated : related v w)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
     (hbound : st.blocks.val.length ≤ st.core.pos.val + 1)
     (res : core.result.Result Unit error.OpError) (v' : V)
-    (h : code.body_loop_loop visitor data env ctx index profile v st = .ok (res, v')) :
-    ∃ w', code.body_loop_loop replacement data env ctx index profile w st = .ok (res, w') ∧
+    (h : code.body_loop_loop visitor data env ctx index v st = .ok (res, v')) :
+    ∃ w', code.body_loop_loop replacement data env ctx index w st = .ok (res, w') ∧
       related v' w' := by
   generalize hn : Usize.max - st.core.pos.val = n
   induction n using Nat.strong_induction_on generalizing st v w with
@@ -96,7 +96,7 @@ theorem code.body_loop_loop.refines {V W : Type}
     simp only at h ⊢
     obtain ⟨cf, hb, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
     obtain ⟨cf', hw, ho, hr⟩ := body.refines visitor replacement related hrefines
-      data env ctx index profile st v w hrelated cf hb
+      data env ctx index st v w hrelated cf hb
     simp only [Wasm2.Visitor.body] at hw
     rw [hw]
     cases cf with
@@ -114,10 +114,10 @@ theorem code.body_loop_loop.refines {V W : Type}
     | cont pair =>
       obtain ⟨v1, s⟩ := pair
       obtain ⟨emptyCf, he, heo⟩ := body.transfer visitor code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-        FullVisitor.empty_accepts data env ctx ctx rfl index profile st v () _ hb trivial
+        FullVisitor.empty_accepts data env ctx ctx rfl index st v () _ hb trivial
       have hp := code.body_loop_loop.body.total
         code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-        data env ctx index profile st () hdata hs halign hbound
+        data env ctx index st () hdata hs halign hbound
       simp only [Wasm2.Visitor.body] at he
       rw [he, WP.spec_ok] at hp
       cases emptyCf with
@@ -144,10 +144,10 @@ theorem code.validate_body_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (v : V) (w : W) (hrelated : related v w)
+     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (v' : V)
-    (h : code.validate_body_with visitor data env ctx index profile v = .ok (res, v')) :
-    ∃ w', code.validate_body_with replacement data env ctx index profile w =
+    (h : code.validate_body_with visitor data env ctx index v = .ok (res, v')) :
+    ∃ w', code.validate_body_with replacement data env ctx index w =
       .ok (res, w') ∧ related v' w' := by
   unfold code.validate_body_with at h ⊢
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
@@ -168,20 +168,20 @@ theorem code.validate_body_with.refines {V W : Type}
       have hp := code.initial_state.total env index
       rw [hr, WP.spec_ok] at hp
       exact code.body_loop_loop.refines visitor replacement related hrefines
-        data env ctx index profile st v w hrelated (by scalar_tac) hp.1 hp.2.1 hp.2.2 res v' h
+        data env ctx index st v w hrelated (by scalar_tac) hp.1 hp.2.1 hp.2.2 res v' h
 
 /-- Instrumenting body validation preserves its exact outcome and underlying visitor state and
 appends the actual callbacks, including rejection. -/
 theorem code.validate_body_with.instrument_forward {V : Type}
     (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V)
+    (ctx : code.Context) (index : U32) (v : V)
     (log : List Observation) (res : core.result.Result Unit error.OpError) (v' : V)
-    (h : code.validate_body_with visitor data env ctx index profile v = .ok (res, v')) :
-    ∃ added, code.validate_body_with (instrument visitor) data env ctx index profile
+    (h : code.validate_body_with visitor data env ctx index v = .ok (res, v')) :
+    ∃ added, code.validate_body_with (instrument visitor) data env ctx index
       (v, log) = .ok (res, (v', log ++ added)) := by
   obtain ⟨⟨w, out⟩, hw, he, added, hl⟩ := code.validate_body_with.refines
     visitor (instrument visitor) _ (instrument_refines visitor log)
-    data env ctx index profile v (v, log) ⟨rfl, [], by simp⟩ res v' h
+    data env ctx index v (v, log) ⟨rfl, [], by simp⟩ res v' h
   dsimp only at he hl
   subst w
   subst out

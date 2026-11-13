@@ -18,7 +18,7 @@ theorem profile_scalar_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
     (accepted : code.step_wasm2 visitor st.core data env ctx opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ post result.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index .Wasm2 opcode before ⦃ result =>
+    code.step_profile visitor st data env ctx index opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = {core := out} ∧ post result.2.2 ⦄ := by
   rw [profile_scalar_eq visitor st data env ctx index opcode before ordinary]
   have notFull : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by
@@ -46,7 +46,7 @@ theorem profile_base_available_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (misc : opcode ≠ code.OP_MISC_PREFIX) (locals : ctx.locals = sourceCtx.locals)
     (accepted : code.step visitor st.core data env sourceCtx opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ post result.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index .Wasm2 opcode before ⦃ result =>
+    code.step_profile visitor st data env ctx index opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = {core := out} ∧ post result.2.2 ⦄ := by
   rw [profile_scalar_eq visitor st data env ctx index opcode before ordinary]
   have notFull : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by

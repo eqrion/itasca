@@ -9,7 +9,7 @@ to install the pinned tools.
 
 | Path | Responsibility |
 | --- | --- |
-| `src/lib.rs` | Explicit consumer exports and the Wasm 2.0 profile selection. |
+| `src/lib.rs` | Explicit consumer exports and the public validation API. |
 | `src/stream.rs` | Module orchestration, source/scheduler contracts, issued batches, and the private contiguous adapter. |
 | `src/module.rs` | Read-only module metadata and internal environment, entry, and tail validation. |
 | `src/code.rs` | Wasm 2.0 body execution, control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
@@ -115,7 +115,7 @@ allocation, and store identity issuance remain explicit embedding boundaries.
 - Use explicit copy helpers instead of `.clone()`. Extraction excludes Clone
   and Copy implementations.
 
-Rust enums already represent profiles, value types, control kinds, signatures,
+Rust enums already represent value types, control kinds, signatures,
 imports, exports, and errors. The current Lean backend also handles fieldless
 enums with explicit discriminants, decoding matches, and casts. Remaining
 opcode/section constants represent wire bytes; resource constants represent
@@ -169,7 +169,7 @@ migration records are not sources of current API or toolchain requirements.
 
 The driver owns phase order and acceptance. It decodes the environment, frames
 and submits code batches, validates the tail, and drains all outstanding work.
-Each batch fixes its profile, environment, bytes, and module/batch identity.
+Each batch fixes its environment, bytes, and module/batch identity.
 Dispatch and validation have independent cursors; a framed entry is not yet
 validated. The first validation error remains stored. Only successful
 `validate_func` calls advance validation, and the driver checks the returned
@@ -214,12 +214,11 @@ meaning independently of dispatch so correspondence checks can detect wrong
 mappings. Module and streaming callbacks also affect scheduler invariants;
 every callback must preserve the relation between issued and returned workers.
 
-Keep language restrictions and implementation limits separate in
-`Itasca/Profile/`. Shared body and entry certificates connect independent bytes
-to generated typing; module and streaming proofs compose those certificates.
-Changes to sections, index spaces, initializers, or segment encodings also need
-independent module-grammar and elaboration updates. A new body feature alone
-does not establish a new module profile. The Wasm 2.0 certificate includes the
+Keep WebAssembly validity conditions separate from implementation limits.
+Shared body and entry certificates connect independent bytes to generated
+typing; module and streaming proofs compose those certificates. Changes to
+sections, index spaces, initializers, or segment encodings also need independent
+module-grammar and elaboration updates. The Wasm 2.0 certificate includes the
 independent declared-reference condition for `ref.func`; preserve it through
 body, entry, module, and worker certificates. The pinned generated typing model
 does not supply that condition.

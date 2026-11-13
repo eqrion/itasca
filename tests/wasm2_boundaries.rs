@@ -266,7 +266,7 @@ fn check(check_itasca: bool) {
             .is_ok();
         assert_eq!(reference, case.valid, "reference: {}", case.name);
         if check_itasca {
-            let actual = itasca::validate_module(&case.bytes, itasca::ValidationProfile::Wasm2);
+            let actual = itasca::validate_module(&case.bytes);
             assert_eq!(actual.is_ok(), case.valid, "{}: {actual:?}", case.name);
         }
     }
@@ -310,7 +310,7 @@ fn check_block(bytes: &[u8], valid: bool) {
         .validate_all(bytes)
         .is_ok();
     assert_eq!(reference, valid, "reference: {bytes:02x?}");
-    let actual = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm2);
+    let actual = itasca::validate_module(bytes);
     assert_eq!(actual.is_ok(), valid, "{actual:?}: {bytes:02x?}");
 }
 

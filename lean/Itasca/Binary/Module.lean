@@ -3,7 +3,7 @@ import Itasca.Binary.Wasm1.Encoding
 /-!
 # Module binary grammar
 
-The handwritten, relational binary format of whole modules for both profiles. It defines raw
+The handwritten, relational binary format of whole Wasm 2.0 modules. It defines raw
 module syntax (`ModuleBinary.Module`) and the byte-level relations for LEB-prefixed vectors,
 names, types, constant expressions, imports, exports, element and data segments, code entries
 and sections. `ModuleEncodingWith` assembles them into the module grammar and `ModuleEncoding`
@@ -266,22 +266,19 @@ inductive ActiveIndexEncoding : U32 → Bool → List U8 → Prop where
       ActiveIndexEncoding index true (flags ++ bytes)
 
 /-- The optional explicit table or memory index of an active segment, as selected by the flag. -/
-def SegmentIndexEncoding (profile : ValidationProfile) (flags index : U32)
+def SegmentIndexEncoding (flags index : U32)
     (explicit : Bool) (bytes : List U8) : Prop :=
-  match profile with
-  | .Wasm2 =>
-      (flags = 0#u32 ∧ index = 0#u32 ∧ explicit = false ∧ bytes = []) ∨
-      (flags = 2#u32 ∧ explicit = true ∧ IndexEncoding index bytes)
+  (flags = 0#u32 ∧ index = 0#u32 ∧ explicit = false ∧ bytes = []) ∨
+  (flags = 2#u32 ∧ explicit = true ∧ IndexEncoding index bytes)
 
-/-- The element segment grammar of the profile. -/
-def ElementEncodingFor (profile : ValidationProfile) (entry : Element)
+/-- The Wasm 2.0 element segment grammar. -/
+def ElementEncodingFor (entry : Element)
     (bytes : List U8) : Prop :=
-  match profile with
-  | .Wasm2 => Wasm2ElementEncoding entry bytes
+  Wasm2ElementEncoding entry bytes
 
 /-- A Wasm 2.0 segment index with its flag is an `ActiveIndexEncoding`. -/
 theorem SegmentIndexEncoding.active {flags index explicit bytes headBytes}
-    (h : SegmentIndexEncoding .Wasm2 flags index explicit bytes)
+    (h : SegmentIndexEncoding flags index explicit bytes)
     (hf : IndexEncoding flags headBytes) : ActiveIndexEncoding index explicit (headBytes ++ bytes) := by
   rcases h with ⟨rfl, rfl, rfl, rfl⟩ | ⟨rfl, rfl, hi⟩
   · simpa using ActiveIndexEncoding.implicit hf
@@ -291,7 +288,7 @@ theorem SegmentIndexEncoding.active {flags index explicit bytes headBytes}
 theorem ActiveIndexEncoding.parts {index explicit bytes}
     (h : ActiveIndexEncoding index explicit bytes) :
     ∃ flags headBytes suffix, IndexEncoding flags headBytes ∧
-      SegmentIndexEncoding .Wasm2 flags index explicit suffix ∧ bytes = headBytes ++ suffix := by
+      SegmentIndexEncoding flags index explicit suffix ∧ bytes = headBytes ++ suffix := by
   cases h with
   | implicit hf => exact ⟨0#u32, _, [], hf, Or.inl ⟨rfl, rfl, rfl, rfl⟩, by simp⟩
   | explicit hf hi => exact ⟨2#u32, _, _, hf, Or.inr ⟨rfl, rfl, hi⟩, rfl⟩
@@ -310,10 +307,9 @@ inductive Wasm2DataEncoding : Data → List U8 → Prop where
       IndexEncoding 1#u32 flags → ByteVecEncoding init entries →
       Wasm2DataEncoding ⟨.Passive, init⟩ (flags ++ entries)
 
-/-- The data segment grammar of the profile. -/
-def DataEncodingFor (profile : ValidationProfile) (entry : Data) (bytes : List U8) : Prop :=
-  match profile with
-  | .Wasm2 => Wasm2DataEncoding entry bytes
+/-- The Wasm 2.0 data segment grammar. -/
+def DataEncodingFor (entry : Data) (bytes : List U8) : Prop :=
+  Wasm2DataEncoding entry bytes
 
 /-- A section: its id, a LEB128 size equal to the payload length, and the payload. -/
 def SectionEncoding {α : Type} (id : U8) (R : α → List U8 → Prop)
@@ -348,13 +344,12 @@ def PaddedEncoding {α : Type} (id : U8) (R : α → List U8 → Prop)
 
 /-- Assembles an active data segment from its flag, memory index, offset and
 bytes. -/
-theorem DataEncodingFor.of_parts {profile flags memoryIndex explicit offset init fb mb ob ib}
+theorem DataEncodingFor.of_parts {flags memoryIndex explicit offset init fb mb ob ib}
     (hf : IndexEncoding flags fb)
-    (hm : SegmentIndexEncoding profile flags memoryIndex explicit mb)
+    (hm : SegmentIndexEncoding flags memoryIndex explicit mb)
     (ho : ConstEncoding offset ob) (hi : ByteVecEncoding init ib) :
-    DataEncodingFor profile ⟨.Active memoryIndex offset, init⟩ (fb ++ mb ++ ob ++ ib) := by
-  cases profile with
-  | Wasm2 => exact .active (hm.active hf) ho hi
+    DataEncodingFor ⟨.Active memoryIndex offset, init⟩ (fb ++ mb ++ ob ++ ib) := by
+  exact .active (hm.active hf) ho hi
 
 /-- The start section payload: a function index. -/
 def StartEncoding (value : Option U32) (bytes : List U8) : Prop :=
@@ -385,15 +380,13 @@ def DataCountValid (value : Module) : Prop :=
   | some count => count.val = value.data.length
 
 /-- Data-count occurs before code despite its numerically larger section ID. -/
-def DataCountSectionEncoding (profile : ValidationProfile) (value : Option U32)
+def DataCountSectionEncoding (value : Option U32)
     (bytes : List U8) : Prop :=
-  match profile with
-  | .Wasm2 => PaddedEncoding 12#u8 StartEncoding none value bytes
+  PaddedEncoding 12#u8 StartEncoding none value bytes
 
-/-- The module format for the profile, parameterized by the code entry grammar, with custom
+/-- The Wasm 2.0 module format, parameterized by the code entry grammar, with custom
 sections between the ordered optional sections. Typing checks are separate from this grammar. -/
-def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (bytes : List U8)
-    (profile : ValidationProfile) : Prop :=
+def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (bytes : List U8) : Prop :=
   ∃ types imports functions tables memories globals exports start elements dataCount codes datas customs,
     PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] value.types types ∧
     PaddedEncoding 2#u8 (VecEncoding ImportEncoding) [] value.imports imports ∧
@@ -403,10 +396,10 @@ def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (b
     PaddedEncoding 6#u8 (VecEncoding GlobalEncoding) [] value.globals globals ∧
     PaddedEncoding 7#u8 (VecEncoding ExportEncoding) [] value.exports exports ∧
     PaddedEncoding 8#u8 StartEncoding none value.start start ∧
-    PaddedEncoding 9#u8 (VecEncoding (ElementEncodingFor profile)) [] value.elements elements ∧
-    DataCountSectionEncoding profile value.dataCount dataCount ∧
+    PaddedEncoding 9#u8 (VecEncoding ElementEncodingFor) [] value.elements elements ∧
+    DataCountSectionEncoding value.dataCount dataCount ∧
     PaddedEncoding 10#u8 (VecEncoding codeRel) [] value.codes codes ∧
-    PaddedEncoding 11#u8 (VecEncoding (DataEncodingFor profile)) [] value.data datas ∧
+    PaddedEncoding 11#u8 (VecEncoding DataEncodingFor) [] value.data datas ∧
     CustomsEncoding customs ∧
     bytes = magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
       globals ++ exports ++ start ++ elements ++ dataCount ++ codes ++ datas ++ customs ∧

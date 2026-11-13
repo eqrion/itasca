@@ -121,7 +121,7 @@ theorem importType_wf (types : List wasm_types.FuncType) (desc : metadata.Import
 
 /-- The external type of each import of a valid cached environment is valid. -/
 theorem import_type_valid {env : metadata.Env} {tables memories entry}
-    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
+    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
     (he : entry ∈ env.imports.val) : Externtype_ok (importType env.types.val entry.desc) := by
   cases hd : entry.desc with
   | Func idx => exact .func _ (functionType_valid _ _) (.externtype_case_0 _)
@@ -143,7 +143,7 @@ theorem import_type_valid {env : metadata.Env} {tables memories entry}
 
 /-- Each import of a valid cached environment is typed, given well-formed names. -/
 theorem import_typed {env : metadata.Env} {tables memories entry}
-    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
+    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
     (he : entry ∈ env.imports.val)
     (hmod : wf_name (ModuleBinary.nameOfBytes entry.module.val))
     (hn : wf_name (ModuleBinary.nameOfBytes entry.name.val))
@@ -154,7 +154,7 @@ theorem import_typed {env : metadata.Env} {tables memories entry}
     (.import_case_0 _ _ _ hmod hn (importType_wf _ _))
 
 /-- The start function of a valid environment is typed in the module context. -/
-theorem start_typed {env : metadata.Env} {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile) (idx : U32)
+theorem start_typed {env : metadata.Env} (hv : ModuleEnv.Valid env) (idx : U32)
     (hs : env.start = some idx) (C : context) (hC : CodeEntry.ModuleContext env C) :
     Start_ok C (start idx) := by
   obtain ⟨hi, hp, hr⟩ := hv.start idx hs

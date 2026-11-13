@@ -12,9 +12,9 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem executable_witness_compiler_finish {A : Type} (ops : runtime.platform.Alloc A)
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (facts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body)
     {source : List instr}
     (body : StructuredCompiledBody final.function.jump_tables.val (ExecutableEmission (CompilerTables.ofFunction final.function) (EnvTranslation.context env w.ctx)) w.startedState final

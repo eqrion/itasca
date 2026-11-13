@@ -125,8 +125,8 @@ namespace Itasca
 /-- `metadata.decode_const_expr` satisfies `ModuleConstants.Post`. -/
 @[step]
 theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (expected : wasm_types.ValueType) (profile : ValidationProfile) :
-    metadata.decode_const_expr data pos env expected profile ⦃ ModuleConstants.Post data pos env expected ⦄ := by
+    (env : metadata.Env) (expected : wasm_types.ValueType) :
+    metadata.decode_const_expr data pos env expected ⦃ ModuleConstants.Post data pos env expected ⦄ := by
   unfold metadata.decode_const_expr
   by_cases hb : pos.val < data.length
   · obtain ⟨_, hr, next, rfl, hp⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hb)
@@ -266,110 +266,104 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
             core.convert.FromSame, bind_assoc] using ht
     · rename_i hop
-      cases profile with
-      | Wasm2 =>
-        obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data next .Wasm2)
-        cases r with
-        | Err e =>
-          simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            ModuleConstants.Post]
-        | Ok pair =>
-          obtain ⟨ty, mid⟩ := pair
-          obtain ⟨bytes, rfl, himm⟩ := hdecode
-          have hop' : data.val[pos.val] = 0xD0#u8 := by with_unfolding_all exact hop
+      obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data next)
+      cases r with
+      | Err e =>
+        simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          ModuleConstants.Post]
+      | Ok pair =>
+        obtain ⟨ty, mid⟩ := pair
+        obtain ⟨bytes, rfl, himm⟩ := hdecode
+        have hop' : data.val[pos.val] = 0xD0#u8 := by with_unfolding_all exact hop
+        have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
+        have hv : wasm_types.ElemType.value_type ty = .ok (ModuleConstants.referenceValueType ty) := by
+          cases ty <;> rfl
+        have ht := ModuleConstants.finish_spec data pos mid env expected
+          (ModuleConstants.referenceValueType ty) (.RefNull ty) [0xD0#u8, ModuleBinary.elemByte ty] hs
+          (ModuleBinary.ConstEncoding.refNull ty) (ModuleConstants.Valid.refNull ty)
+        obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists
+          (metadata.expect_const_type.spec (ModuleConstants.referenceValueType ty) expected)
+        obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
+        cases typeResult <;> cases endResult <;>
+          simpa [htype, hend, hd, hv, core.result.Result.Insts.CoreOpsTry.branch,
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+            core.convert.FromSame, bind_assoc] using ht
+    · rename_i hop
+      obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
+      cases r with
+      | Err e =>
+        simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
+      | Ok pair =>
+        obtain ⟨idx, mid⟩ := pair
+        simp only [hd, bind_ok]
+        step
+        split
+        · simp [ModuleConstants.Post]
+        · have hi : idx.val < env.func_types.val.length := by scalar_tac
+          obtain ⟨bytes, hsuffix, hlen, hbound, he⟩ := hdecode
+          have hop' : data.val[pos.val] = 0xD2#u8 := by with_unfolding_all exact hop
+          have himm : Wasm1.BytesAt data next bytes mid := ⟨hsuffix, hlen, hbound⟩
           have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
-          have hv : wasm_types.ElemType.value_type ty = .ok (ModuleConstants.referenceValueType ty) := by
-            cases ty <;> rfl
-          have ht := ModuleConstants.finish_spec data pos mid env expected
-            (ModuleConstants.referenceValueType ty) (.RefNull ty) [0xD0#u8, ModuleBinary.elemByte ty] hs
-            (ModuleBinary.ConstEncoding.refNull ty) (ModuleConstants.Valid.refNull ty)
-          obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists
-            (metadata.expect_const_type.spec (ModuleConstants.referenceValueType ty) expected)
+          have ht := ModuleConstants.finish_spec data pos mid env expected .FuncRef
+            (.RefFunc idx) (0xD2#u8 :: bytes) hs
+            (by simpa using ModuleBinary.ConstEncoding.refFunc idx he)
+            (ModuleConstants.Valid.refFunc idx hi)
+          obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .FuncRef expected)
           obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
           cases typeResult <;> cases endResult <;>
-            simpa [htype, hend, hd, hv, core.result.Result.Insts.CoreOpsTry.branch,
+            simpa [htype, hend, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
               core.convert.FromSame, bind_assoc] using ht
     · rename_i hop
-      cases profile with
-      | Wasm2 =>
-        obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
-        cases r with
-        | Err e =>
-          simp [hd, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
-        | Ok pair =>
-          obtain ⟨idx, mid⟩ := pair
-          simp only [hd, bind_ok]
-          step
-          split
-          · simp [ModuleConstants.Post]
-          · have hi : idx.val < env.func_types.val.length := by scalar_tac
-            obtain ⟨bytes, hsuffix, hlen, hbound, he⟩ := hdecode
-            have hop' : data.val[pos.val] = 0xD2#u8 := by with_unfolding_all exact hop
-            have himm : Wasm1.BytesAt data next bytes mid := ⟨hsuffix, hlen, hbound⟩
-            have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
-            have ht := ModuleConstants.finish_spec data pos mid env expected .FuncRef
-              (.RefFunc idx) (0xD2#u8 :: bytes) hs
-              (by simpa using ModuleBinary.ConstEncoding.refFunc idx he)
-              (ModuleConstants.Valid.refFunc idx hi)
-            obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .FuncRef expected)
-            obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
-            cases typeResult <;> cases endResult <;>
-              simpa [htype, hend, core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                core.convert.FromSame, bind_assoc] using ht
-    · rename_i hop
-      cases profile with
-      | Wasm2 =>
-        obtain ⟨r, hsub, hsubdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
-        cases r with
-        | Err e =>
-          simp [hsub, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
-        | Ok pair =>
-          obtain ⟨sub, first⟩ := pair
-          by_cases hcode : sub = 12#u32
-          · subst sub
-            obtain ⟨r, hlow, hlowdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data first)
+      obtain ⟨r, hsub, hsubdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
+      cases r with
+      | Err e =>
+        simp [hsub, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
+      | Ok pair =>
+        obtain ⟨sub, first⟩ := pair
+        by_cases hcode : sub = 12#u32
+        · subst sub
+          obtain ⟨r, hlow, hlowdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data first)
+          cases r with
+          | Err e =>
+            simp [hsub, hlow,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+              error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
+          | Ok pair =>
+            obtain ⟨low, second⟩ := pair
+            obtain ⟨r, hhigh, hhighdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data second)
             cases r with
             | Err e =>
-              simp [hsub, hlow,
+              simp [hsub, hlow, hhigh,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
             | Ok pair =>
-              obtain ⟨low, second⟩ := pair
-              obtain ⟨r, hhigh, hhighdecode⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data second)
-              cases r with
-              | Err e =>
-                simp [hsub, hlow, hhigh,
+              obtain ⟨high, mid⟩ := pair
+              obtain ⟨subbytes, hss, hsl, hsb, hse⟩ := hsubdecode
+              obtain ⟨lowbytes, hls, hll, hlb, hle⟩ := hlowdecode
+              obtain ⟨highbytes, hhs, hhl, hhb, hhe⟩ := hhighdecode
+              have hs : Wasm1.BytesAt data next subbytes first := ⟨hss, hsl, hsb⟩
+              have hl : Wasm1.BytesAt data first lowbytes second := ⟨hls, by rw [hle.1]; exact hll, hlb⟩
+              have hh : Wasm1.BytesAt data second highbytes mid := ⟨hhs, by rw [hhe.1]; exact hhl, hhb⟩
+              have hop' : data.val[pos.val] = 0xFD#u8 := by with_unfolding_all exact hop
+              have hs := (((Wasm1.BytesAt.byte data pos next _ hb hop' hp).append hs).append hl).append hh
+              have ht := ModuleConstants.finish_spec data pos mid env expected .V128
+                (.V128 low high) (0xFD#u8 :: (subbytes ++ lowbytes ++ highbytes))
+                (by simpa using hs)
+                (by simpa [List.append_assoc] using ModuleBinary.ConstEncoding.v128 low high hse hle hhe)
+                (ModuleConstants.Valid.v128 low high)
+              obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .V128 expected)
+              obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
+              cases typeResult <;> cases endResult <;>
+                simpa [hsub, hlow, hhigh, htype, hend, core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                  error.Error.Insts.CoreConvertFromOpError.from, ModuleConstants.Post]
-              | Ok pair =>
-                obtain ⟨high, mid⟩ := pair
-                obtain ⟨subbytes, hss, hsl, hsb, hse⟩ := hsubdecode
-                obtain ⟨lowbytes, hls, hll, hlb, hle⟩ := hlowdecode
-                obtain ⟨highbytes, hhs, hhl, hhb, hhe⟩ := hhighdecode
-                have hs : Wasm1.BytesAt data next subbytes first := ⟨hss, hsl, hsb⟩
-                have hl : Wasm1.BytesAt data first lowbytes second := ⟨hls, by rw [hle.1]; exact hll, hlb⟩
-                have hh : Wasm1.BytesAt data second highbytes mid := ⟨hhs, by rw [hhe.1]; exact hhl, hhb⟩
-                have hop' : data.val[pos.val] = 0xFD#u8 := by with_unfolding_all exact hop
-                have hs := (((Wasm1.BytesAt.byte data pos next _ hb hop' hp).append hs).append hl).append hh
-                have ht := ModuleConstants.finish_spec data pos mid env expected .V128
-                  (.V128 low high) (0xFD#u8 :: (subbytes ++ lowbytes ++ highbytes))
-                  (by simpa using hs)
-                  (by simpa [List.append_assoc] using ModuleBinary.ConstEncoding.v128 low high hse hle hhe)
-                  (ModuleConstants.Valid.v128 low high)
-                obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .V128 expected)
-                obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
-                cases typeResult <;> cases endResult <;>
-                  simpa [hsub, hlow, hhigh, htype, hend, core.result.Result.Insts.CoreOpsTry.branch,
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                    core.convert.FromSame, bind_assoc] using ht
-          · have hcodeval : sub.val ≠ 12 := by
-              intro he
-              exact hcode (UScalar.eq_of_val_eq he)
-            simp [hsub, hcodeval, ModuleConstants.Post]
+                  core.convert.FromSame, bind_assoc] using ht
+        · have hcodeval : sub.val ≠ 12 := by
+            intro he
+            exact hcode (UScalar.eq_of_val_eq he)
+          simp [hsub, hcodeval, ModuleConstants.Post]
     · simp [ModuleConstants.Post]
   · simp [reader.read_byte.eof data pos (by omega),
       core.result.Result.Insts.CoreOpsTry.branch,

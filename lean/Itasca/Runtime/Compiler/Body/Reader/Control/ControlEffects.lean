@@ -27,7 +27,7 @@ theorem reader_block_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 2#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 2#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_block] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -37,7 +37,7 @@ theorem reader_loop_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 3#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 3#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_loop] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -47,7 +47,7 @@ theorem reader_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 4#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 4#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_if] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -57,7 +57,7 @@ theorem reader_else_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 5#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 5#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_else] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -67,7 +67,7 @@ theorem reader_end_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 11#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_end] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -77,7 +77,7 @@ theorem reader_br_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_br] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -87,7 +87,7 @@ theorem reader_br_if_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Wasm2.CallbackTrace.dispatch_br_if] at accepted
   obtain ⟨value, _, called⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -98,7 +98,7 @@ theorem reader_control_effects_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (control : ScopeOpcode opcode ∨ opcode = 5#u8 ∨ opcode = 11#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rcases control with scope | rfl | rfl
   · simp only [ScopeOpcode, List.mem_cons, List.not_mem_nil, or_false] at scope

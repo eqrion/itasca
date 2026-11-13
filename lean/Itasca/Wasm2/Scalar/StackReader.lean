@@ -8,8 +8,8 @@ including polymorphic operands and the concrete/bottom select result.
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
-theorem Pending.read_drop {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_drop {data env locals index st}
+    (p : Pending data env locals index st)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
     code.read_drop st.core ⦃ r => ∀ value, r.1 = .Ok value → ∃ values,
       StackSemantics.Popped p.current.ctrl.polymorphic_base p.current.vals value values ∧
@@ -34,8 +34,8 @@ theorem Pending.read_drop {data env profile locals index st}
   · simpa [controls] using ctrls
   · simpa [vals, base] using stack
 
-theorem Pending.read_select {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_select {data env locals index st}
+    (p : Pending data env locals index st)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
     code.read_select st.core ⦃ r => ∀ value, r.1 = .Ok value → ∃ values,

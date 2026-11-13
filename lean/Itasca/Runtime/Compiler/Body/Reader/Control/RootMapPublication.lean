@@ -21,7 +21,7 @@ private theorem source_body_form_wasm2 {bt : signature.BlockType} {form : ScopeF
 The source zipper and empty returned control stack identify the sole root frame. -/
 theorem reader_root_map_publication_wasm2 {jumpTables : List U32}
     {emit : List valtype → instr → List Bytecode → List valtype → Prop}
-    {data env localTypes index st} (p : Wasm2.Pending data env .Wasm2 localTypes index st)
+    {data env localTypes index st} (p : Wasm2.Pending data env localTypes index st)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -33,7 +33,7 @@ theorem reader_root_map_publication_wasm2 {jumpTables : List U32}
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (closed : out.core.ctrls.val = [])
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     FinalControlMapBounds after.function ∧ SourceAligned after := by
   obtain ⟨callback,_,_,_,zipper,afterState⟩ := reader_end_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

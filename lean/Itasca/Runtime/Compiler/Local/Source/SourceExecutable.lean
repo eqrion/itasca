@@ -28,31 +28,29 @@ private theorem padded_all {α : Type} {R : α → List U8 → Prop} {P : α →
     obtain ⟨size, payload, _, ⟨count, entries, _, entriesEncoded, _⟩, _⟩ := content
     exact rep_all entry entriesEncoded
 
-theorem body_bytes {profile source bytes} (encoded : Profile.BodyBytes profile source bytes) :
+theorem body_bytes {source bytes} (encoded : Profile.BodyBytes source bytes) :
     Forall SourceMachine.BinaryInstr source := by
-  cases profile with
-  | Wasm2 =>
-    obtain ⟨tokens, encoded, inner, rfl, emitted⟩ := encoded
-    have known := rep_all (fun _ _ h => token_wasm2 h) encoded
-    exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
+  obtain ⟨tokens, encoded, inner, rfl, emitted⟩ := encoded
+  have known := rep_all (fun _ _ h => token_wasm2 h) encoded
+  exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
 
-theorem code {profile entry bytes} (encoded : Profile.CodeEncoding profile entry bytes) :
+theorem code {entry bytes} (encoded : Profile.CodeEncoding entry bytes) :
     Forall SourceMachine.BinaryInstr entry.body := by
   obtain ⟨size, locals, body, _, _, bodyEncoded, _⟩ := encoded
   exact body_bytes bodyEncoded
 
 /-- Independent full-module encoding suffices for all executable source bodies;
 no validator callback or compiler correctness assumption occurs. -/
-theorem module {profile raw bytes}
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile) :
+theorem module {raw bytes}
+    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes) :
     ModuleExecutable raw := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, _, _, _, _, _, _, _, _, _, _, codeSection, _, _, _, _⟩ := encoded
   exact padded_all (fun _ _ h => code h) codeSection
 
 /-- The canonical function-code list retains the coverage of its decoded bodies. -/
-theorem functions {profile raw bytes}
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile) :
+theorem functions {raw bytes}
+    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes) :
     ∀ source ∈ sourceFunctions raw, match source with
       | .HOST _ => False
       | .FUNC _ _ body => Forall SourceMachine.BinaryInstr body := by

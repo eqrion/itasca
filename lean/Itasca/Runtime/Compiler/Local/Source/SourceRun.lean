@@ -3,8 +3,8 @@ import Itasca.Stream.DriverSound
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-private theorem code_guards {env indices codes profile}
-    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes) :
+private theorem code_guards {env indices codes}
+    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) indices codes) :
     env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false := by
   induction h with
   | nil => simp
@@ -14,9 +14,9 @@ private theorem code_guards {env indices codes profile}
     · exact hp.no_data hc
     · exact ih hc entry hm
 
-private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
+private theorem assembly_guards {env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
     ModuleBinary.DataCountValid (decls.module codes (segments.map ModuleData.raw)) := by
   have hg := code_guards hcodes
@@ -31,23 +31,23 @@ private theorem assembly_guards {profile env decls codes} {segments : List metad
 
 /-- Accepted driver phases recover the independent code section in the exact
 buffer used for batching. This is source framing, not compiler correctness. -/
-theorem stream_run_source {S V : Type} {profile : ValidationProfile}
+theorem stream_run_source {S V : Type}
     (source : stream.Source S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : StreamScheduler.Provenance visitor Tracks profile)
+    (hp : StreamScheduler.Provenance visitor Tracks)
     (id : U64) (state : S) (v v' : V) (env : metadata.Env)
     (data environment code tail : Slice U8)
     (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
     (hv : Tracks id [] v)
-    (run : StreamRun.Accepted source visitor id state v v' env profile) :
-    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw data.val profile ∧
-      ModuleElaboration.Matches env run.remaining.tail raw ∧ ModuleEnv.Valid env profile ∧
+    (run : StreamRun.Accepted source visitor id state v v' env) :
+    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw data.val ∧
+      ModuleElaboration.Matches env run.remaining.tail raw ∧ ModuleEnv.Valid env ∧
       CodeEntry.Bounds env ∧
       raw.functions = env.func_type_indices.val ∧ raw.types = env.types.val ∧
       raw.codes.length = env.func_type_indices.val.length ∧
       StreamFraming.HeaderAt code env run.remaining.entries ∧
-      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) code run.remaining.entries raw.codes (Slice.len code) ∧
+      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) code run.remaining.entries raw.codes (Slice.len code) ∧
       code.length ≤ limits.MAX_MODULE_BYTES.val ∧ data.length ≤ limits.MAX_MODULE_BYTES.val := by
   have heq := hsource.environment_eq run.environment run.environment_call
   have hteq := hsource.tail_eq run.remaining.tailBytes run.remaining.tail_call
@@ -73,8 +73,8 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     simpa using this
   have hdecoded := metadata.validate_env_with.accepted_erase visitor.metadataModuleVisitorInst
     run.environment run.region env run.environmentLength run.decoded run.decode_environment
-  obtain ⟨henv, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
-  have hsem := metadata.validate_env.profile_semantic_spec run.environment profile
+  obtain ⟨henv, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ hecap hdecoded
+  have hsem := metadata.validate_env.profile_semantic_spec run.environment
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
   obtain ⟨decls, hrep, hvalid, _, _, before, hprefix, hspan⟩ := hsem
@@ -111,8 +111,8 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     have he := (hinv.issued issued hi).2.1
     simpa [he] using henv
   obtain ⟨_, _, hcompleted⟩ := StreamScheduler.drain_sound visitor Tracks hp id history
-    run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry hinv.profiles run.remaining.drain_call
-  have hall : ∀ issued ∈ history, StreamScheduler.Completed issued profile := by
+    run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry run.remaining.drain_call
+  have hall : ∀ issued ∈ history, StreamScheduler.Completed issued := by
     intro issued hi
     rcases hinv.accounted issued hi with hpend | hdone
     · exact hcompleted issued hi (hinv.issued issued hi).1 hpend
@@ -121,7 +121,7 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
   have hcount : codes.length = env.func_type_indices.val.length := by simpa using count.symm
   have htyped := entriesTyped.forall₂ (by simpa using hcount)
   have hcode : ModuleBinary.PaddedEncoding 10#u8
-      (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) [] codes code.val := by
+      (ModuleBinary.VecEncoding (Profile.CodeEncoding)) [] codes code.val := by
     rcases hheader with ⟨empty, _, noFunctions⟩ | ⟨count, codeSection, _⟩
     · have noCodes : codes = [] := by simpa [noFunctions] using hcount
       simp only [noCodes, empty]
@@ -132,16 +132,16 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
   have htail := metadata.validate_tail_with.accepted_erase visitor.metadataModuleVisitorInst
     run.remaining.tailBytes 0#usize env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have htailSem := metadata.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp) profile
+  have htailSem := metadata.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp)
   rw [htail] at htailSem
   simp only [WP.spec_ok] at htailSem
   obtain ⟨⟨tailBytes, ht, hts⟩, hsegments, hdataCount⟩ := htailSem
   have htailWhole : run.remaining.tailBytes.val = tailBytes := by simpa using hts.suffix
   let raw := ModuleElaboration.fromEnv env decls.tables decls.memories codes run.remaining.tail.data.val
   have guards := assembly_guards hrep htyped hdataCount
-  have encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw data.val profile := by
-    change ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile)
-      (ModuleElaboration.fromEnv env decls.tables decls.memories codes run.remaining.tail.data.val) data.val profile
+  have encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw data.val := by
+    change ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding)
+      (ModuleElaboration.fromEnv env decls.tables decls.memories codes run.remaining.tail.data.val) data.val
     rw [← ModuleElaboration.represents_module hrep, hbytes]
     exact ModuleComposition.encoding (by simpa [← hwhole, heq] using hprefix) hcode
       (by simpa [← htailWhole, hteq] using ht) guards

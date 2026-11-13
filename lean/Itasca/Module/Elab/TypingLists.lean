@@ -41,8 +41,8 @@ theorem forall₂_right {α β : Type} {R : α → β → Prop} {xs ys}
 
 /-- Pointwise `Typed` code entries are typed as functions in a module context, at the function types
 of their type indices. -/
-theorem functions_typed {env indices codes} {profile : ValidationProfile}
-    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes)
+theorem functions_typed {env indices codes}
+    (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) indices codes)
     (C : context) (hc : CodeEntry.ModuleContext env C)
     (hsegments : CodeEntry.SegmentContext env C) :
     List.Forall₂ (fun ft f => Func_ok C f ft)

@@ -5,7 +5,7 @@ import Itasca.Module.Custom.Visitor
 /-!
 # Streaming driver termination
 
-`stream.validate_streaming.total`: on arbitrary bytes, `stream.validate_streaming`
+`stream.validate_streaming.total_core`: on arbitrary bytes, `stream.validate_streaming`
 returns success or an error whenever the source and scheduler callbacks return
 (`StreamSource.CallbacksTotal`, `StreamScheduler.CallbacksTotal`). Coherence, availability and
 worker provenance are not premises. `stream.validate_remaining.total_spec` covers the phases after
@@ -27,17 +27,14 @@ theorem HeaderChecked.entries_le {S : Type} {source : stream.Source S} {state : 
 end Itasca.StreamFraming
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 /-- After a decoded environment, all remaining phases return an ordinary result when the source
 and visitor callbacks return. Worker provenance is not needed. -/
 theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) :
-    stream.validate_remaining source visitor moduleId profile state env envLen v ⦃ _ => True ⦄ := by
+    stream.validate_remaining source visitor moduleId state env envLen v ⦃ _ => True ⦄ := by
   obtain ⟨codeLen, hlen⟩ := hs.code_len_returns
   unfold stream.validate_remaining
   rw [hlen]
@@ -99,7 +96,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                     simp only [bind_ok]
                     obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
                       (metadata.validate_tail_with.spec visitor.metadataModuleVisitorInst hv.custom
-                        bytes 0#usize env v4 (by simp) (profile := profile))
+                        bytes 0#usize env v4 (by simp) )
                     rw [hparsed]
                     cases r with
                     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -121,9 +118,9 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
 theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v : V)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile)
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) :
-    ∃ r, stream.validate_remaining source visitor moduleId profile state env envLen v = .ok r := by
+    ∃ r, stream.validate_remaining source visitor moduleId state env envLen v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
     (stream.validate_remaining.total_spec source visitor moduleId state env envLen v hs hv henv)
   exact ⟨r, hr⟩
@@ -131,12 +128,12 @@ theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
 /-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
 is a termination premise. -/
-theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.total_core {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : metadata.Env)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor profile) :
-    ∃ r, stream.validate_streaming source visitor moduleId profile state v storage = .ok r := by
-  have hspec : stream.validate_streaming source visitor moduleId profile state v storage ⦃ _ => True ⦄ := by
+    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor ) :
+    ∃ r, stream.validate_streaming source visitor moduleId state v storage = .ok r := by
+  have hspec : stream.validate_streaming source visitor moduleId state v storage ⦃ _ => True ⦄ := by
     unfold stream.validate_streaming
     obtain ⟨r, hread⟩ := hs.environment_returns
     rw [hread]
@@ -156,7 +153,7 @@ theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
         rw [hregion]
         simp only [bind_ok]
         obtain ⟨⟨r, v2⟩, hparsed, _⟩ := WP.spec_imp_exists
-          (metadata.validate_env_with.profile_spec visitor.metadataModuleVisitorInst hv.custom bytes profile v1)
+          (metadata.validate_env_with.profile_spec visitor.metadataModuleVisitorInst hv.custom bytes v1)
         rw [hparsed]
         cases r with
         | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -164,7 +161,7 @@ theorem stream.validate_streaming.total {S V : Type} (source : stream.Source S)
           obtain ⟨env, envEnd⟩ := pair
           have herase := metadata.validate_env_with.accepted_erase
             visitor.metadataModuleVisitorInst bytes v1 env envEnd v2 hparsed
-          have henv := (ModuleEnv.profile_accepted_entry_conditions bytes env envEnd profile hsize herase).1
+          have henv := (ModuleEnv.profile_accepted_entry_conditions bytes env envEnd hsize herase).1
           simp
           split
           · obtain ⟨⟨r, v3⟩, hr⟩ := stream.validate_remaining.total source visitor moduleId state

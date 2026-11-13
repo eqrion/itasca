@@ -45,7 +45,7 @@ def bodyContext (env : metadata.Env) (params declared results : List wasm_types.
     DATAS := EnvTranslation.dataTypes env
     LOCALS := (params ++ declared).map Translate.valueType
     LABELS := [.mk_list (results.map Translate.valueType)]
-    RETURN := some (.mk_list (results.map Translate.valueType)) }
+    RETURN := some (.mk_list (results.map Translate.valueType))}
 
 /-- The type `[] -> results` that a body must have. -/
 def instructionType (ft : wasm_types.FuncType) : functype :=
@@ -54,8 +54,7 @@ def instructionType (ft : wasm_types.FuncType) : functype :=
 /-- The code entry has a function type in the environment's type table. Its body is typed in
 `bodyContext` with the parameters followed by the declared locals and mentions only
 declared function references. -/
-structure Typed (env : metadata.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
-    (validationProfile : ValidationProfile) : Prop where
+structure Typed (env : metadata.Env) (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
@@ -69,7 +68,7 @@ def function (typeIdx : U32) (entry : ModuleBinary.Code) : func :=
 
 /-- A typed body in an environment without a data count contains no data-index instruction,
 regardless of control nesting or stack reachability. -/
-theorem Typed.no_data {env typeIdx entry profile} (h : Typed env typeIdx entry profile)
+theorem Typed.no_data {env typeIdx entry} (h : Typed env typeIdx entry)
     (hcount : env.data_count = none) : ModuleBinary.instructionsUseData entry.body = false :=
   ModuleBinary.typed_no_data h.typed (by simp [bodyContext, EnvTranslation.dataTypes, hcount])
 
@@ -139,7 +138,7 @@ theorem typed_func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary
 
 /-- A `Typed` certificate gives `Func_ok` in the full module context. -/
 theorem Typed.func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
-    {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C)
+     (h : Typed env typeIdx entry) (C : context) (hc : ModuleContext env C)
     (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (EnvTranslation.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=
   typed_func_ok h.type_lt h.typed C hc hsegments

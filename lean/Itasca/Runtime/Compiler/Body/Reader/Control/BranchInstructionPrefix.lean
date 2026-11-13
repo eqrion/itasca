@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed br reading preserves checks of every stored word. -/
 theorem reader_br_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -28,7 +28,7 @@ theorem reader_br_open_instructions_wasm2 {jumpTables : List U32} {data env sour
     (held : CompilerInstructionPrefix before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_BR before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
+      st data env ctx index code.OP_BR before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
   obtain ⟨depth,view,callback,read,post⟩ := reader_br_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
   apply invariant.br_open_instructions ops law out.core depth view sourceBound fixups coordinate ?label held callback
@@ -39,7 +39,7 @@ theorem reader_br_open_instructions_wasm2 {jumpTables : List U32} {data env sour
 
 /-- Actual source-typed br_if reading preserves checks of every stored word. -/
 theorem reader_br_if_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -52,7 +52,7 @@ theorem reader_br_if_open_instructions_wasm2 {jumpTables : List U32} {data env s
     (held : CompilerInstructionPrefix before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR_IF)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_BR_IF before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
+      st data env ctx index code.OP_BR_IF before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
   obtain ⟨depth,view,values,callback,read,post⟩ := reader_br_if_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
   apply invariant.br_if_open_instructions ops law out.core depth view sourceBound ?label held callback

@@ -13,7 +13,7 @@ import Itasca.Contracts
 # Region certificates for streaming completeness
 
 `StreamCompleteRegions.prepare` derives, from independent premises about a module (bounded
-encoding, signature limits, elaboration, `Module_ok` typing and profile restrictions), a
+encoding, signature limits, elaboration, `Module_ok` typing and module restrictions), a
 `StreamCompleteRegions.Certificate` for the canonical split of its bytes produced by
 `stream.find_code_region`. The certificate gives the environment, code header and entries, tail,
 and public metadata of the same raw module. It does not assume parser success or prevalidated
@@ -37,9 +37,9 @@ theorem At.on_region {α : Type} {R : α → List U8 → Prop}
   · simp
   · simpa using hregion.length
 
-/-- Entries encoded within the profile limits declare at most `limits.MAX_LOCALS` locals. -/
-theorem Rep.locals_within_limits {entries bytes profile}
-    (h : Rep (Itasca.Profile.CodeEncodingWithinLimits profile) entries bytes) :
+/-- Entries encoded within the implementation limits declare at most `limits.MAX_LOCALS` locals. -/
+theorem Rep.locals_within_limits {entries bytes }
+    (h : Rep (Itasca.Profile.CodeEncodingWithinLimits ) entries bytes) :
     ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val := by
   induction h with
   | nil => simp
@@ -55,10 +55,10 @@ namespace Itasca.ModuleCode
 
 /-- Generated typing of the code entries in index order and the local-count limit give the entry
 certificates that streaming batches use. -/
-theorem EntriesTyped.of_forall₂ {env entries i profile}
-    (ht : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) (env.func_type_indices.val.drop i) entries)
+theorem EntriesTyped.of_forall₂ {env entries i }
+    (ht : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry ) (env.func_type_indices.val.drop i) entries)
     (hb : ∀ entry ∈ entries, entry.declared.length ≤ limits.MAX_LOCALS.val) :
-    EntriesTyped (profile := profile) env i entries := by
+    EntriesTyped env i entries := by
   induction entries generalizing i with
   | nil => exact .nil _
   | cons entry entries ih =>
@@ -82,20 +82,19 @@ open ModuleBinary ModuleElaboration
 of the shared environment and tail validators and the encoded, typed code entries. Body checking
 is later obtained from the typed, bounded encodings by the streaming driver. -/
 structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
-    (source : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail)
-    (validationProfile : ValidationProfile) : Prop where
+    (source : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail) : Prop where
   split : Split data source
   bytes : data.val = source.env.val ++ source.code.val ++ source.tail.val
   bounded : data.length ≤ limits.MAX_MODULE_BYTES.val
-  environment : metadata.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
+  environment : metadata.validate_env source.env = .ok (.Ok (env, Slice.len source.env))
   ready : ∃ decls, ModuleEnv.Ready raw 10 decls env
   entry_bounds : CodeEntry.Bounds env
   signature_limits : Itasca.Profile.EnvironmentWithinLimits env
   code : ∃ entries, StreamFraming.HeaderAt source.code env entries ∧
-    At (Rep (Itasca.Profile.CodeEncodingWithinLimits validationProfile)) source.code entries raw.codes (Slice.len source.code)
-  typed : ModuleCode.EntriesTyped (profile := validationProfile) env 0 raw.codes
+    At (Rep (Itasca.Profile.CodeEncodingWithinLimits )) source.code entries raw.codes (Slice.len source.code)
+  typed : ModuleCode.EntriesTyped env 0 raw.codes
   code_count : raw.codes.length = env.func_type_indices.val.length
-  tail_accepted : metadata.validate_tail source.tail 0#usize env validationProfile = .ok (.Ok tail)
+  tail_accepted : metadata.validate_tail source.tail 0#usize env = .ok (.Ok tail)
   realization : Matches env tail raw
   metadata : AccessorTypes env raw
 
@@ -109,12 +108,12 @@ private theorem slice_spec (data : Slice U8) (first last : Usize)
 
 /-- Component completeness for the canonical streaming regions of an independently encoded,
 elaborated, typed module. No assumption of parser or body success is made. -/
-theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
-    (hb : ModuleEncodingWithinLimits raw data.val profile)
+theorem prepare (data : Slice U8) (raw : ModuleBinary.Module)
+    (hb : ModuleEncodingWithinLimits raw data.val )
     (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
-    ∃ source env tail, Certificate data raw source env tail profile := by
+    (ht : Module_ok (moduleOf raw)) (hp : Restrictions raw ) :
+    ∃ source env tail, Certificate data raw source env tail := by
   have hs := sections_of_typing he ht
   have hr := profile_requirements_of_typing he hs hp.toModuleConditions hsignatures
   obtain ⟨decls, codePos, tailPos, hl⟩ := ModuleLayout.normalize data raw hb
@@ -128,7 +127,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     (slice_spec data tailPos (Slice.len data) (by simpa using htailPos) (by simp))
   have henvEnc := hl.environment.on_region henvSpan
   obtain ⟨env, finalDecls, henv, hready⟩ := metadata.validate_env.profile_complete
-    environment raw profile decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hr
+    environment raw decls (Slice.len environment) henvEnc hl.raw_eq (.inl rfl) hr
   have henvSize : environment.length ≤ limits.MAX_MODULE_BYTES.val := by
     have := henvSpan.length
     have := hb.1
@@ -136,13 +135,13 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     simp only [Slice.length] at *
     omega
   obtain ⟨hbounds, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
-    environment env (Slice.len environment) profile henvSize henv
+    environment env (Slice.len environment) henvSize henv
   have htailEnc := hl.tail.on_region htailSpan
   obtain ⟨segments, hsegments, hvalid⟩ := ModuleTail.materialize
     tailBytes 0#usize (Slice.len tailBytes) raw finalDecls env htailEnc hs hready
   let tail : metadata.Tail := ⟨segments⟩
   have hmatches := hready.matches tail hsegments
-  have hsemantic := metadata.validate_env.profile_semantic_spec environment profile
+  have hsemantic := metadata.validate_env.profile_semantic_spec environment
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
   obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
@@ -170,10 +169,10 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     have hv := hguards
     simpa [DataCountValid, he, ← hsegments] using hv
   have htail := metadata.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
-  have htypes := ModuleLayout.CodeAt.typed (profile := profile) hready hs hguards hdeclared
+  have htypes := ModuleLayout.CodeAt.typed hready hs hguards hdeclared
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧
-      At (Rep (Itasca.Profile.CodeEncodingWithinLimits profile)) code entries raw.codes (Slice.len code) := by
+      At (Rep (Itasca.Profile.CodeEncodingWithinLimits )) code entries raw.codes (Slice.len code) := by
     rcases hl.code with hcode | ⟨hempty, hsame, _⟩
     · have henc := hcode.on_region hcodeSpan
       obtain ⟨content, hheader, hpayload⟩ := henc.section_split
@@ -189,9 +188,9 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
         apply List.eq_nil_of_length_eq_zero
         simpa [hempty] using hcount.symm
       refine ⟨0#usize, .inl ⟨hzero, rfl, hfuncs⟩, [], ?_, ?_⟩
-      · simpa [hempty] using (Rep.nil : Rep (Itasca.Profile.CodeEncodingWithinLimits profile) [] [])
+      · simpa [hempty] using (Rep.nil : Rep (Itasca.Profile.CodeEncodingWithinLimits ) [] [])
       · exact ⟨by simp [hzero], by simp [hzero], by simp⟩
-  have htyped : ModuleCode.EntriesTyped (profile := profile) env 0 raw.codes := by
+  have htyped : ModuleCode.EntriesTyped env 0 raw.codes := by
     obtain ⟨_, _, bytes, henc, _⟩ := hcode
     apply ModuleCode.EntriesTyped.of_forall₂ (by simpa using htypes)
     exact henc.locals_within_limits

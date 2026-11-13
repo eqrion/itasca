@@ -45,7 +45,7 @@ theorem StructuredReaderCompilerStateWasm2.control_checked_prefix
     (out : code.BodyState) (kind : ControlReaderKind)
     (byte : data.val[st.core.pos.val]'inbounds = kind.opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 kind.opcode before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index kind.opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   let p := state.boundary.pending next advance inbounds
   have sourceBound := state.boundary.source_bound

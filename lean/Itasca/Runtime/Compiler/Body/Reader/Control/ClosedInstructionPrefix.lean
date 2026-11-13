@@ -25,7 +25,7 @@ theorem StructuredReaderCompilerStateWasm2.closed_checked_instructions
     (out : code.BodyState) (closed : out.core.ctrls.val = [])
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     CheckedInstructionPrefix after.function := by
   let p := state.boundary.pending next advance inbounds
   obtain ⟨callback,read,encoded,realizes,zipper,afterState⟩ := reader_end_wasm2 p (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

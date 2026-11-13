@@ -8,7 +8,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Configuration facts used by each source-ordered compiler body fold. -/
 theorem CompileSourceCertificate.scheduler_setup {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops) :
     SignatureSequence c.run.remaining.configured.signatures.val w.env.types.val ∧
       c.run.remaining.configured.func_param_slots.val.map (fun word => word.val) =
@@ -27,7 +27,7 @@ theorem CompileSourceCertificate.scheduler_setup {A : Type} {ops : runtime.platf
 
 /-- Transport the actual reader's code length to the coherent source slice. -/
 theorem CompileSourceCertificate.code_length {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) : c.run.remaining.codeLength = Slice.len c.code := by
   apply UScalar.eq_of_val_eq
   exact c.coherent.code_len_eq _ c.run.remaining.length_call

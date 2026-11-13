@@ -5301,39 +5301,6 @@ def code.step_wasm2
       ok (r1, st, visitor)
   | _ => code.step_extended OpVisitorInst st data env ctx opcode visitor
 
-/-- [itasca::code::check_opcode]:
-    Source: 'src/code.rs' -/
-def code.check_opcode
-  (profile : ValidationProfile) (op : Std.U8) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  ok (core.result.Result.Ok ())
-
-/-- [itasca::code::check_block_type]:
-    Source: 'src/code.rs' -/
-def code.check_block_type
-  (profile : ValidationProfile) (bt : signature.BlockType) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  ok (core.result.Result.Ok ())
-
-/-- [itasca::code::check_table_byte]:
-    Source: 'src/code.rs' -/
-def code.check_table_byte
-  (profile : ValidationProfile) (data : Slice Std.U8) (pos : Std.Usize) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  ok (core.result.Result.Ok ())
-
-/-- [itasca::code::check_table_target]:
-    Source: 'src/code.rs' -/
-def code.check_table_target
-  (profile : ValidationProfile) (env : metadata.Env)
-  (first : signature.ResultType) (ts : signature.ResultType) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  ok (core.result.Result.Ok ())
-
 /-- [itasca::limits::MAX_MULTI_VALUE_RESULTS]
     Source: 'src/limits.rs'
     Visibility: public -/
@@ -5707,7 +5674,7 @@ def signature.BlockType.params
     Source: 'src/code.rs' -/
 def code.enter_info
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) (kind : code.LabelKind) :
+  (kind : code.LabelKind) :
   Result ((core.result.Result signature.BlockType error.OpError) ×
     code.BodyState)
   := do
@@ -5716,471 +5683,461 @@ def code.enter_info
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (bt, «end») := val
-    let r1 ← code.check_block_type profile bt
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      match bt with
-      | signature.BlockType.Empty =>
-        match kind with
-        | code.LabelKind.Body =>
+    match bt with
+    | signature.BlockType.Empty =>
+      match kind with
+      | code.LabelKind.Body =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            code.push_frame { core := ois } code.LabelKind.Body
+              signature.BlockType.Empty
+          let (r2, ois1) ← code.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                signature.BlockType (core.convert.FromSame error.OpError)
+                residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Block =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            code.push_frame { core := ois } code.LabelKind.Block
+              signature.BlockType.Empty
+          let (r2, ois1) ← code.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                signature.BlockType (core.convert.FromSame error.OpError)
+                residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Loop =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            code.push_frame { core := ois } code.LabelKind.Loop
+              signature.BlockType.Empty
+          let (r2, ois1) ← code.push_results st1.core env rt
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                signature.BlockType (core.convert.FromSame error.OpError)
+                residual
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Then =>
+        let (r1, ois) ←
+          code.pop_with_type { st.core with pos := «end» }
+            wasm_types.ValueType.I32
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
           let rt ← signature.BlockType.params signature.BlockType.Empty
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+          let (r2, ois1) ← code.pop_results ois env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
             let st1 ←
-              code.push_frame { core := ois } code.LabelKind.Body
+              code.push_frame { core := ois1 } code.LabelKind.Then
                 signature.BlockType.Empty
-            let (r3, ois1) ← code.push_results st1.core env rt
+            let (r3, ois2) ← code.push_results st1.core env rt
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
               ok (core.result.Result.Ok signature.BlockType.Empty,
-                { core := ois1 })
+                { core := ois2 })
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r4 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   signature.BlockType (core.convert.FromSame error.OpError)
                   residual
-              ok (r4, { core := ois1 })
+              ok (r4, { core := ois2 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Block =>
-          let rt ← signature.BlockType.params signature.BlockType.Empty
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Else =>
+        let rt ← signature.BlockType.params signature.BlockType.Empty
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ←
+            code.push_frame { core := ois } code.LabelKind.Else
+              signature.BlockType.Empty
+          let (r2, ois1) ← code.push_results st1.core env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ←
-              code.push_frame { core := ois } code.LabelKind.Block
-                signature.BlockType.Empty
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok signature.BlockType.Empty,
-                { core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
+            ok (core.result.Result.Ok signature.BlockType.Empty,
+              { core := ois1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Loop =>
-          let rt ← signature.BlockType.params signature.BlockType.Empty
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+    | signature.BlockType.Value _ =>
+      match kind with
+      | code.LabelKind.Body =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ← code.push_frame { core := ois } code.LabelKind.Body bt
+          let (r2, ois1) ← code.push_results st1.core env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ←
-              code.push_frame { core := ois } code.LabelKind.Loop
-                signature.BlockType.Empty
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok signature.BlockType.Empty,
-                { core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
+            ok (core.result.Result.Ok bt, { core := ois1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Then =>
-          let (r2, ois) ←
-            code.pop_with_type { st.core with pos := «end» }
-              wasm_types.ValueType.I32
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Block =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ← code.push_frame { core := ois } code.LabelKind.Block bt
+          let (r2, ois1) ← code.push_results st1.core env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let rt ← signature.BlockType.params signature.BlockType.Empty
-            let (r3, ois1) ← code.pop_results ois env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let st1 ←
-                code.push_frame { core := ois1 } code.LabelKind.Then
-                  signature.BlockType.Empty
-              let (r4, ois2) ← code.push_results st1.core env rt
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-              match cf4 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                ok (core.result.Result.Ok signature.BlockType.Empty,
-                  { core := ois2 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r5 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    signature.BlockType (core.convert.FromSame error.OpError)
-                    residual
-                ok (r5, { core := ois2 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
+            ok (core.result.Result.Ok bt, { core := ois1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Else =>
-          let rt ← signature.BlockType.params signature.BlockType.Empty
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Loop =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ← code.push_frame { core := ois } code.LabelKind.Loop bt
+          let (r2, ois1) ← code.push_results st1.core env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ←
-              code.push_frame { core := ois } code.LabelKind.Else
-                signature.BlockType.Empty
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok signature.BlockType.Empty,
-                { core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
+            ok (core.result.Result.Ok bt, { core := ois1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-      | signature.BlockType.Value _ =>
-        match kind with
-        | code.LabelKind.Body =>
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Then =>
+        let (r1, ois) ←
+          code.pop_with_type { st.core with pos := «end» }
+            wasm_types.ValueType.I32
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
           let rt ← signature.BlockType.params bt
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+          let (r2, ois1) ← code.pop_results ois env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ← code.push_frame { core := ois } code.LabelKind.Body bt
-            let (r3, ois1) ← code.push_results st1.core env rt
+            let st1 ← code.push_frame { core := ois1 } code.LabelKind.Then bt
+            let (r3, ois2) ← code.push_results st1.core env rt
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok bt, { core := ois1 })
+              ok (core.result.Result.Ok bt, { core := ois2 })
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r4 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   signature.BlockType (core.convert.FromSame error.OpError)
                   residual
-              ok (r4, { core := ois1 })
+              ok (r4, { core := ois2 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Block =>
-          let rt ← signature.BlockType.params bt
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+      | code.LabelKind.Else =>
+        let rt ← signature.BlockType.params bt
+        let (r1, ois) ←
+          code.pop_results { st.core with pos := «end» } env rt
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let st1 ← code.push_frame { core := ois } code.LabelKind.Else bt
+          let (r2, ois1) ← code.push_results st1.core env rt
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ← code.push_frame { core := ois } code.LabelKind.Block bt
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok bt, { core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
+            ok (core.result.Result.Ok bt, { core := ois1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 signature.BlockType (core.convert.FromSame error.OpError)
                 residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Loop =>
-          let rt ← signature.BlockType.params bt
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ← code.push_frame { core := ois } code.LabelKind.Loop bt
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok bt, { core := ois1 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  signature.BlockType (core.convert.FromSame error.OpError)
-                  residual
-              ok (r4, { core := ois1 })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                signature.BlockType (core.convert.FromSame error.OpError)
-                residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Then =>
-          let (r2, ois) ←
-            code.pop_with_type { st.core with pos := «end» }
-              wasm_types.ValueType.I32
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
+            ok (r3, { core := ois1 })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := ois })
+    | signature.BlockType.TypeIndex index =>
+      let i ← lift (UScalar.cast .Usize index)
+      let i1 := alloc.vec.Vec.len env.types
+      if i >= i1
+      then
+        ok (core.result.Result.Err error.OpError.UnknownType,
+          { core := { st.core with pos := «end» } })
+      else
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.FuncType) env.types i
+        let r1 ← code.check_func_type ft
+        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        match cf1 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          match kind with
+          | code.LabelKind.Body =>
             let rt ← signature.BlockType.params bt
-            let (r3, ois1) ← code.pop_results ois env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
+            let (r2, ois) ←
+              code.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
               let st1 ←
-                code.push_frame { core := ois1 } code.LabelKind.Then bt
-              let (r4, ois2) ← code.push_results st1.core env rt
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-              match cf4 with
+                code.push_frame { core := ois } code.LabelKind.Body bt
+              let (r3, ois1) ← code.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
-                ok (core.result.Result.Ok bt, { core := ois2 })
+                ok (core.result.Result.Ok bt, { core := ois1 })
               | core.ops.control_flow.ControlFlow.Break residual =>
-                let r5 ←
+                let r4 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     signature.BlockType (core.convert.FromSame error.OpError)
                     residual
-                ok (r5, { core := ois2 })
+                ok (r4, { core := ois1 })
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
+              let r3 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   signature.BlockType (core.convert.FromSame error.OpError)
                   residual
-              ok (r4, { core := ois1 })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                signature.BlockType (core.convert.FromSame error.OpError)
-                residual
-            ok (r3, { core := ois })
-        | code.LabelKind.Else =>
-          let rt ← signature.BlockType.params bt
-          let (r2, ois) ←
-            code.pop_results { st.core with pos := «end» } env rt
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let st1 ← code.push_frame { core := ois } code.LabelKind.Else bt
-            let (r3, ois1) ← code.push_results st1.core env rt
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
+              ok (r3, { core := ois })
+          | code.LabelKind.Block =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              code.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
-              ok (core.result.Result.Ok bt, { core := ois1 })
+              let st1 ←
+                code.push_frame { core := ois } code.LabelKind.Block bt
+              let (r3, ois1) ← code.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    signature.BlockType (core.convert.FromSame error.OpError)
+                    residual
+                ok (r4, { core := ois1 })
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
+              let r3 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   signature.BlockType (core.convert.FromSame error.OpError)
                   residual
-              ok (r4, { core := ois1 })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                signature.BlockType (core.convert.FromSame error.OpError)
-                residual
-            ok (r3, { core := ois })
-      | signature.BlockType.TypeIndex index =>
-        let i ← lift (UScalar.cast .Usize index)
-        let i1 := alloc.vec.Vec.len env.types
-        if i >= i1
-        then
-          ok (core.result.Result.Err error.OpError.UnknownType,
-            { core := { st.core with pos := «end» } })
-        else
-          let ft ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              wasm_types.FuncType) env.types i
-          let r2 ← code.check_func_type ft
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            match kind with
-            | code.LabelKind.Body =>
+              ok (r3, { core := ois })
+          | code.LabelKind.Loop =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              code.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                code.push_frame { core := ois } code.LabelKind.Loop bt
+              let (r3, ois1) ← code.push_results st1.core env rt
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (core.result.Result.Ok bt, { core := ois1 })
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r4 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    signature.BlockType (core.convert.FromSame error.OpError)
+                    residual
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  signature.BlockType (core.convert.FromSame error.OpError)
+                  residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Then =>
+            let (r2, ois) ←
+              code.pop_with_type { st.core with pos := «end» }
+                wasm_types.ValueType.I32
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
               let rt ← signature.BlockType.params bt
-              let (r3, ois) ←
-                code.pop_results { st.core with pos := «end» } env rt
+              let (r3, ois1) ← code.pop_results ois env rt
               let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
               match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
                 let st1 ←
-                  code.push_frame { core := ois } code.LabelKind.Body bt
-                let (r4, ois1) ← code.push_results st1.core env rt
+                  code.push_frame { core := ois1 } code.LabelKind.Then bt
+                let (r4, ois2) ← code.push_results st1.core env rt
                 let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
                 match cf4 with
                 | core.ops.control_flow.ControlFlow.Continue _ =>
-                  ok (core.result.Result.Ok bt, { core := ois1 })
+                  ok (core.result.Result.Ok bt, { core := ois2 })
                 | core.ops.control_flow.ControlFlow.Break residual =>
                   let r5 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                       signature.BlockType (core.convert.FromSame error.OpError)
                       residual
-                  ok (r5, { core := ois1 })
+                  ok (r5, { core := ois2 })
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let r4 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     signature.BlockType (core.convert.FromSame error.OpError)
                     residual
-                ok (r4, { core := ois })
-            | code.LabelKind.Block =>
-              let rt ← signature.BlockType.params bt
-              let (r3, ois) ←
-                code.pop_results { st.core with pos := «end» } env rt
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  signature.BlockType (core.convert.FromSame error.OpError)
+                  residual
+              ok (r3, { core := ois })
+          | code.LabelKind.Else =>
+            let rt ← signature.BlockType.params bt
+            let (r2, ois) ←
+              code.pop_results { st.core with pos := «end» } env rt
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let st1 ←
+                code.push_frame { core := ois } code.LabelKind.Else bt
+              let (r3, ois1) ← code.push_results st1.core env rt
               let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
               match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
-                let st1 ←
-                  code.push_frame { core := ois } code.LabelKind.Block bt
-                let (r4, ois1) ← code.push_results st1.core env rt
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  ok (core.result.Result.Ok bt, { core := ois1 })
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      signature.BlockType (core.convert.FromSame error.OpError)
-                      residual
-                  ok (r5, { core := ois1 })
+                ok (core.result.Result.Ok bt, { core := ois1 })
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let r4 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     signature.BlockType (core.convert.FromSame error.OpError)
                     residual
-                ok (r4, { core := ois })
-            | code.LabelKind.Loop =>
-              let rt ← signature.BlockType.params bt
-              let (r3, ois) ←
-                code.pop_results { st.core with pos := «end» } env rt
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let st1 ←
-                  code.push_frame { core := ois } code.LabelKind.Loop bt
-                let (r4, ois1) ← code.push_results st1.core env rt
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  ok (core.result.Result.Ok bt, { core := ois1 })
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      signature.BlockType (core.convert.FromSame error.OpError)
-                      residual
-                  ok (r5, { core := ois1 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    signature.BlockType (core.convert.FromSame error.OpError)
-                    residual
-                ok (r4, { core := ois })
-            | code.LabelKind.Then =>
-              let (r3, ois) ←
-                code.pop_with_type { st.core with pos := «end» }
-                  wasm_types.ValueType.I32
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let rt ← signature.BlockType.params bt
-                let (r4, ois1) ← code.pop_results ois env rt
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  let st1 ←
-                    code.push_frame { core := ois1 } code.LabelKind.Then bt
-                  let (r5, ois2) ← code.push_results st1.core env rt
-                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                  match cf5 with
-                  | core.ops.control_flow.ControlFlow.Continue _ =>
-                    ok (core.result.Result.Ok bt, { core := ois2 })
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r6 ←
-                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                        signature.BlockType (core.convert.FromSame
-                        error.OpError) residual
-                    ok (r6, { core := ois2 })
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      signature.BlockType (core.convert.FromSame error.OpError)
-                      residual
-                  ok (r5, { core := ois1 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    signature.BlockType (core.convert.FromSame error.OpError)
-                    residual
-                ok (r4, { core := ois })
-            | code.LabelKind.Else =>
-              let rt ← signature.BlockType.params bt
-              let (r3, ois) ←
-                code.pop_results { st.core with pos := «end» } env rt
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let st1 ←
-                  code.push_frame { core := ois } code.LabelKind.Else bt
-                let (r4, ois1) ← code.push_results st1.core env rt
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  ok (core.result.Result.Ok bt, { core := ois1 })
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      signature.BlockType (core.convert.FromSame error.OpError)
-                      residual
-                  ok (r5, { core := ois1 })
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    signature.BlockType (core.convert.FromSame error.OpError)
-                    residual
-                ok (r4, { core := ois })
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r3 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                signature.BlockType (core.convert.FromSame error.OpError)
-                residual
-            ok (r3, { core := { st.core with pos := «end» } })
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          signature.BlockType (core.convert.FromSame error.OpError) residual
-      ok (r2, { core := { st.core with pos := «end» } })
+                ok (r4, { core := ois1 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  signature.BlockType (core.convert.FromSame error.OpError)
+                  residual
+              ok (r3, { core := ois })
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          let r2 ←
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              signature.BlockType (core.convert.FromSame error.OpError)
+              residual
+          ok (r2, { core := { st.core with pos := «end» } })
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -6191,10 +6148,10 @@ def code.enter_info
     Source: 'src/code.rs' -/
 def code.enter
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) (kind : code.LabelKind) :
+  (kind : code.LabelKind) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
-  let (r, st1) ← code.enter_info st data env profile kind
+  let (r, st1) ← code.enter_info st data env kind
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -6922,190 +6879,175 @@ def code.check_suffix
 @[rust_loop_body]
 def code.branch_table_with_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (profile : ValidationProfile) (count : Std.U32)
-  (ois : code.OpIterState) (visitor : V) (arity : Option Std.Usize)
-  (first : signature.ResultType) (i : Std.U32) :
-  Result (ControlFlow (code.OpIterState × V × (Option Std.Usize) ×
-    signature.ResultType × Std.U32) ((core.result.Result Unit error.OpError)
-    × code.BodyState × V))
+  (env : metadata.Env) (count : Std.U32) (ois : code.OpIterState) (visitor : V)
+  (arity : Option Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (code.OpIterState × V × (Option Std.Usize) × Std.U32)
+    ((core.result.Result Unit error.OpError) × code.BodyState × V))
   := do
   let (r, st) ← code.read_label_info { core := ois } data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (depth, ts) := val
-    let first1 ← if i = 0#u32
-                   then ok ts
-                   else ok first
-    let r1 ← code.check_table_target profile env first1 ts
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      if i != count
-      then
-        let (r2, visitor1) ←
-          OpVisitorInst.on_br_table_label visitor st.core depth
-        let r3 ← code.visit r2
+    if i != count
+    then
+      let (r1, visitor1) ←
+        OpVisitorInst.on_br_table_label visitor st.core depth
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        let r3 ← signature.ResultType.len ts env
         let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          let r4 ← signature.ResultType.len ts env
-          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
-          match cf3 with
-          | core.ops.control_flow.ControlFlow.Continue val1 =>
-            match arity with
-            | none =>
-              let r5 ← code.check_suffix st.core env ts
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r5
-              match cf4 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                if i = count
-                then
-                  let ois1 ← code.mark_unreachable st.core
-                  let (r6, visitor2) ←
-                    OpVisitorInst.on_br_table visitor1 ois1 depth ts
-                  let r7 ← code.visit r6
-                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r7
-                  match cf5 with
-                  | core.ops.control_flow.ControlFlow.Continue _ =>
-                    ok (done (core.result.Result.Ok (), { core := ois1 },
-                      visitor2))
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r8 ←
-                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                        Unit (core.convert.FromSame error.OpError) residual
-                    ok (done (r8, { core := ois1 }, visitor2))
-                else
-                  let i1 ← i + 1#u32
-                  ok (cont (st.core, visitor1, some val1, first1, i1))
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r6 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame error.OpError) residual
-                ok (done (r6, st, visitor1))
-            | some expected =>
-              if expected != val1
-              then
-                ok (done (core.result.Result.Err error.OpError.TypeMismatch,
-                  st, visitor1))
-              else
-                let r5 ← code.check_suffix st.core env ts
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  if i = count
-                  then
-                    let ois1 ← code.mark_unreachable st.core
-                    let (r6, visitor2) ←
-                      OpVisitorInst.on_br_table visitor1 ois1 depth ts
-                    let r7 ← code.visit r6
-                    let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r7
-                    match cf5 with
-                    | core.ops.control_flow.ControlFlow.Continue _ =>
-                      ok (done (core.result.Result.Ok (), { core := ois1 },
-                        visitor2))
-                    | core.ops.control_flow.ControlFlow.Break residual =>
-                      let r8 ←
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          Unit (core.convert.FromSame error.OpError) residual
-                      ok (done (r8, { core := ois1 }, visitor2))
-                  else
-                    let i1 ← i + 1#u32
-                    ok (cont (st.core, visitor1, arity, first1, i1))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r6 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      Unit (core.convert.FromSame error.OpError) residual
-                  ok (done (r6, st, visitor1))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r5 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame error.OpError) residual
-            ok (done (r5, st, visitor1))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (done (r4, st, visitor1))
-      else
-        let r2 ← signature.ResultType.len ts env
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
           match arity with
           | none =>
-            let r3 ← code.check_suffix st.core env ts
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            let r4 ← code.check_suffix st.core env ts
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue _ =>
               if i = count
               then
                 let ois1 ← code.mark_unreachable st.core
-                let (r4, visitor1) ←
-                  OpVisitorInst.on_br_table visitor ois1 depth ts
-                let r5 ← code.visit r4
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                let (r5, visitor2) ←
+                  OpVisitorInst.on_br_table visitor1 ois1 depth ts
+                let r6 ← code.visit r5
+                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r6
                 match cf4 with
                 | core.ops.control_flow.ControlFlow.Continue _ =>
                   ok (done (core.result.Result.Ok (), { core := ois1 },
-                    visitor1))
+                    visitor2))
                 | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r6 ←
+                  let r7 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                       Unit (core.convert.FromSame error.OpError) residual
-                  ok (done (r6, { core := ois1 }, visitor1))
+                  ok (done (r7, { core := ois1 }, visitor2))
               else
                 let i1 ← i + 1#u32
-                ok (cont (st.core, visitor, some val1, first1, i1))
+                ok (cont (st.core, visitor1, some val1, i1))
             | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
+              let r5 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   Unit (core.convert.FromSame error.OpError) residual
-              ok (done (r4, st, visitor))
+              ok (done (r5, st, visitor1))
           | some expected =>
             if expected != val1
             then
               ok (done (core.result.Result.Err error.OpError.TypeMismatch, st,
-                visitor))
+                visitor1))
             else
-              let r3 ← code.check_suffix st.core env ts
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+              let r4 ← code.check_suffix st.core env ts
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
               match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
                 if i = count
                 then
                   let ois1 ← code.mark_unreachable st.core
-                  let (r4, visitor1) ←
-                    OpVisitorInst.on_br_table visitor ois1 depth ts
-                  let r5 ← code.visit r4
-                  let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                  let (r5, visitor2) ←
+                    OpVisitorInst.on_br_table visitor1 ois1 depth ts
+                  let r6 ← code.visit r5
+                  let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r6
                   match cf4 with
                   | core.ops.control_flow.ControlFlow.Continue _ =>
                     ok (done (core.result.Result.Ok (), { core := ois1 },
-                      visitor1))
+                      visitor2))
                   | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r6 ←
+                    let r7 ←
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                         Unit (core.convert.FromSame error.OpError) residual
-                    ok (done (r6, { core := ois1 }, visitor1))
+                    ok (done (r7, { core := ois1 }, visitor2))
                 else
                   let i1 ← i + 1#u32
-                  ok (cont (st.core, visitor, arity, first1, i1))
+                  ok (cont (st.core, visitor1, arity, i1))
               | core.ops.control_flow.ControlFlow.Break residual =>
-                let r4 ←
+                let r5 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     Unit (core.convert.FromSame error.OpError) residual
-                ok (done (r4, st, visitor))
+                ok (done (r5, st, visitor1))
         | core.ops.control_flow.ControlFlow.Break residual =>
-          let r3 ←
+          let r4 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
               Unit (core.convert.FromSame error.OpError) residual
-          ok (done (r3, st, visitor))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame error.OpError) residual
-      ok (done (r2, st, visitor))
+          ok (done (r4, st, visitor1))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (done (r3, st, visitor1))
+    else
+      let r1 ← signature.ResultType.len ts env
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        match arity with
+        | none =>
+          let r2 ← code.check_suffix st.core env ts
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue _ =>
+            if i = count
+            then
+              let ois1 ← code.mark_unreachable st.core
+              let (r3, visitor1) ←
+                OpVisitorInst.on_br_table visitor ois1 depth ts
+              let r4 ← code.visit r3
+              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf3 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                ok (done (core.result.Result.Ok (), { core := ois1 },
+                  visitor1))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r5 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    Unit (core.convert.FromSame error.OpError) residual
+                ok (done (r5, { core := ois1 }, visitor1))
+            else
+              let i1 ← i + 1#u32
+              ok (cont (st.core, visitor, some val1, i1))
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r3 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                Unit (core.convert.FromSame error.OpError) residual
+            ok (done (r3, st, visitor))
+        | some expected =>
+          if expected != val1
+          then
+            ok (done (core.result.Result.Err error.OpError.TypeMismatch, st,
+              visitor))
+          else
+            let r2 ← code.check_suffix st.core env ts
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              if i = count
+              then
+                let ois1 ← code.mark_unreachable st.core
+                let (r3, visitor1) ←
+                  OpVisitorInst.on_br_table visitor ois1 depth ts
+                let r4 ← code.visit r3
+                let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r4
+                match cf3 with
+                | core.ops.control_flow.ControlFlow.Continue _ =>
+                  ok (done (core.result.Result.Ok (), { core := ois1 },
+                    visitor1))
+                | core.ops.control_flow.ControlFlow.Break residual =>
+                  let r5 ←
+                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                      Unit (core.convert.FromSame error.OpError) residual
+                  ok (done (r5, { core := ois1 }, visitor1))
+              else let i1 ← i + 1#u32
+                   ok (cont (st.core, visitor, arity, i1))
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  Unit (core.convert.FromSame error.OpError) residual
+              ok (done (r3, st, visitor))
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r2 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (done (r2, st, visitor))
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -7117,23 +7059,20 @@ def code.branch_table_with_loop.body
 @[rust_loop]
 def code.branch_table_with_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (ois : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (visitor : V) (count : Std.U32) (arity : Option Std.Usize)
-  (first : signature.ResultType) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (visitor : V) (count : Std.U32)
+  (arity : Option Std.Usize) (i : Std.U32) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
   loop
-    (fun (ois1, visitor1, arity1, first1, i1) =>
-      code.branch_table_with_loop.body OpVisitorInst data env profile count
-      ois1 visitor1 arity1 first1 i1)
-    (ois, visitor, arity, first, i)
+    (fun (ois1, visitor1, arity1, i1) => code.branch_table_with_loop.body
+      OpVisitorInst data env count ois1 visitor1 arity1 i1)
+    (ois, visitor, arity, i)
 
 /-- [itasca::code::branch_table_with]:
     Source: 'src/code.rs' -/
 def code.branch_table_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (visitor : V) :
+  (data : Slice Std.U8) (env : metadata.Env) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
   let r ← reader.read_u32_leb data st.core.pos
@@ -7147,8 +7086,8 @@ def code.branch_table_with
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue _ =>
-      code.branch_table_with_loop OpVisitorInst ois data env profile visitor
-        count none signature.ResultType.Empty 0#u32
+      code.branch_table_with_loop OpVisitorInst ois data env visitor count none
+        0#u32
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -9511,13 +9450,12 @@ def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
 /-- [itasca::code::branch_table]:
     Source: 'src/code.rs' -/
 def code.branch_table
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
   let (r, st1, _) ←
     code.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st
-      data env profile ()
+      data env ()
   ok (r, st1)
 
 /-- [itasca::code::apply_func_type]:
@@ -9592,8 +9530,7 @@ def code.call_info
 /-- [itasca::code::call_indirect_info]:
     Source: 'src/code.rs' -/
 def code.call_indirect_info
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
     code.BodyState)
   := do
@@ -9601,76 +9538,66 @@ def code.call_indirect_info
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← code.check_table_byte profile data ois.pos
+    let (r1, ois1) ← code.take_index ois data
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      let (r2, ois1) ← code.take_index ois data
-      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-      match cf2 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let t ← lift (UScalar.cast .Usize val1)
-        let i := alloc.vec.Vec.len env.table_types
-        if t >= i
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      let t ← lift (UScalar.cast .Usize val1)
+      let i := alloc.vec.Vec.len env.table_types
+      if t >= i
+      then
+        ok (core.result.Result.Err error.OpError.UnknownTable,
+          { core := ois1 })
+      else
+        let tt ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.TableType) env.table_types t
+        let vt ← wasm_types.ElemType.value_type tt.elem
+        let b ←
+          core.cmp.PartialEq.ne.trait_default
+            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
+            wasm_types.ValueType.FuncRef
+        if b
         then
-          ok (core.result.Result.Err error.OpError.UnknownTable,
+          ok (core.result.Result.Err error.OpError.TypeMismatch,
             { core := ois1 })
         else
-          let tt ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              wasm_types.TableType) env.table_types t
-          let vt ← wasm_types.ElemType.value_type tt.elem
-          let b ←
-            core.cmp.PartialEq.ne.trait_default
-              wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
-              wasm_types.ValueType.FuncRef
-          if b
+          let i1 ← lift (UScalar.cast .Usize val)
+          let i2 := alloc.vec.Vec.len env.types
+          if i1 >= i2
           then
-            ok (core.result.Result.Err error.OpError.TypeMismatch,
+            ok (core.result.Result.Err error.OpError.UnknownType,
               { core := ois1 })
           else
-            let i1 ← lift (UScalar.cast .Usize val)
-            let i2 := alloc.vec.Vec.len env.types
-            if i1 >= i2
-            then
-              ok (core.result.Result.Err error.OpError.UnknownType,
-                { core := ois1 })
-            else
-              let (r3, ois2) ←
-                code.pop_with_type ois1 wasm_types.ValueType.I32
+            let (r2, ois2) ← code.pop_with_type ois1 wasm_types.ValueType.I32
+            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+            match cf2 with
+            | core.ops.control_flow.ControlFlow.Continue _ =>
+              let ft ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  wasm_types.FuncType) env.types i1
+              let (r3, ois3) ← code.apply_func_type ois2 ft
               let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
               match cf3 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
-                let ft ←
-                  alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                    wasm_types.FuncType) env.types i1
-                let (r4, ois3) ← code.apply_func_type ois2 ft
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  ok (core.result.Result.Ok (val, val1), { core := ois3 })
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r5 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      (Std.U32 × Std.U32) (core.convert.FromSame
-                      error.OpError) residual
-                  ok (r5, { core := ois3 })
+                ok (core.result.Result.Ok (val, val1), { core := ois3 })
               | core.ops.control_flow.ControlFlow.Break residual =>
                 let r4 ←
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     (Std.U32 × Std.U32) (core.convert.FromSame error.OpError)
                     residual
-                ok (r4, { core := ois2 })
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r3 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (Std.U32 × Std.U32) (core.convert.FromSame error.OpError) residual
-        ok (r3, { core := ois1 })
+                ok (r4, { core := ois3 })
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r3 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (Std.U32 × Std.U32) (core.convert.FromSame error.OpError)
+                  residual
+              ok (r3, { core := ois2 })
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           (Std.U32 × Std.U32) (core.convert.FromSame error.OpError) residual
-      ok (r2, { core := ois })
+      ok (r2, { core := ois1 })
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -9681,12 +9608,12 @@ def code.call_indirect_info
     Source: 'src/code.rs' -/
 def code.call
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) (indirect : Bool) :
+  (indirect : Bool) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
   if indirect
   then
-    let (r, st1) ← code.call_indirect_info st data env profile
+    let (r, st1) ← code.call_indirect_info st data env
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -9746,268 +9673,257 @@ def code.initial_state
 def code.step_profile
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
-  (type_index : Std.U32) (profile : ValidationProfile) (op : Std.U8)
-  (visitor : V) :
+  (type_index : Std.U32) (op : Std.U8) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
-  let r ← code.check_opcode profile op
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    match op with
-    | 2#uscalar =>
-      let (r1, st1) ←
-        code.enter_info st data env profile code.LabelKind.Block
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (r2, visitor1) ← OpVisitorInst.on_block visitor st1.core val
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 3#uscalar =>
-      let (r1, st1) ← code.enter_info st data env profile code.LabelKind.Loop
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (r2, visitor1) ← OpVisitorInst.on_loop visitor st1.core val
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 4#uscalar =>
-      let (r1, st1) ← code.enter_info st data env profile code.LabelKind.Then
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (r2, visitor1) ← OpVisitorInst.on_if visitor st1.core val
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 5#uscalar =>
-      let (r1, st1) ← code.end_frame_info st env true
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (_, bt) := val
-        let (r2, visitor1) ← OpVisitorInst.on_else visitor st1.core bt
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 11#uscalar =>
-      let (r1, st1) ← code.end_frame_info st env false
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (kind, bt) := val
-        let (r2, visitor1) ← OpVisitorInst.on_end visitor st1.core kind bt
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 12#uscalar =>
-      let (r1, st1) ← code.branch_info st data env false
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (depth, ts) := val
-        let (r2, visitor1) ← OpVisitorInst.on_br visitor st1.core depth ts
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 13#uscalar =>
-      let (r1, st1) ← code.branch_info st data env true
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (depth, ts) := val
-        let (r2, visitor1) ← OpVisitorInst.on_br_if visitor st1.core depth ts
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 14#uscalar =>
-      let (r1, st1, visitor1) ←
-        code.branch_table_with OpVisitorInst st data env profile visitor
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+  match op with
+  | 2#uscalar =>
+    let (r, st1) ← code.enter_info st data env code.LabelKind.Block
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (r1, visitor1) ← OpVisitorInst.on_block visitor st1.core val
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
         ok (core.result.Result.Ok (), st1, visitor1)
       | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
+        let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor1)
-    | 15#uscalar =>
-      let (r1, ois) ←
-        code.pop_results st.core env (signature.ResultType.Type type_index
-          signature.TypePart.Results)
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 3#uscalar =>
+    let (r, st1) ← code.enter_info st data env code.LabelKind.Loop
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (r1, visitor1) ← OpVisitorInst.on_loop visitor st1.core val
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
-        let ois1 ← code.mark_unreachable ois
-        let (r2, visitor1) ← OpVisitorInst.on_return visitor ois1
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), { core := ois1 }, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, { core := ois1 }, visitor1)
+        ok (core.result.Result.Ok (), st1, visitor1)
       | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
+        let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, { core := ois }, visitor)
-    | 16#uscalar =>
-      let (r1, st1) ← code.call_info st data env
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 4#uscalar =>
+    let (r, st1) ← code.enter_info st data env code.LabelKind.Then
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (r1, visitor1) ← OpVisitorInst.on_if visitor st1.core val
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (r2, visitor1) ← OpVisitorInst.on_call visitor st1.core val
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
       | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
+        let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | 17#uscalar =>
-      let (r1, st1) ← code.call_indirect_info st data env profile
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 5#uscalar =>
+    let (r, st1) ← code.end_frame_info st env true
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (_, bt) := val
+      let (r1, visitor1) ← OpVisitorInst.on_else visitor st1.core bt
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (idx, table) := val
-        let (r2, visitor1) ←
-          OpVisitorInst.on_call_indirect visitor st1.core idx table
-        let r3 ← code.visit r2
-        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r3
-        match cf2 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), st1, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r4 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r4, st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
       | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
+        let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Unit (core.convert.FromSame error.OpError) residual
-        ok (r2, st1, visitor)
-    | _ =>
-      let i := alloc.vec.Vec.len st.core.vals
-      if i = core.num.Usize.MAX
-      then ok (core.result.Result.Err error.OpError.StackTooLarge, st, visitor)
-      else
-        let (r1, ois, visitor1) ←
-          code.step_wasm2 OpVisitorInst st.core data env ctx op visitor
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          ok (core.result.Result.Ok (), { core := ois }, visitor1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r2 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame error.OpError) residual
-          ok (r2, { core := ois }, visitor1)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame error.OpError) residual
-    ok (r1, st, visitor)
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 11#uscalar =>
+    let (r, st1) ← code.end_frame_info st env false
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (kind, bt) := val
+      let (r1, visitor1) ← OpVisitorInst.on_end visitor st1.core kind bt
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 12#uscalar =>
+    let (r, st1) ← code.branch_info st data env false
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (depth, ts) := val
+      let (r1, visitor1) ← OpVisitorInst.on_br visitor st1.core depth ts
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 13#uscalar =>
+    let (r, st1) ← code.branch_info st data env true
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (depth, ts) := val
+      let (r1, visitor1) ← OpVisitorInst.on_br_if visitor st1.core depth ts
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 14#uscalar =>
+    let (r, st1, visitor1) ←
+      code.branch_table_with OpVisitorInst st data env visitor
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      ok (core.result.Result.Ok (), st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor1)
+  | 15#uscalar =>
+    let (r, ois) ←
+      code.pop_results st.core env (signature.ResultType.Type type_index
+        signature.TypePart.Results)
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      let ois1 ← code.mark_unreachable ois
+      let (r1, visitor1) ← OpVisitorInst.on_return visitor ois1
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), { core := ois1 }, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, { core := ois1 }, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, { core := ois }, visitor)
+  | 16#uscalar =>
+    let (r, st1) ← code.call_info st data env
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (r1, visitor1) ← OpVisitorInst.on_call visitor st1.core val
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | 17#uscalar =>
+    let (r, st1) ← code.call_indirect_info st data env
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (idx, table) := val
+      let (r1, visitor1) ←
+        OpVisitorInst.on_call_indirect visitor st1.core idx table
+      let r2 ← code.visit r1
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), st1, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r3, st1, visitor1)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1, visitor)
+  | _ =>
+    let i := alloc.vec.Vec.len st.core.vals
+    if i = core.num.Usize.MAX
+    then ok (core.result.Result.Err error.OpError.StackTooLarge, st, visitor)
+    else
+      let (r, ois, visitor1) ←
+        code.step_wasm2 OpVisitorInst st.core data env ctx op visitor
+      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+      match cf with
+      | core.ops.control_flow.ControlFlow.Continue _ =>
+        ok (core.result.Result.Ok (), { core := ois }, visitor1)
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r1 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame error.OpError) residual
+        ok (r1, { core := ois }, visitor1)
 
 /-- [itasca::code::body_loop]: loop body 0:
     Source: 'src/code.rs' -/
@@ -10015,7 +9931,7 @@ def code.step_profile
 def code.body_loop_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
-  (profile : ValidationProfile) (visitor : V) (st : code.BodyState) :
+  (visitor : V) (st : code.BodyState) :
   Result (ControlFlow (V × code.BodyState) ((core.result.Result Unit
     error.OpError) × V))
   := do
@@ -10036,7 +9952,7 @@ def code.body_loop_loop.body
       let (r1, st1, visitor1) ←
         code.step_profile OpVisitorInst
           { core := { st.core with pos := «end» } } data env ctx type_index
-          profile op visitor
+          op visitor
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -10058,12 +9974,12 @@ def code.body_loop_loop.body
 def code.body_loop_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
-  (profile : ValidationProfile) (visitor : V) (st : code.BodyState) :
+  (visitor : V) (st : code.BodyState) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
   loop
     (fun (visitor1, st1) => code.body_loop_loop.body OpVisitorInst data env ctx
-      type_index profile visitor1 st1)
+      type_index visitor1 st1)
     (visitor, st)
 
 /-- [itasca::code::body_loop]:
@@ -10072,10 +9988,10 @@ def code.body_loop_loop
 def code.body_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
-  (profile : ValidationProfile) (visitor : V) (st : code.BodyState) :
+  (visitor : V) (st : code.BodyState) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
-  code.body_loop_loop OpVisitorInst data env ctx type_index profile visitor st
+  code.body_loop_loop OpVisitorInst data env ctx type_index visitor st
 
 /-- [itasca::limits::MAX_FUNCTION_BYTES]
     Source: 'src/limits.rs'
@@ -10088,7 +10004,7 @@ def limits.MAX_FUNCTION_BYTES : Std.Usize := 7654321#usize
 def code.validate_body_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
-  (profile : ValidationProfile) (visitor : V) :
+  (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
   let i := Slice.len data
@@ -10099,7 +10015,7 @@ def code.validate_body_with
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
-      code.body_loop OpVisitorInst data env ctx type_index profile visitor val
+      code.body_loop OpVisitorInst data env ctx type_index visitor val
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -10152,20 +10068,10 @@ def error.Error.Insts.CoreConvertFromOpError : core.convert.From error.Error
 @[global_simps, irreducible]
 def limits.MAX_TABLE_ELEMS : Std.U32 := core.num.U32.MAX
 
-/-- [itasca::limits::MAX_TABLES]
-    Source: 'src/limits.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def limits.MAX_TABLES : Std.Usize := 1#usize
-
 /-- [itasca::limits::MAX_MEMORIES]
     Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_MEMORIES : Std.Usize := 1#usize
-
-/-- [itasca::limits::MAX_RESULTS]
-    Source: 'src/limits.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def limits.MAX_RESULTS : Std.Usize := 1#usize
 
 /-- [itasca::limits::MAX_MODULE_BYTES]
     Source: 'src/limits.rs'
@@ -10566,7 +10472,7 @@ def metadata.push_locals
 /-- [itasca::metadata::decode_value_type]:
     Source: 'src/module.rs' -/
 def metadata.decode_value_type
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.ValueType × Std.Usize) error.Error)
   := do
   let r ← reader.read_byte data pos
@@ -10594,7 +10500,7 @@ def metadata.decode_value_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_locals_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (groups : Std.U32)
+  (data : Slice Std.U8) (groups : Std.U32)
   (out : alloc.vec.Vec wasm_types.ValueType) (q : Std.Usize) (i : Std.U32) :
   Result (ControlFlow ((alloc.vec.Vec wasm_types.ValueType) × Std.Usize ×
     Std.U32) (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
@@ -10608,7 +10514,7 @@ def metadata.decode_locals_loop.body
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (count, q1) := val
-      let r1 ← metadata.decode_value_type data q1 profile
+      let r1 ← metadata.decode_value_type data q1
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -10639,20 +10545,20 @@ def metadata.decode_locals_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_locals_loop
-  (data : Slice Std.U8) (profile : ValidationProfile) (groups : Std.U32)
+  (data : Slice Std.U8) (groups : Std.U32)
   (out : alloc.vec.Vec wasm_types.ValueType) (q : Std.Usize) (i : Std.U32) :
   Result (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
     Std.Usize) error.Error)
   := do
   loop
-    (fun (out1, q1, i1) => metadata.decode_locals_loop.body data profile groups
-      out1 q1 i1)
+    (fun (out1, q1, i1) => metadata.decode_locals_loop.body data groups out1 q1
+      i1)
     (out, q, i)
 
 /-- [itasca::metadata::decode_locals]:
     Source: 'src/module.rs' -/
 def metadata.decode_locals
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
     Std.Usize) error.Error)
   := do
@@ -10661,7 +10567,7 @@ def metadata.decode_locals
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (groups, p) := val
-    metadata.decode_locals_loop data profile groups (alloc.vec.Vec.new
+    metadata.decode_locals_loop data groups (alloc.vec.Vec.new
       wasm_types.ValueType) p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -10684,8 +10590,7 @@ def metadata.have_bytes
     Source: 'src/module.rs' -/
 def metadata.validate_code_entry_with
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (pos : Std.Usize) (env : metadata.Env) (index : Std.Usize)
-  (profile : ValidationProfile) (v : V) :
+  (pos : Std.Usize) (env : metadata.Env) (index : Std.Usize) (v : V) :
   Result ((core.result.Result Std.Usize error.Error) × V)
   := do
   let i := alloc.vec.Vec.len env.func_type_indices
@@ -10703,7 +10608,7 @@ def metadata.validate_code_entry_with
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
         let «end» ← p + n
-        let r2 ← metadata.decode_locals data p profile
+        let r2 ← metadata.decode_locals data p
         let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -10739,7 +10644,7 @@ def metadata.validate_code_entry_with
                     { start := p1, «end» }
                 let (r4, v4) ←
                   code.validate_body_with codeOpVisitorInst s3 env
-                    { locals := v1, results := v2 } type_idx profile v3
+                    { locals := v1, results := v2 } type_idx v3
                 match r4 with
                 | core.result.Result.Ok _ =>
                   ok (core.result.Result.Ok «end», v4)
@@ -10779,7 +10684,7 @@ def stream.CodeBatch.validate_next
     then ok (core.result.Result.Err error.Error.Host, visitor)
     else
       metadata.validate_code_entry_with codeOpVisitorInst self.code
-        self.validated_end self.env index self.profile visitor
+        self.validated_end self.env index visitor
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
     Source: 'src/stream.rs'
@@ -10822,9 +10727,8 @@ def stream.CodeBatch.validate_func
 def stream.CodeBatch.validate_all_loop.body
   (self : stream.CodeBatch) (ok1 : Bool) :
   Result (ControlFlow (stream.CodeBatch × Bool) (Std.U64 × Std.Usize ×
-    ValidationProfile × metadata.Env × (Slice Std.U8) × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize
-    × (Option error.Error)))
+    metadata.Env × (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option error.Error)))
   := do
   if self.num_validated < self.num_funcs
   then
@@ -10837,24 +10741,22 @@ def stream.CodeBatch.validate_all_loop.body
       let ok2 ← core.result.Result.is_ok r
       ok (cont (self1, ok2))
     else
-      ok (done (self.module_id, self.batch_id, self.profile, self.env,
-        self.code, self.code_offset, self.first_func, self.num_funcs,
-        self.num_dispatched, self.dispatch_end, self.num_validated,
-        self.validated_end, self.error))
+      ok (done (self.module_id, self.batch_id, self.env, self.code,
+        self.code_offset, self.first_func, self.num_funcs, self.num_dispatched,
+        self.dispatch_end, self.num_validated, self.validated_end, self.error))
   else
-    ok (done (self.module_id, self.batch_id, self.profile, self.env, 
-      self.code, self.code_offset, self.first_func, self.num_funcs,
-      self.num_dispatched, self.dispatch_end, self.num_validated,
-      self.validated_end, self.error))
+    ok (done (self.module_id, self.batch_id, self.env, self.code,
+      self.code_offset, self.first_func, self.num_funcs, self.num_dispatched,
+      self.dispatch_end, self.num_validated, self.validated_end, self.error))
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
     Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.CodeBatch.validate_all_loop
   (self : stream.CodeBatch) (ok1 : Bool) :
-  Result (Std.U64 × Std.Usize × ValidationProfile × metadata.Env × (Slice
-    Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
-    Std.Usize × Std.Usize × (Option error.Error))
+  Result (Std.U64 × Std.Usize × metadata.Env × (Slice Std.U8) × Std.Usize
+    × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × (Option error.Error))
   := do
   loop
     (fun (self1, ok2) => stream.CodeBatch.validate_all_loop.body self1 ok2)
@@ -10864,13 +10766,12 @@ def stream.CodeBatch.validate_all_loop
     Source: 'src/stream.rs' -/
 def stream.CodeBatch.validate_all
   (self : stream.CodeBatch) : Result stream.CodeBatch := do
-  let (i, i1, vp, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
+  let (i, i1, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
     stream.CodeBatch.validate_all_loop self true
   ok
     {
       module_id := i,
       batch_id := i1,
-      profile := vp,
       env := e,
       code := s,
       code_offset := i2,
@@ -11448,8 +11349,7 @@ def stream.get_next_batch
 @[rust_loop_body]
 def stream.submit_code_batches_loop.body
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64)
-  (profile : ValidationProfile) (source : S)
+  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
   (v : alloc.vec.Vec wasm_types.FuncType) (v1 : alloc.vec.Vec metadata.Import)
   (v2 : alloc.vec.Vec metadata.Global) (v3 : alloc.vec.Vec metadata.Export)
   (v4 : alloc.vec.Vec metadata.Element) (o : Option Std.U32)
@@ -11493,7 +11393,6 @@ def stream.submit_code_batches_loop.body
                 {
                   module_id,
                   batch_id,
-                  profile,
                   env :=
                     {
                       types := v,
@@ -11570,7 +11469,6 @@ def stream.submit_code_batches_loop.body
               {
                 module_id,
                 batch_id,
-                profile,
                 env :=
                   {
                     types := v,
@@ -11634,8 +11532,7 @@ def stream.submit_code_batches_loop.body
 @[rust_loop]
 def stream.submit_code_batches_loop
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64)
-  (profile : ValidationProfile) (source : S)
+  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
   (v : alloc.vec.Vec wasm_types.FuncType) (v1 : alloc.vec.Vec metadata.Import)
   (v2 : alloc.vec.Vec metadata.Global) (v3 : alloc.vec.Vec metadata.Export)
   (v4 : alloc.vec.Vec metadata.Element) (o : Option Std.U32)
@@ -11652,23 +11549,22 @@ def stream.submit_code_batches_loop
   loop
     (fun (visitor1, pending1, pos1, func1, batch_id1) =>
       stream.submit_code_batches_loop.body SourceInst StreamingVisitorInst
-      module_id profile source v v1 v2 v3 v4 o v5 o1 v6 v7 v8 v9 v10 i i1
-      code_len config num_funcs visitor1 pending1 pos1 func1 batch_id1)
+      module_id source v v1 v2 v3 v4 o v5 o1 v6 v7 v8 v9 v10 i i1 code_len
+      config num_funcs visitor1 pending1 pos1 func1 batch_id1)
     (visitor, pending, pos, func, batch_id)
 
 /-- [itasca::stream::submit_code_batches]:
     Source: 'src/stream.rs' -/
 def stream.submit_code_batches
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64)
-  (profile : ValidationProfile) (source : S) (env : metadata.Env)
-  (code_len : Std.Usize) (pos : Std.Usize) (config : stream.Config)
-  (visitor : V) :
+  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
+  (env : metadata.Env) (code_len : Std.Usize) (pos : Std.Usize)
+  (config : stream.Config) (visitor : V) :
   Result ((core.result.Result (alloc.vec.Vec Std.Usize) error.Error) × V)
   := do
   let num_funcs := alloc.vec.Vec.len env.func_type_indices
   stream.submit_code_batches_loop SourceInst StreamingVisitorInst module_id
-    profile source env.types env.imports env.globals env.exports env.elements
+    source env.types env.imports env.globals env.exports env.elements
     env.data_count env.declared_funcs env.start env.func_type_indices
     env.func_types env.table_types env.mem_types env.global_types
     env.num_imported_funcs env.num_imported_globals code_len config visitor
@@ -11743,8 +11639,7 @@ def stream.read_code_header
 /-- [itasca::metadata::decode_segment_index]:
     Source: 'src/module.rs' -/
 def metadata.decode_segment_index
-  (data : Slice Std.U8) (pos : Std.Usize) (index_or_flags : Std.U32)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (index_or_flags : Std.U32) :
   Result (core.result.Result (Std.U32 × Std.Usize × Bool) error.Error)
   := do
   match index_or_flags with
@@ -11846,7 +11741,7 @@ def metadata.expect_const_type
 /-- [itasca::metadata::decode_elem_type]:
     Source: 'src/module.rs' -/
 def metadata.decode_elem_type
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.ElemType × Std.Usize) error.Error)
   := do
   let r ← reader.read_byte data pos
@@ -11869,7 +11764,7 @@ def metadata.decode_elem_type
     Source: 'src/module.rs' -/
 def metadata.decode_const_expr
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (expected : wasm_types.ValueType) (profile : ValidationProfile) :
+  (expected : wasm_types.ValueType) :
   Result (core.result.Result (wasm_types.ConstExpr × Std.Usize) error.Error)
   := do
   let r ← reader.read_byte data pos
@@ -12023,7 +11918,7 @@ def metadata.decode_const_expr
           (wasm_types.ConstExpr × Std.Usize)
           error.Error.Insts.CoreConvertFromOpError residual
     | 208#uscalar =>
-      let r1 ← metadata.decode_elem_type data p profile
+      let r1 ← metadata.decode_elem_type data p
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -12181,8 +12076,7 @@ def metadata.copy_bytes
 /-- [itasca::metadata::decode_data_segment]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_segment
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result (metadata.Data × Std.Usize) error.Error)
   := do
   let r ← reader.read_u32_leb data pos
@@ -12215,7 +12109,7 @@ def metadata.decode_data_segment
           (metadata.Data × Std.Usize) error.Error.Insts.CoreConvertFromOpError
           residual
     | _ =>
-      let r1 ← metadata.decode_segment_index data q tag profile
+      let r1 ← metadata.decode_segment_index data q tag
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -12227,7 +12121,6 @@ def metadata.decode_data_segment
         else
           let r2 ←
             metadata.decode_const_expr data next env wasm_types.ValueType.I32
-              profile
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -12272,9 +12165,8 @@ def metadata.decode_data_segment
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_data_section_loop.body
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (out : alloc.vec.Vec metadata.Data) (q : Std.Usize)
-  (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
+  (out : alloc.vec.Vec metadata.Data) (q : Std.Usize) (i : Std.U32) :
   Result (ControlFlow ((alloc.vec.Vec metadata.Data) × Std.Usize × Std.U32)
     (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
     error.Error))
@@ -12282,7 +12174,7 @@ def metadata.decode_data_section_loop.body
   if i >= count
   then ok (done (core.result.Result.Ok (out, q)))
   else
-    let r ← metadata.decode_data_segment data q env profile
+    let r ← metadata.decode_data_segment data q env
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -12301,22 +12193,20 @@ def metadata.decode_data_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_data_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (out : alloc.vec.Vec metadata.Data) (q : Std.Usize)
-  (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
+  (out : alloc.vec.Vec metadata.Data) (q : Std.Usize) (i : Std.U32) :
   Result (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
     error.Error)
   := do
   loop
     (fun (out1, q1, i1) => metadata.decode_data_section_loop.body data env
-      profile count out1 q1 i1)
+      count out1 q1 i1)
     (out, q, i)
 
 /-- [itasca::metadata::decode_data_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
     error.Error)
   := do
@@ -12325,7 +12215,7 @@ def metadata.decode_data_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_data_section_loop data env profile count (alloc.vec.Vec.new
+    metadata.decode_data_section_loop data env count (alloc.vec.Vec.new
       metadata.Data) p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -12777,9 +12667,8 @@ def metadata.read_section_header
 @[rust_loop_body]
 def metadata.validate_tail_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (v : V) (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize)
-  (seen_data : Bool) :
+  (data : Slice Std.U8) (env : metadata.Env) (v : V)
+  (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize) (seen_data : Bool) :
   Result (ControlFlow (V × (alloc.vec.Vec metadata.Data) × Std.Usize × Bool)
     ((core.result.Result metadata.Tail error.Error) × V))
   := do
@@ -12826,7 +12715,7 @@ def metadata.validate_tail_with_loop.body
           then
             ok (done (core.result.Result.Err error.Error.SectionOutOfOrder, v))
           else
-            let r1 ← metadata.decode_data_section data start env profile
+            let r1 ← metadata.decode_data_section data start env
             let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
             match cf1 with
             | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -12852,15 +12741,14 @@ def metadata.validate_tail_with_loop.body
 @[rust_loop]
 def metadata.validate_tail_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (v : V) (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize)
-  (seen_data : Bool) :
+  (data : Slice Std.U8) (env : metadata.Env) (v : V)
+  (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize) (seen_data : Bool) :
   Result ((core.result.Result metadata.Tail error.Error) × V)
   := do
   loop
     (fun (v1, segments1, q1, seen_data1) =>
-      metadata.validate_tail_with_loop.body ModuleVisitorInst data env profile
-      v1 segments1 q1 seen_data1)
+      metadata.validate_tail_with_loop.body ModuleVisitorInst data env v1
+      segments1 q1 seen_data1)
     (v, segments, q, seen_data)
 
 /-- [itasca::metadata::validate_tail_with]:
@@ -12868,20 +12756,18 @@ def metadata.validate_tail_with_loop
 @[reducible]
 def metadata.validate_tail_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) (v : V) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) (v : V) :
   Result ((core.result.Result metadata.Tail error.Error) × V)
   := do
-  metadata.validate_tail_with_loop ModuleVisitorInst data env profile v
+  metadata.validate_tail_with_loop ModuleVisitorInst data env v
     (alloc.vec.Vec.new metadata.Data) pos false
 
 /-- [itasca::stream::validate_remaining]:
     Source: 'src/stream.rs' -/
 def stream.validate_remaining
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64)
-  (profile : ValidationProfile) (source : S) (env : metadata.Env)
-  (env_len : Std.Usize) (visitor : V) :
+  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
+  (env : metadata.Env) (env_len : Std.Usize) (visitor : V) :
   Result ((core.result.Result Unit error.Error) × V)
   := do
   let code_len ← SourceInst.code_len source
@@ -12905,7 +12791,7 @@ def stream.validate_remaining
           else
             let (r3, visitor2) ←
               stream.submit_code_batches SourceInst StreamingVisitorInst
-                module_id profile source env code_len val1 val2 visitor1
+                module_id source env code_len val1 val2 visitor1
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue val3 =>
@@ -12928,7 +12814,7 @@ def stream.validate_remaining
                     let (r7, visitor5) ←
                       metadata.validate_tail_with
                         StreamingVisitorInst.metadataModuleVisitorInst val4
-                        0#usize env profile visitor4
+                        0#usize env visitor4
                     let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
                     match cf7 with
                     | core.ops.control_flow.ControlFlow.Continue val5 =>
@@ -12990,8 +12876,7 @@ def stream.validate_remaining
 /-- [itasca::metadata::decode_data_count]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_count
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -13010,14 +12895,13 @@ def metadata.decode_data_count
     Source: 'src/module.rs' -/
 def metadata.decode_element_initializer
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (elem : wasm_types.ElemType) (expressions : Bool)
-  (profile : ValidationProfile) :
+  (elem : wasm_types.ElemType) (expressions : Bool) :
   Result (core.result.Result (wasm_types.ConstExpr × Std.Usize) error.Error)
   := do
   if expressions
   then
     let vt ← wasm_types.ElemType.value_type elem
-    metadata.decode_const_expr data pos env vt profile
+    metadata.decode_const_expr data pos env vt
   else
     let r ← reader.read_u32_leb data pos
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -13058,8 +12942,8 @@ def metadata.declare_initializer
 @[rust_loop_body]
 def metadata.decode_element_initializers_loop.body
   (data : Slice Std.U8) (elem : wasm_types.ElemType) (expressions : Bool)
-  (profile : ValidationProfile) (count : Std.U32) (env : metadata.Env)
-  (q : Std.Usize) (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
+  (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × (alloc.vec.Vec
     wasm_types.ConstExpr) × Std.U32) ((core.result.Result ((alloc.vec.Vec
     wasm_types.ConstExpr) × Std.Usize) error.Error) × metadata.Env))
@@ -13067,8 +12951,7 @@ def metadata.decode_element_initializers_loop.body
   if i >= count
   then ok (done (core.result.Result.Ok (init, q), env))
   else
-    let r ←
-      metadata.decode_element_initializer data q env elem expressions profile
+    let r ← metadata.decode_element_initializer data q env elem expressions
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -13089,23 +12972,22 @@ def metadata.decode_element_initializers_loop.body
 @[rust_loop]
 def metadata.decode_element_initializers_loop
   (data : Slice Std.U8) (env : metadata.Env) (elem : wasm_types.ElemType)
-  (expressions : Bool) (profile : ValidationProfile) (count : Std.U32)
-  (q : Std.Usize) (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
+  (expressions : Bool) (count : Std.U32) (q : Std.Usize)
+  (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
   Result ((core.result.Result ((alloc.vec.Vec wasm_types.ConstExpr) ×
     Std.Usize) error.Error) × metadata.Env)
   := do
   loop
     (fun (env1, q1, init1, i1) =>
       metadata.decode_element_initializers_loop.body data elem expressions
-      profile count env1 q1 init1 i1)
+      count env1 q1 init1 i1)
     (env, q, init, i)
 
 /-- [itasca::metadata::decode_element_initializers]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_initializers
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (elem : wasm_types.ElemType) (expressions : Bool)
-  (profile : ValidationProfile) :
+  (elem : wasm_types.ElemType) (expressions : Bool) :
   Result ((core.result.Result ((alloc.vec.Vec wasm_types.ConstExpr) ×
     Std.Usize) error.Error) × metadata.Env)
   := do
@@ -13114,8 +12996,8 @@ def metadata.decode_element_initializers
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_element_initializers_loop data env elem expressions profile
-      count p (alloc.vec.Vec.new wasm_types.ConstExpr) 0#u32
+    metadata.decode_element_initializers_loop data env elem expressions count p
+      (alloc.vec.Vec.new wasm_types.ConstExpr) 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -13126,8 +13008,7 @@ def metadata.decode_element_initializers
 /-- [itasca::metadata::decode_element_header]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_header
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result (metadata.ElementMode × wasm_types.ElemType ×
     Bool × Std.Usize) error.Error)
   := do
@@ -13156,7 +13037,7 @@ def metadata.decode_element_header
             else
               let r2 ←
                 metadata.decode_const_expr data next env
-                  wasm_types.ValueType.I32 profile
+                  wasm_types.ValueType.I32
               let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
               match cf2 with
               | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -13222,7 +13103,7 @@ def metadata.decode_element_header
                   else
                     if tag >= 4#u32
                     then
-                      let r3 ← metadata.decode_elem_type data next1 profile
+                      let r3 ← metadata.decode_elem_type data next1
                       let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
                       match cf3 with
                       | core.ops.control_flow.ControlFlow.Continue val3 =>
@@ -13324,7 +13205,7 @@ def metadata.decode_element_header
               else
                 let r2 ←
                   metadata.decode_const_expr data next env
-                    wasm_types.ValueType.I32 profile
+                    wasm_types.ValueType.I32
                 let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
                 match cf2 with
                 | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -13391,7 +13272,7 @@ def metadata.decode_element_header
                     else
                       if tag >= 4#u32
                       then
-                        let r3 ← metadata.decode_elem_type data next1 profile
+                        let r3 ← metadata.decode_elem_type data next1
                         let cf3 ←
                           core.result.Result.Insts.CoreOpsTry.branch r3
                         match cf3 with
@@ -13489,7 +13370,6 @@ def metadata.decode_element_header
             else
               let r1 ←
                 metadata.decode_const_expr data q env wasm_types.ValueType.I32
-                  profile
               let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
               match cf1 with
               | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -13555,7 +13435,7 @@ def metadata.decode_element_header
                   else
                     if tag >= 4#u32
                     then
-                      let r2 ← metadata.decode_elem_type data next profile
+                      let r2 ← metadata.decode_elem_type data next
                       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
                       match cf2 with
                       | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -13711,7 +13591,7 @@ def metadata.decode_element_header
           else
             if tag >= 4#u32
             then
-              let r1 ← metadata.decode_elem_type data q profile
+              let r1 ← metadata.decode_elem_type data q
               let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
               match cf1 with
               | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -13806,19 +13686,17 @@ def metadata.decode_element_header
 /-- [itasca::metadata::decode_element]:
     Source: 'src/module.rs' -/
 def metadata.decode_element
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result (metadata.Element × Std.Usize) error.Error) ×
     metadata.Env)
   := do
-  let r ← metadata.decode_element_header data pos env profile
+  let r ← metadata.decode_element_header data pos env
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (mode, elem, expressions, next) := val
     let (r1, env1) ←
       metadata.decode_element_initializers data next env elem expressions
-        profile
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -13841,15 +13719,15 @@ def metadata.decode_element
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_element_section_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
-  (env : metadata.Env) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize error.Error) × metadata.Env))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let (r, env1) ← metadata.decode_element data q env profile
+    let (r, env1) ← metadata.decode_element data q env
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -13867,20 +13745,19 @@ def metadata.decode_element_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_element_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   loop
-    (fun (env1, q1, i1) => metadata.decode_element_section_loop.body data
-      profile count env1 q1 i1)
+    (fun (env1, q1, i1) => metadata.decode_element_section_loop.body data count
+      env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::metadata::decode_element_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -13888,7 +13765,7 @@ def metadata.decode_element_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_element_section_loop data env profile count p 0#u32
+    metadata.decode_element_section_loop data env count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14140,10 +14017,10 @@ def metadata.decode_export_section
 /-- [itasca::metadata::decode_global_type]:
     Source: 'src/module.rs' -/
 def metadata.decode_global_type
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.GlobalType × Std.Usize) error.Error)
   := do
-  let r ← metadata.decode_value_type data pos profile
+  let r ← metadata.decode_value_type data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -14174,20 +14051,20 @@ def metadata.decode_global_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_global_section_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
-  (env : metadata.Env) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize error.Error) × metadata.Env))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let r ← metadata.decode_global_type data q profile
+    let r ← metadata.decode_global_type data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (gtype, q1) := val
-      let r1 ← metadata.decode_const_expr data q1 env gtype.valtype profile
+      let r1 ← metadata.decode_const_expr data q1 env gtype.valtype
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -14213,20 +14090,19 @@ def metadata.decode_global_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_global_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   loop
-    (fun (env1, q1, i1) => metadata.decode_global_section_loop.body data
-      profile count env1 q1 i1)
+    (fun (env1, q1, i1) => metadata.decode_global_section_loop.body data count
+      env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::metadata::decode_global_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_global_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -14234,7 +14110,7 @@ def metadata.decode_global_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_global_section_loop data env profile count p 0#u32
+    metadata.decode_global_section_loop data env count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14377,21 +14253,13 @@ def metadata.decode_memory_section
         Std.Usize error.Error.Insts.CoreConvertFromOpError residual
     ok (r1, env)
 
-/-- [itasca::metadata::check_table_count]:
-    Source: 'src/module.rs' -/
-def metadata.check_table_count
-  (env : metadata.Env) (profile : ValidationProfile) :
-  Result (core.result.Result Unit error.Error)
-  := do
-  ok (core.result.Result.Ok ())
-
 /-- [itasca::metadata::decode_table_type]:
     Source: 'src/module.rs' -/
 def metadata.decode_table_type
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.TableType × Std.Usize) error.Error)
   := do
-  let r ← metadata.decode_elem_type data pos profile
+  let r ← metadata.decode_elem_type data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -14423,32 +14291,22 @@ def metadata.decode_table_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_table_section_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
-  (env : metadata.Env) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize error.Error) × metadata.Env))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let r ← metadata.decode_table_type data q profile
+    let r ← metadata.decode_table_type data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (tt, q1) := val
       let v ← alloc.vec.Vec.push env.table_types tt
-      let r1 ←
-        metadata.check_table_count { env with table_types := v } profile
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let i1 ← i + 1#u32
-        ok (cont ({ env with table_types := v }, q1, i1))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame error.Error) residual
-        ok (done (r2, { env with table_types := v }))
+      let i1 ← i + 1#u32
+      ok (cont ({ env with table_types := v }, q1, i1))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14459,20 +14317,19 @@ def metadata.decode_table_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_table_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   loop
-    (fun (env1, q1, i1) => metadata.decode_table_section_loop.body data profile
-      count env1 q1 i1)
+    (fun (env1, q1, i1) => metadata.decode_table_section_loop.body data count
+      env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::metadata::decode_table_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_table_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -14480,7 +14337,7 @@ def metadata.decode_table_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_table_section_loop data env profile count p 0#u32
+    metadata.decode_table_section_loop data env count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14585,8 +14442,7 @@ def metadata.decode_function_section
 /-- [itasca::metadata::decode_import]:
     Source: 'src/module.rs' -/
 def metadata.decode_import
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← metadata.decode_name data pos
@@ -14638,28 +14494,18 @@ def metadata.decode_import
                 Std.Usize error.Error.Insts.CoreConvertFromOpError residual
             ok (r4, env)
         | 1#uscalar =>
-          let r3 ← metadata.decode_table_type data p3 profile
+          let r3 ← metadata.decode_table_type data p3
           let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
             let (tt, p4) := val3
             let v ← alloc.vec.Vec.push env.table_types tt
-            let r4 ←
-              metadata.check_table_count { env with table_types := v } profile
-            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-            match cf4 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let v1 ←
-                alloc.vec.Vec.push env.imports
-                  ({ module, «name», desc := (metadata.ImportDesc.Table tt) }
-                  : metadata.Import)
-              ok (core.result.Result.Ok p4,
-                { env with imports := v1, table_types := v })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r5 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Std.Usize (core.convert.FromSame error.Error) residual
-              ok (r5, { env with table_types := v })
+            let v1 ←
+              alloc.vec.Vec.push env.imports
+                ({ module, «name», desc := (metadata.ImportDesc.Table tt) } :
+                metadata.Import)
+            ok (core.result.Result.Ok p4,
+              { env with imports := v1, table_types := v })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14690,7 +14536,7 @@ def metadata.decode_import
                 Std.Usize (core.convert.FromSame error.Error) residual
             ok (r4, env)
         | 3#uscalar =>
-          let r3 ← metadata.decode_global_type data p3 profile
+          let r3 ← metadata.decode_global_type data p3
           let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
@@ -14733,15 +14579,15 @@ def metadata.decode_import
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_import_section_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
-  (env : metadata.Env) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize error.Error) × metadata.Env))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let (r, env1) ← metadata.decode_import data q env profile
+    let (r, env1) ← metadata.decode_import data q env
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -14757,20 +14603,19 @@ def metadata.decode_import_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_import_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   loop
-    (fun (env1, q1, i1) => metadata.decode_import_section_loop.body data
-      profile count env1 q1 i1)
+    (fun (env1, q1, i1) => metadata.decode_import_section_loop.body data count
+      env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::metadata::decode_import_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_import_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -14778,7 +14623,7 @@ def metadata.decode_import_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_import_section_loop data env profile count p 0#u32
+    metadata.decode_import_section_loop data env count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14789,7 +14634,7 @@ def metadata.decode_import_section
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_value_types_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
+  (data : Slice Std.U8) (count : Std.U32)
   (out : alloc.vec.Vec wasm_types.ValueType) (q : Std.Usize) (i : Std.U32) :
   Result (ControlFlow ((alloc.vec.Vec wasm_types.ValueType) × Std.Usize ×
     Std.U32) (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
@@ -14798,7 +14643,7 @@ def metadata.decode_value_types_loop.body
   if i >= count
   then ok (done (core.result.Result.Ok (out, q)))
   else
-    let r ← metadata.decode_value_type data q profile
+    let r ← metadata.decode_value_type data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -14817,21 +14662,21 @@ def metadata.decode_value_types_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_value_types_loop
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
+  (data : Slice Std.U8) (count : Std.U32)
   (out : alloc.vec.Vec wasm_types.ValueType) (q : Std.Usize) (i : Std.U32) :
   Result (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
     Std.Usize) error.Error)
   := do
   loop
-    (fun (out1, q1, i1) => metadata.decode_value_types_loop.body data profile
-      count out1 q1 i1)
+    (fun (out1, q1, i1) => metadata.decode_value_types_loop.body data count
+      out1 q1 i1)
     (out, q, i)
 
 /-- [itasca::metadata::decode_value_types]:
     Source: 'src/module.rs' -/
 def metadata.decode_value_types
   (data : Slice Std.U8) (pos : Std.Usize) (limit : Std.Usize)
-  (count_error : error.OpError) (profile : ValidationProfile) :
+  (count_error : error.OpError) :
   Result (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
     Std.Usize) error.Error)
   := do
@@ -14844,7 +14689,7 @@ def metadata.decode_value_types
     if i > limit
     then ok (core.result.Result.Err (error.Error.Read count_error))
     else
-      metadata.decode_value_types_loop data profile count (alloc.vec.Vec.new
+      metadata.decode_value_types_loop data count (alloc.vec.Vec.new
         wasm_types.ValueType) p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14854,7 +14699,7 @@ def metadata.decode_value_types
 /-- [itasca::metadata::decode_func_type]:
     Source: 'src/module.rs' -/
 def metadata.decode_func_type
-  (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.FuncType × Std.Usize) error.Error)
   := do
   let r ← reader.read_byte data pos
@@ -14867,14 +14712,14 @@ def metadata.decode_func_type
     else
       let r1 ←
         metadata.decode_value_types data p limits.MAX_MULTI_VALUE_PARAMS
-          error.OpError.TooManyParams profile
+          error.OpError.TooManyParams
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
         let (params, p1) := val1
         let r2 ←
           metadata.decode_value_types data p1 limits.MAX_MULTI_VALUE_RESULTS
-            error.OpError.TooManyResults profile
+            error.OpError.TooManyResults
         let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -14897,15 +14742,15 @@ def metadata.decode_func_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_type_section_loop.body
-  (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
-  (env : metadata.Env) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (i : Std.U32) :
   Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
     ((core.result.Result Std.Usize error.Error) × metadata.Env))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let r ← metadata.decode_func_type data q profile
+    let r ← metadata.decode_func_type data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -14923,20 +14768,19 @@ def metadata.decode_type_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_type_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
-  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
+  (i : Std.U32) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   loop
-    (fun (env1, q1, i1) => metadata.decode_type_section_loop.body data profile
-      count env1 q1 i1)
+    (fun (env1, q1, i1) => metadata.decode_type_section_loop.body data count
+      env1 q1 i1)
     (env, q, i)
 
 /-- [itasca::metadata::decode_type_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_type_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   let r ← reader.read_u32_leb data pos
@@ -14944,7 +14788,7 @@ def metadata.decode_type_section
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (count, p) := val
-    metadata.decode_type_section_loop data env profile count p 0#u32
+    metadata.decode_type_section_loop data env count p 0#u32
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14954,21 +14798,20 @@ def metadata.decode_type_section
 /-- [itasca::metadata::decode_env_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_env_section
-  (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
   match id with
-  | 1#uscalar => metadata.decode_type_section data pos env profile
-  | 2#uscalar => metadata.decode_import_section data pos env profile
+  | 1#uscalar => metadata.decode_type_section data pos env
+  | 2#uscalar => metadata.decode_import_section data pos env
   | 3#uscalar => metadata.decode_function_section data pos env
-  | 4#uscalar => metadata.decode_table_section data pos env profile
+  | 4#uscalar => metadata.decode_table_section data pos env
   | 5#uscalar => metadata.decode_memory_section data pos env
-  | 6#uscalar => metadata.decode_global_section data pos env profile
+  | 6#uscalar => metadata.decode_global_section data pos env
   | 7#uscalar => metadata.decode_export_section data pos env
   | 8#uscalar => metadata.decode_start_section data pos env
-  | 9#uscalar => metadata.decode_element_section data pos env profile
-  | 12#uscalar => metadata.decode_data_count data pos env profile
+  | 9#uscalar => metadata.decode_element_section data pos env
+  | 12#uscalar => metadata.decode_data_count data pos env
   | _ => ok (core.result.Result.Err (error.Error.UnknownSection id), env)
 
 /-- [itasca::metadata::section_order]:
@@ -15105,8 +14948,8 @@ def metadata.read_header
 @[rust_loop_body]
 def metadata.validate_env_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (profile : ValidationProfile) (v : V)
-  (env : metadata.Env) (q : Std.Usize) (last_id : Std.U8) :
+  (data : Slice Std.U8) (v : V) (env : metadata.Env) (q : Std.Usize)
+  (last_id : Std.U8) :
   Result (ControlFlow (V × metadata.Env × Std.Usize × Std.U8)
     ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V))
   := do
@@ -15153,7 +14996,7 @@ def metadata.validate_env_with_loop.body
                   v))
               else
                 let (r2, env1) ←
-                  metadata.decode_env_section data start id env profile
+                  metadata.decode_env_section data start id env
                 let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
                 match cf2 with
                 | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -15186,20 +15029,20 @@ def metadata.validate_env_with_loop.body
 @[rust_loop]
 def metadata.validate_env_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (profile : ValidationProfile) (v : V)
-  (env : metadata.Env) (q : Std.Usize) (last_id : Std.U8) :
+  (data : Slice Std.U8) (v : V) (env : metadata.Env) (q : Std.Usize)
+  (last_id : Std.U8) :
   Result ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V)
   := do
   loop
     (fun (v1, env1, q1, last_id1) => metadata.validate_env_with_loop.body
-      ModuleVisitorInst data profile v1 env1 q1 last_id1)
+      ModuleVisitorInst data v1 env1 q1 last_id1)
     (v, env, q, last_id)
 
 /-- [itasca::metadata::validate_env_with]:
     Source: 'src/module.rs' -/
 def metadata.validate_env_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (profile : ValidationProfile) (v : V) :
+  (data : Slice Std.U8) (v : V) :
   Result ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V)
   := do
   let env ← metadata.Env.new
@@ -15207,8 +15050,7 @@ def metadata.validate_env_with
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    metadata.validate_env_with_loop ModuleVisitorInst data profile v env val
-      0#u8
+    metadata.validate_env_with_loop ModuleVisitorInst data v env val 0#u8
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -15221,9 +15063,8 @@ def metadata.validate_env_with
     Visibility: public -/
 def stream.validate_streaming
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64)
-  (profile : ValidationProfile) (source : S) (visitor : V) (env : metadata.Env)
-  :
+  stream.StreamingVisitor V) (module_id : Std.U64) (source : S) (visitor : V)
+  (env : metadata.Env) :
   Result ((core.result.Result Unit error.Error) × V × metadata.Env)
   := do
   let r ← SourceInst.environment source
@@ -15239,7 +15080,7 @@ def stream.validate_streaming
         StreamingVisitorInst.custom_region visitor stream.Region.Environment
       let (r2, visitor2) ←
         metadata.validate_env_with
-          StreamingVisitorInst.metadataModuleVisitorInst val profile visitor1
+          StreamingVisitorInst.metadataModuleVisitorInst val visitor1
       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -15249,7 +15090,7 @@ def stream.validate_streaming
         else
           let (r3, visitor3) ←
             stream.validate_remaining SourceInst StreamingVisitorInst module_id
-              profile source decoded val1 visitor2
+              source decoded val1 visitor2
           ok (r3, visitor3, decoded)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
@@ -15270,7 +15111,7 @@ def stream.validate_streaming
 /-- [itasca::stream::validate_module_slice]:
     Source: 'src/stream.rs' -/
 def stream.validate_module_slice
-  (bytes : Slice Std.U8) (profile : ValidationProfile) :
+  (bytes : Slice Std.U8) :
   Result (core.result.Result metadata.Module error.Error)
   := do
   let (code_start, code_end) ← stream.find_code_region bytes
@@ -15287,7 +15128,7 @@ def stream.validate_module_slice
   let env ← metadata.Env.new
   let (r, visitor, env1) ←
     stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 profile
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
       { env := s, code := s1, tail := s2 } { completed := none, tail := none }
       env
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -15304,10 +15145,10 @@ def stream.validate_module_slice
     Source: 'src/module.rs'
     Visibility: public -/
 def metadata.validate_module
-  (data : Slice Std.U8) (profile : ValidationProfile) :
+  (data : Slice Std.U8) :
   Result (core.result.Result metadata.Module error.Error)
   := do
-  stream.validate_module_slice data profile
+  stream.validate_module_slice data
 
 /-- [itasca::metadata::import_types]: loop body 0:
     Source: 'src/module.rs'
@@ -15546,39 +15387,36 @@ def metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor :
 /-- [itasca::metadata::validate_env]:
     Source: 'src/module.rs' -/
 def metadata.validate_env
-  (data : Slice Std.U8) (profile : ValidationProfile) :
+  (data : Slice Std.U8) :
   Result (core.result.Result (metadata.Env × Std.Usize) error.Error)
   := do
   let (r, _) ←
     metadata.validate_env_with
-      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data
-      profile ()
+      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data ()
   ok r
 
 /-- [itasca::metadata::validate_code_entry]:
     Source: 'src/module.rs' -/
 def metadata.validate_code_entry
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (index : Std.Usize) (profile : ValidationProfile) :
+  (index : Std.Usize) :
   Result (core.result.Result Std.Usize error.Error)
   := do
   let (r, _) ←
     metadata.validate_code_entry_with
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data pos env index profile
-      ()
+      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data pos env index ()
   ok r
 
 /-- [itasca::metadata::validate_tail]:
     Source: 'src/module.rs' -/
 def metadata.validate_tail
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (profile : ValidationProfile) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result metadata.Tail error.Error)
   := do
   let (r, _) ←
     metadata.validate_tail_with
       metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data pos
-      env profile ()
+      env ()
   ok r
 
 /-- [itasca::metadata::code_entry_extent]:
@@ -36569,13 +36407,6 @@ def runtime.compiler.Budget.copy_state
   := do
   ok { self with marker := () }
 
-/-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::profile]:
-    Source: 'src/runtime/compiler/mod.rs'
-    Visibility: public -/
-def runtime.compiler.ExecutableModule.impl.profile
-  (self : runtime.compiler.ExecutableModule) : Result ValidationProfile := do
-  ok self.profile
-
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::function_count]:
     Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
@@ -36935,9 +36766,9 @@ def
     ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32) ×
     (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
-    × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × ValidationProfile
-    × metadata.Env × (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option error.Error) ×
+    × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × metadata.Env ×
+    (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × (Option error.Error) ×
     (core.result.Result Unit error.Error)))
   := do
   let i1 ← stream.CodeBatch.len batch
@@ -36954,14 +36785,14 @@ def
     else
       ok (done (self.signatures, self.func_param_slots, self.completed,
         self.functions, self.tail, self.code_start, self.budget,
-        batch.module_id, batch.batch_id, batch.profile, batch.env, batch.code,
+        batch.module_id, batch.batch_id, batch.env, batch.code,
         batch.code_offset, batch.first_func, batch.num_funcs,
         batch.num_dispatched, batch.dispatch_end, batch.num_validated,
         batch.validated_end, batch.error, result))
   else
     ok (done (self.signatures, self.func_param_slots, self.completed,
       self.functions, self.tail, self.code_start, self.budget, batch.module_id,
-      batch.batch_id, batch.profile, batch.env, batch.code, batch.code_offset,
+      batch.batch_id, batch.env, batch.code, batch.code_offset,
       batch.first_func, batch.num_funcs, batch.num_dispatched,
       batch.dispatch_end, batch.num_validated, batch.validated_end,
       batch.error, result))
@@ -36978,9 +36809,9 @@ def
   Result ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32)
     × (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
-    × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × ValidationProfile
-    × metadata.Env × (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option error.Error) ×
+    × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × metadata.Env ×
+    (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × (Option error.Error) ×
     (core.result.Result Unit error.Error))
   := do
   loop
@@ -36999,8 +36830,8 @@ def
   Result ((core.result.Result Unit error.Error) ×
     (runtime.compiler.CompileScheduler A))
   := do
-  let (v, v1, v2, v3, o, i, b, i1, i2, vp, e, s, i3, i4, i5, i6, i7, i8, i9,
-    o1, result) ←
+  let (v, v1, v2, v3, o, i, b, i1, i2, e, s, i3, i4, i5, i6, i7, i8, i9, o1,
+    result) ←
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
       platformAllocInst self batch 0#usize (core.result.Result.Ok ())
   let cf ← core.result.Result.Insts.CoreOpsTry.branch result
@@ -37011,7 +36842,6 @@ def
         ({
            module_id := i1,
            batch_id := i2,
-           profile := vp,
            env := e,
            code := s,
            code_offset := i3,
@@ -37811,8 +37641,7 @@ def runtime.compiler.code_region
     Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.compile_with
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (bytes : Slice Std.U8) (profile : ValidationProfile)
-  (limits : runtime.compiler.CompileLimits) :
+  (bytes : Slice Std.U8) (limits : runtime.compiler.CompileLimits) :
   Result (core.result.Result runtime.compiler.ExecutableModule
     runtime.compiler.CompileError)
   := do
@@ -37828,7 +37657,7 @@ def runtime.compiler.compile_with
       stream.validate_streaming
         runtime.compiler.CompileSource.Insts.ItascaStreamSource
         (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor
-        platformAllocInst) 0#u64 profile { bytes, code_start, code_end }
+        platformAllocInst) 0#u64 { bytes, code_start, code_end }
         {
           signatures := (alloc.vec.Vec.new runtime.compiler.Signature),
           func_param_slots := (alloc.vec.Vec.new Std.U32),
@@ -37866,7 +37695,6 @@ def runtime.compiler.compile_with
             runtime.compiler.initialize.lower platformAllocInst
               {
                 module := { env := env1, tail := val },
-                profile,
                 functions := val1,
                 global_initializers := (alloc.vec.Vec.new Std.Usize),
                 element_initializers :=
@@ -37907,11 +37735,11 @@ def runtime.compiler.compile_with
     Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.compile_default_with
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (bytes : Slice Std.U8) (profile : ValidationProfile) :
+  (bytes : Slice Std.U8) :
   Result (core.result.Result runtime.compiler.ExecutableModule error.Error)
   := do
   let cl ← runtime.compiler.CompileLimits.Insts.CoreDefaultDefault.default
-  let r ← runtime.compiler.compile_with platformAllocInst bytes profile cl
+  let r ← runtime.compiler.compile_with platformAllocInst bytes cl
   match r with
   | core.result.Result.Ok module => ok (core.result.Result.Ok module)
   | core.result.Result.Err ce =>
@@ -62943,13 +62771,6 @@ def runtime.store.Store.grow_table_with
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
         Std.U32 (core.convert.FromSame runtime.ExecError) residual
     ok (r1, self)
-
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::profile]:
-    Source: 'src/stream.rs'
-    Visibility: public -/
-def stream.CodeBatch.impl.profile
-  (self : stream.CodeBatch) : Result ValidationProfile := do
-  ok self.profile
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_empty]:
     Source: 'src/stream.rs'

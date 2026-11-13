@@ -24,7 +24,7 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
         dispatched entry.index initial ⦃ _ => True ⦄) :
     CompileScheduler.compile_entry ops before batch ⦃ _ => True ⦄ := by
   have identity := reachable.validation.1
-  obtain ⟨_,_,_,_,_,first,count,_⟩ := identity
+  obtain ⟨_,_,_,_,_,first,count⟩ := identity
   have fits : batch.first_func.val + batch.num_funcs.val ≤ Usize.max := by
     rw [first,count]
     exact bounded.2.1.trans issued.env.func_type_indices.property
@@ -37,7 +37,7 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
   | Ok entry =>
     have reached := StreamBatch.Reachable.dispatch reachable dispatch
     have identity := reached.validation.1
-    obtain ⟨_,_,_,code,offset,_,_,_⟩ := identity
+    obtain ⟨_,_,_,code,offset,_,_⟩ := identity
     have cap : limits.MAX_MODULE_BYTES.val + limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
       simp only [limits.MAX_MODULE_BYTES]
       scalar_tac

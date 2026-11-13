@@ -56,9 +56,9 @@ theorem initialize_segments_certified_supported {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (code : Store.CodeInterpretation) (certified : CertifiedSupportedStore view code store)
     (imports : Store.InitializerImports store inst) (bindings : Store.InitializerBindings store inst)
@@ -68,13 +68,13 @@ theorem initialize_segments_certified_supported {M P F A : Type}
         Extend_store (Store.decodeStore view code store) (Store.decodeStore view code out.2.1) ∧
         Store.SegmentObjectMetadata view store out.2.1 ∧ out.2.2 = platform ⦄ := by
   have shaped := Store.initialize_segments_compiled_shape memory hooks floats allocator view laws law
-    store platform instIndex inst bytes profile limits accepted found certified.shape imports bindings types
+    store platform instIndex inst bytes limits accepted found certified.shape imports bindings types
   have normal := Store.initialize_segments_compiled memory hooks floats allocator view laws law
-    store platform instIndex inst bytes profile limits accepted found
+    store platform instIndex inst bytes limits accepted found
     (certified.shape.instances inst (List.mem_of_getElem? found)) imports bindings
   obtain ⟨out, run, metadata⟩ := WP.spec_imp_exists
     (Store.initialize_segments_compiled_object_metadata memory hooks floats allocator view laws law
-      store platform instIndex inst bytes profile limits accepted found certified.shape imports bindings)
+      store platform instIndex inst bytes limits accepted found certified.shape imports bindings)
   rw [run, WP.spec_ok] at shaped normal ⊢
   have retained := certified.segments metadata shaped.1
   exact ⟨retained.1, retained.2, metadata, normal.2⟩

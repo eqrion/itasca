@@ -12,7 +12,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 open Itasca.Wasm1 in
 open Itasca.Wasm2 in
 theorem reader_f32_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST)
@@ -32,7 +32,7 @@ theorem reader_f32_const_wasm2 {data env locals index st}
 
 open Itasca.Wasm2 in
 theorem reader_f64_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST)

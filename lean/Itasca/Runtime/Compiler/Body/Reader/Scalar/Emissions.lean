@@ -25,7 +25,7 @@ open Aeneas Aeneas.Std Itasca
 /-- An actual successful constant reader and compiler callback extends the
 retained code prefix and the supplied source zipper together. -/
 theorem reader_emit_const32_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -37,7 +37,7 @@ theorem reader_emit_const32_wasm2 {data env locals index st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,
@@ -74,7 +74,7 @@ theorem reader_emit_const32_wasm2 {data env locals index st}
 /-- An actual successful constant reader and compiler callback extends the
 retained code prefix and the supplied source zipper together. -/
 theorem reader_emit_const64_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -86,7 +86,7 @@ theorem reader_emit_const64_wasm2 {data env locals index st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ value,

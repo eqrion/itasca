@@ -27,7 +27,7 @@ theorem compiler_reader_table_effect_wasm2 {A : Type} (ops : runtime.platform.Al
     (encoded : BrTable.Decoded data st.core.pos depths fallback next)
     (boundary : CompilerTableBoundary before)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before=.ok (.Ok (),final,after)) :
+      st data env before=.ok (.Ok (),final,after)) :
     TableReaderEffect before after final.core.pos depths := by
   obtain ⟨budget,buffer,types,bufferEq,callback⟩ := compiler_table_source_wasm2 ops law before after st final data env
     shape depths fallback next encoded accepted

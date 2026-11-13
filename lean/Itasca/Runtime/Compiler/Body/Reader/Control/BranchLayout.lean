@@ -15,7 +15,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_layout_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {parents current}
+    (p : Wasm2.Pending data env locals index st) {parents current}
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (known : ConcreteStack st.core.vals.val)
@@ -48,7 +48,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_br_if_layout_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {parents current}
+    (p : Wasm2.Pending data env locals index st) {parents current}
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (fronts : ReaderScopeFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (known : ConcreteStack st.core.vals.val)

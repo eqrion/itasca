@@ -16,8 +16,8 @@ namespace Itasca
 
 /-- The extracted initial environment represents the empty declaration prefix, is valid and
 bounded, and has phase `0`. -/
-theorem metadata.Env.new.profile_declarations (profile : ValidationProfile) : metadata.Env.new ⦃ env =>
-    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env profile ∧
+theorem metadata.Env.new.profile_declarations : metadata.Env.new ⦃ env =>
+    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
     ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ := by
   unfold metadata.Env.new
   simp only [WP.spec_ok]
@@ -34,11 +34,11 @@ end Itasca
 
 namespace Itasca.ModuleSections
 
-theorem ImportsAdded.types {profile} {env entries result} (h : ImportsAdded env entries result profile) :
+theorem ImportsAdded.types {env entries result} (h : ImportsAdded env entries result) :
     result.types = env.types := by
   induction h with
   | nil => rfl
-  | @snoc profile entries before after entry hp ha ih =>
+  | @snoc entries before after entry hp ha ih =>
       obtain ⟨_, ha⟩ := ha
       cases hd : entry.desc <;> simp only [hd] at ha
       · obtain ⟨_, _, he, _⟩ := ha
@@ -60,8 +60,8 @@ open ModuleEnv
 
 /-- Adding one import appends it to the declared imports and keeps the environment representing
 the declarations, provided no functions, globals, tables or memories are declared yet. -/
-theorem ImportAdded.represents {profile} {env result entry decls}
-    (h : ImportAdded env result entry profile) (hr : Represents env decls)
+theorem ImportAdded.represents {env result entry decls}
+    (h : ImportAdded env result entry) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
     (ht : decls.tables = []) (hm : decls.memories = []) :
     Represents result { decls with imports := decls.imports ++ [rawImport entry] } := by
@@ -120,8 +120,8 @@ theorem ImportAdded.represents {profile} {env result entry decls}
 
 /-- Adding a vector of imports appends them to the declared imports and keeps the environment
 representing the declarations. -/
-theorem ImportsAdded.represents {profile} {env result entries decls}
-    (h : ImportsAdded env entries result profile) (hr : Represents env decls)
+theorem ImportsAdded.represents {env result entries decls}
+    (h : ImportsAdded env entries result) (hr : Represents env decls)
     (hf : decls.functions = []) (hg : decls.globals = [])
     (ht : decls.tables = []) (hm : decls.memories = []) :
     Represents result { decls with imports := decls.imports ++ entries.map rawImport } := by
@@ -140,8 +140,8 @@ open ModuleBinary ModuleSections
 
 /-- Every section preserves the bound on nested parameter vectors. Newly declared signatures obtain
 their bound from their own byte span. -/
-theorem Effect.signatureBounded {profile} {data pos env before id next result after}
-    (h : Effect (profile := profile) data pos env before id next result after) (hs : SignatureBounded env pos.val) :
+theorem Effect.signatureBounded {data pos env before id next result after}
+    (h : Effect data pos env before id next result after) (hs : SignatureBounded env pos.val) :
     SignatureBounded result next.val := by
   have hspan := h.span
   have hm := hs.mono hspan.1
@@ -179,8 +179,8 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
 
 /-- A section update in increasing section order keeps the environment representing the
 declarations, including the merged index-space caches. -/
-theorem Effect.represents {profile} {data pos env before id next result after last}
-    (h : Effect (profile := profile) data pos env before id next result after) (hr : Represents env before)
+theorem Effect.represents {data pos env before id next result after last}
+    (h : Effect data pos env before id next result after) (hr : Represents env before)
     (hp : Phase last before) (horder : last < (sectionRank id).val) : Represents result after := by
   obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hp
   cases h with
@@ -295,8 +295,8 @@ theorem Effect.represents {profile} {data pos env before id next result after la
 
 
 /-- A run of sections keeps the environment representing the declarations. -/
-theorem Run.represents {profile} {data initial decls start initialId after afterDecls next id}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
+theorem Run.represents {data initial decls start initialId after afterDecls next id}
+    (h : Run data initial decls start initialId after afterDecls next id)
     (hr : Represents initial decls) (hp : Phase initialId.val decls) :
     Represents after afterDecls := by
   induction h with
@@ -305,8 +305,8 @@ theorem Run.represents {profile} {data initial decls start initialId after after
   | step previous horder hh he ih => exact he.represents ih (previous.phase hp) horder
 
 /-- A run of sections keeps the signature bound. -/
-theorem Run.signatureBounded {profile} {data initial decls start initialId after afterDecls next id}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
+theorem Run.signatureBounded {data initial decls start initialId after afterDecls next id}
+    (h : Run data initial decls start initialId after afterDecls next id)
     (hs : SignatureBounded initial start.val) : SignatureBounded after next.val := by
   induction h with
   | nil => exact hs

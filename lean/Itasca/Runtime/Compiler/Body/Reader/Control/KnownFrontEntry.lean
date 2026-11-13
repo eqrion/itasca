@@ -11,7 +11,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.known_fronts {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     {parents current} (fronts : ReaderKnownFronts parents current (p.parents.map Wasm2.Frames.Saved.vals))
     (child : SourceScope)

@@ -28,7 +28,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_reader {A : Type}
     (out : code.BodyState)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
-    (read : ∀ p : Wasm2.Pending data env .Wasm2 sourceLocals index {core := {st.core with pos := next}},
+    (read : ∀ p : Wasm2.Pending data env sourceLocals index {core := {st.core with pos := next}},
       p.start = st.core.pos → ∃ op a b, StatefulArguments op a b ∧
         runtime.compiler.lower.FunctionCompiler.op ops before out.core (statefulOpcode op) a b 0#u128 = .ok (.Ok (),after) ∧
         StatefulReaderPost p out.core op) :
@@ -74,7 +74,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_base {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   apply point.stateful_reader ops law embedding matched contextLocals next advance inbounds out sourceBound bodyBound
   intro p start
@@ -100,7 +100,7 @@ theorem IndexedTableReaderCompilerPointWasm2.stateful_bulk {A : Type}
     (byte : data.val[st.core.pos.val]'inbounds = 252#u8)
     (decoded : Leb128.Decoded data next subopcode afterSubopcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 252#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   apply point.stateful_reader ops law embedding matched contextLocals next advance inbounds out sourceBound bodyBound
   intro p start

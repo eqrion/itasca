@@ -18,7 +18,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed select uses the source-selected width for its instruction check. -/
 theorem reader_typed_select_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (localsMatch : compilerLocals before = C.LOCALS)
@@ -31,7 +31,7 @@ theorem reader_typed_select_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 28#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,ty,front,values,emitted,input,post,lowered,emission⟩ :=
     reader_emit_typed_select_wasm2 p ops law before after out ctx C localsMatch known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -59,7 +59,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Typed select preserves both invariants for either source reachability bit;
 only live source code emits the selected-width instruction. -/
 theorem reader_typed_select_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -72,7 +72,7 @@ theorem reader_typed_select_checked_prefix_wasm2 {jumpTables : List U32} {data e
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 28#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live

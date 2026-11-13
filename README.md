@@ -5,9 +5,9 @@
 A streaming WebAssembly validator and interpreter written in Rust and verified
 in Lean.
 
-Validation supports the WebAssembly 2.0 core profile, including streaming and
-parallel function validation. Whole-module termination, soundness, and
-completeness are proved for that profile.
+Validation supports WebAssembly Core 2.0, including streaming and parallel
+function validation. Whole-module termination, soundness, and completeness are
+proved.
 
 The execution runtime has checked compilation, invocation, instantiation, API
 invariant, resource-cause, and progress theorems for Wasm 2.0. These are
@@ -21,16 +21,14 @@ more details.
 
 ```rust
 let bytes = b"\x00asm\x01\x00\x00\x00";
-let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm2)?;
+let module = itasca::validate_module(bytes)?;
 let imports = itasca::import_types(module.env())?;
 let exports = itasca::export_types(module.env())?;
 ```
 
-The `ValidationProfile` parameter currently has one supported value:
-
-| Profile | Extensions |
-| --- | --- |
-| `Wasm2` | multi-value, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, SIMD instructions. |
+The validator supports multi-value, sign extension, saturating conversions,
+reference types, multiple tables, bulk memory, passive and declarative
+segments, and SIMD instructions.
 
 `validate_module` is internally implemented using the more powerful and complex
 `validate_streaming` API. This API supports streaming reads, discontiguous
@@ -39,7 +37,6 @@ buffers, and parallel compilation of function bodies.
 ```rust
 use itasca::{
     CodeBatch, Config, Env, Error, Region, Result, Source, StreamingVisitor, Tail,
-    ValidationProfile,
 };
 use std::vec::Vec;
 
@@ -86,7 +83,7 @@ impl<'a> StreamingVisitor<'a> for Visitor<'a> {
 let source = Input(b"\x00asm\x01\x00\x00\x00");
 let mut visitor = Visitor::default();
 let mut env = Env::new();
-itasca::validate_streaming(0, ValidationProfile::Wasm2, &source, &mut visitor, &mut env)?;
+itasca::validate_streaming(0, &source, &mut visitor, &mut env)?;
 ```
 
 ## Formal verification
@@ -96,7 +93,7 @@ The pipeline is:
 ```text
 Rust --Charon--> LLBC --Aeneas--> Lean program model
 SpecTec Wasm 2.0 source ----------> Lean declarative judgments
-Independent binary grammar ------> exact bytes and selected profile
+Independent binary grammar ------> exact bytes and Wasm 2.0 instructions
 Handwritten Lean proofs ----------> validator guarantees
 ```
 

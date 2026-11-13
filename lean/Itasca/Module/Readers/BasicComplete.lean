@@ -6,7 +6,7 @@ import Itasca.Binary.Wasm1.EncodingComplete
 
 Inversion lemmas for `At` over index, byte, repetition and vector encodings, and acceptance
 (`.complete`) of `metadata.decode_value_type` and `metadata.decode_elem_type` from independent
-encodings that the profile allows. The matching soundness specs are in `Module/Readers/Basic`.
+encodings. The matching soundness specs are in `Module/Readers/Basic`.
 -/
 
 open Aeneas Aeneas.Std
@@ -65,23 +65,21 @@ open ModuleBinary
 
 /-- `metadata.decode_value_type` accepts an independently encoded value type. -/
 theorem metadata.decode_value_type.complete (data : Slice U8) (pos : Usize)
-    (ty : wasm_types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next)
-    (profile : ValidationProfile) :
-    metadata.decode_value_type data pos profile = .ok (.Ok (ty, next)) := by
+    (ty : wasm_types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next) :
+    metadata.decode_value_type data pos = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
-  cases profile <;> cases ty <;>
+  cases ty <;>
     simp_all [metadata.decode_value_type, valueByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `metadata.decode_elem_type` accepts an independently encoded element type. -/
 theorem metadata.decode_elem_type.complete (data : Slice U8) (pos : Usize)
-    (ty : wasm_types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next)
-    (profile : ValidationProfile) :
-    metadata.decode_elem_type data pos profile = .ok (.Ok (ty, next)) := by
+    (ty : wasm_types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next) :
+    metadata.decode_elem_type data pos = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
-  cases profile <;> cases ty <;>
+  cases ty <;>
     simp_all [metadata.decode_elem_type, elemByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 

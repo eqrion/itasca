@@ -19,22 +19,22 @@ final ones, ending at position `next` after a section of rank `id`. It records b
 changes rather than calls to the extracted parser. -/
 inductive Run (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) : metadata.Env → Declarations → Usize → U8 →
-      (profile : ValidationProfile) → Prop where
-  | nil {profile} : Run (profile := profile) data initial decls start initialId initial decls start initialId
-  | custom {profile} {before beforeDecls pos last next} :
-      Run (profile := profile) data initial decls start initialId before beforeDecls pos last →
+      Prop where
+  | nil : Run data initial decls start initialId initial decls start initialId
+  | custom {before beforeDecls pos last next} :
+      Run data initial decls start initialId before beforeDecls pos last →
       ModuleBinary.At (fun (_ : Unit) => ModuleBinary.CustomEncoding) data pos () next →
-      Run (profile := profile) data initial decls start initialId before beforeDecls next last
-  | step {profile} {before beforeDecls pos last id first next after afterDecls} :
-      Run (profile := profile) data initial decls start initialId before beforeDecls pos last →
+      Run data initial decls start initialId before beforeDecls next last
+  | step {before beforeDecls pos last id first next after afterDecls} :
+      Run data initial decls start initialId before beforeDecls pos last →
       last.val < (ModuleBinary.sectionRank id).val →
       ModuleBinary.SectionHeader data pos id first next →
-      Effect (profile := profile) data first before beforeDecls id next after afterDecls →
-      Run (profile := profile) data initial decls start initialId after afterDecls next (ModuleBinary.sectionRank id)
+      Effect data first before beforeDecls id next after afterDecls →
+      Run data initial decls start initialId after afterDecls next (ModuleBinary.sectionRank id)
 
 /-- A run keeps the declarations in phase, ending at the last section's rank. -/
-theorem Run.phase {profile} {data initial decls start initialId after afterDecls next id}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
+theorem Run.phase {data initial decls start initialId after afterDecls next id}
+    (h : Run data initial decls start initialId after afterDecls next id)
     (hp : Phase initialId.val decls) : Phase id.val afterDecls := by
   induction h with
   | nil => exact hp
@@ -42,8 +42,8 @@ theorem Run.phase {profile} {data initial decls start initialId after afterDecls
   | step _ horder _ he ih => exact he.phase ih horder
 
 /-- A run advances the position within the input. -/
-theorem Run.span {profile} {data initial decls start initialId after afterDecls next id}
-    (h : Run (profile := profile) data initial decls start initialId after afterDecls next id)
+theorem Run.span {data initial decls start initialId after afterDecls next id}
+    (h : Run data initial decls start initialId after afterDecls next id)
     (hstart : start.val ≤ data.length) : start.val ≤ next.val ∧ next.val ≤ data.length := by
   induction h with
   | nil => exact ⟨le_rfl, hstart⟩

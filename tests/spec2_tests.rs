@@ -58,7 +58,7 @@ fn check_module(
         path.display()
     );
     if check_itasca {
-        let result = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm2);
+        let result = itasca::validate_module(&bytes);
         assert_eq!(
             result.is_ok(),
             valid,

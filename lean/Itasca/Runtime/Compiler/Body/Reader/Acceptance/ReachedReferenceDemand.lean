@@ -22,11 +22,11 @@ theorem reference_reader_demand {A R : Type}
     (action : R → Action) (before after : List Observation) (out : code.BodyState)
     (reference : CoreVisitor.run read (fun log state value => invoke recorder log (.op state (action value))) before =
       .ok (.Ok (),out.core,after))
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (profile : ValidationProfile)
-    (tail : code.body_loop_loop recorder data env ctx index profile after out = .ok (.Ok (),final)) :
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (tail : code.body_loop_loop recorder data env ctx index after out = .ok (.Ok (),final)) :
     CallbackDemand compiler out.core bound := by
   obtain ⟨value,_,called⟩ := CoreVisitor.run.accepted _ _ _ _ _ reference
-  have vectors := source_callback_demand before after final out.core (action value) (.Ok ()) out data env ctx index profile
+  have vectors := source_callback_demand before after final out.core (action value) (.Ok ()) out data env ctx index
     (.Ok ()) called tail
   exact room.demand budget stable codeBudget sources cursor remaining out.core vectors.1
 

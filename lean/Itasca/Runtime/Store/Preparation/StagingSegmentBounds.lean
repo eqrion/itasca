@@ -19,7 +19,7 @@ theorem staging_segment_bounds {M P F A : Type}
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Compiler.InitializerMappings inst.module)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (objectBound : objectCount store ≤ Usize.max)

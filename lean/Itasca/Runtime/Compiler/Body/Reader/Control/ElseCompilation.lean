@@ -22,7 +22,7 @@ theorem StructuredReaderCompilerStateWasm2.begin_else {jumpTables : List U32} {A
     (out : code.BodyState)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_ELSE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_ELSE before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_ELSE before = .ok (.Ok (), out, after)) :
     ∃ condition noEntry, StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.begin_else (Wasm2.blockType savedCurrent.bt) condition before.function.code.val.length noEntry before.reachable)
       savedParents savedCurrent.nextElse := by
@@ -58,7 +58,7 @@ theorem StructuredReaderCompilerStateWasm2.else_ {jumpTables : List U32} {A : Ty
     (out : code.BodyState)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_ELSE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_ELSE before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_ELSE before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨condition, noEntry, nextState⟩ := state.begin_else ops law initialLocals next advance inbounds out byte accepted
   exact nextState.point

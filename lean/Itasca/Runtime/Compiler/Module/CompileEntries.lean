@@ -17,7 +17,7 @@ def submitPack {A : Type} (scheduler : runtime.compiler.CompileScheduler A) (bat
     (result : core.result.Result Unit error.Error) :=
   (scheduler.signatures, scheduler.func_param_slots, scheduler.completed, scheduler.functions,
     scheduler.tail, scheduler.code_start, scheduler.budget, batch.module_id, batch.batch_id,
-    batch.profile, batch.env, batch.code, batch.code_offset, batch.first_func, batch.num_funcs,
+    batch.env, batch.code, batch.code_offset, batch.first_func, batch.num_funcs,
     batch.num_dispatched, batch.dispatch_end, batch.num_validated, batch.validated_end, batch.error, result)
 
 theorem submit_pack_injective {A : Type} (left right : runtime.compiler.CompileScheduler A)
@@ -89,7 +89,7 @@ theorem CompileEntries.completed {A : Type} {allocator : runtime.platform.Alloc 
   | nil => rfl
   | next entry rest ih =>
     obtain ⟨w⟩ := compile_entry_accepted _ _ _ _ _ entry
-    exact ih.trans w.metadata.2.2.2.2.1
+    exact ih.trans w.metadata.2.2.2.1
 
 /-- Fold retained compiler certificates through the exact successful scheduler
 calls. The step obligation receives the concrete entry witness. -/

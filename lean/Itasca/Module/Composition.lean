@@ -27,12 +27,12 @@ theorem padded_prepend_custom {α : Type} {id : U8} {R : α → List U8 → Prop
 
 /-- The environment prefix, code section and tail encodings compose into one module encoding of
 `before ++ codeBytes ++ tailBytes`. -/
-theorem encoding {profile : ValidationProfile} {codeRel : Code → List U8 → Prop} {decls : ModuleEnv.Declarations} {codes segments before codeBytes tailBytes}
-    (henv : ModuleEnv.PrefixEncoding decls before profile)
+theorem encoding {codeRel : Code → List U8 → Prop} {decls : ModuleEnv.Declarations} {codes segments before codeBytes tailBytes}
+    (henv : ModuleEnv.PrefixEncoding decls before)
     (hcode : PaddedEncoding 10#u8 (VecEncoding codeRel) [] codes codeBytes)
-    (htail : ModuleTail.Encoding segments tailBytes profile)
+    (htail : ModuleTail.Encoding segments tailBytes)
     (hcount : DataCountValid (decls.module codes segments)) :
-    ModuleEncodingWith codeRel (decls.module codes segments) (before ++ codeBytes ++ tailBytes) profile := by
+    ModuleEncodingWith codeRel (decls.module codes segments) (before ++ codeBytes ++ tailBytes) := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start,
     elements, dataCount, customs, htypes, himports, hfunctions, htables, hmemories, hglobals,
     hexports, hstart, helements, hdataCount, hcustoms, he⟩ := henv

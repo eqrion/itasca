@@ -16,7 +16,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 theorem reader_global_get_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
@@ -40,7 +40,7 @@ theorem reader_global_get_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_global_set_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_SET before =
@@ -74,7 +74,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -88,7 +88,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType),
       env.global_types.val[index.val]? = some ty ∧
@@ -121,7 +121,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
   exact ⟨ordinary, sources, cursor, index, ty, values, found, post, emitted,
     ⟨lower, SourceStack.of_map (types ++ [ty.valtype]) postConcrete (by simp)⟩, emission⟩
 theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -135,7 +135,7 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType) (front : List valtype),

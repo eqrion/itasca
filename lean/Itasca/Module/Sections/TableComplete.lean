@@ -18,13 +18,13 @@ open ModuleBinary ModuleSections
 
 /-- The table loop accepts the remaining valid table types of a repetition span and adds them. -/
 theorem metadata.decode_table_section_loop.complete
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32) (pos : Usize) (i : U32)
     (added : List wasm_types.TableType) (next : Usize)
     (hb : At (Rep TableTypeEncoding) data pos added next)
     (hc : i.val + added.length = count.val)
     (hv : ∀ ty ∈ added, ModuleBinary.LimitsValid ty.limits limits.MAX_TABLE_ELEMS)
     (hbound : env.table_types.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_table_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_table_section_loop data env count pos i = .ok (.Ok next, result) ∧
       TablesAdded env result added := by
   induction added generalizing env pos i with
   | nil =>
@@ -37,13 +37,12 @@ theorem metadata.decode_table_section_loop.complete
   | cons ty added ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hread := metadata.decode_table_type.complete data pos ty middle hfirst (hv ty (by simp)) profile
+    have hread := metadata.decode_table_type.complete data pos ty middle hfirst (hv ty (by simp))
     have hprogress := hfirst.tableType_progress
     have hnext := hfirst.span.2
     obtain ⟨updatedTypes, hpush, htypes⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.table_types ty (by scalar_tac))
     have hlen : updatedTypes.val.length = env.table_types.val.length + 1 := by simp [htypes]
-    have hcheck := metadata.check_table_count.complete {env with table_types := updatedTypes} profile
     obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
       (U32.add_spec (x := i) (y := 1#u32) (by scalar_tac))
     let updated := {env with table_types := updatedTypes}
@@ -55,22 +54,22 @@ theorem metadata.decode_table_section_loop.complete
     · unfold metadata.decode_table_section_loop at hloop ⊢
       rw [loop]
       simpa [metadata.decode_table_section_loop.body, hmore, hread,
-        hpush, hcheck, hj, core.result.Result.Insts.CoreOpsTry.branch] using hloop
+        hpush, hj, core.result.Result.Insts.CoreOpsTry.branch] using hloop
     · refine ⟨?_, ?_⟩
       · rw [hadded.1]
       · simpa [updated, htypes, List.append_assoc] using hadded.2
 
 /-- `metadata.decode_table_section` accepts a vector span of valid table types and adds them. -/
 theorem metadata.decode_table_section.complete (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) (added : List wasm_types.TableType) (next : Usize)
+    (env : metadata.Env) (added : List wasm_types.TableType) (next : Usize)
     (hb : At (VecEncoding TableTypeEncoding) data pos added next)
     (hv : ∀ ty ∈ added, ModuleBinary.LimitsValid ty.limits limits.MAX_TABLE_ELEMS)
     (hbound : env.table_types.val.length ≤ pos.val) :
-    ∃ result, metadata.decode_table_section data pos env profile = .ok (.Ok next, result) ∧
+    ∃ result, metadata.decode_table_section data pos env = .ok (.Ok next, result) ∧
       TablesAdded env result added := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, hp⟩ := metadata.decode_table_section_loop.complete
-    data env profile count middle 0#u32 added next hentries (by simpa using hc.symm) hv
+    data env count middle 0#u32 added next hentries (by simpa using hc.symm) hv
     (by have := hcount.span; omega)
   refine ⟨result, ?_, hp⟩
   simp [metadata.decode_table_section, reader.read_u32_leb.complete data pos count middle hcount,

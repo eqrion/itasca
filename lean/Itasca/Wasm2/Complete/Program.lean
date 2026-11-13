@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
-def Program (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+def Program (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (tokens : List Token) (ops : List instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (input output : List valtype),
@@ -26,12 +26,12 @@ def Program (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops →
-    ∃ s, Execution data env profile ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
       Bounds data s
 
 /-- The normalized head instruction has a primitive generated typing rule
 and a preserved prefix on its operand stack. -/
-def AtomProgram (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+def AtomProgram (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (tokens : List Token) (op : instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
@@ -40,24 +40,24 @@ def AtomProgram (data : Slice U8) (env : metadata.Env) (profile : ValidationProf
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
-    ∃ s, Execution data env profile ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
 /-- `Program` holds for every emitted token list shorter than `n`. -/
-def SmallerPrograms (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+def SmallerPrograms (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (n : Nat) : Prop :=
-  ∀ tokens ops, tokens.length < n → Emits tokens ops → Program data env profile ctx index tokens ops
+  ∀ tokens ops, tokens.length < n → Emits tokens ops → Program data env ctx index tokens ops
 
 /-- Left-to-right execution follows a declarative derivation even when that
 derivation uses arbitrary sequence, framing, and subsumption rules. The atom
 obligation recursively receives only strictly smaller nested bodies. -/
-theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem program_of_atoms (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32)
     (hatom : ∀ tokens op, Atom tokens op →
-      SmallerPrograms data env profile ctx index tokens.length →
-      AtomProgram data env profile ctx index tokens op)
+      SmallerPrograms data env ctx index tokens.length →
+      AtomProgram data env ctx index tokens op)
     (tokens : List Token) (ops : List instr) (hemits : Emits tokens ops) :
-    Program data env profile ctx index tokens ops := by
+    Program data env ctx index tokens ops := by
   generalize hn : tokens.length = n
   induction n using Nat.strong_induction_on generalizing tokens ops with
   | h n ih =>
@@ -82,7 +82,7 @@ theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : Valid
       obtain ⟨middle, hfirstbytes, hrestbytes⟩ := hbytes.split
       obtain ⟨front, ins, outs, hop, hinput, htail⟩ :=
         DeclarativeComplete.head_realizes hreal htyped
-      have hsmaller : SmallerPrograms data env profile ctx index first.length := by
+      have hsmaller : SmallerPrograms data env ctx index first.length := by
         intro ts es hlen he
         exact ih ts.length (by omega) ts es he rfl
       obtain ⟨mid, hrun, hpos, hout, hbound⟩ :=

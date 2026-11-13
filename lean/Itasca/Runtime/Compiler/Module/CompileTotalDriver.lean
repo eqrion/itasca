@@ -12,16 +12,16 @@ open runtime.compiler
 /-- Common driver assembly from the reached streaming phase. This internal
 adapter derives source initializer space and all result/error bookkeeping. -/
 theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
+    (law : Platform.AllocCorrect ops) (bytes : Slice U8)
     (limits : CompileLimits)
     (streaming : ∀ (codeStart codeEnd : Usize) (storage : metadata.Env),
       codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
       stream.validate_streaming CompileSource.Insts.ItascaStreamSource
-        (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 profile
+        (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
         {bytes,code_start := codeStart,code_end := codeEnd}
         (initialScheduler A limits codeStart) storage ⦃ out =>
           out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄) :
-    runtime.compiler.compile_with ops bytes profile limits ⦃ _ => True ⦄ := by
+    runtime.compiler.compile_with ops bytes limits ⦃ _ => True ⦄ := by
   unfold runtime.compiler.compile_with
   dsimp only
   split
@@ -42,7 +42,7 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
       | none => simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | some tail =>
-        obtain ⟨raw,encoding,matched,_,bounded⟩ := compiler_stream_source ops law bytes profile limits
+        obtain ⟨raw,encoding,matched,_,bounded⟩ := compiler_stream_source ops law bytes limits
           codeStart codeEnd storage env scheduler tail bounds tailReady validated
         simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
         obtain ⟨⟨collected,budget,pending⟩,collect,order⟩ := WP.spec_imp_exists
@@ -57,7 +57,7 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
             simp only [List.length_map] at eq
             exact eq.symm.trans held.functions
           obtain ⟨⟨result,executable,finalBudget⟩,lowered,_⟩ := WP.spec_imp_exists
-            (initializer_lower_source_total ops law env tail profile functions budget encoding matched bounded count)
+            (initializer_lower_source_total ops law env tail functions budget encoding matched bounded count)
           simp only [bind_ok]
           simp only [uninitializedModule] at lowered
           rw [lowered]

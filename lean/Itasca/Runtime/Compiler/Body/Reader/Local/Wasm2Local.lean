@@ -11,7 +11,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_local_get_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 32#u8)
@@ -35,7 +35,7 @@ theorem reader_local_get_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_local_set_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 33#u8)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_LOCAL_SET before =
@@ -58,7 +58,7 @@ theorem reader_local_set_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_local_tee_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 34#u8)

@@ -32,11 +32,11 @@ theorem IndexedTableReaderCompilerPointWasm2.control_available_from_source {A : 
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (kind : ControlReaderKind) (byte : data.val[st.core.pos.val] = kind.opcode)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by
@@ -51,11 +51,11 @@ theorem IndexedTableReaderCompilerPointWasm2.control_available_from_source {A : 
   rw [byte] at reference ⊢
   have liftEffect (allowance : ChargeCounter → Nat) (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter)
       (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2 kind.opcode compiler
+        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index kind.opcode compiler
         ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
       code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2 kind.opcode compiler
+        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index kind.opcode compiler
         ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget
             (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by

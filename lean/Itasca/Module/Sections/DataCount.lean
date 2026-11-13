@@ -69,33 +69,30 @@ theorem metadata.section_order.complete (id : U8) (hlo : 1 ≤ id.val) (hhi : id
 /-- An accepted `metadata.decode_data_count` reads a `u32` count, sets only `data_count`, and
 happens under Wasm 2.0. -/
 @[step]
-theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (profile : ValidationProfile) :
-    metadata.decode_data_count data pos env profile ⦃ result => match result.1 with
+theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : metadata.Env) :
+    metadata.decode_data_count data pos env ⦃ result => match result.1 with
       | .Ok next => ∃ count,
           ModuleBinary.At ModuleBinary.StartEncoding data pos (some count) next ∧
           result.2 = { env with data_count := some count }
       | .Err _ => True ⦄ := by
-  cases profile with
-  | Wasm2 =>
-    obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
-    cases r with
-    | Err e =>
-      simp [metadata.decode_data_count, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        error.Error.Insts.CoreConvertFromOpError.from]
-    | Ok pair =>
-      obtain ⟨count, next⟩ := pair
-      simp only [metadata.decode_data_count, hr, bind_ok,
-        core.result.Result.Insts.CoreOpsTry.branch]
-      obtain ⟨bytes, hs, hl, hb, he⟩ := hd
-      exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl⟩
+  obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
+  cases r with
+  | Err e =>
+    simp [metadata.decode_data_count, hr, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      error.Error.Insts.CoreConvertFromOpError.from]
+  | Ok pair =>
+    obtain ⟨count, next⟩ := pair
+    simp only [metadata.decode_data_count, hr, bind_ok,
+      core.result.Result.Insts.CoreOpsTry.branch]
+    obtain ⟨bytes, hs, hl, hb, he⟩ := hd
+    exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl⟩
 
 /-- Under Wasm 2.0, `metadata.decode_data_count` accepts a count span and sets `data_count`. -/
 theorem metadata.decode_data_count.complete (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (count : U32) (next : Usize)
     (hb : ModuleBinary.At ModuleBinary.StartEncoding data pos (some count) next) :
-    metadata.decode_data_count data pos env .Wasm2 = .ok (.Ok next, {env with data_count := some count}) := by
+    metadata.decode_data_count data pos env = .ok (.Ok next, {env with data_count := some count}) := by
   obtain ⟨bytes, ⟨idx, hi, he⟩, hs⟩ := hb
   have hidx : idx = count := Option.some.inj hi.symm
   subst idx

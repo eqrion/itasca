@@ -52,7 +52,7 @@ private theorem ascii (b : U8) (hb : b.val ≤ 127) : NameEncoding [b] [1#u8,b] 
   ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, .cons (.one _ hb) .nil⟩
 
 /-- `layout` encodes `declarations`. -/
-theorem layout_valid : Layout.Valid 9 declarations layout .Wasm2 := by
+theorem layout_valid : Layout.Valid 9 declarations layout := by
   constructor
   · exact padded _ 4#u8 _ (one ⟨[0#u8], [0#u8],
       ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
@@ -77,7 +77,7 @@ private theorem functions_context {last decls env} (h : Ready raw last decls env
     functionType, EnvTranslation.funcType] using (h.funcs_context hn).symm
 
 /-- The declarations of `raw` satisfy the per-section validation requirements. -/
-theorem requirements : Requirements raw .Wasm2 := by
+theorem requirements : Requirements raw := by
   intro id decls env hlo hhi hr
   interval_cases id
   · simp [SectionValid, Profile.FuncTypeAdmissible, raw, declarations, Declarations.module, functionType]
@@ -117,7 +117,7 @@ theorem requirements : Requirements raw .Wasm2 := by
   · trivial
 
 /-- `codeBytes` encodes the single code entry. -/
-theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeEncodingWithinLimits .Wasm2)) [entry] codeBytes := by
+theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeEncodingWithinLimits )) [entry] codeBytes := by
   refine ⟨[8#u8], [1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8], leb 8#u8, one ?_, rfl⟩
   refine ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [1#u8,1#u8,0x7F#u8],
     [0x10#u8,0#u8,0x0B#u8], leb 6#u8, one ⟨[1#u8], leb 1#u8, rfl⟩, ?_, by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
@@ -130,7 +130,7 @@ theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeE
 
 /-- The code entry has the type of function 1: `call 0` typechecks against the imported
 function. -/
-theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry .Wasm2 := by
+theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry := by
   have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
   refine ⟨by simp [htypes], ?_, ?_⟩
   · let C := CodeEntry.bodyContext env [] entry.declared []
@@ -149,13 +149,13 @@ theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed 
       DeclaredReferences.instructionIndices]
 
 /-- The first 37 bytes of `input` encode the header and `declarations`. -/
-theorem prefix_encoding : At (fun ds bs => PrefixEncoding ds bs .Wasm2) input 0#usize declarations 37#usize := by
+theorem prefix_encoding : At (fun ds bs => PrefixEncoding ds bs ) input 0#usize declarations 37#usize := by
   refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
   constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
     magicVersion, layout, Layout.bytes, codeBytes]
 
 /-- The bytes from offset 37 to 47 are the code section. -/
-theorem code_at : At (SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeEncodingWithinLimits .Wasm2)))
+theorem code_at : At (SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeEncodingWithinLimits )))
     input 37#usize [entry] 47#usize := by
   refine ⟨codeBytes, code_encoding, ?_⟩
   constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
@@ -163,22 +163,22 @@ theorem code_at : At (SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeEnc
 
 /-- `metadata.validate_env` on `input` consumes exactly the 37 bytes before the code section and
 produces an environment with one imported and one defined function. -/
-theorem environment : ∃ env decls, metadata.validate_env input .Wasm2 = .ok (.Ok (env, 37#usize)) ∧
+theorem environment : ∃ env decls, metadata.validate_env input = .ok (.Ok (env, 37#usize)) ∧
     Ready raw 10 decls env := by
   obtain ⟨first, hh, _⟩ := code_at.section_split
-  exact metadata.validate_env.profile_complete input raw .Wasm2 declarations 37#usize prefix_encoding rfl
+  exact metadata.validate_env.profile_complete input raw declarations 37#usize prefix_encoding rfl
     (.inr ⟨10#u8, first, 47#usize, hh, by decide⟩) requirements
 
 /-- `metadata.validate_module` accepts `input` under Wasm 2.0, checking the local declarations, a
 `call` of the imported function, the export and the start declaration. -/
-theorem functions_accepted : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.Ok decoded) := by
+theorem functions_accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) := by
   let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
-  have ht : At (fun ds bs => ModuleTail.Encoding ds bs .Wasm2) input 47#usize raw.data (Slice.len input) := by
+  have ht : At (fun ds bs => ModuleTail.Encoding ds bs ) input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, codeBytes]
   obtain ⟨first, hh, _⟩ := code_at.section_split
-  have hl : ModuleLayout.Layout input raw declarations 37#usize 47#usize .Wasm2 :=
+  have hl : ModuleLayout.Layout input raw declarations 37#usize 47#usize :=
     ⟨rfl, prefix_encoding, .inl code_at, ht, .inr ⟨10#u8, first, 47#usize, hh, by decide⟩⟩
   obtain ⟨env, ha⟩ := StreamSliceExamplesSupport.accepted_layout input raw declarations
     37#usize 47#usize hl (by
@@ -193,9 +193,9 @@ theorem functions_accepted : ∃ decoded, metadata.validate_module input .Wasm2 
   exact ⟨⟨env, tail⟩, ha⟩
 
 /-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`. -/
-theorem functions_validated : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.Ok decoded) ∧
-    ModuleSound.Validated input decoded .Wasm2 := by
+theorem functions_validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
+    ModuleSound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := functions_accepted
-  exact ⟨decoded, ha, metadata.validate_module.profile_sound _ _ .Wasm2 ha⟩
+  exact ⟨decoded, ha, metadata.validate_module.sound _ _ ha⟩
 
 end Itasca.Examples.ModuleFunctions

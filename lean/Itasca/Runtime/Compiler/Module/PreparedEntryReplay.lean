@@ -9,14 +9,14 @@ set_option maxRecDepth 4096
 visitor-bearing calls. This requires only those reached calls, rather than a
 visitor that accepts arbitrary contexts or instruction traces. -/
 theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
-    {data env index start profile} (w : CodeEntry.Prepared data env index start profile)
+    {data env index start} (w : CodeEntry.Prepared data env index start)
     (before started after : V)
     (begun : visitor.on_function_start before w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started))
-    (body : code.validate_body_with visitor w.body env w.ctx w.typeIdx profile started = .ok (.Ok (),after)) :
-    metadata.validate_code_entry_with visitor data start env index profile before
+    (body : code.validate_body_with visitor w.body env w.ctx w.typeIdx started = .ok (.Ok (),after)) :
+    metadata.validate_code_entry_with visitor data start env index before
       ⦃ result => result = (.Ok w.finish,after) ⦄ := by
   have read := reader.read_u32_leb.complete data start w.size w.content w.header
-  obtain ⟨declared,decoded,declaredValues⟩ := metadata.decode_locals.complete data w.content profile w.groups w.bodyStart
+  obtain ⟨declared,decoded,declaredValues⟩ := metadata.decode_locals.complete data w.content w.groups w.bodyStart
     w.locals_bytes w.locals_bound
   have indexBound : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by
     have bound := w.index_lt

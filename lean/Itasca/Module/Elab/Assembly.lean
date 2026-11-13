@@ -67,11 +67,11 @@ theorem initializerContext_eq {env tables memories} (hc : ModuleEnv.Cache env ta
 has `Module_ok` for its elaborated module. All section judgments are assembled in one coherent
 module context, and name well-formedness comes from the independent byte grammar. -/
 theorem typed {env : metadata.Env} {tables memories codes segments xts}
-    (hc : ModuleEnv.Cache env tables memories) {profile : ValidationProfile} (hv : ModuleEnv.Valid env profile)
+    (hc : ModuleEnv.Cache env tables memories) (hv : ModuleEnv.Valid env)
     (hiNames : ∀ entry ∈ env.imports.val,
       wf_name (ModuleBinary.nameOfBytes entry.module.val) ∧ wf_name (ModuleBinary.nameOfBytes entry.name.val))
     (heNames : ∀ entry ∈ env.exports.val, wf_name (ModuleBinary.nameOfBytes entry.name.val))
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
     (hsegments : ∀ segment ∈ segments, ModuleData.Valid env segment)
     (hdataCount : ∀ count, env.data_count = some count → count.val = segments.length)
     (hxts : List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val xts) :

@@ -23,10 +23,10 @@ theorem reader_table_publication_wasm2 {A : Type} (ops : runtime.platform.Alloc 
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (forward : before.next_source.val ≤ final.core.pos.val)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before = .ok (.Ok (),final,after)) :
+      st data env before = .ok (.Ok (),final,after)) :
     SourceCoordinates after ∧ ControlMapPublication after := by
   obtain ⟨count,first,selector,popped,depths,fallback,types,last,readState,budget,buffer,_,_,_,_,_,_,_,callback⟩ :=
-    compiler_read_br_table ops law before after st final data env _ accepted
+    compiler_read_br_table ops law before after st final data env accepted
   exact ⟨compiler_br_table_source_coordinates ops law {before with budget,table_depths := buffer} after final.core fallback
       types (by simpa only [SourceCoordinates] using coordinates) inside forward callback,
     compiler_br_table_map_publication ops law {before with budget,table_depths := buffer} after final.core fallback

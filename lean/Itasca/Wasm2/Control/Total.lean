@@ -2,7 +2,7 @@ import Itasca.Wasm2.Control.Frame
 import Itasca.Wasm2.TableAdapters
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Handler.EnvReaders
-import Itasca.Wasm2.ProfileFilters
+import Itasca.Wasm2.SignatureEquality
 
 /-!
 # Totality of the control handlers
@@ -79,9 +79,9 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
 parameters before fixing the frame's base preserves nested frame bounds. -/
 theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (kind : code.LabelKind)
+    (env : metadata.Env) (kind : code.LabelKind)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
-    code.enter_info st data env profile kind ⦃ r =>
+    code.enter_info st data env kind ⦃ r =>
       Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
       r.2.blocks.val.length ≤ st.blocks.val.length + 1 ∧
       st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
@@ -142,8 +142,8 @@ theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
 
 @[step]
 theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (hs : Control.Shape st.core) :
-    code.call_indirect_info st data env profile ⦃ r =>
+    (env : metadata.Env) (hs : Control.Shape st.core) :
+    code.call_indirect_info st data env ⦃ r =>
       Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   unfold code.call_indirect_info

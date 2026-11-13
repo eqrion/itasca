@@ -1,5 +1,5 @@
 //! Literal scalar extension encodings keep feature gates and LEB behavior visible.
-use itasca::{validate_module, ValidationProfile};
+use itasca::validate_module;
 
 fn module(input: u8, output: u8, operation: &[u8]) -> Vec<u8> {
     let mut bytes = vec![
@@ -41,9 +41,9 @@ fn check(input: u8, output: u8, operation: &[u8]) {
     wasmparser::Validator::new_with_features(wasmparser::WasmFeatures::WASM2)
         .validate_all(&bytes)
         .unwrap();
-    assert!(validate_module(&bytes, ValidationProfile::Wasm2).is_ok());
+    assert!(validate_module(&bytes).is_ok());
     let wrong = if input == 127 { 126 } else { 127 };
-    assert!(validate_module(&module(wrong, output, operation), ValidationProfile::Wasm2).is_err());
+    assert!(validate_module(&module(wrong, output, operation)).is_err());
 }
 
 #[test]
@@ -80,6 +80,6 @@ fn prefixed_opcode_rejects_malformed_and_reserved_subopcodes() {
                 .validate_all(&bytes)
                 .is_err()
         );
-        assert!(validate_module(&bytes, ValidationProfile::Wasm2).is_err());
+        assert!(validate_module(&bytes).is_err());
     }
 }

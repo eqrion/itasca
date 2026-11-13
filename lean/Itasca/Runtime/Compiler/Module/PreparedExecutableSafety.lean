@@ -11,8 +11,8 @@ theorem prepared_executable_safety_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start}
+    (w : CodeEntry.Prepared data env index start)
     (small : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signaturesMatch : SignatureSequence signatures.val env.types.val)
     (slotsMatch : functionSlots.val.map (fun word => word.val) =

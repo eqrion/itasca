@@ -49,10 +49,10 @@ structure Cache (env : metadata.Env) (tables : List wasm_types.TableType) (memor
   tables : env.table_types.val = importedTables env.imports.val ++ tables
   memories : env.mem_types.val = importedMems env.imports.val ++ memories
 
-/-- The semantic checks that are stored in, or derivable from, the environment under `profile`.
+/-- The semantic checks that are stored in, or derivable from, the environment in the module.
 Byte-format evidence is tracked separately. -/
-structure Valid (env : metadata.Env) (profile : ValidationProfile) : Prop where
-  types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
+structure Valid (env : metadata.Env) : Prop where
+  types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
   memoryCount : env.mem_types.val.length ≤ 1
@@ -110,11 +110,11 @@ theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
 
 /-- In a valid cached environment, the stored and cached signatures also respect the completeness
 limits. -/
-theorem Valid.environmentWithinLimits {profile env tables memories} (hv : Valid env profile)
+theorem Valid.environmentWithinLimits {env tables memories} (hv : Valid env)
     (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits env := by
   have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits ft := by
     intro ft hm
-    exact (Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)
+    exact (Profile.funcTypeAdmissible_iff ft).mp (hv.types ft hm)
   exact ⟨ht, hc.func_property ht⟩
 
 theorem Cache.import_indices {env tables memories} (h : Cache env tables memories) :
@@ -149,7 +149,7 @@ theorem Cache.imports_resolve {env tables memories} (h : Cache env tables memori
     | Memory mt => exact ⟨.Memory mt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
     | Global gt => exact ⟨.Global gt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
 
-theorem Valid.exports_resolve {profile env} (h : Valid env profile) :
+theorem Valid.exports_resolve {env} (h : Valid env) :
     ∃ xts, List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val xts := by
   have he := h.exports
   generalize env.exports.val = entries at he ⊢
@@ -167,7 +167,7 @@ namespace Itasca
 /-- The empty environment is cached, valid and bounded by `0`. -/
 @[step]
 theorem metadata.Env.new.spec : metadata.Env.new ⦃ env =>
-    ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env .Wasm2 ∧ ModuleEnv.Bounded env 0 ⦄ := by
+    ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env ∧ ModuleEnv.Bounded env 0 ⦄ := by
   unfold metadata.Env.new
   simp only [WP.spec_ok]
   constructor

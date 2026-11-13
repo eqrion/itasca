@@ -11,10 +11,10 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_return_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_profile visitor st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
     visitor.on_return before out.core = .ok (.Ok (), after) ∧
       Wasm2.returnStep st env index = .ok (.Ok (), out) ∧
       out.core.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ∧

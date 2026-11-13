@@ -32,13 +32,13 @@ theorem simd_carry_success {A : Type} (value result : A) (st out : code.OpIterSt
 /-- Accepted SIMD lane readers retain the literal lane, its bound, the exact
 callback, and the source zipper after the fixed operand check. -/
 theorem reader_simd_lane_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.LaneOperation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Wasm2.Simd.laneMeaning subopcode.val = some op)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ lane position, lane.val < op.count ∧ Wasm1.BytesAt data next [lane] position ∧
       visitor.on_simd_lane before out.core subopcode lane = .ok (.Ok (),after) ∧

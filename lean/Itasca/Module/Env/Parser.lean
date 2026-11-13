@@ -14,24 +14,24 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleEnv
 
-/-- Postcondition of the section loop for `profile`. An accepted result comes with a `Run` from the
+/-- Postcondition of the section loop for the module. An accepted result comes with a `Run` from the
 initial state and a `Bounded` environment. -/
-def LoopPostWith (profile : ValidationProfile) (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
+def LoopPostWith (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) :
     core.result.Result (metadata.Env × Usize) error.Error → Prop
   | .Err _ => True
-  | .Ok (env, next) => ∃ after last, Run (profile := profile) data initial decls start initialId env after next last ∧
+  | .Ok (env, next) => ∃ after last, Run data initial decls start initialId env after next last ∧
       Bounded env next.val
 
-/-- Postcondition of `metadata.validate_env` for `profile`. An accepted result comes with a fresh
+/-- Postcondition of `metadata.validate_env` for the module. An accepted result comes with a fresh
 environment, the module header bytes, a `Run` of sections from the header to the returned
 position, and a `Bounded` environment. -/
-def PostWith (profile : ValidationProfile) (data : Slice U8) : core.result.Result (metadata.Env × Usize) error.Error → Prop
+def PostWith (data : Slice U8) : core.result.Result (metadata.Env × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ initial start decls last,
       metadata.Env.new = .ok initial ∧
       Wasm1.BytesAt data 0#usize ModuleBinary.magicVersion start ∧
-      Run (profile := profile) data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
+      Run data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
 
 end Itasca.ModuleEnv
 
@@ -42,14 +42,14 @@ open ModuleBinary ModuleEnv
 /-- The section loop either rejects or returns the ordered section history. Custom-section hooks
 may reject, and they are only required to terminate. -/
 theorem metadata.validate_env_with_loop.profile_spec {V : Type} (visitor : metadata.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (profile : ValidationProfile) (v : V)
+    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V)
     (env : metadata.Env) (decls : Declarations) (start : Usize) (initialId : U8)
     (hstart : start.val ≤ data.length) (hbound : Bounded env start.val) :
-    metadata.validate_env_with_loop visitor data profile v env start initialId ⦃ r =>
-      LoopPostWith profile data env decls start initialId r.1 ⦄ := by
+    metadata.validate_env_with_loop visitor data v env start initialId ⦃ r =>
+      LoopPostWith data env decls start initialId r.1 ⦄ := by
   unfold metadata.validate_env_with_loop
   apply loop.spec_decr_nat (fun s => data.length - s.2.2.1.val)
-    (fun s => ∃ currentDecls, Run (profile := profile) data env decls start initialId s.2.1 currentDecls s.2.2.1 s.2.2.2 ∧
+    (fun s => ∃ currentDecls, Run data env decls start initialId s.2.1 currentDecls s.2.2.1 s.2.2.2 ∧
       Bounded s.2.1 s.2.2.1.val)
   · rintro ⟨state, current, pos, lastId⟩ ⟨currentDecls, hrun, hbound⟩
     dsimp only at hrun hbound
@@ -102,7 +102,7 @@ theorem metadata.validate_env_with_loop.profile_spec {V : Type} (visitor : metad
                 · rename_i horder
                   have horder' : lastId.val < (sectionRank id).val := by scalar_tac
                   obtain ⟨⟨r, updated⟩, hread, hp⟩ := WP.spec_imp_exists
-                    (metadata.decode_env_section.profile_spec data first id current currentDecls profile (hbound.mono (by omega)))
+                    (metadata.decode_env_section.profile_spec data first id current currentDecls (hbound.mono (by omega)))
                   simp only [hread, bind_ok]
                   cases r with
                   | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
@@ -120,8 +120,8 @@ theorem metadata.validate_env_with_loop.profile_spec {V : Type} (visitor : metad
 /-- `metadata.validate_env_with` reads the header, starts from the empty environment and runs the
 section loop, so its result satisfies `PostWith`. -/
 theorem metadata.validate_env_with.profile_spec {V : Type} (visitor : metadata.ModuleVisitor V)
-    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (profile : ValidationProfile) (v : V) :
-    metadata.validate_env_with visitor data profile v ⦃ r => ModuleEnv.PostWith profile data r.1 ⦄ := by
+    (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (v : V) :
+    metadata.validate_env_with visitor data v ⦃ r => ModuleEnv.PostWith data r.1 ⦄ := by
   obtain ⟨initial, hi, _, _, hb⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (metadata.read_header.spec data)
   cases r with
@@ -129,7 +129,7 @@ theorem metadata.validate_env_with.profile_spec {V : Type} (visitor : metadata.M
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, ModuleEnv.PostWith]
   | Ok start =>
     obtain ⟨⟨r, finalVisitor⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.validate_env_with_loop.profile_spec visitor htotal data profile v initial {} start 0#u8 hh.bound
+      (metadata.validate_env_with_loop.profile_spec visitor htotal data v initial {} start 0#u8 hh.bound
         (hb.mono (Nat.zero_le _)))
     simp [metadata.validate_env_with, hi, hr, core.result.Result.Insts.CoreOpsTry.branch, hloop]
     cases r with
@@ -141,11 +141,11 @@ theorem metadata.validate_env_with.profile_spec {V : Type} (visitor : metadata.M
 
 /-- Arbitrary input bytes give an ordinary result from `metadata.validate_env`. A successful result
 carries the complete ordered section history needed for declarative assembly. -/
-theorem metadata.validate_env.profile_spec (data : Slice U8) (profile : ValidationProfile) :
-    metadata.validate_env data profile ⦃ ModuleEnv.PostWith profile data ⦄ := by
+theorem metadata.validate_env.profile_spec (data : Slice U8) :
+    metadata.validate_env data ⦃ ModuleEnv.PostWith data ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
     (metadata.validate_env_with.profile_spec metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
-      ModuleTail.empty_hooks_total data profile ())
+      ModuleTail.empty_hooks_total data ())
   simpa [metadata.validate_env, hr] using hp
 
 end Itasca

@@ -34,8 +34,7 @@ unlinkable modules, and 34 modules whose instantiation traps. All 48334 formerly
 counted runtime directives and those 117 instantiation failures are executed.
 
 The full itasca gate, `wasm2_complete_corpus`, runs by default and checks the
-same assertions against itasca's only supported profile,
-`ValidationProfile::Wasm2`:
+same assertions against itasca's Wasm 2.0 validator:
 
 ```sh
 cargo test --test spec2_tests wasm2_complete_corpus
@@ -43,8 +42,8 @@ cargo test --test spec2_tests wasm2_complete_corpus
 
 `wasm2_multivalue_corpus` retains a 15-file control-flow comparison against
 wasmparser configured for MVP plus multi-value. This reference configuration
-does not represent an itasca Wasm 1.0 profile: every tested module is checked
-with itasca's Wasm 2.0 profile. Its frozen totals remain 17 accepted modules,
+is only a reference configuration: every tested module is checked with
+itasca's Wasm 2.0 validator. Its frozen totals remain 17 accepted modules,
 489 rejected binaries, 90 quoted malformed-text cases, and 1186 runtime/link
 assertions. The comparison excludes four positive modules outside the reference
 feature set:

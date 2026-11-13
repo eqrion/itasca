@@ -118,24 +118,24 @@ inductive BaseOpcode : U8 → Prop where
   | callIndirect {opcode} : opcode = 17#u8 → BaseOpcode opcode
   | brTable {opcode} : opcode = 14#u8 → BaseOpcode opcode
 
-/-- The opcode families a successful reader step under `profile` starts
+/-- The opcode families a successful reader step starts
 with, one constructor per compiler entry point. -/
-inductive ReaderOpcode : ValidationProfile → U8 → Prop where
-  | ordinary {profile opcode} : opcode ∈ readerOrdinaryOpcodes → ReaderOpcode profile opcode
-  | scope {profile opcode} : ScopeOpcode opcode → ReaderOpcode profile opcode
-  | else_ {profile opcode} : opcode = 5#u8 → ReaderOpcode profile opcode
-  | end_ {profile opcode} : opcode = 11#u8 → ReaderOpcode profile opcode
-  | scalar {profile opcode} : opcode.val ∈ scalarOpcodeValues → ReaderOpcode profile opcode
-  | float {profile opcode} : opcode.val ∈ floatBaseOpcodeValues → ReaderOpcode profile opcode
-  | memory {profile opcode} : opcode.val ∈ [63, 64] → ReaderOpcode profile opcode
-  | callIndirect {profile opcode} : opcode = 17#u8 → ReaderOpcode profile opcode
-  | brTable {profile opcode} : opcode = 14#u8 → ReaderOpcode profile opcode
-  | stateful {opcode} : opcode.val ∈ [37, 38, 208, 209, 210] → ReaderOpcode .Wasm2 opcode
-  | misc {opcode} : opcode = 252#u8 → ReaderOpcode .Wasm2 opcode
-  | simd {opcode} : opcode = 253#u8 → ReaderOpcode .Wasm2 opcode
-  | typedSelect {opcode} : opcode = 28#u8 → ReaderOpcode .Wasm2 opcode
+inductive ReaderOpcode : U8 → Prop where
+  | ordinary {opcode} : opcode ∈ readerOrdinaryOpcodes → ReaderOpcode opcode
+  | scope {opcode} : ScopeOpcode opcode → ReaderOpcode opcode
+  | else_ {opcode} : opcode = 5#u8 → ReaderOpcode opcode
+  | end_ {opcode} : opcode = 11#u8 → ReaderOpcode opcode
+  | scalar {opcode} : opcode.val ∈ scalarOpcodeValues → ReaderOpcode opcode
+  | float {opcode} : opcode.val ∈ floatBaseOpcodeValues → ReaderOpcode opcode
+  | memory {opcode} : opcode.val ∈ [63, 64] → ReaderOpcode opcode
+  | callIndirect {opcode} : opcode = 17#u8 → ReaderOpcode opcode
+  | brTable {opcode} : opcode = 14#u8 → ReaderOpcode opcode
+  | stateful {opcode} : opcode.val ∈ [37, 38, 208, 209, 210] → ReaderOpcode opcode
+  | misc {opcode} : opcode = 252#u8 → ReaderOpcode opcode
+  | simd {opcode} : opcode = 253#u8 → ReaderOpcode opcode
+  | typedSelect {opcode} : opcode = 28#u8 → ReaderOpcode opcode
 
-theorem BaseOpcode.reader {profile opcode} : BaseOpcode opcode → ReaderOpcode profile opcode
+theorem BaseOpcode.reader {opcode} : BaseOpcode opcode → ReaderOpcode opcode
   | .ordinary h => .ordinary h | .scope h => .scope h | .else_ h => .else_ h | .end_ h => .end_ h
   | .scalar h => .scalar h | .float h => .float h | .memory h => .memory h
   | .callIndirect h => .callIndirect h | .brTable h => .brTable h
@@ -147,13 +147,7 @@ theorem stateful_opcode_values {opcode : U8}
   simp only [List.mem_cons, List.not_mem_nil, or_false] at h ⊢
   omega
 
-theorem ReaderOpcode.wasm2 {profile opcode} : ReaderOpcode profile opcode → ReaderOpcode .Wasm2 opcode
-  | .ordinary h => .ordinary h | .scope h => .scope h | .else_ h => .else_ h | .end_ h => .end_ h
-  | .scalar h => .scalar h | .float h => .float h | .memory h => .memory h
-  | .callIndirect h => .callIndirect h | .brTable h => .brTable h | .stateful h => .stateful h
-  | .misc h => .misc h | .simd h => .simd h | .typedSelect h => .typedSelect h
-
-/-- Closes `ReaderOpcode profile opcode` for a concrete opcode byte. -/
+/-- Closes `ReaderOpcode opcode` for a concrete opcode byte. -/
 macro "reader_opcode" : tactic => `(tactic| first
   | exact .ordinary (by clear * -; decide +revert) | exact .scope (by clear * -; unfold ScopeOpcode; decide +revert)
   | exact .else_ (by clear * -; decide +revert) | exact .end_ (by clear * -; decide +revert)
@@ -179,28 +173,28 @@ theorem numeric_base_opcode {opcode operation}
   all_goals subst operation
   reader_opcode_cases opcode
 
-theorem numeric_reader_opcode {profile opcode operation}
-    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode :=
+theorem numeric_reader_opcode {opcode operation}
+    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode opcode :=
   (numeric_base_opcode meaning).reader
 
-theorem memory_reader_opcode {profile opcode operation}
-    (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode := by
+theorem memory_reader_opcode {opcode operation}
+    (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) : ReaderOpcode opcode := by
   unfold MemoryMeaning.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
 
 set_option maxHeartbeats 2000000 in
-theorem sign_reader_opcode {profile opcode operation}
+theorem sign_reader_opcode {opcode operation}
     (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation) :
-    ReaderOpcode profile opcode := by
+    ReaderOpcode opcode := by
   unfold Wasm2.NumericExtensions.signMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
 
-theorem wasm1_immediate_reader_opcode {profile opcode token bytes}
-    (encoded : Wasm1.Immediate opcode token bytes) : ReaderOpcode profile opcode := by
+theorem wasm1_immediate_reader_opcode {opcode token bytes}
+    (encoded : Wasm1.Immediate opcode token bytes) : ReaderOpcode opcode := by
   cases encoded
   all_goals first
     | reader_opcode
@@ -208,7 +202,7 @@ theorem wasm1_immediate_reader_opcode {profile opcode token bytes}
     | exact memory_reader_opcode (by assumption)
 
 theorem wasm2_immediate_reader_opcode {opcode token bytes}
-    (encoded : Wasm2.Immediate opcode token bytes) : ReaderOpcode .Wasm2 opcode := by
+    (encoded : Wasm2.Immediate opcode token bytes) : ReaderOpcode opcode := by
   cases encoded with
   | plain encoded => exact wasm1_immediate_reader_opcode encoded
   | signExtension _ _ meaning => exact sign_reader_opcode meaning
@@ -220,7 +214,7 @@ end Itasca.Runtime.Compiler
 namespace Itasca.Wasm2
 theorem At.reader_opcode {data start token next}
     (encoded : At data start token next) (inbounds : start.val < data.length) :
-    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[start.val] := by
+    Itasca.Runtime.Compiler.ReaderOpcode data.val[start.val] := by
   obtain ⟨bytes,⟨opcode,immediate,rfl,grammar⟩,span⟩ := encoded
   have head := congrArg List.head? span.suffix
   have equal : data.val[start.val] = opcode := by
@@ -231,7 +225,7 @@ theorem At.reader_opcode {data start token next}
 theorem BodyEncoding.next_reader_opcode {data body tokens position}
     (encoded : BodyEncoding data body)
     (before : Consumed data 0#usize tokens position) (remaining : position.val < data.length) :
-    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[position.val] := by
+    Itasca.Runtime.Compiler.ReaderOpcode data.val[position.val] := by
   obtain ⟨token,next,atToken,_⟩ := encoded.next_executable_token (Itasca.Runtime.Compiler.SourceExecutable.body_wasm2 encoded) before remaining
   exact atToken.reader_opcode remaining
 end Itasca.Wasm2

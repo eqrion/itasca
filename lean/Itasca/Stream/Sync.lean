@@ -8,7 +8,7 @@ The private synchronous scheduler `stream.SyncVisitor` that `validate_module` su
 driver. It has one `completed` slot: submission runs `stream.CodeBatch.validate_all` on the seed
 immediately and stores the result, and polling takes it. `StreamSync.provenance` and
 `StreamSync.callbacks_total` show that it meets the `StreamScheduler.Provenance` and
-`StreamScheduler.CallbacksTotal` contracts for every profile, so no embedding obligation remains
+`StreamScheduler.CallbacksTotal` contracts for module validation, so no embedding obligation remains
 for it. `StreamSync.retire_all_tail` shows that draining preserves the delivered tail.
 -/
 
@@ -86,19 +86,18 @@ theorem code_end (state : stream.SyncVisitor) :
 
 /-- Submission runs the extracted worker even on malformed bytes and stores its reachable result.
 Submission succeeding does not mean that `stream.CodeBatch.finish` passes. -/
-theorem submit {profile : ValidationProfile} (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
-    (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
-    (hprofile : issued.profile = profile) :
+theorem submit (state : stream.SyncVisitor) (issued : StreamBatch.Issued)
+    (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env) :
     ∃ batch, (sync).submit_code_batch state issued.seed =
       .ok (.Ok (), { state with completed := some batch }) ∧
       StreamBatch.Reachable issued batch := by
   obtain ⟨batch, hr, hp⟩ := WP.spec_imp_exists
-    (stream.CodeBatch.validate_all.reachable issued issued.seed hissued hbound .seed hprofile)
+    (stream.CodeBatch.validate_all.reachable issued issued.seed hissued hbound .seed)
   exact ⟨batch, by simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr], hp⟩
 
 /-- The synchronous scheduler satisfies `StreamScheduler.Provenance` across every callback,
 including custom regions and tail delivery. -/
-theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sync Tracks profile := by
+theorem provenance : StreamScheduler.Provenance sync Tracks := by
   constructor
   · intro id history state chunk after hcall
     have he : state = after := by
@@ -114,8 +113,8 @@ theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sy
     rw [environment_ready] at hcall
     simp only [Result.ok.injEq, Prod.mk.injEq] at hcall
     exact hcall.2 ▸ hs
-  · intro id history issued state after _ _ hissued hbound hprofile hfresh hcall
-    obtain ⟨batch, hr, hreach⟩ := submit state issued hissued hbound hprofile
+  · intro id history issued state after _ _ hissued hbound hfresh hcall
+    obtain ⟨batch, hr, hreach⟩ := submit state issued hissued hbound
     rw [hr] at hcall
     have he : { state with completed := some batch } = after := by simpa using hcall
     subst after
@@ -142,7 +141,7 @@ theorem provenance {profile : ValidationProfile} : StreamScheduler.Provenance sy
 
 /-- All callbacks of the synchronous scheduler return on seeds of bounded issued batches.
 Submission needs neither valid bytes nor successful worker completion. -/
-theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.CallbacksTotal sync profile := by
+theorem callbacks_total : StreamScheduler.CallbacksTotal sync := by
   constructor
   · intro state chunk
     exact ⟨(.Ok (), state), rfl⟩
@@ -150,8 +149,8 @@ theorem callbacks_total {profile : ValidationProfile} : StreamScheduler.Callback
     exact ⟨state, rfl⟩
   · intro state env
     exact ⟨_, environment_ready state env⟩
-  · intro state issued hissued hbound hprofile
-    obtain ⟨batch, hr, _⟩ := submit state issued hissued hbound hprofile
+  · intro state issued hissued hbound
+    obtain ⟨batch, hr, _⟩ := submit state issued hissued hbound
     exact ⟨_, hr⟩
   · exact poll_total
   · intro state

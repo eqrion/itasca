@@ -16,12 +16,12 @@ theorem compiler_submit_accepted {A : Type} (allocator : runtime.platform.Alloc 
       after = {middle with completed := after.completed, budget := after.budget} := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch at accepted
   obtain ⟨⟨signatures, slots, completed, functions, tail, codeStart, budget,
-    moduleId, batchId, profile, env, code, offset, first, count, dispatched, dispatchEnd,
+    moduleId, batchId, env, code, offset, first, count, dispatched, dispatchEnd,
     validated, validatedEnd, error, result⟩, loopRun, rest⟩ := bind_ok_inv _ _ _ accepted
   let middle : runtime.compiler.CompileScheduler A :=
     {signatures, func_param_slots := slots, completed, functions, tail, code_start := codeStart, budget}
   let worker : stream.CodeBatch :=
-    {module_id := moduleId, batch_id := batchId, profile, env, code, code_offset := offset,
+    {module_id := moduleId, batch_id := batchId, env, code, code_offset := offset,
       first_func := first, num_funcs := count, num_dispatched := dispatched, dispatch_end := dispatchEnd,
       num_validated := validated, validated_end := validatedEnd, error}
   simp only [uncurry_apply_pair] at rest

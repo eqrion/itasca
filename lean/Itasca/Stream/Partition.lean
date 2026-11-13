@@ -14,9 +14,6 @@ module.
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamScheduler
-
-variable {profile : ValidationProfile}
-
 /-- Issued batches partition bytes and defined-function indices in submission
 order. Worker completion order is deliberately absent from this relation. -/
 inductive Partition (code : Slice U8) (env : metadata.Env) :
@@ -44,17 +41,17 @@ theorem Partition.snoc {code env pos func history middle next issued finish}
 premise is discharged by successful retirements. -/
 theorem Partition.encoding {code env pos func history finish next}
     (h : Partition code env pos func history finish next)
-    (hcompleted : ∀ issued ∈ history, Completed issued profile) :
+    (hcompleted : ∀ issued ∈ history, Completed issued) :
     ∃ entries, next = func + entries.length ∧
-      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) code pos entries finish ∧
-      ModuleCode.EntriesTyped (profile := profile) env func entries := by
+      ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) code pos entries finish ∧
+      ModuleCode.EntriesTyped env func entries := by
   induction h with
   | nil pos func hbound =>
     exact ⟨[], by simp, ⟨[], .nil, Wasm1.BytesAt.nil _ _ hbound⟩, .nil _⟩
   | @cons pos func issued rest middle finish next he ho hf hb hp ih =>
     obtain ⟨entries, hn, hr, ht⟩ := hcompleted issued (by simp)
     obtain ⟨restEntries, hnext, hrestBytes, hrestTyped⟩ := ih (fun issued hm => hcompleted issued (by simp [hm]))
-    have hfirst : ModuleCode.EntriesTyped (profile := profile) env func entries := by simpa [he, hf] using ht
+    have hfirst : ModuleCode.EntriesTyped env func entries := by simpa [he, hf] using ht
     refine ⟨entries ++ restEntries, ?_, ModuleCode.entries_at_append ⟨issued.code.val, hr, hb⟩ hrestBytes,
       hfirst.append (by simpa [hn] using hrestTyped)⟩
     simp only [List.length_append]
@@ -65,10 +62,10 @@ encoding and the pairing of each declared function type with its typed code entr
 theorem Partition.code {code env entries history}
     (hheader : StreamFraming.HeaderAt code env entries)
     (h : Partition code env entries 0 history (Slice.len code) env.func_type_indices.val.length)
-    (hcompleted : ∀ issued ∈ history, Completed issued profile) :
+    (hcompleted : ∀ issued ∈ history, Completed issued) :
     ∃ codes, ModuleBinary.PaddedEncoding 10#u8
-      (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) [] codes code.val ∧
-      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes := by
+      (ModuleBinary.VecEncoding (Profile.CodeEncoding)) [] codes code.val ∧
+      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes := by
   obtain ⟨codes, hn, hb, ht⟩ := h.encoding hcompleted
   have hcount : codes.length = env.func_type_indices.val.length := by omega
   have htyped := ht.forall₂ (by omega)

@@ -30,16 +30,16 @@ theorem customs_append {xs ys} (hx : CustomsEncoding xs) (hy : CustomsEncoding y
 /-- The loop invariant: the bytes so far are custom sections plus at most one data section whose
 segments are listed. The flag records whether the data section has occurred. -/
 inductive Prefix :
-    Bool → List ModuleBinary.Data → List U8 → (profile : ValidationProfile) → Prop where
-  | empty {profile} : Prefix false [] [] profile
-  | custom {profile seen segments before bytes} : Prefix seen segments before profile →
-      CustomEncoding bytes → Prefix seen segments (before ++ bytes) profile
-  | data {profile before bytes segments} : Prefix false [] before profile →
-      SectionEncoding 11#u8 (VecEncoding (DataEncodingFor profile)) segments bytes →
-      Prefix true segments (before ++ bytes) profile
+    Bool → List ModuleBinary.Data → List U8 → Prop where
+  | empty : Prefix false [] []
+  | custom {seen segments before bytes} : Prefix seen segments before →
+      CustomEncoding bytes → Prefix seen segments (before ++ bytes)
+  | data {before bytes segments} : Prefix false [] before →
+      SectionEncoding 11#u8 (VecEncoding (DataEncodingFor)) segments bytes →
+      Prefix true segments (before ++ bytes)
 
 /-- Before the data section, a prefix has no segments and is only custom sections. -/
-theorem Prefix.not_seen {profile seen segments bytes} (h : Prefix seen segments bytes profile)
+theorem Prefix.not_seen {seen segments bytes} (h : Prefix seen segments bytes)
     (hs : seen = false) : segments = [] ∧ CustomsEncoding bytes := by
   induction h with
   | empty => exact ⟨rfl, .nil⟩
@@ -50,14 +50,13 @@ theorem Prefix.not_seen {profile seen segments bytes} (h : Prefix seen segments 
 
 /-- The independent grammar of the tail: padded data section (custom sections, then an optional
 data section) followed by custom sections. -/
-def Encoding (segments : List ModuleBinary.Data) (bytes : List U8)
-    (profile : ValidationProfile) : Prop :=
-  ∃ chunk customs, PaddedEncoding 11#u8 (VecEncoding (DataEncodingFor profile)) [] segments chunk ∧
+def Encoding (segments : List ModuleBinary.Data) (bytes : List U8) : Prop :=
+  ∃ chunk customs, PaddedEncoding 11#u8 (VecEncoding (DataEncodingFor)) [] segments chunk ∧
     CustomsEncoding customs ∧ bytes = chunk ++ customs
 
 /-- A prefix is a tail encoding. -/
-theorem Prefix.encoding {profile seen segments bytes} (h : Prefix seen segments bytes profile) :
-    Encoding segments bytes profile := by
+theorem Prefix.encoding {seen segments bytes} (h : Prefix seen segments bytes) :
+    Encoding segments bytes := by
   induction h with
   | empty => exact ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩
   | custom _ hc ih =>
@@ -95,19 +94,19 @@ theorem custom_encoded {data start first last nm} {custom : wasm_types.CustomSec
   exact ⟨bytes, ⟨nm, payload.val, nameBytes, hn, he⟩, hb⟩
 
 /-- A custom section extends a tail prefix. -/
-theorem append_custom {profile seen segments data start pos next}
-    (hp : At (fun segments bytes => Prefix seen segments bytes profile) data start segments pos)
+theorem append_custom {seen segments data start pos next}
+    (hp : At (fun segments bytes => Prefix seen segments bytes) data start segments pos)
     (hc : At (fun (_ : Unit) => CustomEncoding) data pos () next) :
-    At (fun segments bytes => Prefix seen segments bytes profile) data start segments next := by
+    At (fun segments bytes => Prefix seen segments bytes) data start segments next := by
   obtain ⟨before, hp, hs⟩ := hp
   obtain ⟨bytes, hc, ht⟩ := hc
   exact ⟨before ++ bytes, .custom hp hc, hs.append ht⟩
 
 /-- A data section extends a prefix that has not seen one. -/
-theorem append_data {profile old segments data start pos next}
-    (hp : At (fun segments bytes => Prefix false segments bytes profile) data start old pos)
-    (hd : At (SectionEncoding 11#u8 (VecEncoding (DataEncodingFor profile))) data pos segments next) :
-    At (fun segments bytes => Prefix true segments bytes profile) data start segments next := by
+theorem append_data {old segments data start pos next}
+    (hp : At (fun segments bytes => Prefix false segments bytes) data start old pos)
+    (hd : At (SectionEncoding 11#u8 (VecEncoding (DataEncodingFor))) data pos segments next) :
+    At (fun segments bytes => Prefix true segments bytes) data start segments next := by
   obtain ⟨before, hp, hs⟩ := hp
   obtain ⟨bytes, hd, ht⟩ := hd
   have he := (hp.not_seen rfl).1
@@ -128,17 +127,16 @@ section. An accepted tail is an `Encoding` span with valid segments that agree w
 count. Hooks may reject. -/
 theorem metadata.validate_tail_with.spec {V : Type} (visitor : metadata.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (start : Usize)
-    (env : metadata.Env) (v : V) (hstart : start.val ≤ data.length)
-    (profile : ValidationProfile) :
-    metadata.validate_tail_with visitor data start env profile v ⦃ r => match r.1 with
-      | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
+    (env : metadata.Env) (v : V) (hstart : start.val ≤ data.length) :
+    metadata.validate_tail_with visitor data start env v ⦃ r => match r.1 with
+      | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧
           (∀ segment ∈ tail.data.val, ModuleData.Valid env segment) ∧
           ∀ count, env.data_count = some count → count.val = tail.data.val.length
       | .Err _ => True ⦄ := by
   unfold metadata.validate_tail_with metadata.validate_tail_with_loop
   apply loop.spec_decr_nat (fun s => data.length - s.2.2.1.val)
-    (fun s => ModuleBinary.At (fun segments bytes => ModuleTail.Prefix s.2.2.2 segments bytes profile) data start
+    (fun s => ModuleBinary.At (fun segments bytes => ModuleTail.Prefix s.2.2.2 segments bytes) data start
         (s.2.1.val.map ModuleData.raw) s.2.2.1 ∧
       ∀ segment ∈ s.2.1.val, ModuleData.Valid env segment)
   · rintro ⟨state, segments, pos, seen⟩ ⟨hbytes, hvalid⟩
@@ -201,7 +199,7 @@ theorem metadata.validate_tail_with.spec {V : Type} (visitor : metadata.ModuleVi
             | true => simp
             | false =>
               simp only [Bool.false_eq_true, ↓reduceIte]
-              obtain ⟨r, hdata, hp⟩ := WP.spec_imp_exists (metadata.decode_data_section.profile_spec data first env profile)
+              obtain ⟨r, hdata, hp⟩ := WP.spec_imp_exists (metadata.decode_data_section.profile_spec data first env)
               rw [hdata]
               cases r with
               | Err e =>
@@ -224,16 +222,16 @@ theorem metadata.validate_tail_with.spec {V : Type} (visitor : metadata.ModuleVi
 
 /-- `metadata.validate_tail` satisfies the same specification as `metadata.validate_tail_with`. -/
 theorem metadata.validate_tail.spec (data : Slice U8) (start : Usize) (env : metadata.Env)
-    (hstart : start.val ≤ data.length) (profile : ValidationProfile) :
-    metadata.validate_tail data start env profile ⦃ r => match r with
-      | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
+    (hstart : start.val ≤ data.length) :
+    metadata.validate_tail data start env ⦃ r => match r with
+      | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧
           (∀ segment ∈ tail.data.val, ModuleData.Valid env segment) ∧
           ∀ count, env.data_count = some count → count.val = tail.data.val.length
       | .Err _ => True ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
     (metadata.validate_tail_with.spec metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
-      ModuleTail.empty_hooks_total data start env () hstart profile)
+      ModuleTail.empty_hooks_total data start env () hstart)
   simpa [metadata.validate_tail, hr] using hp
 
 end Itasca

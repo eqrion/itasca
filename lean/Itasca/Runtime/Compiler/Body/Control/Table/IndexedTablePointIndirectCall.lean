@@ -23,7 +23,7 @@ theorem IndexedTableReaderCompilerPointWasm2.indirect_call {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds

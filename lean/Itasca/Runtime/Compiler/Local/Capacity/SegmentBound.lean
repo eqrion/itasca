@@ -17,26 +17,24 @@ private theorem vec_positive {α : Type} {R : α → List U8 → Prop} {values b
   simp only [List.length_append]
   omega
 
-private theorem element_bytes {profile entry bytes}
-    (h : ElementEncodingFor profile entry bytes) : 2 ≤ bytes.length := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | activeIndices hf _ he | activeExpressions hf _ he =>
-      have := leb_positive hf
-      have := vec_positive he
-      simp only [List.length_append]
-      omega
-    | passiveIndices hf he | declarativeIndices hf he | passiveExpressions hf he | declarativeExpressions hf he =>
-      have := leb_positive hf
-      have := vec_positive he
-      simp only [List.length_append, List.length_singleton]
-      omega
-    | explicitIndices hf _ _ he | explicitExpressions hf _ _ he =>
-      have := leb_positive hf
-      have := vec_positive he
-      simp only [List.length_append, List.length_singleton]
-      omega
+private theorem element_bytes {entry bytes}
+    (h : ElementEncodingFor entry bytes) : 2 ≤ bytes.length := by
+  cases h with
+  | activeIndices hf _ he | activeExpressions hf _ he =>
+    have := leb_positive hf
+    have := vec_positive he
+    simp only [List.length_append]
+    omega
+  | passiveIndices hf he | declarativeIndices hf he | passiveExpressions hf he | declarativeExpressions hf he =>
+    have := leb_positive hf
+    have := vec_positive he
+    simp only [List.length_append, List.length_singleton]
+    omega
+  | explicitIndices hf _ _ he | explicitExpressions hf _ _ he =>
+    have := leb_positive hf
+    have := vec_positive he
+    simp only [List.length_append, List.length_singleton]
+    omega
 
 private theorem active_positive {index explicit bytes}
     (h : ActiveIndexEncoding index explicit bytes) : 1 ≤ bytes.length := by
@@ -44,21 +42,19 @@ private theorem active_positive {index explicit bytes}
   | implicit hf => exact leb_positive hf
   | explicit hf _ => have := leb_positive hf; simp only [List.length_append]; omega
 
-private theorem data_bytes {profile entry bytes}
-    (h : DataEncodingFor profile entry bytes) : 2 ≤ bytes.length := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | active hi _ he =>
-      have := active_positive hi
-      have := vec_positive he
-      simp only [List.length_append]
-      omega
-    | passive hf he =>
-      have := leb_positive hf
-      have := vec_positive he
-      simp only [List.length_append]
-      omega
+private theorem data_bytes {entry bytes}
+    (h : DataEncodingFor entry bytes) : 2 ≤ bytes.length := by
+  cases h with
+  | active hi _ he =>
+    have := active_positive hi
+    have := vec_positive he
+    simp only [List.length_append]
+    omega
+  | passive hf he =>
+    have := leb_positive hf
+    have := vec_positive he
+    simp only [List.length_append]
+    omega
 
 private theorem rep_size {α : Type} {R : α → List U8 → Prop} {values bytes}
     (h : Rep R values bytes) (minimum : ∀ value bytes, R value bytes → 2 ≤ bytes.length) :
@@ -85,8 +81,8 @@ private theorem padded_size {α : Type} {R : α → List U8 → Prop} {id values
 
 /-- Segment vectors consume at least two bytes per entry, including empty
 passive segments. This holds for Wasm 2.0 and non-minimal LEBs. -/
-theorem segment_count_bytes {R raw bytes profile}
-    (h : ModuleEncodingWith R raw bytes profile) :
+theorem segment_count_bytes {R raw bytes}
+    (h : ModuleEncodingWith R raw bytes) :
     2 * (raw.elements.length + raw.data.length) ≤ bytes.length := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, rfl, _⟩ := h
@@ -150,9 +146,9 @@ theorem SegmentProgram.length_bound {module function}
 /-- The fixed one-GiB validator cap and the binary segment framing leave ample
 room below the interpreter's 32-bit program counter. The two count equalities
 are source/metadata coherence, not execution-correctness premises. -/
-theorem SegmentProgram.pc_bound {module function raw bytes profile R}
+theorem SegmentProgram.pc_bound {module function raw bytes R}
     (certificate : SegmentProgram module function)
-    (encoding : ModuleEncodingWith R raw bytes profile)
+    (encoding : ModuleEncodingWith R raw bytes)
     (moduleBound : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val)
     (elements : module.module.env.elements.length = raw.elements.length)
     (datas : module.module.tail.data.length = raw.data.length) :

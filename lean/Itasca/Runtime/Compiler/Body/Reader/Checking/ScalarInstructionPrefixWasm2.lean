@@ -25,7 +25,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_const32_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -38,7 +38,7 @@ theorem reader_const32_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,value,post,instruction,lowered,emission⟩ :=
     reader_emit_const32_wasm2 p ops law before after out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -48,7 +48,7 @@ theorem reader_const32_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_const64_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -61,7 +61,7 @@ theorem reader_const64_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,value,post,instruction,lowered,emission⟩ :=
     reader_emit_const64_wasm2 p ops law before after out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -71,7 +71,7 @@ theorem reader_const64_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_float32_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A)
     (C : context) (localTypes : C.LOCALS = compilerLocals before) (out : code.BodyState)
@@ -85,7 +85,7 @@ theorem reader_float32_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,value,post,instruction,lowered,emission⟩ :=
     reader_emit_float32_wasm2 p ops law before after C localTypes out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -95,7 +95,7 @@ theorem reader_float32_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual typed literal reading checks its emitted word and retains earlier checks. -/
 theorem reader_float64_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A)
     (C : context) (localTypes : C.LOCALS = compilerLocals before) (out : code.BodyState)
@@ -109,7 +109,7 @@ theorem reader_float64_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,value,post,instruction,lowered,emission⟩ :=
     reader_emit_float64_wasm2 p ops law before after C localTypes out ctx contextLocals types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -171,7 +171,7 @@ theorem reader_nop_open_instructions_wasm2 {A : Type}
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 1#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 1#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨_,run⟩ := profile_base_success_wasm2
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx ctx index 1#u8 before after
@@ -190,7 +190,7 @@ theorem reader_drop_open_instructions_wasm2 {A : Type}
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 26#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 26#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨_,run⟩ := profile_base_success_wasm2
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx ctx index 26#u8 before after
@@ -215,7 +215,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Every scalar reader kind preserves both instruction and recorded exit-slot
 checks from its source-typed prefix, including all unreachable variants. -/
 theorem reader_scalar_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (contextSource : ctx.locals = sourceLocals) (C : context)
@@ -231,7 +231,7 @@ theorem reader_scalar_checked_prefix_wasm2 {jumpTables : List U32} {data env sou
     (kind : ScalarReaderKind) (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = kind.opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 kind.opcode before = .ok (.Ok (),out,after)) :
+      st data env ctx index kind.opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   have sourcePosition : p.start.val ≤ limits.MAX_MODULE_BYTES.val := (Nat.le_of_lt p.inbounds).trans sourceBound
   obtain ⟨codeFits,sourceFits,_,_⟩ := invariant.capacities sourcePosition

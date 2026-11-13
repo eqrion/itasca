@@ -72,7 +72,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 invariants from a reached source prefix, in live and unreachable code. -/
 theorem reader_enter_publication_wasm2 {jumpTables : List U32}
     {emit : List valtype → instr → List Bytecode → List valtype → Prop}
-    {data env localTypes index st} (p : Wasm2.Pending data env .Wasm2 localTypes index st)
+    {data env localTypes index st} (p : Wasm2.Pending data env localTypes index st)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -86,7 +86,7 @@ theorem reader_enter_publication_wasm2 {jumpTables : List U32}
     (form : Wasm2.Frames.Form) (initialForm : form.Initial)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 form.opcode before = .ok (.Ok (),out,after)) :
+      st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
     SourceCoordinates after ∧ ControlMapPublication after := by
   obtain ⟨bt,ins,outs,remaining,base,callback,_,post⟩ := reader_enter_wasm2 p form initialForm
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

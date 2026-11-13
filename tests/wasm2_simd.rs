@@ -1,5 +1,5 @@
 //! Literal SIMD encodings cover every Core 2.0 opcode and immediate class.
-use itasca::{validate_module, ValidationProfile};
+use itasca::validate_module;
 const I32: u8 = 0x7f;
 const I64: u8 = 0x7e;
 const F32: u8 = 0x7d;
@@ -67,7 +67,7 @@ fn compare(bytes: &[u8], valid: bool) {
         .validate_all(bytes)
         .is_ok();
     assert_eq!(reference, valid, "oracle disagreement: {bytes:?}");
-    let actual = validate_module(bytes, ValidationProfile::Wasm2);
+    let actual = validate_module(bytes);
     assert_eq!(actual.is_ok(), valid, "{actual:?}: {bytes:?}");
 }
 

@@ -35,7 +35,7 @@ reader; no independent encoding of the unconsumed suffix is assumed. -/
 theorem reader_misc_accepted {V} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 252#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 252#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ sub next, Leb128.Decoded data st.core.pos sub next ∧ CumulativeMiscOpcode sub := by
   obtain ⟨_,run⟩ := profile_scalar_success visitor st out data env ctx index 252#u8 before after

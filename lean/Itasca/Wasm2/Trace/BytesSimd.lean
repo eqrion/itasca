@@ -15,7 +15,7 @@ namespace Itasca.Wasm2.CallbackBytes
 open VisitorTrace CallbackTrace
 
 /-- The operand checker preserves the cursor even when its operand check fails. -/
-theorem fixed_trace {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem fixed_trace {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (action : Action) (token : Token)
     (haction : actionToken action [] = some token) (hbranch : action.opcode ≠ some 0x0E#u8)
@@ -35,7 +35,7 @@ theorem fixed_trace {data env profile locals index st} (p : Pending data env pro
   dsimp only at spec
   exact ⟨token, haction, hbranch, by simpa [spec.2.1] using hencoded⟩
 
-theorem simd_pure {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_pure {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (subopcode : U32) (op : Simd.Operation)
     (hmap : Simd.pureMeaning subopcode.val = some op) (pos : Usize)
@@ -50,7 +50,7 @@ theorem simd_pure {data env profile locals index st} (p : Pending data env profi
     (by simp [actionToken, Action.token, hmap]) (by simp [Action.opcode])
     _ _ pos hsize hencoded v result final v' run
 
-theorem simd_lane {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_lane {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (subopcode : U32) (op : Simd.LaneOperation)
     (hmap : Simd.laneMeaning subopcode.val = some op) (pos : Usize)
@@ -83,7 +83,7 @@ theorem simd_lane {data env profile locals index st} (p : Pending data env profi
       (by simp [actionToken, Action.token, hmap]) (by simp [Action.opcode])
       _ _ decoded.pos hsize (hencoded lane decoded.pos hbytes) v result final v' run
 
-theorem simd_const {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -114,7 +114,7 @@ theorem simd_const {data env profile locals index st} (p : Pending data env prof
       (.plain (Simd.vectorConstant low high)) rfl (by simp [Action.opcode])
       _ _ decoded.pos hsize (hencoded low high decoded.pos (hbits low high rfl)) v result final v' run
 
-theorem simd_shuffle {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_shuffle {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (pos : Usize) (hpos : pos.val ≤ data.length)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -135,7 +135,7 @@ theorem simd_shuffle {data env profile locals index st} (p : Pending data env pr
   obtain ⟨_, _, _, hbits, _⟩ := spec low high rfl
   exact ⟨.plain (Simd.shuffle low high), rfl, by simp [Action.opcode], hencoded low high s.pos hbits⟩
 
-theorem simd_memory {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_memory {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hfull : op.laneCount = 0) (pos : Usize)
@@ -183,7 +183,7 @@ theorem simd_memory {data env profile locals index st} (p : Pending data env pro
         (by simp [actionToken, Action.token, hmap]) (by simp [Action.opcode])
         _ _ decoded.pos hsize (hencoded arg middle decoded.pos halign hoffset) v result final v' run
 
-theorem simd_memory_lane {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd_memory_lane {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hlaned : op.laneCount ≠ 0) (pos : Usize)
@@ -246,7 +246,7 @@ theorem simd_memory_lane {data env profile locals index st} (p : Pending data en
           v result final v' run
 
 /-- Every ordinary SIMD dispatcher return has an exact independent byte trace. -/
-theorem simd {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem simd {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (records : Records visitor observe) (ctx : code.Context)
     (hsize : st.core.vals.val.length < Usize.max)

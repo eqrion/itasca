@@ -20,7 +20,7 @@ def memoryReader (operation : MemoryMeaning.Operation) (st : code.OpIterState) (
   else code.read_load st data env operation.ty operation.naturalAlign
 
 theorem reader_memory_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (opcode : U8) (operation : MemoryMeaning.Operation)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = opcode)

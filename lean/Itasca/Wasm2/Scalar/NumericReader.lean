@@ -9,8 +9,8 @@ encoding; this proof supplies the common operand and source-prefix preservation.
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
-theorem Pending.numeric_reader {data env profile locals index st}
-    (p : Pending data env profile locals index st) (operation : Numeric.Operation)
+theorem Pending.numeric_reader {data env locals index st}
+    (p : Pending data env locals index st) (operation : Numeric.Operation)
     (position : Usize) (capacity : st.core.vals.val.length < Usize.max)
     (encoded : At data p.start (.plain operation.instruction) position)
     (declared : DeclaredReferences.Instruction

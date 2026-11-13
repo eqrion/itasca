@@ -21,7 +21,7 @@ theorem IndexedTableReaderCompilerPointWasm2.ordinary {A : Type}
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     IndexedTableReaderCompilerPointWasm2 emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   let p := state.boundary.pending next advance inbounds

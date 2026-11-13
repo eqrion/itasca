@@ -31,13 +31,13 @@ theorem Early.of_phase {env decls last} (hr : Represents env decls)
   · have h := hr.elements.symm.trans (hm (by omega))
     exact List.map_eq_nil_iff.mp h
 
-theorem Early.valid {profile} {env} (h : Early env)
-    (ht : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft)
+theorem Early.valid {env} (h : Early env)
+    (ht : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible ft)
     (htt : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1))
     (hmt : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16))
     (hmc : env.mem_types.val.length ≤ 1)
     (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val)
-    (href : ModuleReferences.Coherent env) : Valid env profile := by
+    (href : ModuleReferences.Coherent env) : Valid env := by
   refine ⟨ht, htt, hmt, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_, href⟩
   all_goals simp [h.globals, h.exports, h.start, h.elements]
 
@@ -47,7 +47,7 @@ namespace Itasca.ModuleSections
 
 open ModuleEnv ModuleBinary
 
-theorem ImportAdded.early {profile} {env result entry} (h : ImportAdded env result entry profile)
+theorem ImportAdded.early {env result entry} (h : ImportAdded env result entry)
     (he : Early env) : Early result := by
   obtain ⟨_, h⟩ := h
   cases hd : entry.desc <;> simp only [hd] at h
@@ -55,9 +55,9 @@ theorem ImportAdded.early {profile} {env result entry} (h : ImportAdded env resu
     rw [h]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
   all_goals rw [h.1]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
 
-theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env result entry profile)
-    (hv : Valid env profile) (he : Early env)
-    (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result profile := by
+theorem ImportAdded.valid {env result entry} (h : ImportAdded env result entry)
+    (hv : Valid env) (he : Early env)
+    (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result := by
   have her := h.early he
   obtain ⟨hi, ha⟩ := h
   have hnames : ∀ e ∈ result.imports.val, Utf8 e.module.val ∧ Utf8 e.name.val := by
@@ -102,19 +102,19 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
       (rw [heq]; exact hv.memoryCount) |
       (rw [heq]; exact hv.references)
 
-theorem ImportsAdded.early {profile} {env entries result} (h : ImportsAdded env entries result profile)
+theorem ImportsAdded.early {env entries result} (h : ImportsAdded env entries result)
     (he : Early env) : Early result := by
   induction h with
   | nil => exact he
   | snoc hp ha ih => exact ha.early ih
 
-theorem ImportsAdded.valid {profile} {env entries result} (h : ImportsAdded env entries result profile)
-    (hv : Valid env profile) (he : Early env)
-    (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result profile := by
+theorem ImportsAdded.valid {env entries result} (h : ImportsAdded env entries result)
+    (hv : Valid env) (he : Early env)
+    (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
-    exact ha.valid (ih hv (by intro e hm; exact hn e (by simp [hm])))
+    exact ha.valid (ih (by intro e hm; exact hn e (by simp [hm])))
       (hp.early he) (hn _ (by simp))
 
 end Itasca.ModuleSections
@@ -172,8 +172,8 @@ namespace Itasca.ModuleSections
 
 open ModuleEnv ModuleBinary
 
-theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env result entry)
-    (hv : Valid env profile) (helements : env.elements.val = []) (hn : Utf8 entry.name.val) : Valid result profile := by
+theorem ExportAdded.valid {env result entry} (h : ExportAdded env result entry)
+    (hv : Valid env) (helements : env.elements.val = []) (hn : Utf8 entry.name.val) : Valid result := by
   obtain ⟨he, hexports, hnew, hresolve, href⟩ := h
   have hc : SameCore env result := by constructor <;> rw [he]
   refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
@@ -214,8 +214,8 @@ theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env resu
     simp only [hexports, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil]
     simp [helements, List.append_assoc]
 
-theorem ExportsAdded.valid {profile} {env entries result} (h : ExportsAdded env entries result)
-    (hv : Valid env profile) (helements : env.elements.val = []) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result profile := by
+theorem ExportsAdded.valid {env entries result} (h : ExportsAdded env entries result)
+    (hv : Valid env) (helements : env.elements.val = []) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result := by
   induction h with
   | nil => exact hv
   | snoc hp ha ih =>
@@ -230,10 +230,10 @@ open ModuleBinary ModuleSections
 
 /-- A section effect in increasing section order preserves `Valid`, including name well-formedness,
 export uniqueness and initializer validity. -/
-theorem Effect.valid {profile} {data pos env before id next result after last}
-    (h : Effect (profile := profile) data pos env before id next result after)
-    (hr : Represents env before) (hv : Valid env profile)
-    (hp : Phase last before) (ho : last < (sectionRank id).val) : Valid result profile := by
+theorem Effect.valid {data pos env before id next result after last}
+    (h : Effect data pos env before id next result after)
+    (hr : Represents env before) (hv : Valid env)
+    (hp : Phase last before) (ho : last < (sectionRank id).val) : Valid result := by
   cases h with
   | types ha hb ht =>
     have hearly := Early.of_phase hr hp (by change last < 1 at ho; omega)

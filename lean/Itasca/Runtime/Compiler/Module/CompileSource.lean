@@ -9,9 +9,9 @@ open Itasca
 /-- The concrete source scanner and compiler scheduler discharge all embedding
 premises of the existing validator's accepted-module theorem. -/
 theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
-    ModuleSound.Validated bytes executable.module profile ∧ bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
+    ModuleSound.Validated bytes executable.module ∧ bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
   have bounds := code_region_spec bytes
   rw [w.region, WP.spec_ok] at bounds
   let source : runtime.compiler.CompileSource := {bytes, code_start := w.codeStart, code_end := w.codeEnd}
@@ -34,10 +34,10 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
     constructor
     · simp
     · simp [initialScheduler]
-  obtain ⟨run, validated, size⟩ := stream.validate_streaming.sound
+  obtain ⟨run, validated, size⟩ := stream.validate_streaming.sound_core
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
-    SchedulerTracks (compiler_provenance allocator law profile) 0#u64 source
+    SchedulerTracks (compiler_provenance allocator law) 0#u64 source
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env bytes environment code tail
     coherent recombine initial w.validated
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
@@ -53,15 +53,14 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
   rw [(w.initializers law).1]
   simpa only [sameTail] using validated
 
-/-- Every accepted public compilation validates exactly its input bytes under
-the requested profile. This theorem makes no compiler-certificate premise. -/
+/-- Every accepted public compilation validates exactly its input bytes. This theorem makes no compiler-certificate premise. -/
 theorem compile_source_validated {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (bytes : Slice U8) (profile : ValidationProfile)
+    (law : Platform.AllocCorrect allocator) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) (executable : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok executable)) :
-    ModuleSound.Validated bytes executable.module profile ∧ executable.profile = profile ∧
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok executable)) :
+    ModuleSound.Validated bytes executable.module ∧
       bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
-  obtain ⟨w⟩ := compile_accepted allocator bytes profile limits executable accepted
+  obtain ⟨w⟩ := compile_accepted allocator bytes limits executable accepted
   obtain ⟨validated, size⟩ := w.source_validated law
-  exact ⟨validated, (w.initializers law).2.1, size⟩
+  exact ⟨validated, size⟩
 end Itasca.Runtime.Compiler

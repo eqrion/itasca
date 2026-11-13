@@ -119,14 +119,14 @@ private theorem compiler_split_skip_customs {data : Slice U8} {bytes : List U8}
     rw [compiler_split_skip_section data pos content middle 0#u8 hh (by decide)]
     exact ih hrest
 
-private theorem compiler_split_skip_chain {profile} {data : Slice U8} {raw n bytes}
-    (h : ModuleEnv.Chain raw n bytes profile) {pos next : Usize}
+private theorem compiler_split_skip_chain {data : Slice U8} {raw n bytes}
+    (h : ModuleEnv.Chain raw n bytes) {pos next : Usize}
     (hb : Wasm1.BytesAt data pos bytes next) :
     compilerScan data pos =
       compilerScan data next := by
   induction h generalizing pos with
   | done hc => exact compiler_split_skip_customs hc hb
-  | @step profile n id first rest hn hid hslot _ ih =>
+  | @step n id first rest hn hid hslot _ ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hb.split
     obtain ⟨customs, sec, hc, hs, he⟩ := hslot
     rw [he] at hfirst
@@ -136,15 +136,15 @@ private theorem compiler_split_skip_chain {profile} {data : Slice U8} {raw n byt
     · rw [← hsection.empty]
       exact ih hrest
     · obtain ⟨content, hh, _⟩ := (show
-        At (SectionEncoding id (fun u bs => ModuleEnv.Payload raw (sectionRank id).val u bs profile)) data afterCustoms () middle
+        At (SectionEncoding id (fun u bs => ModuleEnv.Payload raw (sectionRank id).val u bs)) data afterCustoms () middle
         from ⟨_, hs, hsection⟩).section_split
       rw [compiler_split_skip_section data afterCustoms content middle id hh (by
         have hrange := sectionRank_prefix (id := id) (by omega) (by omega)
         omega)]
       exact ih hrest
 
-theorem compiler_split_skip_prefix {profile} {data : Slice U8} {decls next}
-    (h : At (fun ds bs => ModuleEnv.PrefixEncoding ds bs profile) data 0#usize decls next) :
+theorem compiler_split_skip_prefix {data : Slice U8} {decls next}
+    (h : At (fun ds bs => ModuleEnv.PrefixEncoding ds bs) data 0#usize decls next) :
     compilerScan data 8#usize =
       compilerScan data next := by
   obtain ⟨bytes, hp, hb⟩ := h
@@ -159,8 +159,8 @@ theorem compiler_split_skip_prefix {profile} {data : Slice U8} {decls next}
 
 /-- On an independently valid normalized layout, the splitter returns the environment, code and
 tail boundaries used by component completeness. -/
-theorem compiler_code_region_complete_layout {profile} {data : Slice U8} {raw decls codePos tailPos}
-    (h : ModuleLayout.Layout data raw decls codePos tailPos profile) :
+theorem compiler_code_region_complete_layout {data : Slice U8} {raw decls codePos tailPos}
+    (h : ModuleLayout.Layout data raw decls codePos tailPos) :
     runtime.compiler.code_region data = .ok (codePos, tailPos) := by
   change compilerScan data 8#usize = _
   rw [compiler_split_skip_prefix h.environment]
@@ -191,8 +191,8 @@ theorem compiler_code_region_complete_layout {profile} {data : Slice U8} {raw de
 
 /-- On independently encoded modules, both concrete scanners select the same
 canonical byte coordinates despite their different loop control states. -/
-theorem compiler_code_region_eq_stream {profile} (data : Slice U8) (raw : ModuleBinary.Module)
-    (encoded : ModuleEncodingWithinLimits raw data.val profile) :
+theorem compiler_code_region_eq_stream (data : Slice U8) (raw : ModuleBinary.Module)
+    (encoded : ModuleEncodingWithinLimits raw data.val) :
     runtime.compiler.code_region data = Itasca.stream.find_code_region data := by
   obtain ⟨decls,codeStart,codeEnd,layout⟩ := ModuleLayout.normalize data raw encoded
   rw [compiler_code_region_complete_layout layout,Itasca.stream.find_code_region.complete_layout layout]

@@ -28,7 +28,7 @@ open Aeneas Aeneas.Std Itasca
 /-- All information retained from one actually accepted SIMD reader and
 callback. The source meaning is supplied by the independent opcode tables. -/
 structure SimdReaderEvent {A : Type} (ops : runtime.platform.Alloc A)
-    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
+    {data env locals index st} (p : Wasm2.Pending data env locals index st)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.OpIterState) (C : context) where
   source : instr
   inputs : List wasm_types.ValueType

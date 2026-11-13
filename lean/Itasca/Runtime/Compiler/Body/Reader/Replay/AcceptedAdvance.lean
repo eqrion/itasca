@@ -30,11 +30,11 @@ theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law 
     (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (allowance : ChargeCounter → Nat)
     (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         ReachedBodyWasm2 initial C locals data env sourceLocals index ft result.2.2 out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ∧ next.val ≤ out.core.pos.val ⦄ := by
@@ -54,7 +54,7 @@ theorem accepted_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) (law 
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out called
   have cursor := code.step_profile.accepted_progress
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance called
   apply WP.exists_imp_spec

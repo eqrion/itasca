@@ -22,9 +22,9 @@ set_option maxHeartbeats 2000000 in
 /-- The signature returned to an entry callback is exactly the independently
 decoded block signature, and stack processing preserves its ending cursor. -/
 theorem code.enter_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (kind : code.LabelKind)
+    (env : metadata.Env) (kind : code.LabelKind)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
-    code.enter_info st data env profile kind ⦃ r => ∀ bt, r.1 = .Ok bt →
+    code.enter_info st data env kind ⦃ r => ∀ bt, r.1 = .Ok bt →
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
   unfold code.enter_info
   obtain ⟨res, hr, hdecoded⟩ := WP.spec_imp_exists (signature.read_block_type.spec data st.core.pos)
@@ -177,12 +177,10 @@ open VisitorTrace
 
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x02#u8 v =
-      bodyRun (code.enter_info st data env profile .Block) visitor (Action.block) v := by
-  have hc : code.check_opcode profile 0x02#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x02#u8 v =
+      bodyRun (code.enter_info st data env .Block) visitor (Action.block) v := by
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -197,12 +195,10 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x03#u8 v =
-      bodyRun (code.enter_info st data env profile .Loop) visitor (Action.loop) v := by
-  have hc : code.check_opcode profile 0x03#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x03#u8 v =
+      bodyRun (code.enter_info st data env .Loop) visitor (Action.loop) v := by
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -217,12 +213,10 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x04#u8 v =
-      bodyRun (code.enter_info st data env profile .Then) visitor (Action.if_) v := by
-  have hc : code.check_opcode profile 0x04#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x04#u8 v =
+      bodyRun (code.enter_info st data env .Then) visitor (Action.if_) v := by
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -237,12 +231,10 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x05#u8 v =
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x05#u8 v =
       bodyRun (code.end_frame_info st env true) visitor (fun a => Action.else_ a.2) v := by
-  have hc : code.check_opcode profile 0x05#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -260,12 +252,10 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x0b#u8 v =
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x0b#u8 v =
       bodyRun (code.end_frame_info st env false) visitor (fun a => Action.end_ a.1 a.2) v := by
-  have hc : code.check_opcode profile 0x0b#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -283,12 +273,10 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x0c#u8 v =
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x0c#u8 v =
       bodyRun (code.branch_info st data env false) visitor (fun a => Action.br a.1 a.2) v := by
-  have hc : code.check_opcode profile 0x0c#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -306,12 +294,10 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x0d#u8 v =
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x0d#u8 v =
       bodyRun (code.branch_info st data env true) visitor (fun a => Action.br_if a.1 a.2) v := by
-  have hc : code.check_opcode profile 0x0d#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -329,12 +315,10 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x10#u8 v =
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x10#u8 v =
       bodyRun (code.call_info st data env) visitor (Action.call) v := by
-  have hc : code.check_opcode profile 0x10#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -349,12 +333,10 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
 
 theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) :
-    code.step_profile visitor st data env ctx index profile 0x11#u8 v =
-      bodyRun (code.call_indirect_info st data env profile) visitor (fun a => Action.call_indirect a.1 a.2) v := by
-  have hc : code.check_opcode profile 0x11#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _
-  simp [code.step_profile, hc, global_simps, bodyRun, invoke,
+    (ctx : code.Context) (index : U32) (v : V) :
+    code.step_profile visitor st data env ctx index 0x11#u8 v =
+      bodyRun (code.call_indirect_info st data env ) visitor (fun a => Action.call_indirect a.1 a.2) v := by
+  simp [code.step_profile, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1

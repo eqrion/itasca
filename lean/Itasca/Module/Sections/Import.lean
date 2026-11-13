@@ -20,8 +20,7 @@ namespace Itasca.ModuleSections
 /-- `result` is `env` with `entry` appended to the imports and to the index space of its kind.
 Functions must resolve their type, tables and memories satisfy their limits, and memories
 respect the count cap. -/
-def ImportAdded (env result : metadata.Env) (entry : metadata.Import)
-    (profile : ValidationProfile) : Prop :=
+def ImportAdded (env result : metadata.Env) (entry : metadata.Import) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
   match entry.desc with
   | .Func idx => ∃ ft, ModuleEnv.Resolves env.types.val idx ft ∧
@@ -62,9 +61,9 @@ open ModuleBinary ModuleSections
 `ImportEncoding` span, and the environment stays within the byte bound. -/
 @[step]
 theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile) :
-    metadata.decode_import data pos env profile ⦃ r => match r.1 with
-      | .Ok next => ∃ entry, ImportAdded env r.2 entry profile ∧
+    (hbound : ModuleEnv.Bounded env pos.val) :
+    metadata.decode_import data pos env ⦃ r => match r.1 with
+      | .Ok next => ∃ entry, ImportAdded env r.2 entry ∧
           At ImportEncoding data pos (ModuleEnv.rawImport entry) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
@@ -123,7 +122,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
                 intro bytes hbytes
                 exact .func value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data p3)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -135,8 +134,6 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
             have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
             simp [hd]
             step
-            rw [metadata.check_table_count.complete]
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
             step
             let entry : metadata.Import := ⟨modname, nm, .Table value⟩
             refine ⟨entry, ?_, ?_, ?_⟩
@@ -173,7 +170,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
                 intro bytes hbytes
                 exact .memory value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data p3)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

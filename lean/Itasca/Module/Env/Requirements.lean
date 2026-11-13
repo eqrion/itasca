@@ -17,8 +17,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- The semantic requirements for one import against the index spaces built so far. -/
-def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc)
-    (profile : ValidationProfile) : Prop :=
+def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc) : Prop :=
   match desc with
   | .Func idx => idx.val < env.types.val.length
   | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
@@ -36,8 +35,7 @@ def rawMemories (entries : List ModuleBinary.Import) : List wasm_types.MemType :
 
 /-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
 on the merged memory space, so imports can be processed in order. -/
-structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import)
-    (profile : ValidationProfile) : Prop where
+structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
     | .Func idx => idx.val < env.types.val.length
     | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
@@ -55,8 +53,8 @@ def ElementValidRaw (env : metadata.Env) (entry : ModuleBinary.Element) : Prop :
   ∀ init ∈ entry.init, ModuleConstants.Valid env init (ModuleConstants.referenceValueType entry.elem)
 
 /-- The first import of a valid list is valid at the current index-space prefix. -/
-theorem ImportsValid.head {profile} {env entry entries} (h : ImportsValid env (entry :: entries) profile) :
-    ImportValid env entry.desc profile := by
+theorem ImportsValid.head {env entry entries} (h : ImportsValid env (entry :: entries)) :
+    ImportValid env entry.desc := by
   have hd := h.descriptors entry (by simp)
   have hm := h.memories
   cases he : entry.desc <;> simp only [he, ImportValid] at hd ⊢
@@ -68,9 +66,9 @@ theorem ImportsValid.head {profile} {env entry entries} (h : ImportsValid env (e
 
 /-- After the first import is added, the remaining imports are valid against the updated
 environment. -/
-theorem ImportsValid.tail {profile} {env result actual entries}
-    (h : ImportsValid env (ModuleEnv.rawImport actual :: entries) profile)
-    (ha : ImportAdded env result actual profile) : ImportsValid result entries profile := by
+theorem ImportsValid.tail {env result actual entries}
+    (h : ImportsValid env (ModuleEnv.rawImport actual :: entries))
+    (ha : ImportAdded env result actual) : ImportsValid result entries := by
   obtain ⟨_, ha⟩ := ha
   have hd : ∀ e ∈ entries, match e.desc with
       | .Func idx => idx.val < env.types.val.length
@@ -128,11 +126,10 @@ structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
 
 /-- The semantic requirements of declaration section rank `id` of `raw` against `env`. Binary
 framing, UTF-8 names, and cursor and capacity bounds come separately from the grammar. -/
-def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
-    (profile : ValidationProfile) : Prop :=
+def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env) : Prop :=
   match id with
-  | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible profile ft
-  | 2 => ModuleSections.ImportsValid env raw.imports profile
+  | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible ft
+  | 2 => ModuleSections.ImportsValid env raw.imports
   | 3 => ∀ idx ∈ raw.functions, idx.val < env.types.val.length
   | 4 => ∀ tt ∈ raw.tables, ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
   | 5 => (∀ mt ∈ raw.memories, ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES) ∧
@@ -149,7 +146,7 @@ def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
 /-- Every declaration section of `raw` meets its requirements whenever the preceding slots are
 ready. Declarative assembly discharges this once, and it has no parser-execution or
 successful-decoding premise. -/
-def Requirements (raw : ModuleBinary.Module) (profile : ValidationProfile) : Prop :=
-  ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env profile
+def Requirements (raw : ModuleBinary.Module) : Prop :=
+  ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env
 
 end Itasca.ModuleEnv

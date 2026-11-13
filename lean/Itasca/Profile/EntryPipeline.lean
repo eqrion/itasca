@@ -20,21 +20,21 @@ recording the type lookup, locals, body slice and visitor calls. -/
 theorem metadata.validate_code_entry_with.profile_pipeline {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
-    (profile : ValidationProfile) :
-    metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r =>
+     :
+    metadata.validate_code_entry_with visitor data pos env index v ⦃ r =>
       ∀ finish, r.1 = .Ok finish →
-        Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 profile) ⦄ :=
-  metadata.validate_code_entry_with.pipeline_of_body_total visitor hv data pos env index v hbound profile
-    (fun body ctx typeIdx started => code.validate_body_with.total visitor hv body env ctx typeIdx profile started)
+        Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 ) ⦄ :=
+  metadata.validate_code_entry_with.pipeline_of_body_total visitor hv data pos env index v hbound
+    (fun body ctx typeIdx started => code.validate_body_with.total visitor hv body env ctx typeIdx started)
 
 /-- The entry validator with a total visitor returns a result. -/
 theorem metadata.validate_code_entry_with.profile_total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
-    (profile : ValidationProfile) :
-    ∃ r, metadata.validate_code_entry_with visitor data pos env index profile v = .ok r := by
+     :
+    ∃ r, metadata.validate_code_entry_with visitor data pos env index v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (metadata.validate_code_entry_with.profile_pipeline visitor hv data pos env index v hbound profile)
+    (metadata.validate_code_entry_with.profile_pipeline visitor hv data pos env index v hbound )
   exact ⟨r, hr⟩
 
 end Itasca

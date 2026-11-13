@@ -13,18 +13,18 @@ structure ModuleCapacities (module : runtime.compiler.ExecutableModule)
     module.module.env.func_type_indices.val[index]? = some typeIndex →
       ∃ compiled source, module.functions.val[index]? = some compiled ∧
         sources[index]? = some source ∧
-        FunctionCapacity module.profile module.module.env typeIndex source compiled
+        FunctionCapacity module.module.env typeIndex source compiled
 
 theorem ModuleCapacities.extend {before after : runtime.compiler.ExecutableModule} {sources}
     (certificate : ModuleCapacities before sources)
-    (source : after.module = before.module) (profile : after.profile = before.profile)
+    (source : after.module = before.module)
     (preserved : after.functions.val.take before.functions.val.length = before.functions.val) :
     ModuleCapacities after sources := by
   refine ⟨by simpa only [source] using certificate.count, ?_⟩
   intro index typeIndex found
   obtain ⟨compiled, src, foundCode, sourceLookup, code⟩ := certificate.entry index typeIndex
     (by simpa only [source] using found)
-  refine ⟨compiled, src, ?_, sourceLookup, by simpa only [source, profile] using code⟩
+  refine ⟨compiled, src, ?_, sourceLookup, by simpa only [source] using code⟩
   have bound := (List.getElem?_eq_some_iff.mp foundCode).1
   have same := (List.getElem?_eq_some_iff.mp foundCode).2
   have retained := congrArg (fun list => list[index]?) preserved

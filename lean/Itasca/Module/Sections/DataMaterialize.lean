@@ -34,18 +34,16 @@ theorem PaddedEncoding.length_bounded {α : Type} {R : α → List U8 → Prop}
     obtain ⟨_, _, _, hv, _⟩ := hp
     exact hv.length_bounded
 
-/-- A profile data segment's bytes fit in `Usize`. -/
-theorem DataEncodingFor.init_bounded {profile entry bytes}
-    (h : DataEncodingFor profile entry bytes) : entry.init.length ≤ Usize.max := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | active _ _ hi => exact hi.length_bounded
-    | passive _ hi => exact hi.length_bounded
+/-- A data segment's bytes fit in `Usize`. -/
+theorem DataEncodingFor.init_bounded {entry bytes}
+    (h : DataEncodingFor entry bytes) : entry.init.length ≤ Usize.max := by
+  cases h with
+  | active _ _ hi => exact hi.length_bounded
+  | passive _ hi => exact hi.length_bounded
 
 /-- A `DataEncodingFor` entry is the raw form of some runtime `metadata.Data`. -/
-theorem DataEncodingFor.materialize {profile entry bytes}
-    (h : DataEncodingFor profile entry bytes) :
+theorem DataEncodingFor.materialize {entry bytes}
+    (h : DataEncodingFor entry bytes) :
     ∃ segment : metadata.Data, ModuleData.raw segment = entry := by
   refine ⟨⟨entry.mode, Vec.from entry.init h.init_bounded⟩, ?_⟩
   simp [ModuleData.raw]
@@ -56,8 +54,8 @@ namespace Itasca.ModuleTail
 
 open ModuleBinary
 
-private theorem materialize_list {profile} (entries : List ModuleBinary.Data)
-    (h : ∀ entry ∈ entries, ∃ bytes, DataEncodingFor profile entry bytes) :
+private theorem materialize_list (entries : List ModuleBinary.Data)
+    (h : ∀ entry ∈ entries, ∃ bytes, DataEncodingFor entry bytes) :
     ∃ segments : List metadata.Data, segments.map ModuleData.raw = entries := by
   induction entries with
   | nil => exact ⟨[], rfl⟩
@@ -70,7 +68,7 @@ private theorem materialize_list {profile} (entries : List ModuleBinary.Data)
 /-- A tail encoding's segments are the raw form of some runtime vector of `metadata.Data`. The
 allocation bounds come from the data count and each segment's byte count, and no parser
 acceptance is assumed. -/
-theorem Encoding.materialize {profile entries bytes} (h : Encoding entries bytes profile) :
+theorem Encoding.materialize {entries bytes} (h : Encoding entries bytes) :
     ∃ segments : Vec metadata.Data, segments.val.map ModuleData.raw = entries := by
   obtain ⟨_, _, hp, _, _⟩ := h
   obtain ⟨segments, hs⟩ := materialize_list entries (fun entry hm => hp.member hm)
@@ -105,9 +103,9 @@ namespace Itasca.ModuleTail
 
 /-- An independently encoded tail whose sections are typed gives runtime segments that match the
 raw data and are valid in the ready environment. -/
-theorem materialize {profile} (data : Slice U8) (start next : Usize)
+theorem materialize (data : Slice U8) (start next : Usize)
     (raw : ModuleBinary.Module) (decls : ModuleEnv.Declarations) (env : metadata.Env)
-    (hb : ModuleBinary.At (fun es bs => Encoding es bs profile) data start raw.data next)
+    (hb : ModuleBinary.At (fun es bs => Encoding es bs) data start raw.data next)
     (htyped : ModuleElaboration.SectionsTyped raw)
     (hready : ModuleEnv.Ready raw 10 decls env) :
     ∃ segments : Vec metadata.Data, segments.val.map ModuleData.raw = raw.data ∧

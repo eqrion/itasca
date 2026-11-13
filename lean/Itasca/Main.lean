@@ -13,16 +13,15 @@ import Itasca.Results.Invoke
 # Validator results
 
 The public guarantees of the validator. Every headline theorem is stated in full in one of the
-files below; everything else in the library supports them. `profile_*` theorems quantify over both
-`ValidationProfile` values. The embedding
+files below; everything else in the library supports them. The embedding
 obligations of the streaming results are defined in [Contracts](Contracts.lean).
 
 [Results/Validate](Results/Validate.lean), whole-module validation:
-- `metadata.validate_module.profile_spec`, `profile_total`, `profile_sound`
-- `metadata.validate_module.profile_complete`, `profile_complete_with_metadata`
+- `metadata.validate_module.spec`, `total`, `sound`
+- `metadata.validate_module.complete`, `complete_with_metadata`
 
 [Results/Stream](Results/Stream.lean), the streaming driver:
-- `stream.validate_streaming.profile_sound`, `profile_total`, `profile_complete`
+- `stream.validate_streaming.sound`, `total`, `complete`
 
 [Results/Batch](Results/Batch.lean), worker batches:
 - `stream.CodeBatch.validate_func.total`, `complete`
@@ -45,15 +44,14 @@ obligations of the streaming results are defined in [Contracts](Contracts.lean).
 # Runtime results
 
 The public guarantees of the slot runtime. Every headline theorem is stated in full in one of the
-files below; everything else in the library supports them. `profile_*` theorems quantify over both
-complete `ValidationProfile` values. The obligations the results place on an embedding (platform
+files below; everything else in the library supports them. The obligations the results place on an embedding (platform
 operations, host callbacks, compiler eligibility and source resources) are listed in
 [Runtime/Contracts](Runtime/Contracts.lean).
 
 [Results/Compile](Results/Compile.lean), compilation:
-- `runtime.compiler.compile_with.profile_sound`, `profile_spec`
-- `runtime.compiler.compile_with.profile_complete`, `profile_complete_spec`
-- `runtime.compiler.compile_default_with.profile_spec`
+- `runtime.compiler.compile_with.sound`, `spec`
+- `runtime.compiler.compile_with.complete`, `complete_spec`
+- `runtime.compiler.compile_default_with.spec`
 
 [Results/Instantiate](Results/Instantiate.lean), instantiation of a compiled module:
 - `runtime.store.instantiate.Store.instantiate_with.spec`

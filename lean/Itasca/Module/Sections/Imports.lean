@@ -15,10 +15,10 @@ namespace Itasca.ModuleSections
 
 /-- `result` is `initial` after adding `entries` one at a time by `ImportAdded`. -/
 inductive ImportsAdded (initial : metadata.Env) : List metadata.Import → metadata.Env →
-    (profile : ValidationProfile) → Prop where
-  | nil {profile} : ImportsAdded initial [] initial profile
-  | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
-      ImportAdded before after entry profile → ImportsAdded initial (entries ++ [entry]) after profile
+    Prop where
+  | nil : ImportsAdded initial [] initial
+  | snoc {entries before after entry} : ImportsAdded initial entries before →
+      ImportAdded before after entry → ImportsAdded initial (entries ++ [entry]) after
 
 end Itasca.ModuleSections
 
@@ -30,16 +30,16 @@ open ModuleBinary ModuleSections
 @[step]
 theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hbound : ModuleEnv.Bounded env start.val) (profile : ValidationProfile) :
-    metadata.decode_import_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
-      | .Ok next => ∃ entries, entries.length = count.val ∧ ImportsAdded env entries r.2 profile ∧
+    (hbound : ModuleEnv.Bounded env start.val) :
+    metadata.decode_import_section_loop data env count start 0#u32 ⦃ r => match r.1 with
+      | .Ok next => ∃ entries, entries.length = count.val ∧ ImportsAdded env entries r.2 ∧
           At (Rep ImportEncoding) data start (entries.map ModuleEnv.rawImport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   unfold metadata.decode_import_section_loop
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ entries, entries.length = s.2.2.val ∧
-      ImportsAdded env entries s.1 profile ∧
+      ImportsAdded env entries s.1 ∧
       At (Rep ImportEncoding) data start (entries.map ModuleEnv.rawImport) s.2.1 ∧
       ModuleEnv.Bounded s.1 s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, entries, hlen, henv, hbytes, hbound⟩
@@ -51,7 +51,7 @@ theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metada
       have heq : i.val = count.val := by scalar_tac
       exact ⟨entries, by omega, henv, hbytes, hbound⟩
     · rename_i hmore
-      obtain ⟨⟨r, updated⟩, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_import.spec data pos current hbound profile)
+      obtain ⟨⟨r, updated⟩, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_import.spec data pos current hbound)
       simp only [hr, bind_ok]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -71,9 +71,9 @@ theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metada
 /-- `metadata.decode_import_section` adds the imports of a `VecEncoding ImportEncoding` span. -/
 @[step]
 theorem metadata.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile) :
-    metadata.decode_import_section data pos env profile ⦃ r => match r.1 with
-      | .Ok next => ∃ entries, ImportsAdded env entries r.2 profile ∧
+    (hbound : ModuleEnv.Bounded env pos.val) :
+    metadata.decode_import_section data pos env ⦃ r => match r.1 with
+      | .Ok next => ∃ entries, ImportsAdded env entries r.2 ∧
           At (VecEncoding ImportEncoding) data pos (entries.map ModuleEnv.rawImport) next ∧
           ModuleEnv.Bounded r.2 next.val
       | .Err _ => True ⦄ := by
@@ -86,7 +86,7 @@ theorem metadata.decode_import_section.spec (data : Slice U8) (pos : Usize) (env
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_import_section_loop.spec data env count start hs.2.2 (hbound.mono (by omega)) profile)
+      (metadata.decode_import_section_loop.spec data env count start hs.2.2 (hbound.mono (by omega)))
     simp [metadata.decode_import_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with

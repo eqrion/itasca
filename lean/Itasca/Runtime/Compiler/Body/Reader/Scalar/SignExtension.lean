@@ -19,7 +19,7 @@ open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 /-- Exact sign-extension reading advances the supplied source zipper and
 retains both the physical conversion and actual visitor callback. -/
 theorem reader_sign_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (ctx : code.Context) (opcode : U8)
     (operation : Numeric.Operation)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -91,14 +91,14 @@ theorem integer_sign_reader_facts {A : Type} (ops : runtime.platform.Alloc A)
 /-- Successful profile dispatch for any of the five sign extensions supplies
 all reader capacity, hook identity and exact source-position facts internally. -/
 theorem reader_integer_sign_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (op : SourceMachine.Numeric.Instruction)
     (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ operation : Numeric.Operation,
       operation.instruction = op.source ∧
       operation.inputs.map Translate.valueType = List.replicate op.arity (integerType op.input) ∧

@@ -6,9 +6,7 @@ use itasca::runtime::{
     InterruptAction, LinkError, MemoryBuffer, Platform, ResourceLimit, Store, StoreLimits, Trap,
     Value, VecMemory,
 };
-use itasca::{
-    ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValidationProfile, ValueType,
-};
+use itasca::{ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValueType};
 use wast::core::{AbstractHeapType, HeapType, NanPattern, V128Pattern, WastArgCore, WastRetCore};
 use wast::{QuoteWat, Wast, WastArg, WastDirective, WastExecute, WastInvoke, WastRet};
 
@@ -214,7 +212,7 @@ impl Script {
 
     fn compile(&self, module: QuoteWat<'_>) -> Result<ExecutableModule> {
         let bytes = self.encode(module)?;
-        compile(&bytes, ValidationProfile::Wasm2).map_err(Failure::Validation)
+        compile(&bytes).map_err(Failure::Validation)
     }
 
     fn instantiate(&mut self, module: QuoteWat<'_>) -> Result<InstanceAddr> {

@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 /-- Live metadata readers retain the precise full operand suffix used by the
 slot compiler, including values saved outside the current source scope. -/
 theorem _root_.Itasca.Wasm2.MetadataReaderPost.types {data env locals index st}
-    {p : Pending data env .Wasm2 locals index st} {A B : Type}
+    {p : Pending data env locals index st} {A B : Type}
     {decode : Result (core.result.Result A error.OpError × code.OpIterState)}
     {pops : A → List wasm_types.ValueType} {output : A → Option wasm_types.ValueType}
     {metadata : A → B} {operation : A → instr} {value : B} {out : code.OpIterState}

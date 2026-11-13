@@ -21,14 +21,14 @@ theorem compiler_table_source_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
     (shape : Control.Shape st.core) (depths : List U32) (fallback : U32) (next : Usize)
     (encoded : BrTable.Decoded data st.core.pos depths fallback next)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before = .ok (.Ok (),final,after)) :
+      st data env before = .ok (.Ok (),final,after)) :
     ∃ budget buffer types,
       buffer.val = before.table_depths.val ++ depths ∧
       runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
         ops {before with budget,table_depths := buffer} final.core fallback types = .ok (.Ok (),after) := by
   obtain ⟨count,first,selector,popped,actual,default,types,last,readState,budget,buffer,
     countDecoded,popCall,bufferEq,labelsDecoded,defaultDecoded,lengthEq,marked,callback⟩ :=
-    compiler_read_br_table ops law before after st final data env _ accepted
+    compiler_read_br_table ops law before after st final data env accepted
   have movedShape : Control.Shape {st.core with pos := first} := ⟨shape.ordered,shape.bounded⟩
   have poppedSpec := code.pop_with_type.total {st.core with pos := first} .I32 movedShape
   rw [popCall,WP.spec_ok] at poppedSpec

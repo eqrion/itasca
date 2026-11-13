@@ -19,7 +19,7 @@ set_option maxRecDepth 4096
 /-- Independent Wasm 2 source-reader typing supplies the complete
 stateful signature and live operands. Dead paths only observe the source stack.
 This covers references, table operations, and memory/bulk metadata callbacks. -/
-theorem StatefulReaderPost.available {data env locals index st} {p : Wasm2.Pending data env .Wasm2 locals index st}
+theorem StatefulReaderPost.available {data env locals index st} {p : Wasm2.Pending data env locals index st}
     {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)
@@ -93,7 +93,7 @@ theorem stateful_callback_invoke {V : Type} (visitor : code.OpVisitor V) (before
 
 /-- Source-reader typing and bounded lowering establish acceptance of the
 actual stateful hook, with the checked compiler argument order. -/
-theorem StatefulReaderPost.callback_available {data env locals index st} {p : Wasm2.Pending data env .Wasm2 locals index st}
+theorem StatefulReaderPost.callback_available {data env locals index st} {p : Wasm2.Pending data env locals index st}
     {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction} (post : StatefulReaderPost p out op)
     {A : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (compiler : runtime.compiler.FunctionCompiler A) (demand : CallbackDemand compiler out bound)

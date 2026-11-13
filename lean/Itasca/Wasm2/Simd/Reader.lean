@@ -9,8 +9,8 @@ retains the same read state and stack effect without any visitor premise.
 namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
-theorem Pending.fixed_reader {data env profile locals index st}
-    (p : Wasm2.Pending data env profile locals index st)
+theorem Pending.fixed_reader {data env locals index st}
+    (p : Wasm2.Pending data env locals index st)
     (position : Usize)
     (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (source : instr)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -61,7 +61,7 @@ theorem Pending.fixed_reader {data env profile locals index st}
     declared
 
 theorem Pending.fixed_reader_accepted {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st)
+    (p : Wasm2.Pending data env locals index st)
     (position : Usize) (out : code.OpIterState)
     (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (source : instr)
     (capacity : st.core.vals.val.length < Usize.max)

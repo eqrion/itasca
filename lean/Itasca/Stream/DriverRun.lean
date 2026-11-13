@@ -23,7 +23,7 @@ validator. -/
 structure Remaining {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : metadata.Env) (environmentLength : Usize) (before after : V)
-    (profile : ValidationProfile) where
+     where
   codeLength : Usize
   codeEnd : Usize
   entries : Usize
@@ -45,13 +45,13 @@ structure Remaining {S V : Type} (source : stream.Source S)
   configured_call : visitor.environment_ready before env = .ok (.Ok config, configured)
   batch_bytes_positive : config.batch_bytes ≠ 0#usize
   max_batches_positive : config.max_batches ≠ 0#usize
-  submit_call : stream.submit_code_batches source visitor id profile state env codeLength entries config configured =
+  submit_call : stream.submit_code_batches source visitor id state env codeLength entries config configured =
     .ok (.Ok pending, submitted)
   end_call : visitor.code_end submitted = .ok (.Ok (), ended)
   tail_call : source.tail state = .ok (.Ok tailBytes)
   module_bound : limits.add_offset codeEnd (Slice.len tailBytes) = .ok (.Ok moduleEnd)
   region_call : visitor.custom_region ended .Tail = .ok region
-  decode_tail : metadata.validate_tail_with visitor.metadataModuleVisitorInst tailBytes 0#usize env profile region =
+  decode_tail : metadata.validate_tail_with visitor.metadataModuleVisitorInst tailBytes 0#usize env region =
     .ok (.Ok tail, decodedTail)
   ready_call : visitor.tail_ready decodedTail tail = .ok (.Ok (), ready)
   drain_call : stream.retire_all_code_batches visitor id ready pending = .ok (.Ok (), after, remaining)
@@ -61,7 +61,7 @@ custom-section region callback, the environment decode, and the `Remaining` phas
 structure Accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (before after : V) (env : metadata.Env)
-    (profile : ValidationProfile) where
+     where
   environment : Slice U8
   environmentLength : Usize
   region : V
@@ -69,20 +69,20 @@ structure Accepted {S V : Type} (source : stream.Source S)
   environment_call : source.environment state = .ok (.Ok environment)
   environment_bound : limits.add_offset 0#usize (Slice.len environment) = .ok (.Ok environmentLength)
   region_call : visitor.custom_region before .Environment = .ok region
-  decode_environment : metadata.validate_env_with visitor.metadataModuleVisitorInst environment profile region =
+  decode_environment : metadata.validate_env_with visitor.metadataModuleVisitorInst environment region =
     .ok (.Ok (env, environmentLength), decoded)
-  remaining : Remaining source visitor id state env environmentLength decoded after profile
+  remaining : Remaining source visitor id state env environmentLength decoded after
 
 end Itasca.StreamRun
 
 namespace Itasca
 
 /-- An accepted `stream.validate_remaining` yields witnesses for each of its phases. -/
-theorem stream.validate_remaining.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
+theorem stream.validate_remaining.accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v v' : V)
-    (h : stream.validate_remaining source visitor id profile state env envLen v = .ok (.Ok (), v')) :
-    Nonempty (StreamRun.Remaining source visitor id state env envLen v v' profile) := by
+    (h : stream.validate_remaining source visitor id state env envLen v = .ok (.Ok (), v')) :
+    Nonempty (StreamRun.Remaining source visitor id state env envLen v v' ) := by
   unfold stream.validate_remaining at h
   obtain ⟨codeLen, hlen, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   obtain ⟨r, hbound, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -151,11 +151,11 @@ theorem stream.validate_remaining.accepted {profile : ValidationProfile} {S V : 
 set_option maxHeartbeats 600000 in
 /-- An accepted generic driver exposes its decoded environment and the tail delivery it actually
 performed. No assumption is made that the visitor state keeps any metadata. -/
-theorem stream.validate_streaming.accepted {profile : ValidationProfile} {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (v v' : V) (initial env : metadata.Env)
-    (h : stream.validate_streaming source visitor id profile state v initial = .ok (.Ok (), v', env)) :
-    Nonempty (StreamRun.Accepted source visitor id state v v' env profile) := by
+    (h : stream.validate_streaming source visitor id state v initial = .ok (.Ok (), v', env)) :
+    Nonempty (StreamRun.Accepted source visitor id state v v' env ) := by
   unfold stream.validate_streaming at h
   obtain ⟨r, henv, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   cases r with

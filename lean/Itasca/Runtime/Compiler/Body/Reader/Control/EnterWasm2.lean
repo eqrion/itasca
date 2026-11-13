@@ -17,25 +17,25 @@ def enterAction (form : Frames.Form) (bt : signature.BlockType) : Action :=
   | _ => .block bt
 
 theorem reader_enter_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (form : Frames.Form) (initial : form.Initial)
+    (p : Pending data env locals index st) (form : Frames.Form) (initial : form.Initial)
     {V : Type} (visitor : code.OpVisitor V) (before after : V)
     (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 form.opcode before =
+    (accepted : code.step_profile visitor st data env ctx index form.opcode before =
       .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base,
       invoke visitor before (.op out.core (enterAction form bt)) = .ok (.Ok (), after) ∧
-      code.enter_info st data env .Wasm2 form.kind = .ok (.Ok bt, out) ∧
+      code.enter_info st data env form.kind = .ok (.Ok bt, out) ∧
       Wasm2.ReaderEnterPost p out form bt ins outs remaining base := by
-  have dispatch : code.step_profile visitor st data env ctx index .Wasm2 form.opcode before =
-      CallbackTrace.bodyRun (code.enter_info st data env .Wasm2 form.kind) visitor (enterAction form) before := by
+  have dispatch : code.step_profile visitor st data env ctx index form.opcode before =
+      CallbackTrace.bodyRun (code.enter_info st data env form.kind) visitor (enterAction form) before := by
     rcases initial with rfl | rfl | rfl
-    · exact CallbackTrace.dispatch_block visitor st data env ctx index .Wasm2 before
-    · exact CallbackTrace.dispatch_loop visitor st data env ctx index .Wasm2 before
-    · exact CallbackTrace.dispatch_if visitor st data env ctx index .Wasm2 before
+    · exact CallbackTrace.dispatch_block visitor st data env ctx index before
+    · exact CallbackTrace.dispatch_loop visitor st data env ctx index before
+    · exact CallbackTrace.dispatch_if visitor st data env ctx index before
   rw [dispatch] at accepted
   obtain ⟨bt, read, callback⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
-  have erased : code.enter st data env .Wasm2 form.kind = .ok (.Ok (), out) := by
+  have erased : code.enter st data env form.kind = .ok (.Ok (), out) := by
     simp [code.enter, read, core.result.Result.Insts.CoreOpsTry.branch]
   have effect := p.enter_reader form initial byte
   rw [erased, WP.spec_ok] at effect
@@ -43,7 +43,7 @@ theorem reader_enter_wasm2 {data env locals index st}
   have capacity : st.blocks.val.length < Usize.max := by
     have := p.ctrls; have := p.inbounds; have := p.size; have := limits.MAX_FUNCTION_BYTES.room
     omega
-  have info := code.enter_info.bytes st data env .Wasm2 form.kind p.opened.shape.core capacity
+  have info := code.enter_info.bytes st data env form.kind p.opened.shape.core capacity
   rw [read, WP.spec_ok] at info
   obtain ⟨rfl, _⟩ := (info bt rfl).unique decoded
   exact ⟨bt, ins, outs, remaining, base, callback, read, post⟩

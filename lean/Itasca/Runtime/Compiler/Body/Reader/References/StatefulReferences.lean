@@ -15,7 +15,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 
 theorem reader_ref_func_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (idx : U32) (out : code.OpIterState)
+    (p : Pending data env locals index st) (idx : U32) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 210#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_func st.core data env = .ok (.Ok idx,out)) :
@@ -29,7 +29,7 @@ theorem reader_ref_func_wasm2 {data env locals index st}
   exact ⟨bound, controls, values, post⟩
 
 theorem reader_ref_is_null_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (out : code.OpIterState)
+    (p : Pending data env locals index st) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 209#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_is_null st.core = .ok (.Ok (),out)) :
@@ -69,7 +69,7 @@ private theorem fixed_effect_concrete {before after inputs output}
 /-- Reference tests derive their concrete live suffix from the canonical fixed
 effect; dead polymorphic paths only retain the exact source zipper. -/
 theorem reader_ref_is_null_post_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (out : code.OpIterState)
+    (p : Pending data env locals index st) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 209#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_is_null st.core = .ok (.Ok (),out)) :
@@ -102,7 +102,7 @@ theorem reader_ref_is_null_post_wasm2 {data env locals index st}
     exact concrete_stack_append.mpr ⟨outerKnown,afterKnown⟩
 
 theorem reader_ref_func_post_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (idx : U32) (out : code.OpIterState)
+    (p : Pending data env locals index st) (idx : U32) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 210#u8)
     (size : st.core.vals.val.length < Usize.max)
     (accepted : code.read_ref_func st.core data env = .ok (.Ok idx,out)) :

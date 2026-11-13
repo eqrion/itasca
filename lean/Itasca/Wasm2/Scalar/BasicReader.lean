@@ -14,8 +14,8 @@ namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
 /-- NOP records its opcode while preserving the precise source stack. -/
-theorem Pending.nop_reader {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.nop_reader {data env locals index st}
+    (p : Pending data env locals index st)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
     ReaderPost p st.core .NOP p.current.ctrl.polymorphic_base p.current.vals := by
   obtain ⟨_, outer, _, _, base, _, controls, _, vals⟩ := p.opened
@@ -28,8 +28,8 @@ theorem Pending.nop_reader {data env profile locals index st}
   · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
 
 /-- A successful i32 constant read retains its exact source prefix and stack effect. -/
-theorem Pending.read_i32_const {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_i32_const {data env locals index st}
+    (p : Pending data env locals index st)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST) :
     code.read_i32_const st.core data ⦃ r => ∀ value, r.1 = .Ok value →
@@ -54,8 +54,8 @@ theorem Pending.read_i32_const {data env profile locals index st}
   · exact encoded.declared _
 
 /-- A successful i64 constant read retains its exact source prefix and stack effect. -/
-theorem Pending.read_i64_const {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_i64_const {data env locals index st}
+    (p : Pending data env locals index st)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST) :
     code.read_i64_const st.core data ⦃ r => ∀ value, r.1 = .Ok value →
@@ -80,8 +80,8 @@ theorem Pending.read_i64_const {data env profile locals index st}
   · exact encoded.declared _
 
 /-- A successful f32 constant read retains its exact source prefix and stack effect. -/
-theorem Pending.read_f32_const {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_f32_const {data env locals index st}
+    (p : Pending data env locals index st)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST) :
     code.read_f32_const st.core data ⦃ r => ∀ value, r.1 = .Ok value →
@@ -106,8 +106,8 @@ theorem Pending.read_f32_const {data env profile locals index st}
   · exact encoded.declared _
 
 /-- A successful f64 constant read retains its exact source prefix and stack effect. -/
-theorem Pending.read_f64_const {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_f64_const {data env locals index st}
+    (p : Pending data env locals index st)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST) :
     code.read_f64_const st.core data ⦃ r => ∀ value, r.1 = .Ok value →
@@ -132,8 +132,8 @@ theorem Pending.read_f64_const {data env profile locals index st}
   · exact encoded.declared _
 
 /-- Unreachable trims the operand stack and advances the same source prefix. -/
-theorem Pending.read_unreachable {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.read_unreachable {data env locals index st}
+    (p : Pending data env locals index st)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
     code.read_unreachable st.core ⦃ r => r.1 = .Ok () ∧
       r.2.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ∧

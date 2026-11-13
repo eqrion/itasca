@@ -101,7 +101,7 @@ theorem source_opcode_family (opcode : U8) : SourceOpcodeFamily opcode := by
 theorem ReservedSourceOpcode.rejects {V : Type} (source : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (before after : V) (reserved : ReservedSourceOpcode opcode)
-    (reference : code.step_profile source st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) : False := by
+    (reference : code.step_profile source st data env ctx index opcode before = .ok (.Ok (),out,after)) : False := by
   obtain ⟨_,raw⟩ := profile_base_success_wasm2 source st out data env ctx ctx index opcode before after
     reserved.ordinary reserved.plain reserved.sign reserved.misc rfl reference
   rcases reserved.absent with low | high

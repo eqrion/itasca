@@ -40,9 +40,8 @@ limits. -/
 @[step]
 theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hsize : env.table_types.val.length ≤ start.val)
-    (profile : ValidationProfile) :
-    metadata.decode_table_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
+    (hsize : env.table_types.val.length ≤ start.val) :
+    metadata.decode_table_section_loop data env count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TablesAdded env r.2 added ∧
           At (Rep TableTypeEncoding) data start added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 32 - 1)) ∧ r.2.table_types.val.length ≤ next.val
@@ -61,7 +60,7 @@ theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadat
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hsize⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data pos)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
@@ -74,8 +73,6 @@ theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadat
         have hcapacity : current.table_types.val.length < Usize.max := by scalar_tac
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
         step
-        rw [metadata.check_table_count.complete]
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
         step
         refine ⟨?_, ⟨added ++ [ft], ?_, ?_, ?_, ?_, ?_⟩, ?_⟩
         · scalar_tac
@@ -98,9 +95,8 @@ theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadat
 with valid limits. -/
 @[step]
 theorem metadata.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (hsize : env.table_types.val.length ≤ pos.val)
-    (profile : ValidationProfile) :
-    metadata.decode_table_section data pos env profile ⦃ r => match r.1 with
+    (hsize : env.table_types.val.length ≤ pos.val) :
+    metadata.decode_table_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, TablesAdded env r.2 added ∧
           At (VecEncoding TableTypeEncoding) data pos added next ∧
           (∀ ft ∈ added, ModuleTranslation.LimitsValid ft.limits (2 ^ 32 - 1)) ∧ r.2.table_types.val.length ≤ next.val
@@ -114,7 +110,7 @@ theorem metadata.decode_table_section.spec (data : Slice U8) (pos : Usize) (env 
     obtain ⟨count, start⟩ := pair
     have hs := hc.span
     obtain ⟨⟨r, result⟩, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_table_section_loop.spec data env count start hs.2.2 (by omega) profile)
+      (metadata.decode_table_section_loop.spec data env count start hs.2.2 (by omega))
     simp [metadata.decode_table_section, hr, core.result.Result.Insts.CoreOpsTry.branch]
     rw [hloop]
     cases r with

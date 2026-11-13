@@ -4,7 +4,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual accepted tail validation agrees with every declared data count. -/
 theorem CompileWitness.data_count_input {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable) :
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable) :
     ∀ count, w.env.data_count = some count → count.val = w.tail.data.val.length := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
@@ -15,7 +15,7 @@ theorem CompileWitness.data_count_input {A : Type} {allocator : runtime.platform
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.remaining.tailBytes 0#usize w.env run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have tailSemantic := metadata.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp) profile
+  have tailSemantic := metadata.validate_tail.spec run.remaining.tailBytes 0#usize w.env (by simp)
   rw [tailDecoded, WP.spec_ok] at tailSemantic
   obtain ⟨_, _, count⟩ := tailSemantic
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
@@ -31,7 +31,7 @@ theorem CompileWitness.data_count_input {A : Type} {allocator : runtime.platform
 
 /-- Initializer lowering retains the canonical data-count agreement. -/
 theorem CompileWitness.data_count {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
     ∀ count, executable.module.env.data_count = some count →
       count.val = executable.module.tail.data.val.length := by

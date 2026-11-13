@@ -113,7 +113,7 @@ theorem PreparedRun.global_source_context {M P F A : Type}
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
+    (valid : Valid module.module.env) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -246,7 +246,7 @@ theorem PreparedRun.segment_source_values {M P F A : Type}
     (laws : Platform.MemoryLaws memory view) (law : Platform.AllocCorrect allocator)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
+    (valid : Valid module.module.env) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -375,7 +375,7 @@ theorem PreparedRun.allocation_content {M P F A : Type}
     (cache : ModuleEnv.Cache module.module.env raw.tables raw.memories)
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     (lengths : raw.functions.length = raw.codes.length)
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
+    (valid : ModuleEnv.Valid module.module.env) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (initialModule : moduleinst)
     (functionMap : initialModule.FUNCS = trace.inst.funcs.val.map (fun address => address.index.val))
     (globalMap : initialModule.GLOBALS = trace.seed.globals.val.map (fun address => address.index.val))
@@ -508,7 +508,7 @@ theorem LinkedPreparedRun.source_allocation {M P F A : Type}
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
+    (valid : ModuleEnv.Valid module.module.env) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (oldSyntax : StoreSyntax code before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external) :
     ∃ next globals elements,
@@ -632,8 +632,8 @@ theorem LinkedPreparedRun.source_instantiation {M P F A : Type}
     (matched : ModuleElaboration.Matches module.module.env module.module.tail raw)
     (elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
-    {R bytes profile} (encoded : ModuleBinary.ModuleEncodingWith R raw bytes profile)
-    (valid : ModuleEnv.Valid module.module.env module.profile) (compiled : Compiler.InitializerMappings module)
+    {R bytes} (encoded : ModuleBinary.ModuleEncodingWith R raw bytes)
+    (valid : ModuleEnv.Valid module.module.env) (compiled : Compiler.InitializerMappings module)
     (code : CodeInterpretation) (oldSyntax : StoreSyntax code before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external) :
     ∃ next, ready.instances.val[before.instances.len.val]? = some next ∧ next.module = module ∧

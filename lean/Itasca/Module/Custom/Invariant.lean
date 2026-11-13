@@ -15,16 +15,13 @@ They speak only about the successful run.
 open Aeneas Aeneas.Std
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 /-- A successful run of the tail loop preserves `P` when the custom hook does. -/
 theorem metadata.validate_tail_with_loop.accepted_invariant {V : Type}
     (visitor : metadata.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
     (data : Slice U8) (env : metadata.Env) (v : V)
     (segments : alloc.vec.Vec metadata.Data) (pos : Usize) (seen : Bool)
     (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
+    (h : metadata.validate_tail_with_loop visitor data env v segments pos seen = .ok (.Ok result, v')) :
     P v → P v' := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v segments pos seen with
@@ -102,7 +99,7 @@ hook does. -/
 theorem metadata.validate_tail_with.accepted_invariant {V : Type}
     (visitor : metadata.ModuleVisitor V) (P : V → Prop) (hp : ModuleTail.PreservesInvariant visitor P)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (v : V) (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
+    (h : metadata.validate_tail_with visitor data pos env v = .ok (.Ok result, v')) :
     P v → P v' :=
   metadata.validate_tail_with_loop.accepted_invariant visitor P hp data env v
     (alloc.vec.Vec.new _) pos false result v' h
@@ -114,7 +111,7 @@ theorem metadata.validate_env_with_loop.accepted_invariant {V : Type}
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
     (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
     (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with_loop visitor data profile v env pos lastId =
+    (h : metadata.validate_env_with_loop visitor data v env pos lastId =
       .ok (.Ok (result, next), v')) : P v → P v' := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing v env pos lastId with
@@ -197,7 +194,7 @@ theorem metadata.validate_env_with.accepted_invariant {V : Type}
     (visitor : metadata.ModuleVisitor V) (P : V → Prop)
     (hp : ModuleTail.PreservesInvariant visitor P) (data : Slice U8)
     (v : V) (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
+    (h : metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
     P v → P v' := by
   unfold metadata.validate_env_with at h
   obtain ⟨initial, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
@@ -225,16 +222,13 @@ def Preserves {V A : Type} (visitor : metadata.ModuleVisitor V) (observe : V →
 end Itasca.ModuleTail
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 /-- A successful run of the tail loop preserves an observation that the custom hook preserves. -/
 theorem metadata.validate_tail_with_loop.accepted_preserves {V A : Type}
     (visitor : metadata.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (env : metadata.Env) (v : V)
     (segments : alloc.vec.Vec metadata.Data) (pos : Usize) (seen : Bool)
     (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with_loop visitor data env profile v segments pos seen = .ok (.Ok result, v')) :
+    (h : metadata.validate_tail_with_loop visitor data env v segments pos seen = .ok (.Ok result, v')) :
     observe v' = observe v := by
   have hinvariant : ModuleTail.PreservesInvariant visitor (fun state => observe state = observe v) := by
     intro before chunk after hcallback hbefore
@@ -247,7 +241,7 @@ custom hook does. -/
 theorem metadata.validate_tail_with.accepted_preserves {V A : Type}
     (visitor : metadata.ModuleVisitor V) (observe : V → A) (hp : ModuleTail.Preserves visitor observe)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (v : V) (result : metadata.Tail) (v' : V)
-    (h : metadata.validate_tail_with visitor data pos env profile v = .ok (.Ok result, v')) :
+    (h : metadata.validate_tail_with visitor data pos env v = .ok (.Ok result, v')) :
     observe v' = observe v :=
   metadata.validate_tail_with_loop.accepted_preserves visitor observe hp data env v
     (alloc.vec.Vec.new _) pos false result v' h

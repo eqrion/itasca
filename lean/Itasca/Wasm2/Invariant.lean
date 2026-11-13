@@ -1,14 +1,13 @@
 import Itasca.Wasm2.BodySpec
 import Itasca.Wasm2.Frames
-import Itasca.Wasm2.ProfileFilters
+import Itasca.Wasm2.SignatureEquality
 
 /-!
 # Body loop invariant
 
 The invariant of the extracted body loop. `State` says that the loop state is a running typed
 frame zipper (`Frames.Open`) or a completed typed body, with exact provenance for the consumed
-bytes. `Pending` is the state just after an opcode byte that passed
-the profile's opcode filter is read, and `Pending.After` is the postcondition that every
+bytes. `Pending` is the state just after an opcode byte is read, and `Pending.After` is the postcondition that every
 per-opcode handler proves. `Pending.finish_body` and `Pending.append_result` are the shared steps
 for closing the body and appending results.
 -/
@@ -25,7 +24,7 @@ structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
 
 /-- A running typed zipper or a completed typed body, with exact provenance
 for the consumed prefix. No condition is placed on unread bytes. -/
-inductive State (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+inductive State (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : code.BodyState → Prop where
   | running (st : code.BodyState) (ft : wasm_types.FuncType)
       (parents : List Frames.Saved) (current : Frames.Saved) :
@@ -34,28 +33,28 @@ inductive State (data : Slice U8) (env : metadata.Env) (profile : ValidationProf
       Frames.bodyType parents current = some (.TypeIndex index) →
       Consumed data 0#usize (Frames.trace parents current) st.core.pos →
       TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (Frames.trace parents current) →
-      State data env profile locals index st
+      State data env locals index st
   | closed (st : code.BodyState) (ft : wasm_types.FuncType) (ops : List instr) (tokens : List Token) :
       env.types.val[index.val]? = some ft → Bounds data st →
       st.core.ctrls.val = [] → st.blocks.val = [] → BodyTokens tokens ops →
       FunctionTyped env locals ft ops → Consumed data 0#usize tokens st.core.pos →
       TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) tokens →
-      State data env profile locals index st
+      State data env locals index st
 
-theorem State.bounds {data env profile locals index st} (h : State data env profile locals index st) :
+theorem State.bounds {data env locals index st} (h : State data env locals index st) :
     Bounds data st := by cases h <;> assumption
 
-theorem State.shape {data env profile locals index st} (h : State data env profile locals index st) :
+theorem State.shape {data env locals index st} (h : State data env locals index st) :
     Shape st := by
   cases h with
   | running ft parents current hi bounds ho hb hc hd => exact ho.shape
   | closed _ _ _ _ _ hc hb _ _ _ _ =>
     exact ⟨⟨by simp [hc], by simp [hc]⟩, by simp [hc, hb]⟩
 
-theorem State.finished {data env profile locals index st}
-    (h : State data env profile locals index st)
+theorem State.finished {data env locals index st}
+    (h : State data env locals index st)
     (hblocks : st.blocks.val = []) (hpos : st.core.pos.val = data.length) :
-    Validated profile data env locals index := by
+    Validated data env locals index := by
   cases h with
   | running ft parents current _ _ ho _ _ _ =>
     obtain ⟨_, _, _, _, _, _, _, hb, _⟩ := ho
@@ -69,11 +68,11 @@ def initial (index : U32) : code.BodyState :=
       alloc.vec.Vec.from [⟨.Body, .TypeIndex index, 0#usize, false⟩] (by scalar_tac), 0#usize⟩ }
 
 /-- The initial state satisfies `State` for a body within the size limit. -/
-theorem State.start (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem State.start (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType)
     (index : U32) (ft : wasm_types.FuncType) (hi : env.types.val[index.val]? = some ft)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
-    State data env profile locals index (initial index) := by
+    State data env locals index (initial index) := by
   apply State.running (initial index) ft []
     (Frames.Saved.fresh 0#usize .body (.TypeIndex index) ft.params.val ft.results.val) hi
   · constructor <;> simp [initial, hsize]
@@ -90,7 +89,7 @@ theorem State.start (data : Slice U8) (env : metadata.Env) (profile : Validation
 
 /-- The opcode has been consumed and passed the profile's opcode filter, but its immediate is
 still arbitrary. -/
-structure Pending (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+structure Pending (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (st : code.BodyState) where
   start : Usize
   ft : wasm_types.FuncType
@@ -108,11 +107,11 @@ structure Pending (data : Slice U8) (env : metadata.Env) (profile : ValidationPr
 
 /-- A running state with bytes left yields a `Pending` after reading one opcode byte that passes
 the profile's opcode filter. -/
-theorem State.pending {data env profile locals index st}
-    (h : State data env profile locals index st)
+theorem State.pending {data env locals index st}
+    (h : State data env locals index st)
     (hblocks : st.blocks.val ≠ []) (hpos : st.core.pos.val < data.length)
     (next : Usize) (hnext : next.val = st.core.pos.val + 1) :
-    ∃ p : Pending data env profile locals index { st with core := { st.core with pos := next } },
+    ∃ p : Pending data env locals index { st with core := { st.core with pos := next } },
       p.start = st.core.pos := by
   cases h with
   | closed _ _ _ _ _ _ hb _ _ _ _ => exact False.elim (hblocks hb)
@@ -122,18 +121,13 @@ theorem State.pending {data env profile locals index st}
 
 /-- The postcondition of one opcode step: the resulting state satisfies `State` and its cursor has
 advanced within the data. -/
-def Pending.After {data env profile locals index st} (_ : Pending data env profile locals index st)
+def Pending.After {data env locals index st} (_ : Pending data env locals index st)
     (s : code.BodyState) : Prop :=
-  State data env profile locals index s ∧ st.core.pos.val ≤ s.core.pos.val ∧
+  State data env locals index s ∧ st.core.pos.val ≤ s.core.pos.val ∧
     s.core.pos.val ≤ data.length
 
-/-- The opcode of a `Pending` state passes the profile's opcode filter. -/
-theorem Pending.check_opcode {data env profile locals index st}
-    (p : Pending data env profile locals index st) :
-    code.check_opcode profile (data.val[p.start.val]'p.inbounds) = .ok (.Ok ()) := rfl
-
-theorem Pending.running_after {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.running_after {data env locals index st}
+    (p : Pending data env locals index st)
     (s : code.BodyState) (parents : List Frames.Saved) (current : Frames.Saved)
     (token : Token) (encoded : At data p.start token s.core.pos)
     (ho : Frames.Open env (bodyContext env locals p.ft) s parents current)
@@ -152,8 +146,8 @@ theorem Pending.running_after {data env profile locals index st}
   · rw [ht, tokensDeclared_append, tokensDeclared_singleton]
     exact ⟨p.declared, hd⟩
 
-theorem Pending.closed_after {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.closed_after {data env locals index st}
+    (p : Pending data env locals index st)
     (s : code.BodyState) (ops : List instr) (encoded : At data p.start .end_ s.core.pos)
     (hc : s.core.ctrls.val = []) (hb : s.blocks.val = [])
     (ht : BodyTokens (Frames.trace p.parents p.current ++ [.end_]) ops)
@@ -165,8 +159,8 @@ theorem Pending.closed_after {data env profile locals index st}
 
 /-- Closing the root frame recovers the result vector selected by the actual
 function type index, without treating function parameters as operands. -/
-theorem Pending.finish_body {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.finish_body {data env locals index st}
+    (p : Pending data env locals index st)
     (s : code.BodyState) (encoded : At data p.start .end_ s.core.pos)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0B#u8)
     (hform : p.current.form = .body)
@@ -184,8 +178,8 @@ theorem Pending.finish_body {data env profile locals index st}
 
 /-- Shared leaf preservation uses arbitrary frame inputs, while retaining the
 same descriptor and exact byte provenance. Calls may append multiple values. -/
-theorem Pending.append_result {data env profile locals index st}
-    (p : Pending data env profile locals index st)
+theorem Pending.append_result {data env locals index st}
+    (p : Pending data env locals index st)
     (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer
       p.current.form p.current.ins)

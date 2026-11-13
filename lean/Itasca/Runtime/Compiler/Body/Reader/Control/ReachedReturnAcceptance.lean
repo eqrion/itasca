@@ -12,7 +12,7 @@ set_option maxRecDepth 4096
 /-- Source return typing and the retained root frame discharge the actual
 return callback's width check, including multi-value and vector results. -/
 theorem reached_profile_return_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A V : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState) (ctx : code.Context)
@@ -22,9 +22,9 @@ theorem reached_profile_return_available_wasm2 {jumpTables : List U32} {data env
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current)
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (demand : CallbackDemand compiler out.core bound)
-    (reference : code.step_profile source st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 15#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 15#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 15#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨frame,found,resultWidth⟩ := reader_root_frame_wasm2 p compiler invariant.frames same

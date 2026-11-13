@@ -15,8 +15,7 @@ LEB encodings from one through five bytes. Before requiring acceptance it
 independently checks the documented signature, local, body-byte, and module-byte
 limits. It does not rewrite generated element or data sections.
 
-The Core 2.0 targets select `ValidationProfile::Wasm2` and compare the complete
-profile against wasmparser's Core 2.0 feature set. The generated-module target
+The Core 2.0 targets compare itasca against wasmparser's Core 2.0 feature set. The generated-module target
 keeps the validator's signature and module-size limits separate from language
 features.
 

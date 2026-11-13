@@ -48,9 +48,9 @@ theorem reached_profile_end_available_wasm2 {A V : Type}
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (capacity : CallbackCapacity compiler out.core bound 1)
     (coordinate : compiler.function.body_start.val+out.core.pos.val ≤ Usize.max)
-    (reference : code.step_profile source st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 11#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 11#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   rw [Wasm2.CallbackTrace.dispatch_end] at reference ⊢

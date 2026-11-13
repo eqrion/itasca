@@ -10,7 +10,7 @@ This proof-level choice contains no compiler run or compiled artifact. -/
 noncomputable def independentBodyLog (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32) : List Observation := by
   classical
-  exact if successful : ∃ log, code.validate_body_with recorder data env ctx index .Wasm2 [] = .ok (.Ok (),log)
+  exact if successful : ∃ log, code.validate_body_with recorder data env ctx index [] = .ok (.Ok (),log)
     then Classical.choose successful else []
 
 /-- Source stack/control peaks obtained from independent validation. This is a
@@ -24,30 +24,29 @@ noncomputable def independentBodyDemand (data : Slice U8)
 Choice of completeness proof therefore cannot change the source demand. -/
 theorem independentBodyLog.unique (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32) (log : List Observation)
-    (reference : code.validate_body_with recorder data env ctx index .Wasm2 [] = .ok (.Ok (),log)) :
+    (reference : code.validate_body_with recorder data env ctx index [] = .ok (.Ok (),log)) :
     independentBodyLog data env ctx index = log := by
   classical
-  have successful : ∃ log, code.validate_body_with recorder data env ctx index .Wasm2 [] = .ok (.Ok (),log) :=
+  have successful : ∃ log, code.validate_body_with recorder data env ctx index [] = .ok (.Ok (),log) :=
     ⟨log,reference⟩
   unfold independentBodyLog
   rw [dif_pos successful]
   have same := (Classical.choose_spec successful).symm.trans reference
   simpa using same
 
-/-- Independent source typing, encoding, profile, and validator limits
+/-- Independent source typing, encoding, and validator limits
 construct the actual successful reference run. No accepted compiler trace or
 completed code certificate is a premise. -/
-theorem independentBodyLog.of_valid (profile : ValidationProfile) (data : Slice U8)
+theorem independentBodyLog.of_valid (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32)
     (limits : Profile.EnvironmentWithinLimits env)
     (size : data.length ≤ Itasca.limits.MAX_FUNCTION_BYTES.val)
-    (body : Profile.Body profile data env ctx.locals index) :
-    code.validate_body_with recorder data env ctx index profile [] =
+    (body : Wasm2.Validated data env ctx.locals index) :
+    code.validate_body_with recorder data env ctx index [] =
       .ok (.Ok (),independentBodyLog data env ctx index) := by
-  obtain ⟨log,called⟩ := code.validate_body_with.profile_complete recorder recorder_accepts data env ctx index .Wasm2 []
-    limits size body.to_wasm2
+  obtain ⟨log,called⟩ := code.validate_body_with.profile_complete recorder recorder_accepts data env ctx index []
+    limits size body
   rw [independentBodyLog.unique data env ctx index log called]
-  cases profile with
-  | Wasm2 => exact called
+  exact called
 
 end Itasca.Runtime.Compiler

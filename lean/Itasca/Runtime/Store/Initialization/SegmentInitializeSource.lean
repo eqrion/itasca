@@ -91,9 +91,9 @@ theorem initialize_segments_compiled_source_causes {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (sourceCode : CodeInterpretation) (shape : Shape view store)
     (sourceSyntax : StoreSyntax sourceCode store) (bounds : SegmentBounds store)
@@ -105,10 +105,10 @@ theorem initialize_segments_compiled_source_causes {M P F A : Type}
         SegmentSetupCause allocator store inst.module (.Exhausted reason)) ∨
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,segmentModuleSource inst.module⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩,segmentResult out.1⟩ ⦄ := by
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes limits inst.module accepted code program
   have instanceShape := shape.instances inst (List.mem_of_getElem? found)
   have ready := segment_program_ready store inst code program pcBound instanceShape imports bindings valid.elements dataValid
   have compatible := segment_program_compatible store inst code program types valid.elements
@@ -141,9 +141,9 @@ theorem initialize_segments_raw_source_causes {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (sourceCode : CodeInterpretation) (shape : Shape view store)
     (sourceSyntax : StoreSyntax sourceCode store) (bounds : SegmentBounds store)
@@ -159,7 +159,7 @@ theorem initialize_segments_raw_source_causes {M P F A : Type}
         SegmentExecutionStatus out.1 ∧ StepsH ⟨⟨decodeStore view sourceCode store,ambient⟩,segmentRawSource raw ++ after⟩ []
           ⟨⟨decodeStore view sourceCode out.2.1,ambient⟩,segmentAfter out.1 after⟩ ⦄ := by
   obtain ⟨out,run,outcome⟩ := WP.spec_imp_exists (initialize_segments_compiled_source_causes
-    memory hooks floats allocator view laws law store platform instIndex inst bytes profile limits
+    memory hooks floats allocator view laws law store platform instIndex inst bytes limits
     accepted found sourceCode shape sourceSyntax bounds imports bindings types ambient ambientWf moduleEq)
   rw [run,WP.spec_ok]
   rcases outcome with exhausted | reduced

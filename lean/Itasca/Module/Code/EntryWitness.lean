@@ -18,9 +18,9 @@ namespace Itasca
 calls and parser results. Other executions of the visitor need not terminate. -/
 theorem metadata.validate_code_entry_with.witness_profile {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
-    (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
-    (h : metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
-    Nonempty (CodeEntry.Witness visitor data env index pos finish v v' profile) := by
+    (v v' : V) (hbound : CodeEntry.Bounds env)
+    (h : metadata.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
+    Nonempty (CodeEntry.Witness visitor data env index pos finish v v' ) := by
   unfold metadata.validate_code_entry_with at h
   dsimp only at h
   by_cases hi : index ≥ alloc.vec.Vec.len env.func_type_indices
@@ -50,7 +50,7 @@ theorem metadata.validate_code_entry_with.witness_profile {V : Type} (visitor : 
       obtain ⟨last, hlast, hlastval⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := content) (y := UScalar.cast .Usize size) (by scalar_tac))
       simp [hlast] at h
-      obtain ⟨r, hr, hl⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content profile)
+      obtain ⟨r, hr, hl⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content )
       rw [hr] at h
       cases r with
       | Err e =>
@@ -92,7 +92,6 @@ theorem metadata.validate_code_entry_with.witness_profile {V : Type} (visitor : 
         | Err e => simp at ht
         | Ok u =>
           cases u
-          cases profile
           all_goals
             try dsimp only at ht
             have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)

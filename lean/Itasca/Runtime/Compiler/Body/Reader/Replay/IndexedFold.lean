@@ -22,7 +22,7 @@ theorem TypedRunWasm2.fold_indexed_tables {A : Type}
       next.val = st.core.pos.val + 1 →
       (inbounds : st.core.pos.val < data.length) →
       code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ctx index .Wasm2
+        {core := {st.core with pos := next}} data env ctx index
         data.val[st.core.pos.val] before = .ok (.Ok (), out, middle) →
       TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out middle final →
       StructuredCompiledBody final.function.jump_tables.val (emit (CompilerTables.ofFunction final.function)) initial final types functions returns locals source ∨
@@ -40,7 +40,7 @@ theorem TypedRunWasm2.fold_indexed_tables {A : Type}
   | @step st before next out middle final typed pending start advance called rest ih =>
     have inbounds : st.core.pos.val < data.length := by simpa only [start] using pending.inbounds
     have called' : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ctx index .Wasm2
+        {core := {st.core with pos := next}} data env ctx index
         data.val[st.core.pos.val] before = .ok (.Ok (), out, middle) := by
       simpa only [start] using called
     rcases progress st before middle final next out point advance inbounds called' rest with done | nextPoint

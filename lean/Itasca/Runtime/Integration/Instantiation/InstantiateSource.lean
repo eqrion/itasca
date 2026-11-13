@@ -79,9 +79,9 @@ theorem commit_instance_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits=.ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits=.ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]?=some inst)
     (code : CodeInterpretation) (certified : ExecutableInv view code store)
     (imports : InitializerImports store inst) (types : SegmentTypeBindings store inst)
@@ -100,9 +100,8 @@ theorem commit_instance_source {M P F A : Type}
         ∀ error,out.1=.Err error → (error=.Trap .MemoryOutOfBounds ∨ error=.Trap .TableOutOfBounds) ∨
           (out.2.1=store ∧ SegmentSetupCause allocator store inst.module error) ⦄ := by
   have bindings := certified.shape.initializer_bindings (List.mem_of_getElem? found)
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
-  have valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile := by
-    rw [(witness.initializers law).2.1]
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits inst.module accepted
+  have valid : Itasca.ModuleEnv.Valid inst.module.module.env := by
     exact (witness.semantic law).1
   let continuation := (inst.module.module.env.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList
   have continuationWf : Forall wf_admininstr continuation := by
@@ -113,12 +112,12 @@ theorem commit_instance_source {M P F A : Type}
       simpa [continuation,hs,Forall] using wf_admininstr.admininstr_case_10 (.mk_uN index.val) indexWf
   have startEq : raw.start = inst.module.module.env.start := congrArg ModuleBinary.Module.start matched.1
   have initSource := initialize_segments_raw_source_causes memory hooks floats allocator view laws law store platform identity.index
-    inst bytes profile limits accepted found code certified.shape certified.storeSyntax certified.segmentBounds
+    inst bytes limits accepted found code certified.shape certified.storeSyntax certified.segmentBounds
     imports bindings types (moduleStartFrame store inst)
     (module_start_frame_wf code store identity.index inst certified.storeSyntax found) rfl raw matched continuation continuationWf
   obtain ⟨⟨status,initialized,host⟩,initRun,fresh,extension,metadata,hostEq⟩ :=
     WP.spec_imp_exists (initialize_segments_certified_supported memory hooks floats allocator view laws law
-      store platform identity.index inst bytes profile limits accepted found code certified.toCertifiedSupportedStore
+      store platform identity.index inst bytes limits accepted found code certified.toCertifiedSupportedStore
       imports bindings types)
   dsimp only at fresh extension metadata hostEq
   subst host
@@ -219,10 +218,10 @@ theorem instantiate_compiled_source {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (oldCode : CodeInterpretation) (old : ExecutableInv view oldCode before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (raw : ModuleBinary.Module)
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile) :
+    (encoded : ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes.val ) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
         ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
@@ -235,18 +234,18 @@ theorem instantiate_compiled_source {M P F A : Type}
             view oldCode before module imports platform raw out.2.1 error ⦄ := by
   obtain ⟨actualRaw,actualEncoded,elaborated,matched,typed,origin⟩ :=
     instantiate_compiled_executable_eventful_origin memory hooks floats allocator view laws law before module imports platform
-      oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes profile limits accepted
-  have sameRaw := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded actualEncoded
+      oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes limits accepted
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique Profile.code_prefix_unique encoded actualEncoded
   subst actualRaw
   refine ⟨typed,?_⟩
   rcases origin with ⟨error,staged,returned,retained⟩ |
     ⟨ready,inst,found,source,readyCertified,readyCapacities,readyAccounting,initializers,types,table,allocated,
       preparedExtension,preparedPrefix,continued⟩
   · obtain ⟨cause,_,_,_⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
-      before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles
+      before module imports platform old.shape old.segmentAccounting bytes limits accepted handles
       error staged platform returned
     obtain ⟨_,_,evidence⟩ := instantiate_compiled_precommit_resource_causes memory hooks floats allocator law view laws
-      before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles error staged platform returned
+      before module imports platform old.shape old.segmentAccounting bytes limits accepted handles error staged platform returned
     obtain ⟨out,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
       (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained returned)
     rw [run,WP.spec_ok]
@@ -271,12 +270,12 @@ theorem instantiate_compiled_source {M P F A : Type}
         cases h
         assumption
       exact wf _ _ _ _ allocated
-    have acceptedInst : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module) := by
+    have acceptedInst : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module) := by
       simpa only [source] using accepted
     have matchedInst : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw := by
       simpa only [source] using matched
     have tail := commit_instance_source memory hooks floats allocator view laws law ready platform
-      ⟨before.id,before.instances.len⟩ inst bytes profile limits acceptedInst found
+      ⟨before.id,before.instances.len⟩ inst bytes limits acceptedInst found
       (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
       ⟨readyCertified,readyAccounting,readyCapacities old.capacities⟩ initializers types table raw matchedInst initialWf
     unfold runtime.store.instantiate.Store.instantiate_with

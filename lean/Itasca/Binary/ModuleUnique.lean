@@ -5,8 +5,8 @@ import Itasca.Binary.ModuleUniqueSegments
 # Uniqueness of module decoding
 
 `ModuleEncodingWith.unique` shows that two raw modules with the same encoding are equal, for
-the Wasm 2.0 profile and any prefix-unique code entry grammar. Custom section placement and omitted
-empty sections introduce no ambiguity. `Itasca/Results/Unique` specializes it to the supported profile.
+Wasm 2.0 and any prefix-unique code entry grammar. Custom section placement and omitted
+empty sections introduce no ambiguity. `Itasca/Results/Unique` specializes it to the validator’s code entry grammar.
 -/
 
 open Aeneas Aeneas.Std
@@ -14,20 +14,19 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleBinary
 
 /-- The data count section frames like other optional fields. -/
-theorem DataCountSectionEncoding.frames {profile value bytes}
-    (h : DataCountSectionEncoding profile value bytes) :
+theorem DataCountSectionEncoding.frames {value bytes}
+    (h : DataCountSectionEncoding value bytes) :
     ∃ sections payloads, Rep SectionDecode.Encoding sections bytes ∧
       SectionDecode.Field StartEncoding none value payloads ∧
       ∀ wanted, wanted ≠ 0#u8 → SectionDecode.payloads wanted sections =
         if wanted = 12#u8 then payloads else [] := by
-  cases profile with
-  | Wasm2 => exact PaddedEncoding.frames h
+  exact PaddedEncoding.frames h
 
 namespace SectionDecode
 
 /-- The standard fields of a raw module as payloads of a raw section list. -/
 structure Fields (raw : Module) (sections : List (U8 × List U8))
-    (profile : ValidationProfile) (codeRel : Code → List U8 → Prop) : Prop where
+    (codeRel : Code → List U8 → Prop) : Prop where
   types : Field (VecEncoding FuncTypeEncoding) [] raw.types (payloads 1#u8 sections)
   imports : Field (VecEncoding ImportEncoding) [] raw.imports (payloads 2#u8 sections)
   functions : Field (VecEncoding IndexEncoding) [] raw.functions (payloads 3#u8 sections)
@@ -36,18 +35,18 @@ structure Fields (raw : Module) (sections : List (U8 × List U8))
   globals : Field (VecEncoding GlobalEncoding) [] raw.globals (payloads 6#u8 sections)
   exports : Field (VecEncoding ExportEncoding) [] raw.exports (payloads 7#u8 sections)
   start : Field StartEncoding none raw.start (payloads 8#u8 sections)
-  elements : Field (VecEncoding (ElementEncodingFor profile)) [] raw.elements (payloads 9#u8 sections)
+  elements : Field (VecEncoding ElementEncodingFor) [] raw.elements (payloads 9#u8 sections)
   dataCount : Field StartEncoding none raw.dataCount (payloads 12#u8 sections)
   codes : Field (VecEncoding codeRel) [] raw.codes (payloads 10#u8 sections)
-  data : Field (VecEncoding (DataEncodingFor profile)) [] raw.data (payloads 11#u8 sections)
+  data : Field (VecEncoding DataEncodingFor) [] raw.data (payloads 11#u8 sections)
 
 end SectionDecode
 
 /-- A module encoding gives a raw section list that carries every standard field. -/
-theorem ModuleEncodingWith.sections {profile codeRel raw bytes}
-    (h : ModuleEncodingWith codeRel raw bytes profile) :
+theorem ModuleEncodingWith.sections {codeRel raw bytes}
+    (h : ModuleEncodingWith codeRel raw bytes) :
     ∃ sections, Rep SectionDecode.Encoding sections (bytes.drop magicVersion.length) ∧
-      SectionDecode.Fields raw sections profile codeRel := by
+      SectionDecode.Fields raw sections codeRel := by
   obtain ⟨b1, b2, b3, b4, b5, b6, b7, b8, b9, bc, b10, b11, b12,
     h1, h2, h3, h4, h5, h6, h7, h8, h9, hc, h10, h11, h12, hb, _⟩ := h
   obtain ⟨s1, p1, hr1, hf1, hl1⟩ := h1.frames
@@ -101,10 +100,10 @@ theorem ModuleEncodingWith.sections {profile codeRel raw bytes}
     · simpa [lookup 11#u8 (by decide)] using hf11
 
 /-- A byte string encodes at most one raw module, with no typing or implementation limit premise. -/
-theorem ModuleEncodingWith.unique {profile codeRel x y bytes}
+theorem ModuleEncodingWith.unique {codeRel x y bytes}
     (hcode : PrefixUnique codeRel)
-    (hx : ModuleEncodingWith codeRel x bytes profile)
-    (hy : ModuleEncodingWith codeRel y bytes profile) : x = y := by
+    (hx : ModuleEncodingWith codeRel x bytes)
+    (hy : ModuleEncodingWith codeRel y bytes) : x = y := by
   obtain ⟨xs, hxs, hxf⟩ := hx.sections
   obtain ⟨ys, hys, hyf⟩ := hy.sections
   have he := SectionDecode.unique hxs hys
@@ -117,10 +116,10 @@ theorem ModuleEncodingWith.unique {profile codeRel x y bytes}
   have h_globals := SectionDecode.Field.unique global_prefix_unique.vec.unique hxf.globals hyf.globals
   have h_exports := SectionDecode.Field.unique export_prefix_unique.vec.unique hxf.exports hyf.exports
   have h_start := SectionDecode.Field.unique start_prefix_unique.unique hxf.start hyf.start
-  have h_elements := SectionDecode.Field.unique (elementFor_prefix_unique profile).vec.unique hxf.elements hyf.elements
+  have h_elements := SectionDecode.Field.unique elementFor_prefix_unique.vec.unique hxf.elements hyf.elements
   have h_count := SectionDecode.Field.unique start_prefix_unique.unique hxf.dataCount hyf.dataCount
   have h_codes := SectionDecode.Field.unique hcode.vec.unique hxf.codes hyf.codes
-  have h_data := SectionDecode.Field.unique (dataFor_prefix_unique profile).vec.unique hxf.data hyf.data
+  have h_data := SectionDecode.Field.unique dataFor_prefix_unique.vec.unique hxf.data hyf.data
   cases x; cases y; simp_all
 
 end Itasca.ModuleBinary

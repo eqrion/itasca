@@ -15,11 +15,11 @@ namespace Itasca
 
 /-- The empty-visitor run of `code.validate_body_with` is `code.bodyCore`. -/
 theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) :
+    (ctx : code.Context) (index : U32) :
     (do
       let (r, _) ← code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-        data env ctx index profile ()
-      .ok r) = code.bodyCore data env ctx.locals ctx.results index profile := by
+        data env ctx index ()
+      .ok r) = code.bodyCore data env ctx.locals ctx.results index := by
   unfold code.validate_body_with code.initial_state code.bodyCore
   simp only [Std.bind_assoc]
   split
@@ -47,12 +47,12 @@ theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
 of the scalar context. The source visitor needs no totality assumption. -/
 theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (results : alloc.vec.Vec wasm_types.ValueType) (v v' : V)
-    (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
-    code.bodyCore data env ctx.locals results index profile = .ok (.Ok ()) := by
+     (results : alloc.vec.Vec wasm_types.ValueType) (v v' : V)
+    (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
+    code.bodyCore data env ctx.locals results index = .ok (.Ok ()) := by
   obtain ⟨w, hw⟩ := code.validate_body_with.accepted_transfer visitor
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts data env ctx
-    ⟨ctx.locals, results⟩ rfl index profile v () v' h
+    ⟨ctx.locals, results⟩ rfl index v () v' h
   cases w
   rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩]
   simp [hw]
@@ -61,10 +61,10 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
 result vector does not constrain the signature selected by the type index. -/
 theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
     (results : alloc.vec.Vec wasm_types.ValueType) (v : V)
-    (h : code.bodyCore data env ctx.locals results index profile = .ok (.Ok ())) :
-    ∃ v', code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v') := by
+    (h : code.bodyCore data env ctx.locals results index = .ok (.Ok ())) :
+    ∃ v', code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v') := by
   rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩] at h
   obtain ⟨⟨r, w⟩, hr, h⟩ := ResultFacts.bind_ok_inv _ _ _ h
   cases w
@@ -72,28 +72,28 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
   subst r
   exact code.validate_body_with.accepted_transfer
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor visitor ha data env
-    ⟨ctx.locals, results⟩ ctx rfl index profile () v () hr
+    ⟨ctx.locals, results⟩ ctx rfl index () v () hr
 
 /-- Arbitrary accepted visitors establish `Wasm2.Validated` for the profile, without a callback
 totality premise. -/
 theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (profile : ValidationProfile) (v v' : V)
-    (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
-    Wasm2.Validated profile data env ctx.locals index :=
-  code.bodyCore.sound data env ctx.locals ctx.results index profile
-    (code.validate_body_with.accepted_erase visitor data env ctx index profile _ v v' h)
+     (v v' : V)
+    (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
+    Wasm2.Validated data env ctx.locals index :=
+  code.bodyCore.sound data env ctx.locals ctx.results index
+    (code.validate_body_with.accepted_erase visitor data env ctx index _ v v' h)
 
 /-- `Wasm2.Validated` bodies are accepted with accepting callbacks, subject to the
 implementation limits. -/
 theorem code.validate_body_with.complete {V : Type} (visitor : code.OpVisitor V)
     (ha : FullVisitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile)
+    (ctx : code.Context) (index : U32)
     (henv : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
-    (hbody : Wasm2.Validated profile data env ctx.locals index) (v : V) :
-    ∃ v', code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v') :=
-  code.validate_body_with.accepted_lift visitor ha data env ctx index profile ctx.results v
-    (code.bodyCore.complete data env ctx.locals ctx.results index profile henv hsize hbody)
+    (hbody : Wasm2.Validated data env ctx.locals index) (v : V) :
+    ∃ v', code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v') :=
+  code.validate_body_with.accepted_lift visitor ha data env ctx index ctx.results v
+    (code.bodyCore.complete data env ctx.locals ctx.results index henv hsize hbody)
 
 end Itasca

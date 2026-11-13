@@ -42,10 +42,10 @@ profile, independently of the reader or visitor state. -/
 theorem reader_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (value : V) :
-    ReaderOpcode .Wasm2 opcode ∨
+    ReaderOpcode opcode ∨
     code.step_wasm2 visitor st data env ctx opcode value =
       .ok (.Err error.OpError.UnrecognizedOpcode,st,value) := by
-  by_cases supported : ReaderOpcode .Wasm2 opcode
+  by_cases supported : ReaderOpcode opcode
   · exact .inl supported
   right
   have base : opcode.val ∉ [28,37,38,208,209,210,252,253] := by
@@ -69,14 +69,14 @@ theorem reader_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
 theorem reader_accepted_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (typeIndex : U32) (opcode : U8) (value after : V)
-    (accepted : code.step_profile visitor st data env ctx typeIndex .Wasm2 opcode value =
-      .ok (.Ok (),final,after)) : ReaderOpcode .Wasm2 opcode := by
+    (accepted : code.step_profile visitor st data env ctx typeIndex opcode value =
+      .ok (.Ok (),final,after)) : ReaderOpcode opcode := by
   by_contra unknown
   have rejected := (reader_opcode_wasm2 visitor st.core data env ctx opcode value).resolve_left unknown
   have hok : core.result.Result.Insts.CoreOpsTry.branch
       (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
   unfold code.step_profile at accepted
-  simp only [code.check_opcode, bind_ok, hok] at accepted
+  simp only [bind_ok, hok] at accepted
   split at accepted
   all_goals try { exfalso; apply unknown; reader_opcode }
   all_goals

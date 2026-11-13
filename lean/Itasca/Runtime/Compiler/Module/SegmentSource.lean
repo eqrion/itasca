@@ -6,9 +6,9 @@ open Aeneas Aeneas.Std
 
 /-- Accepted source bytes supply the binary framing and metadata coherence
 needed by the retained initializer's program-counter bound. -/
-theorem segment_validated_pc_bound {module function bytes profile}
+theorem segment_validated_pc_bound {module function bytes}
     (certificate : SegmentProgram module function)
-    (validated : Itasca.ModuleSound.Validated bytes module.module profile)
+    (validated : Itasca.ModuleSound.Validated bytes module.module)
     (bounded : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val) :
     function.code.length < U32.max := by
   obtain ⟨raw, encoded, _, matched, _⟩ := validated
@@ -21,12 +21,12 @@ theorem segment_validated_pc_bound {module function bytes profile}
 /-- No extra runtime limit premise is required for the initializer PC: the
 successful public compiler already checked the fixed module-byte cap. -/
 theorem segment_compile_pc_bound {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (law : Platform.AllocCorrect allocator) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) (module : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (function : runtime.bytecode.CompiledFunction) (certificate : SegmentProgram module function) :
     function.code.length < U32.max := by
-  obtain ⟨validated, _, bounded⟩ := compile_source_validated allocator law bytes profile limits module accepted
+  obtain ⟨validated, bounded⟩ := compile_source_validated allocator law bytes limits module accepted
   exact segment_validated_pc_bound certificate validated bounded
 
 end Itasca.Runtime.Compiler

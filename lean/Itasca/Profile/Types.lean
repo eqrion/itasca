@@ -4,7 +4,7 @@ import Itasca.Generated.Funs
 # Profile signature predicates
 
 Implementation bounds on function types and signature tables. The decoder-facing
-`FuncTypeAdmissible` retains the current profile parameter.
+`FuncTypeAdmissible` states the decoder-facing signature bounds.
 -/
 
 open Aeneas Aeneas.Std
@@ -27,11 +27,11 @@ structure EnvironmentWithinLimits (env : metadata.Env) : Prop where
   funcs : ∀ ft ∈ env.func_types.val, FuncTypeWithinLimits ft
 
 /-- The signature bounds checked by the environment decoder. -/
-def FuncTypeAdmissible (profile : ValidationProfile) (ft : wasm_types.FuncType) : Prop :=
+def FuncTypeAdmissible (ft : wasm_types.FuncType) : Prop :=
   ft.params.val.length ≤ limits.MAX_MULTI_VALUE_PARAMS.val ∧
     ft.results.val.length ≤ limits.MAX_MULTI_VALUE_RESULTS.val
 
-theorem funcTypeAdmissible_iff (profile : ValidationProfile) (ft : wasm_types.FuncType) :
-    FuncTypeAdmissible profile ft ↔ FuncTypeWithinLimits ft := Iff.rfl
+theorem funcTypeAdmissible_iff (ft : wasm_types.FuncType) :
+    FuncTypeAdmissible ft ↔ FuncTypeWithinLimits ft := Iff.rfl
 
 end Itasca.Profile

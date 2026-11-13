@@ -51,5 +51,5 @@ theorem structured_callback_else_dormant_prefix {jumpTables : List U32} {emit : 
   have sources := compiler_else_sources ops law before after state bt accepted
   have cursor := compiler_else_cursor ops law before after state bt accepted
   exact ⟨noEntry, positionEq, invariant.begin_else_dormant unentered deadAfter stable maps prior frame
-    framesEq afterFrames codeEq sourceType condition noEntry form positionEq  sources consumed (by rw [cursor])⟩
+    framesEq afterFrames codeEq sourceType condition noEntry form positionEq sources consumed (by rw [cursor])⟩
 end Itasca.Runtime.Compiler

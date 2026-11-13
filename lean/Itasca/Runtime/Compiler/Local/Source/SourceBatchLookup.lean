@@ -38,15 +38,15 @@ theorem encoded_entry_lookup {α : Type} {R : α → List U8 → Prop}
 /-- A successful entry's actual body is the code-list member at the exact
 validated prior index. Framing equality, not a compiler premise, selects it. -/
 theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
-    {data env index start finish before after profile}
-    (w : CodeEntry.Witness visitor data env index start finish before after profile)
+    {data env index start finish before after}
+    (w : CodeEntry.Witness visitor data env index start finish before after)
     {entries prior : List ModuleBinary.Code}
-    (whole : ModuleBinary.Rep (Profile.CodeEncoding profile) entries data.val)
-    (previous : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) data 0#usize prior start)
+    (whole : ModuleBinary.Rep (Profile.CodeEncoding) entries data.val)
+    (previous : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) data 0#usize prior start)
     (bound : prior.length < entries.length) :
     ∃ entry, entries[prior.length]? = some entry ∧ w.groups = entry.locals ∧
-      Profile.BodyEncoding profile w.body entry.body := by
-  obtain ⟨ft, source, _, body, _⟩ := code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile
+      Profile.BodyEncoding w.body entry.body := by
+  obtain ⟨ft, source, _, body, _⟩ := code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx
     w.startedState after w.body_accepted
   have actual := Profile.codeEncoding_of_parts w.header w.extent w.locals_bytes w.body_bytes body
   obtain ⟨first, prefixEncoding, prefixSpan⟩ := previous
@@ -59,7 +59,7 @@ theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
       data.val ++ [] = data.val := List.append_nil _
       _ = first ++ data.val.drop start.val := span
       _ = first ++ last ++ data.val.drop finish.val := by rw [lastSpan.suffix, List.append_assoc]
-  exact ⟨⟨w.groups, source⟩, encoded_entry_lookup (Profile.code_prefix_unique profile)
+  exact ⟨⟨w.groups, source⟩, encoded_entry_lookup (Profile.code_prefix_unique)
     whole prefixEncoding lastEncoding joined bound, rfl, body⟩
 
 end Itasca.Runtime.Compiler
@@ -78,22 +78,22 @@ inside the independently encoded issued code view. -/
 theorem witness_batch_source_lookup {V : Type} {visitor : code.OpVisitor V}
     {issued : StreamBatch.Issued} {batch : stream.CodeBatch}
     {index finish before after}
-    (w : CodeEntry.Witness visitor batch.code batch.env index batch.validated_end finish before after batch.profile)
+    (w : CodeEntry.Witness visitor batch.code batch.env index batch.validated_end finish before after)
     (reachable : StreamBatch.Reachable issued batch)
     (bounds : CodeEntry.Bounds batch.env)
     {entries : List ModuleBinary.Code}
-    (whole : ModuleBinary.Rep (Profile.CodeEncoding issued.profile) entries issued.code.val)
+    (whole : ModuleBinary.Rep (Profile.CodeEncoding) entries issued.code.val)
     (count : batch.num_validated.val < entries.length) :
     ∃ entry, entries[batch.num_validated.val]? = some entry ∧ w.groups = entry.locals ∧
-      Profile.BodyEncoding batch.profile w.body entry.body := by
+      Profile.BodyEncoding w.body entry.body := by
   obtain ⟨identity, previous, _⟩ := reachable.validation
-  obtain ⟨_, _, envEq, codeEq, _, _, _, profileEq⟩ := identity
+  obtain ⟨_, _, envEq, codeEq, _, _, _⟩ := identity
   have bound : CodeEntry.Bounds issued.env := by simpa only [envEq] using bounds
-  obtain ⟨prior, length, encoded, _⟩ := previous.typed bound profileEq.symm
-  have priorBytes : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding batch.profile))
+  obtain ⟨prior, length, encoded, _⟩ := previous.typed bound
+  have priorBytes : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding))
       batch.code 0#usize prior batch.validated_end := by simpa only [codeEq] using encoded
-  have complete : ModuleBinary.Rep (Profile.CodeEncoding batch.profile) entries batch.code.val := by
-    simpa only [profileEq, codeEq] using whole
+  have complete : ModuleBinary.Rep (Profile.CodeEncoding) entries batch.code.val := by
+    simpa only [ codeEq] using whole
   obtain ⟨entry, found, groups, body⟩ := witness_source_lookup w complete priorBytes (by omega)
   exact ⟨entry, by simpa only [length] using found, groups, body⟩
 

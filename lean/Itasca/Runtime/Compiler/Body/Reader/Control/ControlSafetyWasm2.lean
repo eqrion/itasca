@@ -27,7 +27,7 @@ theorem StructuredReaderCompilerStateWasm2.control_total {A}
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (bodyBound : initial.function.body_start.val+data.length ≤ Usize.max) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {st with core := {st.core with pos := next}} data env ctx index .Wasm2 opcode compiler ⦃ out =>
+      {st with core := {st.core with pos := next}} data env ctx index opcode compiler ⦃ out =>
         out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   let pending := state.boundary.pending next advance inbounds
   have ready := state.compiled.control_ready data.length next.val state.boundary.source_bound

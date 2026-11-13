@@ -19,12 +19,12 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- Import additions compose. -/
-theorem ImportsAdded.trans {profile} {env middle result first rest}
-    (h : ImportsAdded env first middle profile) (h' : ImportsAdded middle rest result profile) :
-    ImportsAdded env (first ++ rest) result profile := by
+theorem ImportsAdded.trans {env middle result first rest}
+    (h : ImportsAdded env first middle) (h' : ImportsAdded middle rest result) :
+    ImportsAdded env (first ++ rest) result := by
   induction h' with
   | nil => simpa using h
-  | snoc previous current ih => simpa [List.append_assoc] using ImportsAdded.snoc (ih h) current
+  | snoc previous current ih => simpa [List.append_assoc] using ImportsAdded.snoc ih current
 
 end Itasca.ModuleSections
 
@@ -35,12 +35,12 @@ open ModuleBinary ModuleSections
 /-- `metadata.decode_import` accepts a valid `ImportEncoding` span and adds that import and
 its cache entry to the environment. -/
 theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) (entry : ModuleBinary.Import) (next : Usize)
+    (env : metadata.Env) (entry : ModuleBinary.Import) (next : Usize)
     (hb : At ImportEncoding data pos entry next)
-    (hv : ImportValid env entry.desc profile)
+    (hv : ImportValid env entry.desc)
     (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, metadata.decode_import data pos env profile = .ok (.Ok next, result) ∧
-      ModuleEnv.rawImport actual = entry ∧ ImportAdded env result actual profile := by
+    ∃ result actual, metadata.decode_import data pos env = .ok (.Ok next, result) ∧
+      ModuleEnv.rawImport actual = entry ∧ ImportAdded env result actual := by
   rcases entry with ⟨moduleName, rawName, desc⟩
   obtain ⟨bs, ⟨modBytes, nameBytes, descBytes, hm, hn, hd, rfl⟩, hs⟩ := hb
   obtain ⟨p1, hmbytes, hremain⟩ :=
@@ -76,17 +76,16 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
     have hprogress := htag.length
     have hnext := hty.bound
     have hv' : ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS := hv
-    have hread := metadata.decode_table_type.complete data p3 tt next ⟨_, he, hty⟩ hv' profile
+    have hread := metadata.decode_table_type.complete data p3 tt next ⟨_, he, hty⟩ hv'
     obtain ⟨tables, hpush, htables⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.table_types tt (by have := hbound.tables; scalar_tac))
-    have hcheck := metadata.check_table_count.complete {env with table_types := tables} profile
     let actual : metadata.Import := ⟨modName, nm, .Table tt⟩
     obtain ⟨imports, hpushimport, himports⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.imports actual (by have := hbound.imports; scalar_tac))
     let result := {env with imports := imports, table_types := tables}
     refine ⟨result, actual, ?_, ?_, himports, rfl, htables, ?_⟩
     · simp [metadata.decode_import, hmod, hname, htag.read_byte, hread,
-        hpush, hcheck, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
+        hpush, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
     · simp_all [ModuleEnv.rawImport, actual]
     · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid,
         Option.mem_def, global_simps, U32.rMax] using hv'
@@ -117,7 +116,7 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
     obtain ⟨p3, htag, hty⟩ := (show Wasm1.BytesAt data p2 ([3#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
-    have hread := metadata.decode_global_type.complete data p3 gt next ⟨_, he, hty⟩ profile
+    have hread := metadata.decode_global_type.complete data p3 gt next ⟨_, he, hty⟩
     obtain ⟨globals, hpush, hglobals⟩ := WP.spec_imp_exists
       (alloc.vec.Vec.push_spec env.global_types gt (by have := hbound.globalTypes; scalar_tac))
     obtain ⟨num, hnum, hnumval⟩ := WP.spec_imp_exists
@@ -134,14 +133,14 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
 
 /-- The import loop accepts the remaining valid imports of a repetition span. -/
 theorem metadata.decode_import_section_loop.complete
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32) (pos : Usize) (i : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32) (pos : Usize) (i : U32)
     (entries : List ModuleBinary.Import) (next : Usize)
     (hb : At (Rep ImportEncoding) data pos entries next)
     (hc : i.val + entries.length = count.val)
-    (hv : ImportsValid env entries profile)
+    (hv : ImportsValid env entries)
     (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, metadata.decode_import_section_loop data env profile count pos i = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result profile := by
+    ∃ result actual, metadata.decode_import_section_loop data env count pos i = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result := by
   induction entries generalizing env pos i with
   | nil =>
     have he := hb.rep_nil
@@ -154,14 +153,14 @@ theorem metadata.decode_import_section_loop.complete
     obtain ⟨middle, hfirst, hrest⟩ := hb.rep_cons
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
     obtain ⟨updated, current, hread, hraw, hadded⟩ := metadata.decode_import.complete
-      data pos env profile entry middle hfirst hv.head hbound
+      data pos env entry middle hfirst hv.head hbound
     have hbound' : ModuleEnv.Bounded updated middle.val := by
-      have hs := metadata.decode_import.spec data pos env hbound profile
+      have hs := metadata.decode_import.spec data pos env hbound
       simp only [hread, WP.spec_ok] at hs
       exact hs.choose_spec.2.2
     obtain ⟨j, hj, hjval⟩ := WP.spec_imp_exists
       (U32.add_spec (x := i) (y := 1#u32) (by scalar_tac))
-    have hv' : ImportsValid updated entries profile := by
+    have hv' : ImportsValid updated entries := by
       rw [← hraw] at hv
       exact hv.tail hadded
     obtain ⟨result, actual, hloop, hraws, hhistory⟩ := ih updated middle j hrest
@@ -175,15 +174,15 @@ theorem metadata.decode_import_section_loop.complete
 
 /-- `metadata.decode_import_section` accepts a vector span of valid imports. -/
 theorem metadata.decode_import_section.complete (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) (entries : List ModuleBinary.Import) (next : Usize)
+    (env : metadata.Env) (entries : List ModuleBinary.Import) (next : Usize)
     (hb : At (VecEncoding ImportEncoding) data pos entries next)
-    (hv : ImportsValid env entries profile)
+    (hv : ImportsValid env entries)
     (hbound : ModuleEnv.Bounded env pos.val) :
-    ∃ result actual, metadata.decode_import_section data pos env profile = .ok (.Ok next, result) ∧
-      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result profile := by
+    ∃ result actual, metadata.decode_import_section data pos env = .ok (.Ok next, result) ∧
+      actual.map ModuleEnv.rawImport = entries ∧ ImportsAdded env actual result := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, actual, hr, hp⟩ := metadata.decode_import_section_loop.complete
-    data env profile count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
+    data env count middle 0#u32 entries next hentries (by simpa using hc.symm) hv
     (hbound.mono (by have := hcount.span; omega))
   refine ⟨result, actual, ?_, hp⟩
   simp [metadata.decode_import_section, reader.read_u32_leb.complete data pos count middle hcount,

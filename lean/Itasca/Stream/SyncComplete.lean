@@ -28,8 +28,8 @@ def Queued (_id : U64) (queue : List StreamBatch.Issued) (state : stream.SyncVis
 
 /-- The synchronous scheduler satisfies the accepting scheduler policy. Capacity one prevents a
 queued batch from being overwritten. -/
-theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts sync
-    { batch_bytes := 25000#usize, max_batches := 1#usize } Queued profile := by
+theorem accepts : StreamAcceptingScheduler.Accepts sync
+    { batch_bytes := 25000#usize, max_batches := 1#usize } Queued := by
   constructor
   · decide
   · decide
@@ -48,7 +48,7 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
     subst queue
     obtain ⟨entries, hn, ht, hb⟩ := hvalid.entries
     obtain ⟨after, hr, _, _⟩ := stream.CodeBatch.validate_all.complete_at_seed
-      issued entries hvalid.bounded hn ht hvalid.limits hvalid.entry_bounds hb hvalid.validation_profile
+      issued entries hvalid.bounded hn ht hvalid.limits hvalid.entry_bounds hb
     refine ⟨{ state with completed := some after }, ?_, after, rfl, hr⟩
     simp [stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch, hr]
   · intro id queue state hqueue _ hnonempty
@@ -71,9 +71,9 @@ theorem accepts {profile : ValidationProfile} : StreamAcceptingScheduler.Accepts
 
 /-- The tail delivered to the scheduler survives the final drain, so the slice adapter returns the
 tail that the generic driver theorems describe. -/
-theorem delivered_tail {profile : ValidationProfile} {S : Type} {source : stream.Source S} {id : U64} {state : S}
+theorem delivered_tail {S : Type} {source : stream.Source S} {id : U64} {state : S}
     {env : metadata.Env} {environmentLength : Usize} {before after : stream.SyncVisitor}
-    (run : StreamRun.Remaining source sync id state env environmentLength before after profile) :
+    (run : StreamRun.Remaining source sync id state env environmentLength before after) :
     after.tail = some run.tail := by
   have hready := run.ready_call
   rw [tail_ready] at hready

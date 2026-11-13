@@ -18,7 +18,7 @@ theorem reader_profile_scalar_reached {V} (visitor : code.OpVisitor V)
     (step : st.core.vals.val.length < Usize.max →
       code.step_wasm2 visitor st.core data env ctx opcode before ⦃ out =>
         out.1 = .Ok () → post out.2.1 out.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index .Wasm2 opcode before ⦃ out =>
+    code.step_profile visitor st data env ctx index opcode before ⦃ out =>
       out.1 = .Ok () → post out.2.1.core out.2.2 ⦄ := by
   rw [profile_scalar_eq visitor st data env ctx index opcode before ordinary]
   by_cases full : alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX

@@ -26,8 +26,8 @@ private theorem lane_wf (lane : U8) : wf_uN 8 (.mk_uN lane.val) := by
   scalar_tac
 
 /-- A fixed operand effect extends the independently typed prefix in the active frame. -/
-theorem Pending.fixed {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (v : V)
+theorem Pending.fixed {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (v : V)
     (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (op : instr)
     (hw : wf_instr op)
     (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
@@ -51,8 +51,8 @@ theorem Pending.fixed {data env profile locals index st}
     exact post.after
 
 
-theorem Pending.simd_pure {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_pure {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.Operation)
     (hmap : Simd.pureMeaning subopcode.val = some op) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -65,8 +65,8 @@ theorem Pending.simd_pure {data env profile locals index st}
     (fun C hC _ => by simpa [Simd.Signature.inputs_pop, Simd.Signature.outputs_pop] using op.typed C hC)
     pos hsize _ (fun s _ => hv.on_simd v s subopcode) hencoded
 
-theorem Pending.simd_lane {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_lane {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.LaneOperation)
     (hmap : Simd.laneMeaning subopcode.val = some op) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -98,8 +98,8 @@ theorem Pending.simd_lane {data env profile locals index st}
         (by simpa [Simd.LaneOperation.runtime, proj_uN_0] using hbound)
 
 
-theorem Pending.simd_const {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_const {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
@@ -125,8 +125,8 @@ theorem Pending.simd_const {data env profile locals index st}
       (hencoded low high decoded.pos (hbits low high rfl))
 
 
-theorem Pending.simd_memory {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_memory {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hfull : op.laneCount = 0) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -165,8 +165,8 @@ theorem Pending.simd_memory {data env profile locals index st}
         op.typed_runtime C env ⟨locals, p.ft.results⟩ hC hm arg 0#u8 hc.1
           (by simpa [Simd.MemoryOperation.runtime] using hc.2) (by simp [hfull])
 
-theorem Pending.simd_memory_lane {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_memory_lane {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (subopcode : U32) (op : Simd.MemoryOperation)
     (hmap : Simd.memoryMeaning subopcode.val = some op) (hlaned : op.laneCount ≠ 0) (pos : Usize)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -215,8 +215,8 @@ theorem Pending.simd_memory_lane {data env profile locals index st}
 
 
 /-- A shuffle's scanner proves the lane limits before its fixed binary stack effect. -/
-theorem Pending.shuffle_reader {data env profile locals index st}
-    (p : Pending data env profile locals index st) (pos : Usize) (hpos : pos.val ≤ data.length)
+theorem Pending.shuffle_reader {data env locals index st}
+    (p : Pending data env locals index st) (pos : Usize) (hpos : pos.val ≤ data.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
       At data p.start (.plain (Simd.shuffle low high)) next) :
@@ -251,8 +251,8 @@ theorem Pending.shuffle_reader {data env profile locals index st}
   · simpa [code.BodyState.blocks_eq_of_ctrls (show s.ctrls = st.core.ctrls from hc)] using blocks
 
 /-- A shuffle's scanner proves the lane limits before its fixed binary stack effect. -/
-theorem Pending.simd_shuffle {data env profile locals index st}
-    (p : Pending data env profile locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
+theorem Pending.simd_shuffle {data env locals index st}
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V) (v : V)
     (hv : FullVisitor.Total visitor) (pos : Usize) (hpos : pos.val ≤ data.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hencoded : ∀ low high next, Simd.BitsDecoded data pos low high next →
@@ -272,7 +272,7 @@ theorem Pending.simd_shuffle {data env profile locals index st}
     exact post.after
 
 /-- The complete SIMD prefix dispatcher preserves the independently encoded typed body. -/
-theorem Pending.simd {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.simd {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (v : V) (hv : FullVisitor.Total visitor)
     (hsize : st.core.vals.val.length < Usize.max)
     (hbyte : data.val[p.start.val]'p.inbounds = 0xFD#u8) :

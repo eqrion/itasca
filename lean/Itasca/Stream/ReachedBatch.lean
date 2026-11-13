@@ -9,7 +9,7 @@ theorem stream.CodeBatch.validate_next.total_on {V : Type} (visitor : code.OpVis
     (batch : stream.CodeBatch) (index : Usize) (v : V)
     (range : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
     (entry : metadata.validate_code_entry_with visitor batch.code batch.validated_end
-      batch.env index batch.profile v ⦃ _ => True ⦄) :
+      batch.env index v ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_next visitor batch index v ⦃ _ => True ⦄ := by
   unfold stream.CodeBatch.validate_next
   split
@@ -28,7 +28,7 @@ theorem stream.CodeBatch.validate_func.total_on {V : Type} (visitor : code.OpVis
     (batch : stream.CodeBatch) (index : Usize) (v : V)
     (range : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
     (entry : metadata.validate_code_entry_with visitor batch.code batch.validated_end
-      batch.env index batch.profile v ⦃ _ => True ⦄) :
+      batch.env index v ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_func visitor batch index v ⦃ _ => True ⦄ := by
   cases sticky : batch.error with
   | some error => rw [stream.CodeBatch.validate_func.sticky visitor batch index v error sticky]; simp
@@ -49,13 +49,13 @@ theorem stream.CodeBatch.validate_func.prepared_total {V : Type} (visitor : code
     (batch : stream.CodeBatch) (index : Usize) (v : V)
     (bounds : CodeEntry.Bounds batch.env)
     (range : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (start : ∀ prepared : CodeEntry.Prepared batch.code batch.env index batch.validated_end batch.profile,
+    (start : ∀ prepared : CodeEntry.Prepared batch.code batch.env index batch.validated_end,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
-    (bodyTotal : ∀ (prepared : CodeEntry.Prepared batch.code batch.env index batch.validated_end batch.profile) started,
+    (bodyTotal : ∀ (prepared : CodeEntry.Prepared batch.code batch.env index batch.validated_end) started,
       visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-      code.validate_body_with visitor prepared.body batch.env prepared.ctx prepared.typeIdx batch.profile started ⦃ _ => True ⦄) :
+      code.validate_body_with visitor prepared.body batch.env prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄) :
     stream.CodeBatch.validate_func visitor batch index v ⦃ _ => True ⦄ := by
   exact stream.CodeBatch.validate_func.total_on visitor batch index v range
     (metadata.validate_code_entry_with.total_on visitor batch.code batch.validated_end batch.env index v
-      bounds batch.profile start bodyTotal)
+      bounds start bodyTotal)
 end Itasca

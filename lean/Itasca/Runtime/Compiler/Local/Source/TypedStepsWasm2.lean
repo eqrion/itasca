@@ -11,23 +11,23 @@ including indexed block signatures and the declared-reference condition. -/
 inductive TypedRunWasm2 {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) :
     code.BodyState → V → V → Prop where
-  | done {st v} (typed : State data env .Wasm2 ctx.locals index st)
+  | done {st v} (typed : State data env ctx.locals index st)
       (closed : st.blocks.val = []) (finished : st.core.pos = Slice.len data) :
       TypedRunWasm2 visitor data env ctx index st v v
   | step {st v next out middle final}
-      (typed : State data env .Wasm2 ctx.locals index st)
-      (pending : Pending data env .Wasm2 ctx.locals index {core := {st.core with pos := next}})
+      (typed : State data env ctx.locals index st)
+      (pending : Pending data env ctx.locals index {core := {st.core with pos := next}})
       (start : pending.start = st.core.pos)
       (advance : next.val = st.core.pos.val + 1)
-      (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx index .Wasm2
+      (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx index
         (data.val[pending.start.val]'pending.inbounds) v = .ok (.Ok (), out, middle))
       (rest : TypedRunWasm2 visitor data env ctx index out middle final) :
       TypedRunWasm2 visitor data env ctx index st v final
 
 theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (st : code.BodyState) (v v' : V) (hi : State data env .Wasm2 ctx.locals index st)
-    (h : code.body_loop_loop visitor data env ctx index .Wasm2 v st = .ok (.Ok (), v')) :
+    (st : code.BodyState) (v v' : V) (hi : State data env ctx.locals index st)
+    (h : code.body_loop_loop visitor data env ctx index v st = .ok (.Ok (), v')) :
     TypedRunWasm2 visitor data env ctx index st v v' := by
   generalize hn : data.length - st.core.pos.val = n
   induction n using Nat.strong_induction_on generalizing st v with
@@ -63,7 +63,7 @@ theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
         obtain ⟨⟨res, out, w⟩, hs, htail⟩ := ResultFacts.bind_ok_inv _ _ _ hb
         obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
         have hs' : code.step_profile visitor {core := {st.core with pos := next}}
-            data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) v =
+            data env ctx index (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs
         cases res with
         | Err e =>
@@ -77,22 +77,21 @@ theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
           subst cf
           obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
             code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
-            data env ctx ctx rfl index .Wasm2 st v () _ hb0 trivial
+            data env ctx ctx rfl index st v () _ hb0 trivial
           obtain ⟨⟨res, s⟩, hs0, hafter⟩ :=
-            WP.spec_imp_exists (steps data env .Wasm2 ctx.locals ctx index rfl _ p)
+            WP.spec_imp_exists (steps data env ctx.locals ctx index rfl _ p)
           simp only [hstart] at hs0
           have heval : Visitor.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-              data env ctx index .Wasm2 () st =
+              data env ctx index () st =
               .ok (match continueStep (res, s) with
                 | .cont (s, _) => .cont ((), s)
                 | .done r => .done (r, ())) := by
-            change code.body_loop_loop.body _ _ _ _ _ _ _ _ = _
+            change code.body_loop_loop.body _ _ _ _ _ _ _ = _
             rw [Wasm2.emptyVisitorLoop.body_eq]
-            change (loopBody data env .Wasm2 ctx index st >>= fun r => .ok
-              (match r with | .cont (s, _) => .cont ((), s) | .done r => .done (r, ())
-                : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
+            change (loopBody data env ctx index st >>= fun r => .ok
+              (match r with | .cont (s, _) => .cont ((), s) | .done r => .done (r, ()) : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
             rw [loopBody_eq, if_neg hc, hr]
-            simp only [bind_ok, code.check_opcode, hs0]
+            simp only [bind_ok, hs0]
             cases res <;> simp [continueStep]
           rw [hempty] at heval
           simp only [Result.ok.injEq] at heval
@@ -106,7 +105,7 @@ theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
             obtain ⟨hi', hge, hbound⟩ := hafter rfl
             change next.val ≤ out.core.pos.val at hge
             have hmeasure : data.length - out.core.pos.val < n := by omega
-            have ht' : code.body_loop_loop visitor data env ctx index .Wasm2 w out = .ok (.Ok (), v') := by
+            have ht' : code.body_loop_loop visitor data env ctx index w out = .ok (.Ok (), v') := by
               simpa [code.body_loop_loop] using ht
             exact .step hi p hstart hnext hs'
               (ih (data.length - out.core.pos.val) hmeasure out w hi' ht' rfl)
@@ -121,7 +120,7 @@ its actual root frame; no compiler-correctness premise is assumed. -/
 theorem typed_body_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (before after : V)
-    (accepted : code.validate_body_with visitor data env ctx index .Wasm2 before =
+    (accepted : code.validate_body_with visitor data env ctx index before =
       .ok (.Ok (), after)) :
     TypedRunWasm2 visitor data env ctx index (initial index) before after := by
   unfold code.validate_body_with at accepted
@@ -139,5 +138,5 @@ theorem typed_body_wasm2 {V : Type} (visitor : code.OpVisitor V)
       rw [initialized, WP.spec_ok] at start
       obtain ⟨rfl, ft, lookup⟩ := start
       exact typed_loop_wasm2 visitor data env ctx index _ before after
-        (State.start data env .Wasm2 ctx.locals index ft lookup (by scalar_tac)) tail
+        (State.start data env ctx.locals index ft lookup (by scalar_tac)) tail
 end Itasca.Runtime.Compiler

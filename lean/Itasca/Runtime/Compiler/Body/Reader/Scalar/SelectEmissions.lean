@@ -19,7 +19,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_select_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
@@ -48,7 +48,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_select_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -61,7 +61,7 @@ theorem reader_emit_select_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_SELECT before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_SELECT before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (ty : Itasca.wasm_types.ValueType) (front : List valtype) (values : List code.StackType),
       Sequence.stackTypes st.core.vals.val = front ++ [Translate.valueType ty, Translate.valueType ty, .I32] ∧

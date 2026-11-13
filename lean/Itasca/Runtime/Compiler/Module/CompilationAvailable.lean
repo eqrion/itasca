@@ -8,49 +8,49 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
 
-/-- Independent complete-profile module validity, including intrinsic binary
+/-- Independent module validity, including intrinsic binary
 and signature limits. No compiler run or emitted object occurs in these fields. -/
-structure ValidCompilationSource (bytes : Slice U8) (profile : ValidationProfile)
+structure ValidCompilationSource (bytes : Slice U8)
     (raw : ModuleBinary.Module) : Prop where
-  encoding : ModuleBinary.ModuleEncodingWithinLimits raw bytes.val profile
+  encoding : ModuleBinary.ModuleEncodingWithinLimits raw bytes.val
   signatures : ModuleBinary.ModuleSignaturesWithinLimits raw
   elaborated : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw)
   typed : Module_ok (ModuleElaboration.moduleOf raw)
-  restrictions : ModuleElaboration.Profile raw profile
+  restrictions : ModuleElaboration.Restrictions raw
 
 /-- Compiler eligibility is entirely source-facing: configured module size and
 independent numerical demand for the canonical source-region metadata. Region
 certificates are derived by validator completeness, not assumed compiler output. -/
-structure CompileEligible (A : Type) (bytes : Slice U8) (profile : ValidationProfile)
+structure CompileEligible (A : Type) (bytes : Slice U8)
     (raw : ModuleBinary.Module) (limits : runtime.compiler.CompileLimits) (bound : Nat) : Prop where
   moduleBytes : bytes.length ≤ limits.max_module_bytes.val
-  demand : ∀ regions env tail, StreamCompleteRegions.Certificate bytes raw regions env tail profile →
-    ∃ bodyBytes localCount peak, SourceCompilationDemand A env tail profile limits bodyBytes localCount peak bound
+  demand : ∀ regions env tail, StreamCompleteRegions.Certificate bytes raw regions env tail →
+    ∃ bodyBytes localCount peak, SourceCompilationDemand A env tail limits bodyBytes localCount peak bound
 
 private theorem module_fits (bytes : Slice U8) (limit : Usize) (bounded : bytes.length ≤ limit.val) :
     ¬ Slice.len bytes > limit := by scalar_tac
 
-private theorem certificate_initializer_typing {bytes raw regions env tail profile}
-    (certificate : StreamCompleteRegions.Certificate bytes raw regions env tail profile)
+private theorem certificate_initializer_typing {bytes raw regions env tail}
+    (certificate : StreamCompleteRegions.Certificate bytes raw regions env tail)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) :
-    InitializerSourceTyping (uninitializedModule env tail profile functions) := by
-  have environment := Itasca.metadata.validate_env.profile_semantic_spec regions.env profile
+    InitializerSourceTyping (uninitializedModule env tail functions) := by
+  have environment := Itasca.metadata.validate_env.profile_semantic_spec regions.env
   rw [certificate.environment,WP.spec_ok] at environment
   obtain ⟨_,_,valid,_,_,_⟩ := environment
-  have dataValid := Itasca.metadata.validate_tail.spec regions.tail 0#usize env (by simp) profile
+  have dataValid := Itasca.metadata.validate_tail.spec regions.tail 0#usize env (by simp)
   rw [certificate.tail_accepted,WP.spec_ok] at dataValid
   exact InitializerSourceTyping.of_valid valid dataValid.2.1
 
-/-- Independently valid modules in either complete profile compile successfully
+/-- Independently valid modules for WebAssembly Core 2.0 compile successfully
 when explicit source-only compiler bounds and bounded allocations are available.
 Aeneas normal return and the successful Rust result are both conclusions. -/
 theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : ValidCompilationSource bytes profile raw)
-    (eligible : CompileEligible A bytes profile raw limits bound) :
-    ∃ executable, runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable) := by
-  obtain ⟨regions,env,tail,certificate⟩ := StreamCompleteRegions.prepare bytes raw profile valid.encoding valid.signatures
+    (bytes : Slice U8) (raw : ModuleBinary.Module)
+    (limits : runtime.compiler.CompileLimits) (valid : ValidCompilationSource bytes raw)
+    (eligible : CompileEligible A bytes raw limits bound) :
+    ∃ executable, runtime.compiler.compile_with ops bytes limits = .ok (.Ok executable) := by
+  obtain ⟨regions,env,tail,certificate⟩ := StreamCompleteRegions.prepare bytes raw valid.encoding valid.signatures
     valid.elaborated valid.typed valid.restrictions
   obtain ⟨bodyBytes,localCount,peak,demand⟩ := eligible.demand regions env tail certificate
   obtain ⟨codeStart,codeEnd,scanned,_,_,_⟩ := certificate.split
@@ -62,7 +62,7 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
     exact (ordered.trans bounded).trans certificate.bounded
   obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists Itasca.metadata.Env.new.spec
   obtain ⟨scheduler,run,streamCall,tailEq,tailReady,ready,workers⟩ := compiler_streaming_available ops law bound allocation
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource {bytes,code_start := codeStart,code_end := codeEnd} 0#u64 profile
+    runtime.compiler.CompileSource.Insts.ItascaStreamSource {bytes,code_start := codeStart,code_end := codeEnd} 0#u64
     bytes raw regions env tail certificate available (initialScheduler A limits codeStart) storage bodyBytes localCount peak
     (demand.environment_at codeStart) demand.functions demand.maxima demand.queueReserve rfl rfl rfl rfl origin
   have functionReserve : scheduler.functions.length ≤ bound := by
@@ -87,7 +87,7 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
     rw [budgetEq]
     exact ready.paid
   obtain ⟨⟨reply,executable,finalBudget⟩,lowered,status,_,_,_⟩ := WP.spec_imp_exists
-    (initializer_compilation_available ops law bound allocation (uninitializedModule env tail profile functions) budget
+    (initializer_compilation_available ops law bound allocation (uninitializedModule env tail functions) budget
       (certificate_initializer_typing certificate functions) (demand.initializers functions functionCount budget paid))
   dsimp only at status
   subst reply

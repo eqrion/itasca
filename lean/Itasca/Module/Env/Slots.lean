@@ -17,8 +17,7 @@ set_option maxHeartbeats 800000
 namespace Itasca.ModuleEnv
 
 /-- The payload encoding of the declaration section with rank `id` of `raw`. -/
-def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
-    (profile : ValidationProfile) : Prop :=
+def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8) : Prop :=
   match id with
   | 1 => ModuleBinary.VecEncoding ModuleBinary.FuncTypeEncoding raw.types bytes
   | 2 => ModuleBinary.VecEncoding ModuleBinary.ImportEncoding raw.imports bytes
@@ -28,7 +27,7 @@ def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
   | 6 => ModuleBinary.VecEncoding ModuleBinary.GlobalEncoding raw.globals bytes
   | 7 => ModuleBinary.VecEncoding ModuleBinary.ExportEncoding raw.exports bytes
   | 8 => ModuleBinary.StartEncoding raw.start bytes
-  | 9 => ModuleBinary.VecEncoding (ModuleBinary.ElementEncodingFor profile) raw.elements bytes
+  | 9 => ModuleBinary.VecEncoding (ModuleBinary.ElementEncodingFor) raw.elements bytes
   | 10 => ModuleBinary.StartEncoding raw.dataCount bytes
   | _ => False
 
@@ -65,11 +64,10 @@ def update (raw : ModuleBinary.Module) (id : Nat) (decls : Declarations) : Decla
 /-- The bytes of the slot with id `id`: leading custom sections followed by either a present section
 or nothing when the slot is empty. An omitted empty section completes its slot just as a present
 section does. -/
-def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8)
-    (profile : ValidationProfile) : Prop :=
+def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8) : Prop :=
   ∃ customs body, ModuleBinary.CustomsEncoding customs ∧
     ((Empty raw (ModuleBinary.sectionRank id).val ∧ body = []) ∨
-      ModuleBinary.SectionEncoding id (fun u bytes => Payload raw (ModuleBinary.sectionRank id).val u bytes profile) () body) ∧
+      ModuleBinary.SectionEncoding id (fun u bytes => Payload raw (ModuleBinary.sectionRank id).val u bytes) () body) ∧
     bytes = customs ++ body
 
 /-- Filling slot `id` of the declarations from the raw module advances `Ready` to `id`. -/

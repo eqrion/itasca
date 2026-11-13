@@ -53,26 +53,24 @@ def Section (data : Slice U8) (start : Usize) (env : metadata.Env) (cs : Header)
 
 /-- The code entry is typed against the `i`-th defined function and has a declared local count
 within `limits.MAX_LOCALS`. -/
-def EntryAt (env : metadata.Env) (i : Nat) (entry : ModuleBinary.Code)
-    (profile : ValidationProfile) : Prop :=
+def EntryAt (env : metadata.Env) (i : Nat) (entry : ModuleBinary.Code) : Prop :=
   ∃ hi : i < env.func_type_indices.val.length,
-    CodeEntry.Typed env env.func_type_indices.val[i] entry profile ∧
+    CodeEntry.Typed env env.func_type_indices.val[i] entry ∧
     entry.declared.length ≤ limits.MAX_LOCALS.val
 
 /-- The entries are `EntryAt` the defined functions in order, starting at function index `i`. -/
-inductive EntriesTypedFor (profile : ValidationProfile) (env : metadata.Env) : Nat → List ModuleBinary.Code → Prop where
-  | nil (i : Nat) : EntriesTypedFor profile env i []
-  | cons {i entry entries} : EntryAt (profile := profile) env i entry →
-      EntriesTypedFor profile env (i + 1) entries → EntriesTypedFor profile env i (entry :: entries)
+inductive EntriesTypedFor (env : metadata.Env) : Nat → List ModuleBinary.Code → Prop where
+  | nil (i : Nat) : EntriesTypedFor env i []
+  | cons {i entry entries} : EntryAt env i entry →
+      EntriesTypedFor env (i + 1) entries → EntriesTypedFor env i (entry :: entries)
 
-/-- Typed entries with an explicit validation-profile parameter. -/
-abbrev EntriesTyped (env : metadata.Env) (i : Nat) (entries : List ModuleBinary.Code)
-    (profile : ValidationProfile) : Prop := EntriesTypedFor profile env i entries
+/-- Typed entries indexed by their function position. -/
+abbrev EntriesTyped (env : metadata.Env) (i : Nat) (entries : List ModuleBinary.Code) : Prop := EntriesTypedFor env i entries
 
 /-- Typed entries extend by one more entry at the next function index. -/
-theorem EntriesTyped.snoc {env i entries entry} {profile : ValidationProfile}
-    (h : EntriesTyped (profile := profile) env i entries) (he : EntryAt (profile := profile) env (i + entries.length) entry) :
-    EntriesTyped (profile := profile) env i (entries ++ [entry]) := by
+theorem EntriesTyped.snoc {env i entries entry}
+    (h : EntriesTyped env i entries) (he : EntryAt env (i + entries.length) entry) :
+    EntriesTyped env i (entries ++ [entry]) := by
   induction h with
   | nil i => exact .cons (by simpa using he) (.nil _)
   | @cons i first rest hfirst hrest ih =>
@@ -89,9 +87,9 @@ theorem entries_at_snoc {data start pos next entries entry} {R : ModuleBinary.Co
 
 /-- Typed entries covering all remaining functions are pointwise `CodeEntry.Typed` against the
 function type indices from `i`. -/
-theorem EntriesTyped.forall₂ {env i entries} {profile : ValidationProfile}
-    (h : EntriesTyped (profile := profile) env i entries) (hn : i + entries.length = env.func_type_indices.val.length) :
-    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) (env.func_type_indices.val.drop i) entries := by
+theorem EntriesTyped.forall₂ {env i entries}
+    (h : EntriesTyped env i entries) (hn : i + entries.length = env.func_type_indices.val.length) :
+    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) (env.func_type_indices.val.drop i) entries := by
   induction h with
   | nil i =>
     have hb : env.func_type_indices.val.length ≤ i := by simpa using hn.symm.le
@@ -102,10 +100,10 @@ theorem EntriesTyped.forall₂ {env i entries} {profile : ValidationProfile}
     exact .cons ht (ih (by simp only [List.length_cons] at hn; omega))
 
 /-- Concatenate adjacent typed batches in defined-function order. -/
-theorem EntriesTyped.append {env i first second} {profile : ValidationProfile}
-    (hfirst : EntriesTyped (profile := profile) env i first)
-    (hsecond : EntriesTyped (profile := profile) env (i + first.length) second) :
-    EntriesTyped (profile := profile) env i (first ++ second) := by
+theorem EntriesTyped.append {env i first second}
+    (hfirst : EntriesTyped env i first)
+    (hsecond : EntriesTyped env (i + first.length) second) :
+    EntriesTyped env i (first ++ second) := by
   induction hfirst with
   | nil i => simpa using hsecond
   | @cons i entry entries he hs ih =>
@@ -120,17 +118,17 @@ theorem entries_at_append {data start middle finish first second} {R : ModuleBin
   obtain ⟨cs, hc, ht⟩ := hsecond
   exact ⟨bs ++ cs, hb.append hc, hs.append ht⟩
 
-/-- The independent encoding of the code section, which may be absent, for `profile`. -/
-def Encoding (profile : ValidationProfile) := ModuleBinary.OptionalSectionEncoding 10#u8
-  (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) []
+/-- The independent encoding of the code section, which may be absent. -/
+def Encoding := ModuleBinary.OptionalSectionEncoding 10#u8
+  (ModuleBinary.VecEncoding (Profile.CodeEncoding)) []
 
 /-- A section header and an independent entry repetition with the right count give the section
 `Encoding`. -/
-theorem Section.encoding {data start env cs entries} {profile : ValidationProfile}
+theorem Section.encoding {data start env cs entries}
     (h : Section data start env cs)
-    (hb : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) data cs.entries entries cs.end)
+    (hb : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) data cs.entries entries cs.end)
     (hn : entries.length = env.func_type_indices.val.length) :
-    ModuleBinary.At (Encoding (profile := profile)) data start entries cs.end := by
+    ModuleBinary.At (Encoding) data start entries cs.end := by
   obtain ⟨content, ⟨afterId, size, hid, hsize, hlen, _⟩, hcount, hcountval⟩ := h
   obtain ⟨countBytes, hc, hclen, hcbound, hcenc⟩ := hcount
   obtain ⟨entryBytes, he, hes⟩ := hb
@@ -140,7 +138,7 @@ theorem Section.encoding {data start env cs entries} {profile : ValidationProfil
   have hsizeval : size.val = (countBytes ++ entryBytes).length := by
     have := payload.length
     omega
-  have hpayload : ModuleBinary.VecEncoding (Profile.CodeEncoding profile) entries (countBytes ++ entryBytes) :=
+  have hpayload : ModuleBinary.VecEncoding (Profile.CodeEncoding) entries (countBytes ++ entryBytes) :=
     ⟨countBytes, entryBytes, by simpa [hcountval, hn] using hcenc, he, rfl⟩
   refine ⟨10#u8 :: (sizeBytes ++ (countBytes ++ entryBytes)), .present ?_, ?_⟩
   · exact ⟨sizeBytes, countBytes ++ entryBytes, by simpa [hsizeval] using hsenc, hpayload, rfl⟩
@@ -163,8 +161,8 @@ end Itasca.ModuleCode
 namespace Itasca.ModuleBinary
 
 /-- An independently encoded code entry has an `Extent`. -/
-theorem At.code_extent {data pos entry next} {profile : ValidationProfile}
-    (h : At (Profile.CodeEncoding profile) data pos entry next) :
+theorem At.code_extent {data pos entry next}
+    (h : At (Profile.CodeEncoding) data pos entry next) :
     ∃ first, ModuleCode.Extent data pos first next := by
   obtain ⟨bytes, he, hs⟩ := h
   obtain ⟨sizeBytes, localBytes, bodyBytes, hsize, _, _, rfl⟩ := he

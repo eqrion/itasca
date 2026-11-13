@@ -91,7 +91,7 @@ theorem export_source {M : Type} (store : runtime.store.Store M) (inst : runtime
 /-- All source-ordered exports satisfy the generated allocator's resolutions. -/
 theorem exports_source {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (shape : InstanceShape store inst)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (code : CodeInterpretation) (instanceIndex : Nat) (sourceSyntax : InstanceSyntax code instanceIndex inst) :
     List.Forall₂ (fun source allocated => fun_instexport
       (decodeInstance store inst).FUNCS (decodeInstance store inst).GLOBALS
@@ -109,7 +109,7 @@ theorem exports_source {M : Type} (store : runtime.store.Store M) (inst : runtim
 export records. -/
 theorem exports_source_raw {M : Type} (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (shape : InstanceShape store inst)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (code : CodeInterpretation) (instanceIndex : Nat) (sourceSyntax : InstanceSyntax code instanceIndex inst)
     (raw : ModuleBinary.Module)
     (matched : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw) :

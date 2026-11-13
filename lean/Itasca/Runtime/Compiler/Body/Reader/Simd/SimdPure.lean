@@ -17,7 +17,7 @@ selected independent subopcode dispatch. -/
 theorem simd_prefix_success {V : Type} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     st.core.vals.val.length < Usize.max ∧ ∃ subopcode next,
       Leb128.Decoded data st.core.pos subopcode next ∧
@@ -36,13 +36,13 @@ theorem simd_prefix_success {V : Type} (visitor : code.OpVisitor V)
 
 /-- Pure SIMD readers retain the exact supplied source prefix and callback. -/
 theorem reader_simd_pure_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (subopcode : U32) (next : Usize) (op : Wasm2.Simd.Operation)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Wasm2.Simd.pureMeaning subopcode.val = some op)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0xfd#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     visitor.on_simd before out.core subopcode = .ok (.Ok (),after) ∧
       Wasm2.Simd.readFixed {st.core with pos := next} op.signature.popTypes (some op.signature.output) =

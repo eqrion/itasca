@@ -14,12 +14,12 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
 theorem reader_stateful_bulk_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context) (subopcode : U32) (next : Usize)
     (member : subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17])
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
     (decoded : Leb128.Decoded data st.core.pos subopcode next)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 252#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_profile visitor st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     ∃ op a b, StatefulArguments op a b ∧
       statefulCallback visitor before out.core op a b = .ok (.Ok (),after) ∧ StatefulReaderPost p out.core op := by
   obtain ⟨size,run⟩ := profile_scalar_success visitor st out data env ctx index 252#u8 before after (by decide) accepted

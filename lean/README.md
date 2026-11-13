@@ -1,7 +1,7 @@
 # Lean verification
 
 Lean checks the extracted Rust validator against SpecTec-generated Wasm 2.0
-typing rules, an independent binary grammar, and the explicit Wasm 2.0 profile.
+typing rules and an independent binary grammar for Wasm 2.0.
 The [project README](../README.md#formal-verification) states the
 public guarantees and trust boundary, and [DEVELOPMENT.md](../DEVELOPMENT.md)
 the change workflow. This guide covers setup, proof contracts, and layout. The
@@ -134,25 +134,23 @@ The `SpecTecSupport` library compiles upstream's handwritten
 ## Proof contracts
 
 [Itasca/Main.lean](Itasca/Main.lean) lists every headline theorem, and each is
-stated in full under [Itasca/Results/](Itasca/Results). The `profile_*` theorem
-names and `ValidationProfile` parameter remain in the Lean interface during
-this cleanup; the only supported profile is `.Wasm2`.
+stated in full under [Itasca/Results/](Itasca/Results). The validator supports Wasm 2.0 directly.
 
 | Layer | Contracts |
 | --- | --- |
-| Whole module | [Results/Validate](Itasca/Results/Validate.lean): `metadata.validate_module.profile_total`, `profile_sound`, `profile_spec`, `profile_complete`, `profile_complete_with_metadata`. |
-| Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.profile_sound`, `profile_total`, and `profile_complete`, proved in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
+| Whole module | [Results/Validate](Itasca/Results/Validate.lean): `metadata.validate_module.total`, `sound`, `spec`, `complete`, `complete_with_metadata`. |
+| Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.sound`, `total`, and `complete`, proved in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
 | Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
 | Worker batches | [Results/Batch](Itasca/Results/Batch.lean): `stream.CodeBatch.validate_func`, `validate_all`, and `finish.sound`, giving ordered entry validation and exact coverage. |
-| Bodies and entries | [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) for Wasm 2.0, built on [Wasm2/](Itasca/Wasm2) `Soundness`, `Totality`, and `Completeness`. |
+| Bodies and entries | [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean) defines the `Wasm2.Validated` body certificate; [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) cover visiting and entry contracts. |
 | Callback traces | [Results/Trace](Itasca/Results/Trace.lean), proved in [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean) and [Profile/EntryTrace](Itasca/Profile/EntryTrace.lean). |
 | Decoding uniqueness | [Results/Unique](Itasca/Results/Unique.lean), built on [Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) and [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean), without typing or size premises. |
 
 Soundness yields `ModuleSound.Validated`: one raw module that the bytes encode,
-that elaborates to a `Module_ok` SpecTec module satisfying the profile, and that
+that elaborates to a `Module_ok` SpecTec module satisfying the module restrictions, and that
 the returned environment, tail, and accessors describe. Completeness assumes
 `ModuleEncodingWithinLimits`, `ModuleSignaturesWithinLimits`, `Elaborates`,
-`Module_ok`, and `ModuleElaboration.Profile`, and never parser success. Body byte
+`Module_ok`, and `ModuleElaboration.Restrictions`, and never parser success. Body byte
 bounds include the final `end`; local bounds exclude parameters.
 
 ### Streaming premises
@@ -196,8 +194,8 @@ and examples import only `Main`. Between these, the order is a guide.
 | `Handler/` | Lemmas about individual extracted handlers, and `Realizes`/`TypedPrefix` for stacks. |
 | `Visitor/` | Profile-agnostic visitor contracts, erasure, lifting, and the trace framework. |
 | `Wasm1/` | Completeness lemmas for the shared scalar instructions. `Binary/Wasm1/` supplies their encodings, which the Wasm 2.0 grammar extends. |
-| `Wasm2/` | Wasm 2.0 function body proofs, split like the Rust dispatch into `Scalar/`, `NumericExt/`, `References/`, `Bulk/`, `Simd/`, `Control/`, and `Step/`, plus `Complete/`, `Visitor/`, and `Trace/`. |
-| `Profile/` | Profile predicates and body and entry certificates; the profile parameter currently admits only Wasm 2.0. |
+| `Wasm2/` | Wasm 2.0 function body proofs, split like the Rust dispatch into `Scalar/`, `NumericExt/`, `References/`, `Bulk/`, `Simd/`, `Control/`, and `Step/`, plus `Complete/`, `Visitor/`, and `Trace/`. `Wasm2.Validated` is the body certificate. |
+| `Profile/` | Wasm 2.0 code-entry encoding and typing (`Entry`, `EntryTyped`, `CodeEncoding`), signature caps, and entry contracts. |
 | `Contracts` | Definitions of the streaming source, scheduler, and worker obligations. |
 | `Module/` | Readers, constant expressions, sections, environment, code entries, elaboration, and custom sections. |
 | `Stream/` | Sources, scheduler proofs, batches, the driver, and the contiguous adapter. |
@@ -306,7 +304,7 @@ patch to generated Lean output:
   iteration can observe the wrapped address. This changes the trusted execution
   target without changing validator typing rules or runtime behavior.
 
-## Extending the profile
+## Extending validation
 
 The accepted instruction language is bounded by the binary grammar. Add binary
 syntax, Rust dispatch, typing preservation, and completeness together. Keep
@@ -365,12 +363,12 @@ live normal exit; branches require a live target. Dead scopes therefore need
 no certificate for source suffixes that the compiler omits. Outermost live
 continuations retain the actual typed Return epilogue, while a dead nonvoid
 body may have the compiler's zero-width epilogue. These are syntactic invariant
-conditions, not assumptions about machine execution. The complete-profile
+conditions, not assumptions about machine execution. The complete Wasm 2.0
 compiler body fold is checked for Wasm 2.0. Actual construction, entry
 validation, and finishing produce a certificate for the independently encoded
 source body. The
 [complete compilation theorem](Itasca/Results/Compile.lean) combines
-all-input normal return with independently encoded complete-profile function,
+all-input normal return with independently encoded complete Wasm 2.0 function,
 initializer, metadata and capacity certificates. It has no accepted-body or
 opcode-subset premise. [Compiler completeness](Itasca/Results/Compile.lean)
 constructs actual successful compilation and that certificate from independent
@@ -390,7 +388,7 @@ exists.
 [Instantiation](Itasca/Results/Instantiate.lean) is total and runs no callback.
 It links, allocates and initializes the module. Rejection before publication
 leaves the store unchanged and never reports a trap. Segment traps preserve
-completed writes and allocated objects under the Wasm 2.0 validation profile. It
+completed writes and allocated objects under Wasm 2.0 validation. It
 classifies every resource error and returns the resolved start function, which
 the embedder runs with `invoke_with`. Success reaches the call of
 that function in the source instantiation, so instantiate-then-invoke follows

@@ -6,7 +6,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Canonical accepted environment parsing establishes the exact imported and
 defined index-space caches retained by the executable module. -/
 theorem CompileWitness.cache_input {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable) :
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable) :
     ∃ tables memories, ModuleEnv.Cache w.env tables memories := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
@@ -16,13 +16,13 @@ theorem CompileWitness.cache_input {A : Type} {allocator : runtime.platform.Allo
   have decoded := metadata.validate_env_with.accepted_erase
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator).metadataModuleVisitorInst
     run.environment run.region w.env run.environmentLength run.decoded run.decode_environment
-  have semantic := metadata.validate_env.profile_semantic_spec run.environment profile
+  have semantic := metadata.validate_env.profile_semantic_spec run.environment
   rw [decoded, WP.spec_ok] at semantic
   obtain ⟨decls, represented, _, _, _, _⟩ := semantic
   exact ⟨decls.tables, decls.memories, represented.cache⟩
 
 theorem CompileWitness.cache {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) :
     ∃ tables memories, ModuleEnv.Cache executable.module.env tables memories := by
   rw [(w.initializers law).1]

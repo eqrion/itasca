@@ -16,7 +16,7 @@ theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before : V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes) :
-    code.step_profile visitor st data env ctx index .Wasm2 opcode before =
+    code.step_profile visitor st data env ctx index opcode before =
       (if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st, before)
       else do
@@ -30,7 +30,7 @@ theorem profile_scalar_eq {V : Type} (visitor : code.OpVisitor V)
           .ok (error, {core := state}, after)) := by
   have hok : core.result.Result.Insts.CoreOpsTry.branch
       (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
-  simp only [code.step_profile, code.check_opcode, bind_ok, hok]
+  simp only [code.step_profile, bind_ok, hok]
   split <;> try rfl
   all_goals exact False.elim (ordinary (by decide))
 
@@ -38,7 +38,7 @@ theorem profile_scalar_success {V : Type} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before after : V)
     (ordinary : opcode.val ∉ Wasm2.controlOpcodes)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     st.core.vals.val.length < Usize.max ∧
       code.step_wasm2 visitor st.core data env ctx opcode before = .ok (.Ok (), out.core, after) := by
   rw [profile_scalar_eq visitor st data env ctx index opcode before ordinary] at accepted
@@ -74,7 +74,7 @@ theorem profile_base_success_wasm2 {V : Type} (visitor : code.OpVisitor V)
     (base : opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253])
     (sign : Wasm2.NumericExtensions.signMeaning opcode = none)
     (misc : opcode ≠ code.OP_MISC_PREFIX) (locals : ctx.locals = ctx'.locals)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     st.core.vals.val.length < Usize.max ∧
       code.step visitor st.core data env ctx' opcode before = .ok (.Ok (), out.core, after) := by
   obtain ⟨capacity, run⟩ := profile_scalar_success visitor st out data env ctx index opcode before after ordinary accepted

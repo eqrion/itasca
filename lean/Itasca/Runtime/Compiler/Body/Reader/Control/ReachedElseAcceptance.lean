@@ -56,7 +56,7 @@ theorem StructuredCompilerPrefix.else_available {A : Type}
 /-- Independent source else acceptance identifies the active then-scope;
 its physical guard and source-paid reserve establish actual compiler acceptance. -/
 theorem reached_profile_else_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A V : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A V : Type}
     (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState) (ctx : code.Context)
@@ -67,9 +67,9 @@ theorem reached_profile_else_available_wasm2 {jumpTables : List U32} {data env s
     (capacity : CallbackCapacity compiler out.core bound 1)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (byte : data.val[p.start.val]'p.inbounds = 5#u8)
-    (reference : code.step_profile source st data env ctx index .Wasm2 5#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 5#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index 5#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨_,_,sourceForm,_⟩ := reader_else_wasm2 p source before after out ctx byte reference

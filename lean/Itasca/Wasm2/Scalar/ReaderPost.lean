@@ -3,7 +3,7 @@ import Itasca.Wasm2.Invariant
 /-!
 Exact source-prefix advancement shared by validator preservation and compiler replay.
 `ReaderPost` retains the decoded instruction and the original frame zipper as well
-as the ordinary `Pending.After` invariant, for the supported validation profile.
+as the ordinary `Pending.After` invariant.
 -/
 
 namespace Itasca.Wasm2
@@ -11,8 +11,8 @@ open Aeneas Aeneas.Std Itasca
 
 /-- A reader advances this precise source zipper; source instructions are not
 recovered from an unrelated existential post-state witness. -/
-structure ReaderPost {data env profile locals index st}
-    (pending : Pending data env profile locals index st) (out : code.OpIterState)
+structure ReaderPost {data env locals index st}
+    (pending : Pending data env locals index st) (out : code.OpIterState)
     (instruction : instr) (poly : Bool) (values : List code.StackType) : Prop where
   encoded : At data pending.start (.plain instruction) out.pos
   opened : Frames.Open env (bodyContext env locals pending.ft) {st with core := out}
@@ -20,8 +20,8 @@ structure ReaderPost {data env profile locals index st}
   after : pending.After {st with core := out}
 
 /-- Retain the exact decoded instruction under its original frame context. -/
-theorem Pending.append_reader_context {data env profile locals index st}
-    (p : Pending data env profile locals index st) (C : context) (outer : List code.StackType)
+theorem Pending.append_reader_context {data env locals index st}
+    (p : Pending data env locals index st) (C : context) (outer : List code.StackType)
     (spine : Frames.Spine env (bodyContext env locals p.ft) p.parents C outer p.current.form p.current.ins)
     (header : Frames.Header env C p.current)
     (base : p.current.ctrl.value_stack_base.val = outer.length)
@@ -42,8 +42,8 @@ theorem Pending.append_reader_context {data env profile locals index st}
       wf encoded typed controls blocks stack declared
 
 /-- Append an independently encoded instruction to the same source zipper. -/
-theorem Pending.append_reader {data env profile locals index st}
-    (p : Pending data env profile locals index st) (out : code.OpIterState)
+theorem Pending.append_reader {data env locals index st}
+    (p : Pending data env locals index st) (out : code.OpIterState)
     (instruction : instr) (poly : Bool) (values : List code.StackType)
     (wf : wf_instr instruction) (encoded : At data p.start (.plain instruction) out.pos)
     (typed : ∀ C, wf_context C →

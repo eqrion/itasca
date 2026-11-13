@@ -22,10 +22,10 @@ namespace Itasca.ModuleEnv
 prerequisites for the profile: the allocation bound and signatures within the
 completeness limits. -/
 theorem profile_accepted_entry_conditions (data : Slice U8) (env : metadata.Env) (next : Usize)
-    (profile : ValidationProfile) (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (h : metadata.validate_env data profile = .ok (.Ok (env, next))) :
+     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (h : metadata.validate_env data = .ok (.Ok (env, next))) :
     CodeEntry.Bounds env ∧ Profile.EnvironmentWithinLimits env := by
-  have hs := metadata.validate_env.profile_semantic_spec data profile
+  have hs := metadata.validate_env.profile_semantic_spec data
   rw [h] at hs
   simp only [WP.spec_ok] at hs
   obtain ⟨decls, hr, hv, hsig, _, hb⟩ := hs

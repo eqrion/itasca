@@ -61,26 +61,20 @@ def checkIndex (env : metadata.Env) (bt : signature.BlockType) :
       code.check_func_type ft
   | _ => .ok (.Ok ())
 
-/-- The block type checks of `code.enter`: the profile filter, then `checkIndex`. -/
-def checkBlock (env : metadata.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
-    Result (core.result.Result Unit error.OpError) := do
-  let r ← code.check_block_type profile bt
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | .Continue _ => checkIndex env bt
-  | .Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      Unit (core.convert.FromSame error.OpError) residual
+/-- The block type signature checks of `code.enter`. -/
+def checkBlock (env : metadata.Env) (bt : signature.BlockType) :
+    Result (core.result.Result Unit error.OpError) :=
+  checkIndex env bt
 
 /-- `code.enter` unfolds to the block type read, `checkBlock` and `enterArgs`. -/
 theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (kind : code.LabelKind) :
-    code.enter st data env profile kind = (do
+     (kind : code.LabelKind) :
+    code.enter st data env kind = (do
       let r ← signature.read_block_type data st.core.pos
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | .Continue (bt, next) =>
-        let r ← checkBlock env profile bt
+        let r ← checkBlock env bt
         let cf ← core.result.Result.Insts.CoreOpsTry.branch r
         match cf with
         | .Continue _ => enterArgs { st with core := { st.core with pos := next } } env kind bt
@@ -138,10 +132,10 @@ theorem checkIndex.spec (env : metadata.Env) (bt : signature.BlockType) :
         by simp [resolve, outputs, hi, hft, r_post], hr⟩
 
 @[step]
-theorem checkBlock.spec (env : metadata.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
-    checkBlock env profile bt ⦃ r => r = .Ok () → ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
+theorem checkBlock.spec (env : metadata.Env) (bt : signature.BlockType) :
+    checkBlock env bt ⦃ r => r = .Ok () → ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
-  simp only [checkBlock, code.check_block_type.complete, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  simp only [checkBlock]
   exact checkIndex.spec env bt
 
 /-- Exact semantic effect of opening a structured frame. -/
@@ -236,11 +230,11 @@ namespace Itasca
 /-- A successful `code.enter` decodes a block type whose signature resolves within the limits and
 opens the frame with effect `EnterEffect`. -/
 theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (form : Wasm2.Frames.Form) (initial : form.Initial)
+     (form : Wasm2.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Control.base st.core).val = outer.length)
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
-    code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
+    code.enter st data env form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
       Wasm2.resolve env (Wasm2.inputs bt) = some ins ∧
       Wasm2.resolve env (Wasm2.outputs bt) = some outs ∧
@@ -254,7 +248,7 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata
   | Ok pair =>
     obtain ⟨bt, next⟩ := pair
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with Wasm2.checkBlock.spec env profile bt as ⟨r, hcheck⟩
+    step with Wasm2.checkBlock.spec env bt as ⟨r, hcheck⟩
     cases r with
     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>

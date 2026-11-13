@@ -17,7 +17,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual source-typed local get reading preserves every stored instruction check. -/
 theorem reader_local_get_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -31,7 +31,7 @@ theorem reader_local_get_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 32#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ty,values,found,post,instruction,lowered,emission⟩ :=
     reader_emit_local_get_wasm2 p ops law before after out ctx contextLocals localsMatch types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -41,7 +41,7 @@ theorem reader_local_get_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed local set reading preserves every stored instruction check. -/
 theorem reader_local_set_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -55,7 +55,7 @@ theorem reader_local_set_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 33#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_LOCAL_SET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_LOCAL_SET before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ty,values,front,found,input,post,instruction,lowered,emission⟩ :=
     reader_emit_local_set_wasm2 p ops law before after out ctx contextLocals localsMatch known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -66,7 +66,7 @@ theorem reader_local_set_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed local tee reading preserves every stored instruction check. -/
 theorem reader_local_tee_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -80,7 +80,7 @@ theorem reader_local_tee_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 34#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_LOCAL_TEE before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_LOCAL_TEE before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ty,values,front,found,input,post,instruction,lowered,emission⟩ :=
     reader_emit_local_tee_wasm2 p ops law before after out ctx contextLocals localsMatch known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -91,7 +91,7 @@ theorem reader_local_tee_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed global get reading preserves every stored instruction check. -/
 theorem reader_global_get_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -106,7 +106,7 @@ theorem reader_global_get_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ty,values,found,post,instruction,lowered,emission⟩ :=
     reader_emit_global_get_wasm2 p ops law before after out ctx contextLocals C localsMatch globalsMatch types concrete layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -116,7 +116,7 @@ theorem reader_global_get_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed global set reading preserves every stored instruction check. -/
 theorem reader_global_set_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -131,7 +131,7 @@ theorem reader_global_set_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ty,values,front,found,mutable,input,post,instruction,lowered,emission⟩ :=
     reader_emit_global_set_wasm2 p ops law before after out ctx contextLocals C localsMatch globalsMatch known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -142,7 +142,7 @@ theorem reader_global_set_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed select reading preserves every stored instruction check. -/
 theorem reader_select_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -156,7 +156,7 @@ theorem reader_select_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_SELECT before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_SELECT before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,ty,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_select_wasm2 p ops law before after out ctx contextLocals C localsMatch known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -167,7 +167,7 @@ theorem reader_select_open_instructions_wasm2 {data env locals typeIndex st}
 
 /-- Actual source-typed memory load reading preserves every stored instruction check. -/
 theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -183,7 +183,7 @@ theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,arg,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_memory_load_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode contextMemories known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -193,7 +193,7 @@ theorem reader_memory_load_open_instructions_wasm2 {data env locals index st}
 
 /-- Actual source-typed memory store reading preserves every stored instruction check. -/
 theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -209,7 +209,7 @@ theorem reader_memory_store_open_instructions_wasm2 {data env locals index st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,arg,front,values,input,post,instruction,lowered,emission⟩ :=
     reader_emit_memory_store_wasm2 p ops law before after out ctx contextLocals op C contextLocalsCode contextMemories known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted

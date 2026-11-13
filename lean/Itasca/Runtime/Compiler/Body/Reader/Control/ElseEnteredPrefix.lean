@@ -93,7 +93,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_else_entered_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A : Type}
+    (p : Wasm2.Pending data env locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns compilerLocals : List valtype)
@@ -106,7 +106,7 @@ theorem structured_reader_prefix_else_entered_wasm2 {jumpTables : List U32} {emi
     (initialLocals : LocalLayout initial) (entered : current.entered = true)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 0x05#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 0x05#u8 before = .ok (.Ok (), out, after)) :
     ∃ condition noEntry,
       current.form = .then_ (Wasm2.blockType p.current.bt) condition ∧
       noEntry.val = before.function.code.val.length + (if before.reachable then 1 else 0) ∧

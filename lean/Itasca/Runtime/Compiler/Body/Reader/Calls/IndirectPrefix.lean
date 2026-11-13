@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A successful callback only appends pair metadata. Live reader typing supplies
 its operand layout; a dead callback only observes the validator state. -/
 theorem StatefulReaderPost.indirect_prefix {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
+    {p : Wasm2.Pending data env sourceLocals index st} {out : code.OpIterState} {op : SourceMachine.Stateful.Instruction}
     (post : StatefulReaderPost p out op) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (C : context)

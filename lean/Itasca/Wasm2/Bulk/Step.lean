@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Wasm2
 
-theorem Pending.memory_fill {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.memory_fill {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 11#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -39,7 +39,7 @@ theorem Pending.memory_fill {data env profile locals index st} (p : Pending data
     rw [hrun, WP.spec_ok] at hspec
     simpa [Simd.inputTypes, Simd.outputTypes, Translate.valueType] using hC.memory_fill (hspec.2.2 rfl).2
 
-theorem Pending.memory_copy {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.memory_copy {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 10#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -65,7 +65,7 @@ theorem Pending.memory_copy {data env profile locals index st} (p : Pending data
     rw [hrun, WP.spec_ok] at hspec
     simpa [Simd.inputTypes, Simd.outputTypes, Translate.valueType] using hC.memory_copy (hspec.2.2 rfl).2
 
-theorem Pending.memory_init {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.memory_init {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 8#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -95,7 +95,7 @@ theorem reference_value_injective {a b : wasm_types.ElemType}
     (h : ModuleConstants.referenceValueType a = ModuleConstants.referenceValueType b) : a = b := by
   cases a <;> cases b <;> simp_all [ModuleConstants.referenceValueType]
 
-theorem Pending.table_init {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_init {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 12#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -128,7 +128,7 @@ theorem Pending.table_init {data env profile locals index st} (p : Pending data 
     simpa [Simd.inputTypes, Simd.outputTypes, Translate.valueType] using
       hC.table_init j i env.table_types.val[j.val] env.elements.val[i.val] hj hi rfl rfl (reference_value_injective (hity.symm.trans hjty))
 
-theorem Pending.table_copy {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_copy {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 14#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :

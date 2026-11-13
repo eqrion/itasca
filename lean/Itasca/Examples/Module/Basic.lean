@@ -68,7 +68,7 @@ theorem header (data : Slice U8) (rest : List U8)
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `metadata.validate_env` on the header alone returns `emptyEnv` and consumed length 8. -/
-theorem empty_env : metadata.validate_env emptyBytes .Wasm2 = .ok (.Ok (emptyEnv, 8#usize)) := by
+theorem empty_env : metadata.validate_env emptyBytes = .ok (.Ok (emptyEnv, 8#usize)) := by
   have hh := header emptyBytes [] (by simp [emptyBytes, bytes, alloc.vec.Vec.deref])
   simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hh,
     core.result.Result.Insts.CoreOpsTry.branch, emptyEnv]
@@ -78,7 +78,7 @@ theorem empty_env : metadata.validate_env emptyBytes .Wasm2 = .ok (.Ok (emptyEnv
     alloc.vec.Vec.deref, ModuleBinary.magicVersion]
 
 /-- `metadata.validate_module` accepts the header-only module under Wasm 2.0. -/
-theorem empty_accepted : metadata.validate_module emptyBytes .Wasm2 = .ok (.Ok emptyModule) := by
+theorem empty_accepted : metadata.validate_module emptyBytes = .ok (.Ok emptyModule) := by
   apply StreamSliceExamplesSupport.accepted_at_end emptyBytes emptyEnv
     (by simp [emptyBytes, bytes, ModuleBinary.magicVersion, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) rfl rfl
   have hlen : Slice.len emptyBytes = 8#usize := UScalar.eq_of_val_eq rfl
@@ -86,8 +86,8 @@ theorem empty_accepted : metadata.validate_module emptyBytes .Wasm2 = .ok (.Ok e
 
 /-- The accepted header-only module has a `ModuleSound.Validated` certificate for these bytes,
 which covers the external metadata and the Wasm 2.0 restrictions. -/
-theorem empty_validated : ModuleSound.Validated emptyBytes emptyModule .Wasm2 :=
-  metadata.validate_module.profile_sound _ _ .Wasm2 empty_accepted
+theorem empty_validated : ModuleSound.Validated emptyBytes emptyModule :=
+  metadata.validate_module.sound _ _ empty_accepted
 
 /-- A module of acceptable size with no declared functions, whose environment consumes all the
 bytes, is accepted with that environment and an empty tail. -/
@@ -95,8 +95,8 @@ theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hfuncs : env.func_type_indices.val = [])
     (hdataCount : env.data_count = none)
-    (henv : metadata.validate_env data .Wasm2 = .ok (.Ok (env, Slice.len data))) :
-    metadata.validate_module data .Wasm2 = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) :=
+    (henv : metadata.validate_env data = .ok (.Ok (env, Slice.len data))) :
+    metadata.validate_module data = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) :=
   StreamSliceExamplesSupport.accepted_at_end data env hsize hfuncs hdataCount henv
 
 /-- An error from `metadata.validate_env` is the result of `metadata.validate_module` when the code
@@ -104,8 +104,8 @@ region split is empty. -/
 theorem environment_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data))
-    (herror : metadata.validate_env data .Wasm2 = .ok (.Err e)) :
-    metadata.validate_module data .Wasm2 = .ok (.Err e) :=
+    (herror : metadata.validate_env data = .ok (.Err e)) :
+    metadata.validate_module data = .ok (.Err e) :=
   StreamSliceRejection.environment_error data e hsize hsplit herror
 
 /-- A header error on input of at most 8 bytes is the result of `metadata.validate_module`. -/
@@ -113,7 +113,7 @@ theorem header_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hshort : data.length ≤ 8)
     (herror : metadata.read_header data = .ok (.Err e)) :
-    metadata.validate_module data .Wasm2 = .ok (.Err e) := by
+    metadata.validate_module data = .ok (.Err e) := by
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     rw [stream.find_code_region, stream.find_code_region_loop, loop]
     have hstop : 8#usize ≥ Slice.len data := by scalar_tac
@@ -124,7 +124,7 @@ theorem header_error (data : Slice U8) (e : error.Error)
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- Empty input is rejected with `UnexpectedEof`. -/
-theorem missing_header_rejected : metadata.validate_module (bytes []) .Wasm2 =
+theorem missing_header_rejected : metadata.validate_module (bytes []) =
     .ok (.Err (.Read .UnexpectedEof)) := by
   apply header_error _ _ (by simp [bytes, alloc.vec.Vec.deref, limits.MAX_MODULE_BYTES]) (by decide)
   simp [metadata.read_header, reader.read_byte.eof (bytes []) 0#usize (by simp [bytes, alloc.vec.Vec.deref]),
@@ -133,7 +133,7 @@ theorem missing_header_rejected : metadata.validate_module (bytes []) .Wasm2 =
     error.Error.Insts.CoreConvertFromOpError.from]
 
 /-- A first byte of `01` instead of `00` in the magic word is rejected with `InvalidMagic`. -/
-theorem invalid_magic_rejected : metadata.validate_module (bytes [1#u8, 0x61#u8, 0x73#u8, 0x6D#u8]) .Wasm2 =
+theorem invalid_magic_rejected : metadata.validate_module (bytes [1#u8, 0x61#u8, 0x73#u8, 0x6D#u8]) =
     .ok (.Err .InvalidMagic) := by
   let data := bytes [1#u8, 0x61#u8, 0x73#u8, 0x6D#u8]
   have h0 := read_at data 0#usize 1#usize 1#u8 (by decide) rfl rfl
@@ -145,7 +145,7 @@ theorem invalid_magic_rejected : metadata.validate_module (bytes [1#u8, 0x61#u8,
 
 /-- The version `01 00 00 01` is rejected under Wasm 2.0 with `InvalidVersion`. -/
 theorem invalid_version_rejected : metadata.validate_module
-    (bytes [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8, 1#u8]) .Wasm2 =
+    (bytes [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8, 1#u8]) =
     .ok (.Err .InvalidVersion) := by
   let data := bytes [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8, 1#u8]
   have h0 := read_at data 0#usize 1#usize 0#u8 (by decide) rfl rfl

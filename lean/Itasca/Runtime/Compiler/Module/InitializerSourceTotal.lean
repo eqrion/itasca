@@ -42,40 +42,36 @@ private theorem vec_count {α : Type} {R : α → List U8 → Prop} {values byte
   simp only [List.length_append]
   omega
 
-private theorem element_cost {profile entry bytes}
-    (h : ElementEncodingFor profile entry bytes) : entry.init.length + 3 ≤ 3 * bytes.length := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | activeIndices _ _ he | passiveIndices _ he | explicitIndices _ _ _ he | declarativeIndices _ he =>
-      have := vec_count he (fun _ _ h => leb_nonempty h)
-      simp only [List.length_map, List.length_append, List.length_singleton]
-      omega
-    | activeExpressions _ _ he | passiveExpressions _ he | explicitExpressions _ _ _ he | declarativeExpressions _ he =>
-      have := vec_count he (fun _ _ h => const_nonempty h)
-      simp only [List.length_append, List.length_singleton]
-      omega
+private theorem element_cost {entry bytes}
+    (h : ElementEncodingFor entry bytes) : entry.init.length + 3 ≤ 3 * bytes.length := by
+  cases h with
+  | activeIndices _ _ he | passiveIndices _ he | explicitIndices _ _ _ he | declarativeIndices _ he =>
+    have := vec_count he (fun _ _ h => leb_nonempty h)
+    simp only [List.length_map, List.length_append, List.length_singleton]
+    omega
+  | activeExpressions _ _ he | passiveExpressions _ he | explicitExpressions _ _ _ he | declarativeExpressions _ he =>
+    have := vec_count he (fun _ _ h => const_nonempty h)
+    simp only [List.length_append, List.length_singleton]
+    omega
 
 private theorem global_cost {entry bytes} (h : GlobalEncoding entry bytes) : 2 ≤ 3 * bytes.length := by
   obtain ⟨ty, expr, rfl, _, rfl⟩ := h
   simp only [List.length_append, List.length_cons, List.length_nil]
   omega
 
-private theorem data_cost {profile entry bytes}
-    (h : DataEncodingFor profile entry bytes) : 2 ≤ 3 * bytes.length := by
+private theorem data_cost {entry bytes}
+    (h : DataEncodingFor entry bytes) : 2 ≤ 3 * bytes.length := by
   have vec_positive {α : Type} {R : α → List U8 → Prop} {values bytes}
       (h : VecEncoding R values bytes) : 1 ≤ bytes.length := by
     obtain ⟨count, entries, hc, _, rfl⟩ := h
     have := leb_nonempty hc
     simp only [List.length_append]
     omega
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | active _ _ he | passive _ he =>
-      have := vec_positive he
-      simp only [List.length_append]
-      omega
+  cases h with
+  | active _ _ he | passive _ he =>
+    have := vec_positive he
+    simp only [List.length_append]
+    omega
 
 private theorem rep_cost {α : Type} {R : α → List U8 → Prop} {values bytes}
     (cost : α → Nat) (h : Rep R values bytes)
@@ -103,8 +99,8 @@ private theorem padded_cost {α : Type} {R : α → List U8 → Prop} {id values
 
 /-- The independently encoded declaration sections pay for all initializer-map
 appends and the defined functions, including empty element segments. -/
-theorem initializer_cost_bytes {R raw bytes profile}
-    (encoding : ModuleEncodingWith R raw bytes profile) :
+theorem initializer_cost_bytes {R raw bytes}
+    (encoding : ModuleEncodingWith R raw bytes) :
     raw.functions.length + 2 * raw.globals.length +
       (raw.elements.map (fun e => e.init.length + 3)).sum + 2 * raw.data.length ≤
       3 * bytes.length := by
@@ -121,8 +117,8 @@ theorem initializer_cost_bytes {R raw bytes profile}
 /-- Canonical metadata and the fixed module-byte cap discharge both numeric
 headroom obligations before initializer lowering runs. No successful initializer
 result is assumed. -/
-theorem initializer_source_headroom {R raw bytes profile env tail}
-    (encoding : ModuleEncodingWith R raw bytes profile)
+theorem initializer_source_headroom {R raw bytes env tail}
+    (encoding : ModuleEncodingWith R raw bytes)
     (matched : Itasca.ModuleElaboration.Matches env tail raw)
     (bounded : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val) :
     env.func_type_indices.val.length + initializerMappingCost ⟨env, tail⟩ + 1 ≤ Usize.max ∧
@@ -157,13 +153,13 @@ lowering, directly from the independently encoded module and collected function
 count. This covers successful lowering and every normal error result. -/
 theorem initializer_lower_source_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (env : Itasca.metadata.Env) (tail : Itasca.metadata.Tail)
-    (profile : Itasca.ValidationProfile) (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
+     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
     (budget : runtime.compiler.Budget A) {R raw bytes}
-    (encoding : ModuleEncodingWith R raw bytes profile)
+    (encoding : ModuleEncodingWith R raw bytes)
     (matched : Itasca.ModuleElaboration.Matches env tail raw)
     (bounded : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val)
     (functionCount : functions.val.length = env.func_type_indices.val.length) :
-    runtime.compiler.initialize.lower ops (uninitializedModule env tail profile functions) budget
+    runtime.compiler.initialize.lower ops (uninitializedModule env tail functions) budget
       ⦃ _ => True ⦄ := by
   obtain ⟨mapSpace, segmentSpace⟩ := initializer_source_headroom encoding matched bounded
   apply initializer_lower_fresh_total ops law _ budget rfl rfl rfl rfl

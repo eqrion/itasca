@@ -60,7 +60,7 @@ theorem StructuredReaderCompilerPointWasm2.scope_step {jumpTables : List U32} {A
     (opcode : U8) (supported : ScopeOpcode opcode)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point
   simp only [ScopeOpcode, List.mem_cons, List.not_mem_nil, or_false] at supported

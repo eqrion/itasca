@@ -15,17 +15,14 @@ successfully.
 open Aeneas Aeneas.Std
 
 namespace Itasca.StreamAcceptingScheduler
-
-variable {validationProfile : ValidationProfile}
-
 /-- Running `validate_all` on the seed of a `Valid` batch gives a worker with the issued identity
 that `stream.CodeBatch.finish` accepts. -/
-theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued validationProfile)
+theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued)
     {after : stream.CodeBatch} (hr : stream.CodeBatch.validate_all issued.seed = .ok after) :
     StreamBatch.Identity issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
   obtain ⟨entries, hn, ht, hb⟩ := h.entries
   obtain ⟨result, hrun, hreachable, hfinish⟩ := stream.CodeBatch.validate_all.complete_at_seed
-    issued entries h.bounded hn ht h.limits h.entry_bounds hb h.validation_profile
+    issued entries h.bounded hn ht h.limits h.entry_bounds hb
   have he : result = after := by simpa using hrun.symm.trans hr
   subst result
   exact ⟨hreachable.validation.1, hfinish⟩
@@ -74,21 +71,18 @@ theorem stream.retire_code_batch.complete {V : Type} (visitor : stream.Streaming
 end Itasca
 
 namespace Itasca.StreamAcceptingScheduler
-
-variable {validationProfile : ValidationProfile}
-
 /-- Valid pending work retires in any scheduler-selected order. Successful finish follows from the
 actual worker execution on independently typed encodings. -/
 theorem retire_complete {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : Accepts visitor config Queued validationProfile) (id : U64)
+    (hp : Accepts visitor config Queued) (id : U64)
     (queue : List StreamBatch.Issued) (v : V) (pending : alloc.vec.Vec Usize)
-    (hv : Queued id queue v) (hvalid : ValidQueue id queue validationProfile)
+    (hv : Queued id queue v) (hvalid : ValidQueue id queue)
     (hids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id))
     (hnonempty : pending.val ≠ []) :
     ∃ v' remaining rest,
       stream.retire_code_batch visitor id v pending = .ok (.Ok (), v', remaining) ∧
-      Queued id rest v' ∧ ValidQueue id rest validationProfile ∧
+      Queued id rest v' ∧ ValidQueue id rest ∧
       remaining.val.Perm (rest.map StreamBatch.Issued.batch_id) ∧
       remaining.length + 1 = pending.length := by
   have hqueue : queue ≠ [] := by
@@ -117,9 +111,9 @@ theorem retire_complete {V : Type} (visitor : stream.StreamingVisitor V)
 /-- Draining a valid queue terminates successfully and leaves no queued work. -/
 theorem drain_complete {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : Accepts visitor config Queued validationProfile) (id : U64)
+    (hp : Accepts visitor config Queued) (id : U64)
     (queue : List StreamBatch.Issued) (v : V) (pending : alloc.vec.Vec Usize)
-    (hv : Queued id queue v) (hvalid : ValidQueue id queue validationProfile)
+    (hv : Queued id queue v) (hvalid : ValidQueue id queue)
     (hids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id)) :
     ∃ v' remaining,
       stream.retire_all_code_batches visitor id v pending = .ok (.Ok (), v', remaining) ∧

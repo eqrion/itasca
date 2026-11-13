@@ -9,7 +9,7 @@ Main declarations: `reader_indirect_call_pair_prefix_wasm2`. A direct consumer i
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context)
@@ -23,7 +23,7 @@ theorem reader_indirect_call_pair_prefix_wasm2 {jumpTables : List U32} {data env
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     ∃ extra, after.function.indirect.val = before.function.indirect.val ++ extra := by
   by_cases reachable : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live reachable

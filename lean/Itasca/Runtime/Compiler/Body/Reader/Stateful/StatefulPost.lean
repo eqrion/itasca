@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 /-- A stateful source reader advances the exact supplied zipper in all paths;
 live concrete operands additionally expose its context-derived signature. -/
 def StatefulReaderPost {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) (out : code.OpIterState) (op : SourceMachine.Stateful.Instruction) : Prop :=
+    (p : Pending data env locals index st) (out : code.OpIterState) (op : SourceMachine.Stateful.Instruction) : Prop :=
   ∃ values, Wasm2.ReaderPost p out op.source p.current.ctrl.polymorphic_base values ∧
     ∀ C, EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C →
       ConcreteStack st.core.vals.val → p.current.ctrl.polymorphic_base = false →
@@ -22,7 +22,7 @@ def StatefulReaderPost {data env locals index st}
         Sequence.stackTypes out.vals.val = front ++ output ∧ ConcreteStack out.vals.val
 
 theorem _root_.Itasca.Wasm2.MetadataReaderPost.stateful_post {data env locals index st}
-    {p : Pending data env .Wasm2 locals index st} {D M : Type}
+    {p : Pending data env locals index st} {D M : Type}
     {decode : Result (core.result.Result D error.OpError × code.OpIterState)}
     {pops : D → List wasm_types.ValueType} {output : D → Option wasm_types.ValueType}
     {metadata : D → M} {operation : D → instr} {value : M} {out : code.OpIterState}

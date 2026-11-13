@@ -20,12 +20,12 @@ expanded-local, and operand maxima. It need not accept every module whose
 actual output happens to lie exactly at the configured limits. -/
 theorem compile_complete {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (bytes : Slice U8) (profile : ValidationProfile) (raw : ModuleBinary.Module)
-    (limits : runtime.compiler.CompileLimits) (valid : Compiler.ValidCompilationSource bytes profile raw)
-    (eligible : Compiler.CompileEligible A bytes profile raw limits bound) :
-    ∃ executable, runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable) ∧
-      CompilationCertificate bytes profile executable := by
-  obtain ⟨executable,compiled⟩ := Compiler.compile_with_available ops law bound allocation bytes profile raw limits valid eligible
-  exact ⟨executable,compiled,compile_accepted_certificate ops law bytes profile limits executable compiled⟩
+    (bytes : Slice U8) (raw : ModuleBinary.Module)
+    (limits : runtime.compiler.CompileLimits) (valid : Compiler.ValidCompilationSource bytes raw)
+    (eligible : Compiler.CompileEligible A bytes raw limits bound) :
+    ∃ executable, runtime.compiler.compile_with ops bytes limits = .ok (.Ok executable) ∧
+      CompilationCertificate bytes executable := by
+  obtain ⟨executable,compiled⟩ := Compiler.compile_with_available ops law bound allocation bytes raw limits valid eligible
+  exact ⟨executable,compiled,compile_accepted_certificate ops law bytes limits executable compiled⟩
 
 end Itasca.Runtime.Integration

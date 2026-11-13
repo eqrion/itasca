@@ -44,16 +44,16 @@ theorem Frames.Open.branchLabels {env root st parents current}
     simpa [hr, hcontext] using he.symm
 
 /-- The direct `call` opcode (`0x10`) preserves `Pending` on success. -/
-theorem Pending.call_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.call_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
-    code.call st data env profile false ⦃ r => r.1 = .Ok () → ∃ idx values, Leb128.Decoded data st.core.pos idx r.2.core.pos ∧
+    code.call st data env false ⦃ r => r.1 = .Ok () → ∃ idx values, Leb128.Decoded data st.core.pos idx r.2.core.pos ∧
       ReaderPost p r.2.core (.CALL (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
-  apply WP.spec_mono (code.call.direct_prefix st data env profile ⟨locals, p.ft.results⟩ outer
+  apply WP.spec_mono (code.call.direct_prefix st data env ⟨locals, p.ft.results⟩ outer
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
@@ -67,18 +67,18 @@ theorem Pending.call_reader {data env profile locals index st} (p : Pending data
     (encoded.declared _)
   simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
-theorem Pending.call {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.call {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x10#u8) :
-    code.call st data env profile false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.call st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.call_reader hbyte)
   intro r effect accepted
   rcases effect accepted with ⟨_, _, _, post⟩
   exact post.after
 
 /-- The `call_indirect` opcode (`0x11`) preserves `Pending` on success. -/
-theorem Pending.call_indirect_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.call_indirect_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
-    code.call st data env profile true ⦃ r => r.1 = .Ok () → ∃ idx table middle values, Leb128.Decoded data st.core.pos idx middle ∧
+    code.call st data env true ⦃ r => r.1 = .Ok () → ∃ idx table middle values, Leb128.Decoded data st.core.pos idx middle ∧
       Leb128.Decoded data middle table r.2.core.pos ∧
       ReaderPost p r.2.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
@@ -86,7 +86,7 @@ theorem Pending.call_indirect_reader {data env profile locals index st} (p : Pen
     simp [Control.polymorphic, ctrls]
   have hC := (spine.matches (EnvTranslation.Matches.root env ⟨locals, p.ft.results⟩)).enter
     (p.current.form.label p.current.ins p.current.outs)
-  apply WP.spec_mono (code.call.indirect_prefix st data env profile ⟨locals, p.ft.results⟩ outer
+  apply WP.spec_mono (code.call.indirect_prefix st data env ⟨locals, p.ft.results⟩ outer
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
@@ -105,16 +105,16 @@ theorem Pending.call_indirect_reader {data env profile locals index st} (p : Pen
       (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
     simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
-theorem Pending.call_indirect {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.call_indirect {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x11#u8) :
-    code.call st data env profile true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.call st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.call_indirect_reader hbyte)
   intro r effect accepted
   rcases effect accepted with ⟨_, _, _, _, _, _, post⟩
   exact post.after
 
 /-- The `br` opcode (`0x0c`) preserves `Pending` on success. -/
-theorem Pending.branch_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0C#u8) :
     code.branch st data env false ⦃ r => r.1 = .Ok () → ∃ depth, Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
       ReaderPost p r.2.core (.BR (.mk_uN depth.val)) true [] ⦄ := by
@@ -134,7 +134,7 @@ theorem Pending.branch_reader {data env profile locals index st} (p : Pending da
     (.instr_case_7 _ (Spec.label_wf depth)) (.plain encoded) ht hc
     (by simpa [hb] using blocks) (by simpa using hv) (encoded.declared _)
 /-- Forward preservation projects the shared exact reader certificate. -/
-theorem Pending.branch {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0C#u8) :
     code.branch st data env false ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.branch_reader hbyte)
@@ -143,7 +143,7 @@ theorem Pending.branch {data env profile locals index st} (p : Pending data env 
   exact post.after
 
 /-- The `br_if` opcode (`0x0d`) preserves `Pending` on success. -/
-theorem Pending.branch_if_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch_if_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0D#u8) :
     code.branch st data env true ⦃ r => r.1 = .Ok () → ∃ depth values, Leb128.Decoded data st.core.pos depth r.2.core.pos ∧
       ReaderPost p r.2.core (.BR_IF (.mk_uN depth.val)) p.current.ctrl.polymorphic_base values ⦄ := by
@@ -167,7 +167,7 @@ theorem Pending.branch_if_reader {data env profile locals index st} (p : Pending
     (encoded.declared _)
   simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
-theorem Pending.branch_if {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch_if {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0D#u8) :
     code.branch st data env true ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.branch_if_reader hbyte)
@@ -182,15 +182,15 @@ open Aeneas Aeneas.Std
 namespace Itasca.Wasm2
 
 /-- The `br_table` opcode (`0x0e`) preserves `Pending` on success. -/
-theorem Pending.branch_table_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch_table_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0E#u8) :
-    code.branch_table st data env profile ⦃ r => r.1 = .Ok () → ∃ depths fallback, BrTable.Decoded data st.core.pos depths fallback r.2.core.pos ∧
+    code.branch_table st data env ⦃ r => r.1 = .Ok () → ∃ depths fallback, BrTable.Decoded data st.core.pos depths fallback r.2.core.pos ∧
       ReaderPost p r.2.core (BrTable.instruction depths fallback) true [] ⦄ := by
   obtain ⟨C, outer, spine, header, base, typed, ctrls, blocks, vals⟩ := id p.opened
   have hC := Frames.enter_wf C (spine.context_wf (EnvTranslation.context_wf env ⟨locals, p.ft.results⟩))
     p.current.form p.current.ins p.current.outs
   have hl := p.opened.branchLabels rfl C outer spine
-  apply WP.spec_mono (code.branch_table.prefix st data env profile (p.parents.map Frames.Saved.ctrl)
+  apply WP.spec_mono (code.branch_table.prefix st data env (p.parents.map Frames.Saved.ctrl)
     p.current.ctrl outer p.current.vals ctrls vals base p.opened.shape.core
     _ hC _ p.current.ops typed hl)
   intro r hr hok
@@ -202,9 +202,9 @@ theorem Pending.branch_table_reader {data env profile locals index st} (p : Pend
     (BrTable.instruction_wf depths default) (.plain encoded) ht hc
     (by simpa [hb] using blocks) (by simpa using hv) (by simp [BrTable.instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
 /-- Forward preservation projects the shared exact reader certificate. -/
-theorem Pending.branch_table {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.branch_table {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0E#u8) :
-    code.branch_table st data env profile ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
+    code.branch_table st data env ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.branch_table_reader hbyte)
   intro r effect accepted
   rcases effect accepted with ⟨_, _, _, post⟩

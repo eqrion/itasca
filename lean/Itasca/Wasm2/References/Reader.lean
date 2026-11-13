@@ -11,8 +11,8 @@ namespace Itasca.Wasm2
 open Aeneas Aeneas.Std Itasca
 
 /-- Exact successful decoder and fixed-stack effect, with the original source zipper. -/
-abbrev MetadataReaderPost {data env profile locals index st}
-    (p : Pending data env profile locals index st) {A B : Type}
+abbrev MetadataReaderPost {data env locals index st}
+    (p : Pending data env locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr) (value : B) (out : code.OpIterState) : Prop :=
@@ -26,8 +26,8 @@ abbrev MetadataReaderPost {data env profile locals index st}
         Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
           (.mk_list (Simd.outputTypes (output a)))))
 
-theorem Pending.metadata_reader {data env profile locals index st}
-    (p : Pending data env profile locals index st) {A B : Type}
+theorem Pending.metadata_reader {data env locals index st}
+    (p : Pending data env locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr)
@@ -87,7 +87,7 @@ theorem Pending.metadata_reader {data env profile locals index st}
           controlEq newBlocks afterValues (declared a ⟨middle,read⟩)
 
 theorem Pending.metadata_reader_accepted {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {A B : Type}
+    (p : Pending data env locals index st) {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
     (metadata : A → B) (operation : A → instr)

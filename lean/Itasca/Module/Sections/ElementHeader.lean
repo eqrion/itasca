@@ -5,7 +5,7 @@ import Itasca.Module.Readers.BasicComplete
 # Element segment header and entry parser
 
 `ModuleElements.HeaderEncoding` is the independent grammar of the flag word and prefix of an
-element segment for the supported profile (the eight Wasm 2.0 forms).
+element segment in one of the eight Wasm 2.0 forms.
 `metadata.decode_element_header.spec` shows an accepted header is a `HeaderEncoding` span whose
 table and offset are valid. `metadata.decode_element.spec` assembles a full entry: an
 `ElementEncodingFor` span that is valid, extends the declared functions by its references and
@@ -17,27 +17,27 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleElements
 open ModuleBinary
 
-/-- The bytes of an element segment header for a profile, mode, element type and initializer
+/-- The bytes of an element segment header for a mode, element type and initializer
 form (`true` for expressions). The first argument of each constructor is the flag word. -/
-inductive HeaderEncoding : ValidationProfile → metadata.ElementMode → wasm_types.ElemType → Bool → List U8 → Prop where
+inductive HeaderEncoding : metadata.ElementMode → wasm_types.ElemType → Bool → List U8 → Prop where
   | activeIndices {offset fb ob} : IndexEncoding 0#u32 fb → ConstEncoding offset ob →
-      HeaderEncoding .Wasm2 (.Active 0#u32 offset) .FuncRef false (fb ++ ob)
+      HeaderEncoding (.Active 0#u32 offset) .FuncRef false (fb ++ ob)
   | passiveIndices {fb} : IndexEncoding 1#u32 fb →
-      HeaderEncoding .Wasm2 .Passive .FuncRef false (fb ++ [0#u8])
+      HeaderEncoding .Passive .FuncRef false (fb ++ [0#u8])
   | explicitIndices {index offset fb ib ob} : IndexEncoding 2#u32 fb →
       IndexEncoding index ib → ConstEncoding offset ob →
-      HeaderEncoding .Wasm2 (.Active index offset) .FuncRef false (fb ++ ib ++ ob ++ [0#u8])
+      HeaderEncoding (.Active index offset) .FuncRef false (fb ++ ib ++ ob ++ [0#u8])
   | declarativeIndices {fb} : IndexEncoding 3#u32 fb →
-      HeaderEncoding .Wasm2 .Declarative .FuncRef false (fb ++ [0#u8])
+      HeaderEncoding .Declarative .FuncRef false (fb ++ [0#u8])
   | activeExpressions {offset fb ob} : IndexEncoding 4#u32 fb → ConstEncoding offset ob →
-      HeaderEncoding .Wasm2 (.Active 0#u32 offset) .FuncRef true (fb ++ ob)
+      HeaderEncoding (.Active 0#u32 offset) .FuncRef true (fb ++ ob)
   | passiveExpressions {elem fb} : IndexEncoding 5#u32 fb →
-      HeaderEncoding .Wasm2 .Passive elem true (fb ++ [elemByte elem])
+      HeaderEncoding .Passive elem true (fb ++ [elemByte elem])
   | explicitExpressions {elem index offset fb ib ob} : IndexEncoding 6#u32 fb →
       IndexEncoding index ib → ConstEncoding offset ob →
-      HeaderEncoding .Wasm2 (.Active index offset) elem true (fb ++ ib ++ ob ++ [elemByte elem])
+      HeaderEncoding (.Active index offset) elem true (fb ++ ib ++ ob ++ [elemByte elem])
   | declarativeExpressions {elem fb} : IndexEncoding 7#u32 fb →
-      HeaderEncoding .Wasm2 .Declarative elem true (fb ++ [elemByte elem])
+      HeaderEncoding .Declarative elem true (fb ++ [elemByte elem])
 
 /-- An active segment names an in-range table of the segment's element type with a valid `i32`
 offset. Passive and declarative segments have no condition. -/
@@ -66,10 +66,10 @@ theorem indices_vector {values bytes}
   exact ⟨indices, rfl, count, encoded, by simpa using hc, hi, rfl⟩
 
 /-- A header followed by an initializer vector is an `ElementEncodingFor` entry. -/
-theorem HeaderEncoding.append {profile mode elem expressions header init bytes}
-    (h : HeaderEncoding profile mode elem expressions header)
+theorem HeaderEncoding.append {mode elem expressions header init bytes}
+    (h : HeaderEncoding mode elem expressions header)
     (hi : VecEncoding (InitializerEncoding expressions) init bytes) :
-    ElementEncodingFor profile ⟨elem, mode, init⟩ (header ++ bytes) := by
+    ElementEncodingFor ⟨elem, mode, init⟩ (header ++ bytes) := by
   cases h with
   | activeIndices hf ho =>
     obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
@@ -89,8 +89,8 @@ theorem HeaderEncoding.append {profile mode elem expressions header init bytes}
   | declarativeExpressions hf => exact .declarativeExpressions hf hi
 
 /-- The initializer type of a header is the reference type of its element type. -/
-theorem HeaderEncoding.initializer_type {profile mode elem expressions bytes}
-    (h : HeaderEncoding profile mode elem expressions bytes) :
+theorem HeaderEncoding.initializer_type {mode elem expressions bytes}
+    (h : HeaderEncoding mode elem expressions bytes) :
     initializerType elem expressions = ModuleConstants.referenceValueType elem := by
   cases h <;> rfl
 
@@ -105,20 +105,18 @@ theorem indices_vector_intro {indices bytes} (h : VecEncoding IndexEncoding indi
   | cons hv hs ih => exact .cons ⟨_, rfl, hv⟩ ih
 
 /-- An `ElementEncodingFor` entry splits into a header and an initializer vector. -/
-theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry bytes) :
-    ∃ expressions header encoded, HeaderEncoding profile entry.mode entry.elem expressions header ∧
+theorem header_parts {entry bytes} (h : ElementEncodingFor entry bytes) :
+    ∃ expressions header encoded, HeaderEncoding entry.mode entry.elem expressions header ∧
       VecEncoding (InitializerEncoding expressions) entry.init encoded ∧ bytes = header ++ encoded := by
-  cases profile with
-  | Wasm2 =>
-    cases h with
-    | activeIndices hf ho hi => exact ⟨false, _, _, .activeIndices hf ho, indices_vector_intro hi, rfl⟩
-    | passiveIndices hf hi => exact ⟨false, _, _, .passiveIndices hf, indices_vector_intro hi, rfl⟩
-    | explicitIndices hf ht ho hi => exact ⟨false, _, _, .explicitIndices hf ht ho, indices_vector_intro hi, rfl⟩
-    | declarativeIndices hf hi => exact ⟨false, _, _, .declarativeIndices hf, indices_vector_intro hi, rfl⟩
-    | activeExpressions hf ho hi => exact ⟨true, _, _, .activeExpressions hf ho, hi, rfl⟩
-    | passiveExpressions hf hi => exact ⟨true, _, _, .passiveExpressions hf, hi, rfl⟩
-    | explicitExpressions hf ht ho hi => exact ⟨true, _, _, .explicitExpressions hf ht ho, hi, rfl⟩
-    | declarativeExpressions hf hi => exact ⟨true, _, _, .declarativeExpressions hf, hi, rfl⟩
+  cases h with
+  | activeIndices hf ho hi => exact ⟨false, _, _, .activeIndices hf ho, indices_vector_intro hi, rfl⟩
+  | passiveIndices hf hi => exact ⟨false, _, _, .passiveIndices hf, indices_vector_intro hi, rfl⟩
+  | explicitIndices hf ht ho hi => exact ⟨false, _, _, .explicitIndices hf ht ho, indices_vector_intro hi, rfl⟩
+  | declarativeIndices hf hi => exact ⟨false, _, _, .declarativeIndices hf, indices_vector_intro hi, rfl⟩
+  | activeExpressions hf ho hi => exact ⟨true, _, _, .activeExpressions hf ho, hi, rfl⟩
+  | passiveExpressions hf hi => exact ⟨true, _, _, .passiveExpressions hf, hi, rfl⟩
+  | explicitExpressions hf ht ho hi => exact ⟨true, _, _, .explicitExpressions hf ht ho, hi, rfl⟩
+  | declarativeExpressions hf hi => exact ⟨true, _, _, .declarativeExpressions hf, hi, rfl⟩
 
 end Itasca.ModuleElements
 
@@ -129,10 +127,10 @@ open ModuleBinary ModuleElements
 mode and element type. -/
 @[step]
 theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile) :
-    metadata.decode_element_header data pos env profile ⦃ r => match r with
+    (env : metadata.Env) :
+    metadata.decode_element_header data pos env ⦃ r => match r with
       | .Ok (mode, elem, expressions, next) =>
-          At (fun value => HeaderEncoding profile value.1 value.2.1 value.2.2)
+          At (fun value => HeaderEncoding value.1 value.2.1 value.2.2)
             data pos (mode, elem, expressions) next ∧ HeaderValid env mode elem
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
@@ -144,255 +142,253 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
     obtain ⟨tag, first⟩ := pair
     obtain ⟨fb, hf, hfs⟩ := At.of_u32 hp
     simp only [metadata.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    cases profile with
-    | Wasm2 =>
-      change (if tag > 7#u32 then _ else _) ⦃_⦄
-      by_cases htag : tag > 7#u32
-      · rw [if_pos htag]
+    change (if tag > 7#u32 then _ else _) ⦃_⦄
+    by_cases htag : tag > 7#u32
+    · rw [if_pos htag]
+      simp
+    · rw [if_neg htag]
+      have hc : tag = 0#u32 ∨ tag = 1#u32 ∨ tag = 2#u32 ∨ tag = 3#u32 ∨
+          tag = 4#u32 ∨ tag = 5#u32 ∨ tag = 6#u32 ∨ tag = 7#u32 := by scalar_tac
+      rcases hc with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
+      all_goals
+        simp only [show (0#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
+          show (1#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
+          show (2#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
+          show (3#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
+          show (4#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
+          show (5#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
+          show (6#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
+          show (7#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl, bind_ok]
         simp
-      · rw [if_neg htag]
-        have hc : tag = 0#u32 ∨ tag = 1#u32 ∨ tag = 2#u32 ∨ tag = 3#u32 ∨
-            tag = 4#u32 ∨ tag = 5#u32 ∨ tag = 6#u32 ∨ tag = 7#u32 := by scalar_tac
-        rcases hc with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-        all_goals
-          simp only [show (0#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
-            show (1#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
-            show (2#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
-            show (3#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
-            show (4#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
-            show (5#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl,
-            show (6#u32 % 2#u32 : Result U32) = .ok 0#u32 from by rfl,
-            show (7#u32 % 2#u32 : Result U32) = .ok 1#u32 from by rfl, bind_ok]
-          simp
-        · step
-          split
-          · simp
-          · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-              (metadata.decode_const_expr.spec data first env .I32 .Wasm2)
-            rw [hconst]
-            cases r with
-            | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok pair =>
-              obtain ⟨offset, offsetNext⟩ := pair
-              obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-              simp only [bind_ok]
-              step
-              split
-              · simp
-              · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
-                simp only [wasm_types.ElemType.value_type, bind_ok]
-                step
-                cases ht : tt.elem <;>
-                  simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-                all_goals
-                  exact ⟨⟨fb ++ ob, .activeIndices hf ho, hfs.append hos⟩,
-                    hi, (by
-                      have hrval : r.val = (0#u32).val := by scalar_tac
-                      simpa [tt_post, hrval] using ht), hv⟩
-        · obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data first)
-          change (reader.read_byte data _ >>= _) ⦃_⦄
-          rw [hkind]
+      · step
+        split
+        · simp
+        · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
+            (metadata.decode_const_expr.spec data first env .I32)
+          rw [hconst]
           cases r with
           | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
-            obtain ⟨kind, kindNext⟩ := pair
-            by_cases hz : kind = 0#u8
-            · subst kind
-              have hks := At.byte hk
-              simp
-              exact ⟨⟨fb ++ [0#u8], .passiveIndices hf, hfs.append hks⟩, trivial⟩
-            · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-              simp [hn]
-        · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
-          rw [hindex]
-          cases r with
-          | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
-          | Ok pair =>
-            obtain ⟨index, indexNext⟩ := pair
-            obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
+            obtain ⟨offset, offsetNext⟩ := pair
+            obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
             simp only [bind_ok]
             step
             split
             · simp
-            · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-                (metadata.decode_const_expr.spec data indexNext env .I32 .Wasm2)
-              rw [hconst]
-              cases r with
-              | Err e => simp [
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-              error.Error.Insts.CoreConvertFromOpError.from]
-              | Ok pair =>
-                obtain ⟨offset, offsetNext⟩ := pair
-                obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-                simp only [bind_ok]
-                obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data offsetNext)
-                change (reader.read_byte data _ >>= _) ⦃_⦄
-                rw [hkind]
-                cases r with
-                | Err e => simp [
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                  error.Error.Insts.CoreConvertFromOpError.from]
-                | Ok pair =>
-                  obtain ⟨kind, kindNext⟩ := pair
-                  by_cases hz : kind = 0#u8
-                  · subst kind
-                    have hks := At.byte hk
-                    simp
-                    step
-                    split
-                    · simp
-                    · have hi : (index).val < env.table_types.val.length := by scalar_tac
-                      simp only [wasm_types.ElemType.value_type, bind_ok]
-                      step
-                      cases ht : tt.elem <;>
-                        simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                          wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-                      all_goals
-                        exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], .explicitIndices hf hindexEnc ho, ((hfs.append his).append hos).append hks⟩,
-                          hi, (by
-                            have hentry : tt = env.table_types.val[index.val] := by
-                              rw [tt_post]
-                              congr 1
-                              scalar_tac
-                            simpa [hentry] using ht), hv⟩
-                  · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-                    simp [hn]
-        · obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data first)
-          change (reader.read_byte data _ >>= _) ⦃_⦄
-          rw [hkind]
-          cases r with
-          | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
-          | Ok pair =>
-            obtain ⟨kind, kindNext⟩ := pair
-            by_cases hz : kind = 0#u8
-            · subst kind
-              have hks := At.byte hk
-              simp
-              exact ⟨⟨fb ++ [0#u8], .declarativeIndices hf, hfs.append hks⟩, trivial⟩
-            · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
-              simp [hn]
-        · step
+            · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
+              simp only [wasm_types.ElemType.value_type, bind_ok]
+              step
+              cases ht : tt.elem <;>
+                simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+              all_goals
+                exact ⟨⟨fb ++ ob, .activeIndices hf ho, hfs.append hos⟩,
+                  hi, (by
+                    have hrval : r.val = (0#u32).val := by scalar_tac
+                    simpa [tt_post, hrval] using ht), hv⟩
+      · obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data first)
+        change (reader.read_byte data _ >>= _) ⦃_⦄
+        rw [hkind]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from]
+        | Ok pair =>
+          obtain ⟨kind, kindNext⟩ := pair
+          by_cases hz : kind = 0#u8
+          · subst kind
+            have hks := At.byte hk
+            simp
+            exact ⟨⟨fb ++ [0#u8], .passiveIndices hf, hfs.append hks⟩, trivial⟩
+          · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
+            simp [hn]
+      · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
+        rw [hindex]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from]
+        | Ok pair =>
+          obtain ⟨index, indexNext⟩ := pair
+          obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
+          simp only [bind_ok]
+          step
           split
           · simp
           · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-              (metadata.decode_const_expr.spec data first env .I32 .Wasm2)
+              (metadata.decode_const_expr.spec data indexNext env .I32)
             rw [hconst]
             cases r with
             | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+            error.Error.Insts.CoreConvertFromOpError.from]
             | Ok pair =>
               obtain ⟨offset, offsetNext⟩ := pair
               obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
               simp only [bind_ok]
-              step
-              split
-              · simp
-              · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
-                simp only [wasm_types.ElemType.value_type, bind_ok]
-                step
-                cases ht : tt.elem <;>
-                  simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-                all_goals
-                  exact ⟨⟨fb ++ ob, .activeExpressions hf ho, hfs.append hos⟩,
-                    hi, (by
-                      have hrval : r.val = (0#u32).val := by scalar_tac
-                      simpa [tt_post, hrval] using ht), hv⟩
-        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first .Wasm2)
-          simp only [helemRead, bind_ok]
-          cases r with
-          | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-          | Ok pair =>
-            obtain ⟨elem, elemNext⟩ := pair
-            obtain ⟨eb, he, hes⟩ := he
-            have heq : eb = [elemByte elem] := he
-            subst eb
-            simp only [bind_ok]
-            exact ⟨⟨fb ++ [elemByte elem], .passiveExpressions hf, hfs.append hes⟩, trivial⟩
-        · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
-          rw [hindex]
-          cases r with
-          | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            error.Error.Insts.CoreConvertFromOpError.from]
-          | Ok pair =>
-            obtain ⟨index, indexNext⟩ := pair
-            obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
-            simp only [bind_ok]
-            step
-            split
-            · simp
-            · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-                (metadata.decode_const_expr.spec data indexNext env .I32 .Wasm2)
-              rw [hconst]
+              obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data offsetNext)
+              change (reader.read_byte data _ >>= _) ⦃_⦄
+              rw [hkind]
               cases r with
               | Err e => simp [
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+                error.Error.Insts.CoreConvertFromOpError.from]
               | Ok pair =>
-                obtain ⟨offset, offsetNext⟩ := pair
-                obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-                simp only [bind_ok]
-                let Target : WP.Post (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error) :=
-                  fun result => match result with
-                    | .Ok (mode, elem, expressions, next) =>
-                        At (fun value => HeaderEncoding .Wasm2 value.1 value.2.1 value.2.2)
-                          data pos (mode, elem, expressions) next ∧ HeaderValid env mode elem
-                    | .Err _ => True
-                change ((metadata.decode_elem_type data offsetNext .Wasm2 >>= _) :
-                  Result (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error)) ⦃ Target ⦄
-                obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data offsetNext .Wasm2)
-                simp only [helemRead]
-                cases r with
-                | Err e => simp [Target,
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                | Ok pair =>
-                  obtain ⟨elem, elemNext⟩ := pair
-                  obtain ⟨eb, he, hes⟩ := he
-                  have heq : eb = [elemByte elem] := he
-                  subst eb
-                  try with_unfolding_all simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                obtain ⟨kind, kindNext⟩ := pair
+                by_cases hz : kind = 0#u8
+                · subst kind
+                  have hks := At.byte hk
+                  simp
                   step
                   split
-                  · simp [Target]
+                  · simp
                   · have hi : (index).val < env.table_types.val.length := by scalar_tac
-                    have hty : wasm_types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
-                      cases elem <;> rfl
-                    rw [hty]
-                    simp only [bind_ok]
+                    simp only [wasm_types.ElemType.value_type, bind_ok]
                     step
-                    cases elem <;> cases ht : tt.elem <;>
-                      simp [Target, wasm_types.ElemType.value_type, ModuleConstants.referenceValueType,
-                        core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+                    cases ht : tt.elem <;>
+                      simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                     all_goals
-                      exact ⟨⟨_, .explicitExpressions hf hindexEnc ho, ((hfs.append his).append hos).append hes⟩,
+                      exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], .explicitIndices hf hindexEnc ho, ((hfs.append his).append hos).append hks⟩,
                         hi, (by
                           have hentry : tt = env.table_types.val[index.val] := by
                             rw [tt_post]
                             congr 1
                             scalar_tac
                           simpa [hentry] using ht), hv⟩
-        · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first .Wasm2)
-          simp only [helemRead, bind_ok]
+                · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
+                  simp [hn]
+      · obtain ⟨r, hkind, hk⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data first)
+        change (reader.read_byte data _ >>= _) ⦃_⦄
+        rw [hkind]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from]
+        | Ok pair =>
+          obtain ⟨kind, kindNext⟩ := pair
+          by_cases hz : kind = 0#u8
+          · subst kind
+            have hks := At.byte hk
+            simp
+            exact ⟨⟨fb ++ [0#u8], .declarativeIndices hf, hfs.append hks⟩, trivial⟩
+          · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
+            simp [hn]
+      · step
+        split
+        · simp
+        · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
+            (metadata.decode_const_expr.spec data first env .I32)
+          rw [hconst]
           cases r with
           | Err e => simp [
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
-            obtain ⟨elem, elemNext⟩ := pair
-            obtain ⟨eb, he, hes⟩ := he
-            have heq : eb = [elemByte elem] := he
-            subst eb
+            obtain ⟨offset, offsetNext⟩ := pair
+            obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
             simp only [bind_ok]
-            exact ⟨⟨fb ++ [elemByte elem], .declarativeExpressions hf, hfs.append hes⟩, trivial⟩
+            step
+            split
+            · simp
+            · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
+              simp only [wasm_types.ElemType.value_type, bind_ok]
+              step
+              cases ht : tt.elem <;>
+                simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+              all_goals
+                exact ⟨⟨fb ++ ob, .activeExpressions hf ho, hfs.append hos⟩,
+                  hi, (by
+                    have hrval : r.val = (0#u32).val := by scalar_tac
+                    simpa [tt_post, hrval] using ht), hv⟩
+      · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first)
+        simp only [helemRead, bind_ok]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Ok pair =>
+          obtain ⟨elem, elemNext⟩ := pair
+          obtain ⟨eb, he, hes⟩ := he
+          have heq : eb = [elemByte elem] := he
+          subst eb
+          simp only [bind_ok]
+          exact ⟨⟨fb ++ [elemByte elem], .passiveExpressions hf, hfs.append hes⟩, trivial⟩
+      · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
+        rw [hindex]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+          error.Error.Insts.CoreConvertFromOpError.from]
+        | Ok pair =>
+          obtain ⟨index, indexNext⟩ := pair
+          obtain ⟨ib, hindexEnc, his⟩ := At.of_u32 hi
+          simp only [bind_ok]
+          step
+          split
+          · simp
+          · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
+              (metadata.decode_const_expr.spec data indexNext env .I32)
+            rw [hconst]
+            cases r with
+            | Err e => simp [
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+            | Ok pair =>
+              obtain ⟨offset, offsetNext⟩ := pair
+              obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
+              simp only [bind_ok]
+              let Target : WP.Post (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error) :=
+                fun result => match result with
+                  | .Ok (mode, elem, expressions, next) =>
+                      At (fun value => HeaderEncoding value.1 value.2.1 value.2.2)
+                        data pos (mode, elem, expressions) next ∧ HeaderValid env mode elem
+                  | .Err _ => True
+              change ((metadata.decode_elem_type data offsetNext >>= _) :
+                Result (core.result.Result (metadata.ElementMode × wasm_types.ElemType × Bool × Usize) error.Error)) ⦃ Target ⦄
+              obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data offsetNext)
+              simp only [helemRead]
+              cases r with
+              | Err e => simp [Target,
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+              | Ok pair =>
+                obtain ⟨elem, elemNext⟩ := pair
+                obtain ⟨eb, he, hes⟩ := he
+                have heq : eb = [elemByte elem] := he
+                subst eb
+                try with_unfolding_all simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+                step
+                split
+                · simp [Target]
+                · have hi : (index).val < env.table_types.val.length := by scalar_tac
+                  have hty : wasm_types.ElemType.value_type elem = .ok (ModuleConstants.referenceValueType elem) := by
+                    cases elem <;> rfl
+                  rw [hty]
+                  simp only [bind_ok]
+                  step
+                  cases elem <;> cases ht : tt.elem <;>
+                    simp [Target, wasm_types.ElemType.value_type, ModuleConstants.referenceValueType,
+                      core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
+                      wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
+                  all_goals
+                    exact ⟨⟨_, .explicitExpressions hf hindexEnc ho, ((hfs.append his).append hos).append hes⟩,
+                      hi, (by
+                        have hentry : tt = env.table_types.val[index.val] := by
+                          rw [tt_post]
+                          congr 1
+                          scalar_tac
+                        simpa [hentry] using ht), hv⟩
+      · obtain ⟨r, helemRead, he⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data first)
+        simp only [helemRead, bind_ok]
+        cases r with
+        | Err e => simp [
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Ok pair =>
+          obtain ⟨elem, elemNext⟩ := pair
+          obtain ⟨eb, he, hes⟩ := he
+          have heq : eb = [elemByte elem] := he
+          subst eb
+          simp only [bind_ok]
+          exact ⟨⟨fb ++ [elemByte elem], .declarativeExpressions hf, hfs.append hes⟩, trivial⟩
 
 end Itasca
 
@@ -405,16 +401,16 @@ open ModuleBinary ModuleElements
 declared functions grow by its references, and the cursor advances. -/
 @[step]
 theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (profile : ValidationProfile)
+    (env : metadata.Env)
     (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    metadata.decode_element data pos env profile ⦃ r => match r.1 with
+    metadata.decode_element data pos env ⦃ r => match r.1 with
       | .Ok (entry, next) =>
-          At (ElementEncodingFor profile) data pos ⟨entry.elem, entry.mode, entry.init.val⟩ next ∧
+          At (ElementEncodingFor) data pos ⟨entry.elem, entry.mode, entry.init.val⟩ next ∧
           ModuleReferences.Added env r.2 (ModuleReferences.element entry) ∧
           ModuleSegments.elementValid env entry ∧
           r.2.declared_funcs.val.length ≤ next.val ∧ pos.val < next.val
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_element_header.spec data pos env profile)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_element_header.spec data pos env)
   cases r with
   | Err e => simp [metadata.decode_element, hr, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -423,7 +419,7 @@ theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
     obtain ⟨hheader, hvalid⟩ := hp
     have hspan := hheader.span
     obtain ⟨⟨r, result⟩, hinit, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_element_initializers.spec data middle env elem expressions profile (by omega))
+      (metadata.decode_element_initializers.spec data middle env elem expressions (by omega))
     cases r with
     | Err e => simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

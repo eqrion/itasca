@@ -17,13 +17,13 @@ open ModuleBinary
 
 /-- The loop of `metadata.decode_locals` accepts the remaining encoded groups and returns the
 output extended by their expansion. -/
-theorem metadata.decode_locals_loop.complete (data : Slice U8) (profile : ValidationProfile) (groups : U32)
+theorem metadata.decode_locals_loop.complete (data : Slice U8) (groups : U32)
     (out : alloc.vec.Vec wasm_types.ValueType) (pos : Usize) (i : U32)
     (decoded : List (U32 × wasm_types.ValueType)) (next : Usize)
     (hcount : i.val + decoded.length = groups.val)
     (hbytes : At (Rep LocalEncoding) data pos decoded next)
     (hcap : out.val.length + (ModuleLocals.declared decoded).length ≤ limits.MAX_LOCALS.val) :
-    ∃ locals, metadata.decode_locals_loop data profile groups out pos i = .ok (.Ok (locals, next)) ∧
+    ∃ locals, metadata.decode_locals_loop data groups out pos i = .ok (.Ok (locals, next)) ∧
       locals.val = out.val ++ ModuleLocals.declared decoded := by
   induction decoded generalizing out pos i with
   | nil =>
@@ -40,7 +40,7 @@ theorem metadata.decode_locals_loop.complete (data : Slice U8) (profile : Valida
     obtain ⟨valuePos, hcountSpan, htypeSpan⟩ := hlocal.split
     have hread := hcountSpan.read_u32 count hcountBytes
     have htype := metadata.decode_value_type.complete data valuePos ty middle
-      ⟨[valueByte ty], rfl, htypeSpan⟩ profile
+      ⟨[valueByte ty], rfl, htypeSpan⟩
     have hlt : i.val < groups.val := by simp only [List.length_cons] at hcount; omega
     have hstop : ¬ i ≥ groups := by scalar_tac
     have hdecl : ModuleLocals.declared ((count, ty) :: rest) =
@@ -72,14 +72,14 @@ theorem metadata.decode_locals_loop.complete (data : Slice U8) (profile : Valida
 
 /-- `metadata.decode_locals` accepts an independently encoded local vector within the limit and
 returns its expansion. -/
-theorem metadata.decode_locals.complete (data : Slice U8) (pos : Usize) (profile : ValidationProfile)
+theorem metadata.decode_locals.complete (data : Slice U8) (pos : Usize)
     (groups : List (U32 × wasm_types.ValueType)) (next : Usize)
     (hbytes : At (VecEncoding LocalEncoding) data pos groups next)
     (hcap : (ModuleLocals.declared groups).length ≤ limits.MAX_LOCALS.val) :
-    ∃ locals, metadata.decode_locals data pos profile = .ok (.Ok (locals, next)) ∧
+    ∃ locals, metadata.decode_locals data pos = .ok (.Ok (locals, next)) ∧
       locals.val = ModuleLocals.declared groups := by
   obtain ⟨count, first, hcount, hread, hrest⟩ := hbytes.vector_split
-  obtain ⟨locals, hloop, hvals⟩ := metadata.decode_locals_loop.complete data profile count
+  obtain ⟨locals, hloop, hvals⟩ := metadata.decode_locals_loop.complete data count
     (alloc.vec.Vec.new _) first 0#u32 groups next (by simpa using hcount.symm) hrest (by simpa using hcap)
   refine ⟨locals, ?_, by simpa using hvals⟩
   simp [metadata.decode_locals, reader.read_u32_leb.complete data pos count first hread,

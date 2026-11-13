@@ -19,7 +19,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_call_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
@@ -31,7 +31,7 @@ theorem structured_reader_prefix_call_wasm2 {jumpTables : List U32} {data env so
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_CALL before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (ft : Itasca.wasm_types.FuncType) (values : List code.StackType),
       env.func_types.val[callee.val]? = some ft ∧
       Wasm2.ReaderPost p out.core (.CALL (.mk_uN callee.val)) p.current.ctrl.polymorphic_base values ∧
@@ -68,7 +68,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_dead_call_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
@@ -77,7 +77,7 @@ theorem structured_reader_prefix_dead_call_wasm2 {jumpTables : List U32} {data e
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_CALL before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (values : List code.StackType),
       Wasm2.ReaderPost p out.core (.CALL (.mk_uN callee.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.CALL (.mk_uN callee.val)))
@@ -112,7 +112,7 @@ theorem StructuredReaderCompilerStateWasm2.call {jumpTables : List U32} {A : Typ
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_CALL)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_CALL before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (values : List code.StackType), StructuredReaderCompilerStateWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) returns locals data env ctx.locals index ft out
       parents (current.advance (.CALL (.mk_uN callee.val))) savedParents
       (savedCurrent.advance (.plain (.CALL (.mk_uN callee.val))) (.CALL (.mk_uN callee.val))

@@ -27,7 +27,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual source RETURN checks its full result suffix and retains recorded exits. -/
 theorem reader_return_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions locals parents current}
@@ -40,7 +40,7 @@ theorem reader_return_open_instructions_wasm2 {jumpTables : List U32} {data env 
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 15#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨callback, read, values, post⟩ := reader_return_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -76,7 +76,7 @@ theorem reader_return_open_instructions_wasm2 {jumpTables : List U32} {data env 
 
 /-- Actual trap reading preserves all earlier checks and emits a checked trap word when live. -/
 theorem reader_unreachable_open_instructions_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -86,7 +86,7 @@ theorem reader_unreachable_open_instructions_wasm2 {jumpTables : List U32} {data
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨capacity, run⟩ := profile_base_success_wasm2
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st out data env ctx

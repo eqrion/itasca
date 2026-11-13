@@ -358,43 +358,43 @@ theorem table_encoded : BodyEncoding tableBytes tableOps := by
 
 /-- `code.bodyCore` accepts `blockBytes` as a function of type 0. The theorem
 combines the decoding and typing derivations, without evaluating any handler. -/
-theorem block_accepted : code.bodyCore blockBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
-  code.bodyCore.complete blockBytes env locals _ 0#u32 .Wasm2
+theorem block_accepted : code.bodyCore blockBytes env locals (alloc.vec.Vec.new _) 0#u32 = .ok (.Ok ()) :=
+  code.bodyCore.complete blockBytes env locals _ 0#u32
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     ⟨pairResult, blockOps, rfl, block_encoded, block_typed, (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `ifBytes` as a function of type 0. -/
-theorem if_accepted : code.bodyCore ifBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
-  code.bodyCore.complete ifBytes env locals _ 0#u32 .Wasm2
+theorem if_accepted : code.bodyCore ifBytes env locals (alloc.vec.Vec.new _) 0#u32 = .ok (.Ok ()) :=
+  code.bodyCore.complete ifBytes env locals _ 0#u32
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     ⟨pairResult, ifOps, rfl, if_encoded, if_typed, (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityIf, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `loopBytes` as a function of type 3. -/
-theorem loop_accepted : code.bodyCore loopBytes env locals (alloc.vec.Vec.new _) 3#u32 .Wasm2 = .ok (.Ok ()) :=
-  code.bodyCore.complete loopBytes env locals _ 3#u32 .Wasm2
+theorem loop_accepted : code.bodyCore loopBytes env locals (alloc.vec.Vec.new _) 3#u32 = .ok (.Ok ()) :=
+  code.bodyCore.complete loopBytes env locals _ 3#u32
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     ⟨emptyResult, loopOps, rfl, loop_encoded, loop_typed, (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, loopInstr, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `tableBytes` as a function of type 0. -/
-theorem table_accepted : code.bodyCore tableBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
-  code.bodyCore.complete tableBytes env locals _ 0#u32 .Wasm2
+theorem table_accepted : code.bodyCore tableBytes env locals (alloc.vec.Vec.new _) 0#u32 = .ok (.Ok ()) :=
+  code.bodyCore.complete tableBytes env locals _ 0#u32
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
     ⟨pairResult, tableOps, rfl, table_encoded, table_typed, (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, tableBlock, tableInner, heterogeneousTable, BrTable.instruction])⟩
 
 /-- The accepted run on `blockBytes` yields a `Validated` soundness certificate. -/
-theorem block_validated : Validated .Wasm2 blockBytes env locals 0#u32 :=
-  code.bodyCore.sound blockBytes env locals _ 0#u32 .Wasm2 block_accepted
+theorem block_validated : Validated blockBytes env locals 0#u32 :=
+  code.bodyCore.sound blockBytes env locals _ 0#u32 block_accepted
 
 /-- The accepted run on `ifBytes` yields a `Validated` soundness certificate. -/
-theorem if_validated : Validated .Wasm2 ifBytes env locals 0#u32 :=
-  code.bodyCore.sound ifBytes env locals _ 0#u32 .Wasm2 if_accepted
+theorem if_validated : Validated ifBytes env locals 0#u32 :=
+  code.bodyCore.sound ifBytes env locals _ 0#u32 if_accepted
 
 /-- The accepted run on `loopBytes` yields a `Validated` soundness certificate. -/
-theorem loop_validated : Validated .Wasm2 loopBytes env locals 3#u32 :=
-  code.bodyCore.sound loopBytes env locals _ 3#u32 .Wasm2 loop_accepted
+theorem loop_validated : Validated loopBytes env locals 3#u32 :=
+  code.bodyCore.sound loopBytes env locals _ 3#u32 loop_accepted
 
 /-- The accepted run on `tableBytes` yields a `Validated` soundness certificate. -/
-theorem table_validated : Validated .Wasm2 tableBytes env locals 0#u32 :=
-  code.bodyCore.sound tableBytes env locals _ 0#u32 .Wasm2 table_accepted
+theorem table_validated : Validated tableBytes env locals 0#u32 :=
+  code.bodyCore.sound tableBytes env locals _ 0#u32 table_accepted
 
 end Itasca.Examples.Wasm2Body

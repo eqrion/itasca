@@ -27,7 +27,7 @@ private theorem head_member {α : Type} {items : List α} {item}
   | cons first rest => simp only [List.head?_cons, Option.some.injEq] at found; subst item; simp
 
 theorem reader_root_frame_wasm2 {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (compiler : runtime.compiler.FunctionCompiler A) {locals parents current}
     (physical : ScopeFrameStack locals compiler parents current)
     (same : ReaderScopeZipperWasm2 parents current p.parents p.current) :

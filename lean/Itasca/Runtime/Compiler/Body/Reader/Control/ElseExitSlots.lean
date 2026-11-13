@@ -80,7 +80,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual ELSE reading preserves stored instruction checks from its matched THEN scope. -/
 theorem reader_else_exit_slots_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -92,7 +92,7 @@ theorem reader_else_exit_slots_wasm2 {jumpTables : List U32} {data env sourceLoc
     (held : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 5#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 5#u8 before = .ok (.Ok (),out,after)) : FrameExitSlotBounds after := by
+      st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) : FrameExitSlotBounds after := by
   obtain ⟨callback,read,sourceForm,encoded,results,opened,afterState⟩ := reader_else_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
   have matched := same.current.form

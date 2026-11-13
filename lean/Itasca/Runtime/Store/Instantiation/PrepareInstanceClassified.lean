@@ -74,7 +74,7 @@ theorem prepare_instance_classified {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile)
+    (valid : Valid module.module.env)
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
     (compiled : Compiler.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
@@ -180,7 +180,7 @@ theorem prepare_instance_classified {M P F A : Type}
             simp only [bind_ok, uncurry_apply_pair] at run
             cases funcsReserved with
             | false =>
-              simp only [Bool.false_eq_true, ↓reduceIte, 
+              simp only [Bool.false_eq_true, ↓reduceIte,
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                 core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
               change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
@@ -194,7 +194,7 @@ theorem prepare_instance_classified {M P F A : Type}
               simp only [bind_ok, uncurry_apply_pair] at run
               cases tablesReserved with
               | false =>
-                simp only [Bool.false_eq_true, ↓reduceIte, 
+                simp only [Bool.false_eq_true, ↓reduceIte,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                   core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                 change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
@@ -208,7 +208,7 @@ theorem prepare_instance_classified {M P F A : Type}
                 simp only [bind_ok, uncurry_apply_pair] at run
                 cases memoriesReserved with
                 | false =>
-                  simp only [Bool.false_eq_true, ↓reduceIte, 
+                  simp only [Bool.false_eq_true, ↓reduceIte,
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                     core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                   change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
@@ -222,7 +222,7 @@ theorem prepare_instance_classified {M P F A : Type}
                   simp only [bind_ok, uncurry_apply_pair] at run
                   cases globalsReserved with
                   | false =>
-                    simp only [Bool.false_eq_true, ↓reduceIte, 
+                    simp only [Bool.false_eq_true, ↓reduceIte,
                       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                       core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                     change Result.ok (.Err (.Exhausted .Allocation), before, platform) =
@@ -261,7 +261,7 @@ theorem prepare_instance_classified {M P F A : Type}
                       simp only [bind_ok, uncurry_apply_pair] at run
                       cases typesReserved with
                       | false =>
-                        simp only [Bool.false_eq_true, ↓reduceIte, 
+                        simp only [Bool.false_eq_true, ↓reduceIte,
                           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                           core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                         exact Or.inl ⟨_, _, run.symm, .refl _, by trivial, by exact PrecommitOrigins.resource True.intro⟩
@@ -449,7 +449,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                 simp only [bind_ok, uncurry_apply_pair] at run
                                 cases instancesReserved with
                                 | false =>
-                                  simp only [Bool.false_eq_true, ↓reduceIte, 
+                                  simp only [Bool.false_eq_true, ↓reduceIte,
                                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                                     core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                                   exact Or.inl ⟨_, _, run.symm, preparedPrefix, by trivial, by exact PrecommitOrigins.resource True.intro⟩
@@ -511,7 +511,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                     simp only [set_given globalStore.instances before.instances.len globalInst globalFound] at run
                                     cases elementsReserved with
                                     | false =>
-                                      simp only [Bool.false_eq_true, ↓reduceIte, 
+                                      simp only [Bool.false_eq_true, ↓reduceIte,
                                         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                                         core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                                       exact Or.inl ⟨_, _, run.symm, globalPrefix, by trivial, by exact PrecommitOrigins.resource True.intro⟩
@@ -556,7 +556,7 @@ theorem prepare_instance_classified {M P F A : Type}
                                         simp only [set_given elementStore.instances before.instances.len elementInst elementFound] at run
                                         cases dataReserved with
                                         | false =>
-                                          simp only [Bool.false_eq_true, ↓reduceIte, 
+                                          simp only [Bool.false_eq_true, ↓reduceIte,
                                             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
                                             core.convert.FromSame.from, bind_ok, bind_tc_ok] at run
                                           exact Or.inl ⟨_, _, run.symm, elementPrefix, by trivial, by exact PrecommitOrigins.resource True.intro⟩

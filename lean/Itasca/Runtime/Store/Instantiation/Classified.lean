@@ -21,7 +21,7 @@ theorem instantiate_inner_classified_decomposition {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile)
+    (valid : Valid module.module.env)
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
     (compiled : Compiler.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)

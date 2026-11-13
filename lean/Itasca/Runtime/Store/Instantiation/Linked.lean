@@ -25,7 +25,7 @@ theorem instantiate_inner_linked_decomposition {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
     {tables memories} (cache : Cache module.module.env tables memories)
-    (valid : Valid module.module.env module.profile)
+    (valid : Valid module.module.env)
     (dataValid : ∀ data ∈ module.module.tail.data.val, Itasca.ModuleData.Valid module.module.env data)
     (compiled : Compiler.InitializerMappings module)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
@@ -65,8 +65,8 @@ theorem instantiate_compiled_linked_bounded_decomposition {M P F A : Type}
     (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before) (bounded : SegmentBounds before)
-    (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (handles : ∀ external ∈ imports.val, ExternalIssued before external) :
     (∃ error staged,
       runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
@@ -77,19 +77,18 @@ theorem instantiate_compiled_linked_bounded_decomposition {M P F A : Type}
       Nonempty (LinkedPreparedRun memory hooks floats allocator view before module imports platform ready) ∧
       runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
         runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false := by
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have actualValid : Itasca.ModuleEnv.Valid module.module.env module.profile := by
-    rw [certificates.2.1]
+  have actualValid : Itasca.ModuleEnv.Valid module.module.env := by
     exact valid
   have decomposition := instantiate_inner_linked_decomposition memory hooks floats allocator law view laws
-    before module imports platform shape accounted cache actualValid dataValid certificates.2.2.2 handles _ rfl
+    before module imports platform shape accounted cache actualValid dataValid certificates.2.2 handles _ rfl
   rcases decomposition with rejected | ⟨ready, inst, readyShape, found, source, initializers, types, counts, code, ⟨trace⟩, tail⟩
   · exact Or.inl rejected
   · exact Or.inr ⟨ready, inst, readyShape, found, source, initializers, types, counts, code,
-      trace.toPreparedRun.compiled_segment_bounds laws law shape accounted bounded bytes profile limits accepted, ⟨trace⟩, tail⟩
+      trace.toPreparedRun.compiled_segment_bounds laws law shape accounted bounded bytes limits accepted, ⟨trace⟩, tail⟩
 end Itasca.Runtime.Store
 
 end

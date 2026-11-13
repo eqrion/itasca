@@ -7,22 +7,18 @@ private theorem vector_length_bound {α : Type} {R : α → List U8 → Prop} {v
   obtain ⟨count, entries, bounded, _, _⟩ := encoded
   exact bounded.value_lt
 
-private theorem element_payload_bound {profile entry bytes}
-    (encoded : ElementEncodingFor profile entry bytes) : entry.init.length < 2^32 := by
-  cases profile with
-  | Wasm2 =>
-    cases encoded with
-    | activeIndices _ _ encoded | passiveIndices _ encoded | explicitIndices _ _ _ encoded
-    | declarativeIndices _ encoded | activeExpressions _ _ encoded | passiveExpressions _ encoded
-    | explicitExpressions _ _ _ encoded | declarativeExpressions _ encoded =>
-      simpa using vector_length_bound encoded
+private theorem element_payload_bound {entry bytes}
+    (encoded : ElementEncodingFor entry bytes) : entry.init.length < 2^32 := by
+  cases encoded with
+  | activeIndices _ _ encoded | passiveIndices _ encoded | explicitIndices _ _ _ encoded
+  | declarativeIndices _ encoded | activeExpressions _ _ encoded | passiveExpressions _ encoded
+  | explicitExpressions _ _ _ encoded | declarativeExpressions _ encoded =>
+    simpa using vector_length_bound encoded
 
-private theorem data_payload_bound {profile entry bytes}
-    (encoded : DataEncodingFor profile entry bytes) : entry.init.length < 2^32 := by
-  cases profile with
-  | Wasm2 =>
-    cases encoded with
-    | active _ _ encoded | passive _ encoded => exact vector_length_bound encoded
+private theorem data_payload_bound {entry bytes}
+    (encoded : DataEncodingFor entry bytes) : entry.init.length < 2^32 := by
+  cases encoded with
+  | active _ _ encoded | passive _ encoded => exact vector_length_bound encoded
 
 private theorem rep_property {α : Type} {R : α → List U8 → Prop} {Q : α → Prop} {values bytes}
     (encoded : Rep R values bytes) (property : ∀ value bytes, R value bytes → Q value) :
@@ -47,8 +43,8 @@ private theorem padded_property {α : Type} {R : α → List U8 → Prop} {Q : �
 
 /-- Binary vector prefixes bound every element and data payload, independently
 of semantic typing and of the compiler's chosen instruction representation. -/
-theorem module_segment_payload_bounds {R raw bytes profile}
-    (encoded : ModuleEncodingWith R raw bytes profile) :
+theorem module_segment_payload_bounds {R raw bytes}
+    (encoded : ModuleEncodingWith R raw bytes) :
     (∀ element ∈ raw.elements, element.init.length < 2^32) ∧
     (∀ segment ∈ raw.data, segment.init.length < 2^32) := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
@@ -57,8 +53,8 @@ theorem module_segment_payload_bounds {R raw bytes profile}
     padded_property hd (fun _ _ h => data_payload_bound h)⟩
 
 /-- Payload bounds for the actual metadata retained by an accepted validator. -/
-theorem validated_segment_payload_bounds {bytes module profile}
-    (validated : Itasca.ModuleSound.Validated bytes module profile) :
+theorem validated_segment_payload_bounds {bytes module}
+    (validated : Itasca.ModuleSound.Validated bytes module) :
     (∀ element ∈ module.env.elements.val, element.init.length < 2^32) ∧
     (∀ segment ∈ module.tail.data.val, segment.init.length < 2^32) := by
   obtain ⟨raw, encoded, _, matched, _⟩ := validated
@@ -77,10 +73,10 @@ theorem validated_segment_payload_bounds {bytes module profile}
 
 /-- The public compiler supplies the payload bounds without an added count premise. -/
 theorem compile_segment_payload_bounds {A : Type} (allocator : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect allocator) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (law : Platform.AllocCorrect allocator) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) (module : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module)) :
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module)) :
     (∀ element ∈ module.module.env.elements.val, element.init.length < 2^32) ∧
     (∀ segment ∈ module.module.tail.data.val, segment.init.length < 2^32) := by
-  exact validated_segment_payload_bounds (compile_source_validated allocator law bytes profile limits module accepted).1
+  exact validated_segment_payload_bounds (compile_source_validated allocator law bytes limits module accepted).1
 end Itasca.Runtime.Compiler

@@ -25,7 +25,7 @@ theorem IndexedTableReaderCompilerPointWasm2.reader_total {A} (ops : runtime.pla
     (next : Usize) (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (opcode : U8) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      ⟨{st.core with pos:=next}⟩ data env ⟨sourceLocals,ft.results⟩ index .Wasm2 opcode compiler
+      ⟨{st.core with pos:=next}⟩ data env ⟨sourceLocals,ft.results⟩ index opcode compiler
       ⦃out => out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
   have pending := state.boundary.pending next advance inbounds

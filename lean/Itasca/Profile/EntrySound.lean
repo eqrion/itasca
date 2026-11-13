@@ -12,13 +12,13 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An execution witness and a `Profile.Body` fact for its body give `Profile.Entry`. The entry
+/-- An execution witness and a `Wasm2.Validated` fact for its body give `Profile.Entry`. The entry
 parser supplies framing and locals, and the body fact supplies the decoded and typed tree. -/
 theorem CodeEntry.Witness.profile_validated
-    {V : Type} {visitor : code.OpVisitor V} {data env index start finish v v' profile}
-    (w : CodeEntry.Witness visitor data env index start finish v v' profile)
-    (hbody : Profile.Body profile w.body env w.ctx.locals w.typeIdx) :
-    Profile.Entry profile data env index start finish := by
+    {V : Type} {visitor : code.OpVisitor V} {data env index start finish v v' }
+    (w : CodeEntry.Witness visitor data env index start finish v v' )
+    (hbody : Wasm2.Validated w.body env w.ctx.locals w.typeIdx) :
+    Profile.Entry data env index start finish := by
   obtain ⟨ft, ops, hlookup, hbytes, htyped, hdeclared⟩ := hbody
   have hlookup' : env.types.val[w.typeIdx.val]? = some w.ft := by
     rw [List.getElem?_eq_getElem w.type_lt, w.function_type]
@@ -33,13 +33,13 @@ theorem CodeEntry.Witness.profile_validated
 totality assumption. -/
 theorem metadata.validate_code_entry_with.profile_sound {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
-    (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
-    (h : metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
-    Profile.Entry profile data env index pos finish := by
+    (v v' : V) (hbound : CodeEntry.Bounds env)
+    (h : metadata.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
+    Profile.Entry data env index pos finish := by
   obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile visitor data pos env index finish v v'
-    hbound profile h
+    hbound h
   apply w.profile_validated
-  exact code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile w.startedState v'
+  exact code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx w.startedState v'
     w.body_accepted
 
 end Itasca

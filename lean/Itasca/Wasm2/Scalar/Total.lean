@@ -113,12 +113,12 @@ theorem scalar_total {V : Type} (visitor : code.OpVisitor V)
   by_cases h_drop : opcode = code.OP_DROP
   · subst opcode
     rw [OpDispatch.dispatch_drop]
-    exact run_scalar st _ _ v (ScalarReaders.drop st  hs hsize)
+    exact run_scalar st _ _ v (ScalarReaders.drop st hs hsize)
       (fun s a => hvisitor.on_drop v s a)
   by_cases h_select : opcode = code.OP_SELECT
   · subst opcode
     rw [code.step_select.dispatch]
-    exact run_scalar st _ _ v (ScalarReaders.select st  hs hsize)
+    exact run_scalar st _ _ v (ScalarReaders.select st hs hsize)
       (fun s a => hvisitor.on_select v s a)
   by_cases h_local_get : opcode = code.OP_LOCAL_GET
   · subst opcode

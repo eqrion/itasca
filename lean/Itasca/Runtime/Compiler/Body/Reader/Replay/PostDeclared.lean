@@ -13,7 +13,7 @@ open Aeneas Aeneas.Std Itasca
 /-- Exact byte provenance identifies the retained instruction with the canonical
 accepted trace, so declared-reference evidence is recovered from the reader. -/
 theorem _root_.Itasca.Wasm2.ReaderPost.declared {data env locals index st out instruction poly values}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderPost p out instruction poly values) :
     DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction := by
   have consumed := Wasm2.Consumed.snoc p.consumed post.encoded

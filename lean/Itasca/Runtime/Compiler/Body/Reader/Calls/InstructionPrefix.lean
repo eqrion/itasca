@@ -20,7 +20,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual direct-call reading bounds its source base and retains earlier instruction and exit-slot checks. -/
 theorem reader_call_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
@@ -33,7 +33,7 @@ theorem reader_call_open_instructions_wasm2 {data env locals typeIndex st}
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 16#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex 16#u8 before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ft,values,front,base,found,input,post,baseAt,lowered⟩ :=
     reader_emit_call_wasm2 p ops law before after out ctx known monomorphic metadata layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -60,7 +60,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual indirect-call reading checks the captured table row and source operand region. -/
 theorem reader_indirect_call_open_instructions_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (matched : EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C)
@@ -75,7 +75,7 @@ theorem reader_indirect_call_open_instructions_wasm2 {data env locals typeIndex 
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,table,values,emitted,output,pairs,post,lowered,emission⟩ :=
     reader_emit_indirect_call_wasm2 p ops law before after out ctx C matched contextLocals signatures known monomorphic layout reachable codeFits sourceFits coordinateFits byte accepted
@@ -102,7 +102,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Actual call reading preserves both invariants on live and unreachable paths. -/
 theorem reader_call_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -115,7 +115,7 @@ theorem reader_call_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 16#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live
@@ -133,7 +133,7 @@ theorem reader_call_checked_prefix_wasm2 {jumpTables : List U32} {data env sourc
 
 /-- Actual call reading preserves both invariants on live and unreachable paths. -/
 theorem reader_indirect_call_checked_prefix_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -148,7 +148,7 @@ theorem reader_indirect_call_checked_prefix_wasm2 {jumpTables : List U32} {data 
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
   · obtain ⟨entered,retained⟩ := invariant.live live

@@ -31,10 +31,10 @@ theorem runtime.store.instantiate.Store.instantiate_with.spec {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (oldCode : CodeInterpretation) (old : ExecutableInv view oldCode before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (raw : ModuleBinary.Module)
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile) :
+    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes.val) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
         ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
@@ -46,6 +46,6 @@ theorem runtime.store.instantiate.Store.instantiate_with.spec {M P F A : Type}
           ∀ error, out.1 = .Err error → InstantiationResourceCause memory hooks floats allocator
             view oldCode before module imports platform raw out.2.1 error ⦄ :=
   instantiate_compiled_source memory hooks floats allocator view laws law before module imports platform
-    oldCode old handles bytes profile limits accepted raw encoded
+    oldCode old handles bytes limits accepted raw encoded
 
 end Itasca.Runtime

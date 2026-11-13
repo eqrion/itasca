@@ -12,7 +12,7 @@ set_option maxRecDepth 4096
 control base, and live condition layout for all three Wasm 2 scope openers.
 Dead scope entry requires only the source signature and resource bounds. -/
 theorem reached_profile_enter_available_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Pending data env .Wasm2 sourceLocals index st) (form : Frames.Form) (initialForm : form.Initial)
+    (p : Pending data env sourceLocals index st) (form : Frames.Form) (initialForm : form.Initial)
     {A V : Type} (ops : runtime.platform.Alloc A) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (initial compiler : runtime.compiler.FunctionCompiler A)
     (source : code.OpVisitor V) (before after : V) (out : code.BodyState) (ctx : code.Context)
@@ -24,9 +24,9 @@ theorem reached_profile_enter_available_wasm2 {jumpTables : List U32} {data env 
     (demand : CallbackDemand compiler out.core bound) (scope : ScopeDemand compiler out.core bound)
     (pcRoom : compiler.function.code.length+1 ≤ U32.max)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (reference : code.step_profile source st data env ctx index .Wasm2 form.opcode before = .ok (.Ok (),out,after)) :
+    (reference : code.step_profile source st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 form.opcode compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
+      st data env ctx index form.opcode compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
   obtain ⟨bt,ins,outs,remaining,base,_,read,post⟩ := reader_enter_wasm2 p form initialForm source before after out ctx
@@ -56,13 +56,13 @@ theorem reached_profile_enter_available_wasm2 {jumpTables : List U32} {data env 
           (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
     rcases initialForm with rfl | rfl | rfl <;> exact callback
   have dispatch : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 form.opcode compiler =
-      CallbackTrace.bodyRun (code.enter_info st data env .Wasm2 form.kind)
+      st data env ctx index form.opcode compiler =
+      CallbackTrace.bodyRun (code.enter_info st data env form.kind)
         (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) (enterAction form) compiler := by
     rcases initialForm with rfl | rfl | rfl
-    · exact CallbackTrace.dispatch_block _ _ _ _ _ _ _ _
-    · exact CallbackTrace.dispatch_loop _ _ _ _ _ _ _ _
-    · exact CallbackTrace.dispatch_if _ _ _ _ _ _ _ _
+    · exact CallbackTrace.dispatch_block _ _ _ _ _ _ _
+    · exact CallbackTrace.dispatch_loop _ _ _ _ _ _ _
+    · exact CallbackTrace.dispatch_if _ _ _ _ _ _ _
   rw [dispatch]
   exact CallbackTrace.bodyRun.available_of_read _ _ _ compiler bt out
     (fun after => CompilationBudgetEffect compiler.budget after.budget

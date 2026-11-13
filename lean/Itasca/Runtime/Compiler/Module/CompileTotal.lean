@@ -5,12 +5,12 @@ import Itasca.Runtime.Compiler.Module.CompileProfileTotal
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-/-- Actual prepared function bodies return normally for the supported profile,
+/-- Actual prepared function bodies return normally for WebAssembly Core 2.0,
 without a body-acceptance or callback-correctness premise. The initial source
 and allocation invariants come from actual entry setup. -/
 theorem profile_prepared_bodies_total {A} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (profile : ValidationProfile) :
-    ProfilePreparedBodiesTotal ops profile := by
+    (law : Platform.AllocCorrect ops) :
+    ProfilePreparedBodiesTotal ops := by
   intro data env index start signatures functionSlots budget batchStart initial started prepared
     bounds environment signaturesMatch slotsMatch batchBound created begun
   by_cases small : prepared.body.length ≤ limits.MAX_FUNCTION_BYTES.val
@@ -27,18 +27,17 @@ theorem profile_prepared_bodies_total {A} (ops : runtime.platform.Alloc A)
       ⟨observed,indirect,simd,pool,fixups⟩ facts.bodyBound
     rw [← contextEq] at body
     obtain ⟨result,run,_⟩ := WP.spec_imp_exists body
-    cases profile with
-    | Wasm2 => simp [run]
-  · rw [reader_body_too_large _ profile prepared.body env prepared.ctx prepared.typeIdx started (by omega)]
+    simp [run]
+  · rw [reader_body_too_large _ prepared.body env prepared.ctx prepared.typeIdx started (by omega)]
     simp
 
 /-- Complete-module compilation returns success or a reported validation or
 resource error on arbitrary bytes and arbitrary compiler limits. -/
 @[step] theorem compile_with_total {A} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
+    (law : Platform.AllocCorrect ops) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) :
-    runtime.compiler.compile_with ops bytes profile limits ⦃ _ => True ⦄ :=
-  compile_with_total_of_profile_prepared_bodies ops law bytes profile limits
-    (profile_prepared_bodies_total ops law profile)
+    runtime.compiler.compile_with ops bytes limits ⦃ _ => True ⦄ :=
+  compile_with_total_of_profile_prepared_bodies ops law bytes limits
+    (profile_prepared_bodies_total ops law)
 
 end Itasca.Runtime.Compiler

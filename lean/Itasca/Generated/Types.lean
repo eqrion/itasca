@@ -739,13 +739,6 @@ inductive code.SimdSignature where
 | SplatF32 : code.SimdSignature
 | SplatF64 : code.SimdSignature
 
-/-- [itasca::ValidationProfile]
-    Source: 'src/lib.rs'
-    Visibility: public -/
-@[discriminant isize]
-inductive ValidationProfile where
-| Wasm2 : ValidationProfile
-
 /-- [itasca::code::EmptyOpVisitor]
     Source: 'src/code.rs'
     Visibility: public -/
@@ -777,11 +770,9 @@ inductive error.Error where
 | DuplicateExportName : error.Error
 | LimitsOutOfRange : error.Error
 | MultipleMemories : error.Error
-| MultipleTables : error.Error
 | InvalidStartType : error.Error
 | MutableGlobalInConstExpr : error.Error
 | InvalidConstExpr : error.Error
-| TooManyResults : error.Error
 | TooManyLocals : error.Error
 | ModuleTooLarge : error.Error
 | Body : error.OpError → error.Error
@@ -822,7 +813,6 @@ structure metadata.Module where
 structure stream.CodeBatch where
   module_id : Std.U64
   batch_id : Std.Usize
-  profile : ValidationProfile
   env : metadata.Env
   code : Slice Std.U8
   code_offset : Std.Usize
@@ -1681,7 +1671,6 @@ structure runtime.compiler.FunctionCompiler (A : Type) where
     Visibility: public -/
 structure runtime.compiler.ExecutableModule where
   module : metadata.Module
-  profile : ValidationProfile
   functions : alloc.vec.Vec runtime.bytecode.CompiledFunction
   global_initializers : alloc.vec.Vec Std.Usize
   element_initializers : alloc.vec.Vec (alloc.vec.Vec Std.Usize)

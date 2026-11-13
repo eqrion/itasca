@@ -34,8 +34,8 @@ def bodyGood {V : Type} (cf :
 
 /-- One iteration of the extracted body loop. -/
 abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) (profile : ValidationProfile) (v : V) (st : code.BodyState) :=
-  code.body_loop_loop.body visitor data env ctx index profile v st
+    (ctx : code.Context) (index : U32) (v : V) (st : code.BodyState) :=
+  code.body_loop_loop.body visitor data env ctx index v st
 
 set_option maxHeartbeats 2000000 in
 /-- Each successful body iteration transfers to an accepting visitor with the
@@ -43,10 +43,10 @@ same validator state. Only the locals component of the scalar context matters. -
 theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : FullVisitor.Accepts replacement)
     (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
-    (hlocals : ctx.locals = ctx'.locals) (index : U32) (profile : ValidationProfile)
+    (hlocals : ctx.locals = ctx'.locals) (index : U32)
     (st : code.BodyState) (v : V) (w : W) (cf)
-    (h : body visitor data env ctx index profile v st = .ok cf) (hg : bodyGood cf) :
-    ∃ cf', body replacement data env ctx' index profile w st = .ok cf' ∧
+    (h : body visitor data env ctx index v st = .ok cf) (hg : bodyGood cf) :
+    ∃ cf', body replacement data env ctx' index w st = .ok cf' ∧
       bodyObserve cf' = bodyObserve cf := by
   unfold body code.body_loop_loop.body at h ⊢
   simp only [alloc.vec.Vec.is_empty, bind_ok] at h ⊢
@@ -85,7 +85,7 @@ theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
         simp at h
         subst cf
         obtain ⟨w', hw⟩ := step_transfer visitor replacement ha data env ctx ctx'
-          hlocals index profile opcode { core := { st.core with pos } } s v w v' hs
+          hlocals index opcode { core := { st.core with pos } } s v w v' hs
         exact ⟨.cont (w', s), by simp [hw], rfl⟩
 
 end Itasca.Wasm2.Visitor
@@ -100,13 +100,13 @@ theorem code.body_loop_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
-    (profile : ValidationProfile) (st : code.BodyState) (v : V) (w : W) (v' : V)
+     (st : code.BodyState) (v : V) (w : W) (v' : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
     (hbound : st.blocks.val.length ≤ st.core.pos.val + 1)
-    (h : code.body_loop_loop visitor data env ctx index profile v st =
+    (h : code.body_loop_loop visitor data env ctx index v st =
       .ok (.Ok (), v')) :
-    ∃ w', code.body_loop_loop replacement data env ctx' index profile w st =
+    ∃ w', code.body_loop_loop replacement data env ctx' index w st =
       .ok (.Ok (), w') := by
   generalize hn : Usize.max - st.core.pos.val = n
   induction n using Nat.strong_induction_on generalizing st v w with
@@ -121,7 +121,7 @@ theorem code.body_loop_loop.accepted_transfer {V W : Type}
       simp only [ok.injEq, Prod.mk.injEq] at ht
       obtain ⟨rfl, rfl⟩ := ht
       obtain ⟨cf, hw, ho⟩ := body.transfer visitor replacement ha data env ctx ctx' hlocals
-        index profile st v w _ hb rfl
+        index st v w _ hb rfl
       simp only [Wasm2.Visitor.body] at hw
       rw [hw]
       cases cf with
@@ -134,9 +134,9 @@ theorem code.body_loop_loop.accepted_transfer {V W : Type}
     | cont pair =>
       obtain ⟨v1, s⟩ := pair
       obtain ⟨cf, hw, ho⟩ := body.transfer visitor replacement ha data env ctx ctx' hlocals
-        index profile st v w _ hb trivial
+        index st v w _ hb trivial
       have hp := code.body_loop_loop.body.total replacement ha.toTotal
-        data env ctx' index profile st w hdata hs halign hbound
+        data env ctx' index st w hdata hs halign hbound
       simp only [Wasm2.Visitor.body] at hw
       rw [hw, WP.spec_ok] at hp
       rw [hw]
@@ -158,9 +158,9 @@ theorem code.validate_body_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : FullVisitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
-    (profile : ValidationProfile) (v : V) (w : W) (v' : V)
-    (h : code.validate_body_with visitor data env ctx index profile v = .ok (.Ok (), v')) :
-    ∃ w', code.validate_body_with replacement data env ctx' index profile w =
+     (v : V) (w : W) (v' : V)
+    (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
+    ∃ w', code.validate_body_with replacement data env ctx' index w =
       .ok (.Ok (), w') := by
   unfold code.validate_body_with at h ⊢
   by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
@@ -177,6 +177,6 @@ theorem code.validate_body_with.accepted_transfer {V W : Type}
       have hp := code.initial_state.total env index
       rw [hr, WP.spec_ok] at hp
       exact code.body_loop_loop.accepted_transfer visitor replacement ha
-        data env ctx ctx' hlocals index profile st v w v' (by scalar_tac) hp.1 hp.2.1 hp.2.2 h
+        data env ctx ctx' hlocals index st v w v' (by scalar_tac) hp.1 hp.2.1 hp.2.2 h
 
 end Itasca

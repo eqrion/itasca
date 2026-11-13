@@ -31,8 +31,8 @@ theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : metada
 /-- The actual label loop accepts an independent vector whose targets all fit
 the original suffix and have the same arity. No successful-reader premise occurs. -/
 theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (count i : U32) (arity : Option Usize)
-    (first : signature.ResultType) (n : Usize)
+    (env : metadata.Env) (count i : U32) (arity : Option Usize)
+    (n : Usize)
     (cs : List code.Ctrl) (c : code.Ctrl) (depths : List U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : c.value_stack_base.val ≤ st.core.vals.val.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -40,11 +40,11 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     (hd : BrTable.LabelsDecoded data st.core.pos depths next)
     (ht : Wasm2.TableTargets env st depths (some n))
     (harity : arity = none ∨ arity = some n) :
-    ∃ s, Wasm2.branchTableLoop st.core data env profile count arity first i = .ok (.Ok (), s) ∧
+    ∃ s, Wasm2.branchTableLoop st.core data env count arity i = .ok (.Ok (), s) ∧
       s.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       s.blocks = st.blocks ∧ s.core.pos = next := by
-  induction depths generalizing st i arity first with
+  induction depths generalizing st i arity with
   | nil => simp only [List.length_nil, Nat.add_zero] at hlen; omega
   | cons depth depths ih =>
     obtain ⟨middle, hfirst, hrest⟩ := BrTable.LabelsDecoded.cons_iff.mp hd
@@ -52,8 +52,6 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     have he : k = n := Option.some.inj hk.symm
     subst k
     have hread := code.read_label_info.complete st data depth middle view ha hfirst hlabel
-    have hfirstOk : code.check_table_target profile env (if i = 0#u32 then view else first) view =
-        .ok (.Ok ()) := rfl
     obtain ⟨len, hlenread, hlenval⟩ := signature.ResultType.len.complete view env ts hts
     have he : len = n := UScalar.eq_of_val_eq (hlenval.trans hn.symm)
     subst len
@@ -61,8 +59,8 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     have hs' : c.value_stack_base.val ≤ s.core.vals.val.length := hs
     have hcheck := code.check_suffix.complete_of_base s.core env view ts
       (by simpa [Control.base, s, hctrls] using hs') hts hsuffix
-    have hbody := Wasm2.branchTableLoop.body_checked st s data env profile count i arity depth first
-      view n hread hfirstOk hlenread hcheck harity
+    have hbody := Wasm2.branchTableLoop.body_checked st s data env count i arity depth
+      view n hread hlenread hcheck harity
     cases depths with
     | nil =>
       have hic : i = count := UScalar.eq_of_val_eq (by simp at hlen; omega)
@@ -77,7 +75,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
       unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [Wasm2.tableBody_eq data env profile count st.core arity first i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core arity i, hbody]
       simp [hic, hm]
     | cons d ds =>
       have hilt : i.val < count.val := by simp only [List.length_cons] at hlen; omega
@@ -87,23 +85,20 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
       have htargets : Wasm2.TableTargets env s (d :: ds) (some n) := by
         intro x hx
         exact ht x (by simp [hx])
-      have hj0 : j ≠ 0#u32 := fun h => by
-        rw [h] at hjv
-        simp at hjv
-      obtain ⟨out, hrec, hv, hc, hb, hp⟩ := ih s j (some n) (if i = 0#u32 then view else first)
+      obtain ⟨out, hrec, hv, hc, hb, hp⟩ := ih s j (some n)
         hctrls hs' ha (by scalar_tac) (by simp only [List.length_cons] at hlen ⊢; scalar_tac)
         hrest htargets (.inr rfl)
       refine ⟨out, ?_, hv, hc, hb, hp⟩
       unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
       dsimp only
-      rw [Wasm2.tableBody_eq data env profile count st.core arity first i, hbody]
+      rw [Wasm2.tableBody_eq data env count st.core arity i, hbody]
       simpa [hine, hj, Wasm2.branchTableLoop, code.branch_table_with_loop, Std.bind_assoc] using hrec
 
 /-- The generated common-subtype branch-table premise suffices for each
 concrete target check, while the selector is consumed just once. -/
 theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (front common : List valtype)
     (depths : List U32) (default : U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -114,7 +109,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
       Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)))
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (front ++ (common ++ [.I32]))) :
-    ∃ s, code.branch_table st data env profile = .ok (.Ok (), s) ∧
+    ∃ s, code.branch_table st data env = .ok (.Ok (), s) ∧
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
       s.blocks = st.blocks ∧ s.core.pos = next ∧ s.core.vals.val = outer := by
   obtain ⟨count, first, last, hcount, hlen, hlabels, hdefault⟩ := hd
@@ -145,7 +140,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
         (DeclarativeComplete.result_sub_append (DeclarativeComplete.result_sub_refl front) hsub)
       simpa [popped, hvc, Control.base, hcc, hctrls, hb] using hmono
   obtain ⟨s, hloop, hvals, hctrls', hblocks, hpos⟩ := Wasm2.branchTableLoop.complete
-    popped data env profile count 0#u32 none .Empty n cs c (depths ++ [default]) next
+    popped data env count 0#u32 none n cs c (depths ++ [default]) next
     (by simpa [popped, hcc] using hctrls) hs' (by simp [popped, hcc])
     (by simp) (by simp [hlen])
     (by simpa [popped, hpc] using hlabels.snoc hdefault) htargets' (.inl rfl)

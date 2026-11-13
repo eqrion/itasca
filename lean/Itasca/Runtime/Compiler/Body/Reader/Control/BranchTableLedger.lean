@@ -35,11 +35,11 @@ theorem reader_table_ledger_wasm2 {A} (ops : runtime.platform.Alloc A)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (budget : FixupBudget before.frames.val before.function.code.val.length)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 14#u8 before = .ok (.Ok (),final,after)) :
+      st data env ctx index 14#u8 before = .ok (.Ok (),final,after)) :
     AuxiliaryGrowth before after ∧ FixupBudget after.frames.val after.function.code.val.length := by
   rw [Wasm2.CallbackTrace.dispatch_br_table] at accepted
   obtain ⟨_,_,_,_,_,fallback,types,_,_,allocation,buffer,_,_,_,_,_,_,_,callback⟩ :=
-    compiler_read_br_table ops law before after st final data env _ accepted
+    compiler_read_br_table ops law before after st final data env accepted
   exact ⟨compiler_br_table_auxiliary_growth ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types callback,
     compiler_br_table_fixup_budget ops law {before with budget := allocation, table_depths := buffer} after final.core fallback types budget callback⟩
 end Itasca.Runtime.Compiler

@@ -20,7 +20,7 @@ def ExportBounds {M : Type} (store : runtime.store.Store M) : Prop :=
   ∀ (index : Nat) (inst : runtime.store.ModuleInst), store.instances.val[index]? = some inst → ModuleExportBounds inst.module.module.env
 
 /-- Successful validation supplies export bounds without an API correctness premise. -/
-theorem module_export_bounds {env profile} (valid : Itasca.ModuleEnv.Valid env profile) :
+theorem module_export_bounds {env } (valid : Itasca.ModuleEnv.Valid env) :
     ModuleExportBounds env := by
   constructor
   · intro entry member

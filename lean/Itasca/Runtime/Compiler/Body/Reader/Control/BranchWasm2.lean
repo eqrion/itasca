@@ -10,10 +10,10 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_br_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0c#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0c#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0x0c#u8 before =
       .ok (.Ok (), out, after)) :
     ∃ depth view, visitor.on_br before out.core depth view = .ok (.Ok (), after) ∧
       code.branch_info st data env false = .ok (.Ok (depth, view), out) ∧
@@ -32,10 +32,10 @@ theorem reader_br_wasm2 {data env locals index st}
   exact ⟨depth, view, callback, read, post⟩
 
 theorem reader_br_if_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0d#u8)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0d#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0x0d#u8 before =
       .ok (.Ok (), out, after)) :
     ∃ depth view values, visitor.on_br_if before out.core depth view = .ok (.Ok (), after) ∧
       code.branch_info st data env true = .ok (.Ok (depth, view), out) ∧

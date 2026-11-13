@@ -19,7 +19,7 @@ namespace Itasca.Wasm2
 
 /-- A successful metadata decoder supplies byte provenance and a principal
 effect; the shared fixed checker transports both through the typed zipper. -/
-theorem Pending.metadata_read {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.metadata_read {data env locals index st} (p : Pending data env locals index st)
     {A B : Type}
     (decode : Result (core.result.Result A error.OpError × code.OpIterState))
     (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
@@ -49,7 +49,7 @@ theorem reference_value_translation (rt : wasm_types.ElemType) :
     Translate.valueType (ModuleConstants.referenceValueType rt) = valtype_reftype (Translate.referenceType rt) := by
   cases rt <;> rfl
 
-theorem Pending.table_get {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_get {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 37#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_get st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
@@ -74,7 +74,7 @@ theorem Pending.table_get {data env profile locals index st} (p : Pending data e
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translate.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
-theorem Pending.table_set {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_set {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 38#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_set st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
@@ -99,7 +99,7 @@ theorem Pending.table_set {data env profile locals index st} (p : Pending data e
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translate.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
-theorem Pending.ref_null {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_null {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 208#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_null st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
@@ -119,7 +119,7 @@ theorem Pending.ref_null {data env profile locals index st} (p : Pending data en
 
 /-- The `ref.func` leaf uses the runtime declaration check independently of
 its ordinary generated instruction typing. -/
-theorem Pending.ref_func_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_func_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
@@ -154,7 +154,7 @@ theorem Pending.ref_func_reader {data env profile locals index st} (p : Pending 
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
   · simpa [stack, List.append_assoc] using hv
 
-theorem Pending.ref_func {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_func {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
@@ -166,7 +166,7 @@ theorem Pending.ref_func {data env profile locals index st} (p : Pending data en
   obtain ⟨_, _, _, post, declared⟩ := effect idx accepted
   exact ⟨post.after, declared⟩
 
-theorem Pending.typed_select {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.typed_select {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 28#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_typed_select st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
@@ -185,7 +185,7 @@ theorem Pending.typed_select {data env profile locals index st} (p : Pending dat
     simpa [Simd.inputTypes, Simd.outputTypes, show Translate.valueType .I32 = valtype.I32 from rfl] using
       Instr_ok.select_expl C (Translate.valueType ty) hC.wf (.instr_case_3 _)
 
-theorem Pending.table_grow {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_grow {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 15#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -213,7 +213,7 @@ theorem Pending.table_grow {data env profile locals index st} (p : Pending data 
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.table_size {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_size {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 16#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -241,7 +241,7 @@ theorem Pending.table_size {data env profile locals index st} (p : Pending data 
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.table_fill {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.table_fill {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 17#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -269,7 +269,7 @@ theorem Pending.table_fill {data env profile locals index st} (p : Pending data 
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translate.valueType .I32 = valtype.I32 from rfl] using htyped
 
-theorem Pending.data_drop {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.data_drop {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 9#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -294,7 +294,7 @@ theorem Pending.data_drop {data env profile locals index st} (p : Pending data e
     obtain ⟨_, count, hc, hi⟩ := hspec.2.2 idx rfl
     exact hC.data_drop idx count hc hi
 
-theorem Pending.elem_drop {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.elem_drop {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
     (hprefix : Leb128.Decoded data st.core.pos 13#u32 next)
     (hsize : st.core.vals.val.length < Usize.max) :
@@ -319,7 +319,7 @@ theorem Pending.elem_drop {data env profile locals index st} (p : Pending data e
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
     exact hC.elem_drop idx env.elements.val[idx.val] hi rfl
 
-theorem Pending.ref_is_null_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_is_null_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_is_null st.core ⦃ r => r.2.ctrls = st.core.ctrls ∧ r.2.pos = st.core.pos ∧
@@ -354,7 +354,7 @@ theorem Pending.ref_is_null_reader {data env profile locals index st} (p : Pendi
   · simpa [hc] using ctrls
   · simpa [code.BodyState.blocks_eq_of_ctrls hc] using blocks
 
-theorem Pending.ref_is_null {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.ref_is_null {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_is_null st.core ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by

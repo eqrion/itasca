@@ -29,10 +29,10 @@ theorem IndexedTableReaderCompilerPointWasm2.numeric_available {A V : Type}
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
+    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 data.val[st.core.pos.val] compiler ⦃ result =>
+      {core := {st.core with pos := next}} data env ctx index data.val[st.core.pos.val] compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -55,10 +55,10 @@ theorem IndexedTableReaderCompilerPointWasm2.float_available {A V : Type}
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (floatOpcode op))
-    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
+    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 data.val[st.core.pos.val] compiler ⦃ result =>
+      {core := {st.core with pos := next}} data env ctx index data.val[st.core.pos.val] compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -81,10 +81,10 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_load_available {A V : Type}
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Load)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryLoadOpcode op))
-    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
+    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 data.val[st.core.pos.val] compiler ⦃ result =>
+      {core := {st.core with pos := next}} data env ctx index data.val[st.core.pos.val] compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -107,10 +107,10 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available {A V : Type}
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (demand : CallbackDemand compiler out.core bound) (op : SourceMachine.Memory.Store)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryStoreOpcode op))
-    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index .Wasm2
+    (reference : code.step_profile source {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 data.val[st.core.pos.val] compiler ⦃ result =>
+      {core := {st.core with pos := next}} data env ctx index data.val[st.core.pos.val] compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -149,16 +149,16 @@ theorem IndexedTableReaderCompilerPointWasm2.numeric_available_from_source {A : 
     (op : SourceMachine.Numeric.Instruction) (base : (integerOpcode op).val < 192)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -169,7 +169,7 @@ theorem IndexedTableReaderCompilerPointWasm2.numeric_available_from_source {A : 
   rw [dispatch_numeric recorder _ data env ⟨sourceLocals,ft.results⟩ before _ operation hook meaning handler] at raw
   have demand := reference_reader_demand final room budget state.compiled.metadata state.compiled.codeBudget
     state.compiled.sources state.compiled.cursor inbounds _ (fun (_ : Unit) => .numeric hook) before after out raw
-    data env ⟨sourceLocals,ft.results⟩ index .Wasm2 tail
+    data env ⟨sourceLocals,ft.results⟩ index tail
   exact point.numeric_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op base byte reference
 
@@ -190,16 +190,16 @@ theorem IndexedTableReaderCompilerPointWasm2.float_available_from_source {A : Ty
     (op : SourceMachine.Float.Instruction) (base : (floatOpcode op).val < 256)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (floatOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -210,7 +210,7 @@ theorem IndexedTableReaderCompilerPointWasm2.float_available_from_source {A : Ty
   rw [dispatch_numeric recorder _ data env ⟨sourceLocals,ft.results⟩ before _ operation hook meaning handler] at raw
   have demand := reference_reader_demand final room budget state.compiled.metadata state.compiled.codeBudget
     state.compiled.sources state.compiled.cursor inbounds _ (fun (_ : Unit) => .numeric hook) before after out raw
-    data env ⟨sourceLocals,ft.results⟩ index .Wasm2 tail
+    data env ⟨sourceLocals,ft.results⟩ index tail
   exact point.float_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op base byte reference
 
@@ -231,16 +231,16 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_load_available_from_source {
     (op : SourceMachine.Memory.Load)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryLoadOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -251,7 +251,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_load_available_from_source {
   rw [dispatch_memory recorder _ data env ⟨sourceLocals,ft.results⟩ before _ (memoryLoadMeaning op) hook meaning handler] at raw
   have demand := reference_reader_demand final room budget state.compiled.metadata state.compiled.codeBudget
     state.compiled.sources state.compiled.cursor inbounds _ (fun arg : code.MemArg => .memory hook arg) before after out raw
-    data env ⟨sourceLocals,ft.results⟩ index .Wasm2 tail
+    data env ⟨sourceLocals,ft.results⟩ index tail
   exact point.memory_load_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op byte reference
 
@@ -272,16 +272,16 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available_from_source 
     (op : SourceMachine.Memory.Store)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (memoryStoreOpcode op))
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 st out
+  have tail := code.body_loop_loop.accepted_tail recorder data env ⟨sourceLocals,ft.results⟩ index st out
     before after final nonempty inbounds next advance reference suffix
   have canonical := reference
   rw [byte] at canonical
@@ -292,7 +292,7 @@ theorem IndexedTableReaderCompilerPointWasm2.memory_store_available_from_source 
   rw [dispatch_memory recorder _ data env ⟨sourceLocals,ft.results⟩ before _ (memoryStoreMeaning op) hook meaning handler] at raw
   have demand := reference_reader_demand final room budget state.compiled.metadata state.compiled.codeBudget
     state.compiled.sources state.compiled.cursor inbounds _ (fun arg : code.MemArg => .memory hook arg) before after out raw
-    data env ⟨sourceLocals,ft.results⟩ index .Wasm2 tail
+    data env ⟨sourceLocals,ft.results⟩ index tail
   exact point.memory_store_available ops bound available recorder before after out ⟨sourceLocals,ft.results⟩ rfl
     next advance inbounds demand op byte reference
 

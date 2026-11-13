@@ -129,9 +129,9 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
     (code : CodeInterpretation) (certified : CertifiedExecutableApiStore view code before)
     (accounted : SegmentAccounting before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module)) :
-    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module)) :
+    ∃ raw, ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes.val ∧
       ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw) ∧
       ModuleElaboration.Matches module.module.env module.module.tail raw ∧
       Module_ok (ModuleElaboration.moduleOf raw) ∧
@@ -152,19 +152,18 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
         Interp.FrameStorePrefix before ready ∧
         runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
           runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false) := by
-  obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors, functions, initializers, actualProfile⟩ :=
-    Compiler.compile_executable_functions allocator law bytes profile limits module accepted
-  obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities,_⟩ :=
-    Compiler.compile_executable_capacities allocator law bytes profile limits module accepted
-  have sameRaw := ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique _) encoded capacityEncoded
+  obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors, functions, initializers⟩ :=
+    Compiler.compile_executable_functions allocator law bytes limits module accepted
+  obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities⟩ :=
+    Compiler.compile_executable_capacities allocator law bytes limits module accepted
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique Profile.code_prefix_unique encoded capacityEncoded
   subst capacityRaw
   refine ⟨raw, encoded, elaborated, matched, typed, ?_⟩
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
-  have valid : ModuleEnv.Valid module.module.env module.profile := by
-    rw [actualProfile]
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
+  have valid : ModuleEnv.Valid module.module.env := by
     exact (witness.semantic law).1
   have decomposition := instantiate_compiled_linked_bounded_decomposition memory hooks floats allocator law view laws
-    before module imports platform certified.shape accounted certified.segmentBounds bytes profile limits accepted handles
+    before module imports platform certified.shape accounted certified.segmentBounds bytes limits accepted handles
   rcases decomposition with rejected | ⟨ready, inst, shape, found, source, initializersReady, types, counts, metadata, bounded, ⟨trace⟩, continued⟩
   · exact Or.inl rejected
   · obtain ⟨certifiedInst, certifiedFound, certifiedSource, readyCertified, readyAccounting, bindings⟩ :=

@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Wasm2.HandlerAdapters
-import Itasca.Wasm2.ProfileFilters
+import Itasca.Wasm2.SignatureEquality
 import Itasca.Wasm2.Prefix
 import Itasca.Handler.EnvCalls
 import Itasca.Handler.EnvComplete
@@ -21,12 +21,12 @@ namespace Itasca
 /-- Direct-call acceptance consumes every parameter and supplies every result,
 with the function index certified by the independent LEB grammar. -/
 theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
-    code.call st data env profile false ⦃ r => r.1 = .Ok () →
+    code.call st data env false ⦃ r => r.1 = .Ok () →
       ∃ idx, Leb128.Decoded data st.core.pos idx r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
@@ -66,7 +66,7 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
 theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (idx : U32) (next : Usize) (ft : wasm_types.FuncType)
+    (env : metadata.Env) (idx : U32) (next : Usize) (ft : wasm_types.FuncType)
     (hd : Leb128.Decoded data st.core.pos idx next)
     (hi : idx.val < env.func_types.val.length) (ht : env.func_types.val[idx.val] = ft)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
@@ -75,7 +75,7 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
     (hcap : st.core.vals.val.length + ft.results.val.length ≤ Usize.max)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ ft.params.val.map Translate.valueType)) :
-    code.call st data env profile false ⦃ r => r.1 = .Ok () ∧
+    code.call st data env false ⦃ r => r.1 = .Ok () ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ r.2.core.pos = next ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
         rest.length ≤ segment.length + ft.results.val.length ∧
@@ -98,12 +98,12 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
 /-- Indirect calls decode both indices and require a function-reference table.
 The selector is consumed before function arguments. -/
 theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Control.base st.core).val = outer.length)
     (C : context) (hC : EnvTranslation.Matches env ctx C) (inputs : List valtype) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
-    code.call st data env profile true ⦃ r => r.1 = .Ok () →
+    code.call st data env true ⦃ r => r.1 = .Ok () →
       ∃ idx table middle, Leb128.Decoded data st.core.pos idx middle ∧
       Leb128.Decoded data middle table r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
@@ -117,16 +117,9 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok pair =>
     obtain ⟨idx, middle⟩ := pair
-    obtain ⟨rb, hbyte, hz⟩ := WP.spec_imp_exists (code.check_table_byte.spec profile data middle)
-    cases rb with
-    | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte,
-        core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok u =>
-    cases u
     obtain ⟨rtable, hreadtable, hdtable⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data middle)
     cases rtable with
-    | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable,
+    | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable,
         core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
@@ -139,7 +132,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
         have htablesmall := Nat.not_le_of_gt htable
         cases helem : tt.elem with
         | ExternRef =>
-          simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+          simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
             htablesmall, hget, helem, wasm_types.ElemType.value_type,
             core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
             wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq,
@@ -158,7 +151,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
             dsimp only at hcc hpc hvc htc
             cases rc with
             | Err e =>
-              simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+              simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
                 htablesmall, hget, helem, wasm_types.ElemType.value_type,
                 core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                 wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond,
@@ -170,7 +163,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                   (by simpa [Control.base, hcc] using hbase))
               cases res with
               | Err e =>
-                simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+                simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
                   htablesmall, hget, helem, wasm_types.ElemType.value_type,
                   core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
@@ -192,7 +185,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                   (hC.call_indirect idx table ft hi htype htable hfun)
                 rw [WP.spec_equiv_exists]
                 refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-                · simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+                · simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
                     htablesmall, hget, helem, wasm_types.ElemType.value_type,
                     core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                     wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
@@ -201,20 +194,20 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                 · exact ⟨idx, table, middle, hd, by simpa [Leb128.Post, hp, hpc] using hdtable,
                     hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), _, hv, htyping⟩
           · have hlarge := Nat.le_of_not_gt hi
-            simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+            simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
               htablesmall, hget, helem, wasm_types.ElemType.value_type,
               core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
               wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hlarge,
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       · have hlarge := Nat.le_of_not_gt htable
-        simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
+        simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
           hlarge, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- Independently encoded indices and compatible operands force acceptance. -/
 theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (idx table : U32) (middle next : Usize)
+    (env : metadata.Env) (idx table : U32) (middle next : Usize)
     (ft : wasm_types.FuncType) (hd : Leb128.Decoded data st.core.pos idx middle)
     (hdtable : Leb128.Decoded data middle table next)
     (htable : table.val < env.table_types.val.length)
@@ -226,7 +219,7 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
     (hcap : st.core.vals.val.length + ft.results.val.length ≤ Usize.max)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (before ++ (ft.params.val.map Translate.valueType ++ [.I32]))) :
-    code.call st data env profile true ⦃ r => r.1 = .Ok () ∧
+    code.call st data env true ⦃ r => r.1 = .Ok () ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧ r.2.core.pos = next ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
         rest.length ≤ segment.length + ft.results.val.length ∧
@@ -234,7 +227,6 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
           (before ++ ft.results.val.map Translate.valueType) ⦄ := by
   have hread := reader.read_u32_leb.complete data st.core.pos idx middle hd
   have hreadtable := reader.read_u32_leb.complete data middle table next hdtable
-  have hbyte := code.check_table_byte.complete profile data middle
   have htix : (UScalar.cast .Usize table).val < env.table_types.val.length := by simpa using htable
   obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize table) htix)
@@ -260,7 +252,7 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), hpos.trans hpc,
     rest, hvs, by omega, ?_⟩
-  · simp [code.call, code.call_indirect_info, code.take_index, hread, hbyte, hreadtable, lift,
+  · simp [code.call, code.call_indirect_info, code.take_index, hread, hreadtable, lift,
       htablesmall, hget, helem, wasm_types.ElemType.value_type,
       core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
       wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, ht, hs,

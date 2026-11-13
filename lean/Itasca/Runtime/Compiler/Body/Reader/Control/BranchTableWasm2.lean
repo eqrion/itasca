@@ -16,12 +16,12 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
 
  theorem table_rest_cont {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (env : metadata.Env) (count index depth : U32)
-    (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
+    (types : signature.ResultType) (arity : Option Usize)
     (before after : V) (next : code.OpIterState) (nextArity : Option Usize)
-    (nextFirst : signature.ResultType) (nextIndex : U32)
-    (accepted : tableRest visitor st env count index depth types arity first before =
-      .ok (.cont (next,after,nextArity,nextFirst,nextIndex))) :
-    next = st.core ∧ after = before ∧ nextFirst = first ∧ index ≠ count ∧
+     (nextIndex : U32)
+    (accepted : tableRest visitor st env count index depth types arity before =
+      .ok (.cont (next,after,nextArity,nextIndex))) :
+    next = st.core ∧ after = before ∧ index ≠ count ∧
       nextIndex.val = index.val + 1 := by
   unfold tableRest at accepted
   obtain ⟨checked,_,rest⟩ := bind_ok_inv _ _ _ accepted
@@ -36,16 +36,16 @@ open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
     · simp only [final,ite_false] at rest
       obtain ⟨incremented,increment,rest⟩ := bind_ok_inv _ _ _ rest
       simp only [Result.ok.injEq,ControlFlow.cont.injEq,Prod.mk.injEq] at rest
-      obtain ⟨rfl,rfl,rfl,rfl,rfl⟩ := rest
+      obtain ⟨rfl,rfl,rfl,rfl⟩ := rest
       have arithmetic := UScalar.add_equiv index 1#u32
       rw [increment] at arithmetic
-      exact ⟨rfl,rfl,rfl,final,by simpa using arithmetic.2.1⟩
+      exact ⟨rfl,rfl,final,by simpa using arithmetic.2.1⟩
 
 theorem table_rest_done {V : Type} (visitor : code.OpVisitor V)
     (st final : code.BodyState) (env : metadata.Env) (count index depth : U32)
-    (types : signature.ResultType) (arity : Option Usize) (first : signature.ResultType)
+    (types : signature.ResultType) (arity : Option Usize)
     (before after : V)
-    (accepted : tableRest visitor st env count index depth types arity first before =
+    (accepted : tableRest visitor st env count index depth types arity before =
       .ok (.done (.Ok (),final,after))) :
     index = count ∧
     code.mark_unreachable st.core = .ok final.core ∧
@@ -113,11 +113,11 @@ set_option maxRecDepth 4096
 theorem compiler_table_body_cont {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st : code.BodyState) (next : code.OpIterState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (count index nextIndex : U32) (arity nextArity : Option Usize)
-    (first nextFirst : signature.ResultType)
+     (count index nextIndex : U32) (arity nextArity : Option Usize)
+
     (accepted : tableBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env profile count st before arity first index =
-        .ok (.cont (next,after,nextArity,nextFirst,nextIndex))) :
+      data env count st before arity index =
+        .ok (.cont (next,after,nextArity,nextIndex))) :
     ∃ depth budget buffer,
       after = {before with budget,table_depths := buffer} ∧
       buffer.val = before.table_depths.val ++ [depth] ∧
@@ -132,15 +132,10 @@ theorem compiler_table_body_cont {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨depth,types⟩ := pair
     have bytes := table_label_bytes st s data depth types readCall
     simp only [uncurry_apply_pair] at rest
-    obtain ⟨checked,_,rest⟩ := bind_ok_inv _ _ _ rest
-    cases checked with
-    | Err error => simp at rest
-    | Ok unit =>
-    simp only [bind_ok] at rest
     by_cases isLast : index = count
     · simp only [isLast,bne_self_eq_false,Bool.false_eq_true,ite_false] at rest
-      exact False.elim ((table_rest_cont _ s env count count depth types arity _ before after next
-        nextArity nextFirst nextIndex rest).2.2.2.1 rfl)
+      exact False.elim ((table_rest_cont _ s env count count depth types arity before after next
+        nextArity nextIndex rest).2.2.1 rfl)
     · simp only [bne_iff_ne,if_pos isLast] at rest
       obtain ⟨⟨reply,middle⟩,callback,rest⟩ := bind_ok_inv _ _ _ rest
       cases reply with
@@ -148,18 +143,18 @@ theorem compiler_table_body_cont {A : Type} (ops : runtime.platform.Alloc A)
       | Ok unit =>
         cases unit
         simp only [code.visit,bind_ok,uncurry_apply_pair] at rest
-        obtain ⟨rfl,rfl,_,_,nextEq⟩ := table_rest_cont _ s env count index depth types arity _ middle
-          after next nextArity nextFirst nextIndex rest
+        obtain ⟨rfl,rfl,_,nextEq⟩ := table_rest_cont _ s env count index depth types arity middle
+          after next nextArity nextIndex rest
         obtain ⟨budget,buffer,same,appended⟩ := compiler_table_label_success ops law before _ s.core depth callback
         exact ⟨depth,budget,buffer,same,appended,bytes.2.2,bytes.1,bytes.2.1,isLast,nextEq⟩
 
 theorem compiler_table_body_done {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (count index : U32) (arity : Option Usize)
-    (first : signature.ResultType)
+     (count index : U32) (arity : Option Usize)
+
     (accepted : tableBody (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env profile count st before arity first index = .ok (.done (.Ok (),final,after))) :
+      data env count st before arity index = .ok (.done (.Ok (),final,after))) :
     ∃ (depth : U32) (types : signature.ResultType) (readState : code.BodyState),
       index = count ∧
       Leb128.Decoded data st.core.pos depth readState.core.pos ∧
@@ -174,14 +169,9 @@ theorem compiler_table_body_done {A : Type} (ops : runtime.platform.Alloc A)
     obtain ⟨depth,types⟩ := pair
     have bytes := table_label_bytes st s data depth types readCall
     simp only [uncurry_apply_pair] at rest
-    obtain ⟨checked,_,rest⟩ := bind_ok_inv _ _ _ rest
-    cases checked with
-    | Err error => simp at rest
-    | Ok unit =>
-    simp only [bind_ok] at rest
     by_cases isLast : index = count
     · simp only [isLast,bne_self_eq_false,Bool.false_eq_true,ite_false] at rest
-      obtain ⟨_,marked,callback⟩ := table_rest_done _ s final env count count depth types arity _
+      obtain ⟨_,marked,callback⟩ := table_rest_done _ s final env count count depth types arity
         before after rest
       exact ⟨depth,types,s,isLast,bytes.2.2,marked,callback⟩
     · simp only [bne_iff_ne,if_pos isLast] at rest
@@ -191,7 +181,7 @@ theorem compiler_table_body_done {A : Type} (ops : runtime.platform.Alloc A)
       | Ok unit =>
         cases unit
         simp only [code.visit,bind_ok,uncurry_apply_pair] at rest
-        exact False.elim (isLast (table_rest_done _ s final env count index depth types arity _ middle
+        exact False.elim (isLast (table_rest_done _ s final env count index depth types arity middle
           after rest).1)
 end Itasca.Runtime.Compiler
 
@@ -210,11 +200,11 @@ set_option maxRecDepth 4096
 labels, then invokes the final callback once with the separately decoded default. -/
 theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
-    (count index : U32) (arity : Option Usize) (first : signature.ResultType)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (count index : U32) (arity : Option Usize)
     (indexBound : index.val ≤ count.val)
     (accepted : code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st.core data env profile before count arity first index = .ok (.Ok (),final,after)) :
+      st.core data env before count arity index = .ok (.Ok (),final,after)) :
     ∃ (depths : List U32) (default : U32) (types : signature.ResultType)
       (defaultStart : Usize) (readState : code.BodyState) (budget : runtime.compiler.Budget A)
       (buffer : alloc.vec.Vec U32),
@@ -226,12 +216,12 @@ theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
         ops {before with budget,table_depths := buffer} final.core default types = .ok (.Ok (),after) := by
   generalize measure : count.val - index.val = n
-  induction n using Nat.strong_induction_on generalizing before st index arity first with
+  induction n using Nat.strong_induction_on generalizing before st index arity with
   | h n ih =>
     unfold code.branch_table_with_loop at accepted
     rw [loop] at accepted
     simp only [tableBody_eq (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env profile count st before arity first index] at accepted
+      data env count st before arity index] at accepted
     obtain ⟨flow,bodyCall,tail⟩ := bind_ok_inv _ _ _ accepted
     cases flow with
     | done result =>
@@ -239,25 +229,25 @@ theorem compiler_table_loop {A : Type} (ops : runtime.platform.Alloc A)
       simp only [Result.ok.injEq,Prod.mk.injEq] at tail
       obtain ⟨rfl,rfl,rfl⟩ := tail
       obtain ⟨default,types,readState,last,decoded,marked,callback⟩ :=
-        compiler_table_body_done ops before _ st _ data env profile count index arity first bodyCall
+        compiler_table_body_done ops before _ st _ data env count index arity bodyCall
       exact ⟨[],default,types,st.core.pos,readState,before.budget,before.table_depths,
         by simp,.nil,decoded,by simp [last],marked,callback⟩
     | cont next =>
-      obtain ⟨nextState,middle,nextArity,nextFirst,nextIndex⟩ := next
+      obtain ⟨nextState,middle,nextArity,nextIndex⟩ := next
       obtain ⟨depth,budget,buffer,rfl,appended,decoded,values,controls,nonLast,indexEq⟩ :=
-        compiler_table_body_cont ops law before middle st nextState data env profile count index
-          nextIndex arity nextArity first nextFirst bodyCall
+        compiler_table_body_cont ops law before middle st nextState data env count index
+          nextIndex arity nextArity bodyCall
       have nextBound : nextIndex.val ≤ count.val := by
         have ne : index.val ≠ count.val := fun same => nonLast (UScalar.eq_of_val_eq same)
         omega
       have recursive : code.branch_table_with_loop (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-          nextState data env profile {before with budget,table_depths := buffer} count nextArity
-            nextFirst nextIndex =
+          nextState data env {before with budget,table_depths := buffer} count nextArity
+            nextIndex =
           .ok (.Ok (),final,after) := tail
       obtain ⟨depths,default,types,defaultStart,readState,nextBudget,nextBuffer,bufferEq,
         remaining,defaultDecoded,countEq,marked,callback⟩ :=
         ih (count.val-nextIndex.val) (by omega) (before := _) (st := ⟨nextState⟩)
-          (index := nextIndex) (arity := nextArity) (first := nextFirst) nextBound recursive rfl
+          (index := nextIndex) (arity := nextArity) nextBound recursive rfl
       refine ⟨depth::depths,default,types,defaultStart,readState,nextBudget,nextBuffer,?_,?_,
         defaultDecoded,?_,marked,callback⟩
       · simpa only [appended,List.append_assoc,List.singleton_append] using bufferEq
@@ -281,9 +271,9 @@ set_option maxRecDepth 4096
 actual selector-pop/final-callback equations. No replacement visitor is assumed. -/
 theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+    (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env profile before = .ok (.Ok (),final,after)) :
+      st data env before = .ok (.Ok (),final,after)) :
     ∃ (count : U32) (first : Usize) (selector : code.StackType) (popped : code.OpIterState)
       (depths : List U32) (default : U32) (types : signature.ResultType)
       (defaultStart : Usize) (readState : code.BodyState) (budget : runtime.compiler.Budget A)
@@ -314,7 +304,7 @@ theorem compiler_read_br_table {A : Type} (ops : runtime.platform.Alloc A)
       simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair] at rest
       obtain ⟨depths,default,types,defaultStart,readState,budget,buffer,bufferEq,
         decoded,defaultDecoded,countEq,marked,callback⟩ :=
-        compiler_table_loop ops law before after ⟨popped⟩ final data env profile count 0#u32 none .Empty
+        compiler_table_loop ops law before after ⟨popped⟩ final data env count 0#u32 none
           (by scalar_tac) rest
       exact ⟨count,first,selector,popped,depths,default,types,defaultStart,readState,budget,buffer,
         readSpec,popCall,bufferEq,decoded,defaultDecoded,by simpa using countEq,marked,callback⟩

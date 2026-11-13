@@ -83,7 +83,7 @@ open Aeneas Aeneas.Std Itasca
 endpoint for nested scope instruction checking. -/
 theorem reader_nested_end_open_instructions_wasm2 {jumpTables : List U32}
     {emit : List valtype → instr → List Bytecode → List valtype → Prop}
-    {data env localTypes index st} (p : Wasm2.Pending data env .Wasm2 localTypes index st)
+    {data env localTypes index st} (p : Wasm2.Pending data env localTypes index st)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -94,7 +94,7 @@ theorem reader_nested_end_open_instructions_wasm2 {jumpTables : List U32}
     (maps : ControlMapPublication before) (held : CompilerInstructionPrefix before)
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index .Wasm2 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after := by
   obtain ⟨callback,_,_,_,_,afterState⟩ := reader_end_wasm2 p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

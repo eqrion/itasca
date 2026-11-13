@@ -18,8 +18,8 @@ theorem indexed_prepared_compiler_start (jumpTables : List U32) (emit : List val
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
@@ -55,8 +55,8 @@ theorem indexed_prepared_compiler_initial_wasm2 (jumpTables : List U32) (emit : 
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (bodyBound : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
@@ -90,8 +90,8 @@ theorem prepared_compiler_table_boundary {A : Type} (ops : runtime.platform.Allo
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial)
     (startedCall : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
@@ -106,8 +106,8 @@ theorem indexed_table_prepared_compiler_initial_wasm2
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (bodyBound : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val)=

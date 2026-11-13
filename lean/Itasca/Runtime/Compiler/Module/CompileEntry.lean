@@ -98,7 +98,7 @@ theorem CompileEntryWitness.reachable {A : Type} {allocator : runtime.platform.A
 theorem CompileEntryWitness.metadata {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
     (w : CompileEntryWitness allocator before after batch finalBatch) :
-    w.dispatched.env = batch.env ∧ w.dispatched.profile = batch.profile ∧
+    w.dispatched.env = batch.env ∧
       w.dispatched.num_validated = batch.num_validated ∧
       w.dispatched.first_func = batch.first_func ∧
       after.completed = before.completed ∧ after.signatures = before.signatures ∧
@@ -117,13 +117,13 @@ theorem CompileEntryWitness.typed {A : Type} {allocator : runtime.platform.Alloc
     ∃ finish, w.entry.index.val = batch.first_func.val + batch.num_validated.val ∧
       ∃ entry : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor allocator)
           w.dispatched.code w.dispatched.env w.entry.index w.dispatched.validated_end finish
-          w.initial w.final w.dispatched.profile,
+          w.initial w.final,
         TypedRunWasm2 (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor allocator)
           entry.body w.dispatched.env entry.ctx entry.typeIdx (Wasm2.initial entry.typeIdx) entry.startedState
           w.final := by
   obtain ⟨finish, index, entry, typed⟩ := batch_typed_steps _ w.dispatched finalBatch w.entry.index
     w.initial w.final (by simpa only [w.metadata.1] using bounds) w.validated
-  exact ⟨finish, by simpa only [w.metadata.2.2.1, w.metadata.2.2.2.1] using index, entry, typed⟩
+  exact ⟨finish, by simpa only [w.metadata.2.1, w.metadata.2.2.1] using index, entry, typed⟩
 end Itasca.Runtime.Compiler
 
 end
@@ -144,7 +144,7 @@ theorem CompileEntryWitness.coordinate_bound {A : Type} {ops : runtime.platform.
     (bounded : issued.Bounded) (origin : before.code_start.val ≤ limits.MAX_MODULE_BYTES.val) :
     w.batchStart.val + w.dispatched.code.length ≤ Usize.max := by
   have identity := (StreamBatch.Reachable.dispatch reachable w.dispatch).validation.1
-  obtain ⟨_, _, _, code, offset, _, _, _⟩ := identity
+  obtain ⟨_, _, _, code, offset, _, _⟩ := identity
   have arithmetic := UScalar.add_equiv before.code_start w.dispatched.code_offset
   rw [w.coordinates] at arithmetic
   have position := arithmetic.2.1
@@ -165,7 +165,7 @@ theorem CompileEntryWitness.end_fits {A : Type} {ops : runtime.platform.Alloc A}
     {finish : Usize}
     (entry : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       w.dispatched.code w.dispatched.env w.entry.index w.dispatched.validated_end finish
-      w.initial w.final w.dispatched.profile) :
+      w.initial w.final) :
     w.batchStart.val + finish.val ≤ Usize.max := by
   have bound := w.coordinate_bound reachable bounded origin
   have span := entry.body_bytes.bound

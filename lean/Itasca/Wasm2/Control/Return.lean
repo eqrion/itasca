@@ -72,7 +72,7 @@ theorem returnStep.complete (st : code.BodyState) (env : metadata.Env) (index : 
     hp'.trans hp, by simpa [hvals, hb] using hv'⟩
 
 /-- The `return` opcode (`0x0f`) preserves `Pending` on success. -/
-theorem Pending.return_reader {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.return_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
     returnStep st env index ⦃ r => r.1 = .Ok () →
       r.2.core.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ∧
@@ -97,7 +97,7 @@ theorem Pending.return_reader {data env profile locals index st} (p : Pending da
     (encoded.declared _)
 
 /-- Forward preservation projects the shared return-reader certificate. -/
-theorem Pending.return_ {data env profile locals index st} (p : Pending data env profile locals index st)
+theorem Pending.return_ {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0F#u8) :
     returnStep st env index ⦃ r => r.1 = .Ok () → p.After r.2 ⦄ := by
   apply WP.spec_mono (p.return_reader hbyte)

@@ -110,7 +110,7 @@ open Aeneas Aeneas.Std Itasca
 /-- The actual concrete source supplies every exact read used by the retained
 canonical code-section certificate. -/
 theorem CompileSourceCertificate.available {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) :
     StreamSource.Available runtime.compiler.CompileSource.Insts.ItascaStreamSource
       {bytes, code_start := w.codeStart, code_end := w.codeEnd} c.environment.val c.code.val c.tail.val := by

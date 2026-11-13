@@ -39,12 +39,12 @@ theorem TableTargets.snoc {env st depths arity} (h : TableTargets env st depths 
     subst x
     exact ⟨view, ts, n, hl, hts, rfl, hn, hs⟩
 
-private def TableLoopInv (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+private def TableLoopInv (data : Slice U8) (env : metadata.Env)
     (initial : code.BodyState) (count : U32)
     (p : code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize ×
-      signature.ResultType × U32) : Prop :=
+      U32) : Prop :=
   p.1.vals = initial.core.vals ∧ p.1.ctrls = initial.core.ctrls ∧ p.2.1 = initial.blocks ∧
-  p.2.2.2.2.val ≤ count.val ∧ ∃ depths, depths.length = p.2.2.2.2.val ∧
+  p.2.2.2.val ≤ count.val ∧ ∃ depths, depths.length = p.2.2.2.val ∧
     BrTable.LabelsDecoded data initial.core.pos depths p.1.pos ∧
     TableTargets env initial depths p.2.2.1
 
@@ -55,53 +55,50 @@ namespace Itasca
 /-- One table iteration after a successful label read, length and suffix check either finishes at
 the default or continues with the arity fixed. -/
 theorem Wasm2.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (count i : U32) (arity : Option Usize)
-    (depth : U32) (first view : signature.ResultType) (n : Usize)
+     (count i : U32) (arity : Option Usize)
+    (depth : U32) (view : signature.ResultType) (n : Usize)
     (hr : code.read_label_info st data = .ok (.Ok (depth, view), s))
-    (hf : code.check_table_target profile env (if i = 0#u32 then view else first) view =
-      .ok (.Ok ()))
     (hn : signature.ResultType.len view env = .ok (.Ok n))
     (hs : code.check_suffix s.core env view = .ok (.Ok ()))
     (ha : arity = none ∨ arity = some n) :
-    Wasm2.branchTableLoop.body data env profile count st.core arity first i =
+    Wasm2.branchTableLoop.body data env count st.core arity i =
       (do if i = count then
             let core ← code.mark_unreachable s.core
             .ok (.done (.Ok (), {s with core := core}))
           else
             let j ← i + 1#u32
-            .ok (.cont (s.core, some n, if i = 0#u32 then view else first, j))) := by
-  by_cases h0 : i = 0#u32 <;> simp only [h0, ↓reduceIte] at hf <;>
-    rcases ha with rfl | rfl <;>
-    simp [Wasm2.branchTableLoop.body, hr, hn, hs, hf, h0,
+            .ok (.cont (s.core, some n, j))) := by
+  rcases ha with rfl | rfl <;>
+    simp [Wasm2.branchTableLoop.body, hr, hn, hs,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Successful table iteration records all labels, including the default,
 and certifies the unchanged operand suffix against every target. -/
 theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (count : U32) (cs : List code.Ctrl)
+    (env : metadata.Env) (count : U32) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : Control.Shape st.core) :
-    Wasm2.branchTableLoop st.core data env profile count none .Empty 0#u32 ⦃ r =>
+    Wasm2.branchTableLoop st.core data env count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
         BrTable.LabelsDecoded data st.core.pos depths r.2.core.pos ∧
         Wasm2.TableTargets env st depths (some n) ∧
         r.2.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
         r.2.core.ctrls.val = cs ++ [{c with polymorphic_base := true}] ∧ r.2.blocks = st.blocks ⦄ := by
   have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-      st.core data env profile () count none .Empty 0#u32 ⦃ r =>
+      st.core data env () count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
         BrTable.LabelsDecoded data st.core.pos depths r.2.1.core.pos ∧
         Wasm2.TableTargets env st depths (some n) ∧
         r.2.1.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
         r.2.1.core.ctrls.val = cs ++ [{c with polymorphic_base := true}] ∧ r.2.1.blocks = st.blocks ⦄ := by
     unfold code.branch_table_with_loop
-    apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.2.val)
-      (fun p => Wasm2.TableLoopInv data env profile st count
+    apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.val)
+      (fun p => Wasm2.TableLoopInv data env st count
         (p.1, (code.BodyState.mk p.1).blocks, p.2.2))
-    · rintro ⟨stateCore, visitor, arity, first, i⟩ ⟨hv, hc, hb, hi, depths, hlen, hd, ht⟩
+    · rintro ⟨stateCore, visitor, arity, i⟩ ⟨hv, hc, hb, hi, depths, hlen, hd, ht⟩
       let blocks := (code.BodyState.mk stateCore).blocks
       cases visitor
       dsimp only
-      rw [Wasm2.tableBody_eq data env profile count stateCore arity first i]
+      rw [Wasm2.tableBody_eq data env count stateCore arity i]
       apply ResultFacts.map_spec
       dsimp only at hv hc hb hi hlen hd ht
       have hshape : Control.Shape stateCore := ⟨by simpa [hc] using hs.ordered,
@@ -118,21 +115,10 @@ theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
         obtain ⟨hdecoded, hlabel⟩ := hout depth view rfl
         have hlabel' : Wasm2.labelAt st depth.val = some view := by
           simpa [Wasm2.labelAt, hc, hb] using hlabel
-        obtain ⟨rf, hfirst, hsamenext⟩ := WP.spec_imp_exists (code.check_table_target.spec profile env
-          (if i = 0#u32 then view else first) view)
-        cases rf with
-        | Err e =>
-          by_cases h0 : i = 0#u32 <;> simp only [h0, ↓reduceIte] at hfirst <;>
-            simp [Wasm2.branchTableLoop.body, hr, hfirst, h0,
-              core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok u =>
-        cases u
         obtain ⟨reslen, hreadlen, hpostlen⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
         cases reslen with
         | Err e =>
-          by_cases h0 : i = 0#u32 <;> simp only [h0, ↓reduceIte] at hfirst <;>
-            simp [Wasm2.branchTableLoop.body, hr, hfirst, hreadlen, h0,
+          simp [Wasm2.branchTableLoop.body, hr, hreadlen,
               core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | Ok n =>
@@ -144,9 +130,8 @@ theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
               (code.check_suffix.spec s.core env view hs')
             cases rescheck with
             | Err e =>
-              by_cases h0 : i = 0#u32 <;> simp only [h0, ↓reduceIte] at hfirst <;>
-                rcases harity with rfl | rfl <;>
-                simp [Wasm2.branchTableLoop.body, hr, hfirst, hreadlen, hcheck, h0,
+              rcases harity with rfl | rfl <;>
+              simp [Wasm2.branchTableLoop.body, hr, hreadlen, hcheck,
                   core.result.Result.Insts.CoreOpsTry.branch,
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok u =>
@@ -156,8 +141,8 @@ theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
               have htargets := ht.snoc depth view ts n hlabel' hts hn
                 (by simpa [Wasm2.Suffix, Control.base, Control.polymorphic, hvs, hv, hcs, hc] using hsuffix)
                 harity
-              rw [Wasm2.branchTableLoop.body_checked ⟨stateCore⟩ s data env profile count i arity depth first
-                view n hr hfirst hreadlen hcheck harity]
+              rw [Wasm2.branchTableLoop.body_checked ⟨stateCore⟩ s data env count i arity depth
+                view n hr hreadlen hcheck harity]
               by_cases heq : i = count
               · simp only [heq, ↓reduceIte]
                 obtain ⟨s', hm, hv', _, hc', hp'⟩ := WP.spec_imp_exists
@@ -183,8 +168,7 @@ theorem Wasm2.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
             | some expected =>
               have he : expected ≠ n := fun h => harity (.inr (congrArg some h))
               have hev : expected.val ≠ n.val := fun h => he (UScalar.eq_of_val_eq h)
-              by_cases h0 : i = 0#u32 <;> simp only [h0, ↓reduceIte] at hfirst <;>
-                simp [Wasm2.branchTableLoop.body, hr, hfirst, hreadlen, hev, h0,
+              simp [Wasm2.branchTableLoop.body, hr, hreadlen, hev,
                   core.result.Result.Insts.CoreOpsTry.branch]
     · exact ⟨rfl, rfl, rfl, by simp, [], by simp, .nil, by simp [Wasm2.TableTargets]⟩
   unfold Wasm2.branchTableLoop
@@ -261,7 +245,7 @@ namespace Itasca
 /-- Every successful branch table produces the generated common-subtype rule,
 including tables whose target types differ at bottom operands. -/
 theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hvals : st.core.vals.val = outer ++ segment)
     (hbase : c.value_stack_base.val = outer.length)
@@ -269,7 +253,7 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
     (C : context) (hC : wf_context C) (inputs : List valtype) (ops : List instr)
     (htyped : Wasm2.TypedPrefix C inputs ops c.polymorphic_base segment)
     (hlabels : Wasm2.BranchLabels env st C) :
-    code.branch_table st data env profile ⦃ r => r.1 = .Ok () →
+    code.branch_table st data env ⦃ r => r.1 = .Ok () →
       ∃ depths default, BrTable.Decoded data st.core.pos depths default r.2.core.pos ∧
         r.2.core.vals.val = outer ∧ r.2.blocks = st.blocks ∧
         r.2.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
@@ -291,7 +275,7 @@ theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
       have hs' : Control.Shape sc := hs.replace_operands hcc (by
         simp [Control.base, hctrls, hbase, hvc])
       obtain ⟨⟨res, s⟩, hrun, hout⟩ := WP.spec_imp_exists
-        (Wasm2.branchTableLoop.spec ⟨sc⟩ data env profile count cs c
+        (Wasm2.branchTableLoop.spec ⟨sc⟩ data env count cs c
           (by simpa [hcc] using hctrls) hs')
       have hblocks : (code.BodyState.mk sc).blocks = st.blocks :=
         code.BodyState.blocks_eq_of_ctrls hcc

@@ -38,8 +38,8 @@ private theorem padded_count {α : Type} {R : α → List U8 → Prop} {id value
     obtain ⟨size, payload, _, ⟨count, entries, bounded, _, _⟩, _⟩ := content
     exact bounded.value_lt
 
-theorem module_segment_counts {R raw bytes profile}
-    (encoded : ModuleBinary.ModuleEncodingWith R raw bytes profile) :
+theorem module_segment_counts {R raw bytes}
+    (encoded : ModuleBinary.ModuleEncodingWith R raw bytes) :
     raw.elements.length < 2^32 ∧ raw.data.length < 2^32 := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, _, _⟩ := encoded
@@ -67,8 +67,8 @@ private theorem evaluated_values_wf {α : Type} {originals : List α} {values : 
 /-- Canonical raw module syntax discharges the generated instantiation rule's
 structural side conditions. Allocation and initializer evaluations are concrete
 source judgments supplied by the corresponding implementation bridges. -/
-theorem source_instantiate {raw : ModuleBinary.Module} {R bytes profile}
-    (encoded : ModuleBinary.ModuleEncodingWith R raw bytes profile)
+theorem source_instantiate {raw : ModuleBinary.Module} {R bytes}
+    (encoded : ModuleBinary.ModuleEncodingWith R raw bytes)
     (elaborates : ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw))
     (typed : Module_ok (ModuleElaboration.moduleOf raw))
     (s after : store) (externals : List externaddr) (inst initialModule : moduleinst)

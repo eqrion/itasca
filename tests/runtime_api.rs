@@ -1,7 +1,5 @@
 use itasca::runtime::*;
-use itasca::{
-    ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValidationProfile, ValueType,
-};
+use itasca::{ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValueType};
 
 struct Hooks {
     remaining: usize,
@@ -30,18 +28,14 @@ impl<M: MemoryBuffer> Platform<M> for Hooks {
         Err(HostError::Trap)
     }
 }
-fn module(wat: &str, profile: ValidationProfile) -> ExecutableModule {
+fn module(wat: &str) -> ExecutableModule {
     let buf = wast::parser::ParseBuffer::new(wat).unwrap();
     let mut ast = wast::parser::parse::<wast::Wat>(&buf).unwrap();
-    compile(&ast.encode().unwrap(), profile).unwrap()
+    compile(&ast.encode().unwrap()).unwrap()
 }
 fn instance(store: &mut Store, wat: &str, imports: &[Extern]) -> InstanceAddr {
     store
-        .instantiate(
-            module(wat, ValidationProfile::Wasm2),
-            imports,
-            &mut Hooks::new(),
-        )
+        .instantiate(module(wat), imports, &mut Hooks::new())
         .unwrap()
         .instance
 }
@@ -111,7 +105,7 @@ fn failed_segments_preserve_prior_effects_and_escaped_functions() {
         .unwrap();
     assert!(matches!(
         store.instantiate(
-            module(wat, ValidationProfile::Wasm2),
+            module(wat),
             &[Extern::Table(table), Extern::Memory(memory)],
             &mut Hooks::new()
         ),
@@ -403,7 +397,6 @@ fn embedder_memory_growth_preserves_bytes_and_zero_fills() {
             module(
                 r#"(module (import "h" "m" (memory 1))
         (func (export "grow") (result i32) i32.const 1 memory.grow))"#,
-                ValidationProfile::Wasm2,
             ),
             &[Extern::Memory(m)],
             &mut Hooks::new(),
@@ -471,7 +464,6 @@ fn start_function_runs_after_segment_initialization() {
             module(
                 r#"(module (import "h" "m" (memory 1))
         (import "h" "start" (func $start)) (data (i32.const 0) "A") (start $start))"#,
-                ValidationProfile::Wasm2,
             ),
             &[Extern::Memory(memory), Extern::Func(host)],
             &mut platform,

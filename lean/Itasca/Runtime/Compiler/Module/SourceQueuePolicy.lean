@@ -7,12 +7,12 @@ open Aeneas Aeneas.Std Itasca
 cursor. Unlike an unrestricted visitor contract, this permits finite numerical
 module budgets and retains actual completed worker identities and finish checks. -/
 structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
   submit : ∀ id queue cursor issued before,
-    Queued id queue cursor before → StreamAcceptingScheduler.Valid issued profile →
+    Queued id queue cursor before → StreamAcceptingScheduler.Valid issued →
     issued.env = env → issued.module_id = id → issued.first_func.val = cursor →
     queue.length < config.max_batches.val →
     ∃ after, visitor.submit_code_batch before issued.seed = .ok (.Ok (),after) ∧
@@ -26,16 +26,16 @@ structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
 /-- A real queued worker retires successfully. Its finish proof comes from
 concrete compilation; dispatch cursors need not match an empty visitor run. -/
 theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (policy : QueuePolicy visitor config env profile Queued)
+    (policy : QueuePolicy visitor config env Queued)
     (id : U64) (queue : List StreamBatch.Issued) (cursor : Nat) (before : V)
     (pending : alloc.vec.Vec Usize) (held : Queued id queue cursor before)
-    (valid : StreamAcceptingScheduler.ValidQueue id queue profile)
+    (valid : StreamAcceptingScheduler.ValidQueue id queue)
     (ids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id)) (nonempty : pending.val ≠ []) :
     ∃ after remaining rest,
       Itasca.stream.retire_code_batch visitor id before pending = .ok (.Ok (),after,remaining) ∧
-      Queued id rest cursor after ∧ StreamAcceptingScheduler.ValidQueue id rest profile ∧
+      Queued id rest cursor after ∧ StreamAcceptingScheduler.ValidQueue id rest ∧
       remaining.val.Perm (rest.map StreamBatch.Issued.batch_id) ∧ remaining.length+1 = pending.length := by
   have queued : queue ≠ [] := by
     intro empty
@@ -60,12 +60,12 @@ theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
 /-- Draining the actual completed-worker queue preserves the source cursor and
 terminates with every pending worker retired. -/
 theorem drain_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env) (profile : ValidationProfile)
+    (config : Itasca.stream.Config) (env : metadata.Env)
     (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (policy : QueuePolicy visitor config env profile Queued)
+    (policy : QueuePolicy visitor config env Queued)
     (id : U64) (queue : List StreamBatch.Issued) (cursor : Nat) (before : V)
     (pending : alloc.vec.Vec Usize) (held : Queued id queue cursor before)
-    (valid : StreamAcceptingScheduler.ValidQueue id queue profile)
+    (valid : StreamAcceptingScheduler.ValidQueue id queue)
     (ids : pending.val.Perm (queue.map StreamBatch.Issued.batch_id)) :
     ∃ after remaining,
       Itasca.stream.retire_all_code_batches visitor id before pending = .ok (.Ok (),after,remaining) ∧
@@ -82,7 +82,7 @@ theorem drain_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
       rw [Itasca.stream.retire_all_code_batches,Itasca.stream.retire_all_code_batches_loop,loop]
       simp [Itasca.stream.retire_all_code_batches_loop.body,alloc.vec.Vec.is_empty,empty]
     · obtain ⟨middle,remaining,rest,retired,retained,restValid,restIds,length⟩ :=
-        retire_complete visitor config env profile Queued policy id queue cursor before pending held valid ids empty
+        retire_complete visitor config env Queued policy id queue cursor before pending held valid ids empty
       change remaining.val.length+1 = pending.val.length at length
       obtain ⟨after,final,continued,finished,result⟩ := ih remaining.val.length (by omega)
         rest middle remaining retained restValid restIds rfl

@@ -16,9 +16,6 @@ accepts every callback.
 open Aeneas Aeneas.Std
 
 namespace Itasca
-
-variable {profile : ValidationProfile}
-
 open ModuleTrace
 
 /-- A successful run of the environment loop reports each custom section exactly where its
@@ -29,7 +26,7 @@ theorem metadata.validate_env_with_loop.accepted_trace {V : Type}
     (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
     (result : metadata.Env) (next : Usize) (v' : V)
     (hpos : pos.val ≤ data.length)
-    (h : metadata.validate_env_with_loop visitor data profile v env pos lastId =
+    (h : metadata.validate_env_with_loop visitor data v env pos lastId =
       .ok (.Ok (result, next), v')) :
     ∃ events, observe v' = observe v ++ events ∧
       SectionTrace data (fun id => (1 ≤ id.val ∧ id.val < 10) ∨ id.val = 12) pos next events := by
@@ -123,7 +120,7 @@ theorem metadata.validate_env_with.accepted_trace {V : Type}
     (visitor : metadata.ModuleVisitor V) (observe : V → List Event)
     (hrecords : RecordsCustom visitor observe) (data : Slice U8)
     (v : V) (result : metadata.Env) (next : Usize) (v' : V)
-    (h : metadata.validate_env_with visitor data profile v = .ok (.Ok (result, next), v')) :
+    (h : metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
     ∃ events, observe v' = observe v ++ events ∧ EnvTrace data next events := by
   unfold metadata.validate_env_with at h
   obtain ⟨initial, _, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h

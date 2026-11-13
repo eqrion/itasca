@@ -10,7 +10,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem reader_end_root_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {kind bt out}
+    (p : Wasm2.Pending data env locals index st) {kind bt out}
     (single : st.blocks.val.length = 1)
     (read : code.end_frame_info st env false = .ok (.Ok (kind,bt),out)) :
     out.core.ctrls.val = [] := by
@@ -30,10 +30,10 @@ theorem reader_end_root_wasm2 {data env locals index st}
   simpa [parents] using controlEq
 
 theorem step_end_root_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {V} (visitor : code.OpVisitor V)
+    (p : Wasm2.Pending data env locals index st) {V} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (single : st.blocks.val.length = 1)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 0x0b#u8 before =
+    (accepted : code.step_profile visitor st data env ctx index 0x0b#u8 before =
       .ok (.Ok (),out,after)) : out.core.ctrls.val = [] := by
   rw [Wasm2.CallbackTrace.dispatch_end] at accepted
   obtain ⟨pair,read,_⟩ := Wasm2.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted

@@ -25,23 +25,22 @@ theorem instantiate_compiled_precommit_origins {M P F A : Type}
     (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
-    (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (error : runtime.ExecError) (staged : runtime.store.Store M) (host : P)
     (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
       .ok (.Err error, staged, host, false)) :
     PrecommitError error ∧ host = platform ∧ StagedPrefix before staged ∧
       PrecommitOrigins memory view before staged module imports error := by
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have actualValid : Itasca.ModuleEnv.Valid module.module.env module.profile := by
-    rw [certificates.2.1]
+  have actualValid : Itasca.ModuleEnv.Valid module.module.env := by
     exact valid
   have decomposition := instantiate_inner_classified_decomposition memory hooks floats allocator law view laws
-    before module imports platform shape accounted cache actualValid dataValid certificates.2.2.2 handles _ run
+    before module imports platform shape accounted cache actualValid dataValid certificates.2.2 handles _ run
   rcases decomposition with ⟨rejected, after, outcome, retained, cause, origins⟩ |
       ⟨ready, inst, readyShape, found, source, initializers, types, counts, code, trace, tail⟩
   · simp only [Result.ok.injEq, Prod.mk.injEq, core.result.Result.Err.injEq] at outcome
@@ -73,23 +72,22 @@ theorem instantiate_compiled_precommit_resource_causes {M P F A : Type}
     (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
     (imports : Slice runtime.Extern) (platform : P)
     (shape : Shape view before) (accounted : SegmentAccounting before)
-    (bytes : Slice U8) (profile : Itasca.ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
     (error : runtime.ExecError) (staged : runtime.store.Store M) (host : P)
     (run : runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
       .ok (.Err error, staged, host, false)) :
     host = platform ∧ StagedPrefix before staged ∧
       PrecommitResourceEvidence memory hooks floats allocator before module imports platform error := by
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
   obtain ⟨tables, memories, cache⟩ := witness.cache law
   have certificates := witness.initializers law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have actualValid : Itasca.ModuleEnv.Valid module.module.env module.profile := by
-    rw [certificates.2.1]
+  have actualValid : Itasca.ModuleEnv.Valid module.module.env := by
     exact valid
   have decomposition := instantiate_inner_resource_decomposition memory hooks floats allocator law view laws
-    before module imports platform shape accounted cache actualValid dataValid certificates.2.2.2 handles _ run
+    before module imports platform shape accounted cache actualValid dataValid certificates.2.2 handles _ run
   rcases decomposition with ⟨rejected, after, outcome, retained, causes⟩ |
       ⟨ready, inst, readyShape, found, source, initializers, types, counts, code, trace, tail⟩
   · simp only [Result.ok.injEq, Prod.mk.injEq, core.result.Result.Err.injEq] at outcome

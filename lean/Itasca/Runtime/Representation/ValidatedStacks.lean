@@ -13,15 +13,15 @@ open Aeneas Aeneas.Std Itasca
 Its reader equations use the empty visitor, independently of compiled code. -/
 inductive ValidatedStacksWasm2 (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) : code.BodyState → List (List code.StackType) → Prop where
-  | done {st} (typed : Wasm2.State data env .Wasm2 ctx.locals index st)
+  | done {st} (typed : Wasm2.State data env ctx.locals index st)
       (closed : st.blocks.val = []) (finished : st.core.pos = Slice.len data) :
       ValidatedStacksWasm2 data env ctx index st [st.core.vals.val]
   | step {st next out samples}
-      (typed : Wasm2.State data env .Wasm2 ctx.locals index st)
-      (pending : Wasm2.Pending data env .Wasm2 ctx.locals index {core := {st.core with pos := next}})
+      (typed : Wasm2.State data env ctx.locals index st)
+      (pending : Wasm2.Pending data env ctx.locals index {core := {st.core with pos := next}})
       (start : pending.start = st.core.pos) (advance : next.val = st.core.pos.val + 1)
       (read : code.step_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-        {core := {st.core with pos := next}} data env ctx index .Wasm2
+        {core := {st.core with pos := next}} data env ctx index
         (data.val[pending.start.val]'pending.inbounds) () = .ok (.Ok (), out, ()))
       (rest : ValidatedStacksWasm2 data env ctx index out samples) :
       ValidatedStacksWasm2 data env ctx index st (st.core.vals.val :: samples)

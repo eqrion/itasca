@@ -106,8 +106,8 @@ output by their expansion, and keeps it within `limits.MAX_LOCALS`. -/
 theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
     (out : alloc.vec.Vec wasm_types.ValueType) (q : Usize) (i : U32)
     (hi : i.val ≤ groups.val) (hq : q.val ≤ data.length)
-    (hsize : out.val.length ≤ limits.MAX_LOCALS.val) (profile : ValidationProfile) :
-    metadata.decode_locals_loop data profile groups out q i ⦃ r => match r with
+    (hsize : out.val.length ≤ limits.MAX_LOCALS.val) :
+    metadata.decode_locals_loop data groups out q i ⦃ r => match r with
       | .Ok (locals, next) => ∃ decoded,
           decoded.length = groups.val - i.val ∧
           ModuleBinary.At (ModuleBinary.Rep ModuleBinary.LocalEncoding) data q decoded next ∧
@@ -141,7 +141,7 @@ theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
             error.Error.Insts.CoreConvertFromOpError.from]
       | Ok pair =>
           obtain ⟨count, p1⟩ := pair
-          obtain ⟨r, ht, htpost⟩ := WP.spec_imp_exists (metadata.decode_value_type.spec data p1 profile)
+          obtain ⟨r, ht, htpost⟩ := WP.spec_imp_exists (metadata.decode_value_type.spec data p1)
           simp [core.result.Result.Insts.CoreOpsTry.branch]
           rw [ht]
           cases r with
@@ -180,8 +180,8 @@ theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
 /-- `metadata.decode_locals` terminates, and on success returns the expansion of independently
 encoded local groups within `limits.MAX_LOCALS`. -/
 @[step]
-theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile) :
-    metadata.decode_locals data pos profile ⦃ r => match r with
+theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) :
+    metadata.decode_locals data pos ⦃ r => match r with
       | .Ok (locals, next) => ∃ groups,
           ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding) data pos groups next ∧
           locals.val = ModuleLocals.declared groups ∧
@@ -199,7 +199,7 @@ theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : V
       rw [metadata.decode_locals, hr]
       simp [core.result.Result.Insts.CoreOpsTry.branch]
       apply WP.spec_mono (metadata.decode_locals_loop.spec data groups (alloc.vec.Vec.new _) start 0#u32
-        (by simp) hs.2.2 (by simp) profile)
+        (by simp) hs.2.2 (by simp))
       rintro r h
       cases r with
       | Err e => trivial

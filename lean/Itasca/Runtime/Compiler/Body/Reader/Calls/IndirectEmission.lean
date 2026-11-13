@@ -14,7 +14,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 /-- The canonical reader and actual compiler callback jointly establish the
 indirect-call emission, with metadata and source cursor preserved. -/
 theorem reader_emit_indirect_call_wasm2 {data env locals typeIndex st}
-    (p : Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (C : context) (matched : EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C)
@@ -28,7 +28,7 @@ theorem reader_emit_indirect_call_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 17#u8 before = .ok (.Ok (),out,after)) :
+      st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ index table values emitted output,
       after.function.indirect.val = before.function.indirect.val ++ [(table,index)] ∧

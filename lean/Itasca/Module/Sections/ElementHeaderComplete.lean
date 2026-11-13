@@ -18,19 +18,19 @@ open ModuleBinary ModuleElements
 
 /-- `metadata.decode_element_header` accepts a valid `HeaderEncoding` span. -/
 theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} {profile mode elem expressions}
-    (hb : At (fun value => HeaderEncoding profile value.1 value.2.1 value.2.2)
+    {env : metadata.Env} {mode elem expressions}
+    (hb : At (fun value => HeaderEncoding value.1 value.2.1 value.2.2)
       data pos (mode, elem, expressions) next)
     (hv : HeaderValid env mode elem) :
-    metadata.decode_element_header data pos env profile = .ok (.Ok (mode, elem, expressions, next)) := by
+    metadata.decode_element_header data pos env = .ok (.Ok (mode, elem, expressions, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
-  have hx : metadata.decode_element_header data pos env profile ⦃ r => r = .Ok (mode, elem, expressions, next) ⦄ := by
+  have hx : metadata.decode_element_header data pos env ⦃ r => r = .Ok (mode, elem, expressions, next) ⦄ := by
     cases he with
     | @activeIndices offset fb ob hf ho =>
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
       have hrf := hflags.read_u32 0#u32 hf
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (0#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -54,7 +54,7 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
       have hrf := hflags.read_u32 4#u32 hf
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (4#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -93,7 +93,7 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
       have hrf := hflags.read_u32 2#u32 hf
       have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
       simp [metadata.decode_element_header, hrf, hri, hro, hkind.read_byte,
         show (2#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -117,14 +117,14 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
     | @passiveExpressions elem fb hf =>
       obtain ⟨middle, hflags, helem⟩ := hs.split
       have hrf := hflags.read_u32 5#u32 hf
-      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2
+      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hre,
         show (5#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
     | @declarativeExpressions elem fb hf =>
       obtain ⟨middle, hflags, helem⟩ := hs.split
       have hrf := hflags.read_u32 7#u32 hf
-      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2
+      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hre,
         show (7#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -135,8 +135,8 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
       have hrf := hflags.read_u32 6#u32 hf
       have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
-      have hre := metadata.decode_elem_type.complete data elemPos elem next ⟨_, rfl, helem⟩ .Wasm2
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
+      have hre := metadata.decode_elem_type.complete data elemPos elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hri, hro, hre,
         show (6#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -170,10 +170,10 @@ open ModuleBinary ModuleElements ModuleSections
 /-- `metadata.decode_element` accepts an `ElementEncodingFor` span of a raw element that is valid in
 the environment. -/
 theorem metadata.decode_element.complete (data : Slice U8) (env : metadata.Env)
-    (profile : ValidationProfile) (pos next : Usize) (entry : ModuleBinary.Element)
-    (hb : At (ElementEncodingFor profile) data pos entry next)
+     (pos next : Usize) (entry : ModuleBinary.Element)
+    (hb : At (ElementEncodingFor) data pos entry next)
     (hv : ElementValidRaw env entry) (hrefs : env.declared_funcs.val.length ≤ pos.val) :
-    ∃ result actual, metadata.decode_element data pos env profile = .ok (.Ok (actual, next), result) ∧
+    ∃ result actual, metadata.decode_element data pos env = .ok (.Ok (actual, next), result) ∧
       ModuleEnv.rawElement actual = entry ∧ ModuleReferences.Added env result (ModuleReferences.element actual) := by
   obtain ⟨bytes, he, hs⟩ := hb
   obtain ⟨expressions, header, encoded, hhead, hvalues, rfl⟩ := header_parts he
@@ -183,7 +183,7 @@ theorem metadata.decode_element.complete (data : Slice U8) (env : metadata.Env)
   have hspan := hheader.length
   have hty := hhead.initializer_type
   obtain ⟨result, init, hreadinit, hinit, hadded⟩ := metadata.decode_element_initializers.complete
-    data env entry.elem expressions profile middle next entry.init ⟨encoded, hvalues, hentries⟩
+    data env entry.elem expressions middle next entry.init ⟨encoded, hvalues, hentries⟩
     (by omega) (by simpa only [hty] using hv.2)
   let actual : metadata.Element := ⟨entry.elem, entry.mode, init⟩
   refine ⟨result, actual, ?_, ?_, ?_⟩
