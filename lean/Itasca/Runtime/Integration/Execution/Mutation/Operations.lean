@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Integration.Execution.Mutation.Certificate
 import Itasca.Runtime.Integration.Execution.Mutation.TableShape
-import Itasca.Runtime.Interp.Memory.MemoryMutation
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Store.Api.GrowthEffects
 import Itasca.Runtime.Store.Api.MemoryFill

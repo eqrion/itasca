@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.Relation
-import Itasca.Runtime.Interp.Memory.MemoryDecode
+import Itasca.Runtime.Interp.Memory.MemorySize
 
 /-!
 The structured byte effect decodes an actual opaque buffer replacement exactly.

@@ -72,12 +72,9 @@ import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Interp.Relations.SelectSlots
 import Itasca.Runtime.Interp.Machine.Select.Operands
-import Itasca.Runtime.Interp.Memory.MemoryCoreTransition
-import Itasca.Runtime.Interp.Memory.MemoryCoreOperandBounds
-import Itasca.Runtime.Interp.Memory.MemoryCoreEmission
+import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
-import Itasca.Runtime.Interp.Memory.MemoryCoreResult
-import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
+import Itasca.Runtime.Interp.Memory.MemoryGrow
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Calls.IndirectResolve
@@ -91,7 +88,6 @@ import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Interp.Memory.MemoryMutation
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.FunctionTables

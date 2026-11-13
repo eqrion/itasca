@@ -1,5 +1,4 @@
-import Itasca.Runtime.Interp.Memory.MemoryDispatch
-import Itasca.Runtime.Interp.Memory.MemoryDecode
+import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Spec.FloatPromote
 
 /-!

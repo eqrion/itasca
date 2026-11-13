@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Memory.MemoryAddress
+import Itasca.Runtime.Interp.Memory.MemorySize
 
 /-!
 Byte payloads of vector stores.

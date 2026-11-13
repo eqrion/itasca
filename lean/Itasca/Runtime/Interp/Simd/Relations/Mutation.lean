@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Memory.MemoryMutation
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 
 /-!
 SIMD retains the store or replaces the opaque buffer of one issued memory without changing its length. Source semantics separately constrain its bytes.

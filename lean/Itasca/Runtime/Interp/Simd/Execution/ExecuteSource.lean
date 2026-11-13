@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Relations.Mutation
 import Itasca.Runtime.Interp.Simd.Memory.Execute
-import Itasca.Runtime.Interp.Memory.MemoryDecode
+import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 
 /-!

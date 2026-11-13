@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Simd.Memory.ChangeDecode
 import Itasca.Runtime.Interp.Simd.Memory.Transition
 import Itasca.Runtime.Interp.Simd.Memory.ExecuteEffect
 import Itasca.Runtime.Interp.Simd.Memory.ExecuteError
-import Itasca.Runtime.Interp.Memory.MemoryMutation
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 
 /-!
 Execute any decoded vector memory instruction, retaining its exact source step, slot footprint and single-buffer mutation.
