@@ -1,5 +1,5 @@
 import Itasca.Profile.BinaryUnique
-import Itasca.Wasm2.Trace.Correspondence
+import Itasca.Wasm2.Trace.Acceptance
 
 /-!
 # Code entry traces

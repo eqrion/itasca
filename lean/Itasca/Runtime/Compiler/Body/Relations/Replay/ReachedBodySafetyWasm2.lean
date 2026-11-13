@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
 import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
 import Itasca.Visitor.BodyReplay
-import Itasca.Wasm2.Trace.Body
+import Itasca.Wasm2.Trace.BytesScalar
 
 /-!
 A rejected body needs no retained suffix; an accepted open boundary retains both the exact compiler/source point and its quantitative callback ledger.

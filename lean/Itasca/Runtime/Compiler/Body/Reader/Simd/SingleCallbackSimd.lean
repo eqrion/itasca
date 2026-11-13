@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SingleCallbackExtended
-import Itasca.Wasm2.Trace.Refinement
+import Itasca.Wasm2.Trace.BytesReferences
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2.Simd

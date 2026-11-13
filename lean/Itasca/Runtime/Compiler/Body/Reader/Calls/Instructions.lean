@@ -1,8 +1,7 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Local.Wasm2Local
-import Itasca.Wasm2.Trace.ControlBytes
-import Itasca.Wasm2.Control.Return
 import Itasca.Wasm2.Trace.ControlRecords
+import Itasca.Wasm2.Control.Return
 
 /-!
 Accepted direct and indirect call reader steps and their decoded instruction facts, used by call safety, lowering and replay.

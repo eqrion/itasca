@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Publication.NonScopeCallbackPublication
-import Itasca.Wasm2.Trace.Refinement
+import Itasca.Wasm2.Trace.BytesReferences
 
 /-!
 Single-callback replay through scalar and extended operations. SIMD replay remains separate because it consumes this construction.

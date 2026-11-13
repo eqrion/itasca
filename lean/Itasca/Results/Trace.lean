@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Trace.Correspondence
+import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Profile.EntryTrace
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Visitor.BodyReplay
-import Itasca.Wasm2.Trace.ControlRefinement
+import Itasca.Wasm2.Trace.BytesReferences
 
 /-!
 Successful table iterations either continue or finish with acceptance.

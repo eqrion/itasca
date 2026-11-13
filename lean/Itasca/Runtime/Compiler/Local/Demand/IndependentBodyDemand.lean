@@ -1,6 +1,6 @@
 import Itasca.Visitor.RunTrace
 import Itasca.Runtime.Platform.Laws
-import Itasca.Wasm2.Trace.ControlRefinement
+import Itasca.Wasm2.Trace.BytesReferences
 import Itasca.Profile.BinaryUnique
 
 /-!
