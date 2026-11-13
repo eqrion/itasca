@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ScalarAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Publication.ScalarCallbackPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Checking.CoreInstructionPrefix

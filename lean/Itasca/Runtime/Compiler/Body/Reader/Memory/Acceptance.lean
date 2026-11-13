@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryTypes
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 
 /-!
 Memory callback acceptance and successful replay from reached source prefixes and available resources.

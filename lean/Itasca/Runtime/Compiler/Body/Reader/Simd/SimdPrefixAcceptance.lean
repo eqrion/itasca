@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdPure
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Binary.Wasm1.EncodingUnique
 
 namespace Itasca.Runtime.Compiler

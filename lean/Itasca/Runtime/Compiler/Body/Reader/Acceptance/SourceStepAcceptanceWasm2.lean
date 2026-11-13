@@ -1,10 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceMiscPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundScalarAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundPointAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Control.SourceBoundControlAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SourceBoundSimdAcceptance

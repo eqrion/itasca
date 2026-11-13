@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ScalarAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ScalarDispatchSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ExtendedNumericSafety
