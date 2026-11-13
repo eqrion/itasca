@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Publication.ScalarMapPublication
+import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication
 import Itasca.Visitor.Events
 
 namespace Itasca.Runtime.Compiler

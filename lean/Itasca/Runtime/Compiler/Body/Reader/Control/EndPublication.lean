@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Publication.ScopeClosePublication
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 
 /-!

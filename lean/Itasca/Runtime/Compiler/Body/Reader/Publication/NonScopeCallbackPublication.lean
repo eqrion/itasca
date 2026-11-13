@@ -4,9 +4,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Publication.ExtendedNumericCallbackPu
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryCallbackPublication
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
-import Itasca.Runtime.Compiler.Local.Publication.CallbackMapPublication
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication
-import Itasca.Runtime.Compiler.Local.Publication.ElseMapPublication
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

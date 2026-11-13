@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Local.Publication.RootMapPublication
-import Itasca.Runtime.Compiler.Local.Publication.FinalControlMapBounds
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca

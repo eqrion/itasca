@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Checking.RootInstructionPublication
-import Itasca.Runtime.Compiler.Local.Publication.ScopeClosePublication
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
 namespace Itasca.Runtime.Compiler

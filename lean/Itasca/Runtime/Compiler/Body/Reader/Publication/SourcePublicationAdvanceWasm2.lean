@@ -1,13 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceBudgetAdvance
 import Itasca.Runtime.Compiler.Body.Reader.Publication.PublicationWasm2
-
 import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPointNonempty
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication
-
 import Itasca.Runtime.Compiler.Body.Reader.Checking.JumpTargets
-
-import Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationRanges
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
