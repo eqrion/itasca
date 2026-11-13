@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectTypes
-import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEffects
+import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulPost
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
