@@ -33,15 +33,13 @@ import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.Integer
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
 import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Relations.LocalCapacity
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
-import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
-import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands

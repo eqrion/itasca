@@ -1,11 +1,10 @@
 import Itasca.Runtime.Interp.Machine.Retention.StatefulOwnership
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
-import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads

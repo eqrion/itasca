@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
@@ -12,7 +12,6 @@ import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Integration.Execution.Resources.Failure
 import Itasca.Runtime.Interp.Machine.Retention.StatefulOwnership

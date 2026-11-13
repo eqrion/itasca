@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
-import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Control.BranchPoint
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
@@ -16,7 +15,6 @@ import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
-import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Spec.Integer

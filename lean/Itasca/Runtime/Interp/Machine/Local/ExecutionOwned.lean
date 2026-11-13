@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Relations.LocalCapacity
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.SourceMachine.Core.Trap

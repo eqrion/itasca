@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Float.Transition
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
+
 namespace Itasca.Runtime.Interp
 open SourceMachine.Ownership
 
