@@ -141,7 +141,7 @@ it does not assume store typing or execution correctness as another field.
 | Export membership and unique source names | `ExportBounds` retains descriptor bounds and decoded-name uniqueness, constructed from validator `ModuleEnv.Valid`. Completed instance maps resolve each export into its own module namespace. |
 | Host functions | The repaired generated host `Funcinst_ok` rule types signatures without Wasm bodies; the decoder's empty module environment is well formed. |
 
-[Invariant/SourceStoreTyping](Store/Invariant/OwnedInitializerErrors.lean) assembles
+[Invariant/OwnedInitializerErrors](Store/Invariant/OwnedInitializerErrors.lean) assembles
 these facts. Existing API preservation theorems retain their certificates on
 success and error, including committed effects and evolving code interpretations.
 Intermediate preparation states need typing only where that invariant is
@@ -181,7 +181,7 @@ are distinct from Wasm table storage operations.
 The call family illustrates the direction of each argument:
 [Calls/Instructions](Compiler/Body/Reader/Calls/Instructions.lean) inverts
 accepted direct and indirect reader steps,
-[Calls/Compilation](Compiler/Body/Reader/Calls/Compilation.lean) relates their
+[Calls/Compilation](Compiler/Body/Reader/Calls/Safety.lean) relates their
 compiler effects, and [Calls/Acceptance](Compiler/Body/Reader/Calls/Acceptance.lean)
 constructs successful replay from independent source and allocation premises.
 Cross-family composition uses:
@@ -221,7 +221,7 @@ compiler layers; completeness still constructs actual compiler acceptance.
 [Checking/BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
 constructs actual body success with the checker premises at root close.
 
-[EntryFinishAvailable](Compiler/Module/EntryFinishAvailable.lean) composes entry
+[BatchLoopAvailable](Compiler/Module/BatchLoopAvailable.lean) composes entry
 parsing, body compilation and actual finishing. Module demand envelopes account
 for metadata, functions, initializers, scheduling, collection, output counters
 and temporary reserves. [Compilation/Complete](Integration/Compilation/Complete.lean)
@@ -258,7 +258,7 @@ not every transitive import.
    [Compilation/Complete](Integration/Compilation/Complete.lean) combines the
    certificate with an actual successful compilation.
 3. [CompilationAvailable](Compiler/Module/CompilationAvailable.lean) assembles
-   module acceptance. [EntryFinishAvailable](Compiler/Module/EntryFinishAvailable.lean)
+   module acceptance. [BatchLoopAvailable](Compiler/Module/BatchLoopAvailable.lean)
    joins entry reading, [BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
    and finishing.
 4. [FunctionCapacity](Representation/StoreCapacity.lean) and
