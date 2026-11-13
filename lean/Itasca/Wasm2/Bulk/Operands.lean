@@ -1,4 +1,4 @@
-import Itasca.Wasm2.References.Operands
+import Itasca.Wasm2.References.Reader
 
 /-!
 # Operand factorization of bulk readers

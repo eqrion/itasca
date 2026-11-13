@@ -1,6 +1,4 @@
 import Itasca.Wasm2.References.Reader
-import Itasca.Wasm2.References.Operands
-import Itasca.Wasm2.References.EnvMatches
 import Itasca.Wasm2.Scalar.Step
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Step.Dispatch
-import Itasca.Wasm2.References.ReadersTotal
+import Itasca.Wasm2.References.Readers
 import Itasca.Wasm2.NumericExt.Total
 
 /-!
