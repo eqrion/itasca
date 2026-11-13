@@ -1,5 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

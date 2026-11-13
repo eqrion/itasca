@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+
 /-! Actual integer-add callbacks preserve the source-prefix lowering relation.
 Operand addresses come from the compiler's live layout; the proof then follows
 the extracted opcode classifier, constructor, emitter, and post-stack observer. -/

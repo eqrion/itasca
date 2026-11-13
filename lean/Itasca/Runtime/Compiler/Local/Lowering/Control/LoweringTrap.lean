@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!

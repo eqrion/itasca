@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-! Actual direct-call lowering constructs a retained structured certificate

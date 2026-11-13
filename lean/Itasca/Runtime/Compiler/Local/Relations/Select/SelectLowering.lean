@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
 /-!
 The bytecode lowering of untyped select.

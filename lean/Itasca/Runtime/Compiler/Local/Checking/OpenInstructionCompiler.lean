@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Instructions.SimdInstructionAccep
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry
 

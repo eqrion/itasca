@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOpcode
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
 /-!
 Depth, pair-table use and dispatch equations for stateful lowering.
