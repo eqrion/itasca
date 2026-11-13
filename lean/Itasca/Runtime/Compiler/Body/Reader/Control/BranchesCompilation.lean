@@ -13,9 +13,9 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Sections, each formerly its own module: StructuredBranchLayout, BranchesCompilation.

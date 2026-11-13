@@ -1,9 +1,8 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedFold
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedStateful
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointTypedSelect
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointRoot
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixStart
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedStateful
 import Itasca.Runtime.Compiler.Body.Reader.Simd.IndexedTableCompilerSimd
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
@@ -12,11 +11,11 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.BulkAndSaturatingEncoding
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
@@ -55,7 +54,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
-import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Actual accepted complete-profile body execution produces indexed code evidence against all four final function-local tables.

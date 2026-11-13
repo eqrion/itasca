@@ -1,11 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
-import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
@@ -13,7 +12,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Wasm2.Control.Total
 import Itasca.Wasm2.Scalar.ReadersTotal
-import Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety
+import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 

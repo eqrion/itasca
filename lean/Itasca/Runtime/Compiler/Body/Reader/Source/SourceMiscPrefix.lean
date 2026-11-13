@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Wasm2.Bulk.Dispatch
 
 namespace Itasca.Runtime.Compiler

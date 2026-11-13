@@ -1,11 +1,10 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 
 /-!
 Live and dormant local get/set/tee prefixes and their structured compiler-state composition.

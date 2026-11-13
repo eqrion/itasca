@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockWasm2Prefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockDormantPrefix

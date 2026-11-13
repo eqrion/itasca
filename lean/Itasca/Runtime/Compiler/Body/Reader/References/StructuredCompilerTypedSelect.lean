@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
 

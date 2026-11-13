@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Body.Reader.Local.Wasm2Local
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 
 /-!

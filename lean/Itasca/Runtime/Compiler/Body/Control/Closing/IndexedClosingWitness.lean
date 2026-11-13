@@ -1,11 +1,11 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerBodyWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndWasm2Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Replay.OpcodeClassification
+import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedFold
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedStateful
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation
@@ -16,7 +16,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableIndexed
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
-import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
 
 /-!
 Sections, each formerly its own module: IndexedAdvanceOrClosed, IndexedClosingWitness.

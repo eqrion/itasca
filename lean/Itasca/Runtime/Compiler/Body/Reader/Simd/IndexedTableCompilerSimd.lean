@@ -1,10 +1,9 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Prefix
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedScratch
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedCodeMonotone
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEventTables
 
 /-!

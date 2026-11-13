@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Sections, each formerly its own module: ElseDormantPrefix, ElseDormantWasm2Prefix, ElseEnteredPrefix, ElseCompilation.

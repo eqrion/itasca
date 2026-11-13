@@ -3,9 +3,9 @@ import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Live/dormant global get/set and untyped-select prefixes, composed into structured reader compilation.

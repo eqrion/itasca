@@ -6,9 +6,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Wasm2.Trace.TableBytes
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Table.BranchTableTables
 
 /-!

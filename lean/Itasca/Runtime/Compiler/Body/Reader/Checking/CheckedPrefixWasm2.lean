@@ -21,7 +21,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Sections, each formerly its own module: ScalarInstructionPrefixWasm2, StatefulInstructionPrefix, TypedSelectCheckedPrefix, NoncontrolCheckedPrefixWasm2, CheckedPrefixWasm2.

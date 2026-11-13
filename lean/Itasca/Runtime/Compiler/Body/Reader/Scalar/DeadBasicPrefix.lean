@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty
 
 /-!

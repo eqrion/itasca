@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulMetadataPosts
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 
 /-!
 Composition of base stateful reader cases.

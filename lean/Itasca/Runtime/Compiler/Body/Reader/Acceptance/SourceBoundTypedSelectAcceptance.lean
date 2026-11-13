@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Acceptance
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
 import Itasca.Visitor.ReaderAcceptance

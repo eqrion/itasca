@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Initial indexed compiler certificates from validated entries.

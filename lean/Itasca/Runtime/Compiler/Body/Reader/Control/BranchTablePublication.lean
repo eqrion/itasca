@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.BodyReplay
@@ -9,10 +9,10 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbac
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
@@ -30,7 +30,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredRootMapPublication
 import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
 import Itasca.Runtime.Compiler.Body.Reader.Calls.InstructionPrefix
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
 import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication

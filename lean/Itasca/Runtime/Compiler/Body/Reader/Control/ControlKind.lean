@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntrySignatures
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterSafety
-import Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety
+import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Wasm2.Visitor.Total
 import Itasca.Wasm2.Invariant

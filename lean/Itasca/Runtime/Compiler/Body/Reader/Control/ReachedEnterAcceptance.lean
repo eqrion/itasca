@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Visitor.BodyReplay

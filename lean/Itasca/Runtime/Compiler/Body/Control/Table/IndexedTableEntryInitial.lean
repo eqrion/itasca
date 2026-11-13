@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Control.Entry.IndexedEntryCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

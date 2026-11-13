@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectTypes
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 
 /-!

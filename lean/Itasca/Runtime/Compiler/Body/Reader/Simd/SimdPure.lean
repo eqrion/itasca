@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Simd.Reader
 import Itasca.Wasm2.Simd.Sound
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 
 /-!
 Accepted SIMD prefix decoding retains the exact unsigned LEB and the selected independent subopcode dispatch.

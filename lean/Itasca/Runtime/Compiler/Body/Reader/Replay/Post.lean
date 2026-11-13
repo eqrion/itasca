@@ -1,9 +1,43 @@
+import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Wasm2.Scalar.BasicReader
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Visitor.EventDispatch
 import Itasca.Visitor.Erasure
 import Itasca.Wasm2.Scalar.Step
+
+/-!
+Sections, each formerly its own module: BodyTooLarge, Post.
+-/
+
+/-! ## BodyTooLarge -/
+
+section
+
+/-!
+Oversized function bodies reject before initialization or visitor calls.
+
+Main declarations: `reader_body_too_large`. A direct consumer is `Compiler.Module.CompileTotal`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Oversized function bodies reject before initialization or visitor calls. -/
+theorem reader_body_too_large {V} (visitor : code.OpVisitor V)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (value : V)
+    (large : limits.MAX_FUNCTION_BYTES.val < data.length) :
+    code.validate_body_with visitor data env ctx index value =
+      .ok (.Err .BodyTooLarge,value) := by
+  have guard : Slice.len data > limits.MAX_FUNCTION_BYTES := by simpa using large
+  simp only [code.validate_body_with,guard,↓reduceIte]
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## Post -/
+
+section
 
 /-!
 Accepted scalar steps expose their actual callback together with the shared
@@ -97,3 +131,5 @@ theorem reader_numeric_wasm2 {data env locals index st}
   exact ⟨callback, read, controls, position, values, numeric, post⟩
 
 end Itasca.Runtime.Compiler
+
+end

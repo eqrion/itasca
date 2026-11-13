@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SingleCallbackExtended
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SingleCallbackSimd
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Wasm2.Trace.ControlRecords
 
