@@ -2,9 +2,7 @@ import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Calls.CallLookup
 import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
 import Itasca.Runtime.Interp.Calls.IndirectCallNext
-import Itasca.Runtime.SourceMachine.Indirect.Results
-import Itasca.Runtime.SourceMachine.Indirect.Correct
-import Itasca.Runtime.SourceMachine.Indirect.Transport
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 
 /-!
 A resolved defined indirect call reuses the actual call installer while saving the caller after consuming both its arguments and table selector.

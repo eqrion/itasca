@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Machine.Calls.IndirectPoint
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
-import Itasca.Runtime.SourceMachine.Indirect.Operands
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 
 /-!
 Source operand values at an indirect-call instruction.

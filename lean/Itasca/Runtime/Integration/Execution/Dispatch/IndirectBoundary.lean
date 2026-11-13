@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
-import Itasca.Runtime.SourceMachine.Indirect.Operands
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.Interp.Machine.Progress.Advance
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
@@ -20,13 +20,11 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
 import Itasca.Runtime.Interp.Calls.IndirectCallNext
-import Itasca.Runtime.SourceMachine.Indirect.Results
-import Itasca.Runtime.SourceMachine.Indirect.Correct
-import Itasca.Runtime.SourceMachine.Indirect.Transport
 import Itasca.Runtime.Interp.Calls.IndirectCallSlots
 import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

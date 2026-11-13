@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
-import Itasca.Runtime.SourceMachine.Indirect.Transport
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.Ownership.Core
 import Itasca.Runtime.SourceMachine.Numeric.Transition

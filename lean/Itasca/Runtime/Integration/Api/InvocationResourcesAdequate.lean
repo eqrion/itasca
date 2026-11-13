@@ -34,7 +34,7 @@ import Itasca.Runtime.SourceMachine.Stateful.MemoryGrow
 import Itasca.Runtime.SourceMachine.Stateful.TableGrow
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Indirect.Correct
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Numeric.OperandBounds
