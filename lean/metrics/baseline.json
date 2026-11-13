@@ -2,9 +2,9 @@
   "all_goals": 1197,
   "bare_simp": 8822,
   "extra_unfold_files": 1379,
-  "extracted_functions_unfolded": 751,
+  "extracted_functions_unfolded": 752,
   "extracted_functions_unfolded_in_3_or_more_files": 259,
-  "handwritten_lines": 284688,
+  "handwritten_lines": 284725,
   "heartbeat_overrides": 265,
   "layer_violations": 0,
   "lean_lines_by_area": {

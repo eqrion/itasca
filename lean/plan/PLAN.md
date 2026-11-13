@@ -879,6 +879,8 @@ Completed 2026-11-13: [helpers and validation](notes/step31-results.md).
 
 ### 3.2 Fresh store
 
+Completed 2026-11-13: [contract and validation](notes/step32-results.md).
+
 `runtime.store.Store.with_identity.spec` (section 5.1). Needs the premise
 `0 < id.val`. The native wrapper guarantees it by starting its counter at 1;
 say so in the docstring.

@@ -86,4 +86,41 @@ theorem ExecutableInv.append_hosts {M : Type} {view : M → Slice U8}
       rw [host] at defined
       cases defined
 
+/-- An empty store has executable certificates for every code interpretation.
+The native wrapper supplies the positive identity: its counter starts at one
+and advances with checked addition. That wrapper is outside extraction. -/
+@[step] theorem _root_.Itasca.runtime.store.Store.with_identity.spec {M : Type}
+    (memory : runtime.platform.MemoryBuffer M) (view : M → Slice U8)
+    (code : Store.CodeInterpretation) (id : Usize) (limits : runtime.store.StoreLimits)
+    (positive : 0 < id.val) :
+    runtime.store.Store.with_identity memory id limits ⦃ store =>
+      ExecutableInv view code store ∧ store.id = id ∧ store.limits = limits ∧
+        Store.decodeStore view code store = ⟨[], [], [], [], [], []⟩ ⦄ := by
+  simp only [runtime.store.Store.with_identity, WP.spec_ok]
+  refine ⟨?_, trivial, trivial, rfl⟩
+  refine {
+    shape := ?_, storeSyntax := ?_, typed := ?_, supported := ?_, compiled := ?_,
+    segmentBounds := ?_, exportBounds := ?_, segmentAccounting := ?_, capacities := ?_ }
+  · constructor <;>
+      simp only [positive, alloc.vec.Vec.new, alloc.vec.Vec.from_val, List.not_mem_nil,
+        IsEmpty.forall_iff, implies_true, List.map_nil, List.nodup_nil,
+        alloc.vec.Vec.length, List.length_nil, add_zero, zero_le,
+        UScalar.ofNatCore_val_eq, List.sum_nil, Slice.length]
+  · simp only [StoreSyntax, alloc.vec.Vec.new, alloc.vec.Vec.from_val, List.length_nil,
+      not_lt_zero, not_false_eq_true, getElem?_neg, reduceCtorEq, IsEmpty.forall_iff, implies_true]
+  · simp only [Interp.CoreFunctionsTyped, alloc.vec.Vec.new, alloc.vec.Vec.from_val,
+      List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+  · simp only [SourceMachine.FunctionsSupported, decodeStore, alloc.vec.Vec.new,
+      alloc.vec.Vec.from_val, List.map_nil, List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+  · simp only [Interp.Machine.CompiledFunctions, alloc.vec.Vec.new, alloc.vec.Vec.from_val,
+      List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+  · constructor <;> simp only [alloc.vec.Vec.new, alloc.vec.Vec.from_val, List.not_mem_nil,
+      alloc.vec.Vec.length, Nat.reducePow, IsEmpty.forall_iff, implies_true]
+  · simp only [ExportBounds, alloc.vec.Vec.new, alloc.vec.Vec.from_val, List.length_nil,
+      not_lt_zero, not_false_eq_true, getElem?_neg, reduceCtorEq, IsEmpty.forall_iff, implies_true]
+  · constructor <;> simp only [alloc.vec.Vec.length, alloc.vec.Vec.new, alloc.vec.Vec.from_val,
+      List.length_nil, List.map_nil, List.sum_nil]
+  · simp only [FunctionCapacities, alloc.vec.Vec.new, alloc.vec.Vec.from_val,
+      List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+
 end Itasca.Runtime.Integration
