@@ -1,6 +1,6 @@
 import Itasca.Stream.Batch
 import Itasca.Stream.Retirement
-import Itasca.Module.Custom.Invariant
+import Itasca.Module.Custom.Trace
 import Itasca.Support.Result
 import Itasca.Contracts
 

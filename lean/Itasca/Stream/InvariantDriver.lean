@@ -1,5 +1,5 @@
 import Itasca.Stream.DriverTotal
-import Itasca.Module.Custom.Invariant
+import Itasca.Module.Custom.Trace
 import Itasca.Stream.InvariantSubmission
 
 open Aeneas Aeneas.Std

@@ -1,6 +1,6 @@
 import Itasca.Stream.SubmissionTotal
 import Itasca.Module.Code.FuncTyping
-import Itasca.Module.Custom.Visitor
+import Itasca.Module.Custom.Trace
 
 /-!
 # Streaming driver termination
