@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.Defaults

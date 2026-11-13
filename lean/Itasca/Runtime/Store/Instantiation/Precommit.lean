@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Instantiation.Linked
 import Itasca.Runtime.Store.Instantiation.TailCommit
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory

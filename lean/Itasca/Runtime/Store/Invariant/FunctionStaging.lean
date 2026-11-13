@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Spec.Integer

@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Store.Api.TableInitLists

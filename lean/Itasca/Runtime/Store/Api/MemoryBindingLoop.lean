@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Linking.LinkedOwners

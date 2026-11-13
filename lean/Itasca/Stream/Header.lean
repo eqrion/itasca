@@ -3,7 +3,7 @@ import Itasca.Stream.Source
 import Itasca.Contracts
 import Itasca.Module.Custom.Trace
 import Itasca.Module.Code.Framing
-import Itasca.Generated.Funs
+import Itasca.Generated.FunsValidator
 
 /-!
 Sections, each formerly its own module: Retirement, Scheduler, EntryFrame, BatchBounds, DriverRun, Header.

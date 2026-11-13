@@ -1,4 +1,5 @@
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Profile.BinaryUnique
 import Itasca.Stream.Source

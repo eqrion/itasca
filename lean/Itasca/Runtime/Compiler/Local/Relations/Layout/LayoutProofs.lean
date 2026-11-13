@@ -1,5 +1,6 @@
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Platform.Laws
 import Itasca.Support.Result

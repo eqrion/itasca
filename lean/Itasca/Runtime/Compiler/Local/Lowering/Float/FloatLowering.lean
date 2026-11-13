@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 
 /-!

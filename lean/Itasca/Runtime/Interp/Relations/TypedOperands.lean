@@ -1,3 +1,4 @@
+import Itasca.Runtime.Interp.ValueSlots
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Relations.Defaults

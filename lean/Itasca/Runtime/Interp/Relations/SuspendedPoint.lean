@@ -1,3 +1,4 @@
+import Itasca.Runtime.Interp.ValueSlots
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.SourceMachine.BrTable

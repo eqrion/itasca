@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Store.Initialization.InitializerErrors
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend

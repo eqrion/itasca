@@ -64,9 +64,14 @@ just verify           # Run the complete verification sequence
 
 Generated comments retain Rust filenames but omit line ranges, so moving Rust
 lines does not change generated source locations. Rust changes that affect
-extracted definitions still require regeneration. Inspect generated diffs; never
-repair `Types.lean` or `Funs.lean` by hand. `FunsExternal.lean` is handwritten,
-and the generated external template is ignored and must never be imported.
+extracted definitions still require regeneration. `just extract` generates
+`Types.lean`, the `FunsValidator`, `FunsRuntimeCommon`, `FunsCompiler`,
+`FunsStore`, `FunsInterp`, and `FunsInstantiate` partitions, and the `Funs.lean`
+umbrella. A post-Aeneas splitter runs after `strip_source_lines.py`; it preserves
+declaration text, namespaces and headers, and adds ordered imports. Inspect
+generated diffs; never repair these files by hand. `FunsExternal.lean` is
+handwritten, and the generated external template is ignored and must never be
+imported.
 Specification changes belong in source or generator patches, followed by
 regeneration. Consistency checks write to ignored build directories and fail on
 stale committed output.

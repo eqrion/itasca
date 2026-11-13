@@ -1,5 +1,10 @@
 # Step 2.2 dependency blocker
 
+Resolved with the user-authorized proof reorganization: interpreter slot proofs
+now live in `Runtime/Interp/ValueSlots.lean`, and compiler/validator imports no
+longer reach generated interpreter functions. The original preflight finding
+and restriction are recorded below.
+
 Identified 2026-11-13, before changing generated sources or running another
 integration build. Step 2.1 is complete and validated at `a0e4a0a0`.
 

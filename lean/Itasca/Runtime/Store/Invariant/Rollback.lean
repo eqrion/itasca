@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Representation.StoreCapacity
 

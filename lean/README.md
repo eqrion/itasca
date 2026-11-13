@@ -117,9 +117,14 @@ Preserve the `.lake/` and `.build/` caches.
 ## Generated sources
 
 [Generated/Types.lean](Itasca/Generated/Types.lean) and
-[Funs.lean](Itasca/Generated/Funs.lean) come from `just extract`; never edit them
-by hand. One Charon and Aeneas pass extracts the validator and the runtime, so
-the runtime calls the validator's definitions directly. Charon runs with
+[Funs.lean](Itasca/Generated/Funs.lean) and its generated partitions
+`FunsValidator`, `FunsRuntimeCommon`, `FunsCompiler`, `FunsStore`, `FunsInterp`,
+and `FunsInstantiate` come from `just extract`; never edit them by hand. One
+Charon and Aeneas pass extracts the validator and runtime, then `scripts/split_funs.py` runs
+after `strip_source_lines.py`. This second post-Aeneas transformation distributes
+declarations while preserving their text, namespaces and headers and adding
+ordered imports. The runtime calls the
+validator's definitions directly. Charon runs with
 `--cfg=charon`, which excludes only the native platform wrappers.
 [FunsExternal.lean](Itasca/Generated/FunsExternal.lean) is the handwritten
 model of `Vec.pop`, `Vec.is_empty`, `count_ones` and `trailing_zeros`. The
@@ -242,7 +247,9 @@ The proofs supplement the pinned specification without editing it:
 
 Aeneas runs unmodified at the pinned revision. After extraction,
 `scripts/strip_source_lines.py` removes Rust line ranges from generated comments,
-retaining source filenames and changing no definitions. Private Rust modules use
+retaining source filenames and changing no definitions; the generated-file
+splitter then partitions the extracted functions without rewriting declarations.
+Private Rust modules use
 `metadata` and `wasm_types` to avoid Lean namespace collisions with fields
 named `module` and `types`; their files remain `src/module.rs` and `src/types.rs`.
 Local binders also avoid namespaces referenced in the same scope, such as
@@ -433,6 +440,8 @@ map and concrete [compilation](Itasca/Runtime/README.md#compilation),
 [instantiation](Itasca/Runtime/README.md#instantiation) reading paths.
 Validator proofs never import `Itasca.Runtime` or `SpecExt`; only `Main` and the
 runtime results under `Results/` join the two. Runtime proofs reach generated
-functions through `Itasca.Runtime.Equations`. The runtime contract entry point
+functions through narrow generated partitions. `Itasca.Runtime.Equations.Bytecode`
+provides bytecode equation lemmas; `.Interp` provides interpreter equations.
+Validator and compiler proofs must not transitively import `FunsInterp`. The runtime contract entry point
 admits only the exact `Integration.Api.ExecutableInv` module from the integration
 layer; it cannot import the constructions that assume those contracts.

@@ -7,14 +7,6 @@ constant-expression typing and runtime reference resolution are separate facts. 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-def initializerWidth : Itasca.wasm_types.ValueType → U32
-  | .V128 => 2#u32
-  | _ => 1#u32
-
-theorem compiler_width_eq (ty : Itasca.wasm_types.ValueType) :
-    runtime.value.width ty = .ok (initializerWidth ty) := by
-  cases ty <;> rfl
-
 def initializerBits (lo hi : U64) : U128 :=
   ⟨(UScalar.cast .U128 lo).bv ||| ((UScalar.cast .U128 hi).bv <<< 64)⟩
 

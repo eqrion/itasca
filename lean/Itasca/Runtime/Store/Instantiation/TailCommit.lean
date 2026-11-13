@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
 import Itasca.Runtime.Store.Invariant.TypeStagingCauses
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses

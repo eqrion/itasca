@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Api.DefineTable
 import Mathlib.Tactic.FailIfNoProgress

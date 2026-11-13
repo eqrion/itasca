@@ -1,4 +1,4 @@
-import Itasca.Generated.Funs
+import Itasca.Generated.FunsValidator
 
 /-!
 # Profile signature predicates

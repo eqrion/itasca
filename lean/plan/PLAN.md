@@ -80,6 +80,16 @@ first thing to do with one is to make it typecheck.
   Retain Phase 2's clean-build benchmarks and final integration, lint and
   audit checks. Use local results for iteration without also polling PR CI.
 
+- Step 2.2 may reorganize handwritten proofs to remove the compiler-to-interpreter
+  dependency identified in preflight. The user approved separating interpreter
+  slot proofs from shared representation facts; preserve theorem statements and
+  proof bodies while adjusting their module locations and imports. This supersedes
+  the prohibition on restructuring proofs for that dependency.
+- The required equation-module split adds two foundational modules under 50
+  lines; relocating the shared width equation also shortens Initializer below
+  50 lines. Record these structural effects of the approved reorganization
+  in the short-module baseline (50 to 53), retaining the other ratchets.
+
 ## Rules for whoever executes this plan
 
 1. Read `AGENTS.md`, `DEVELOPMENT.md`, `lean/README.md` and
@@ -677,7 +687,8 @@ Stop if: the clean build is slower than before. Report the two times.
 
 ### 2.2 Split the generated functions by Rust area
 
-Blocked in preflight on 2026-11-13: [required interpreter dependency](notes/step22-blocker.md).
+Completed 2026-11-13: [results and timing](notes/step22-results.md). The user
+authorized the proof reorganization resolving the [preflight blocker](notes/step22-blocker.md).
 
 The user approved this on 2026-11-12. Unlike step 0.4, it does more than touch
 comments: a script moves each generated declaration, unchanged, into one of six

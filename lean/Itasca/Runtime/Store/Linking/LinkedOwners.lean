@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Representation.StoreCapacity

@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Module.Env.Basic
 import Itasca.Runtime.Store.Invariant.FunctionStaging

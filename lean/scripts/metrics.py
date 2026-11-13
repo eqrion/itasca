@@ -62,6 +62,25 @@ def count_lines(paths, suffix):
     return total
 
 
+def import_path(imports, start, target):
+    """Return a shortest import chain, or None when target is unreachable."""
+    pending = collections.deque([start])
+    previous = {start: None}
+    while pending:
+        current = pending.popleft()
+        if current == target:
+            path = []
+            while current is not None:
+                path.append(current)
+                current = previous[current]
+            return list(reversed(path))
+        for dependency in imports.get(current, ()):
+            if dependency not in previous:
+                previous[dependency] = current
+                pending.append(dependency)
+    return None
+
+
 def layer_violations(imports):
     """The import rules documented in lean/README.md. Returns a list of (module, import, rule)."""
     def layer(m):
@@ -82,12 +101,25 @@ def layer_violations(imports):
                 bad.append((m, i, "Handler adds only Visitor"))
             if li in ("Results", "Main") and lm not in ("Main", "Examples", "Itasca", "Results"):
                 bad.append((m, i, "only Main and Examples import Results"))
-            if lm == "Runtime" and ".Generated.Funs" in i and m != "Itasca.Runtime.Equations":
-                bad.append((m, i, "Runtime reaches generated functions only through Runtime.Equations"))
+            if lm == "Runtime" and ".Generated.Funs" in i and i not in {
+                    "Itasca.Generated.FunsValidator", "Itasca.Generated.FunsRuntimeCommon",
+                    "Itasca.Generated.FunsCompiler", "Itasca.Generated.FunsStore",
+                    "Itasca.Generated.FunsInterp", "Itasca.Generated.FunsInstantiate"}:
+                bad.append((m, i, "Runtime imports generated function partitions, not the umbrella or external models"))
             if m.startswith("Itasca.Runtime.Compiler.") and i.startswith("Itasca.Runtime.Compiler."):
                 s, t = m.split(".")[3], i.split(".")[3]
                 if (s == "Local" and t in ("Body", "Module")) or (s == "Body" and t == "Module"):
                     bad.append((m, i, "Compiler stages are Local -> Body -> Module"))
+    protected = ("Itasca.Binary.", "Itasca.Handler.", "Itasca.Visitor.",
+                 "Itasca.Wasm2.", "Itasca.Profile.", "Itasca.Module.",
+                 "Itasca.Stream.", "Itasca.Runtime.Compiler.")
+    for module in imports:
+        if any(module == prefix[:-1] or module.startswith(prefix) for prefix in protected):
+            path = import_path(imports, module, "Itasca.Generated.FunsInterp")
+            if path:
+                bad.append((module, path[-1],
+                            "validator/compiler must not transitively import interpreter functions: "
+                            + " -> ".join(path)))
     return bad
 
 
@@ -104,7 +136,9 @@ def compute():
     text = "\n".join(src.values())
     binders = [len(BINDER.findall(m.group(2))) for s in src.values() for m in THEOREM.finditer(s)]
 
-    funs = generated.get(os.path.join(GENERATED, "Funs.lean"), "")
+    funs = "\n".join(text for path, text in generated.items()
+                     if re.fullmatch(r"Funs(?:Validator|RuntimeCommon|Compiler|Store|Interp|Instantiate)?\.lean",
+                                     os.path.basename(path)))
     extracted = set(re.findall(r"^(?:@\[[^\]]*\]\s*)*(?:noncomputable )?def ([\w.«»]+)", funs, re.M))
     unfold_files = collections.defaultdict(set)
     for p, s in src.items():

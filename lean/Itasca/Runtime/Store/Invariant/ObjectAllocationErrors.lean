@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Preparation.PreparationResults
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop

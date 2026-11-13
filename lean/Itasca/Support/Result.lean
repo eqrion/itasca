@@ -1,4 +1,4 @@
-import Itasca.Generated.Funs
+import Itasca.Generated.FunsValidator
 import «wasm2.0»
 import Aeneas
 

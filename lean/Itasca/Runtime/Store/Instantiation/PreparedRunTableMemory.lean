@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Preparation.StagingSegmentBounds

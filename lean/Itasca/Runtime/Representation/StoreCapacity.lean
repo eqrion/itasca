@@ -1,7 +1,8 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Wasm2.LoopDispatch
 import Itasca.Profile.CodeEntry
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsStore
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Binary.UnicodeUnique

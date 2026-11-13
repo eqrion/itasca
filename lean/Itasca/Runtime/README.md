@@ -34,7 +34,7 @@ boundaries and compiler stages below; Lean rejects import cycles.
 | --- | --- |
 | `SpecExt/`, `Spec/` | Source semantics, generated-rule algebra, typing, numeric and store semantics; no extracted runtime dependency. |
 | `SourceMachine/` | Flat source states, decoding, transitions, typing, ownership, simulation and progress; independent of the extracted runtime. |
-| `Equations` | Shared equation lemmas; the sole runtime gateway to `Itasca.Generated.Funs`. |
+| `Equations` | Shared equation lemmas over narrow generated function partitions. `Equations/Bytecode` holds bytecode equation lemmas and `Equations/Interp` holds interpreter equations. |
 | `Platform/` | Allocator, memory, floating-point, callback, recording and divergence contracts. |
 | `Representation/` | Slot layout, encoding, store decoding, function tables and source capacity certificates; no compiler, interpreter or store-construction imports. |
 | `Compiler/` | Per-operation emission, body construction, then complete-module certificates. |
@@ -158,7 +158,11 @@ preservation. It is source-only and cannot depend on the extracted runtime.
 ## Compiler completeness
 
 The compiler uses the same Local → Body → Module stages for soundness and
-acceptance. The additional local directories separate the maintained evidence:
+acceptance. Generated runtime rules import narrow function partitions, so compiler
+proofs remain independent of generated interpreter functions; compiler code may still
+use store definitions. `Representation/Values` retains shared `runtime.value`
+facts. Interpreter slot proofs are in `Interp/ValueSlots`, with unchanged theorem statements and shared width equations. The additional local directories separate the maintained
+evidence:
 
 | Directory | Responsibility |
 | --- | --- |

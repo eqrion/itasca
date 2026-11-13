@@ -777,7 +777,6 @@ Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand	Itasca.Runtime.Compil
 Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand	Itasca.Runtime.Compiler.observationDemand	6
 Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand	Itasca.Runtime.Compiler.independentBodyLog	8
 Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand	Itasca.Runtime.Compiler.independentBodyDemand	6
-Itasca.Runtime.Compiler.Local.Initializer	Itasca.Runtime.Compiler.initializerWidth	3
 Itasca.Runtime.Compiler.Local.Initializer	Itasca.Runtime.Compiler.initializerBits	2
 Itasca.Runtime.Compiler.Local.Initializer	Itasca.Runtime.Compiler.ConstantInstruction	17
 Itasca.Runtime.Compiler.Local.Initializer	Itasca.Runtime.Compiler.ConstantInstruction.i32	2
@@ -1071,6 +1070,7 @@ Itasca.Runtime.Representation.StoreCapacity	Itasca.Runtime.Interp.FunctionTable	
 Itasca.Runtime.Representation.StoreCapacity	Itasca.Runtime.Store.TypeEntries	3
 Itasca.Runtime.Representation.StoreCapacity	Itasca.Runtime.Store.FunctionCapacity	14
 Itasca.Runtime.Representation.StoreCapacity	Itasca.Runtime.Store.FunctionCapacities	3
+Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.initializerWidth	3
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.compilerStackWidth	3
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.stackWords	2
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.valueType	5

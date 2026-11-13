@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 
 /-!
 Sections, each formerly its own module: IndirectCallLowering, IndirectCallOperands, StatefulCallbacks.

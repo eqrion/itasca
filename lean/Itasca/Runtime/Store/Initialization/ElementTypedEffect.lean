@@ -1,3 +1,4 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Store.Api.MemoryBindingLoop

@@ -1,4 +1,5 @@
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 import Itasca.Stream.Source
 import Itasca.Binary.Leb128
 import Mathlib.Tactic.IntervalCases

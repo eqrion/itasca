@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Memory.Decode
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

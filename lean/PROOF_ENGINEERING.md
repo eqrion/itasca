@@ -72,7 +72,8 @@ There are three kinds of Lean text here, with different standards:
 
 ### 1. One contract per extracted function
 
-Every function in `Itasca/Generated/Funs.lean` that proofs reason about has
+Every function in the generated `Itasca/Generated/Funs*.lean` partitions that
+proofs reason about has
 exactly one specification theorem, named `<function>.spec`, tagged `@[step]`,
 stated with the postcondition notation:
 
@@ -190,7 +191,8 @@ state the top-level contract as a table over those families.
 
 ### 6. Write proofs that survive re-extraction
 
-Aeneas regenerates `Funs.lean` whenever Rust changes. Bound variable names,
+The extraction pipeline regenerates the generated `Funs*.lean` partitions and
+their `Funs.lean` umbrella whenever Rust changes. Bound variable names,
 the order of binds and helper names can all change.
 
 - Never refer to names Lean or Aeneas invented. That means the `i1`, `v2_post`
@@ -208,7 +210,8 @@ the order of binds and helper names can all change.
 - Do not case-bash large enumerations with `cases x <;> ...`, `all_goals try
   ...` or long `first | ... | ...` chains. For `runtime.bytecode.Instr` (432
   constructors) use the classifier functions and the equation lemmas from
-  `Itasca.Runtime.Equations`, and prove one lemma per instruction family.
+  `Itasca.Runtime.Equations.Bytecode`; interpreter equations are in
+  `Itasca.Runtime.Equations.Interp`. Prove one lemma per instruction family.
   `all_goals` is acceptable only when one terminal tactic closes every goal.
 - Arithmetic: use `scalar_tac` (or `agrind`) whenever the goal or a needed
   hypothesis mentions a Rust integer type or the length of a `Vec` or `Slice`.
@@ -238,8 +241,8 @@ the order of binds and helper names can all change.
 
 - No `sorry`, `admit`, `axiom`, `native_decide`, `unsafe`, `implemented_by`, or
   `opaque` placeholders.
-- Never edit `Itasca/Generated/Types.lean`, `Itasca/Generated/Funs.lean` or
-  `SpecTec/wasm2.0.lean` by hand.
+- Never edit `Itasca/Generated/Types.lean`, generated `Itasca/Generated/Funs*.lean`
+  files, or `SpecTec/wasm2.0.lean` by hand.
 - Never cite the three unproved well-formedness theorems in the generated
   specification (`Step_is_wf`, `Step_read_is_wf`, `Step_pure_is_wf`).
 - A change to anything in `metrics/audit.txt`, to a specification patch, or to
@@ -248,8 +251,8 @@ the order of binds and helper names can all change.
 ## Changing Rust
 
 1. Make the Rust change and run both Cargo test configurations.
-2. `just extract`, then read the diff of `Funs.lean` to see which extracted
-   functions changed.
+2. `just extract`, then read the diffs of the generated `Funs*.lean` partitions
+   to see which extracted functions changed.
 3. For each changed function, repair its contract. If the effect statement is
    still true, callers need no change.
 4. If the effect statement changed, repair the derived properties in the same
