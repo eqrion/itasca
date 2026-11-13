@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.StoreTyping
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Store.Api.ExportBounds
 import Itasca.Runtime.Representation.NameSource
 import Itasca.Runtime.Interp.Machine.Functions.Typing

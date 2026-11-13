@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Indirect.Definition
 import Itasca.Runtime.SourceMachine.Ownership.Bounds
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore

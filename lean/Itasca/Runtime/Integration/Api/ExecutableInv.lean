@@ -6,11 +6,12 @@ import Itasca.Runtime.Interp.Machine.Stateful.Projection
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Calls.IndirectPoint
-import Itasca.Runtime.SourceMachine.BinaryInstr
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Store.Initialization.SegmentAccounting
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Initialization.SegmentCounts
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 

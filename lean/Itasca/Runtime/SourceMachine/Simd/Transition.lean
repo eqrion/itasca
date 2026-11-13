@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Simd.Signature
 import Itasca.Runtime.SourceMachine.Sim.Typed
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Spec.ModuleMembership
 
 namespace Itasca.Runtime.SourceMachine.Simd

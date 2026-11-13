@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Simd.Source
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
+
 namespace Itasca.Runtime.SourceMachine
 
 /-- Source constructor tag used only to separate scalar/reference/control

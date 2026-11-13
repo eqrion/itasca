@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
 Source grammar, ownership and code-bound closure through control transitions.

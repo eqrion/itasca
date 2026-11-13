@@ -1,10 +1,9 @@
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.SourceSyntax
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
-import Itasca.Runtime.SourceMachine.PureHead
 import Itasca.Module.Soundness
 import Itasca.Profile.BinaryUnique
 import Itasca.Profile.EntrySound
@@ -18,6 +17,7 @@ import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 

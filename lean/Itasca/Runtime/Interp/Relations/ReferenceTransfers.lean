@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.ReferenceBounds
+import Itasca.Runtime.SourceMachine.BrTable
 
 namespace Itasca.Runtime.Interp
 

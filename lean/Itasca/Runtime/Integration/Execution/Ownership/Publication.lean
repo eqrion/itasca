@@ -1,7 +1,8 @@
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.FunctionSignatures
 import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca.ModuleEnv
 

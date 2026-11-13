@@ -11,10 +11,11 @@ import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Cumulative.Heap
 import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.SourceMachine.Float.Transition
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
+
 namespace Itasca.Runtime.SourceMachine.Cumulative
 open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
 

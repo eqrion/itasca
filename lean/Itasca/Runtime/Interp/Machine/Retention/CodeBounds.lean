@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.Interp.Control.NormalizeClosure
 

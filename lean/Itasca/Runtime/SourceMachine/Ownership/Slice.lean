@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Ownership.Numeric
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
+
 namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec
 

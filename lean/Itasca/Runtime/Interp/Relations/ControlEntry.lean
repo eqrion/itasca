@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.SourceMachine.Sim.Structured
-import Itasca.Runtime.SourceMachine.ControlSafety
+import Itasca.Runtime.SourceMachine.CallSafety
 
 namespace Itasca.Runtime.Interp
 open Aeneas.Std

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
-import Itasca.Runtime.SourceMachine.ExecutableExclusion
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
 Inversion of complete-profile emission into its operation-family cases.

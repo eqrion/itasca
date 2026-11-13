@@ -8,7 +8,7 @@ import Itasca.Runtime.Interp.Calls.CallStack
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Interp.Relations.Readback
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Invocation.Checks
 import Itasca.Runtime.Interp.Relations.Marshal
 import Itasca.Runtime.Representation.Collection

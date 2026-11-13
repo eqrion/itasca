@@ -2,7 +2,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Interp.Relations.Arguments
 import Itasca.Runtime.Interp.Calls.CallRegions
 import Itasca.Runtime.Interp.Relations.FrameBindings
-import Itasca.Runtime.SourceMachine.Invoke
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-! Invocation entry bridges checked API arguments and retained function
 metadata to the typed abstract state. Compiler/body certificates remain explicit. -/

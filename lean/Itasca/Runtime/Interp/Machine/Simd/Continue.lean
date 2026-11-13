@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Measure
 
 /-!
 Reuse the retained SIMD continuation after the exact operand suffix has been replaced. The store may change only through a checked source extension.

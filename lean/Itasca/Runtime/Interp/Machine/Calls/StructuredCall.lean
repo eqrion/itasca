@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.ReferenceBounds
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Machine.Calls.CallLookup
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
 import Itasca.Runtime.SourceMachine.Bound
@@ -12,8 +12,6 @@ import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.SourceMachine.Results
 
 /-!
 Source-base retention and structured execution of a direct call.

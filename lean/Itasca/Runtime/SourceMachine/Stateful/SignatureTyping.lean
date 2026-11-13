@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Stateful.Signature
-import Itasca.Runtime.SourceMachine.Safety
+import Itasca.Runtime.SourceMachine.Measure
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

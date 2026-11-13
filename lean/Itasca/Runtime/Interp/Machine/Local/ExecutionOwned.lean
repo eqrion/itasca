@@ -20,7 +20,7 @@ import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.Integer
 
 /-!

@@ -4,14 +4,13 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.SourceMachine.Core
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
@@ -21,7 +20,7 @@ import Itasca.Runtime.Interp.Control.SkipStack
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Core.Pure
 import Itasca.Runtime.Spec.Integer
 

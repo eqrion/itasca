@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.BinaryInstr
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Binary.Wasm2.Encoding
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
 

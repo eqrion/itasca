@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.StackRelation
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
 Repositioning a frame program certificate.

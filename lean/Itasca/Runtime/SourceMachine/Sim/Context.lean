@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Step
+import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Spec.Integer
 
 namespace Itasca.Runtime.SourceMachine

@@ -1,7 +1,6 @@
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Core.Step
-import Itasca.Runtime.SourceMachine.BinaryInstr
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.BrTable
 
 namespace Itasca.Runtime.SourceMachine
 

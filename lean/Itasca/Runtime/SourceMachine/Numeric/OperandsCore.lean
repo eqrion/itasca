@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Safety
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Numeric.Semantics
 
 namespace Itasca.Runtime.SourceMachine.Numeric

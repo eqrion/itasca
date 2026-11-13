@@ -1,7 +1,8 @@
-import Itasca.Runtime.SourceMachine.PureHead
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Module.Soundness
 import Itasca.Profile.BinaryUnique
 import Itasca.Profile.EntrySound
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

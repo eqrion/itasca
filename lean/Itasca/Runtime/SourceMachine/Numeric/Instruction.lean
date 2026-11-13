@@ -3,7 +3,7 @@ import Itasca.Runtime.SourceMachine.Sim.Int
 import Itasca.Runtime.Spec.SegmentInitCases
 import SpecExt.Builtins.Examples
 import Itasca.Runtime.SourceMachine.Sim.Trap
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
 
 /-!
 Integer instruction soundness from unary, binary, comparison and conversion operations. Establishes typed source reduction used by transition safety and interpreter simulation.

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Interp.Relations.Rel
-import Itasca.Runtime.SourceMachine.LabelHeights
+import Itasca.Runtime.SourceMachine.BrTable
 
 namespace Itasca.Runtime.Interp
 open Aeneas.Std

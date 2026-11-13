@@ -1,5 +1,6 @@
-import Itasca.Runtime.SourceMachine.HostTyping
+import Itasca.Runtime.SourceMachine.DecodeDepth
 import Itasca.Runtime.SourceMachine.Indirect.Correct
+
 namespace Itasca.Runtime.SourceMachine.Indirect
 open SpecExt Itasca.Runtime.Spec
 

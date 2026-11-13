@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Machine.Frames.ReturnStack
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership

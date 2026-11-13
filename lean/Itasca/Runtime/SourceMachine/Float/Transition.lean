@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Sim.Typed
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Sim.Trap
 
 /-!

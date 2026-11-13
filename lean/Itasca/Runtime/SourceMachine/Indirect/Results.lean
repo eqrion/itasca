@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Indirect.Definition
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.BrTable
+
 namespace Itasca.Runtime.SourceMachine.Indirect
 
 theorem invoke_result {s : store} {ambient : frame} {f : AFrame} {rest : List AFrame}

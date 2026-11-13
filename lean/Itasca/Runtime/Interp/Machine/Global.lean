@@ -3,10 +3,10 @@ import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
 import Itasca.Runtime.Interp.State.GlobalCoreEmission
 import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.SourceMachine.Core.Step
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
 import Itasca.Runtime.SourceMachine.Core.Pure
 import Itasca.Runtime.SourceMachine.Ownership.Core

@@ -1,19 +1,19 @@
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Store.Invariant.SupportedFunctionTables
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
 import Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization
 import Itasca.Runtime.Interp.Machine.Stateful.Projection
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
 import Itasca.Runtime.Interp.Machine.Simd.Point
 import Itasca.Runtime.Interp.Machine.Calls.IndirectPoint
-import Itasca.Runtime.SourceMachine.BinaryInstr
 import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Invariant.InternTypes
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Api.ExportBounds
 import Itasca.Runtime.Store.Invariant.SourceStoreTyping
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
 
 /-!

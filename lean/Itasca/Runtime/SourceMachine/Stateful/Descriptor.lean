@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.State
+import Itasca.Runtime.SourceMachine.Decode
 
 namespace Itasca.Runtime.SourceMachine.Stateful
 

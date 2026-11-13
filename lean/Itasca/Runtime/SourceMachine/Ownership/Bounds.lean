@@ -1,4 +1,5 @@
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.BrTable
+
 namespace Itasca.Runtime.SourceMachine.Ownership
 
 /-- Source function and external references use distinct issued address spaces. -/

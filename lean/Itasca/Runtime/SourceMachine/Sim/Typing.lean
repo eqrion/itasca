@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Progress
+import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Sim.Context
 
 namespace Itasca.Runtime.SourceMachine

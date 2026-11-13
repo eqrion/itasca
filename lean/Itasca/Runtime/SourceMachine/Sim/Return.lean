@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Sim.Branch
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
 
 namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec

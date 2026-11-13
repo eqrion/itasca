@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.SourceMachine.Core.Typing
 

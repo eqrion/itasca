@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.BrTable
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

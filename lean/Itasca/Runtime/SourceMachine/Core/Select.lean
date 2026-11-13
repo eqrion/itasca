@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.SourceMachine.Preservation
+import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Sim.Typed
 
 namespace Itasca.Runtime.SourceMachine.Core

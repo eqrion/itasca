@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Point
 import Itasca.Runtime.Interp.Machine.Emission.Empty
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission

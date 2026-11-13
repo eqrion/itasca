@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Point
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
 A step keeps the frame's code and labels within the binary instruction grammar.

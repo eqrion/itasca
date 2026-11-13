@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.StepSafety
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Sim.Trap
 import Itasca.Runtime.SourceMachine.Sim.Local

@@ -14,14 +14,13 @@ import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Machine.Functions.Typing
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Collection
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
 import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Initialization.SegmentExtension

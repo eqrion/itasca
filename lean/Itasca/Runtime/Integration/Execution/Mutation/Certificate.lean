@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.SegmentCounts
 import Itasca.Runtime.Interp.Machine.Functions.Typing
-import Itasca.Runtime.SourceMachine.Core
+import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.SourceMachine.Stateful.Descriptor
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
@@ -9,9 +9,9 @@ import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Collection
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std
 

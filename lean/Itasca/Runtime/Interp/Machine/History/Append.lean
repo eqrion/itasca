@@ -30,13 +30,12 @@ import Itasca.Runtime.Interp.Relations.LocalCapacity
 import Itasca.Runtime.Interp.Control.LoopHead
 import Itasca.Runtime.Interp.Relations.Normalization
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.ReferenceBounds
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Interp.Calls.CallRefinement
 import Itasca.Runtime.Interp.Calls.CallStack
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Calls.ReturnResult
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Relations.StackRelation

@@ -2,8 +2,9 @@ import Itasca.Runtime.Integration.Host.HostCallFrames
 import Itasca.Runtime.Interp.Machine.Calls.HostReturnFrames
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
-import Itasca.Runtime.SourceMachine.HostCallSite
+import Itasca.Runtime.SourceMachine.DecodeDepth
 import Itasca.Runtime.Interp.Machine.Execution
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 open Itasca.Runtime.Interp.Machine

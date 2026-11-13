@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Relations.FrameBindings
 import Itasca.Runtime.Representation.FunctionTable
 import Itasca.Runtime.Interp.Relations.FrameStack
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.SourceMachine.PureHead
+import Itasca.Runtime.SourceMachine.Measure
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
