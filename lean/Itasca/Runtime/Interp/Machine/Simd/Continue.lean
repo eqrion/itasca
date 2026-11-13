@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition

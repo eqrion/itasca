@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 
 /-!
 Target lookup exposes the retained source continuation, with concrete label fields obtained from the dynamic/static label correspondence.

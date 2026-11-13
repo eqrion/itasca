@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Machine.Emission.Empty
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission

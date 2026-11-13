@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.State.GlobalMutationStep
-import Itasca.Runtime.Interp.Machine.Global
+import Itasca.Runtime.Interp.Machine.Select
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Control.StructuredLinear
 

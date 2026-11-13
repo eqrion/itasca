@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 
 /-!
 Inversion of an empty indexed structured-code relation.

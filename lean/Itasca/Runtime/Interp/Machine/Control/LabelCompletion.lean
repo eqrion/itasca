@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Control.LabelCompletion
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 
 /-!
 Normal completion removes a source label at its retained fallthrough PC. The concrete words and PC are unchanged; the generated source semantics takes one positive reduction and installs the retained enclosing continuation.

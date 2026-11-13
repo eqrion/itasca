@@ -92,7 +92,7 @@ bytes, preserving their little-endian order. -/
       have positionBound : position.val < width.val := by scalar_tac
       step as ⟨source, sourceEq⟩
       step as ⟨byte, byteEq⟩
-      step as ⟨wide, wideEq⟩
+      step with Aeneas.Step.specLiftDef (UScalar.cast .U64 byte) as ⟨wide, wideEq⟩
       step as ⟨shift, shiftEq⟩
       step as ⟨shifted, shiftedEq, shiftedBits⟩
       step as ⟨updated, updatedEq, updatedBits⟩

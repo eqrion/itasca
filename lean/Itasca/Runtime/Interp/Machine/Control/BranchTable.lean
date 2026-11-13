@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable
 import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.SourceMachine.DecodeDepth

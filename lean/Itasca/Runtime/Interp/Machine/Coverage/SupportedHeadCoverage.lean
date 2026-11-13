@@ -11,7 +11,7 @@ import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
 import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
 

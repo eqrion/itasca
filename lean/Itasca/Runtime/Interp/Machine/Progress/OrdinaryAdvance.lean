@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Progress.UniformAdvance
-import Itasca.Runtime.Interp.Machine.Numeric
+import Itasca.Runtime.Interp.Machine.Select
 import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Control.ControlExecution
 import Itasca.Runtime.Interp.Machine.Constants.IntegerConstant

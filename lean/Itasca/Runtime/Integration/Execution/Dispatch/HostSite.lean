@@ -4,11 +4,10 @@ import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Global.Mutation
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryAdvance
-import Itasca.Runtime.Interp.Machine.Numeric
+import Itasca.Runtime.Interp.Machine.Select
 import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
-import Itasca.Runtime.Interp.Machine.Select
-import Itasca.Runtime.Interp.Machine.Memory
+import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Calls.CallExecution
 import Itasca.Runtime.Interp.Machine.Frames.ReturnExecution
 import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution

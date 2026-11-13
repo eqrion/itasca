@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Functions.FunctionCode
 import Itasca.Runtime.Interp.Calls.IndirectResolve
-import Itasca.Runtime.Interp.Machine.Point
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Machine.Calls.CallStack
 
 /-!
