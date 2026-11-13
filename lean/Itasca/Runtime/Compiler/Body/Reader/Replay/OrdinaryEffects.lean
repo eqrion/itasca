@@ -16,7 +16,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering

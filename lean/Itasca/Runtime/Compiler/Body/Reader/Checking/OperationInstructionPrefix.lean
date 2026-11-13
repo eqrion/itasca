@@ -20,7 +20,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering

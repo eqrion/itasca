@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
+import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
@@ -8,7 +8,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
 

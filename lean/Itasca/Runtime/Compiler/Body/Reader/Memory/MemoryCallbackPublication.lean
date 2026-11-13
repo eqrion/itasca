@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
+import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
 import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication

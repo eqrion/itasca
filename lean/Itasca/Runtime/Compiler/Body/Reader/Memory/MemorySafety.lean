@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemorySafety
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
+import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Wasm2.Scalar.ReadersTotal
 
 /-!
