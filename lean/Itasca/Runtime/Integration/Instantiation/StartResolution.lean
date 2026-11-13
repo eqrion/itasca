@@ -8,12 +8,11 @@ import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Invocation.Checks
+import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Interp.Machine.Resources.CallErrors
-import Itasca.Runtime.Interp.Invocation.Divergence
 import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Spec.ModuleMembership

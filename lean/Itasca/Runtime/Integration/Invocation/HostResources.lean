@@ -1,8 +1,8 @@
 import Itasca.Runtime.Integration.Invocation.InitialHostCauses
 import Itasca.Runtime.Integration.Api.ReadbackIssued
 import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
-import Itasca.Runtime.Interp.Invocation.RecordedPrefix
-import Itasca.Runtime.Interp.Invocation.LoopRecordingFacts
+import Itasca.Runtime.Interp.Invocation.RecordingErasure
+import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Host.HostCallRecording
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.CheckedValues

@@ -3,7 +3,6 @@ import Itasca.Runtime.Integration.Invocation.HostResources
 import Itasca.Runtime.Contracts
 import Itasca.Runtime.Integration.Api.ExecutableCallEntry
 import Itasca.Runtime.Integration.Api.ExecutableInv
-import Itasca.Runtime.Interp.Invocation.RecordedChecks
 import Itasca.Runtime.Interp.Invocation.RecordingErasure
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Store.Invariant.CheckedValues

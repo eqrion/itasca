@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Api.ReadbackIssued
 import Itasca.Runtime.Integration.Host.HostCallRetainedWorld
-import Itasca.Runtime.Interp.Invocation.PrefixCauses
+import Itasca.Runtime.Interp.Invocation.Recording
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments

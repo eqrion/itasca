@@ -1,8 +1,7 @@
 import Itasca.Runtime.Integration.Execution.World.StepOutcomes
 import Itasca.Runtime.Integration.Execution.World.Infinite
 import Itasca.Runtime.Integration.Execution.Dispatch.Entry
-import Itasca.Runtime.Interp.Invocation.Divergence
-import Itasca.Runtime.Interp.Invocation.PrefixDivergence
+import Itasca.Runtime.Interp.Invocation.Recording
 
 /-!
 A source run from `initial` reaches a configuration whose store decodes a runtime store on which some callback diverges.

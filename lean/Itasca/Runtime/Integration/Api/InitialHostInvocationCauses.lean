@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
-import Itasca.Runtime.Interp.Invocation.PrefixCauses
+import Itasca.Runtime.Interp.Invocation.Recording
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

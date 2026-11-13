@@ -2,7 +2,7 @@ import Itasca.Runtime.Integration.Execution.World.StepOutcomes
 import Itasca.Runtime.Integration.Execution.Resources.WorldLoop
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
-import Itasca.Runtime.Interp.Invocation.RecordedPrefix
+import Itasca.Runtime.Interp.Invocation.RecordingErasure
 import Itasca.Runtime.Integration.Api.ReadbackIssued
 import Itasca.Runtime.Spec.ModuleMembership
 

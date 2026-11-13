@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Api.InvocationCanonicalResources
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
-import Itasca.Runtime.Interp.Invocation.MutableCauses
+import Itasca.Runtime.Interp.Invocation.Recording
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
