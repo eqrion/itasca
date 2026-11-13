@@ -33,7 +33,7 @@ import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
-import Itasca.Runtime.Interp.Calls.CallCauses
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec Itasca.Runtime.Interp

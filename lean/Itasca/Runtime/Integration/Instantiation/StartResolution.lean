@@ -2,9 +2,8 @@ import Itasca.Runtime.Store.Instantiation.NoStart
 import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.Interp.Calls.CallRefinement
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.Interp.Calls.CallStack
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Interp.Relations.Readback

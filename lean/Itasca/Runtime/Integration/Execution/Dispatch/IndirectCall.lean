@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Calls.IndirectCall
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Store.Invariant.CanonicalSignatures
 
 namespace Itasca.Runtime.Interp

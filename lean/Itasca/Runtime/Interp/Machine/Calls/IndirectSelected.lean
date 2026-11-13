@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Calls.CallLookup
 import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
-import Itasca.Runtime.Interp.Calls.IndirectCallNext
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 
 /-!

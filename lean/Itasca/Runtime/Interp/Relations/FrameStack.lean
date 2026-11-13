@@ -1,7 +1,6 @@
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
-import Itasca.Runtime.Interp.Calls.ReturnRegions
-import Itasca.Runtime.Interp.Calls.CallFrames
+import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

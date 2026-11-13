@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Entry
-import Itasca.Runtime.Interp.Calls.CallCauses
+import Itasca.Runtime.Interp.Calls.IndirectResolve
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 

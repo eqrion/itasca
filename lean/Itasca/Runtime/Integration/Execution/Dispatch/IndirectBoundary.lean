@@ -19,10 +19,8 @@ import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
-import Itasca.Runtime.Interp.Calls.IndirectCallNext
-import Itasca.Runtime.Interp.Calls.IndirectCallSlots
-import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Calls.IndirectResolve
+import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution
 
 namespace Itasca.Runtime.Integration

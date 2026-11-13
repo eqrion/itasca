@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Frames.ReturnStack
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Calls.ReturnResult
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 
 /-!
 Completing a return while retaining the execution certificate.

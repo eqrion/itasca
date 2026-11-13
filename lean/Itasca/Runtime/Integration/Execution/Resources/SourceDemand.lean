@@ -70,11 +70,9 @@ import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.SourceMachine.CallSafety
-import Itasca.Runtime.Interp.Calls.CallStack
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction
-import Itasca.Runtime.Interp.Calls.CallRefinement
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
-import Itasca.Runtime.Interp.Calls.ReturnResult
 import Itasca.Runtime.Interp.Machine.Emission.Unreachable
 import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Interp.Relations.Epilogue

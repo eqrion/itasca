@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Calls.DirectCallCause
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Spec.SegmentInitCases
 

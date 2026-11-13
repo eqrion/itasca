@@ -4,7 +4,7 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Host.HostResume
 import Itasca.Runtime.Interp.Relations.TypeSlots
-import Itasca.Runtime.Interp.Calls.CallRegions
+import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
 /-!
 Host argument/result-buffer preparation and its resource causes. The composition proof tracks requested slot capacity, allocation refusal and the callback boundary while preserving the extracted argument values.

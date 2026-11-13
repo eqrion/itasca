@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
-import Itasca.Runtime.Interp.Calls.CallStack
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 
 /-!
 The caller's post-fetch continuation and live prefix form the saved frame needed for entry. The argument words remain available to the new callee.

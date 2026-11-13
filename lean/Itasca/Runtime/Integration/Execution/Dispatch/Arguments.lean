@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Interp.Relations.Arguments
-import Itasca.Runtime.Interp.Calls.CallRegions
+import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Relations.FrameBindings
 import Itasca.Runtime.SourceMachine.BrTable
 

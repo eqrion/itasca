@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Calls.CallStack
+import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.StackPreservation
 
 namespace Itasca.Runtime.Interp
