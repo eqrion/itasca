@@ -1,9 +1,8 @@
-import Itasca.Runtime.Interp.Simd.Relations.Mutation
+import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
 import Itasca.Runtime.Interp.Simd.Memory.ExtendSource
 import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
-import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
 import Itasca.Runtime.Interp.Simd.Lanes.Shuffle
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 import Itasca.Runtime.Interp.Simd.Integer.UnaryWords

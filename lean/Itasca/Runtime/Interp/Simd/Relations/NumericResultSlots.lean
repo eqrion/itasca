@@ -1,4 +1,37 @@
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
+
+/-!
+Sections, each formerly its own module: Mutation, NumericResultSlots.
+-/
+
+/-! ## Mutation -/
+
+section
+
+/-!
+SIMD retains the store or replaces the opaque buffer of one issued memory without changing its length. Source semantics separately constrain its bytes.
+
+Main declarations: `SimdStoreMutation`. A direct consumer is `Interp.Simd.Execution.ExecuteSource`.
+-/
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std
+
+/-- SIMD retains the store or replaces the opaque buffer of one issued memory
+without changing its length. Source semantics separately constrain its bytes. -/
+def SimdStoreMutation {M : Type} (view : M → Slice U8)
+    (before after : runtime.store.Store M) : Prop :=
+  after = before ∨ ∃ address object, before.memories.val[address.index.val]? = some object ∧
+    MemoryMutation view before after address object
+
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## NumericResultSlots -/
+
+section
 
 /-!
 Numeric SIMD results represented in runtime slots.
@@ -51,3 +84,5 @@ theorem ValuesAt.simd_numeric_result {words : List U64} {base : Nat} {front : Li
     simpa only [Compiler.simdSourceWidth,Store.decodeWords,Spec.Simd.valueOfBits,UScalar.cast_val_eq,UScalarTy.numBits,
       BitVec.toNat_setWidth,UScalar.bv_toNat] using result
 end Itasca.Runtime.Interp
+
+end

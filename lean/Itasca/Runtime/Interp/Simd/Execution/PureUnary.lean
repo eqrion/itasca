@@ -1,4 +1,3 @@
-import Itasca.Runtime.Interp.Simd.Relations.OperandsBounded
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 import Itasca.Runtime.Interp.Simd.Integer.UnaryAll

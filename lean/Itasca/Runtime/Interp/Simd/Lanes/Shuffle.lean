@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Simd.Relations.LaneRelation
+import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Interp.Simd.Lanes.Swizzle
 import Itasca.Runtime.Spec.Simd.CompareInteger
 import SpecExt.Builtins.Examples

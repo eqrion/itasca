@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Simd.Relations.ValueSlots
+import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Compiler.Local.Capacity.SimdCapacity
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.StackPreservation
@@ -8,7 +8,6 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor
-import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots
 import Itasca.Runtime.Interp.Simd.Execution.PureSound
 

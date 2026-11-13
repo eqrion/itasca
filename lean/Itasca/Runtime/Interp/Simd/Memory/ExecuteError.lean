@@ -4,13 +4,13 @@ import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.Simd.CompareInteger
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
 import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
-import Itasca.Runtime.Interp.Simd.Relations.LaneRelation
-import Itasca.Runtime.Interp.Simd.Relations.ShuffleRelation
+import Itasca.Runtime.Interp.Simd.Relations.InputValues
+import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots
 import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Interp.Simd.Execution.PureUnary
 import Itasca.Runtime.Platform.Laws
-import Itasca.Runtime.Interp.Simd.Relations.OperandsBounded
+import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 
 /-!
 Sections, each formerly its own module: LaneSource, StoreEncoding, LaneStoreSource, Splat, SplatSource, StoreSource, ZeroSource, Relation, Transition, ValuesTransition, ChangeDecode, ExecuteEffect, ExecuteError.

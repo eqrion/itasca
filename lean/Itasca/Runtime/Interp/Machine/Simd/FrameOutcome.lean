@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Simd.ExecutionJoin
-import Itasca.Runtime.Interp.Simd.Relations.Mutation
+import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
 
 /-!
 The postcondition of a SIMD frame step.
