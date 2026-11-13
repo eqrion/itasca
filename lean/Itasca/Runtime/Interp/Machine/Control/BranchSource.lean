@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
-import Itasca.Runtime.Interp.Control.BranchCondition
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 
 /-!
 A fused conditional branch always performs the source test and, when selected, the positive branch transfer.

@@ -9,8 +9,7 @@ import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.Interp.Control.SkipStack
+import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.Machine.Emission.Opcode
 import Itasca.Runtime.Interp.Machine.Emission.Binary
@@ -22,12 +21,9 @@ import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.Interp.Relations.ConstCodePoint
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
 import Itasca.Runtime.Interp.Relations.ValueLookup
-import Itasca.Runtime.Interp.Control.BranchNoCopy
-import Itasca.Runtime.Interp.Control.BranchConditionStep
 import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Interp.Relations.LocalCapacity
-import Itasca.Runtime.Interp.Control.LoopHead
 import Itasca.Runtime.Interp.Relations.Normalization
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.BrTable
@@ -39,9 +35,7 @@ import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Relations.Epilogue
-import Itasca.Runtime.Interp.Control.StructuredUnreachable
 import Itasca.Runtime.Interp.Relations.HeadCoverage
-import Itasca.Runtime.Interp.Control.NormalizeClosure
 import Itasca.Runtime.Interp.Machine.Simulation.Measure
 import Itasca.Runtime.Interp.Relations.ExecutionLoop
 

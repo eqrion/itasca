@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Control.SkipStack
+import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 
 /-!

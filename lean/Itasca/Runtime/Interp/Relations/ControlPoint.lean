@@ -1,5 +1,4 @@
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.Interp.Control.PendingJump
+import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Sim.Structured
 
 namespace Itasca.Runtime.Interp

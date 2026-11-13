@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Numeric.Decode
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 /-!
 Inversion of return code points and their source values.

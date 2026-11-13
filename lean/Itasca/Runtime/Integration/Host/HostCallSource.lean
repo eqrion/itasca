@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Host.HostPreparationCauses
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Spec.ModuleMembership

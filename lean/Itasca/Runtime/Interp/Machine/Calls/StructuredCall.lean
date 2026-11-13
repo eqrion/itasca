@@ -10,7 +10,7 @@ import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.Machine.Calls.PrepareCallStack
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.SourceMachine.Numeric.Decode
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.Interp.Relations.Capacity
 
 /-!

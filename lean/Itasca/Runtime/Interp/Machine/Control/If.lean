@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.Control.ControlInversion
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Relations.ControlEntry
-import Itasca.Runtime.Interp.Control.BranchConditionStep
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
 
 /-!

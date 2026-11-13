@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Relations.InitializerExecute
 import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Interp.Relations.Ensure
-import Itasca.Runtime.Interp.Control.LoopBasis
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 /-! Read-only synthetic initializer execution. `InitialRead` records only the
 instruction shape, literal bits, and resolved store addresses. It contains no

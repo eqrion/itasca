@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Calls.CallStack
-import Itasca.Runtime.Interp.Control.SkipStack
+import Itasca.Runtime.Interp.Control.BrTableSource
 
 /-!
 Fetch advances the caller PC and removes argument values from its saved live prefix, preparing the complete suspended chain for a defined call.

@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Control.LoopHead
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 
 /-!
 Execution of a structured loop instruction.

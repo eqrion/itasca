@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.CallSafety
 

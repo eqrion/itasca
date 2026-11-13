@@ -2,8 +2,8 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.Interp.Control.NormalizeClosure
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 
 /-!
 Code-size preservation is separate from value provenance and allowed syntax.

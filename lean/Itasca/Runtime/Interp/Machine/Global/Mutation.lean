@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.State.GlobalMutationStep
 import Itasca.Runtime.Interp.Machine.Global
 import Itasca.Runtime.Interp.Machine.Mutation.Core
-import Itasca.Runtime.Interp.Control.PendingJump
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 /-!
 Structured global-write mutation. The point-step effect establishes the retained source/store mutation certificate used by full machine execution.

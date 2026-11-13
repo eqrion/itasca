@@ -10,7 +10,7 @@ import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Machine.Point
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Interp.Control.BranchNoCopy
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 
 /-!
 A complete BR iteration, including compiler-elided copies and forward administrative skips. All operand decomposition, slots and target continuation come from retained structured code evidence and generated source typing.

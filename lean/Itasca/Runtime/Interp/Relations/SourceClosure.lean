@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 namespace Itasca.Runtime.Interp
 

@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
@@ -13,7 +13,6 @@ import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.State.GlobalMutationStep
-import Itasca.Runtime.Interp.Control.PendingJump
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
@@ -31,7 +30,7 @@ import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Relations.PrefixEffect
-import Itasca.Runtime.Interp.Control.SkipStack
+import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.Integer
@@ -46,11 +45,9 @@ import Itasca.Runtime.Interp.Machine.Local.MovePrefix
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Retention.CodeBounds
 import Itasca.Runtime.SourceMachine.Numeric.Decode
-import Itasca.Runtime.Interp.Control.BranchNoCopy
-import Itasca.Runtime.Interp.Control.BranchConditionStep
+import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.ControlEntry
-import Itasca.Runtime.Interp.Control.LoopHead
 import Itasca.Runtime.Interp.Machine.Constants.IntegerEmission
 import Itasca.Runtime.Interp.Machine.Constants.IntegerSlots
 import Itasca.Runtime.Interp.Machine.Emission.Opcode
@@ -80,8 +77,6 @@ import Itasca.Runtime.Interp.Relations.Normalization
 import Itasca.Runtime.Interp.Machine.Emission.Empty
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
-import Itasca.Runtime.Interp.Control.NormalizeClosure
-import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Machine.Simulation.Measure
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax

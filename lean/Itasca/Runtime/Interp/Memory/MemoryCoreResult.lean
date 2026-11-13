@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.Memory.MemoryCore
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
+
 namespace Itasca.Runtime.Interp.MemoryDescriptor
 open Aeneas Aeneas.Std SpecExt
 

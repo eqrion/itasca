@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.Relations.Arguments
-import Itasca.Runtime.Interp.Control.StructuredPoint
+import Itasca.Runtime.Interp.Control.StructuredLinear
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt
 

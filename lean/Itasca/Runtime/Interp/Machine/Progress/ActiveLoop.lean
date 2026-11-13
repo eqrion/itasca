@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.History.Append
-import Itasca.Runtime.Interp.Control.LoopBasis
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 /-!
 Active-frame requirements for divergent execution loops and immediate errors.

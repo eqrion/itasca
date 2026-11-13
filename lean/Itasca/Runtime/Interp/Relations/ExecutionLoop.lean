@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Control.LoopBasis
+import Itasca.Runtime.Interp.Control.StructuredLinear
 
 /-! Actual execution-loop trace and safety composition. The body contract is a
 local proof interface, to be discharged by the concrete instruction refinements. -/
