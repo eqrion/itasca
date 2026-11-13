@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
+import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
 

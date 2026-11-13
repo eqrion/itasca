@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerBodyWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Control.RootEnd
+import Itasca.Runtime.Compiler.Body.Reader.Control.EndWasm2Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OpcodeClassification
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
@@ -14,7 +14,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.OrdinaryCompilation
 import Itasca.Runtime.Compiler.Body.Control.Control.CumulativePointControl
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredScopes
 import Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Control.EndEnteredPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableIndexed
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission

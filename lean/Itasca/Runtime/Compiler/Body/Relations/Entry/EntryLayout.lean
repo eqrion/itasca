@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterStacks
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 
 /-!

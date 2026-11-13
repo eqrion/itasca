@@ -2,8 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Publication.NonScopeCallbackPublicati
 import Itasca.Runtime.Compiler.Local.Coordinates.TableCallbackTargetBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterPublicationWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Control.EndPublication
+import Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CallbackProfile
 import Itasca.Wasm2.Trace.TableBytes

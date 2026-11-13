@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Publication.SourcePublicationAdvanceWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Checking.CheckedPrefixWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Control.ClosedInstructionPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceStepAcceptanceWasm2
 
 /-!

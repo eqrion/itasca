@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
-import Itasca.Runtime.Compiler.Body.Reader.Control.BoundaryInitial
+import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixStart
 
 /-!

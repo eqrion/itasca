@@ -9,9 +9,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
-import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
-import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
-import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
@@ -32,14 +31,14 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
-import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
+import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.ConstantCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Local.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.EmptyCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Safety
-import Itasca.Runtime.Compiler.Body.Reader.Control.TerminalCompilation
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnSafety
 
 /-!
 Actual accepted ordinary dispatch preserves the retained compiler/source point. All opcode-specific stack and callback facts are derived internally.

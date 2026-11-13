@@ -11,10 +11,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
-import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
-import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
-import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFronts
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
@@ -53,7 +51,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
-import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
+import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating

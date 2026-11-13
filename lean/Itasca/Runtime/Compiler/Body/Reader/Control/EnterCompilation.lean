@@ -1,11 +1,11 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
+import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockWasm2Prefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockDormantPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Control.IfPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.IfDormantPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.LoopPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.LoopDormantPrefix
 
 /-!

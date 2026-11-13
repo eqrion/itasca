@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryLedger
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlLedger
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance
 
 /-!
 The numerical callback ledger at a complete source-instruction boundary.

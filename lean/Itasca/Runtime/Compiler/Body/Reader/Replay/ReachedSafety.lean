@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlSafetyWasm2
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ProfileOrdinarySafety
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSafetyWasm2
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnSafety
 import Itasca.Visitor.ReachedTableLabels
 
 /-!

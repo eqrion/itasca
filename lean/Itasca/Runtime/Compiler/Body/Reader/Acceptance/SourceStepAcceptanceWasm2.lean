@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Source.SourceMiscPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Control.SourceBoundControlAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEnterAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SourceBoundSimdAcceptance
 import Itasca.Visitor.ReaderAcceptedProgress
 

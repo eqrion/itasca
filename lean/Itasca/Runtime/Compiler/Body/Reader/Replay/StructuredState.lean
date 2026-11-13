@@ -1,8 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
-import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
-import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
-import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFronts
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 
 /-!
 The shared state invariant for structured source/compiler replay.

@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Publication.ScalarCallbackPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Checking.OperationInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.TerminalInstructionPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
@@ -21,8 +21,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlCheckedPrefixWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInstructionPrefixWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 
 /-!

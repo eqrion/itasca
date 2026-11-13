@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
+import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 
 /-!
 Byte-coordinate spans consumed by accepted reader steps.

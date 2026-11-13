@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
+import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
