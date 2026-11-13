@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
+import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Source.JumpTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 

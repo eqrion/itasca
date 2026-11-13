@@ -22,10 +22,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
@@ -33,12 +31,10 @@ import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
 import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
@@ -46,7 +42,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature

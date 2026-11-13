@@ -1,5 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessLoop
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional
 
 /-!
 Skipped forward and loop branches during br_table compilation. The common result preserves the distinct transfer and elided-code cases.

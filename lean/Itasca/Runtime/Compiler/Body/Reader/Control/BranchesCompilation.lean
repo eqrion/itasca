@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixBranch
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixLoopBranch
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
@@ -10,7 +10,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks

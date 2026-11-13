@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOperands
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
+import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 

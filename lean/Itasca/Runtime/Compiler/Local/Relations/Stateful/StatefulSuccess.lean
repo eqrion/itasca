@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
+import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 
 /-!
 Acceptance of either pair-based callback exposes its actual allocation.

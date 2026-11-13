@@ -1,9 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixEndEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 
 /-!
 A dormant source prefix after the end callback.

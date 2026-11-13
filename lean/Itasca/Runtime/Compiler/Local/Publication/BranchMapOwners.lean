@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
 namespace Itasca.Runtime.Compiler

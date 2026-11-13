@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Publication.BranchMapOwners
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

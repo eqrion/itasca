@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredRootMapPublication
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndPublication
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper
 

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservation
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 
 /-!
 END safety needs only retained fixup/map addresses and vector headroom, not a source body typing or final compilation-success hypothesis.

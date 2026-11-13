@@ -1,9 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixElseDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 
 /-!
 An actual ELSE in an omitted IF changes only its retained source arm and physical frame kind. No emitted-code relation is assumed for the omitted arm.

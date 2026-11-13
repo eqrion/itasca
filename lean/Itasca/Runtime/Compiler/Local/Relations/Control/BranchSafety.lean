@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 
 namespace Itasca.Runtime.Compiler

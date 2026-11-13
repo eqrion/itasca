@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit
+import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.OpenPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
