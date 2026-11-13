@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 

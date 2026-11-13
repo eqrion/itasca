@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
 /-!
 Contextual function syntax with the actual retained jump table. The certificate contains source/layout evidence, never an execution premise.

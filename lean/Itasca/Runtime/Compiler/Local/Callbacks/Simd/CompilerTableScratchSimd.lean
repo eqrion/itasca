@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratch
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
 /-!
 Sections, each formerly its own module: CompilerSimdMetadata, CompilerCodeMonotoneSimd, CompilerTableScratchSimd.

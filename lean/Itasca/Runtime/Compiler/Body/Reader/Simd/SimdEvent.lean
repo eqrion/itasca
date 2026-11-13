@@ -13,7 +13,7 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Simd.CallbackEmission
 
 /-!

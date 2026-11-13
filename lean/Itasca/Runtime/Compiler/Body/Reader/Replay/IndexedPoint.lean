@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
 /-!
 The shared reader/compiler point indexed by emitted jump and control tables.

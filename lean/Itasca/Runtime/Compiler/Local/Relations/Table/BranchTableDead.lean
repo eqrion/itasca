@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096

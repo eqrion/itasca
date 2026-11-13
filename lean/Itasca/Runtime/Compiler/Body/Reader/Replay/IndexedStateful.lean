@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedScratch
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedCodeMonotone
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Reader.Replay.PostDeclared
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StatefulFuturePrefix
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch

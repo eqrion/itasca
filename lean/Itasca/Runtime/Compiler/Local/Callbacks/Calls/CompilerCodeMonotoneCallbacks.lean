@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

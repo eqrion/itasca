@@ -1,6 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchStateful
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchScalar
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBase
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulBulkDispatch
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions

@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.SourceMachine.BrTable
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

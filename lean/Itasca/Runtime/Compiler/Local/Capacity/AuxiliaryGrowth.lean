@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering

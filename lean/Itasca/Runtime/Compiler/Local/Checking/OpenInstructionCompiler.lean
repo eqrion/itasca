@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.SimdInstructionAcceptance
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering

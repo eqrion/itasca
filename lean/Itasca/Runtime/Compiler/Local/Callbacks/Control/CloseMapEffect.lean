@@ -3,9 +3,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbac
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStart
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchCallbacks
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchControl
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf

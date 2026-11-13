@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.FixupTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry
 import Itasca.Runtime.Compiler.Body.Relations.Table.BranchTableTables
 import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth
 

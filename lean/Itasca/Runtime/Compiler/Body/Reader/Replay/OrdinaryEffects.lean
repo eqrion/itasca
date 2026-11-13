@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantLowering
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchScalar
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
@@ -38,7 +38,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbac
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
@@ -70,7 +69,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 import Itasca.Runtime.Compiler.Local.Lowering.Table.LiteralTablePreservation
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Effects.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects

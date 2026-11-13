@@ -1,5 +1,68 @@
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableDead
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+
+/-!
+Sections, each formerly its own module: FixupTablePreservation, CompilerTableScratchEntry.
+-/
+
+/-! ## FixupTablePreservation -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+theorem TableTargetsBuilt.fixup_budget {A}
+    {before after : runtime.compiler.FunctionCompiler A} {depths targets}
+    (built : TableTargetsBuilt before after depths targets)
+    (budget : FixupBudget before.frames.val before.function.code.val.length) :
+    FixupBudget after.frames.val after.function.code.val.length := by
+  induction built with
+  | nil => exact budget
+  | cons _ _ _ _ _ _ effect rest ih => exact ih (effect.fixup_budget budget)
+
+theorem compiler_lower_table_fixup_budget {A} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (budget : FixupBudget before.frames.val before.function.code.val.length)
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    FixupBudget after.frames.val after.function.code.val.length := by
+  obtain ⟨start,len,selector,emitted,targets,_,_,_,emission,built,_⟩ :=
+    compiler_lower_table_production ops law before after accepted
+  obtain ⟨allocation,code,sources,rfl,codeEq,_⟩ := emission
+  apply built.fixup_budget
+  apply budget.mono
+  simp [codeEq]
+
+theorem compiler_br_table_fixup_budget {A} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (fallback : U32) (types : Itasca.signature.ResultType)
+    (budget : FixupBudget before.frames.val before.function.code.val.length)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table ops before state fallback types =
+      .ok (.Ok (),after)) : FixupBudget after.frames.val after.function.code.val.length := by
+  by_cases live : before.reachable = true
+  · obtain ⟨allocation,depths,lowered,cleared,_,lower,_,observed⟩ :=
+      compiler_br_table_success ops law before after state fallback types live accepted
+    have kept := compiler_lower_table_fixup_budget ops law {before with budget := allocation, table_depths := depths}
+      lowered budget lower
+    exact FixupBudget.ordinary (before := {lowered with reachable := false, table_depths := cleared}) kept
+      (compiler_observe_ordinary_result ops law _ after state (.Ok ()) observed)
+      (compiler_observe_code_mono ops law _ after state (.Ok ()) observed)
+  · have dead : before.reachable = false := by simpa using live
+    obtain ⟨_,code,_,frames,_⟩ := compiler_br_table_dead_effect ops law before after state fallback types dead accepted
+    simpa [code,frames] using budget
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CompilerTableScratchEntry -/
+
+section
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000
@@ -138,3 +201,5 @@ theorem compiler_function_start_table_boundary {A : Type} (ops : runtime.platfor
   exact boundary.preserved fields.1 fields.2.1 (by rw [fields.2.2])
 
 end Itasca.Runtime.Compiler
+
+end

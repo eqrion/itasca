@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.BranchTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
 /-!
 Resolved br_table target layouts and their callback certificate. Per-target resolution composes into the built table and final source prefix.

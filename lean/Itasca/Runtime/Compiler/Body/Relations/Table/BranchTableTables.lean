@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

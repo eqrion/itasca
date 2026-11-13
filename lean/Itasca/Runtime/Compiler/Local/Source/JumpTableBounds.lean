@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 
 namespace Itasca.Runtime.Compiler

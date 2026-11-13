@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectEmission
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix
 

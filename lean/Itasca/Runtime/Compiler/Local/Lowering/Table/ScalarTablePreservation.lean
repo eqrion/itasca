@@ -1,7 +1,8 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEffects
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096

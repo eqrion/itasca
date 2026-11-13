@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Local.Control.Simd.StructuredSimdEmbedding
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
 
 /-!

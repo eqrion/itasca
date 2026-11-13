@@ -2,9 +2,10 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedScratch
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedCodeMonotone
 import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectCallPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectPairPrefix
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

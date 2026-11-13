@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxHeartbeats 2000000

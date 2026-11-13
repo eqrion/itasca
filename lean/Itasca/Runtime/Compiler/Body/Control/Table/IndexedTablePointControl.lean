@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
@@ -36,7 +36,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCal
 import Itasca.Runtime.Compiler.Body.Control.Control.CumulativePointControl
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredScopes
 import Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndWasm2Compilation
