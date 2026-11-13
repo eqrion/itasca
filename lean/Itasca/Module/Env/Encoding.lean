@@ -1,12 +1,7 @@
 import Itasca.Module.Env.Declarations
-import Itasca.Module.Sections.Imports
-import Itasca.Module.Sections.Table
-import Itasca.Module.Sections.Memory
-import Itasca.Module.Sections.Global
-import Itasca.Module.Sections.Element
-import Itasca.Module.Sections.Export
-import Itasca.Module.Sections.DataCount
 import Itasca.Module.Sections.Tail
+import Itasca.Module.Sections.Data
+import Itasca.Module.Sections.ElementHeader
 import Itasca.Module.Readers.Utf8
 import Itasca.Binary.UnicodeUnique
 

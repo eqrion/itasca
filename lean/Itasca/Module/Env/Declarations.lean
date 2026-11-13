@@ -1,4 +1,4 @@
-import Itasca.Module.Sections.Type
+import Itasca.Module.Sections.ElementHeader
 import Itasca.Module.Env.Basic
 
 /-!

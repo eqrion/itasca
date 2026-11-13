@@ -1,7 +1,7 @@
 import Itasca.Module.Env.Encoding
-import Itasca.Module.Sections.Imports
-import Itasca.Module.Sections.Export
-import Itasca.Module.Sections.DataCount
+import Itasca.Module.Sections.Tail
+import Itasca.Module.Sections.Data
+import Itasca.Module.Sections.ElementHeader
 
 /-!
 Sections, each formerly its own module: Preservation, Validity, Semantics, Requirements.

@@ -2,13 +2,7 @@ import Itasca.Module.Env.Requirements
 import Itasca.Module.Elab.SectionInversion
 import Itasca.Module.Env.Encoding
 import Itasca.Module.Sections.TypeComplete
-import Itasca.Module.Sections.FunctionComplete
-import Itasca.Module.Sections.TableComplete
-import Itasca.Module.Sections.MemoryComplete
 import Itasca.Module.Sections.GlobalComplete
-import Itasca.Module.Sections.ImportsComplete
-import Itasca.Module.Sections.ElementComplete
-import Itasca.Module.Sections.ExportComplete
 import Itasca.Module.Readers.TypesComplete
 
 /-!
