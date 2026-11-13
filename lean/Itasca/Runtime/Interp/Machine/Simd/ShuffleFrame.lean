@@ -1,6 +1,5 @@
-import Itasca.Runtime.Interp.Simd.Execution.FrameRetention
+import Itasca.Runtime.Interp.Simd.Execution.PureValuesExecute
 import Itasca.Runtime.Interp.Simd.Execution.ShuffleValuesExecute
-import Itasca.Runtime.Interp.Simd.Execution.BytecodeDispatch
 import Itasca.Runtime.Interp.Machine.Simd.Prepare
 import Itasca.Runtime.Interp.Machine.Simd.ExecutionJoin
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature

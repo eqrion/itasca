@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Simd.Execution.ExecutePure
+import Itasca.Runtime.Interp.Simd.Execution.PureUnary
 import Itasca.Runtime.Interp.Relations.ReferenceSource
 
 /-!
