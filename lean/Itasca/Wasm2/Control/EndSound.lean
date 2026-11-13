@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Control.EndTotal
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 
 /-!
 # Soundness of frame closing

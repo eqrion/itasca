@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 
 /-!
 Exact source-prefix advancement shared by validator preservation and compiler replay.

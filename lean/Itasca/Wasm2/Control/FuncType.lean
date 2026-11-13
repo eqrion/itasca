@@ -1,4 +1,4 @@
-import Itasca.Wasm2.ResultStackSemantics
+import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Handler.SimplePrefix
 
 /-!

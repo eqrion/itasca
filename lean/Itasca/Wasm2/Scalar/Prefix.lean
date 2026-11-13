@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Prefix
+import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Wasm2.Scalar.Total
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Complete.Frame
-import Itasca.Wasm2.Execution
+import Itasca.Wasm2.SoundLoop
 import Itasca.Binary.Wasm2.SyntaxUnique
 
 /-!

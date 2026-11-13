@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Complete.Control
-import Itasca.Wasm2.Execution
+import Itasca.Wasm2.SoundLoop
 import Itasca.Wasm2.Complete.LeafContracts
 import Itasca.Wasm2.Soundness
 

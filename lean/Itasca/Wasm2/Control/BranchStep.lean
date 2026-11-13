@@ -2,7 +2,7 @@ import Itasca.Binary.Wasm1.DeclaredReferences
 import Itasca.Wasm2.Scalar.ReaderPost
 import Itasca.Wasm2.Control.BranchComplete
 import Itasca.Wasm2.Control.Call
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Control.BrTableComplete
 
 /-!

@@ -1,4 +1,4 @@
-import Itasca.Wasm2.FixedOperands
+import Itasca.Wasm2.SuffixTyping
 import Itasca.Visitor.Total
 
 /-!

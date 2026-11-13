@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
-import Itasca.Wasm2.FixedOperands
+import Itasca.Wasm2.SuffixTyping
 
 /-!
 Fixed signatures preserve concrete operands even when the control frame is polymorphic; this follows from actual pop/push behavior.

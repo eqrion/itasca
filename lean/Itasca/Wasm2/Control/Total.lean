@@ -2,7 +2,6 @@ import Itasca.Wasm2.Control.Frame
 import Itasca.Wasm2.TableAdapters
 import Itasca.Wasm2.Control.FuncType
 import Itasca.Handler.EnvReaders
-import Itasca.Wasm2.SignatureEquality
 
 /-!
 # Totality of the control handlers

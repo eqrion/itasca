@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Control.Total
-import Itasca.Wasm2.Prefix
+import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Wasm2.SuffixTyping
 import Itasca.Handler.RawControl
 

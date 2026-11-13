@@ -1,5 +1,5 @@
 import Itasca.Profile.Types
-import Itasca.Wasm2.BodySpec
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Module.Code.Encoding
 

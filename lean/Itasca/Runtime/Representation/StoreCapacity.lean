@@ -1,5 +1,5 @@
 import Itasca.Runtime.Representation.Values
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Profile.CodeEntry
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Platform.Laws

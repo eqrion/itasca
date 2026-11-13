@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Control.EnterComplete
-import Itasca.Wasm2.Totality
+import Itasca.Wasm2.SoundLoop
 
 /-!
 # `block`, `loop` and `if` step

@@ -4,7 +4,7 @@ import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Wasm2.Scalar.NumericReader
 import Itasca.Wasm2.Scalar.BasicReader
 import Itasca.Wasm2.Scalar.Memory
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Step.ScalarContext
 import Itasca.Binary.Wasm1.DeclaredReferences
 

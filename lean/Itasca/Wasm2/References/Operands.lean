@@ -1,5 +1,5 @@
 import Itasca.Wasm2.References.Readers
-import Itasca.Wasm2.FixedOperands
+import Itasca.Wasm2.SuffixTyping
 
 /-!
 # Operand factorization of reference readers

@@ -1,7 +1,6 @@
 import Itasca.Wasm2.Control.FuncType
-import Itasca.Wasm2.HandlerAdapters
-import Itasca.Wasm2.SignatureEquality
-import Itasca.Wasm2.Prefix
+import Itasca.Wasm2.TableAdapters
+import Itasca.Wasm2.EmptyVisitorLoop
 import Itasca.Handler.Select
 import Itasca.Handler.RawControl
 

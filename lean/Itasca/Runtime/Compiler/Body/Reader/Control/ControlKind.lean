@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterSafety
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Wasm2.Visitor.Total
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Wasm2.Trace.ControlRecords
 

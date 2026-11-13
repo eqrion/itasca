@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Simd.Reader
 import Itasca.Wasm2.Simd.Shuffle
-import Itasca.Wasm2.Invariant
+import Itasca.Wasm2.LoopDispatch
 import Itasca.Wasm2.Simd.Visitor
 import Itasca.Wasm2.Simd.LaneReaders
 import Itasca.Wasm2.Simd.Decode
