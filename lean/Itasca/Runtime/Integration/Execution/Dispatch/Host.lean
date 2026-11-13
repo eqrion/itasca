@@ -6,7 +6,6 @@ import Itasca.Runtime.Interp.Machine.Global.Mutation
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Progress.PendingExecution
 import Itasca.Runtime.Interp.Machine.Select
-import Itasca.Runtime.Interp.Machine.Global.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
 import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
