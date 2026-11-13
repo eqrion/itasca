@@ -15,7 +15,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredScopes
 import Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableIndexed
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 
 /-!
 Sections, each formerly its own module: IndexedAdvanceOrClosed, IndexedClosingWitness.

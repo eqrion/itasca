@@ -1,7 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Relations.Table.PreparedTableInitial
 import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Module.CompileProfileTotal
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

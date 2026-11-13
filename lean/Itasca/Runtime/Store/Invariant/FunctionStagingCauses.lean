@@ -7,8 +7,7 @@ import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
 import Itasca.Runtime.Store.Invariant.PrecommitError
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunctionContext
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.FrameStep

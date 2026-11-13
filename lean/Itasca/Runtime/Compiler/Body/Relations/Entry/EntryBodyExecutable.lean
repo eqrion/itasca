@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunction
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTableEntryInitial
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerBodyWasm2
 

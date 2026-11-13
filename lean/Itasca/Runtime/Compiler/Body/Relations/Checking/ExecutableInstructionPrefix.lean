@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix

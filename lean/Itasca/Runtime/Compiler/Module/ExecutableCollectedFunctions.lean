@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
 import Itasca.Runtime.Compiler.Module.CollectFunctions
 
 namespace Itasca.Runtime.Compiler
