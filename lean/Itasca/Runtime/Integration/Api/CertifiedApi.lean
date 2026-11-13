@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
-import Itasca.Runtime.Store.Invariant.SupportedFunctionTables
+import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation
 import Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization
@@ -7,12 +7,11 @@ import Itasca.Runtime.Interp.Machine.Stateful.Prepare
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Machine.Simd.FrameStep
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
-import Itasca.Runtime.Store.Invariant.TypeStaging
-import Itasca.Runtime.Store.Invariant.InternTypes
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
+import Itasca.Runtime.Store.Invariant.FunctionStaging
+import Itasca.Runtime.Store.Invariant.Rollback
+import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
-import Itasca.Runtime.Store.Invariant.SourceStoreTyping
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std

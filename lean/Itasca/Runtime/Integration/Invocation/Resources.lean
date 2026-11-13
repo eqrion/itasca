@@ -5,7 +5,7 @@ import Itasca.Runtime.Integration.Api.ExecutableCallEntry
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Interp.Invocation.RecordingErasure
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
-import Itasca.Runtime.Store.Invariant.CheckedValues
+import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Invocation.Outcomes
 

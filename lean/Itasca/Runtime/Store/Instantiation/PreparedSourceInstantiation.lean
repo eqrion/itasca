@@ -12,12 +12,11 @@ import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Store.Instantiation.PreparedRunCertificates
-import Itasca.Runtime.Store.Invariant.SourceFunctionAllocation
-import Itasca.Runtime.Store.Invariant.SourceBindings
+import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
+import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Spec.ModuleMembership
-import Itasca.Runtime.Store.Invariant.SourceExports
 import Itasca.Runtime.Compiler.Module.SourceInstantiation
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Calls.IndirectResolve
-import Itasca.Runtime.Store.Invariant.CanonicalSignatures
+import Itasca.Runtime.Store.Invariant.HostSignature
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -1,5 +1,4 @@
 import Itasca.Runtime.Store.Invariant.PrecommitError
-import Itasca.Runtime.Store.Invariant.NormalResult
 import Itasca.Runtime.Store.Api.DefineTable
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename

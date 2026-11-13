@@ -6,7 +6,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Initialization.Data
 import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Invariant.FunctionSignatures
+import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 
 /-!

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Invariant.InstantiationCode
+import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Representation.StoreCapacity
 
 namespace Itasca.Runtime.Store

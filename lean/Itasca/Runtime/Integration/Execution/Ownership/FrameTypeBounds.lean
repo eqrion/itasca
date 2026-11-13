@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.StackPreservation
-import Itasca.Runtime.Store.Invariant.Extension
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

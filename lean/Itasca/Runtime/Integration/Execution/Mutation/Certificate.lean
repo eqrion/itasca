@@ -7,8 +7,8 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
+import Itasca.Runtime.Store.Invariant.CodeAgreement
+import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
 
 namespace Itasca.Runtime.Integration

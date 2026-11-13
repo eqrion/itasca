@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
-import Itasca.Runtime.Store.Invariant.TypeStaging
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates

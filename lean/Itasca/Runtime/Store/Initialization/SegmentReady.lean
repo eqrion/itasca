@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.ElementLoop
-import Itasca.Runtime.Store.Invariant.FunctionTables
+import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Interp.Relations.SourceClosure
 
 /-!

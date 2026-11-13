@@ -1,5 +1,5 @@
 import Itasca.Runtime.Equations
-import Itasca.Runtime.Store.Invariant.NormalResult
+import Itasca.Runtime.Store.Invariant.PrecommitError
 
 /-!
 Every normal result of the remaining initializer computation carries the committed flag.

@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Initialization.InitializerErrors
 import Itasca.Runtime.Store.Initialization.ElementTypes
-import Itasca.Runtime.Store.Invariant.AddressOrder
+import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
 
 /-!
 Sections, each formerly its own module: DataStagingLoop, DataLoopCertificates.

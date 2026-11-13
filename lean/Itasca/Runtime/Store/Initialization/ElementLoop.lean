@@ -2,9 +2,8 @@ import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Store.Preparation.Staging
-import Itasca.Runtime.Store.Invariant.ValueRead
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Module.Const.Syntax
-import Itasca.Runtime.Store.Invariant.InvalidWrite
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Representation.Values

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Linking.LinkMaps
-import Itasca.Runtime.Store.Invariant.TypeStaging
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

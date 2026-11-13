@@ -24,7 +24,7 @@ import Itasca.Runtime.Integration.Api.ReadbackIssued
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
-import Itasca.Runtime.Store.Invariant.CheckedValues
+import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Integration.Execution.Resources.SourceCauses
 import Itasca.Runtime.Integration.Api.InvocationEntryResources

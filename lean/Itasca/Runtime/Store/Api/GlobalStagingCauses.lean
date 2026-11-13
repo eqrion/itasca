@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
-import Itasca.Runtime.Store.Invariant.TypeStaging
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.PreparationResults
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Preparation.AllocationCauses

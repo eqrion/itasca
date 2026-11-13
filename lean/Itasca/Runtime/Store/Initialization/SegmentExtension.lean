@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.SegmentReady
-import Itasca.Runtime.Store.Invariant.InstantiationCode
+import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Store.Invariant.Typing

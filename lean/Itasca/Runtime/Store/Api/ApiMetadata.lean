@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.FloatTrunc
-import Itasca.Runtime.Store.Invariant.ValueRead
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.DefineTable
 

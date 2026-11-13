@@ -1,6 +1,6 @@
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Api.DefineTable
-import Itasca.Runtime.Store.Invariant.CheckedValues
+import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Api.ExecutableInv
 

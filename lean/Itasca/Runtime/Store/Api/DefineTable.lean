@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Platform.Laws
-import Itasca.Runtime.Store.Invariant.ValueShape
+import Itasca.Runtime.Store.Invariant.Typing
 
 /-!
 Sections, each formerly its own module: Grow, Write, Define, DefineMemory, DefineTable.

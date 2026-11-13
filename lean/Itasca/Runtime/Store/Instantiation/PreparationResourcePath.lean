@@ -4,7 +4,6 @@ import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
 import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Store.Api.GlobalStagingCauses
 import Itasca.Runtime.Store.Initialization.ElementStagingCauses
-import Itasca.Runtime.Store.Invariant.InstanceItemCauses
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 namespace Itasca.Runtime.Store

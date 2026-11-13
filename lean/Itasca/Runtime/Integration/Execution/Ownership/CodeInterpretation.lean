@@ -1,10 +1,9 @@
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Invariant.FunctionTables
+import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
-import Itasca.Runtime.Store.Invariant.CodeAgreement
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
+import Itasca.Runtime.Store.Invariant.ErrorPost
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std

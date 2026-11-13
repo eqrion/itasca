@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Store.Api.GrowthLimits
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.DefineTable
-import Itasca.Runtime.Store.Invariant.ObjectExtension
+import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.Spec.MemoryGrowth
 import Itasca.Runtime.Interp.State.TableSource

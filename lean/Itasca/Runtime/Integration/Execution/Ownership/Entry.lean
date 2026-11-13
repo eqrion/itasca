@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Ownership.Extension
-import Itasca.Runtime.Store.Invariant.ValueShape
+import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 
 namespace Itasca.Runtime.Store

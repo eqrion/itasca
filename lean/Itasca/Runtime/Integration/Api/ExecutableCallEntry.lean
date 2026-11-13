@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Api.ExecutableInv
-import Itasca.Runtime.Store.Invariant.CheckedValues
+import Itasca.Runtime.Store.Invariant.HostSignature
 
 /-! Lookup evidence for an owned public function handle. This API-layer evidence
 is shared by correspondence, typing and divergence; representation foundations

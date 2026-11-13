@@ -3,7 +3,7 @@ import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Store.Initialization.SegmentLoop
 import Itasca.Runtime.Store.Api.GrowthLimits
-import Itasca.Runtime.Store.Invariant.Syntax
+import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Initialization.SegmentDrop
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation

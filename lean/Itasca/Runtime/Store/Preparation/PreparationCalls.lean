@@ -1,4 +1,5 @@
-import Itasca.Runtime.Store.Invariant.NormalResult
+import Itasca.Runtime.Store.Invariant.PrecommitError
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

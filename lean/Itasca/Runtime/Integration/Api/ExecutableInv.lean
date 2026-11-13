@@ -9,7 +9,7 @@ import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
-import Itasca.Runtime.Store.Invariant.TypeStaging
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std

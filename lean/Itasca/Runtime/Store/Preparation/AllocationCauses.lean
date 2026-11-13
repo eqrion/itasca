@@ -1,4 +1,5 @@
-import Itasca.Runtime.Store.Invariant.CopyTypes
+import Itasca.Runtime.Store.Invariant.Rollback
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

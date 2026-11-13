@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Store.Invariant.Extension
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Initialization.SegmentReady
 
 namespace Itasca.Runtime.Store

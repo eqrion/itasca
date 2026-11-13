@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Invariant.InstantiationCode
+import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Preparation.PreparationAllocatedMaps
 import Itasca.Runtime.Store.Preparation.PreparationCertificates
 import Itasca.Runtime.Store.Preparation.PreparationSuccess

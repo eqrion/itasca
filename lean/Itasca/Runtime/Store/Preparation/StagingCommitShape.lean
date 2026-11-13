@@ -1,12 +1,8 @@
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
-import Itasca.Runtime.Store.Invariant.AllocatedGlobalLoop
-import Itasca.Runtime.Store.Invariant.AllocatedElementLoop
-import Itasca.Runtime.Store.Invariant.AllocatedDataLoop
+import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Invariant.OwnedGlobalLoop
 import Itasca.Runtime.Store.Initialization.ElementSourceStaging
-import Itasca.Runtime.Store.Invariant.OwnedDataLoop
-import Itasca.Runtime.Store.Invariant.InstanceMapShape
-import Itasca.Runtime.Store.Invariant.ShapeAssembly
+import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 /-!

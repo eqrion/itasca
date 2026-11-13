@@ -1,7 +1,5 @@
 import Itasca.Runtime.Store.Preparation.PreparationResults
-import Itasca.Runtime.Store.Invariant.FunctionAllocatedPreparation
-import Itasca.Runtime.Store.Invariant.AllocatedTypeLoop
-import Itasca.Runtime.Store.Invariant.AllocatedTableLoop
+import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
 import Itasca.Runtime.Store.Linking.LinkedOwners
 

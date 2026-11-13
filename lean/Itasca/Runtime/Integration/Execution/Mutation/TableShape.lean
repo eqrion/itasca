@@ -17,15 +17,14 @@ import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Store.Invariant.FunctionTables
+import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
+import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
-import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Store.Invariant.SemanticApi
 
 namespace Itasca.Runtime.Integration

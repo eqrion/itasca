@@ -1,5 +1,4 @@
 import Itasca.Runtime.Store.Preparation.PreparedInitializers
-import Itasca.Runtime.Store.Invariant.TypeStaging
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 

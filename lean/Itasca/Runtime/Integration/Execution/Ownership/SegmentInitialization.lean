@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore
 import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Store.Invariant.SourceSyntax
+import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Stateful.Signature
@@ -9,12 +9,11 @@ import Itasca.Profile.BinaryUnique
 import Itasca.Profile.EntrySound
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 import Itasca.Runtime.Store.Invariant.CodeAgreement
-import Itasca.Runtime.Store.Invariant.FunctionSignatures
+import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
+import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
 
 namespace Itasca.Runtime.Integration

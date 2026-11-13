@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Preparation.PreparationResults
-import Itasca.Runtime.Store.Invariant.FunctionPreparation
+import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
