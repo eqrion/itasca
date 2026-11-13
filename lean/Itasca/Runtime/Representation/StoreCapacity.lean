@@ -4,7 +4,7 @@ import Itasca.Profile.BodySpec
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.CallSafety
-import Itasca.Binary.Unicode
+import Itasca.Binary.UnicodeUnique
 
 /-!
 Sections, each formerly its own module: ValidatedStacks, FunctionCapacity, Store, StoreInvariant, FunctionTable, TypeEntries, NameSource, StoreCapacity.

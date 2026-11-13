@@ -1,5 +1,5 @@
 import Itasca.Handler.Control
-import Itasca.Binary.ReadByte
+import Itasca.Binary.Leb128
 import Itasca.Binary.Wasm1.BlockType
 
 /-!

@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.References
 import Itasca.Binary.Wasm2.Bulk
-import Itasca.Binary.PrefixUnique
+import Itasca.Binary.UnicodeUnique
 import Itasca.Binary.Wasm2.Encoding
 import Itasca.Binary.Wasm2.EncodingComplete
 import Itasca.Binary.Wasm2.SyntaxUnique

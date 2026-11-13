@@ -1,5 +1,5 @@
 import Itasca.Visitor.ReaderAcceptance
-import Itasca.Binary.ReadByte
+import Itasca.Binary.Leb128
 
 /-!
 Replay an independently accepted body through reached-step callback obligations.

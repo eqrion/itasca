@@ -1,6 +1,5 @@
 import Itasca.Profile.CodeEntry
 import Itasca.Binary.Wasm2.EncodingUnique
-import Itasca.Binary.ModuleUniquePrimitives
 import Itasca.Binary.ModuleUnique
 
 /-!

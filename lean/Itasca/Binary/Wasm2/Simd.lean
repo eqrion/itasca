@@ -1,7 +1,7 @@
 import Itasca.Binary.Wasm2.SimdMemoryMeaning
 import Itasca.Binary.Wasm1.MemoryMeaning
-import Itasca.Binary.FloatBits
-import Itasca.Binary.PrefixUnique
+import Itasca.Binary.SignedLeb32
+import Itasca.Binary.UnicodeUnique
 
 /-!
 # Wasm 2.0 SIMD instruction bytes

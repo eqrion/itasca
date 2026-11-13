@@ -1,4 +1,4 @@
-import Itasca.Binary.PrefixUnique
+import Itasca.Binary.UnicodeUnique
 import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Binary.Wasm1.Encoding
 

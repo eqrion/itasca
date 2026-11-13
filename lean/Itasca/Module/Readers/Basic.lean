@@ -1,4 +1,4 @@
-import Itasca.Binary.Module
+import Itasca.Binary.UnicodeUnique
 
 /-!
 # Primitive module readers

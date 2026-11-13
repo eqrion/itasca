@@ -1,4 +1,4 @@
-import Itasca.Binary.ReadByte
+import Itasca.Binary.Leb128
 
 namespace Itasca
 open Aeneas Aeneas.Std

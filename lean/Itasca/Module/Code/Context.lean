@@ -1,5 +1,5 @@
 import Itasca.Module.Code.BodyContext
-import Itasca.Binary.Module
+import Itasca.Binary.UnicodeUnique
 import Itasca.Module.Code.BodyContextComplete
 import Itasca.Spec.Checks
 

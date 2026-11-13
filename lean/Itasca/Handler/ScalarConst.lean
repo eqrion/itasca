@@ -1,6 +1,6 @@
 import Itasca.Handler.SignedConst
 import Itasca.Binary.SignedLeb64
-import Itasca.Binary.FloatBits
+import Itasca.Binary.SignedLeb32
 import Itasca.Visitor.Basic
 import Itasca.Spec.TypingInversion
 

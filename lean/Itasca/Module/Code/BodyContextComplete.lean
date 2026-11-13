@@ -1,4 +1,4 @@
-import Itasca.Binary.Module
+import Itasca.Binary.UnicodeUnique
 import Itasca.Module.Code.BodyContext
 
 /-!

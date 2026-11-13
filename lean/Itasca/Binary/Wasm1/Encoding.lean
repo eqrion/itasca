@@ -4,7 +4,6 @@ import Itasca.Binary.Wasm1.MemoryMeaning
 import Itasca.Binary.Wasm1.BlockType
 import Itasca.Binary.SignedLeb32
 import Itasca.Binary.SignedLeb64
-import Itasca.Binary.FloatBits
 import Itasca.Spec.TypingInversion
 
 /-!
