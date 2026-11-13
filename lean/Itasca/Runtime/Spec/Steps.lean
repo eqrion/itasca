@@ -1,4 +1,4 @@
-import SpecExt.Host
+import SpecExt.Builtins
 
 /-!
 Host-extended source execution sequences and event traces. Runtime correspondence and exact recording compose these source runs without assuming a chosen host reply.

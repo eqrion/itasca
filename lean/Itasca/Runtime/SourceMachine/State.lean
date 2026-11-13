@@ -1,4 +1,4 @@
-import SpecExt.Host
+import SpecExt.Builtins
 
 /-! A flat abstract execution state over specification values and instructions.
 The first frame and first label are innermost. Operand values retain Wasm's

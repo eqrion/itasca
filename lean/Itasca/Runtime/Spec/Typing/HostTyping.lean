@@ -1,4 +1,4 @@
-import SpecExt.Host
+import SpecExt.Builtins
 
 /-! Source host typing and conservativity of the host-code backport.
 The default module environment is the one used by runtime host decoding.
