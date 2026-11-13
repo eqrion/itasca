@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots

@@ -3,8 +3,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Mathlib.Tactic.IntervalCases
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.SimdInstructionAcceptance
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
 /-!
 Sections, each formerly its own module: SimdSafetyCallbacks, SimdInstructionAcceptance.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid
 import Itasca.Visitor.BodyReplay

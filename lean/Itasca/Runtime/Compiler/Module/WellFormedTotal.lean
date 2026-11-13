@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.CodeRegion
 import Mathlib.Tactic.IntervalCases
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
 /-!
 Normal return of per-instruction validity checks and complete function well-formedness checks, including jump/control tables.

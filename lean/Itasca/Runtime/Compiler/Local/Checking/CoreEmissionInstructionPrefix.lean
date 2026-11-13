@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.ScalarEmissionAcceptance
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

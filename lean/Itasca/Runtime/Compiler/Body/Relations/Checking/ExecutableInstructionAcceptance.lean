@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.StatefulInstructionAcceptance
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance
 
 /-!

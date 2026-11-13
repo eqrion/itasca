@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
 /-!
 Checked instruction prefixes through br_table lowering. Target-dispatch effects compose through the loop into the callback while retaining existing checked instructions.
