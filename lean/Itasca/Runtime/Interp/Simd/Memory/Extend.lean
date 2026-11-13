@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.ExtendLoop
-import Itasca.Runtime.Interp.Simd.Integer.WidenSound
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 import Itasca.Runtime.Interp.Simd.Memory.Range
 
 /-!

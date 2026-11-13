@@ -1,17 +1,10 @@
 import Itasca.Runtime.Interp.Simd.Relations.OperandsBounded
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
-import Itasca.Runtime.Interp.Simd.Integer.WidenSound
-import Itasca.Runtime.Interp.Simd.Integer.Pairwise
-import Itasca.Runtime.Interp.Simd.Integer.Narrow
-import Itasca.Runtime.Interp.Simd.Integer.Dot
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
+import Itasca.Runtime.Interp.Simd.Integer.UnaryAll
 import Itasca.Runtime.Interp.Simd.Float.TruncSat
-import Itasca.Runtime.Interp.Simd.Integer.ConvertInteger
-import Itasca.Runtime.Interp.Simd.Integer.UnarySound
-import Itasca.Runtime.Interp.Simd.Integer.PopcountSound
-import Itasca.Runtime.Interp.Simd.Integer.ShiftSound
+import Itasca.Runtime.Interp.Simd.Integer.Q15
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
-import Itasca.Runtime.Interp.Simd.Integer.AllTrueSound
-import Itasca.Runtime.Interp.Simd.Integer.BitmaskSound
 
 /-!
 Sections, each formerly its own module: ExecutePure, PureConversions, PureUnary.

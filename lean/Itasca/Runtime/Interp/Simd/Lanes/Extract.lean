@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
-import Itasca.Runtime.Interp.Simd.Integer.Signed
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!

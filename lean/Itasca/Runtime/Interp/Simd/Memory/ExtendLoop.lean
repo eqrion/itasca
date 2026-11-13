@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Simd.Integer.WidenWords
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 
 /-!
 The runtime loop used by widening vector loads.

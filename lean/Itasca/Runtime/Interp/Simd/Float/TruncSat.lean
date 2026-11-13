@@ -1,10 +1,9 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatPromote
 import Itasca.Runtime.Spec.Simd.ExtendLanes
-import Itasca.Runtime.Interp.Simd.Integer.CompareLoop
-import Itasca.Runtime.Interp.Simd.Integer.CompareMaskBits
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
+import Itasca.Runtime.Interp.Simd.Integer.UnaryWords
 import Itasca.Runtime.Spec.Simd.FloatResize
 import Itasca.Runtime.Interp.Numeric.Float
-import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes
 import Itasca.Runtime.Spec.Simd.Pairwise
 import Itasca.Runtime.Interp.Numeric.Float.FloatTrunc64
 

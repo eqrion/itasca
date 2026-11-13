@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.Range
-import Itasca.Runtime.Interp.Simd.Integer.Shift
+import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
 
 /-!
 Opcodes and byte ranges of vector lane-memory operations.

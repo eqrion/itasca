@@ -6,7 +6,7 @@ import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
 import Itasca.Runtime.Interp.Simd.Lanes.LaneEntries
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
-import Itasca.Runtime.Interp.Simd.Integer.Compare
+import Itasca.Runtime.Interp.Simd.Integer.UnaryWords
 import Itasca.Runtime.Interp.Simd.Float.TruncSat
 import Itasca.Runtime.Interp.Simd.Float.PureEntries
 import Itasca.Runtime.Interp.Simd.Integer.PureInteger
