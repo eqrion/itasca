@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.SyntaxUnique
 import Itasca.Wasm2.Invariant
-import Itasca.Wasm1.Complete.Frame
+import Itasca.Wasm1.Complete.Scalar
 import Itasca.Profile.Types
 
 /-!
