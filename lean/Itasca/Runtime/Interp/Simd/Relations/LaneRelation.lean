@@ -1,7 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
-import Itasca.Runtime.Interp.Simd.Lanes.Extract
+import Itasca.Runtime.Interp.Simd.Lanes.Swizzle
 import Itasca.Runtime.Interp.Simd.Integer.CompareSigned
-import Itasca.Runtime.Interp.Simd.Lanes.Replace
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Spec.FloatTrunc
 

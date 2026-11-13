@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Memory.LaneEffect
 import Itasca.Runtime.Interp.Simd.Memory.LoadSource
-import Itasca.Runtime.Interp.Simd.Lanes.ReplacePacking
+import Itasca.Runtime.Interp.Simd.Lanes.Swizzle
 
 /-!
 Byte decoding and widths of vector lane loads.

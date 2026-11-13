@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Simd.Lanes.Access
+import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Spec.Simd.CompareInteger
 
 /-!

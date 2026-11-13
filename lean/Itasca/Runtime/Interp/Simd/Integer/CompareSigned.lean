@@ -1,9 +1,6 @@
-import Itasca.Runtime.Interp.Simd.Lanes.Access
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import Itasca.Runtime.Interp.Simd.Lanes.Splat
-import Itasca.Runtime.Interp.Simd.Lanes.Packing
 import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!

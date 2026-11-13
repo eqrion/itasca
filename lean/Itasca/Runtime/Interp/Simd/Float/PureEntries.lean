@@ -1,5 +1,4 @@
-import Itasca.Runtime.Interp.Simd.Lanes.Splat
-import Itasca.Runtime.Interp.Simd.Lanes.Packing
+import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Spec.Simd.IntegerMinMax
 import Itasca.Runtime.Interp.Simd.Float.TruncSat
 import Itasca.Runtime.Interp.Numeric.Float.FloatPromote
