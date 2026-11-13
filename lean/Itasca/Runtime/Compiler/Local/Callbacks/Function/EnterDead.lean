@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 
 /-!
 Compiler scope entry when the source is unreachable.

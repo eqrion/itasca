@@ -1,9 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Operations.EndSafety
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000

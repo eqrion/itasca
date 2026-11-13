@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrame
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 
 /-!

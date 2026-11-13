@@ -72,7 +72,6 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
@@ -82,16 +81,10 @@ import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseTransition
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackElse
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterElse
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseGuardedScope
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature
 import Itasca.Runtime.Compiler.Module.CompileEntry

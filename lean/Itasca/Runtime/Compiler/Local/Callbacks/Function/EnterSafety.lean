@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterLoop
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds

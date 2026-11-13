@@ -3,15 +3,14 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.Signatures
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeNesting
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Capacity.ControlGrowth
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
 /-!
 Sections, each formerly its own module: CallbackCursor, CompilerIndirectTactic, CallbackIndirect, CallbackSources, CompilerCallbackMetadata, ScopeCallbackEnter, ScopeCallbackDead, ScopeCallbackIf, CallbackGrowth, CallbackCapacity, CompilerCodeMonotoneCallbacks.

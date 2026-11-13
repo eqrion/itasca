@@ -69,7 +69,6 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post

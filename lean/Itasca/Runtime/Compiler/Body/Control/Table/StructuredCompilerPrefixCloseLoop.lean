@@ -2,7 +2,8 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixComple
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseLoop
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

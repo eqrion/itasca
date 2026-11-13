@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
+
 /-! Exact conditional branches with nonempty slot transfers. The guard skips
 the copy and jump on false; the final patch fixes its exact resume address. -/
 namespace Itasca.Runtime.Compiler

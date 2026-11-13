@@ -4,7 +4,6 @@ import Itasca.Runtime.Compiler.Local.Checking.InstructionAppendEffect
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
 /-!

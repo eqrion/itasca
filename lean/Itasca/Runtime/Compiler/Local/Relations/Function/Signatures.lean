@@ -1,7 +1,8 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Support.ControlTranslation
 import Itasca.Runtime.Representation.Values
+
 /-! Compiler signature capture: total exact word counting, retained source
 value/word arities, and source block-signature resolution. -/
 namespace Itasca.Runtime.Compiler

@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlHeightSuccess
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterElse
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackCapacity
 
 /-!

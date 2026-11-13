@@ -1,8 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionPatch
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseTransition
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSuccess
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
 
 /-!

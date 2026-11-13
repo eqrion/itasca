@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.ScopeDemand
 import Itasca.Runtime.Compiler.Local.Capacity.ObserveBudgetAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetEffects
 import Itasca.Runtime.Compiler.Local.Capacity.EmitAvailability
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 
 /-!
 Allocation availability for scope publication and entry without emitted code. The publication reserve is discharged before constructing the entered compiler state.

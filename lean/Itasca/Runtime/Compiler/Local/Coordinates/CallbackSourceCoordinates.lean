@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 
 namespace Itasca.Runtime.Compiler

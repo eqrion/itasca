@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.CallbackCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringForwardBranch
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringLoopBranch
 import Itasca.Runtime.Compiler.Local.Capacity.ObserveBudgetAvailability
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 
 /-!
 Allocator availability for forward and loop branches, composed into the branch callback availability theorem.

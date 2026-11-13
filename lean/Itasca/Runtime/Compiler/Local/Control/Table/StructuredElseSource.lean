@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixChange
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 theorem StructuredElseFrames.outer {jumpTables : List Aeneas.Std.U32} {emit types functions returns locals code scopes labels scope label}

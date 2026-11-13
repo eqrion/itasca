@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 
 /-!
 The successful function-start callback establishes the zero-operand layout, source coordinates, and the root control frame used by all later callbacks.

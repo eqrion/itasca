@@ -4,7 +4,8 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseBranches
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

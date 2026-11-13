@@ -8,7 +8,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks

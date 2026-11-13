@@ -13,7 +13,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ControlEffects
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 
 /-!
 Every successful structured-control reader step is one control compiler

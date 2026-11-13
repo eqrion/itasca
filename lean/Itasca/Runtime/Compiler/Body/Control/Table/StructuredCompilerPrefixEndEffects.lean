@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseBlock
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseGuardedScope
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

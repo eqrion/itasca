@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameSelect
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
