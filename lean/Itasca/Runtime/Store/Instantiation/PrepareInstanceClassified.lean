@@ -10,7 +10,6 @@ import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
-import Itasca.Runtime.Store.Linking.LinkErrors
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop

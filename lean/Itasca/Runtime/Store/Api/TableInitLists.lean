@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
-import Itasca.Runtime.Store.Linking.LinkMaps
+import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Initialization.Data
 import Itasca.Runtime.Store.Initialization.ElementLoop

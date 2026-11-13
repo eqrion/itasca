@@ -1,8 +1,7 @@
 import Itasca.Runtime.Store.Instantiation.PreparationResourcePath
-import Itasca.Runtime.Store.Linking.LinkErrors
+import Itasca.Runtime.Store.Linking.LinkLoop
 import Itasca.Runtime.Store.Instantiation.LinkedPreparedRun
 import Itasca.Runtime.Store.Invariant.PrecommitError
-import Itasca.Runtime.Store.Linking.LinkLoop
 import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Invariant.FunctionStaging

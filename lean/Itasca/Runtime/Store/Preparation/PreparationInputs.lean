@@ -1,4 +1,4 @@
-import Itasca.Runtime.Store.Linking.LinkMaps
+import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 
 namespace Itasca.Runtime.Store

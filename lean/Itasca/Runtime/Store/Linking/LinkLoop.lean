@@ -1,5 +1,299 @@
-import Itasca.Runtime.Store.Linking.ExternalMaps
-import Itasca.Runtime.Store.Linking.LinkMaps
+import Itasca.Runtime.Store.Preparation.AllocationErrors
+import Itasca.Runtime.Store.Linking.LinkedOwners
+
+/-!
+Sections, each formerly its own module: LinkErrors, ExternalMaps, LinkLoop.
+-/
+
+/-! ## LinkErrors -/
+
+section
+
+/-!
+Linking error classification and exclusion of resource errors. These results are consumed by instance preparation without executing module code.
+-/
+
+/-! ## Link Errors -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+set_option maxRecDepth 8192
+macro "link_error_step " h:ident : tactic => `(tactic|
+  first
+  | solve | (simp only [Result.ok.injEq] at $h:ident; cases $h:ident; simp_all [ErrorAllowed, PrecommitError])
+  | solve | simp_all only [Result.ok.injEq, Prod.mk.injEq, ErrorAllowed, PrecommitError,
+      runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, core.option.Option.ok_or, bind_ok, bind_tc_ok]
+  | (fail_if_no_progress simp only [runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, core.option.Option.ok_or, bind_ok, bind_tc_ok, uncurry_apply_pair] at $h:ident)
+  | split at $h:ident
+  | (obtain ⟨value, called, rest⟩ := normal_bind_exists _ _ _ $h
+     clear $h
+     rename' rest => $h
+     first
+     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩
+        repeat' (guard_hyp secondValue : Prod _ _; rcases secondValue with ⟨firstValue, secondValue⟩))
+     | skip
+     try simp only [uncurry_apply_pair] at $h:ident)
+  | split at $h:ident)
+
+/-- Linking itself can reject only compatibility or handle ownership. Partial
+indexing is excluded by normal return here, and by issued-handle invariants in
+the surrounding total staging theorem. -/
+theorem link_import_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (store : runtime.store.Store M)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
+    (run : runtime.store.instantiate.Store.link_import memory store inst index external = .ok out) :
+    ErrorAllowed PrecommitError out.1 ∧ out.2.1 = store ∧ out.2.2.module = inst.module := by
+  unfold runtime.store.instantiate.Store.link_import at run
+  repeat' link_error_step run
+
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Link Error Loop -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+set_option maxRecDepth 8192
+theorem link_staging_errors {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (imports : Slice runtime.Extern)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
+    (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed PrecommitError status)
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop2 memory store imports status index inst = .ok out) :
+    ErrorAllowed PrecommitError out.2.1 := by
+  generalize size : Usize.max - index.val = count
+  induction count using Nat.strong_induction_on generalizing store inst index status with
+  | h count ih =>
+    unfold runtime.store.instantiate.Store.prepare_instance_loop2 at run
+    rw [loop] at run
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop2.body,
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok] at run
+    split at run
+    · cases status with
+      | Err error =>
+        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at run
+        subst out
+        exact allowed
+      | Ok unit =>
+        cases unit
+        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at run
+        obtain ⟨external, read, rest⟩ := normal_bind_exists _ _ _ run
+        obtain ⟨⟨nextStatus, nextStore, nextInst⟩, called, tail⟩ := normal_bind_exists _ _ _ rest
+        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
+        obtain ⟨nextIndex, increment, tail⟩ := normal_bind_exists _ _ _ tail
+        have arithmetic := UScalar.add_equiv index 1#usize
+        rw [increment] at arithmetic
+        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
+        have nextMax := nextIndex.hmax
+        have smaller : Usize.max - nextIndex.val < count := by scalar_tac
+        have nextAllowed := (link_import_errors memory store inst index external _ called).1
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory nextStore imports nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop2, runtime.store.instantiate.Store.prepare_instance_loop2.body,
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
+        exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl
+    · simp only [bind_ok, Result.ok.injEq] at run
+      subst out
+      exact allowed
+
+end Itasca.Runtime.Store
+
+end
+
+/-! ## Link Nonresource -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+set_option maxRecDepth 8192
+/-- Link compatibility and ownership checks allocate no execution resources. -/
+def LinkFailure (error : runtime.ExecError) : Prop :=
+  match error with
+  | .Link _ | .WrongStore => True
+  | _ => False
+macro "link_nonresource_step " h:ident : tactic => `(tactic|
+  first
+  | solve | (simp only [Result.ok.injEq] at $h:ident; cases $h:ident; simp_all [ErrorAllowed, LinkFailure])
+  | solve | simp_all only [Result.ok.injEq, Prod.mk.injEq, ErrorAllowed, LinkFailure,
+      runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, core.option.Option.ok_or, bind_ok, bind_tc_ok]
+  | (fail_if_no_progress simp only [runtime.store.Store.check, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+      core.convert.FromSame.from, core.option.Option.ok_or, bind_ok, bind_tc_ok, uncurry_apply_pair] at $h:ident)
+  | split at $h:ident
+  | (obtain ⟨value, called, rest⟩ := normal_bind_exists _ _ _ $h
+     clear $h
+     rename' rest => $h
+     first
+     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩
+        repeat' (guard_hyp secondValue : Prod _ _; rcases secondValue with ⟨firstValue, secondValue⟩))
+     | skip
+     try simp only [uncurry_apply_pair] at $h:ident)
+  | split at $h:ident)
+
+/-- Linking itself can reject only compatibility or handle ownership. Partial
+indexing is excluded by normal return here, and by issued-handle invariants in
+the surrounding total staging theorem. -/
+theorem link_import_nonresource {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (store : runtime.store.Store M)
+    (inst : runtime.store.ModuleInst) (index : Usize) (external : runtime.Extern)
+    (out : core.result.Result Unit runtime.ExecError × runtime.store.Store M × runtime.store.ModuleInst)
+    (run : runtime.store.instantiate.Store.link_import memory store inst index external = .ok out) :
+    ErrorAllowed (LinkFailure) out.1 ∧ out.2.1 = store ∧ out.2.2.module = inst.module := by
+  unfold runtime.store.instantiate.Store.link_import at run
+  repeat' link_nonresource_step run
+
+theorem link_staging_nonresource {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (imports : Slice runtime.Extern)
+    (store : runtime.store.Store M) (inst : runtime.store.ModuleInst) (index : Usize)
+    (status : core.result.Result Unit runtime.ExecError) (allowed : ErrorAllowed LinkFailure status)
+    {out} (run : runtime.store.instantiate.Store.prepare_instance_loop2 memory store imports status index inst = .ok out) :
+    ErrorAllowed LinkFailure out.2.1 := by
+  generalize size : Usize.max - index.val = count
+  induction count using Nat.strong_induction_on generalizing store inst index status with
+  | h count ih =>
+    unfold runtime.store.instantiate.Store.prepare_instance_loop2 at run
+    rw [loop] at run
+    simp only [runtime.store.instantiate.Store.prepare_instance_loop2.body,
+      runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok] at run
+    split at run
+    · cases status with
+      | Err error =>
+        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at run
+        subst out
+        exact allowed
+      | Ok unit =>
+        cases unit
+        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at run
+        obtain ⟨external, read, rest⟩ := normal_bind_exists _ _ _ run
+        obtain ⟨⟨nextStatus, nextStore, nextInst⟩, called, tail⟩ := normal_bind_exists _ _ _ rest
+        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
+        obtain ⟨nextIndex, increment, tail⟩ := normal_bind_exists _ _ _ tail
+        have arithmetic := UScalar.add_equiv index 1#usize
+        rw [increment] at arithmetic
+        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
+        have nextMax := nextIndex.hmax
+        have smaller : Usize.max - nextIndex.val < count := by scalar_tac
+        have nextAllowed := (link_import_nonresource memory store inst index external _ called).1
+        have nextRun : runtime.store.instantiate.Store.prepare_instance_loop2 memory nextStore imports nextStatus nextIndex nextInst = .ok out := by
+          simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop2, runtime.store.instantiate.Store.prepare_instance_loop2.body,
+            runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
+        exact ih _ smaller nextStore nextInst nextIndex nextStatus nextAllowed nextRun rfl
+    · simp only [bind_ok, Result.ok.injEq] at run
+      subst out
+      exact allowed
+
+end Itasca.Runtime.Store
+
+end
+
+end
+
+/-! ## ExternalMaps -/
+
+section
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+def decodeExternal : runtime.Extern → externaddr
+  | .Func address => .FUNC address.index.val
+  | .Table address => .TABLE address.index.val
+  | .Memory address => .MEM address.index.val
+  | .Global address => .GLOBAL address.index.val
+
+def externalFunctions (externals : List runtime.Extern) : List runtime.FuncAddr :=
+  externals.filterMap (fun external => match external with | .Func a => some a | _ => none)
+def externalTables (externals : List runtime.Extern) : List runtime.TableAddr :=
+  externals.filterMap (fun external => match external with | .Table a => some a | _ => none)
+def externalMemories (externals : List runtime.Extern) : List runtime.MemoryAddr :=
+  externals.filterMap (fun external => match external with | .Memory a => some a | _ => none)
+def externalGlobals (externals : List runtime.Extern) : List runtime.GlobalAddr :=
+  externals.filterMap (fun external => match external with | .Global a => some a | _ => none)
+
+/-- Exact address subsequences of the caller's external list, including ownership
+bits. This complements the signature-indexed import map. -/
+structure ExternalMaps (externals : List runtime.Extern) (inst : runtime.store.ModuleInst) : Prop where
+  funcs : inst.funcs.val = externalFunctions externals
+  tables : inst.tables.val = externalTables externals
+  memories : inst.memories.val = externalMemories externals
+  globals : inst.globals.val = externalGlobals externals
+
+theorem LinkedStep.external_maps {M : Type} {view : M → Slice U8} {store : runtime.store.Store M}
+    {before after : runtime.store.ModuleInst} {desc external externals}
+    (effect : LinkedStep view store before desc external after)
+    (maps : ExternalMaps externals before) : ExternalMaps (externals ++ [external]) after := by
+  cases effect <;> constructor <;>
+    simp_all [externalFunctions, externalTables, externalMemories, externalGlobals,
+      maps.funcs, maps.tables, maps.memories, maps.globals]
+
+theorem external_functions (externals : List runtime.Extern) :
+    fun_funcs (externals.map decodeExternal)
+      ((externalFunctions externals).map (fun a => a.index.val)) := by
+  induction externals with
+  | nil => exact .fun_funcs_case_0
+  | cons external rest ih =>
+    cases external <;> simp only [List.map_cons, externalFunctions, List.filterMap_cons,
+      List.map_cons,
+      decodeExternal] at *
+    · exact .fun_funcs_case_1 _ _ _ ih
+    all_goals exact .fun_funcs_case_2 _ _ _ ih
+
+theorem external_globals (externals : List runtime.Extern) :
+    fun_globals (externals.map decodeExternal)
+      ((externalGlobals externals).map (fun a => a.index.val)) := by
+  induction externals with
+  | nil => exact .fun_globals_case_0
+  | cons external rest ih =>
+    cases external <;> simp only [List.map_cons, externalGlobals, List.filterMap_cons,
+      List.map_cons,
+      decodeExternal] at *
+    all_goals first
+      | exact .fun_globals_case_1 _ _ _ ih
+      | exact .fun_globals_case_2 _ _ _ ih
+
+theorem external_tables (externals : List runtime.Extern) :
+    fun_tables (externals.map decodeExternal)
+      ((externalTables externals).map (fun a => a.index.val)) := by
+  induction externals with
+  | nil => exact .fun_tables_case_0
+  | cons external rest ih =>
+    cases external <;> simp only [List.map_cons, externalTables, List.filterMap_cons,
+      List.map_cons,
+      decodeExternal] at *
+    all_goals first
+      | exact .fun_tables_case_1 _ _ _ ih
+      | exact .fun_tables_case_2 _ _ _ ih
+
+theorem external_memories (externals : List runtime.Extern) :
+    fun_mems (externals.map decodeExternal)
+      ((externalMemories externals).map (fun a => a.index.val)) := by
+  induction externals with
+  | nil => exact .fun_mems_case_0
+  | cons external rest ih =>
+    cases external <;> simp only [List.map_cons, externalMemories, List.filterMap_cons,
+      List.map_cons,
+      decodeExternal] at *
+    all_goals first
+      | exact .fun_mems_case_1 _ _ _ ih
+      | exact .fun_mems_case_2 _ _ _ ih
+end Itasca.Runtime.Store
+
+end
+
+/-! ## LinkLoop -/
+
+section
 
 /-!
 Import linking loop and its external-map certificate. These results are consumed by instance preparation without executing module code.
@@ -215,5 +509,7 @@ theorem linked_maps_empty {M : Type} (view : M → Slice U8) (store : runtime.st
   constructor <;> simp [*, importedFuncs, importedTables, importedMems, importedGlobals]
 
 end Itasca.Runtime.Store
+
+end
 
 end

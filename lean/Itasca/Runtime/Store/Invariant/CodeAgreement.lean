@@ -1,5 +1,5 @@
 import Itasca.Runtime.Representation.Values
-import Itasca.Runtime.Store.Linking.LinkMaps
+import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.FunctionStaging
-import Itasca.Runtime.Store.Linking.LinkMaps
+import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Module.Env.Basic
 import Itasca.Module.Elab.Metadata
