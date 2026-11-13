@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.TypedSelect.Correct
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Stateful.Ownership
 

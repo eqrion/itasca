@@ -10,7 +10,7 @@ import Itasca.Runtime.Spec.MemoryGrowth
 import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Spec.Simd.FloatResize
 import Itasca.Runtime.SourceMachine.Sim.Typed
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.SourceMachine.Stateful.Transition

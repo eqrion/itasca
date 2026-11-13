@@ -1,6 +1,7 @@
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Store.Invariant.ValueShape
 import Itasca.Runtime.Interp.Relations.ReferenceArguments
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

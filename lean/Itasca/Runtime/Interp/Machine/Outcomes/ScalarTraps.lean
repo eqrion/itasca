@@ -9,7 +9,7 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 

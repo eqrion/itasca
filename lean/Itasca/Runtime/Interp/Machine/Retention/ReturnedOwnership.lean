@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
 
 /-!

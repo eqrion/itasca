@@ -15,7 +15,7 @@ import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Numeric.Positive
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 
 /-!
 Integer numeric machine fetch, execution and trap classification. The resulting argument is consumed by complete machine advance while preserving its source grammar and store premises.

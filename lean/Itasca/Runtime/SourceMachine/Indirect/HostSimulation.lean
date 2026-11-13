@@ -2,7 +2,7 @@ import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.SourceMachine.Ownership.Bounds
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results

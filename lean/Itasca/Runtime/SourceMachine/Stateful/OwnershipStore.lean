@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Stateful.PayloadTyping
 import Itasca.Runtime.SourceMachine.Stateful.CopyStore
