@@ -3,7 +3,7 @@ import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Memory.Decode
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.SourceMachine.Simd.Source
-import Itasca.Runtime.Interp.Machine.Emission.Opcode
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 
 namespace Itasca.Runtime.Interp

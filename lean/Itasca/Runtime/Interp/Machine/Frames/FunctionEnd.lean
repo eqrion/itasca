@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
-import Itasca.Runtime.Interp.Machine.Emission.Empty
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
 import Itasca.Runtime.Interp.Relations.Epilogue
 

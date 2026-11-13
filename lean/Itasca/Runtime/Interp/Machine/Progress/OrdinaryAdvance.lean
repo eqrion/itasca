@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
 import Itasca.Runtime.Interp.Machine.Control.ControlExecution
 import Itasca.Runtime.Interp.Machine.Constants.IntegerConstant
 import Itasca.Runtime.Interp.Machine.Progress.Advance
-import Itasca.Runtime.Interp.Machine.Emission.Opcode
+import Itasca.Runtime.Interp.Machine.Emission.Local
 
 /-!
 Progress of ordinary instructions under uniform simulation.

@@ -22,7 +22,7 @@ import Itasca.Runtime.Interp.State.GlobalMutationStep
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Machine.Emission.Integer
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.Relations.ControlPoint
@@ -41,7 +41,6 @@ import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
-import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
 import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.Interp.Relations.ValueLookup
@@ -55,7 +54,6 @@ import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.ControlEntry
 import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
-import Itasca.Runtime.Interp.Machine.Emission.Opcode
 import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.State.GlobalCoreOperands
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
@@ -77,7 +75,6 @@ import Itasca.Runtime.Interp.Machine.Emission.Unreachable
 import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Interp.Relations.Epilogue
 import Itasca.Runtime.Interp.Relations.Normalization
-import Itasca.Runtime.Interp.Machine.Emission.Empty
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Machine.Simulation.Measure

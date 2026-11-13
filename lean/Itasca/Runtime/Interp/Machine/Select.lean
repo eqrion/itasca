@@ -13,7 +13,7 @@ import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
-import Itasca.Runtime.Interp.Machine.Emission.Integer
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure

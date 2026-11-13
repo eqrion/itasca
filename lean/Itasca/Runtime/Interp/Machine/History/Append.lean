@@ -11,8 +11,7 @@ import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.Interp.Relations.SourceCallCause
-import Itasca.Runtime.Interp.Machine.Emission.Opcode
-import Itasca.Runtime.Interp.Machine.Emission.Binary
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Relations.Fetch
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Interp.Relations.TypedOperands

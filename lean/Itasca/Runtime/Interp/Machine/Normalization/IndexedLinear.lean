@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Interp.Machine.Emission.Integer
+import Itasca.Runtime.Interp.Machine.Emission.Local
 
 /-!
 Inversion of a linear indexed structured-code relation.

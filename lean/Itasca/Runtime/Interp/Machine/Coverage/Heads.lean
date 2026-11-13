@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Interp.Machine.Emission.Empty
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission

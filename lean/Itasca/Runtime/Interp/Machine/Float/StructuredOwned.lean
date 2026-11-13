@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Numeric.Float.FloatFetch
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
-import Itasca.Runtime.Interp.Machine.Emission.Integer
+import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
 import Itasca.Runtime.Interp.Numeric.Float.FloatOwnership
 
