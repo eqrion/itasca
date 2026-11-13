@@ -27,7 +27,7 @@ import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
+import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep

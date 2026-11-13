@@ -7,7 +7,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
+import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.Interp.State.GlobalCoreStep

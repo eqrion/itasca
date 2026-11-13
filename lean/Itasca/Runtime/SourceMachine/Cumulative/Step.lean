@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
+import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Float.Transition

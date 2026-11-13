@@ -3,9 +3,9 @@ import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Integration.Execution.Ownership.StoreOperations
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Interp.Machine.Calls.CallLookup
-
 import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.SourceMachine.Supported.Invoke
+import Itasca.Runtime.SourceMachine.Supported.PureCoverage
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 

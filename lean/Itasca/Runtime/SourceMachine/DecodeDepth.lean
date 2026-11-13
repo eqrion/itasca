@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.Cumulative.Step
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
+import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.SourceMachine.Measure

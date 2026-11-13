@@ -1,7 +1,126 @@
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
-import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
+
+/-!
+Sections, each formerly its own module: CoreStuck, Invoke, PureCoverage.
+-/
+
+/-! ## CoreStuck -/
+
+section
+
+namespace Itasca.Runtime.SourceMachine
+
+/-- `Core.instruction` never executes the head; another transition relation handles it. -/
+def CoreStuck (op : instr) : Prop :=
+  ∀ s ambient f rest after, Core.instruction s ambient f rest op after = .stuck
+
+theorem float_core_stuck (op : Float.Instruction) : CoreStuck op.source := by
+  intro s ambient f rest after
+  cases op <;> simp [Core.instruction,Float.Instruction.source,astep,Numeric.decodeInstruction]
+
+theorem stateful_core_stuck (op : Stateful.Instruction) : CoreStuck op.source := by
+  intro s ambient f rest after
+  cases op <;> simp [Core.instruction,Stateful.Instruction.source,astep,Numeric.decodeInstruction]
+
+theorem indirect_core_stuck (table : tableidx) (type : typeidx) : CoreStuck (.CALL_INDIRECT table type) := by
+  intro s ambient f rest after
+  simp [Core.instruction,astep,Numeric.decodeInstruction]
+
+theorem SimdInstr.core_stuck {op : instr} (supported : SimdInstr op) : CoreStuck op := by
+  intro s ambient f rest after
+  cases supported with
+  | pure signature => cases signature <;> rfl
+  | constant => rfl
+  | memory signature => cases signature <;> rfl
+
+theorem BinaryInstr.core_head {op} (allowed : BinaryInstr op) : CoreHead op ∨ CoreStuck op := by
+  cases allowed with
+  | nop => exact .inl (.pure .nop)
+  | unreachable => exact .inl (.pure .unreachable)
+  | drop => exact .inl (.pure .drop)
+  | const ty value => exact .inl (.const ty value)
+  | numeric op => exact .inl (.pure (.numeric op))
+  | float op => exact .inr (float_core_stuck op)
+  | select => exact .inl .select
+  | typed_select ty => exact .inr fun _ _ _ _ _ => rfl
+  | local_get index => exact .inl (.pure (.local_get index))
+  | local_set index => exact .inl (.pure (.local_set index))
+  | local_tee index => exact .inl (.pure (.local_tee index))
+  | global_get index => exact .inl (.global_get index)
+  | global_set index => exact .inl (.global_set index)
+  | load op argument => exact .inl (.load op argument)
+  | store op argument => exact .inl (.store op argument)
+  | stateful op => exact .inr (stateful_core_stuck op)
+  | simd simd => exact .inr simd.core_stuck
+  | block ty body _ => exact .inl (.pure (.block ty body))
+  | loop ty body _ => exact .inl (.pure (.loop ty body))
+  | ifelse ty yes no _ _ => exact .inl (.pure (.ifelse ty yes no))
+  | br depth => exact .inl (.pure (.br depth))
+  | br_if depth => exact .inl (.pure (.br_if depth))
+  | br_table labels fallback => exact .inr fun _ _ _ _ _ => rfl
+  | call index => exact .inl (.pure (.call index))
+  | call_indirect table type => exact .inr (indirect_core_stuck table type)
+  | ret => exact .inl (.pure .ret)
+
+end Itasca.Runtime.SourceMachine
+
+end
+
+/-! ## Invoke -/
+
+section
+
+namespace Itasca.Runtime.SourceMachine
+open SpecExt Itasca.Runtime.Spec
+
+/-- A real defined function address and typed arguments construct the initial
+abstract state and its generated specification call reduction. -/
+theorem defined_supported_invocation (s : store) (ambient : frame) (address : funcaddr)
+    (moduleInst : moduleinst) (typeIndex : idx) (params results : List valtype)
+    (locals : List «local») (body : List instr) (args : List val)
+    (hs : wf_store s) (ha : wf_frame ambient) (functions : FunctionsTyped s)
+    (covered : FunctionsSupported s)
+    (lookup : s.FUNCS[address]? = some ⟨⟨.mk_list params, .mk_list results⟩, moduleInst,
+      .FUNC typeIndex locals body⟩)
+    (arguments : ResultsTyped s params args) :
+    ∃ defaults, defaultLocals locals = some defaults ∧
+      ATyped (entryState s ambient address moduleInst results body args defaults) ∧
+      SupportedState (entryState s ambient address moduleInst results body args defaults) ∧
+      StepH ⟨⟨s, ambient⟩, vals args ++ [.CALL_ADDR address]⟩ []
+        (decode (entryState s ambient address moduleInst results body args defaults)) := by
+  have member := List.mem_of_getElem? lookup
+  have hfunc := functions _ member
+  obtain ⟨C, bindings, emptyLocals, emptyLabels, _, hfunc⟩ := hfunc
+  obtain ⟨defaults, hdefaults, hcallee⟩ := callee_frame_typed hs (function_module_wf hs member)
+    bindings emptyLocals emptyLabels hfunc arguments address
+  refine ⟨defaults, hdefaults, ?_, ?_, ?_⟩
+  · refine ⟨hs, functions, ha, .cons hcallee (.nil results), by simp [entryState, Forall], by simp [entryState], ?_⟩
+    intro frame hm
+    simp only [entryState, List.mem_singleton] at hm
+    subst frame
+    exact frame_typed_heights hcallee
+  · refine ⟨?_, covered⟩
+    intro frame hm
+    simp only [entryState, List.mem_singleton] at hm
+    subst frame
+    exact ⟨covered _ member, by simp [Forall]⟩
+  · obtain ⟨types, hlocals, nonbot⟩ := function_local_types hfunc
+    subst locals
+    have result := call_invoke s ambient address typeIndex moduleInst params results types body args defaults
+      hs ha lookup nonbot hdefaults (results_typed_wf arguments) (results_typed_length arguments)
+    simpa [entryState, decode, decodeFrames, decodeLabels, vals, AFrame.arity, AFrame.toFrame, Label.arity] using result
+
+end Itasca.Runtime.SourceMachine
+
+end
+
+/-! ## PureCoverage -/
+
+section
 
 namespace Itasca.Runtime.SourceMachine.Supported
 
@@ -201,3 +320,5 @@ theorem slice_instruction_covered (s : store) (ambient : frame) (f : AFrame)
 
 
 end Itasca.Runtime.SourceMachine.Supported
+
+end
