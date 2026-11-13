@@ -1,8 +1,9 @@
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxHeartbeats 2000000

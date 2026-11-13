@@ -19,7 +19,6 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursor
 import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
@@ -40,8 +39,6 @@ import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
@@ -49,7 +46,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
@@ -60,7 +56,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout

@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionPatch
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 Checked instruction prefixes through else patching. OpenInstructionPrefix.append_patch feeds ElseTransition preservation and the completed else callback.

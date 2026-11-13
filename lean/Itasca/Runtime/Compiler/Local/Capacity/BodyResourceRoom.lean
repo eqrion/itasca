@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 Source compilation budgets and the body resource-room certificate. Source-only instruction demands bound callback requests and establish BodyResourceRoom for successful replay.

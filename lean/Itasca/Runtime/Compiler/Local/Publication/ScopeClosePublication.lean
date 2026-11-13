@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 
 /-!

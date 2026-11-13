@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
 
 /-!

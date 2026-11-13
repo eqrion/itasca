@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 Compiler callbacks for floating-point constants.

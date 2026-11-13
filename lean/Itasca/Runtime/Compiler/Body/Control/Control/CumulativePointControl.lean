@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmissionTransport
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
@@ -25,7 +25,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
@@ -50,7 +49,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
 import Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot

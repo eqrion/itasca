@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
 import Itasca.Runtime.Compiler.Local.Source.SourceCursor
 

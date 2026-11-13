@@ -8,8 +8,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
 import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode

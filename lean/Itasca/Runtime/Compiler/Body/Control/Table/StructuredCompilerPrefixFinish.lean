@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixComple
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalRoot
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunctionBodyClose
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 Root source-code relation and final compiled-body prefix. The finish theorem applies the root relation to the actual retained epilogue.

@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceEntryChain
 import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerPatchMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates

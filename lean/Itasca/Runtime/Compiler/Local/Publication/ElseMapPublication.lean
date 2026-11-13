@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Publication.BranchMapOwners
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 

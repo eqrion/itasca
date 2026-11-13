@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerPatchMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096

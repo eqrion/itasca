@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts

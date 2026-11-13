@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 
 namespace Itasca.Runtime.Compiler

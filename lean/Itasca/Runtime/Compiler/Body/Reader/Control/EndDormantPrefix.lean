@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixEndEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseDormant
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts

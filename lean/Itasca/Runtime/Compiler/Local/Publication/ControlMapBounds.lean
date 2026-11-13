@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

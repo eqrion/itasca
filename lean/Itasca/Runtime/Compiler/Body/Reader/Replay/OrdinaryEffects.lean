@@ -23,7 +23,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFronts
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
@@ -37,7 +36,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchCallbacks
@@ -56,13 +54,11 @@ import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
 import Itasca.Support.EnvTranslation
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn

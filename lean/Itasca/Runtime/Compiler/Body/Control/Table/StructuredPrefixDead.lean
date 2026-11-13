@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

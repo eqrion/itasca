@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
@@ -7,7 +6,6 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 An actual successful final observation establishes operand layout from concrete validator values and the fixed local layout of the resulting compiler.

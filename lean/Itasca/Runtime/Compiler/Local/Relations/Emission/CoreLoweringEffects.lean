@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic

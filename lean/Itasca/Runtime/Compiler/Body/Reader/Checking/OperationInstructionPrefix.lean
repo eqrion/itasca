@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursor
 import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span

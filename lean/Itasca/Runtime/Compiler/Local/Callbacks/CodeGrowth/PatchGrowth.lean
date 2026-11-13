@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerFixupMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 
 /-!
 Emitted-code length preservation during patching and fixups.

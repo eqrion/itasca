@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.DormantFrames
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceControlBudget
 import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
