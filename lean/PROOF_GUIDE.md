@@ -27,14 +27,14 @@ Wasm execution or a compiler consuming the callbacks.
 
 ### The soundness certificate
 
-[`ModuleSound.Validated`](Itasca/Module/Soundness.lean) says there is **one raw
+[`ModuleSound.Validated`](Itasca/Module/Layout.lean) says there is **one raw
 module** such that:
 
 | Component | Meaning |
 | --- | --- |
-| `ModuleEncodingWith Profile.CodeEncoding` | The input bytes encode that module, including section framing and complete consumption ([Binary/Module](Itasca/Binary/Module.lean)). |
-| `Elaborates raw (moduleOf raw)` | The raw module translates to SpecTec syntax with valid type references and matching function/code counts ([Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean)). |
-| `Matches decoded.env decoded.tail raw` | The returned declarations, data, and index-space caches describe that module ([Module/Elab/Metadata](Itasca/Module/Elab/Metadata.lean)). |
+| `ModuleEncodingWith Profile.CodeEncoding` | The input bytes encode that module, including section framing and complete consumption ([Binary/UnicodeUnique](Itasca/Binary/UnicodeUnique.lean)). |
+| `Elaborates raw (moduleOf raw)` | The raw module translates to SpecTec syntax with valid type references and matching function/code counts ([Module/Elab/Profile](Itasca/Module/Elab/Profile.lean)). |
+| `Matches decoded.env decoded.tail raw` | The returned declarations, data, and index-space caches describe that module ([Module/Elab/TypingInversion](Itasca/Module/Elab/TypingInversion.lean)). |
 | `Module_ok (moduleOf raw)` | The module is valid under the generated SpecTec typing rules. |
 | `ModuleElaboration.Restrictions raw` | Extra language conditions hold: export-name uniqueness, the memory-count bound, and `ref.func` declarations ([Module/Elab/Profile](Itasca/Module/Elab/Profile.lean)). |
 | `AccessorTypes decoded.env raw` | `import_types` and `export_types` return this module's external types in order. |
@@ -55,7 +55,7 @@ the input.
 
 These describe bytes and declarative validity without mentioning itasca. There
 is no premise that parsing succeeded or that bodies passed some other checker.
-[Module/Limits.lean](Itasca/Module/Limits.lean) defines the byte and local
+[Module/Layout.lean](Itasca/Module/Layout.lean) defines the byte and local
 bounds; [Profile/Types](Itasca/Profile/Types.lean) defines the signature caps. The values are listed in the [implementation bounds](../src/limits.rs).
 
 ## Reading Lean
@@ -124,7 +124,7 @@ bad lookups hidden by that total function.
 
 The module restrictions fill in what generated typing does not say. They add
 export-name uniqueness and the `ref.func` declaration condition in
-[Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean). The binary grammar bounds the Wasm 2.0 instruction set.
+[Spec/Checks](Itasca/Spec/Checks.lean). The binary grammar bounds the Wasm 2.0 instruction set.
 
 ## From the API inward
 
@@ -139,7 +139,7 @@ flowchart BT
 ```
 
 `validate_module` runs the streaming driver with a private contiguous source and
-synchronous worker. [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and
+synchronous worker. [Stream/SyncComplete](Itasca/Stream/SyncComplete.lean) and
 [Stream/SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the generic
 streaming contracts for that adapter.
 
@@ -152,7 +152,7 @@ checks), and `Bounded` (sizes for safe arithmetic). Callers never supply these.
 
 [`Profile.Entry`](Itasca/Profile/CodeEntry.lean) ties one code entry's bytes to
 its function type and body typing, using `Wasm2.Validated` for the body certificate. `ModuleSound.assembled_regions` in
-[Module/Soundness](Itasca/Module/Soundness.lean) combines environment, typed
+[Module/Layout](Itasca/Module/Layout.lean) combines environment, typed
 entries, and tail into `Validated`. For completeness,
 `StreamCompleteRegions.prepare` in
 [Stream/DriverRegions](Itasca/Stream/DriverRegions.lean) derives the component
@@ -162,9 +162,9 @@ certificates from the independent premises.
 
 The generic driver theorems are stated in
 [Results/Stream](Itasca/Results/Stream.lean) and proved in
-[DriverSound](Itasca/Stream/DriverSound.lean),
-[DriverTotal](Itasca/Stream/DriverTotal.lean), and
-[DriverComplete](Itasca/Stream/DriverComplete.lean). Each direction needs
+[InvariantRetirement](Itasca/Stream/InvariantRetirement.lean),
+[SplitTotal](Itasca/Stream/SplitTotal.lean), and
+[SyncComplete](Itasca/Stream/SyncComplete.lean). Each direction needs
 different embedding contracts, defined in [Contracts](Itasca/Contracts.lean)
 and summarized in the [Lean guide](README.md#streaming-premises).
 
@@ -178,9 +178,9 @@ advancing a cursor. Workers may finish in any order.
 The validator mutates operand and control stacks; the typing rules describe
 instruction trees. The body invariant connects them midway through a function.
 
-[Wasm2/Invariant](Itasca/Wasm2/Invariant.lean) defines `Wasm2.State`, which
+[Wasm2/LoopDispatch](Itasca/Wasm2/LoopDispatch.lean) defines `Wasm2.State`, which
 carries cursor and stack bounds, a partially rebuilt instruction tree (a
-*zipper*, in [Wasm2/Frames](Itasca/Wasm2/Frames.lean)) related to the runtime
+*zipper*, in [Wasm2/LoopDispatch](Itasca/Wasm2/LoopDispatch.lean)) related to the runtime
 stacks, typing for processed instructions, and byte provenance for the consumed
 prefix. These are proof witnesses, not runtime state. The state retains the
 supported Wasm 2.0 instruction grammar.
@@ -190,7 +190,7 @@ malformed. `Pending` is the state after reading an opcode but before its
 immediate. Each handler either returns an error or restores the invariant, which
 gives soundness and termination on arbitrary input.
 
-[Handler/Sequence](Itasca/Handler/Sequence.lean) handles stack polymorphism.
+[Handler/SimplePrefix](Itasca/Handler/SimplePrefix.lean) handles stack polymorphism.
 `Realizes` relates the validator's stack types, including `.Bot`, to declarative
 stacks; `TypedPrefix` says the consumed instructions can produce every stack the
 frame represents.
@@ -206,10 +206,10 @@ entry encoding and typing facts.
 
 ### Following `nop`
 
-1. `code.step_nop.total` in [Visitor/Basic](Itasca/Visitor/Basic.lean): the
+1. `code.step_nop.total` in [Visitor/Total](Itasca/Visitor/Total.lean): the
    extracted step returns with unchanged validator stacks whether the hook
    accepts or rejects.
-2. `TypedPrefix.nop` in [Wasm2/Scalar/Prefix](Itasca/Wasm2/Scalar/Prefix.lean): append
+2. `TypedPrefix.nop` in [Wasm2/Scalar/Env](Itasca/Wasm2/Scalar/Env.lean): append
    the `nop` typing rule to a typed prefix.
 3. `Pending.step_nop` in [Wasm2/Scalar/Step](Itasca/Wasm2/Scalar/Step.lean):
    combine the step, the `0x01` encoding, and the typing to restore the
@@ -226,7 +226,7 @@ Preserving an invariant does not show that valid input succeeds. Completeness
 runs the other way: from independent encoding and typing, it constructs a
 successful execution. `code.bodyCore.complete` in
 [Wasm2/Completeness](Itasca/Wasm2/Completeness.lean) builds on `Program` in
-[Wasm2/Complete/Program](Itasca/Wasm2/Complete/Program.lean), which recurses over
+[Wasm2/Complete/Leaf](Itasca/Wasm2/Complete/Leaf.lean), which recurses over
 encoded instruction structure. [Spec/TypingInversion](Itasca/Spec/TypingInversion.lean)
 unpacks derivations whose sequence, frame, and subtyping rules do not line up
 with the validator's next step. The accepted bodies in
@@ -235,11 +235,11 @@ concrete blocks, `if`s, loops, and branch tables.
 
 ## Callbacks and uniqueness
 
-[Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean) relates visiting to plain
+[Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean) relates visiting to plain
 validation for Wasm 2.0. `FullVisitor.Total` allows callback errors; `FullVisitor.Accepts`
 requires callback success. The trace theorems (`trace_sound` and
 `trace_complete` in [Results/Trace](Itasca/Results/Trace.lean), proved in
-[Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean)) identify
+[Wasm2/Trace/Acceptance](Itasca/Wasm2/Trace/Acceptance.lean)) identify
 callback order, state snapshots, and immediates, and show a rejecting callback
 is the last one.
 

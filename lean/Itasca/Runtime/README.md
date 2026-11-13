@@ -199,20 +199,19 @@ Cross-family composition uses:
 The Wasm 2.0 compiler reader shares reader proofs with the validator's Wasm 2.0
 body checks.
 The exact source-prefix certificate is shared with the validator in
-[Wasm2/Scalar/ReaderPost](../Wasm2/Scalar/ReaderPost.lean). Shared reader proofs
+[Wasm2/Scalar/IndexReader](../Wasm2/Scalar/IndexReader.lean). Shared reader proofs
 cover scalar constants and stack operations, numeric instructions, local/global
 indices, memory operands, reference/table metadata and SIMD effects. Validator
 preservation projects `Pending.After`; compiler inversion retains the same exact
 source frame, decoded arguments and operand effects. Control entry and closure
 use [EnterStep](../Wasm2/Control/EnterStep.lean) and
-[EndStep](../Wasm2/Control/EndStep.lean); branches and calls use
-[BranchStep](../Wasm2/Control/BranchStep.lean).
+[EnterSound](../Wasm2/Control/EnterSound.lean); branches and calls use
+[Return](../Wasm2/Control/Return.lean).
 
 Accepted steps expose the actual reader and callback via
 `CoreVisitor.run.accepted` or
 [CallbackTrace.bodyRun.accepted](../Wasm2/Trace/Acceptance.lean).
-[Visitor/ReaderAcceptance](../Visitor/ReaderAcceptance.lean) and
-[Visitor/BodyReplay](../Visitor/BodyReplay.lean) replay only the reached callback
+[Visitor/BodyReplay](../Visitor/BodyReplay.lean) replays only the reached callback
 obligations. [AcceptedTable](../Wasm2/Visitor/AcceptedTable.lean) preserves the
 repeated label callbacks and distinct final callback of `br_table`. Successful
 inversion does not require total visitors or acceptance at unrelated states.

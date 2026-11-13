@@ -88,7 +88,7 @@ theorem code.push_val.spec (st : code.OpIterState) (t : code.StackType)
   step*
 ```
 
-That one is real ([Handler/Stack.lean](Itasca/Handler/Stack.lean)). A function
+That one is real ([Handler/SimplePrefix.lean](Itasca/Handler/SimplePrefix.lean)). A function
 that can fail and that changes a larger state has this shape (schematic; the
 effect relations are yours to define, see rule 2):
 

@@ -139,11 +139,11 @@ stated in full under [Itasca/Results/](Itasca/Results). The validator supports W
 | Layer | Contracts |
 | --- | --- |
 | Whole module | [Results/Validate](Itasca/Results/Validate.lean): `metadata.validate_module.total`, `sound`, `spec`, `complete`, `complete_with_metadata`. |
-| Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.sound`, `total`, and `complete`, proved in [Stream/DriverSound](Itasca/Stream/DriverSound.lean), [DriverTotal](Itasca/Stream/DriverTotal.lean), and [DriverComplete](Itasca/Stream/DriverComplete.lean). |
-| Contiguous adapter | [Stream/SliceSound](Itasca/Stream/SliceSound.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
+| Streaming driver | [Results/Stream](Itasca/Results/Stream.lean): `stream.validate_streaming.sound`, `total`, and `complete`, proved in [Stream/InvariantRetirement](Itasca/Stream/InvariantRetirement.lean), [SplitTotal](Itasca/Stream/SplitTotal.lean), and [SyncComplete](Itasca/Stream/SyncComplete.lean). |
+| Contiguous adapter | [Stream/SyncComplete](Itasca/Stream/SyncComplete.lean) and [SliceComplete](Itasca/Stream/SliceComplete.lean) discharge the driver contracts for `validate_module`. |
 | Worker batches | [Results/Batch](Itasca/Results/Batch.lean): `stream.CodeBatch.validate_func`, `validate_all`, and `finish.sound`, giving ordered entry validation and exact coverage. |
-| Bodies and entries | [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean) defines the `Wasm2.Validated` body certificate; [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean), [EntrySound](Itasca/Profile/EntrySound.lean), and [EntryComplete](Itasca/Profile/EntryComplete.lean) cover visiting and entry contracts. |
-| Callback traces | [Results/Trace](Itasca/Results/Trace.lean), proved in [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean) and [Profile/EntryTrace](Itasca/Profile/EntryTrace.lean). |
+| Bodies and entries | [Wasm2/LoopDispatch](Itasca/Wasm2/LoopDispatch.lean) defines the `Wasm2.Validated` body certificate; [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean) covers visiting and entry contracts. |
+| Callback traces | [Results/Trace](Itasca/Results/Trace.lean), proved in [Wasm2/Trace/Acceptance](Itasca/Wasm2/Trace/Acceptance.lean) and [Profile/EntryTrace](Itasca/Profile/EntryTrace.lean). |
 | Decoding uniqueness | [Results/Unique](Itasca/Results/Unique.lean), built on [Binary/ModuleUnique](Itasca/Binary/ModuleUnique.lean) and [Profile/BinaryUnique](Itasca/Profile/BinaryUnique.lean), without typing or size premises. |
 
 Soundness yields `ModuleSound.Validated`: one raw module that the bytes encode,
@@ -209,17 +209,19 @@ Within a family, `X` or `XSound` proves soundness or invariant preservation,
 
 Some dependencies run against intuition. The whole-module results build on
 `Stream/` because `validate_module` runs through the streaming adapter. The
-body loop validates the Wasm 2.0 instruction grammar directly. Keep the
-independent body contracts in [Wasm2/BodySpec](Itasca/Wasm2/BodySpec.lean) and
-[Profile/BodySpec](Itasca/Profile/BodySpec.lean) free of soundness and completeness
-proofs, so grammar and module code can import them cheaply.
+body loop validates the Wasm 2.0 instruction grammar directly. The independent
+body grammar contract is the `BodySpec` section in
+[Wasm2/LoopDispatch](Itasca/Wasm2/LoopDispatch.lean); the code-entry encoding
+contract is the `BodySpec` section in [Profile/CodeEntry](Itasca/Profile/CodeEntry.lean).
+Keep both contract statements independent of the validator’s soundness and
+completeness proofs.
 
 ## Specification gaps
 
 The proofs supplement the pinned specification without editing it:
 
 - The generated typing omits the `C.refs` condition on `ref.func`.
-  [Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean) requires every
+  [Spec/Checks](Itasca/Spec/Checks.lean) requires every
   `ref.func` target to occur in the module outside function definitions and the
   start declaration. Module, entry, and body certificates carry it.
 - The generated module judgment lacks export-name uniqueness and similar
@@ -311,11 +313,10 @@ syntax, Rust dispatch, typing preservation, and completeness together. Keep
 language rules separate from implementation bounds.
 
 Segment and table instructions cross the module/body boundary.
-[Module/Code/BodyContext](Itasca/Module/Code/BodyContext.lean) transports typing
+[Module/Code/BodyContextComplete](Itasca/Module/Code/BodyContextComplete.lean) transports typing
 across it. Changes to tables, value types, segments, or constant expressions also
 touch
-[Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean),
-[Module/Elab/Profile](Itasca/Module/Elab/Profile.lean), and the module grammar.
+[Module/Elab/Profile](Itasca/Module/Elab/Profile.lean) and the module grammar.
 
 ## Proof checking
 
