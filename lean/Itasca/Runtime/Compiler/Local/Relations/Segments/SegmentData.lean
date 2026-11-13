@@ -1,4 +1,135 @@
-import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentEmit
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+
+/-!
+Sections, each formerly its own module: SegmentProgram, SegmentEmit, SegmentData.
+-/
+
+/-! ## SegmentProgram -/
+
+section
+
+/-! Syntactic programs emitted for active and declarative segments. The
+certificate records source segment indices and actual embedded descriptor
+lookups; runtime bounds and source typing remain separate obligations. -/
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+inductive ElementProgram (function : runtime.bytecode.CompiledFunction)
+    (index : Nat) (segment : Itasca.metadata.Element) : List runtime.bytecode.Instr → Prop where
+  | passive (mode : segment.mode = .Passive) : ElementProgram function index segment []
+  | declarative (mode : segment.mode = .Declarative) (word : U32) (encoded : word.val = index) :
+      ElementProgram function index segment [.ElemDrop word]
+  | active (table : U32) (offset : Itasca.wasm_types.ConstExpr)
+      (mode : segment.mode = .Active table offset)
+      (word length entry : U32) (encoded : word.val = index) (count : length.val = segment.init.length)
+      (descriptor : function.indirect.val[entry.val]? = some (word, table))
+      (instruction : runtime.bytecode.Instr)
+      (constant : ConstantInstruction function 0#u32 offset .I32 instruction) :
+      ElementProgram function index segment
+        [instruction, .Const32 1#u32 0#u32, .Const32 2#u32 length,
+          .TableInit 0#u32 entry, .ElemDrop word]
+
+inductive DataProgram (function : runtime.bytecode.CompiledFunction)
+    (index : Nat) (segment : Itasca.metadata.Data) : List runtime.bytecode.Instr → Prop where
+  | passive (mode : segment.mode = .Passive) : DataProgram function index segment []
+  | active (memory : U32) (offset : Itasca.wasm_types.ConstExpr)
+      (mode : segment.mode = .Active memory offset)
+      (word length : U32) (encoded : word.val = index) (count : length.val = segment.init.length)
+      (instruction : runtime.bytecode.Instr)
+      (constant : ConstantInstruction function 0#u32 offset .I32 instruction) :
+      DataProgram function index segment
+        [instruction, .Const32 1#u32 0#u32, .Const32 2#u32 length,
+          .MemoryInit 0#u32 word, .DataDrop word]
+
+/-- The initialization function is the source-ordered concatenation of segment
+programs followed by a zero-result return. -/
+structure SegmentProgramBody (module : runtime.compiler.ExecutableModule)
+    (function : runtime.bytecode.CompiledFunction)
+    (elementPrograms dataPrograms : List (List runtime.bytecode.Instr)) : Prop where
+  elementCount : elementPrograms.length = module.module.env.elements.length
+  dataCount : dataPrograms.length = module.module.tail.data.length
+  elements : ∀ index segment, module.module.env.elements.val[index]? = some segment →
+    ∃ instructions, elementPrograms[index]? = some instructions ∧ ElementProgram function index segment instructions
+  datas : ∀ index segment, module.module.tail.data.val[index]? = some segment →
+    ∃ instructions, dataPrograms[index]? = some instructions ∧ DataProgram function index segment instructions
+  instructions : function.code.val = elementPrograms.flatten ++ dataPrograms.flatten ++ [.Return 0#u32 0#u32]
+  capacity : function.slot_count = 0#u32 ∨ function.slot_count = 3#u32
+  activeCapacity : (∃ (index : Nat) (instructions : List runtime.bytecode.Instr), elementPrograms[index]? = some instructions ∧ instructions.length = 5) ∨
+    (∃ (index : Nat) (instructions : List runtime.bytecode.Instr), dataPrograms[index]? = some instructions ∧ instructions.length = 5) →
+    function.slot_count = 3#u32
+  localSlots : function.local_slots = 0#u32
+  paramSlots : function.param_slots = 0#u32
+  locals : function.locals.val = []
+
+def SegmentProgram (module : runtime.compiler.ExecutableModule) (function : runtime.bytecode.CompiledFunction) : Prop :=
+  ∃ elements datas, SegmentProgramBody module function elements datas
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## SegmentEmit -/
+
+section
+
+/-!
+Successful emission determines the appended instruction without a separate capacity premise: the actual checked vector append supplies that bound.
+
+Main declarations: `initializer_emit_success` and `initializer_offset_success`. A direct consumer is `Compiler.Local.Relations.Segments.SegmentData`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+/-- Successful emission determines the appended instruction without a separate
+capacity premise: the actual checked vector append supplies that bound. -/
+theorem initializer_emit_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
+    (before after : alloc.vec.Vec runtime.bytecode.Instr) (instruction : runtime.bytecode.Instr)
+    (success : runtime.compiler.initialize.emit ops budget before instruction = .ok (.Ok (), afterBudget, after)) :
+    after.val = before.val ++ [instruction] := by
+  unfold runtime.compiler.initialize.emit at success
+  obtain ⟨⟨result, charged⟩, charge, rest⟩ := initializer_bind_success success
+  cases result with
+  | Err error =>
+    simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
+  | Ok value =>
+    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
+    exact (budget_push_success ops law charged afterBudget before after instruction rest).2
+
+/-- Integer offsets have a single instruction and no literal-pool allocation. -/
+theorem initializer_offset_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
+    (before after : runtime.bytecode.CompiledFunction) (expr : Itasca.wasm_types.ConstExpr)
+    (offset : (∃ bits, expr = .I32 bits) ∨ (∃ index, expr = .GlobalGet index))
+    (success : runtime.compiler.initialize.constant ops budget before expr .I32 0#u32 =
+      .ok (.Ok (), afterBudget, after)) :
+    ∃ instruction, after = {before with code := after.code} ∧
+      after.code.val = before.code.val ++ [instruction] ∧
+      ConstantInstruction after 0#u32 expr .I32 instruction := by
+  rcases offset with ⟨bits, rfl⟩ | ⟨index, rfl⟩
+  all_goals
+    simp only [runtime.compiler.initialize.constant, lift, bind_ok] at success
+    obtain ⟨⟨result, charged, instructions⟩, emitted, rest⟩ := initializer_bind_success success
+    have output := Result.ok_injective rest
+    have resultEq := congrArg Prod.fst output
+    dsimp only at resultEq
+    subst result
+    have fields := congrArg (fun out => out.2.2) output
+    dsimp only at fields
+    subst after
+    have values := initializer_emit_success ops law budget charged before.code instructions _ emitted
+    refine ⟨_, rfl, values, ?_⟩
+    first | exact .i32 _ _ | exact .global _ _ (by intro h; cases h)
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## SegmentData -/
+
+section
 
 /-!
 Validated data offsets and emitted data-initializer programs.
@@ -119,3 +250,5 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
                   · exact .inr ⟨rfl, by rw [firstFields]⟩
 
 end Itasca.Runtime.Compiler
+
+end

@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Module.InitializerOffsetAvailable
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
-import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentAcceptance
-import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentFinish
+import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
 
 /-!
 Successful data/element segment compilation from bounded segment demand. Per-segment emission and their folds establish the final segment compilation availability theorem.

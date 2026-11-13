@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentProgram
+import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Module.Limits
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalSafety

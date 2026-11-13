@@ -272,7 +272,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 /-- The executable slot-range gate accepts an independent arithmetic bound. -/
-theorem slots_fit_accepts (function : runtime.bytecode.CompiledFunction) (start count : U32)
+theorem slot_availability_fit_accepts (function : runtime.bytecode.CompiledFunction) (start count : U32)
     (bounded : start.val + count.val ≤ function.slot_count.val) :
     runtime.bytecode.CompiledFunction.slots_fit function start count = .ok true := by
   have lower : start ≤ function.slot_count := by scalar_tac
@@ -294,12 +294,12 @@ theorem initial_instruction_capacity_accepts (function : runtime.bytecode.Compil
     (vector : ∀ lo hi, expr = .V128 lo hi → ty = .V128) :
     runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
   have scalar : runtime.bytecode.CompiledFunction.slots_fit function 0#u32 1#u32 = .ok true := by
-    apply slots_fit_accepts
+    apply slot_availability_fit_accepts
     have positive : 1 ≤ (initializerWidth ty).val := by cases ty <;> decide
     scalar_tac
   have wide (same : ty = .V128) :
       runtime.bytecode.CompiledFunction.slots_fit function 0#u32 2#u32 = .ok true := by
-    apply slots_fit_accepts
+    apply slot_availability_fit_accepts
     simpa [same,initializerWidth] using capacity
   cases lowered <;>
     simp only [runtime.bytecode.CompiledFunction.instruction_valid,runtime.bytecode.CompiledFunction.other_valid,runtime.bytecode.Instr.scalar,

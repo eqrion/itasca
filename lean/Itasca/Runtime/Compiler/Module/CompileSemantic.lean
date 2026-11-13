@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Module.CompileSource
-import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentComplete
+import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
