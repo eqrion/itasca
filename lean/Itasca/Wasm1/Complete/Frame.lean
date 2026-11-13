@@ -1,4 +1,4 @@
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 import Itasca.Spec.TypingInversion
 import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete

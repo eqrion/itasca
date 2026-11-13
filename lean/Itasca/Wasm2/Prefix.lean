@@ -1,4 +1,4 @@
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 import Itasca.Handler.ResumePrefix
 import Itasca.Binary.Wasm1.Encoding
 

@@ -1,4 +1,4 @@
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 # `i64`, `f32` and `f64` constants in SpecTec

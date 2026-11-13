@@ -3,7 +3,7 @@ import Itasca.Wasm2.Simd.Complete
 import Itasca.Wasm2.Complete.Leaf
 import Itasca.Wasm2.Control.Return
 import Itasca.Wasm2.Control.BranchStep
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Wasm2.References.Complete
 
 /-!

@@ -1,4 +1,4 @@
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 import Mathlib.Tactic.IntervalCases
 
 /-!

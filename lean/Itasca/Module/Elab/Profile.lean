@@ -1,5 +1,5 @@
 import Itasca.Module.Elab.Declared
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 import Mathlib.Data.List.Nodup
 
 /-!

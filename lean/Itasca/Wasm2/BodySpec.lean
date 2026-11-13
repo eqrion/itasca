@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.Encoding
 import Itasca.Binary.Wasm2.DeclaredReferences
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 
 /-!
 # Wasm 2.0 body contract

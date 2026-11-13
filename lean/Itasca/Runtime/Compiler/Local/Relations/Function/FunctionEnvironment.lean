@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic

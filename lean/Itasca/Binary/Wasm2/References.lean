@@ -1,4 +1,4 @@
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Binary.Wasm2.BlockType
 import Itasca.Binary.Wasm1.Encoding
 

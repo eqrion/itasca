@@ -17,7 +17,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable

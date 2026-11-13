@@ -1,5 +1,5 @@
 import Itasca.Spec.TypingInversion
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 
 /-!
 # Body typing under extended segment spaces

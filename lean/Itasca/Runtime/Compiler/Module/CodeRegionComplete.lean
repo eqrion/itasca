@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Stream.Scheduler
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Stream.BatchBounds

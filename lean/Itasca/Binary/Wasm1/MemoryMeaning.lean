@@ -1,4 +1,4 @@
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 # Wasm 1.0 memory opcodes

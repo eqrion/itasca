@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Bulk.Operands
 import Itasca.Binary.Wasm1.EncodingComplete
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 
 /-!
 # Completeness of reference and table readers

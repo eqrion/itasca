@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Equations
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 import SpecExt.Builtins.Float.Sign
 
 /-!

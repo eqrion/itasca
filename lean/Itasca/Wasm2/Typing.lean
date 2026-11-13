@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Signature
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 
 /-!
 # Block type signatures

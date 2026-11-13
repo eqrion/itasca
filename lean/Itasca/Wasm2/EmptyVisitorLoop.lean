@@ -1,4 +1,4 @@
-import Itasca.Support.BodyState
+import Itasca.Support.Result
 import Itasca.Wasm2.SignatureEquality
 
 /-!

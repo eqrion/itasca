@@ -1,4 +1,3 @@
-import Itasca.Support.BodyState
 import Itasca.Support.Result
 
 /-!

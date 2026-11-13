@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-! The layout component of the compiler invariant, stated over the actual
 extracted compiler state. Prefix-code, open-label, and fixup preservation are

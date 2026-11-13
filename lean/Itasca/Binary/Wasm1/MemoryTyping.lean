@@ -1,5 +1,5 @@
 import Itasca.Binary.Wasm1.MemoryMeaning
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 
 /-!
 # Typing of Wasm 1.0 memory opcodes

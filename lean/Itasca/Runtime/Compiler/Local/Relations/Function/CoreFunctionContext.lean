@@ -4,10 +4,9 @@ import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Support.EnvTranslation
 
 /-!
 Sections, each formerly its own module: Environment, FunctionStartRaw, CoreFunction, CoreFunctionContext.

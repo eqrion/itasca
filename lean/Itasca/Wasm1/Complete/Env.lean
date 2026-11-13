@@ -1,6 +1,6 @@
 import Itasca.Wasm1.Complete.Frame
 import Itasca.Handler.EnvComplete
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Handler.EnvDispatch
 import Itasca.Binary.Wasm1.MemoryTyping
 import Itasca.Visitor.StepErasure

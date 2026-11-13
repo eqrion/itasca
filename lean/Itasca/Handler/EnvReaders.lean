@@ -1,4 +1,4 @@
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Binary.Leb128
 
 /-!

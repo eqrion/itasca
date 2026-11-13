@@ -11,7 +11,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadE
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 Sections, each formerly its own module: StructuredLabelWiden, StructuredFunctionBodyClose, StructuredResolvedBranchPrefix, StructuredResolvedConditionalPrefix, StructuredUniversalBranch, StructuredUniversalConditional, StructuredElseBranches, StructuredUniversalLoopBranch, StructuredUniversalOpen, StructuredCodeLabels, StructuredFunction.

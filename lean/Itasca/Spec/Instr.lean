@@ -1,4 +1,4 @@
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 # `i32.const` and label indices in SpecTec

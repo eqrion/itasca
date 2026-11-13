@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid

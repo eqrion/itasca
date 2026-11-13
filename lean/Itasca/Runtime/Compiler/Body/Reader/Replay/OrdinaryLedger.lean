@@ -32,7 +32,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth

@@ -1,6 +1,5 @@
-import Itasca.Support.BodyState
-import Itasca.Visitor.Accepts
 import Itasca.Support.Result
+import Itasca.Visitor.Accepts
 
 /-!
 # Visitor transfer for `br_table`

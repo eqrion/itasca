@@ -2,7 +2,7 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Platform.Laws
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 Compiler value widths and observed operand layouts.
