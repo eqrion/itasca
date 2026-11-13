@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
-import Itasca.Runtime.Compiler.Local.Control.Function.IndexedFunctionAssembly
+import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 
 /-!
 The final executable check turns a completed actual body compilation into its retained source certificate, with the original function-start metadata.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Function.IndexedFunction
+import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission
 
 /-!
