@@ -38,7 +38,7 @@ import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth

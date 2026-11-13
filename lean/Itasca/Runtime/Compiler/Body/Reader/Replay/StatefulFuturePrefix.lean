@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Safety
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 
 /-!

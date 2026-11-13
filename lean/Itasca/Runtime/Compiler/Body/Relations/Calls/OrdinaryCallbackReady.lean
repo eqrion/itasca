@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
-import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
 
 namespace Itasca.Runtime.Compiler

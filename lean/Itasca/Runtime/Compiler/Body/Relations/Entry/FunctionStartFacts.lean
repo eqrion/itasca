@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
-import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 
 /-!
 Fixed metadata and local layout obtained from actual construction and the successful function-start callback. These are static premises of the body fold.
