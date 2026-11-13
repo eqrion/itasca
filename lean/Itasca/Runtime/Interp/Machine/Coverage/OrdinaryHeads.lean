@@ -14,7 +14,7 @@ import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
 import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
+import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 
 /-!
 Sections, each formerly its own module: SupportedHeadCoverage, OrdinaryHeads.

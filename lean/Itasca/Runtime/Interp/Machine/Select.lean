@@ -14,10 +14,9 @@ import Itasca.Runtime.Interp.State.GlobalCoreStep
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Interp.Machine.Emission.Local
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
+import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Relations.ControlPoint
 import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch

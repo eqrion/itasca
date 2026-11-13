@@ -20,7 +20,6 @@ import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
 import Itasca.Runtime.Interp.Relations.Normalization
 import Itasca.Runtime.Interp.Relations.ValueLookup
 

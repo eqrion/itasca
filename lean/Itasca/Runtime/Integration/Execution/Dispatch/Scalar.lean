@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Integration.Execution.Dispatch.UniformOutcomes
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
+import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Machine.Float.StructuredOwned
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 

@@ -2,13 +2,12 @@ import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Relations.PrefixDispatch
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
+import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 import Itasca.Runtime.Interp.Relations.LocalCapacity
 import Itasca.Runtime.Interp.Relations.Capacity
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Relations.ReferenceTransfers
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.ControlPoint
