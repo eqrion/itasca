@@ -677,6 +677,8 @@ Stop if: the clean build is slower than before. Report the two times.
 
 ### 2.2 Split the generated functions by Rust area
 
+Blocked in preflight on 2026-11-13: [required interpreter dependency](notes/step22-blocker.md).
+
 The user approved this on 2026-11-12. Unlike step 0.4, it does more than touch
 comments: a script moves each generated declaration, unchanged, into one of six
 files and adds imports between them. It cannot change what a declaration means
