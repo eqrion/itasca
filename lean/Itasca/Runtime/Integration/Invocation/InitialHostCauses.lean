@@ -12,7 +12,7 @@ import Itasca.Runtime.Integration.Host.HostStructuredResume
 import Itasca.Runtime.Integration.Host.HostCallContext
 import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
-import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution

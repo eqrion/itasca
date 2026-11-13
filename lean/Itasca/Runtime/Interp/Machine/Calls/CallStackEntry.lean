@@ -1,7 +1,180 @@
-import Itasca.Runtime.Interp.Machine.Functions.FunctionCode
-import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Interp.Machine.Calls.CallStack
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
+import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.SourceMachine.CallSafety
+import Itasca.Runtime.Interp.Machine.Frames.FrameStack
+import Itasca.Runtime.Interp.Calls.IndirectResolve
+import Itasca.Runtime.Interp.Machine.Functions.FunctionCode
+
+/-!
+Sections, each formerly its own module: IndirectPoint, CallLookup, CallStack, CallStackEntry.
+-/
+
+/-! ## IndirectPoint -/
+
+section
+
+/-!
+The indirect call head is independent of the following instruction family. The projection is purely syntactic and is discharged by each cumulative emission.
+
+Main declarations: `indirect_point_head`. A direct consumer is `Interp.Machine.Calls.IndirectOperands`.
+-/
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas.Std
+variable {jumpTables : List Aeneas.Std.U32}
+
+/-- The indirect call head is independent of the following instruction family.
+The projection is purely syntactic and is discharged by each cumulative emission. -/
+theorem indirect_point_head {emission : ContextEmission} {pairs C returns code labels stack pc next output}
+    (table type : Nat) (after : List instr)
+    (project : ∀ before emitted result,
+      emission C before (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)) emitted result →
+        Compiler.IndirectCallEmission pairs C before (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)) emitted result)
+    (point : Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+      code jumpTables labels stack (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after) pc next output) :
+    (∃ target : U32, pc < target.val ∧ code[pc]? = some (.Jump target) ∧
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+        code jumpTables labels stack (.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after) target.val next output) ∨
+    (∃ (front params results : List valtype) (typeIndex tableIndex entry index base : U32) (bounds : limits),
+      typeIndex.val = type ∧ tableIndex.val = table ∧ stack = (front ++ params) ++ [.I32] ∧
+      C.TYPES[type]? = some ⟨.mk_list params,.mk_list results⟩ ∧
+      C.TABLES[table]? = some (.mk_tabletype bounds .FUNCREF) ∧
+      pairs[entry.val]? = some (tableIndex,typeIndex) ∧
+      base.val = Compiler.slots C.LOCALS + Compiler.slots front ∧ index.val = base.val + Compiler.slots params ∧
+      code[pc]? = some (.CallIndirect entry index base) ∧
+      Compiler.StructuredCode.Point (emission C) C.TYPES C.FUNCS returns C.LOCALS
+        code jumpTables labels (front ++ results) after (pc+1) next output) := by
+  have relation := point.current
+  generalize sourceEq : instr.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after = source at relation
+  cases relation with
+  | linear head ordinary fragment rest =>
+    obtain ⟨headEq,tailEq⟩ := List.cons.inj sourceEq
+    subst_vars
+    obtain ⟨front,params,results,typeIndex,tableIndex,entry,index,base,bounds,typeEq,tableEq,stackEq,resultEq,emitted,
+      signature,tableFound,pair,basePosition,indexPosition⟩ := (project _ _ _ head).invert
+    subst_vars
+    have fetch := fragment.fetch (index := 0) (by rfl)
+    obtain ⟨_,_,_,_,nextEq⟩ := fragment
+    refine Or.inr ⟨front,params,results,typeIndex,tableIndex,entry,index,base,bounds,rfl,rfl,rfl,
+      signature,tableFound,pair,basePosition,indexPosition,by simpa using fetch,?_⟩
+    exact ⟨by simpa only [List.length_singleton] using nextEq ▸ rest,point.targets,point.normal,point.exit,point.root⟩
+  | skip forward instruction rest =>
+    subst_vars
+    exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
+  | _ => simp at sourceEq
+end Itasca.Runtime.Interp.Machine
+
+end
+
+/-! ## CallLookup -/
+
+section
+
+/-!
+Lookup of a defined function from its compilation certificate.
+
+Main declarations: `CompiledFunctions.defined`. A direct consumer is `Interp.Machine.Calls.IndirectSelected`.
+-/
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std
+
+theorem CompiledFunctions.defined {M : Type} {code : Store.CodeInterpretation}
+    {store : runtime.store.Store M} (compiledFunctions : CompiledFunctions code store)
+    (view : M → Slice U8) (typed : CoreFunctionsTyped view code store)
+    (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
+    (instanceIndex functionIndex : Usize)
+    (lookup : store.funcs.val[address.index.val]? = some function)
+    (defined : function.code = .Wasm instanceIndex functionIndex) :
+    ∃ inst compiled signature declared body epilogue,
+      store.instances.val[instanceIndex.val]? = some inst ∧
+      inst.module.functions.val[functionIndex.val]? = some compiled ∧
+      store.types.val[function.signature.val]? = some signature ∧
+      FunctionTable store inst (inst.module.module.env.func_types.val.map Store.decodeFuncType) ∧
+      FunctionCode (Compiler.moduleFunctionContext inst.module
+        (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType))
+        (signature.params.val.map sourceType) declared (signature.results.val.map sourceType) body compiled epilogue ∧
+      SourceMachine.ModuleBindings (Store.decodeStore view code store) (Store.decodeInstance store inst)
+        (Compiler.moduleFunctionContext inst.module (signature.params.val.map sourceType++declared) (signature.results.val.map sourceType)) ∧
+      (Store.decodeStore view code store).FUNCS[address.index.val]? =
+        some ⟨Store.decodeFuncType signature,Store.decodeInstance store inst,
+          .FUNC (.mk_uN compiled.type_index.val) (declared.map local.LOCAL) body⟩ := by
+  obtain ⟨inst,compiled,signature,declared,body,epilogue,hi,hc,hs,source,table,types,certificate⟩ :=
+    compiledFunctions function (List.mem_of_getElem? lookup) instanceIndex functionIndex defined
+  have sourceTyped := typed function (List.mem_of_getElem? lookup)
+  simp only [CoreFunctionTyped,defined] at sourceTyped
+  obtain ⟨actual,index,locals,instructions,found,bodyEq,bindings,functionTyped⟩ := sourceTyped
+  have same : actual = inst := Option.some.inj (found.symm.trans hi)
+  subst actual
+  have contextBindings := bindings.scope (signature.params.val.map sourceType++declared) [] (some (.mk_list (signature.results.val.map sourceType)))
+  exact ⟨inst,compiled,signature,declared,body,epilogue,hi,hc,hs,table,certificate,contextBindings,
+    defined_function_lookup view code store address function signature instanceIndex functionIndex inst _ lookup hs defined hi source⟩
+end Itasca.Runtime.Interp.Machine
+
+end
+
+/-! ## CallStack -/
+
+section
+
+/-!
+The caller's post-fetch continuation and live prefix form the saved frame needed for entry. The argument words remain available to the new callee.
+
+Main declarations: `prepare_saved_caller` and `FrameStackRel.call_enter`. A direct consumer is `Interp.Machine.Calls.CallStackEntry`.
+-/
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std
+
+/-- The caller's post-fetch continuation and live prefix form the saved frame
+needed for entry. The argument words remain available to the new callee. -/
+theorem prepare_saved_caller {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+    {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
+    (binding : FrameBinding store exec raw source)
+    (slots : FrameSlots exec raw source)
+    {compiled C targets next output}
+    (program : FrameProgram store raw compiled (source.locals.map Compiler.valueType) source.resultTypes C.FUNCS)
+    (point : FramePoint s raw source compiled C targets next output)
+    (index : Usize) (pc : U32) (lookup : exec.frames.val[index.val]? = some raw)
+    (front args : List val) (after : List instr) (returns : List valtype) (base : Nat)
+    (split : source.vals = front ++ args)
+    (destination : base = raw.base.val + Compiler.slots ((source.locals ++ front).map Compiler.valueType))
+    (heights : ∀ label ∈ source.labels, label.height ≤ front.length)
+    (continuation : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
+      (front.map Compiler.valueType ++ returns) after pc.val next output) :
+    SavedFrame store s { exec with frames := exec.frames.set index { raw with pc := pc } }
+      { raw with pc := pc } { source with vals := front, code := after } returns base := by
+  refine ⟨binding.advance index pc lookup, ?_, destination,
+    compiled, C, targets, next, output, ⟨program.lookup, program.checked, program.fetchBound, program.localSlots, program.epilogue⟩,
+    point.suspend front args after pc returns split heights continuation⟩
+  apply WordsAt.append_left (right := Compiler.encodeValues args)
+  simpa only [FrameSlots, ValuesAt, split, Compiler.encode_values_append, List.append_assoc] using slots
+
+/-- After successful entry, the initialized callee and prepared caller chain
+constitute the complete frame-stack relation. -/
+theorem FrameStackRel.call_enter {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+    {before after : runtime.interp.Execution} {raws : List runtime.interp.Frame} {sources : List SourceMachine.AFrame}
+    {instanceIndex functionIndex base : Usize} {compiled : runtime.bytecode.CompiledFunction}
+    (effect : CallEntryEffect before after instanceIndex functionIndex base compiled)
+    (source : SourceMachine.AFrame)
+    (frames : before.frames.val = raws.reverse)
+    (saved : SavedFrames store s before raws sources source.resultTypes base.val)
+    (active : ActiveFrame store s after ⟨instanceIndex, functionIndex, 0#u32, base⟩ source)
+    (params : compiled.param_slots.val ≤ compiled.local_slots.val)
+    (capacity : compiled.local_slots.val ≤ compiled.slot_count.val) :
+    FrameStackRel store s after (source :: sources) := by
+  exact .active (by rw [effect.1, frames]) active
+    (saved.call_preserved effect (Nat.le_refl _) params capacity)
+
+end Itasca.Runtime.Interp.Machine
+
+end
+
+/-! ## CallStackEntry -/
+
+section
 
 /-!
 Defined-function callee certification and stack entry. The body point and call certificate assemble the frame-stack relation for the newly entered Wasm callee.
@@ -182,5 +355,7 @@ theorem call_wasm_stack {M P F A : Type}
     signature.results.val.map sourceType, false, program, .ready point⟩
 
 end Itasca.Runtime.Interp.Machine
+
+end
 
 end

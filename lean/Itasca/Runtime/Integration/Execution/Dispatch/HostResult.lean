@@ -8,13 +8,14 @@ import Itasca.Runtime.Integration.Host.HostStructuredResume
 import Itasca.Runtime.Integration.Host.HostCallContext
 import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
-import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Integration.Host.HostEventfulReturn
 import Itasca.Runtime.Integration.Host.HostIndirectSelected
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution
 import Itasca.Runtime.Interp.Relations.EventfulNormalize
 import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

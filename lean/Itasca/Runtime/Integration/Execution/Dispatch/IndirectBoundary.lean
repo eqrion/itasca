@@ -2,7 +2,7 @@ import Itasca.Runtime.Interp.Machine.Frames.SourceBase
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectCall
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectLookup
 import Itasca.Runtime.Integration.Execution.Resources.Failure
-import Itasca.Runtime.Interp.Machine.Calls.IndirectPoint
+import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
 import Itasca.Runtime.Interp.Machine.Execution
@@ -18,7 +18,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
-import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Interp.Relations.SourceIndirectCallCause
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution

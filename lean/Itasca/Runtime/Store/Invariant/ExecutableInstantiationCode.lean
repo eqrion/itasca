@@ -5,7 +5,7 @@ import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunctionConte
 import Itasca.Runtime.Interp.Machine.Stateful.Projection
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage
 import Itasca.Runtime.Interp.Machine.Simd.Point
-import Itasca.Runtime.Interp.Machine.Calls.IndirectPoint
+import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 
 /-!

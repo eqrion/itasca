@@ -2,7 +2,8 @@ import Itasca.Runtime.Interp.Machine.Frames.SourceBase
 import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
-import Itasca.Runtime.Interp.Machine.Calls.IndirectSelected
+import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 theorem step_indirect_supported_execution
