@@ -13,7 +13,7 @@ import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Mutation.Core
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Values

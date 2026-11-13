@@ -22,7 +22,7 @@ import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.SourceMachine.Measure
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext

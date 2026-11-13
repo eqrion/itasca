@@ -66,7 +66,7 @@ import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Interp.Memory.MemoryCoreResult
 import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction

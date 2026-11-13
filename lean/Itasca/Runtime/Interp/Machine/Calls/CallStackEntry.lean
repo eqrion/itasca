@@ -1,11 +1,9 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
-import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
 import Itasca.Runtime.Interp.Calls.IndirectResolve
-import Itasca.Runtime.Interp.Machine.Functions.FunctionCode
 
 /-!
 Sections, each formerly its own module: IndirectPoint, CallLookup, CallStack, CallStackEntry.

@@ -60,7 +60,7 @@ import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Interp.Memory.MemoryCoreResult
 import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction
@@ -102,7 +102,6 @@ import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
-import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads

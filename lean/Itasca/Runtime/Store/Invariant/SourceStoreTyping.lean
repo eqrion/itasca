@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Store.Api.ExportBounds
 import Itasca.Runtime.Representation.StoreCapacity
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Store.Invariant.Typing
 
 namespace Itasca.Runtime.Store

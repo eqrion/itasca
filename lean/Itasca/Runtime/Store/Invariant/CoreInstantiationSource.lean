@@ -2,7 +2,7 @@ import Itasca.Runtime.Store.Invariant.SourceBindings
 import Itasca.Runtime.Store.Invariant.SourceSyntax
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
 import Itasca.Runtime.Compiler.Local.Source.SourceSlice
 import Itasca.Runtime.Store.Invariant.FunctionSignatures

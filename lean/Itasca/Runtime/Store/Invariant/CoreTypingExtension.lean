@@ -1,6 +1,7 @@
-import Itasca.Runtime.Interp.Machine.Functions.Typing
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Store.Invariant.CodeAgreement
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 
