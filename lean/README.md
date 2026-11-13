@@ -239,7 +239,9 @@ The proofs supplement the pinned specification without editing it:
 
 ### Source patches
 
-Aeneas runs unmodified at the pinned revision. Private Rust modules use
+Aeneas runs unmodified at the pinned revision. After extraction,
+`scripts/strip_source_lines.py` removes Rust line ranges from generated comments,
+retaining source filenames and changing no definitions. Private Rust modules use
 `metadata` and `wasm_types` to avoid Lean namespace collisions with fields
 named `module` and `types`; their files remain `src/module.rs` and `src/types.rs`.
 Local binders also avoid namespaces referenced in the same scope, such as

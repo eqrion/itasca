@@ -20,21 +20,21 @@ set_option maxRecDepth 2048
 namespace Itasca
 
 /-- [core::marker::PhantomData]
-    Source: '/rustc/library/core/src/marker.rs', lines 811:0-811:39
+    Source: '/rustc/library/core/src/marker.rs'
     Name pattern: [core::marker::PhantomData]
     Visibility: public -/
 @[reducible, rust_type "core::marker::PhantomData"]
 def core.marker.PhantomData (T : Type) := Unit
 
 /-- [itasca::code::MemArg]
-    Source: 'src/code.rs', lines 22:0-25:1
+    Source: 'src/code.rs'
     Visibility: public -/
 structure code.MemArg where
   align : Std.U32
   offset : Std.U32
 
 /-- [itasca::wasm_types::ValueType]
-    Source: 'src/types.rs', lines 10:0-18:1
+    Source: 'src/types.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive wasm_types.ValueType where
@@ -47,21 +47,21 @@ inductive wasm_types.ValueType where
 | ExternRef : wasm_types.ValueType
 
 /-- [itasca::code::Context]
-    Source: 'src/code.rs', lines 31:0-35:1
+    Source: 'src/code.rs'
     Visibility: public -/
 structure code.Context where
   locals : alloc.vec.Vec wasm_types.ValueType
   results : alloc.vec.Vec wasm_types.ValueType
 
 /-- [itasca::error::VisitError]
-    Source: 'src/error.rs', lines 52:0-54:1
+    Source: 'src/error.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive error.VisitError where
 | OutOfMemory : error.VisitError
 
 /-- [itasca::error::OpError]
-    Source: 'src/error.rs', lines 16:0-47:1
+    Source: 'src/error.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive error.OpError where
@@ -93,7 +93,7 @@ inductive error.OpError where
 | Visitor : error.VisitError → error.OpError
 
 /-- [itasca::code::StackType]
-    Source: 'src/code.rs', lines 52:0-55:1
+    Source: 'src/code.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive code.StackType where
@@ -101,7 +101,7 @@ inductive code.StackType where
 | Bot : code.StackType
 
 /-- [itasca::code::LabelKind]
-    Source: 'src/code.rs', lines 60:0-66:1
+    Source: 'src/code.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive code.LabelKind where
@@ -112,7 +112,7 @@ inductive code.LabelKind where
 | Else : code.LabelKind
 
 /-- [itasca::signature::BlockType]
-    Source: 'src/signature.rs', lines 89:0-93:1
+    Source: 'src/signature.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive signature.BlockType where
@@ -121,7 +121,7 @@ inductive signature.BlockType where
 | TypeIndex : Std.U32 → signature.BlockType
 
 /-- [itasca::code::Ctrl]
-    Source: 'src/code.rs', lines 71:0-79:1
+    Source: 'src/code.rs'
     Visibility: public -/
 structure code.Ctrl where
   kind : code.LabelKind
@@ -130,7 +130,7 @@ structure code.Ctrl where
   polymorphic_base : Bool
 
 /-- [itasca::code::OpIterState]
-    Source: 'src/code.rs', lines 84:0-88:1
+    Source: 'src/code.rs'
     Visibility: public -/
 structure code.OpIterState where
   vals : alloc.vec.Vec code.StackType
@@ -138,12 +138,12 @@ structure code.OpIterState where
   pos : Std.Usize
 
 /-- [itasca::code::BodyState]
-    Source: 'src/code.rs', lines 91:0-93:1 -/
+    Source: 'src/code.rs' -/
 structure code.BodyState where
   core : code.OpIterState
 
 /-- [itasca::wasm_types::Mut]
-    Source: 'src/types.rs', lines 40:0-43:1
+    Source: 'src/types.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive wasm_types.Mut where
@@ -151,14 +151,14 @@ inductive wasm_types.Mut where
 | Var : wasm_types.Mut
 
 /-- [itasca::wasm_types::GlobalType]
-    Source: 'src/types.rs', lines 109:0-112:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.GlobalType where
   mutability : wasm_types.Mut
   valtype : wasm_types.ValueType
 
 /-- [itasca::wasm_types::ElemType]
-    Source: 'src/types.rs', lines 83:0-86:1
+    Source: 'src/types.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive wasm_types.ElemType where
@@ -166,34 +166,34 @@ inductive wasm_types.ElemType where
 | ExternRef : wasm_types.ElemType
 
 /-- [itasca::wasm_types::Limits]
-    Source: 'src/types.rs', lines 68:0-71:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.Limits where
   min : Std.U32
   max : Option Std.U32
 
 /-- [itasca::wasm_types::TableType]
-    Source: 'src/types.rs', lines 101:0-104:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.TableType where
   limits : wasm_types.Limits
   elem : wasm_types.ElemType
 
 /-- [itasca::wasm_types::MemType]
-    Source: 'src/types.rs', lines 76:0-78:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.MemType where
   limits : wasm_types.Limits
 
 /-- [itasca::wasm_types::FuncType]
-    Source: 'src/types.rs', lines 60:0-63:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.FuncType where
   params : alloc.vec.Vec wasm_types.ValueType
   results : alloc.vec.Vec wasm_types.ValueType
 
 /-- [itasca::wasm_types::ConstExpr]
-    Source: 'src/types.rs', lines 129:0-144:1
+    Source: 'src/types.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive wasm_types.ConstExpr where
@@ -207,7 +207,7 @@ inductive wasm_types.ConstExpr where
 | GlobalGet : Std.U32 → wasm_types.ConstExpr
 
 /-- [itasca::metadata::ElementMode]
-    Source: 'src/module.rs', lines 93:0-97:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive metadata.ElementMode where
@@ -216,7 +216,7 @@ inductive metadata.ElementMode where
 | Declarative : metadata.ElementMode
 
 /-- [itasca::metadata::Element]
-    Source: 'src/module.rs', lines 102:0-106:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Element where
   elem : wasm_types.ElemType
@@ -224,7 +224,7 @@ structure metadata.Element where
   init : alloc.vec.Vec wasm_types.ConstExpr
 
 /-- [itasca::metadata::ExportDesc]
-    Source: 'src/module.rs', lines 75:0-80:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive metadata.ExportDesc where
@@ -234,14 +234,14 @@ inductive metadata.ExportDesc where
 | Global : Std.U32 → metadata.ExportDesc
 
 /-- [itasca::metadata::Export]
-    Source: 'src/module.rs', lines 85:0-88:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Export where
   «name» : alloc.vec.Vec Std.U8
   desc : metadata.ExportDesc
 
 /-- [itasca::metadata::ImportDesc]
-    Source: 'src/module.rs', lines 56:0-61:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive metadata.ImportDesc where
@@ -251,7 +251,7 @@ inductive metadata.ImportDesc where
 | Global : wasm_types.GlobalType → metadata.ImportDesc
 
 /-- [itasca::metadata::Import]
-    Source: 'src/module.rs', lines 66:0-70:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Import where
   module : alloc.vec.Vec Std.U8
@@ -259,14 +259,14 @@ structure metadata.Import where
   desc : metadata.ImportDesc
 
 /-- [itasca::metadata::Global]
-    Source: 'src/module.rs', lines 48:0-51:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Global where
   gtype : wasm_types.GlobalType
   init : wasm_types.ConstExpr
 
 /-- [itasca::metadata::Env]
-    Source: 'src/module.rs', lines 115:0-144:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Env where
   types : alloc.vec.Vec wasm_types.FuncType
@@ -286,7 +286,7 @@ structure metadata.Env where
   num_imported_globals : Std.Usize
 
 /-- [itasca::signature::TypePart]
-    Source: 'src/signature.rs', lines 14:0-17:1
+    Source: 'src/signature.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive signature.TypePart where
@@ -294,7 +294,7 @@ inductive signature.TypePart where
 | Results : signature.TypePart
 
 /-- [itasca::signature::ResultType]
-    Source: 'src/signature.rs', lines 22:0-26:1
+    Source: 'src/signature.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive signature.ResultType where
@@ -303,7 +303,7 @@ inductive signature.ResultType where
 | «Type» : Std.U32 → signature.TypePart → signature.ResultType
 
 /-- Trait declaration: [itasca::code::OpVisitor]
-    Source: 'src/code.rs', lines 2316:0-2662:1
+    Source: 'src/code.rs'
     Visibility: public -/
 structure code.OpVisitor (Self : Type) where
   on_ref_null : Self → code.OpIterState → wasm_types.ElemType → Result
@@ -726,7 +726,7 @@ structure code.OpVisitor (Self : Type) where
     ((core.result.Result Unit error.VisitError) × Self)
 
 /-- [itasca::code::SimdSignature]
-    Source: 'src/code.rs', lines 1267:0-1277:1 -/
+    Source: 'src/code.rs' -/
 @[discriminant isize]
 inductive code.SimdSignature where
 | Unary : code.SimdSignature
@@ -740,7 +740,7 @@ inductive code.SimdSignature where
 | SplatF64 : code.SimdSignature
 
 /-- [itasca::ValidationProfile]
-    Source: 'src/lib.rs', lines 74:0-79:1
+    Source: 'src/lib.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive ValidationProfile where
@@ -748,13 +748,13 @@ inductive ValidationProfile where
 | Wasm2 : ValidationProfile
 
 /-- [itasca::code::EmptyOpVisitor]
-    Source: 'src/code.rs', lines 2665:0-2665:26
+    Source: 'src/code.rs'
     Visibility: public -/
 @[reducible]
 def code.EmptyOpVisitor := Unit
 
 /-- [itasca::error::Error]
-    Source: 'src/error.rs', lines 59:0-109:1
+    Source: 'src/error.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive error.Error where
@@ -790,7 +790,7 @@ inductive error.Error where
 | Host : error.Error
 
 /-- [itasca::metadata::DataMode]
-    Source: 'src/module.rs', lines 261:0-264:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive metadata.DataMode where
@@ -798,27 +798,27 @@ inductive metadata.DataMode where
 | Passive : metadata.DataMode
 
 /-- [itasca::metadata::Data]
-    Source: 'src/module.rs', lines 268:0-271:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Data where
   mode : metadata.DataMode
   init : alloc.vec.Vec Std.U8
 
 /-- [itasca::metadata::Tail]
-    Source: 'src/module.rs', lines 275:0-277:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Tail where
   data : alloc.vec.Vec metadata.Data
 
 /-- [itasca::metadata::Module]
-    Source: 'src/module.rs', lines 281:0-284:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Module where
   env : metadata.Env
   tail : metadata.Tail
 
 /-- [itasca::stream::CodeBatch]
-    Source: 'src/stream.rs', lines 128:0-150:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 structure stream.CodeBatch where
   module_id : Std.U64
@@ -836,20 +836,20 @@ structure stream.CodeBatch where
   error : Option error.Error
 
 /-- [itasca::stream::SyncVisitor]
-    Source: 'src/stream.rs', lines 590:0-593:1 -/
+    Source: 'src/stream.rs' -/
 structure stream.SyncVisitor where
   completed : Option stream.CodeBatch
   tail : Option metadata.Tail
 
 /-- [itasca::stream::Config]
-    Source: 'src/stream.rs', lines 33:0-39:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 structure stream.Config where
   batch_bytes : Std.Usize
   max_batches : Std.Usize
 
 /-- [itasca::stream::Region]
-    Source: 'src/stream.rs', lines 25:0-28:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive stream.Region where
@@ -857,7 +857,7 @@ inductive stream.Region where
 | Tail : stream.Region
 
 /-- [itasca::wasm_types::CustomSection]
-    Source: 'src/types.rs', lines 153:0-160:1
+    Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.CustomSection where
   name_len : Std.Usize
@@ -865,14 +865,14 @@ structure wasm_types.CustomSection where
   payload_end : Std.Usize
 
 /-- Trait declaration: [itasca::metadata::ModuleVisitor]
-    Source: 'src/module.rs', lines 1685:0-1693:1
+    Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.ModuleVisitor (Self : Type) where
   on_custom_section : Self → wasm_types.CustomSection → Result
     ((core.result.Result Unit error.VisitError) × Self)
 
 /-- Trait declaration: [itasca::stream::StreamingVisitor]
-    Source: 'src/stream.rs', lines 79:0-103:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 structure stream.StreamingVisitor (Self : Type) where
   metadataModuleVisitorInst : metadata.ModuleVisitor Self
@@ -888,14 +888,14 @@ structure stream.StreamingVisitor (Self : Type) where
     error.Error) × Self)
 
 /-- [itasca::stream::SliceSource]
-    Source: 'src/stream.rs', lines 559:0-563:1 -/
+    Source: 'src/stream.rs' -/
 structure stream.SliceSource where
   env : Slice Std.U8
   code : Slice Std.U8
   tail : Slice Std.U8
 
 /-- Trait declaration: [itasca::stream::Source]
-    Source: 'src/stream.rs', lines 51:0-67:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 structure stream.Source (Self : Type) where
   environment : Self → Result (core.result.Result (Slice Std.U8) error.Error)
@@ -905,7 +905,7 @@ structure stream.Source (Self : Type) where
   tail : Self → Result (core.result.Result (Slice Std.U8) error.Error)
 
 /-- [itasca::wasm_types::ExternType]
-    Source: 'src/types.rs', lines 116:0-121:1
+    Source: 'src/types.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive wasm_types.ExternType where
@@ -915,13 +915,13 @@ inductive wasm_types.ExternType where
 | Global : wasm_types.GlobalType → wasm_types.ExternType
 
 /-- [itasca::metadata::EmptyModuleVisitor]
-    Source: 'src/module.rs', lines 1696:0-1696:30
+    Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
 def metadata.EmptyModuleVisitor := Unit
 
 /-- [itasca::runtime::compiler::ControlMap]
-    Source: 'src/runtime/compiler/mod.rs', lines 190:0-204:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 structure runtime.compiler.ControlMap where
   kind : code.LabelKind
@@ -934,7 +934,7 @@ structure runtime.compiler.ControlMap where
   results : Std.Usize
 
 /-- [itasca::runtime::bytecode::Instr]
-    Source: 'src/runtime/bytecode.rs', lines 43:8-86:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[discriminant isize]
 inductive runtime.bytecode.Instr where
 | Copy : Std.U32 → Std.U32 → runtime.bytecode.Instr
@@ -1571,14 +1571,14 @@ inductive runtime.bytecode.Instr where
   runtime.bytecode.Instr
 
 /-- [itasca::runtime::bytecode::SimdImmediate]
-    Source: 'src/runtime/bytecode.rs', lines 29:0-33:1 -/
+    Source: 'src/runtime/bytecode.rs' -/
 structure runtime.bytecode.SimdImmediate where
   offset : Std.U32
   lane : Std.U32
   bits : Std.U128
 
 /-- [itasca::runtime::bytecode::CompiledFunction]
-    Source: 'src/runtime/bytecode.rs', lines 7:0-25:1 -/
+    Source: 'src/runtime/bytecode.rs' -/
 structure runtime.bytecode.CompiledFunction where
   locals : alloc.vec.Vec wasm_types.ValueType
   local_slots : Std.U32
@@ -1597,13 +1597,13 @@ structure runtime.bytecode.CompiledFunction where
   body_end : Std.Usize
 
 /-- Trait declaration: [itasca::runtime::platform::Alloc]
-    Source: 'src/runtime/platform.rs', lines 91:0-93:1 -/
+    Source: 'src/runtime/platform.rs' -/
 structure runtime.platform.Alloc (Self : Type) where
   reserve : forall {T : Type}, alloc.vec.Vec T → Std.Usize → Result (Bool
     × (alloc.vec.Vec T))
 
 /-- [itasca::runtime::compiler::Frame]
-    Source: 'src/runtime/compiler/mod.rs', lines 553:0-564:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.Frame where
   map : Std.Usize
   kind : code.LabelKind
@@ -1617,7 +1617,7 @@ structure runtime.compiler.Frame where
   fixups : alloc.vec.Vec Std.Usize
 
 /-- [itasca::runtime::compiler::Signature]
-    Source: 'src/runtime/compiler/mod.rs', lines 514:0-519:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.Signature where
   params : Std.Usize
   results : Std.Usize
@@ -1625,7 +1625,7 @@ structure runtime.compiler.Signature where
   result_slots : Std.U32
 
 /-- [itasca::runtime::compiler::CompileResource]
-    Source: 'src/runtime/compiler/mod.rs', lines 64:0-73:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.compiler.CompileResource where
@@ -1639,7 +1639,7 @@ inductive runtime.compiler.CompileResource where
 | Allocation : runtime.compiler.CompileResource
 
 /-- [itasca::runtime::compiler::CompileLimits]
-    Source: 'src/runtime/compiler/mod.rs', lines 37:0-45:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 structure runtime.compiler.CompileLimits where
   max_module_bytes : Std.Usize
@@ -1651,7 +1651,7 @@ structure runtime.compiler.CompileLimits where
   max_locals : Std.Usize
 
 /-- [itasca::runtime::compiler::Budget]
-    Source: 'src/runtime/compiler/mod.rs', lines 95:0-103:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.Budget (A : Type) where
   marker : core.marker.PhantomData A
   limits : runtime.compiler.CompileLimits
@@ -1662,7 +1662,7 @@ structure runtime.compiler.Budget (A : Type) where
   error : Option runtime.compiler.CompileResource
 
 /-- [itasca::runtime::compiler::FunctionCompiler]
-    Source: 'src/runtime/compiler/mod.rs', lines 566:0-579:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.FunctionCompiler (A : Type) where
   signatures : Slice runtime.compiler.Signature
   func_param_slots : Slice Std.U32
@@ -1678,7 +1678,7 @@ structure runtime.compiler.FunctionCompiler (A : Type) where
   table_depths : alloc.vec.Vec Std.U32
 
 /-- [itasca::runtime::compiler::ExecutableModule]
-    Source: 'src/runtime/compiler/mod.rs', lines 151:0-162:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 structure runtime.compiler.ExecutableModule where
   module : metadata.Module
@@ -1691,7 +1691,7 @@ structure runtime.compiler.ExecutableModule where
   initialization : Std.Usize
 
 /-- [itasca::runtime::compiler::CompileError]
-    Source: 'src/runtime/compiler/mod.rs', lines 78:0-81:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.compiler.CompileError where
@@ -1699,7 +1699,7 @@ inductive runtime.compiler.CompileError where
 | Resource : runtime.compiler.CompileResource → runtime.compiler.CompileError
 
 /-- [itasca::runtime::compiler::FunctionStats]
-    Source: 'src/runtime/compiler/mod.rs', lines 167:0-185:1
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 structure runtime.compiler.FunctionStats where
   type_index : Std.U32
@@ -1714,7 +1714,7 @@ structure runtime.compiler.FunctionStats where
   body_end : Std.Usize
 
 /-- [itasca::runtime::compiler::CompileScheduler]
-    Source: 'src/runtime/compiler/mod.rs', lines 439:0-447:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.CompileScheduler (A : Type) where
   signatures : alloc.vec.Vec runtime.compiler.Signature
   func_param_slots : alloc.vec.Vec Std.U32
@@ -1725,7 +1725,7 @@ structure runtime.compiler.CompileScheduler (A : Type) where
   budget : runtime.compiler.Budget A
 
 /-- [itasca::stream::CodeEntry]
-    Source: 'src/stream.rs', lines 111:0-120:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 structure stream.CodeEntry where
   index : Std.Usize
@@ -1734,42 +1734,42 @@ structure stream.CodeEntry where
   «end» : Std.Usize
 
 /-- [itasca::runtime::compiler::CompileSource]
-    Source: 'src/runtime/compiler/mod.rs', lines 376:0-380:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 structure runtime.compiler.CompileSource where
   bytes : Slice Std.U8
   code_start : Std.Usize
   code_end : Std.Usize
 
 /-- [itasca::runtime::GlobalAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.GlobalAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::MemoryAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.MemoryAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::TableAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.TableAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::FuncAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.FuncAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::store::ModuleInst]
-    Source: 'src/runtime/store.rs', lines 87:0-96:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.ModuleInst where
   module : runtime.compiler.ExecutableModule
   types : alloc.vec.Vec Std.Usize
@@ -1781,51 +1781,51 @@ structure runtime.store.ModuleInst where
   datas : alloc.vec.Vec Std.Usize
 
 /-- [itasca::runtime::store::DataInst]
-    Source: 'src/runtime/store.rs', lines 83:0-85:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.DataInst where
   bytes : alloc.vec.Vec Std.U8
 
 /-- [itasca::runtime::store::ElemInst]
-    Source: 'src/runtime/store.rs', lines 78:0-81:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.ElemInst where
   ty : wasm_types.ElemType
   refs : alloc.vec.Vec Std.U64
 
 /-- [itasca::runtime::store::GlobalInst]
-    Source: 'src/runtime/store.rs', lines 72:0-76:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.GlobalInst where
   lo : Std.U64
   hi : Std.U64
   ty : wasm_types.GlobalType
 
 /-- [itasca::runtime::store::TableInst]
-    Source: 'src/runtime/store.rs', lines 66:0-70:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.TableInst where
   elements : alloc.vec.Vec Std.U64
   ty : wasm_types.ElemType
   maximum : Option Std.U32
 
 /-- [itasca::runtime::store::MemInst]
-    Source: 'src/runtime/store.rs', lines 61:0-64:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.MemInst (M : Type) where
   buf : M
   maximum : Option Std.U32
 
 /-- [itasca::runtime::store::FuncCode]
-    Source: 'src/runtime/store.rs', lines 52:0-55:1 -/
+    Source: 'src/runtime/store.rs' -/
 @[discriminant isize]
 inductive runtime.store.FuncCode where
 | Host : Std.U64 → runtime.store.FuncCode
 | Wasm : Std.Usize → Std.Usize → runtime.store.FuncCode
 
 /-- [itasca::runtime::store::FuncInst]
-    Source: 'src/runtime/store.rs', lines 57:0-60:1 -/
+    Source: 'src/runtime/store.rs' -/
 structure runtime.store.FuncInst where
   signature : Std.Usize
   code : runtime.store.FuncCode
 
 /-- [itasca::runtime::store::StoreLimits]
-    Source: 'src/runtime/store.rs', lines 16:0-36:1
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 structure runtime.store.StoreLimits where
   max_objects : Std.Usize
@@ -1838,7 +1838,7 @@ structure runtime.store.StoreLimits where
   max_values : Std.Usize
 
 /-- [itasca::runtime::store::Store]
-    Source: 'src/runtime/store.rs', lines 101:0-117:1
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 structure runtime.store.Store (M : Type) where
   id : Std.Usize
@@ -1858,7 +1858,7 @@ structure runtime.store.Store (M : Type) where
   table_elements : Std.Usize
 
 /-- Trait declaration: [itasca::runtime::platform::MemoryBuffer]
-    Source: 'src/runtime/platform.rs', lines 46:0-51:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 structure runtime.platform.MemoryBuffer (Self : Type) where
   new_zeroed : Std.Usize → Result (Option Self)
@@ -1867,7 +1867,7 @@ structure runtime.platform.MemoryBuffer (Self : Type) where
   grow : Self → Std.Usize → Result (Bool × Self)
 
 /-- [itasca::runtime::ResourceLimit]
-    Source: 'src/runtime/mod.rs', lines 138:0-143:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.ResourceLimit where
@@ -1877,7 +1877,7 @@ inductive runtime.ResourceLimit where
 | Objects : runtime.ResourceLimit
 
 /-- [itasca::runtime::LinkError]
-    Source: 'src/runtime/mod.rs', lines 131:0-134:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.LinkError where
@@ -1885,7 +1885,7 @@ inductive runtime.LinkError where
 | IncompatibleImportType : runtime.LinkError
 
 /-- [itasca::runtime::Trap]
-    Source: 'src/runtime/mod.rs', lines 117:0-127:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Trap where
@@ -1900,7 +1900,7 @@ inductive runtime.Trap where
 | Host : runtime.Trap
 
 /-- [itasca::runtime::ExecError]
-    Source: 'src/runtime/mod.rs', lines 147:0-157:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.ExecError where
@@ -1913,7 +1913,7 @@ inductive runtime.ExecError where
 | Internal : runtime.ExecError
 
 /-- Trait declaration: [itasca::runtime::platform::FloatOps]
-    Source: 'src/runtime/platform.rs', lines 58:0-86:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 structure runtime.platform.FloatOps (Self : Type) where
   f32_add : Std.U32 → Std.U32 → Result Std.U32
@@ -1945,7 +1945,7 @@ structure runtime.platform.FloatOps (Self : Type) where
   f32_demote_f64 : Std.U64 → Result Std.U32
 
 /-- [itasca::runtime::interp::Frame]
-    Source: 'src/runtime/interp/mod.rs', lines 13:0-18:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 structure runtime.interp.Frame where
   «instance» : Std.Usize
   function : Std.Usize
@@ -1953,14 +1953,14 @@ structure runtime.interp.Frame where
   base : Std.Usize
 
 /-- [itasca::runtime::ExternAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.ExternAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::Value]
-    Source: 'src/runtime/mod.rs', lines 63:0-71:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Value where
@@ -1973,7 +1973,7 @@ inductive runtime.Value where
 | ExternRef : Option runtime.ExternAddr → runtime.Value
 
 /-- [itasca::runtime::interp::Execution]
-    Source: 'src/runtime/interp/mod.rs', lines 20:0-26:1
+    Source: 'src/runtime/interp/mod.rs'
     Visibility: public -/
 structure runtime.interp.Execution where
   store : Std.Usize
@@ -1983,7 +1983,7 @@ structure runtime.interp.Execution where
   host_results : alloc.vec.Vec runtime.Value
 
 /-- [itasca::runtime::platform::HostError]
-    Source: 'src/runtime/platform.rs', lines 17:0-20:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.platform.HostError where
@@ -1991,7 +1991,7 @@ inductive runtime.platform.HostError where
 | StackOverflow : runtime.platform.HostError
 
 /-- [itasca::runtime::platform::InterruptAction]
-    Source: 'src/runtime/platform.rs', lines 9:0-12:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.platform.InterruptAction where
@@ -1999,7 +1999,7 @@ inductive runtime.platform.InterruptAction where
 | Terminate : runtime.platform.InterruptAction
 
 /-- Trait declaration: [itasca::runtime::platform::Platform]
-    Source: 'src/runtime/platform.rs', lines 28:0-37:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 structure runtime.platform.Platform (Self : Type) (M : Type) where
   MemoryBufferInst : runtime.platform.MemoryBuffer M
@@ -2010,21 +2010,21 @@ structure runtime.platform.Platform (Self : Type) (M : Type) where
     runtime.Value))
 
 /-- [itasca::runtime::InstanceAddr]
-    Source: 'src/runtime/mod.rs', lines 38:8-41:9
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.InstanceAddr where
   store : Std.Usize
   index : Std.Usize
 
 /-- [itasca::runtime::Instantiated]
-    Source: 'src/runtime/mod.rs', lines 55:0-58:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 structure runtime.Instantiated where
   «instance» : runtime.InstanceAddr
   start : Option runtime.FuncAddr
 
 /-- [itasca::runtime::Extern]
-    Source: 'src/runtime/mod.rs', lines 107:0-112:1
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 @[discriminant isize]
 inductive runtime.Extern where
@@ -2034,7 +2034,7 @@ inductive runtime.Extern where
 | Global : runtime.GlobalAddr → runtime.Extern
 
 /-- [itasca::runtime::platform::VecMemory]
-    Source: 'src/runtime/platform.rs', lines 96:0-98:1
+    Source: 'src/runtime/platform.rs'
     Visibility: public -/
 structure runtime.platform.VecMemory where
   data : alloc.vec.Vec Std.U8

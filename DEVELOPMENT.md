@@ -62,8 +62,10 @@ just verify           # Run the complete verification sequence
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
 | Documentation outside extraction inputs | Check links and `git diff --check` |
 
-Generated source locations change when Rust lines move. Inspect generated diffs;
-never repair `Types.lean` or `Funs.lean` by hand. `FunsExternal.lean` is handwritten,
+Generated comments retain Rust filenames but omit line ranges, so moving Rust
+lines does not change generated source locations. Rust changes that affect
+extracted definitions still require regeneration. Inspect generated diffs; never
+repair `Types.lean` or `Funs.lean` by hand. `FunsExternal.lean` is handwritten,
 and the generated external template is ignored and must never be imported.
 Specification changes belong in source or generator patches, followed by
 regeneration. Consistency checks write to ignored build directories and fail on

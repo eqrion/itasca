@@ -13,7 +13,9 @@ consumer API and checked theorem premises.
 
 - `src/` and `lean/Itasca/Generated/` are coupled. Regenerate committed
   `Types.lean` and `Funs.lean` with `just extract`; never edit them by hand.
-  Rust comment and line-number changes also require regeneration.
+  Rust changes still require regeneration. Generated comments retain Rust
+  filenames but omit line ranges, so moving lines no longer changes those
+  comments.
 - `FunsExternal.lean` is handwritten. The generated external template is ignored
   and must never be imported by a proof.
 - `lean/SpecTec/wasm2.0.lean` is generated from pinned sources and versioned

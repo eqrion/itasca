@@ -54,11 +54,13 @@ llbc: check-tools
 
 extract: llbc
 	$(AENEAS) -backend lean .build/itasca.llbc -dest . -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py Itasca/Generated/Types.lean Itasca/Generated/Funs.lean
 
 # Do not refresh checked-in files while checking their provenance.
 extract-check: llbc
 	mkdir -p .build/extract-check
 	$(AENEAS) -backend lean .build/itasca.llbc -dest .build/extract-check -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py .build/extract-check/Itasca/Generated/Types.lean .build/extract-check/Itasca/Generated/Funs.lean
 	cmp .build/extract-check/Itasca/Generated/Types.lean Itasca/Generated/Types.lean
 	cmp .build/extract-check/Itasca/Generated/Funs.lean Itasca/Generated/Funs.lean
 

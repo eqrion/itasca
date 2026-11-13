@@ -25,7 +25,7 @@ noncomputable section
 namespace Itasca
 
 /-- [itasca::code::visit]:
-    Source: 'src/code.rs', lines 40:0-45:1 -/
+    Source: 'src/code.rs' -/
 def code.visit
   (r : core.result.Result Unit error.VisitError) :
   Result (core.result.Result Unit error.OpError)
@@ -36,867 +36,867 @@ def code.visit
     ok (core.result.Result.Err (error.OpError.Visitor e))
 
 /-- [itasca::code::OP_UNREACHABLE]
-    Source: 'src/code.rs', lines 97:0-97:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_UNREACHABLE : Std.U8 := 0#u8
 
 /-- [itasca::code::OP_NOP]
-    Source: 'src/code.rs', lines 98:0-98:28
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_NOP : Std.U8 := 1#u8
 
 /-- [itasca::code::OP_BLOCK]
-    Source: 'src/code.rs', lines 99:0-99:30
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BLOCK : Std.U8 := 2#u8
 
 /-- [itasca::code::OP_LOOP]
-    Source: 'src/code.rs', lines 100:0-100:29
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOOP : Std.U8 := 3#u8
 
 /-- [itasca::code::OP_IF]
-    Source: 'src/code.rs', lines 101:0-101:27
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_IF : Std.U8 := 4#u8
 
 /-- [itasca::code::OP_ELSE]
-    Source: 'src/code.rs', lines 102:0-102:29
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_ELSE : Std.U8 := 5#u8
 
 /-- [itasca::code::OP_END]
-    Source: 'src/code.rs', lines 103:0-103:28
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_END : Std.U8 := 11#u8
 
 /-- [itasca::code::OP_BR]
-    Source: 'src/code.rs', lines 104:0-104:27
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR : Std.U8 := 12#u8
 
 /-- [itasca::code::OP_BR_IF]
-    Source: 'src/code.rs', lines 105:0-105:30
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR_IF : Std.U8 := 13#u8
 
 /-- [itasca::code::OP_BR_TABLE]
-    Source: 'src/code.rs', lines 106:0-106:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_BR_TABLE : Std.U8 := 14#u8
 
 /-- [itasca::code::OP_RETURN]
-    Source: 'src/code.rs', lines 107:0-107:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_RETURN : Std.U8 := 15#u8
 
 /-- [itasca::code::OP_CALL]
-    Source: 'src/code.rs', lines 108:0-108:29
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_CALL : Std.U8 := 16#u8
 
 /-- [itasca::code::OP_CALL_INDIRECT]
-    Source: 'src/code.rs', lines 109:0-109:38
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_CALL_INDIRECT : Std.U8 := 17#u8
 
 /-- [itasca::code::OP_DROP]
-    Source: 'src/code.rs', lines 110:0-110:29
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_DROP : Std.U8 := 26#u8
 
 /-- [itasca::code::OP_SELECT]
-    Source: 'src/code.rs', lines 111:0-111:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_SELECT : Std.U8 := 27#u8
 
 /-- [itasca::code::OP_LOCAL_GET]
-    Source: 'src/code.rs', lines 113:0-113:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_GET : Std.U8 := 32#u8
 
 /-- [itasca::code::OP_LOCAL_SET]
-    Source: 'src/code.rs', lines 114:0-114:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_SET : Std.U8 := 33#u8
 
 /-- [itasca::code::OP_LOCAL_TEE]
-    Source: 'src/code.rs', lines 115:0-115:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_LOCAL_TEE : Std.U8 := 34#u8
 
 /-- [itasca::code::OP_GLOBAL_GET]
-    Source: 'src/code.rs', lines 116:0-116:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_GLOBAL_GET : Std.U8 := 35#u8
 
 /-- [itasca::code::OP_GLOBAL_SET]
-    Source: 'src/code.rs', lines 117:0-117:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_GLOBAL_SET : Std.U8 := 36#u8
 
 /-- [itasca::code::OP_I32_LOAD]
-    Source: 'src/code.rs', lines 119:0-119:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD : Std.U8 := 40#u8
 
 /-- [itasca::code::OP_I64_LOAD]
-    Source: 'src/code.rs', lines 120:0-120:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD : Std.U8 := 41#u8
 
 /-- [itasca::code::OP_F32_LOAD]
-    Source: 'src/code.rs', lines 121:0-121:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LOAD : Std.U8 := 42#u8
 
 /-- [itasca::code::OP_F64_LOAD]
-    Source: 'src/code.rs', lines 122:0-122:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LOAD : Std.U8 := 43#u8
 
 /-- [itasca::code::OP_I32_LOAD8_S]
-    Source: 'src/code.rs', lines 123:0-123:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_S : Std.U8 := 44#u8
 
 /-- [itasca::code::OP_I32_LOAD8_U]
-    Source: 'src/code.rs', lines 124:0-124:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_U : Std.U8 := 45#u8
 
 /-- [itasca::code::OP_I32_LOAD16_S]
-    Source: 'src/code.rs', lines 125:0-125:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_S : Std.U8 := 46#u8
 
 /-- [itasca::code::OP_I32_LOAD16_U]
-    Source: 'src/code.rs', lines 126:0-126:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_U : Std.U8 := 47#u8
 
 /-- [itasca::code::OP_I64_LOAD8_S]
-    Source: 'src/code.rs', lines 127:0-127:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_S : Std.U8 := 48#u8
 
 /-- [itasca::code::OP_I64_LOAD8_U]
-    Source: 'src/code.rs', lines 128:0-128:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_U : Std.U8 := 49#u8
 
 /-- [itasca::code::OP_I64_LOAD16_S]
-    Source: 'src/code.rs', lines 129:0-129:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_S : Std.U8 := 50#u8
 
 /-- [itasca::code::OP_I64_LOAD16_U]
-    Source: 'src/code.rs', lines 130:0-130:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_U : Std.U8 := 51#u8
 
 /-- [itasca::code::OP_I64_LOAD32_S]
-    Source: 'src/code.rs', lines 131:0-131:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_S : Std.U8 := 52#u8
 
 /-- [itasca::code::OP_I64_LOAD32_U]
-    Source: 'src/code.rs', lines 132:0-132:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_U : Std.U8 := 53#u8
 
 /-- [itasca::code::OP_I32_STORE]
-    Source: 'src/code.rs', lines 134:0-134:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE : Std.U8 := 54#u8
 
 /-- [itasca::code::OP_I64_STORE]
-    Source: 'src/code.rs', lines 135:0-135:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE : Std.U8 := 55#u8
 
 /-- [itasca::code::OP_F32_STORE]
-    Source: 'src/code.rs', lines 136:0-136:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_STORE : Std.U8 := 56#u8
 
 /-- [itasca::code::OP_F64_STORE]
-    Source: 'src/code.rs', lines 137:0-137:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_STORE : Std.U8 := 57#u8
 
 /-- [itasca::code::OP_I32_STORE8]
-    Source: 'src/code.rs', lines 138:0-138:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE8 : Std.U8 := 58#u8
 
 /-- [itasca::code::OP_I32_STORE16]
-    Source: 'src/code.rs', lines 139:0-139:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_STORE16 : Std.U8 := 59#u8
 
 /-- [itasca::code::OP_I64_STORE8]
-    Source: 'src/code.rs', lines 140:0-140:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE8 : Std.U8 := 60#u8
 
 /-- [itasca::code::OP_I64_STORE16]
-    Source: 'src/code.rs', lines 141:0-141:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE16 : Std.U8 := 61#u8
 
 /-- [itasca::code::OP_I64_STORE32]
-    Source: 'src/code.rs', lines 142:0-142:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_STORE32 : Std.U8 := 62#u8
 
 /-- [itasca::code::OP_MEMORY_SIZE]
-    Source: 'src/code.rs', lines 144:0-144:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_MEMORY_SIZE : Std.U8 := 63#u8
 
 /-- [itasca::code::OP_MEMORY_GROW]
-    Source: 'src/code.rs', lines 145:0-145:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_MEMORY_GROW : Std.U8 := 64#u8
 
 /-- [itasca::code::OP_I32_CONST]
-    Source: 'src/code.rs', lines 147:0-147:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CONST : Std.U8 := 65#u8
 
 /-- [itasca::code::OP_I64_CONST]
-    Source: 'src/code.rs', lines 148:0-148:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CONST : Std.U8 := 66#u8
 
 /-- [itasca::code::OP_F32_CONST]
-    Source: 'src/code.rs', lines 149:0-149:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONST : Std.U8 := 67#u8
 
 /-- [itasca::code::OP_F64_CONST]
-    Source: 'src/code.rs', lines 150:0-150:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONST : Std.U8 := 68#u8
 
 /-- [itasca::code::OP_I32_EQZ]
-    Source: 'src/code.rs', lines 152:0-152:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_EQZ : Std.U8 := 69#u8
 
 /-- [itasca::code::OP_I32_EQ]
-    Source: 'src/code.rs', lines 153:0-153:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_EQ : Std.U8 := 70#u8
 
 /-- [itasca::code::OP_I32_NE]
-    Source: 'src/code.rs', lines 154:0-154:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_NE : Std.U8 := 71#u8
 
 /-- [itasca::code::OP_I32_LT_S]
-    Source: 'src/code.rs', lines 155:0-155:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LT_S : Std.U8 := 72#u8
 
 /-- [itasca::code::OP_I32_LT_U]
-    Source: 'src/code.rs', lines 156:0-156:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LT_U : Std.U8 := 73#u8
 
 /-- [itasca::code::OP_I32_GT_S]
-    Source: 'src/code.rs', lines 157:0-157:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GT_S : Std.U8 := 74#u8
 
 /-- [itasca::code::OP_I32_GT_U]
-    Source: 'src/code.rs', lines 158:0-158:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GT_U : Std.U8 := 75#u8
 
 /-- [itasca::code::OP_I32_LE_S]
-    Source: 'src/code.rs', lines 159:0-159:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LE_S : Std.U8 := 76#u8
 
 /-- [itasca::code::OP_I32_LE_U]
-    Source: 'src/code.rs', lines 160:0-160:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_LE_U : Std.U8 := 77#u8
 
 /-- [itasca::code::OP_I32_GE_S]
-    Source: 'src/code.rs', lines 161:0-161:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GE_S : Std.U8 := 78#u8
 
 /-- [itasca::code::OP_I32_GE_U]
-    Source: 'src/code.rs', lines 162:0-162:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_GE_U : Std.U8 := 79#u8
 
 /-- [itasca::code::OP_I64_EQZ]
-    Source: 'src/code.rs', lines 164:0-164:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EQZ : Std.U8 := 80#u8
 
 /-- [itasca::code::OP_I64_EQ]
-    Source: 'src/code.rs', lines 165:0-165:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EQ : Std.U8 := 81#u8
 
 /-- [itasca::code::OP_I64_NE]
-    Source: 'src/code.rs', lines 166:0-166:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_NE : Std.U8 := 82#u8
 
 /-- [itasca::code::OP_I64_LT_S]
-    Source: 'src/code.rs', lines 167:0-167:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LT_S : Std.U8 := 83#u8
 
 /-- [itasca::code::OP_I64_LT_U]
-    Source: 'src/code.rs', lines 168:0-168:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LT_U : Std.U8 := 84#u8
 
 /-- [itasca::code::OP_I64_GT_S]
-    Source: 'src/code.rs', lines 169:0-169:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GT_S : Std.U8 := 85#u8
 
 /-- [itasca::code::OP_I64_GT_U]
-    Source: 'src/code.rs', lines 170:0-170:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GT_U : Std.U8 := 86#u8
 
 /-- [itasca::code::OP_I64_LE_S]
-    Source: 'src/code.rs', lines 171:0-171:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LE_S : Std.U8 := 87#u8
 
 /-- [itasca::code::OP_I64_LE_U]
-    Source: 'src/code.rs', lines 172:0-172:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_LE_U : Std.U8 := 88#u8
 
 /-- [itasca::code::OP_I64_GE_S]
-    Source: 'src/code.rs', lines 173:0-173:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GE_S : Std.U8 := 89#u8
 
 /-- [itasca::code::OP_I64_GE_U]
-    Source: 'src/code.rs', lines 174:0-174:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_GE_U : Std.U8 := 90#u8
 
 /-- [itasca::code::OP_F32_EQ]
-    Source: 'src/code.rs', lines 176:0-176:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_EQ : Std.U8 := 91#u8
 
 /-- [itasca::code::OP_F32_NE]
-    Source: 'src/code.rs', lines 177:0-177:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NE : Std.U8 := 92#u8
 
 /-- [itasca::code::OP_F32_LT]
-    Source: 'src/code.rs', lines 178:0-178:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LT : Std.U8 := 93#u8
 
 /-- [itasca::code::OP_F32_GT]
-    Source: 'src/code.rs', lines 179:0-179:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_GT : Std.U8 := 94#u8
 
 /-- [itasca::code::OP_F32_LE]
-    Source: 'src/code.rs', lines 180:0-180:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_LE : Std.U8 := 95#u8
 
 /-- [itasca::code::OP_F32_GE]
-    Source: 'src/code.rs', lines 181:0-181:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_GE : Std.U8 := 96#u8
 
 /-- [itasca::code::OP_F64_EQ]
-    Source: 'src/code.rs', lines 183:0-183:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_EQ : Std.U8 := 97#u8
 
 /-- [itasca::code::OP_F64_NE]
-    Source: 'src/code.rs', lines 184:0-184:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NE : Std.U8 := 98#u8
 
 /-- [itasca::code::OP_F64_LT]
-    Source: 'src/code.rs', lines 185:0-185:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LT : Std.U8 := 99#u8
 
 /-- [itasca::code::OP_F64_GT]
-    Source: 'src/code.rs', lines 186:0-186:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_GT : Std.U8 := 100#u8
 
 /-- [itasca::code::OP_F64_LE]
-    Source: 'src/code.rs', lines 187:0-187:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_LE : Std.U8 := 101#u8
 
 /-- [itasca::code::OP_F64_GE]
-    Source: 'src/code.rs', lines 188:0-188:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_GE : Std.U8 := 102#u8
 
 /-- [itasca::code::OP_I32_SUB]
-    Source: 'src/code.rs', lines 190:0-190:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SUB : Std.U8 := 107#u8
 
 /-- [itasca::code::OP_I32_MUL]
-    Source: 'src/code.rs', lines 191:0-191:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_MUL : Std.U8 := 108#u8
 
 /-- [itasca::code::OP_I32_DIV_S]
-    Source: 'src/code.rs', lines 192:0-192:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_DIV_S : Std.U8 := 109#u8
 
 /-- [itasca::code::OP_I32_DIV_U]
-    Source: 'src/code.rs', lines 193:0-193:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_DIV_U : Std.U8 := 110#u8
 
 /-- [itasca::code::OP_I32_REM_S]
-    Source: 'src/code.rs', lines 194:0-194:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REM_S : Std.U8 := 111#u8
 
 /-- [itasca::code::OP_I32_REM_U]
-    Source: 'src/code.rs', lines 195:0-195:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REM_U : Std.U8 := 112#u8
 
 /-- [itasca::code::OP_I32_AND]
-    Source: 'src/code.rs', lines 196:0-196:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_AND : Std.U8 := 113#u8
 
 /-- [itasca::code::OP_I32_OR]
-    Source: 'src/code.rs', lines 197:0-197:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_OR : Std.U8 := 114#u8
 
 /-- [itasca::code::OP_I32_XOR]
-    Source: 'src/code.rs', lines 198:0-198:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_XOR : Std.U8 := 115#u8
 
 /-- [itasca::code::OP_I32_SHL]
-    Source: 'src/code.rs', lines 199:0-199:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHL : Std.U8 := 116#u8
 
 /-- [itasca::code::OP_I32_SHR_S]
-    Source: 'src/code.rs', lines 200:0-200:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHR_S : Std.U8 := 117#u8
 
 /-- [itasca::code::OP_I32_SHR_U]
-    Source: 'src/code.rs', lines 201:0-201:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_SHR_U : Std.U8 := 118#u8
 
 /-- [itasca::code::OP_I32_ROTL]
-    Source: 'src/code.rs', lines 202:0-202:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ROTL : Std.U8 := 119#u8
 
 /-- [itasca::code::OP_I32_ROTR]
-    Source: 'src/code.rs', lines 203:0-203:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ROTR : Std.U8 := 120#u8
 
 /-- [itasca::code::OP_I64_ADD]
-    Source: 'src/code.rs', lines 205:0-205:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ADD : Std.U8 := 124#u8
 
 /-- [itasca::code::OP_I64_SUB]
-    Source: 'src/code.rs', lines 206:0-206:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SUB : Std.U8 := 125#u8
 
 /-- [itasca::code::OP_I64_MUL]
-    Source: 'src/code.rs', lines 207:0-207:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_MUL : Std.U8 := 126#u8
 
 /-- [itasca::code::OP_I64_DIV_S]
-    Source: 'src/code.rs', lines 208:0-208:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_DIV_S : Std.U8 := 127#u8
 
 /-- [itasca::code::OP_I64_DIV_U]
-    Source: 'src/code.rs', lines 209:0-209:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_DIV_U : Std.U8 := 128#u8
 
 /-- [itasca::code::OP_I64_REM_S]
-    Source: 'src/code.rs', lines 210:0-210:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REM_S : Std.U8 := 129#u8
 
 /-- [itasca::code::OP_I64_REM_U]
-    Source: 'src/code.rs', lines 211:0-211:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REM_U : Std.U8 := 130#u8
 
 /-- [itasca::code::OP_I64_AND]
-    Source: 'src/code.rs', lines 212:0-212:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_AND : Std.U8 := 131#u8
 
 /-- [itasca::code::OP_I64_OR]
-    Source: 'src/code.rs', lines 213:0-213:31
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_OR : Std.U8 := 132#u8
 
 /-- [itasca::code::OP_I64_XOR]
-    Source: 'src/code.rs', lines 214:0-214:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_XOR : Std.U8 := 133#u8
 
 /-- [itasca::code::OP_I64_SHL]
-    Source: 'src/code.rs', lines 215:0-215:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHL : Std.U8 := 134#u8
 
 /-- [itasca::code::OP_I64_SHR_S]
-    Source: 'src/code.rs', lines 216:0-216:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHR_S : Std.U8 := 135#u8
 
 /-- [itasca::code::OP_I64_SHR_U]
-    Source: 'src/code.rs', lines 217:0-217:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_SHR_U : Std.U8 := 136#u8
 
 /-- [itasca::code::OP_I64_ROTL]
-    Source: 'src/code.rs', lines 218:0-218:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ROTL : Std.U8 := 137#u8
 
 /-- [itasca::code::OP_I64_ROTR]
-    Source: 'src/code.rs', lines 219:0-219:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_ROTR : Std.U8 := 138#u8
 
 /-- [itasca::code::OP_F32_ADD]
-    Source: 'src/code.rs', lines 221:0-221:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_ADD : Std.U8 := 146#u8
 
 /-- [itasca::code::OP_F32_SUB]
-    Source: 'src/code.rs', lines 222:0-222:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_SUB : Std.U8 := 147#u8
 
 /-- [itasca::code::OP_F32_MUL]
-    Source: 'src/code.rs', lines 223:0-223:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MUL : Std.U8 := 148#u8
 
 /-- [itasca::code::OP_F32_DIV]
-    Source: 'src/code.rs', lines 224:0-224:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_DIV : Std.U8 := 149#u8
 
 /-- [itasca::code::OP_F32_MIN]
-    Source: 'src/code.rs', lines 225:0-225:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MIN : Std.U8 := 150#u8
 
 /-- [itasca::code::OP_F32_MAX]
-    Source: 'src/code.rs', lines 226:0-226:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_MAX : Std.U8 := 151#u8
 
 /-- [itasca::code::OP_F32_COPYSIGN]
-    Source: 'src/code.rs', lines 227:0-227:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_COPYSIGN : Std.U8 := 152#u8
 
 /-- [itasca::code::OP_F64_ADD]
-    Source: 'src/code.rs', lines 229:0-229:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_ADD : Std.U8 := 160#u8
 
 /-- [itasca::code::OP_F64_SUB]
-    Source: 'src/code.rs', lines 230:0-230:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_SUB : Std.U8 := 161#u8
 
 /-- [itasca::code::OP_F64_MUL]
-    Source: 'src/code.rs', lines 231:0-231:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MUL : Std.U8 := 162#u8
 
 /-- [itasca::code::OP_F64_DIV]
-    Source: 'src/code.rs', lines 232:0-232:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_DIV : Std.U8 := 163#u8
 
 /-- [itasca::code::OP_F64_MIN]
-    Source: 'src/code.rs', lines 233:0-233:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MIN : Std.U8 := 164#u8
 
 /-- [itasca::code::OP_F64_MAX]
-    Source: 'src/code.rs', lines 234:0-234:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_MAX : Std.U8 := 165#u8
 
 /-- [itasca::code::OP_F64_COPYSIGN]
-    Source: 'src/code.rs', lines 235:0-235:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_COPYSIGN : Std.U8 := 166#u8
 
 /-- [itasca::code::OP_I32_CLZ]
-    Source: 'src/code.rs', lines 237:0-237:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CLZ : Std.U8 := 103#u8
 
 /-- [itasca::code::OP_I32_CTZ]
-    Source: 'src/code.rs', lines 238:0-238:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_CTZ : Std.U8 := 104#u8
 
 /-- [itasca::code::OP_I32_POPCNT]
-    Source: 'src/code.rs', lines 239:0-239:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_POPCNT : Std.U8 := 105#u8
 
 /-- [itasca::code::OP_I32_ADD]
-    Source: 'src/code.rs', lines 240:0-240:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_ADD : Std.U8 := 106#u8
 
 /-- [itasca::code::OP_I64_CLZ]
-    Source: 'src/code.rs', lines 242:0-242:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CLZ : Std.U8 := 121#u8
 
 /-- [itasca::code::OP_I64_CTZ]
-    Source: 'src/code.rs', lines 243:0-243:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_CTZ : Std.U8 := 122#u8
 
 /-- [itasca::code::OP_I64_POPCNT]
-    Source: 'src/code.rs', lines 244:0-244:35
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_POPCNT : Std.U8 := 123#u8
 
 /-- [itasca::code::OP_F32_ABS]
-    Source: 'src/code.rs', lines 246:0-246:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_ABS : Std.U8 := 139#u8
 
 /-- [itasca::code::OP_F32_NEG]
-    Source: 'src/code.rs', lines 247:0-247:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NEG : Std.U8 := 140#u8
 
 /-- [itasca::code::OP_F32_CEIL]
-    Source: 'src/code.rs', lines 248:0-248:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CEIL : Std.U8 := 141#u8
 
 /-- [itasca::code::OP_F32_FLOOR]
-    Source: 'src/code.rs', lines 249:0-249:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_FLOOR : Std.U8 := 142#u8
 
 /-- [itasca::code::OP_F32_TRUNC]
-    Source: 'src/code.rs', lines 250:0-250:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_TRUNC : Std.U8 := 143#u8
 
 /-- [itasca::code::OP_F32_NEAREST]
-    Source: 'src/code.rs', lines 251:0-251:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_NEAREST : Std.U8 := 144#u8
 
 /-- [itasca::code::OP_F32_SQRT]
-    Source: 'src/code.rs', lines 252:0-252:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_SQRT : Std.U8 := 145#u8
 
 /-- [itasca::code::OP_F64_ABS]
-    Source: 'src/code.rs', lines 254:0-254:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_ABS : Std.U8 := 153#u8
 
 /-- [itasca::code::OP_F64_NEG]
-    Source: 'src/code.rs', lines 255:0-255:32
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NEG : Std.U8 := 154#u8
 
 /-- [itasca::code::OP_F64_CEIL]
-    Source: 'src/code.rs', lines 256:0-256:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CEIL : Std.U8 := 155#u8
 
 /-- [itasca::code::OP_F64_FLOOR]
-    Source: 'src/code.rs', lines 257:0-257:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_FLOOR : Std.U8 := 156#u8
 
 /-- [itasca::code::OP_F64_TRUNC]
-    Source: 'src/code.rs', lines 258:0-258:34
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_TRUNC : Std.U8 := 157#u8
 
 /-- [itasca::code::OP_F64_NEAREST]
-    Source: 'src/code.rs', lines 259:0-259:36
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_NEAREST : Std.U8 := 158#u8
 
 /-- [itasca::code::OP_F64_SQRT]
-    Source: 'src/code.rs', lines 260:0-260:33
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_SQRT : Std.U8 := 159#u8
 
 /-- [itasca::code::OP_I32_WRAP_I64]
-    Source: 'src/code.rs', lines 262:0-262:37
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_WRAP_I64 : Std.U8 := 167#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 263:0-263:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_S : Std.U8 := 168#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 264:0-264:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_U : Std.U8 := 169#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 265:0-265:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_S : Std.U8 := 170#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 266:0-266:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_U : Std.U8 := 171#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_S]
-    Source: 'src/code.rs', lines 267:0-267:41
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_S : Std.U8 := 172#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_U]
-    Source: 'src/code.rs', lines 268:0-268:41
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_U : Std.U8 := 173#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_S]
-    Source: 'src/code.rs', lines 269:0-269:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_S : Std.U8 := 174#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_U]
-    Source: 'src/code.rs', lines 270:0-270:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_U : Std.U8 := 175#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_S]
-    Source: 'src/code.rs', lines 271:0-271:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_S : Std.U8 := 176#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_U]
-    Source: 'src/code.rs', lines 272:0-272:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_U : Std.U8 := 177#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 273:0-273:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_S : Std.U8 := 178#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 274:0-274:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_U : Std.U8 := 179#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 275:0-275:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_S : Std.U8 := 180#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 276:0-276:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_U : Std.U8 := 181#u8
 
 /-- [itasca::code::OP_F32_DEMOTE_F64]
-    Source: 'src/code.rs', lines 277:0-277:39
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_DEMOTE_F64 : Std.U8 := 182#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_S]
-    Source: 'src/code.rs', lines 278:0-278:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_S : Std.U8 := 183#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_U]
-    Source: 'src/code.rs', lines 279:0-279:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_U : Std.U8 := 184#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_S]
-    Source: 'src/code.rs', lines 280:0-280:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_S : Std.U8 := 185#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_U]
-    Source: 'src/code.rs', lines 281:0-281:42
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_U : Std.U8 := 186#u8
 
 /-- [itasca::code::OP_F64_PROMOTE_F32]
-    Source: 'src/code.rs', lines 282:0-282:40
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_PROMOTE_F32 : Std.U8 := 187#u8
 
 /-- [itasca::code::OP_I32_REINTERPRET_F32]
-    Source: 'src/code.rs', lines 283:0-283:44
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I32_REINTERPRET_F32 : Std.U8 := 188#u8
 
 /-- [itasca::code::OP_I64_REINTERPRET_F64]
-    Source: 'src/code.rs', lines 284:0-284:44
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_I64_REINTERPRET_F64 : Std.U8 := 189#u8
 
 /-- [itasca::code::OP_F32_REINTERPRET_I32]
-    Source: 'src/code.rs', lines 285:0-285:44
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F32_REINTERPRET_I32 : Std.U8 := 190#u8
 
 /-- [itasca::code::OP_F64_REINTERPRET_I64]
-    Source: 'src/code.rs', lines 286:0-286:44
+    Source: 'src/code.rs'
     Visibility: public -/
 @[global_simps, irreducible] def code.OP_F64_REINTERPRET_I64 : Std.U8 := 191#u8
 
 /-- [itasca::code::cur_base]:
-    Source: 'src/code.rs', lines 290:0-296:1 -/
+    Source: 'src/code.rs' -/
 def code.cur_base (st : code.OpIterState) : Result Std.Usize := do
   let n := alloc.vec.Vec.len st.ctrls
   if n = 0#usize
@@ -909,7 +909,7 @@ def code.cur_base (st : code.OpIterState) : Result Std.Usize := do
     ok c.value_stack_base
 
 /-- [itasca::code::cur_polymorphic]:
-    Source: 'src/code.rs', lines 298:0-304:1 -/
+    Source: 'src/code.rs' -/
 def code.cur_polymorphic (st : code.OpIterState) : Result Bool := do
   let n := alloc.vec.Vec.len st.ctrls
   if n = 0#usize
@@ -922,14 +922,14 @@ def code.cur_polymorphic (st : code.OpIterState) : Result Bool := do
     ok c.polymorphic_base
 
 /-- [itasca::code::push_val]:
-    Source: 'src/code.rs', lines 306:0-308:1 -/
+    Source: 'src/code.rs' -/
 def code.push_val
   (st : code.OpIterState) (t : code.StackType) : Result code.OpIterState := do
   let v ← alloc.vec.Vec.push st.vals t
   ok { st with vals := v }
 
 /-- [itasca::code::pop_stack_type]:
-    Source: 'src/code.rs', lines 311:0-322:1 -/
+    Source: 'src/code.rs' -/
 def code.pop_stack_type
   (st : code.OpIterState) :
   Result ((core.result.Result code.StackType error.OpError) ×
@@ -952,7 +952,7 @@ def code.pop_stack_type
     | some t => ok (core.result.Result.Ok t, { st with vals := v })
 
 /-- [itasca::wasm_types::{impl core::cmp::PartialEq<itasca::wasm_types::ValueType> for itasca::wasm_types::ValueType}::eq]:
-    Source: 'src/types.rs', lines 21:4-32:5
+    Source: 'src/types.rs'
     Visibility: public -/
 def wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq
   (self : wasm_types.ValueType) (other : wasm_types.ValueType) :
@@ -1024,7 +1024,7 @@ def wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq
     | wasm_types.ValueType.ExternRef => ok true
 
 /-- [itasca::code::pop_with_type]:
-    Source: 'src/code.rs', lines 326:0-338:1 -/
+    Source: 'src/code.rs' -/
 def code.pop_with_type
   (st : code.OpIterState) (expected : wasm_types.ValueType) :
   Result ((core.result.Result code.StackType error.OpError) ×
@@ -1049,7 +1049,7 @@ def code.pop_with_type
     ok (r1, st1)
 
 /-- [itasca::code::pop_types]: loop body 0:
-    Source: 'src/code.rs', lines 343:4-350:1 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.pop_types_loop.body
   (types : Slice wasm_types.ValueType) (st : code.OpIterState) (i : Std.Usize)
@@ -1073,7 +1073,7 @@ def code.pop_types_loop.body
       ok (done (r1, st1))
 
 /-- [itasca::code::pop_types]: loop 0:
-    Source: 'src/code.rs', lines 343:4-350:1 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.pop_types_loop
   (st : code.OpIterState) (types : Slice wasm_types.ValueType) (i : Std.Usize)
@@ -1085,7 +1085,7 @@ def code.pop_types_loop
     (st, i)
 
 /-- [itasca::code::pop_types]:
-    Source: 'src/code.rs', lines 341:0-350:1 -/
+    Source: 'src/code.rs' -/
 def code.pop_types
   (st : code.OpIterState) (types : Slice wasm_types.ValueType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -1094,7 +1094,7 @@ def code.pop_types
   code.pop_types_loop st types i
 
 /-- [itasca::code::push_types]: loop body 0:
-    Source: 'src/code.rs', lines 354:4-360:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.push_types_loop.body
   (types : Slice wasm_types.ValueType) (st : code.OpIterState) (i : Std.Usize)
@@ -1111,7 +1111,7 @@ def code.push_types_loop.body
     ok (cont (st1, i2))
 
 /-- [itasca::code::push_types]: loop 0:
-    Source: 'src/code.rs', lines 354:4-360:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.push_types_loop
   (st : code.OpIterState) (types : Slice wasm_types.ValueType) (i : Std.Usize)
@@ -1123,7 +1123,7 @@ def code.push_types_loop
     (st, i)
 
 /-- [itasca::code::push_types]:
-    Source: 'src/code.rs', lines 352:0-361:1 -/
+    Source: 'src/code.rs' -/
 @[reducible]
 def code.push_types
   (st : code.OpIterState) (types : Slice wasm_types.ValueType) :
@@ -1132,7 +1132,7 @@ def code.push_types
   code.push_types_loop st types 0#usize
 
 /-- [itasca::code::mark_unreachable]: loop body 0:
-    Source: 'src/code.rs', lines 366:4-371:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.mark_unreachable_loop.body
   (base : Std.Usize) (st : code.OpIterState) :
@@ -1147,7 +1147,7 @@ def code.mark_unreachable_loop.body
     ok (cont { st with vals := v })
 
 /-- [itasca::code::mark_unreachable]: loop 0:
-    Source: 'src/code.rs', lines 366:4-371:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.mark_unreachable_loop
   (st : code.OpIterState) (base : Std.Usize) :
@@ -1159,7 +1159,7 @@ def code.mark_unreachable_loop
     st
 
 /-- [itasca::code::mark_unreachable]:
-    Source: 'src/code.rs', lines 364:0-377:1 -/
+    Source: 'src/code.rs' -/
 def code.mark_unreachable
   (st : code.OpIterState) : Result code.OpIterState := do
   let base ← code.cur_base st
@@ -1176,12 +1176,12 @@ def code.mark_unreachable
     ok { vals := v, ctrls := v2, pos := i }
 
 /-- [itasca::code::control_stack_empty]:
-    Source: 'src/code.rs', lines 382:0-384:1 -/
+    Source: 'src/code.rs' -/
 def code.control_stack_empty (st : code.OpIterState) : Result Bool := do
   alloc.vec.Vec.is_empty Global st.ctrls
 
 /-- [itasca::reader::read_byte]:
-    Source: 'src/reader.rs', lines 12:0-18:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_byte
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -1196,7 +1196,7 @@ def reader.read_byte
     ok (core.result.Result.Ok (b, i1))
 
 /-- [itasca::code::read_op]:
-    Source: 'src/code.rs', lines 388:0-392:1 -/
+    Source: 'src/code.rs' -/
 def code.read_op
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U8 error.OpError) × code.OpIterState)
@@ -1214,7 +1214,7 @@ def code.read_op
     ok (r1, st)
 
 /-- [itasca::code::read_unreachable]:
-    Source: 'src/code.rs', lines 396:0-399:1 -/
+    Source: 'src/code.rs' -/
 def code.read_unreachable
   (st : code.OpIterState) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -1223,7 +1223,7 @@ def code.read_unreachable
   ok (core.result.Result.Ok (), st1)
 
 /-- [itasca::reader::read_sn_leb]: loop body 0:
-    Source: 'src/reader.rs', lines 57:4-81:1 -/
+    Source: 'src/reader.rs' -/
 @[rust_loop_body]
 def reader.read_sn_leb_loop.body
   (data : Slice Std.U8) (last : Std.U32) (lo : Std.I128) (hi : Std.I128)
@@ -1264,7 +1264,7 @@ def reader.read_sn_leb_loop.body
         ok (cont (acc1, mult1, p1, i4))
 
 /-- [itasca::reader::read_sn_leb]: loop 0:
-    Source: 'src/reader.rs', lines 57:4-81:1 -/
+    Source: 'src/reader.rs' -/
 @[rust_loop]
 def reader.read_sn_leb_loop
   (data : Slice Std.U8) (last : Std.U32) (lo : Std.I128) (hi : Std.I128)
@@ -1277,7 +1277,7 @@ def reader.read_sn_leb_loop
     (acc, mult, p, i)
 
 /-- [itasca::reader::read_sn_leb]:
-    Source: 'src/reader.rs', lines 52:0-81:1 -/
+    Source: 'src/reader.rs' -/
 @[reducible]
 def reader.read_sn_leb
   (data : Slice Std.U8) (pos : Std.Usize) (last : Std.U32) (lo : Std.I128)
@@ -1287,7 +1287,7 @@ def reader.read_sn_leb
   reader.read_sn_leb_loop data last lo hi 0#i128 1#i128 pos 0#u32
 
 /-- [itasca::reader::read_s32_leb]:
-    Source: 'src/reader.rs', lines 84:0-87:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_s32_leb
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -1306,7 +1306,7 @@ def reader.read_s32_leb
       (Std.I32 × Std.Usize) (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::read_i32_const]:
-    Source: 'src/code.rs', lines 401:0-406:1 -/
+    Source: 'src/code.rs' -/
 def code.read_i32_const
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.I32 error.OpError) × code.OpIterState)
@@ -1327,7 +1327,7 @@ def code.read_i32_const
     ok (r1, st)
 
 /-- [itasca::reader::read_s64_leb]:
-    Source: 'src/reader.rs', lines 90:0-93:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_s64_leb
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -1347,7 +1347,7 @@ def reader.read_s64_leb
       (Std.I64 × Std.Usize) (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::read_i64_const]:
-    Source: 'src/code.rs', lines 408:0-413:1 -/
+    Source: 'src/code.rs' -/
 def code.read_i64_const
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.I64 error.OpError) × code.OpIterState)
@@ -1368,7 +1368,7 @@ def code.read_i64_const
     ok (r1, st)
 
 /-- [itasca::reader::read_fn_bits]: loop body 0:
-    Source: 'src/reader.rs', lines 101:4-120:1 -/
+    Source: 'src/reader.rs' -/
 @[rust_loop_body]
 def reader.read_fn_bits_loop.body
   (data : Slice Std.U8) (n : Std.U32) (acc : Std.U64) (mult : Std.U64)
@@ -1395,7 +1395,7 @@ def reader.read_fn_bits_loop.body
            ok (cont (acc1, mult1, p1, i4))
 
 /-- [itasca::reader::read_fn_bits]: loop 0:
-    Source: 'src/reader.rs', lines 101:4-120:1 -/
+    Source: 'src/reader.rs' -/
 @[rust_loop]
 def reader.read_fn_bits_loop
   (data : Slice Std.U8) (n : Std.U32) (acc : Std.U64) (mult : Std.U64)
@@ -1408,7 +1408,7 @@ def reader.read_fn_bits_loop
     (acc, mult, p, i)
 
 /-- [itasca::reader::read_fn_bits]:
-    Source: 'src/reader.rs', lines 96:0-120:1 -/
+    Source: 'src/reader.rs' -/
 @[reducible]
 def reader.read_fn_bits
   (data : Slice Std.U8) (pos : Std.Usize) (n : Std.U32) :
@@ -1417,7 +1417,7 @@ def reader.read_fn_bits
   reader.read_fn_bits_loop data n 0#u64 1#u64 pos 0#u32
 
 /-- [itasca::reader::read_f32_bits]:
-    Source: 'src/reader.rs', lines 123:0-126:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_f32_bits
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -1435,7 +1435,7 @@ def reader.read_f32_bits
       (Std.U32 × Std.Usize) (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::read_f32_const]:
-    Source: 'src/code.rs', lines 416:0-421:1 -/
+    Source: 'src/code.rs' -/
 def code.read_f32_const
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1456,7 +1456,7 @@ def code.read_f32_const
     ok (r1, st)
 
 /-- [itasca::reader::read_f64_bits]:
-    Source: 'src/reader.rs', lines 129:0-131:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_f64_bits
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -1465,7 +1465,7 @@ def reader.read_f64_bits
   reader.read_fn_bits data pos 8#u32
 
 /-- [itasca::code::read_f64_const]:
-    Source: 'src/code.rs', lines 424:0-429:1 -/
+    Source: 'src/code.rs' -/
 def code.read_f64_const
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U64 error.OpError) × code.OpIterState)
@@ -1486,7 +1486,7 @@ def code.read_f64_const
     ok (r1, st)
 
 /-- [itasca::code::read_binary]:
-    Source: 'src/code.rs', lines 433:0-438:1 -/
+    Source: 'src/code.rs' -/
 def code.read_binary
   (st : code.OpIterState) (ty : wasm_types.ValueType)
   (result : wasm_types.ValueType) :
@@ -1514,7 +1514,7 @@ def code.read_binary
     ok (r1, st1)
 
 /-- [itasca::code::read_conversion]:
-    Source: 'src/code.rs', lines 441:0-445:1 -/
+    Source: 'src/code.rs' -/
 def code.read_conversion
   (st : code.OpIterState) («from» : wasm_types.ValueType)
   («to» : wasm_types.ValueType) :
@@ -1533,7 +1533,7 @@ def code.read_conversion
     ok (r1, st1)
 
 /-- [itasca::code::read_drop]:
-    Source: 'src/code.rs', lines 447:0-449:1 -/
+    Source: 'src/code.rs' -/
 def code.read_drop
   (st : code.OpIterState) :
   Result ((core.result.Result code.StackType error.OpError) ×
@@ -1542,7 +1542,7 @@ def code.read_drop
   code.pop_stack_type st
 
 /-- [itasca::code::join_stack_type]:
-    Source: 'src/code.rs', lines 452:0-466:1 -/
+    Source: 'src/code.rs' -/
 def code.join_stack_type
   (a : code.StackType) (b : code.StackType) :
   Result (core.result.Result code.StackType error.OpError)
@@ -1559,7 +1559,7 @@ def code.join_stack_type
   | code.StackType.Bot => ok (core.result.Result.Ok b)
 
 /-- [itasca::code::is_select_type]:
-    Source: 'src/code.rs', lines 473:0-478:1 -/
+    Source: 'src/code.rs' -/
 def code.is_select_type (t : code.StackType) : Result Bool := do
   match t with
   | code.StackType.Val vt =>
@@ -1574,7 +1574,7 @@ def code.is_select_type (t : code.StackType) : Result Bool := do
   | code.StackType.Bot => ok true
 
 /-- [itasca::code::read_select]:
-    Source: 'src/code.rs', lines 480:0-492:1 -/
+    Source: 'src/code.rs' -/
 def code.read_select
   (st : code.OpIterState) :
   Result ((core.result.Result code.StackType error.OpError) ×
@@ -1624,7 +1624,7 @@ def code.read_select
     ok (r1, st1)
 
 /-- [itasca::code::local_type]:
-    Source: 'src/code.rs', lines 495:0-501:1 -/
+    Source: 'src/code.rs' -/
 def code.local_type
   (ctx : code.Context) (idx : Std.U32) :
   Result (core.result.Result wasm_types.ValueType error.OpError)
@@ -1640,7 +1640,7 @@ def code.local_type
     ok (core.result.Result.Ok vt)
 
 /-- [itasca::reader::read_u32_leb]: loop body 0:
-    Source: 'src/reader.rs', lines 26:4-46:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 @[rust_loop_body]
 def reader.read_u32_leb_loop.body
@@ -1688,7 +1688,7 @@ def reader.read_u32_leb_loop.body
           ok (cont (acc1, mult1, p1, i4))
 
 /-- [itasca::reader::read_u32_leb]: loop 0:
-    Source: 'src/reader.rs', lines 26:4-46:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 @[rust_loop]
 def reader.read_u32_leb_loop
@@ -1702,7 +1702,7 @@ def reader.read_u32_leb_loop
     (acc, mult, p, i)
 
 /-- [itasca::reader::read_u32_leb]:
-    Source: 'src/reader.rs', lines 21:0-46:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 @[reducible]
 def reader.read_u32_leb
@@ -1712,7 +1712,7 @@ def reader.read_u32_leb
   reader.read_u32_leb_loop data 0#u32 1#u32 pos 0#u32
 
 /-- [itasca::code::take_local]:
-    Source: 'src/code.rs', lines 504:0-509:1 -/
+    Source: 'src/code.rs' -/
 def code.take_local
   (st : code.OpIterState) (data : Slice Std.U8) (ctx : code.Context) :
   Result ((core.result.Result (Std.U32 × wasm_types.ValueType) error.OpError)
@@ -1742,7 +1742,7 @@ def code.take_local
     ok (r1, st)
 
 /-- [itasca::code::read_local_get]:
-    Source: 'src/code.rs', lines 512:0-516:1 -/
+    Source: 'src/code.rs' -/
 def code.read_local_get
   (st : code.OpIterState) (data : Slice Std.U8) (ctx : code.Context) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1761,7 +1761,7 @@ def code.read_local_get
     ok (r1, st1)
 
 /-- [itasca::code::read_local_set]:
-    Source: 'src/code.rs', lines 519:0-523:1 -/
+    Source: 'src/code.rs' -/
 def code.read_local_set
   (st : code.OpIterState) (data : Slice Std.U8) (ctx : code.Context) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1788,7 +1788,7 @@ def code.read_local_set
     ok (r1, st1)
 
 /-- [itasca::code::read_local_tee]:
-    Source: 'src/code.rs', lines 526:0-531:1 -/
+    Source: 'src/code.rs' -/
 def code.read_local_tee
   (st : code.OpIterState) (data : Slice Std.U8) (ctx : code.Context) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1816,7 +1816,7 @@ def code.read_local_tee
     ok (r1, st1)
 
 /-- [itasca::code::global_type]:
-    Source: 'src/code.rs', lines 534:0-540:1 -/
+    Source: 'src/code.rs' -/
 def code.global_type
   (env : metadata.Env) (idx : Std.U32) :
   Result (core.result.Result wasm_types.GlobalType error.OpError)
@@ -1832,7 +1832,7 @@ def code.global_type
     ok (core.result.Result.Ok gt)
 
 /-- [itasca::code::take_global]:
-    Source: 'src/code.rs', lines 543:0-548:1 -/
+    Source: 'src/code.rs' -/
 def code.take_global
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × wasm_types.GlobalType) error.OpError)
@@ -1862,7 +1862,7 @@ def code.take_global
     ok (r1, st)
 
 /-- [itasca::code::read_global_get]:
-    Source: 'src/code.rs', lines 551:0-555:1 -/
+    Source: 'src/code.rs' -/
 def code.read_global_get
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1881,7 +1881,7 @@ def code.read_global_get
     ok (r1, st1)
 
 /-- [itasca::code::read_global_set]:
-    Source: 'src/code.rs', lines 558:0-566:1 -/
+    Source: 'src/code.rs' -/
 def code.read_global_set
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -1912,7 +1912,7 @@ def code.read_global_set
     ok (r1, st1)
 
 /-- [itasca::code::read_reserved_zero]:
-    Source: 'src/code.rs', lines 569:0-576:1 -/
+    Source: 'src/code.rs' -/
 def code.read_reserved_zero
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -1932,7 +1932,7 @@ def code.read_reserved_zero
     ok (r1, st)
 
 /-- [itasca::code::require_memory]:
-    Source: 'src/code.rs', lines 640:0-645:1 -/
+    Source: 'src/code.rs' -/
 def code.require_memory
   (env : metadata.Env) : Result (core.result.Result Unit error.OpError) := do
   let b ← alloc.vec.Vec.is_empty Global env.mem_types
@@ -1941,7 +1941,7 @@ def code.require_memory
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::code::read_memory_size]:
-    Source: 'src/code.rs', lines 579:0-584:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memory_size
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -1969,7 +1969,7 @@ def code.read_memory_size
     ok (r1, st1)
 
 /-- [itasca::code::read_memory_grow]:
-    Source: 'src/code.rs', lines 587:0-593:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memory_grow
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -2006,7 +2006,7 @@ def code.read_memory_grow
     ok (r1, st1)
 
 /-- [itasca::code::take_index]:
-    Source: 'src/code.rs', lines 596:0-600:1 -/
+    Source: 'src/code.rs' -/
 def code.take_index
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -2024,7 +2024,7 @@ def code.take_index
     ok (r1, st)
 
 /-- [itasca::code::check_memory_and_alignment]:
-    Source: 'src/code.rs', lines 649:0-655:1 -/
+    Source: 'src/code.rs' -/
 def code.check_memory_and_alignment
   (env : metadata.Env) (memarg : code.MemArg) (natural_align : Std.U32) :
   Result (core.result.Result Unit error.OpError)
@@ -2041,7 +2041,7 @@ def code.check_memory_and_alignment
       Unit (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::read_memarg]:
-    Source: 'src/code.rs', lines 632:0-637:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memarg
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result code.MemArg error.OpError) × code.OpIterState)
@@ -2069,7 +2069,7 @@ def code.read_memarg
     ok (r1, st)
 
 /-- [itasca::code::read_load]:
-    Source: 'src/code.rs', lines 603:0-615:1 -/
+    Source: 'src/code.rs' -/
 def code.read_load
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
   (ty : wasm_types.ValueType) (natural_align : Std.U32) :
@@ -2106,7 +2106,7 @@ def code.read_load
     ok (r1, st1)
 
 /-- [itasca::code::read_store]:
-    Source: 'src/code.rs', lines 618:0-630:1 -/
+    Source: 'src/code.rs' -/
 def code.read_store
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
   (ty : wasm_types.ValueType) (natural_align : Std.U32) :
@@ -2151,7 +2151,7 @@ def code.read_store
     ok (r1, st1)
 
 /-- [itasca::code::convert_types]:
-    Source: 'src/code.rs', lines 665:0-697:1 -/
+    Source: 'src/code.rs' -/
 def code.convert_types
   (opcode : Std.U8) :
   Result (Option (wasm_types.ValueType × wasm_types.ValueType))
@@ -2254,7 +2254,7 @@ def code.convert_types
   | _ => ok none
 
 /-- [itasca::code::binary_types]:
-    Source: 'src/code.rs', lines 701:0-727:1 -/
+    Source: 'src/code.rs' -/
 def code.binary_types
   (opcode : Std.U8) :
   Result (Option (wasm_types.ValueType × wasm_types.ValueType))
@@ -2415,7 +2415,7 @@ def code.binary_types
   | _ => ok none
 
 /-- [itasca::code::visit_memory]:
-    Source: 'src/code.rs', lines 2688:8-2698:9 -/
+    Source: 'src/code.rs' -/
 def code.visit_memory
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V) (st : code.OpIterState)
   (opcode : Std.U8) (memarg : code.MemArg) :
@@ -2448,7 +2448,7 @@ def code.visit_memory
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::visit_numeric]:
-    Source: 'src/code.rs', lines 2672:8-2681:9 -/
+    Source: 'src/code.rs' -/
 def code.visit_numeric
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V) (st : code.OpIterState)
   (opcode : Std.U8) :
@@ -2581,7 +2581,7 @@ def code.visit_numeric
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::step_numeric]:
-    Source: 'src/code.rs', lines 925:0-943:1 -/
+    Source: 'src/code.rs' -/
 def code.step_numeric
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (opcode : Std.U8) (v : V) :
@@ -2640,7 +2640,7 @@ def code.step_numeric
       ok (r1, st1, v)
 
 /-- [itasca::code::step_memory]:
-    Source: 'src/code.rs', lines 812:0-922:1 -/
+    Source: 'src/code.rs' -/
 def code.step_memory
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (opcode : Std.U8) (v : V) :
@@ -3175,7 +3175,7 @@ def code.step_memory
   | _ => code.step_numeric OpVisitorInst st opcode v
 
 /-- [itasca::code::step]:
-    Source: 'src/code.rs', lines 735:0-810:1 -/
+    Source: 'src/code.rs' -/
 def code.step
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
@@ -3450,7 +3450,7 @@ def code.step
   | _ => code.step_memory OpVisitorInst st data env opcode v
 
 /-- [itasca::code::sign_extension_type]:
-    Source: 'src/code.rs', lines 946:0-952:1 -/
+    Source: 'src/code.rs' -/
 def code.sign_extension_type
   (opcode : Std.U8) : Result (Option wasm_types.ValueType) := do
   match opcode with
@@ -3462,7 +3462,7 @@ def code.sign_extension_type
   | _ => ok none
 
 /-- [itasca::code::saturating_types]:
-    Source: 'src/code.rs', lines 955:0-963:1 -/
+    Source: 'src/code.rs' -/
 def code.saturating_types
   (opcode : Std.U32) :
   Result (Option (wasm_types.ValueType × wasm_types.ValueType))
@@ -3479,11 +3479,11 @@ def code.saturating_types
   | _ => ok none
 
 /-- [itasca::code::OP_MISC_PREFIX]
-    Source: 'src/code.rs', lines 2711:0-2711:32 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_MISC_PREFIX : Std.U8 := 252#u8
 
 /-- [itasca::code::visit_saturating]:
-    Source: 'src/code.rs', lines 1008:0-1020:1 -/
+    Source: 'src/code.rs' -/
 def code.visit_saturating
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V) (st : code.OpIterState)
   (opcode : Std.U32) :
@@ -3501,7 +3501,7 @@ def code.visit_saturating
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::visit_sign_extension]:
-    Source: 'src/code.rs', lines 997:0-1006:1 -/
+    Source: 'src/code.rs' -/
 def code.visit_sign_extension
   {V : Type} (OpVisitorInst : code.OpVisitor V) (v : V) (st : code.OpIterState)
   (opcode : Std.U8) :
@@ -3516,7 +3516,7 @@ def code.visit_sign_extension
   | _ => ok (core.result.Result.Ok (), v)
 
 /-- [itasca::code::step_extended]:
-    Source: 'src/code.rs', lines 966:0-995:1 -/
+    Source: 'src/code.rs' -/
 def code.step_extended
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
@@ -3592,7 +3592,7 @@ def code.step_extended
       ok (r1, st1, visitor)
 
 /-- [itasca::code::take_reference_type]:
-    Source: 'src/code.rs', lines 1024:0-1032:1 -/
+    Source: 'src/code.rs' -/
 def code.take_reference_type
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result wasm_types.ElemType error.OpError) ×
@@ -3620,7 +3620,7 @@ def code.take_reference_type
     ok (r1, st)
 
 /-- [itasca::code::take_value_type]:
-    Source: 'src/code.rs', lines 1034:0-1047:1 -/
+    Source: 'src/code.rs' -/
 def code.take_value_type
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result wasm_types.ValueType error.OpError) ×
@@ -3663,7 +3663,7 @@ def code.take_value_type
     ok (r1, st)
 
 /-- [itasca::wasm_types::{itasca::wasm_types::ElemType}::value_type]:
-    Source: 'src/types.rs', lines 90:4-95:5
+    Source: 'src/types.rs'
     Visibility: public -/
 def wasm_types.ElemType.value_type
   (self : wasm_types.ElemType) : Result wasm_types.ValueType := do
@@ -3672,7 +3672,7 @@ def wasm_types.ElemType.value_type
   | wasm_types.ElemType.ExternRef => ok wasm_types.ValueType.ExternRef
 
 /-- [itasca::code::read_ref_null]:
-    Source: 'src/code.rs', lines 1049:0-1053:1 -/
+    Source: 'src/code.rs' -/
 def code.read_ref_null
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result wasm_types.ElemType error.OpError) ×
@@ -3692,7 +3692,7 @@ def code.read_ref_null
     ok (r1, st1)
 
 /-- [itasca::code::read_ref_is_null]:
-    Source: 'src/code.rs', lines 1055:0-1064:1 -/
+    Source: 'src/code.rs' -/
 def code.read_ref_is_null
   (st : code.OpIterState) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -3733,7 +3733,7 @@ def code.read_ref_is_null
     ok (r1, st1)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::declares_function]: loop body 0:
-    Source: 'src/module.rs', lines 206:8-215:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
 def metadata.Env.declares_function_loop.body
@@ -3753,7 +3753,7 @@ def metadata.Env.declares_function_loop.body
          ok (cont i3)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::declares_function]: loop 0:
-    Source: 'src/module.rs', lines 206:8-215:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
 def metadata.Env.declares_function_loop
@@ -3763,7 +3763,7 @@ def metadata.Env.declares_function_loop
     i
 
 /-- [itasca::metadata::{itasca::metadata::Env}::declares_function]:
-    Source: 'src/module.rs', lines 204:4-215:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
 def metadata.Env.declares_function
@@ -3771,7 +3771,7 @@ def metadata.Env.declares_function
   metadata.Env.declares_function_loop self index 0#usize
 
 /-- [itasca::code::read_ref_func]:
-    Source: 'src/code.rs', lines 1066:0-1076:1 -/
+    Source: 'src/code.rs' -/
 def code.read_ref_func
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -3799,7 +3799,7 @@ def code.read_ref_func
     ok (r1, st1)
 
 /-- [itasca::code::read_typed_select]:
-    Source: 'src/code.rs', lines 1078:0-1089:1 -/
+    Source: 'src/code.rs' -/
 def code.read_typed_select
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result wasm_types.ValueType error.OpError) ×
@@ -3860,7 +3860,7 @@ def code.read_typed_select
     ok (r1, st1)
 
 /-- [itasca::code::take_table]:
-    Source: 'src/code.rs', lines 1091:0-1098:1 -/
+    Source: 'src/code.rs' -/
 def code.take_table
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × wasm_types.ValueType) error.OpError)
@@ -3888,7 +3888,7 @@ def code.take_table
     ok (r1, st1)
 
 /-- [itasca::code::read_table_get]:
-    Source: 'src/code.rs', lines 1100:0-1105:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_get
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -3916,7 +3916,7 @@ def code.read_table_get
     ok (r1, st1)
 
 /-- [itasca::code::read_table_set]:
-    Source: 'src/code.rs', lines 1107:0-1112:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_set
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -3952,7 +3952,7 @@ def code.read_table_set
     ok (r1, st1)
 
 /-- [itasca::code::take_data_index]:
-    Source: 'src/code.rs', lines 1114:0-1125:1 -/
+    Source: 'src/code.rs' -/
 def code.take_data_index
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -3974,7 +3974,7 @@ def code.take_data_index
     ok (r1, st1)
 
 /-- [itasca::code::take_element]:
-    Source: 'src/code.rs', lines 1127:0-1134:1 -/
+    Source: 'src/code.rs' -/
 def code.take_element
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × wasm_types.ValueType) error.OpError)
@@ -4002,7 +4002,7 @@ def code.take_element
     ok (r1, st1)
 
 /-- [itasca::code::read_bulk_operands]:
-    Source: 'src/code.rs', lines 1136:0-1141:1 -/
+    Source: 'src/code.rs' -/
 def code.read_bulk_operands
   (st : code.OpIterState) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -4037,7 +4037,7 @@ def code.read_bulk_operands
     ok (r1, st1)
 
 /-- [itasca::code::read_bulk_memory]:
-    Source: 'src/code.rs', lines 1143:0-1149:1 -/
+    Source: 'src/code.rs' -/
 def code.read_bulk_memory
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -4057,7 +4057,7 @@ def code.read_bulk_memory
     ok (r1, st1)
 
 /-- [itasca::code::read_memory_init]:
-    Source: 'src/code.rs', lines 1151:0-1156:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memory_init
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -4092,7 +4092,7 @@ def code.read_memory_init
     ok (r1, st1)
 
 /-- [itasca::code::read_memory_copy]:
-    Source: 'src/code.rs', lines 1158:0-1162:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memory_copy
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -4118,7 +4118,7 @@ def code.read_memory_copy
     ok (r1, st1)
 
 /-- [itasca::code::read_memory_fill]:
-    Source: 'src/code.rs', lines 1164:0-1167:1 -/
+    Source: 'src/code.rs' -/
 def code.read_memory_fill
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -4134,7 +4134,7 @@ def code.read_memory_fill
     ok (r1, st1)
 
 /-- Trait implementation: [itasca::wasm_types::{impl core::cmp::PartialEq<itasca::wasm_types::ValueType> for itasca::wasm_types::ValueType}]
-    Source: 'src/types.rs', lines 20:0-33:1 -/
+    Source: 'src/types.rs' -/
 @[reducible]
 impl_def wasm_types.ValueType.Insts.CoreCmpPartialEqValueType :
   core.cmp.PartialEq wasm_types.ValueType wasm_types.ValueType := {
@@ -4144,7 +4144,7 @@ impl_def wasm_types.ValueType.Insts.CoreCmpPartialEqValueType :
 }
 
 /-- [itasca::code::read_table_init]:
-    Source: 'src/code.rs', lines 1169:0-1177:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_init
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
@@ -4190,7 +4190,7 @@ def code.read_table_init
     ok (r1, st1)
 
 /-- [itasca::code::read_table_copy]:
-    Source: 'src/code.rs', lines 1179:0-1187:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_copy
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
@@ -4236,7 +4236,7 @@ def code.read_table_copy
     ok (r1, st1)
 
 /-- [itasca::code::read_table_grow]:
-    Source: 'src/code.rs', lines 1189:0-1195:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_grow
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -4274,7 +4274,7 @@ def code.read_table_grow
     ok (r1, st1)
 
 /-- [itasca::code::read_table_size]:
-    Source: 'src/code.rs', lines 1197:0-1201:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_size
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -4293,7 +4293,7 @@ def code.read_table_size
     ok (r1, st1)
 
 /-- [itasca::code::read_table_fill]:
-    Source: 'src/code.rs', lines 1203:0-1209:1 -/
+    Source: 'src/code.rs' -/
 def code.read_table_fill
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
@@ -4338,7 +4338,7 @@ def code.read_table_fill
     ok (r1, st1)
 
 /-- [itasca::code::step_bulk]:
-    Source: 'src/code.rs', lines 1211:0-1261:1 -/
+    Source: 'src/code.rs' -/
 def code.step_bulk
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (subopcode : Std.U32)
@@ -4485,7 +4485,7 @@ def code.step_bulk
     ok (core.result.Result.Err error.OpError.UnrecognizedOpcode, st, visitor)
 
 /-- [itasca::code::simd_signature]:
-    Source: 'src/code.rs', lines 1280:0-1310:1 -/
+    Source: 'src/code.rs' -/
 def code.simd_signature
   (subopcode : Std.U32) : Result (Option code.SimdSignature) := do
   if subopcode >= 256#u32
@@ -4693,7 +4693,7 @@ def code.simd_signature
     | _ => ok none
 
 /-- [itasca::code::read_simd_signature]:
-    Source: 'src/code.rs', lines 1312:0-1330:1 -/
+    Source: 'src/code.rs' -/
 def code.read_simd_signature
   (st : code.OpIterState) (signature : code.SimdSignature) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -4738,7 +4738,7 @@ def code.read_simd_signature
     code.read_conversion st wasm_types.ValueType.F64 wasm_types.ValueType.V128
 
 /-- [itasca::code::simd_lane_info]:
-    Source: 'src/code.rs', lines 1333:0-1349:1 -/
+    Source: 'src/code.rs' -/
 def code.simd_lane_info
   (subopcode : Std.U32) :
   Result (Option (wasm_types.ValueType × Std.U8 × Bool))
@@ -4761,7 +4761,7 @@ def code.simd_lane_info
   | _ => ok none
 
 /-- [itasca::code::take_simd_lane]:
-    Source: 'src/code.rs', lines 1351:0-1358:1 -/
+    Source: 'src/code.rs' -/
 def code.take_simd_lane
   (st : code.OpIterState) (data : Slice Std.U8) (count : Std.U8) :
   Result ((core.result.Result Std.U8 error.OpError) × code.OpIterState)
@@ -4783,7 +4783,7 @@ def code.take_simd_lane
     ok (r1, st)
 
 /-- [itasca::code::read_simd_lane]:
-    Source: 'src/code.rs', lines 1360:0-1375:1 -/
+    Source: 'src/code.rs' -/
 def code.read_simd_lane
   (st : code.OpIterState) (data : Slice Std.U8) (ty : wasm_types.ValueType)
   (count : Std.U8) (replace : Bool) :
@@ -4834,7 +4834,7 @@ def code.read_simd_lane
     ok (r1, st1)
 
 /-- [itasca::code::simd_memory_info]:
-    Source: 'src/code.rs', lines 1378:0-1397:1 -/
+    Source: 'src/code.rs' -/
 def code.simd_memory_info
   (subopcode : Std.U32) : Result (Option (Std.U32 × Bool × Std.U8)) := do
   match subopcode with
@@ -4863,7 +4863,7 @@ def code.simd_memory_info
   | _ => ok none
 
 /-- [itasca::code::read_simd_memory_lane]:
-    Source: 'src/code.rs', lines 1399:0-1416:1 -/
+    Source: 'src/code.rs' -/
 def code.read_simd_memory_lane
   (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
   (natural_align : Std.U32) (store : Bool) (count : Std.U8) :
@@ -4928,7 +4928,7 @@ def code.read_simd_memory_lane
     ok (r1, st1)
 
 /-- [itasca::code::take_simd_bits]:
-    Source: 'src/code.rs', lines 1419:0-1424:1 -/
+    Source: 'src/code.rs' -/
 def code.take_simd_bits
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U64 × Std.U64) error.OpError) ×
@@ -4957,7 +4957,7 @@ def code.take_simd_bits
     ok (r1, st)
 
 /-- [itasca::code::read_simd_const]:
-    Source: 'src/code.rs', lines 1426:0-1430:1 -/
+    Source: 'src/code.rs' -/
 def code.read_simd_const
   (st : code.OpIterState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U64 × Std.U64) error.OpError) ×
@@ -4977,7 +4977,7 @@ def code.read_simd_const
     ok (r1, st1)
 
 /-- [itasca::code::read_simd_shuffle]: loop body 0:
-    Source: 'src/code.rs', lines 1435:4-1446:1 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.read_simd_shuffle_loop.body
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
@@ -5026,7 +5026,7 @@ def code.read_simd_shuffle_loop.body
       ok (done (r1, st))
 
 /-- [itasca::code::read_simd_shuffle]: loop 0:
-    Source: 'src/code.rs', lines 1435:4-1446:1 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.read_simd_shuffle_loop
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
@@ -5039,7 +5039,7 @@ def code.read_simd_shuffle_loop
     (pos1, i)
 
 /-- [itasca::code::read_simd_shuffle]:
-    Source: 'src/code.rs', lines 1432:0-1446:1 -/
+    Source: 'src/code.rs' -/
 @[reducible]
 def code.read_simd_shuffle
   (st : code.OpIterState) (data : Slice Std.U8) :
@@ -5049,7 +5049,7 @@ def code.read_simd_shuffle
   code.read_simd_shuffle_loop st.vals st.ctrls st.pos data st.pos 0#i32
 
 /-- [itasca::code::step_simd]:
-    Source: 'src/code.rs', lines 1448:0-1487:1 -/
+    Source: 'src/code.rs' -/
 def code.step_simd
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (visitor : V) :
@@ -5196,7 +5196,7 @@ def code.step_simd
     ok (r1, st, visitor)
 
 /-- [itasca::code::step_wasm2]:
-    Source: 'src/code.rs', lines 1489:0-1534:1 -/
+    Source: 'src/code.rs' -/
 def code.step_wasm2
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
@@ -5302,7 +5302,7 @@ def code.step_wasm2
   | _ => code.step_extended OpVisitorInst st data env ctx opcode visitor
 
 /-- [itasca::code::check_opcode]:
-    Source: 'src/code.rs', lines 1544:0-1553:1 -/
+    Source: 'src/code.rs' -/
 def code.check_opcode
   (profile : ValidationProfile) (op : Std.U8) :
   Result (core.result.Result Unit error.OpError)
@@ -5340,7 +5340,7 @@ def code.check_opcode
   | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
 
 /-- [itasca::code::check_block_type]:
-    Source: 'src/code.rs', lines 1556:0-1568:1 -/
+    Source: 'src/code.rs' -/
 def code.check_block_type
   (profile : ValidationProfile) (bt : signature.BlockType) :
   Result (core.result.Result Unit error.OpError)
@@ -5366,7 +5366,7 @@ def code.check_block_type
   | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
 
 /-- [itasca::code::check_table_byte]:
-    Source: 'src/code.rs', lines 1572:0-1583:1 -/
+    Source: 'src/code.rs' -/
 def code.check_table_byte
   (profile : ValidationProfile) (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result Unit error.OpError)
@@ -5387,7 +5387,7 @@ def code.check_table_byte
   | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
 
 /-- [itasca::signature::{itasca::signature::ResultType}::get]:
-    Source: 'src/signature.rs', lines 50:4-83:5
+    Source: 'src/signature.rs'
     Visibility: public -/
 def signature.ResultType.get
   (self : signature.ResultType) (env : metadata.Env) (element : Std.Usize) :
@@ -5432,7 +5432,7 @@ def signature.ResultType.get
           ok (core.result.Result.Ok (some vt))
 
 /-- [itasca::signature::{itasca::signature::ResultType}::len]:
-    Source: 'src/signature.rs', lines 29:4-44:5
+    Source: 'src/signature.rs'
     Visibility: public -/
 def signature.ResultType.len
   (self : signature.ResultType) (env : metadata.Env) :
@@ -5462,7 +5462,7 @@ def signature.ResultType.len
         ok (core.result.Result.Ok i2)
 
 /-- [itasca::code::same_types]: loop body 0:
-    Source: 'src/code.rs', lines 1662:4-1675:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.same_types_loop.body
   (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType)
@@ -5506,7 +5506,7 @@ def code.same_types_loop.body
       ok (done r1)
 
 /-- [itasca::code::same_types]: loop 0:
-    Source: 'src/code.rs', lines 1662:4-1675:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.same_types_loop
   (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType)
@@ -5518,7 +5518,7 @@ def code.same_types_loop
     i
 
 /-- [itasca::code::same_types]:
-    Source: 'src/code.rs', lines 1656:0-1676:1 -/
+    Source: 'src/code.rs' -/
 def code.same_types
   (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType) :
   Result (core.result.Result Bool error.OpError)
@@ -5542,7 +5542,7 @@ def code.same_types
       Bool (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::check_table_target]:
-    Source: 'src/code.rs', lines 1587:0-1602:1 -/
+    Source: 'src/code.rs' -/
 def code.check_table_target
   (profile : ValidationProfile) (env : metadata.Env)
   (first : signature.ResultType) (ts : signature.ResultType) :
@@ -5563,19 +5563,19 @@ def code.check_table_target
   | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
 
 /-- [itasca::limits::MAX_MULTI_VALUE_RESULTS]
-    Source: 'src/limits.rs', lines 32:0-32:48
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_MULTI_VALUE_RESULTS : Std.Usize := 1000#usize
 
 /-- [itasca::limits::MAX_MULTI_VALUE_PARAMS]
-    Source: 'src/limits.rs', lines 28:0-28:47
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_MULTI_VALUE_PARAMS : Std.Usize := 1000#usize
 
 /-- [itasca::code::check_func_type]:
-    Source: 'src/code.rs', lines 1604:0-1612:1 -/
+    Source: 'src/code.rs' -/
 def code.check_func_type
   (ft : wasm_types.FuncType) :
   Result (core.result.Result Unit error.OpError)
@@ -5590,7 +5590,7 @@ def code.check_func_type
     else ok (core.result.Result.Ok ())
 
 /-- [itasca::code::pop_results]:
-    Source: 'src/code.rs', lines 1614:0-1632:1 -/
+    Source: 'src/code.rs' -/
 def code.pop_results
   (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -5629,7 +5629,7 @@ def code.pop_results
         code.pop_types st s
 
 /-- [itasca::code::push_results]:
-    Source: 'src/code.rs', lines 1634:0-1654:1 -/
+    Source: 'src/code.rs' -/
 def code.push_results
   (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -5676,7 +5676,7 @@ def code.push_results
     ok (r1, st)
 
 /-- [itasca::code::push_frame]:
-    Source: 'src/code.rs', lines 1678:0-1685:1 -/
+    Source: 'src/code.rs' -/
 def code.push_frame
   (st : code.BodyState) (kind : code.LabelKind) (bt : signature.BlockType) :
   Result code.BodyState
@@ -5693,7 +5693,7 @@ def code.push_frame
   ok { core := { st.core with ctrls := v } }
 
 /-- [itasca::reader::read_s33_leb]:
-    Source: 'src/reader.rs', lines 134:0-137:1
+    Source: 'src/reader.rs'
     Visibility: public -/
 def reader.read_s33_leb
   (data : Slice Std.U8) (pos : Std.Usize) :
@@ -5712,7 +5712,7 @@ def reader.read_s33_leb
       (Std.I64 × Std.Usize) (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::signature::read_block_type]:
-    Source: 'src/signature.rs', lines 125:0-144:1 -/
+    Source: 'src/signature.rs' -/
 def signature.read_block_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (signature.BlockType × Std.Usize) error.OpError)
@@ -5766,7 +5766,7 @@ def signature.read_block_type
       residual
 
 /-- [itasca::signature::{itasca::signature::BlockType}::params]:
-    Source: 'src/signature.rs', lines 97:4-105:5
+    Source: 'src/signature.rs'
     Visibility: public -/
 def signature.BlockType.params
   (self : signature.BlockType) : Result signature.ResultType := do
@@ -5777,7 +5777,7 @@ def signature.BlockType.params
     ok (signature.ResultType.Type index signature.TypePart.Params)
 
 /-- [itasca::code::enter_info]:
-    Source: 'src/code.rs', lines 1687:0-1712:1 -/
+    Source: 'src/code.rs' -/
 def code.enter_info
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) (kind : code.LabelKind) :
@@ -6261,7 +6261,7 @@ def code.enter_info
     ok (r1, st)
 
 /-- [itasca::code::enter]:
-    Source: 'src/code.rs', lines 1716:0-1725:1 -/
+    Source: 'src/code.rs' -/
 def code.enter
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) (kind : code.LabelKind) :
@@ -6279,7 +6279,7 @@ def code.enter
     ok (r1, st1)
 
 /-- [itasca::signature::{itasca::signature::BlockType}::results]:
-    Source: 'src/signature.rs', lines 108:4-117:5
+    Source: 'src/signature.rs'
     Visibility: public -/
 def signature.BlockType.results
   (self : signature.BlockType) : Result signature.ResultType := do
@@ -6290,7 +6290,7 @@ def signature.BlockType.results
     ok (signature.ResultType.Type index signature.TypePart.Results)
 
 /-- [itasca::code::end_frame_info]:
-    Source: 'src/code.rs', lines 1727:0-1765:1 -/
+    Source: 'src/code.rs' -/
 def code.end_frame_info
   (st : code.BodyState) (env : metadata.Env) (is_else : Bool) :
   Result ((core.result.Result (code.LabelKind × signature.BlockType)
@@ -6710,7 +6710,7 @@ def code.end_frame_info
           ok (r1, { core := ois })
 
 /-- [itasca::code::end_frame]:
-    Source: 'src/code.rs', lines 1769:0-1772:1 -/
+    Source: 'src/code.rs' -/
 def code.end_frame
   (st : code.BodyState) (env : metadata.Env) (is_else : Bool) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
@@ -6727,7 +6727,7 @@ def code.end_frame
     ok (r1, st1)
 
 /-- [itasca::code::label]:
-    Source: 'src/code.rs', lines 1774:0-1785:1 -/
+    Source: 'src/code.rs' -/
 def code.label
   (st : code.BodyState) (depth : Std.U32) :
   Result (core.result.Result signature.ResultType error.OpError)
@@ -6760,7 +6760,7 @@ def code.label
       ok (core.result.Result.Ok rt)
 
 /-- [itasca::code::read_label_info]:
-    Source: 'src/code.rs', lines 1787:0-1792:1 -/
+    Source: 'src/code.rs' -/
 def code.read_label_info
   (st : code.BodyState) (data : Slice Std.U8) :
   Result ((core.result.Result (Std.U32 × signature.ResultType) error.OpError)
@@ -6791,7 +6791,7 @@ def code.read_label_info
     ok (r1, st)
 
 /-- [itasca::code::read_multi_value_label]:
-    Source: 'src/code.rs', lines 1796:0-1799:1 -/
+    Source: 'src/code.rs' -/
 def code.read_multi_value_label
   (st : code.BodyState) (data : Slice Std.U8) :
   Result ((core.result.Result signature.ResultType error.OpError) ×
@@ -6810,7 +6810,7 @@ def code.read_multi_value_label
     ok (r1, st1)
 
 /-- [itasca::code::branch_info]:
-    Source: 'src/code.rs', lines 1801:0-1818:1 -/
+    Source: 'src/code.rs' -/
 def code.branch_info
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (conditional : Bool) :
@@ -6895,7 +6895,7 @@ def code.branch_info
     ok (r1, st1)
 
 /-- [itasca::code::branch]:
-    Source: 'src/code.rs', lines 1822:0-1825:1 -/
+    Source: 'src/code.rs' -/
 def code.branch
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (conditional : Bool) :
@@ -6913,7 +6913,7 @@ def code.branch
     ok (r1, st1)
 
 /-- [itasca::code::check_suffix]: loop body 0:
-    Source: 'src/code.rs', lines 1835:4-1856:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.check_suffix_loop.body
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
@@ -6960,7 +6960,7 @@ def code.check_suffix_loop.body
       ok (done r1)
 
 /-- [itasca::code::check_suffix]: loop 0:
-    Source: 'src/code.rs', lines 1835:4-1856:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.check_suffix_loop
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
@@ -6974,7 +6974,7 @@ def code.check_suffix_loop
     (stack, i1)
 
 /-- [itasca::code::check_suffix]:
-    Source: 'src/code.rs', lines 1831:0-1857:1 -/
+    Source: 'src/code.rs' -/
 def code.check_suffix
   (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
   Result (core.result.Result Unit error.OpError)
@@ -6991,7 +6991,7 @@ def code.check_suffix
       Unit (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::branch_table_with]: loop body 0:
-    Source: 'src/code.rs', lines 1872:4-1898:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.branch_table_with_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -7186,7 +7186,7 @@ def code.branch_table_with_loop.body
     ok (done (r1, st, visitor))
 
 /-- [itasca::code::branch_table_with]: loop 0:
-    Source: 'src/code.rs', lines 1872:4-1898:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.branch_table_with_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (ois : code.OpIterState)
@@ -7202,7 +7202,7 @@ def code.branch_table_with_loop
     (ois, visitor, arity, first, i)
 
 /-- [itasca::code::branch_table_with]:
-    Source: 'src/code.rs', lines 1859:0-1899:1 -/
+    Source: 'src/code.rs' -/
 def code.branch_table_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -7234,7 +7234,7 @@ def code.branch_table_with
     ok (r1, st, visitor)
 
 /-- [itasca::code::OpVisitor::on_f64_const]:
-    Source: 'src/code.rs', lines 2651:4-2653:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_const.default
@@ -7244,7 +7244,7 @@ def code.OpVisitor.on_f64_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_const]:
-    Source: 'src/code.rs', lines 2647:4-2649:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_const.default
@@ -7254,7 +7254,7 @@ def code.OpVisitor.on_f32_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_const]:
-    Source: 'src/code.rs', lines 2641:4-2643:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_const.default
@@ -7264,7 +7264,7 @@ def code.OpVisitor.on_i64_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_const]:
-    Source: 'src/code.rs', lines 2637:4-2639:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_const.default
@@ -7274,7 +7274,7 @@ def code.OpVisitor.on_i32_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_grow]:
-    Source: 'src/code.rs', lines 2631:4-2633:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_grow.default
@@ -7284,7 +7284,7 @@ def code.OpVisitor.on_memory_grow.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_size]:
-    Source: 'src/code.rs', lines 2627:4-2629:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_size.default
@@ -7294,7 +7294,7 @@ def code.OpVisitor.on_memory_size.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_global_set]:
-    Source: 'src/code.rs', lines 2621:4-2623:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_global_set.default
@@ -7304,7 +7304,7 @@ def code.OpVisitor.on_global_set.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_global_get]:
-    Source: 'src/code.rs', lines 2617:4-2619:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_global_get.default
@@ -7314,7 +7314,7 @@ def code.OpVisitor.on_global_get.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_tee]:
-    Source: 'src/code.rs', lines 2613:4-2615:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_tee.default
@@ -7324,7 +7324,7 @@ def code.OpVisitor.on_local_tee.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_set]:
-    Source: 'src/code.rs', lines 2609:4-2611:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_set.default
@@ -7334,7 +7334,7 @@ def code.OpVisitor.on_local_set.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_local_get]:
-    Source: 'src/code.rs', lines 2605:4-2607:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_local_get.default
@@ -7344,7 +7344,7 @@ def code.OpVisitor.on_local_get.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_select]:
-    Source: 'src/code.rs', lines 2599:4-2601:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_select.default
@@ -7354,7 +7354,7 @@ def code.OpVisitor.on_select.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_drop]:
-    Source: 'src/code.rs', lines 2594:4-2596:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_drop.default
@@ -7364,7 +7364,7 @@ def code.OpVisitor.on_drop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_call_indirect]:
-    Source: 'src/code.rs', lines 2581:4-2588:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_call_indirect.default
@@ -7375,7 +7375,7 @@ def code.OpVisitor.on_call_indirect.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_call]:
-    Source: 'src/code.rs', lines 2577:4-2579:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_call.default
@@ -7385,7 +7385,7 @@ def code.OpVisitor.on_call.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_return]:
-    Source: 'src/code.rs', lines 2573:4-2575:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_return.default
@@ -7395,7 +7395,7 @@ def code.OpVisitor.on_return.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_table]:
-    Source: 'src/code.rs', lines 2564:4-2571:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_table.default
@@ -7406,7 +7406,7 @@ def code.OpVisitor.on_br_table.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_table_label]:
-    Source: 'src/code.rs', lines 2556:4-2558:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_table_label.default
@@ -7416,7 +7416,7 @@ def code.OpVisitor.on_br_table_label.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br_if]:
-    Source: 'src/code.rs', lines 2542:4-2549:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br_if.default
@@ -7427,7 +7427,7 @@ def code.OpVisitor.on_br_if.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_br]:
-    Source: 'src/code.rs', lines 2533:4-2540:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_br.default
@@ -7438,7 +7438,7 @@ def code.OpVisitor.on_br.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_end]:
-    Source: 'src/code.rs', lines 2523:4-2530:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_end.default
@@ -7449,7 +7449,7 @@ def code.OpVisitor.on_end.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_else]:
-    Source: 'src/code.rs', lines 2515:4-2517:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_else.default
@@ -7460,7 +7460,7 @@ def code.OpVisitor.on_else.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_if]:
-    Source: 'src/code.rs', lines 2510:4-2512:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_if.default
@@ -7471,7 +7471,7 @@ def code.OpVisitor.on_if.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_loop]:
-    Source: 'src/code.rs', lines 2506:4-2508:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_loop.default
@@ -7482,7 +7482,7 @@ def code.OpVisitor.on_loop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_block]:
-    Source: 'src/code.rs', lines 2502:4-2504:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_block.default
@@ -7493,7 +7493,7 @@ def code.OpVisitor.on_block.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_nop]:
-    Source: 'src/code.rs', lines 2498:4-2500:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_nop.default
@@ -7503,7 +7503,7 @@ def code.OpVisitor.on_nop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_unreachable]:
-    Source: 'src/code.rs', lines 2494:4-2496:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_unreachable.default
@@ -7513,7 +7513,7 @@ def code.OpVisitor.on_unreachable.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_function_start]:
-    Source: 'src/code.rs', lines 2482:4-2490:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_function_start.default
@@ -7524,7 +7524,7 @@ def code.OpVisitor.on_function_start.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_sat_f64_u]:
-    Source: 'src/code.rs', lines 2470:4-2472:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_sat_f64_u.default
@@ -7534,7 +7534,7 @@ def code.OpVisitor.on_i64_trunc_sat_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_sat_f64_s]:
-    Source: 'src/code.rs', lines 2466:4-2468:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_sat_f64_s.default
@@ -7544,7 +7544,7 @@ def code.OpVisitor.on_i64_trunc_sat_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_sat_f32_u]:
-    Source: 'src/code.rs', lines 2462:4-2464:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_sat_f32_u.default
@@ -7554,7 +7554,7 @@ def code.OpVisitor.on_i64_trunc_sat_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_sat_f32_s]:
-    Source: 'src/code.rs', lines 2458:4-2460:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_sat_f32_s.default
@@ -7564,7 +7564,7 @@ def code.OpVisitor.on_i64_trunc_sat_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_sat_f64_u]:
-    Source: 'src/code.rs', lines 2454:4-2456:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_sat_f64_u.default
@@ -7574,7 +7574,7 @@ def code.OpVisitor.on_i32_trunc_sat_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_sat_f64_s]:
-    Source: 'src/code.rs', lines 2450:4-2452:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_sat_f64_s.default
@@ -7584,7 +7584,7 @@ def code.OpVisitor.on_i32_trunc_sat_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_sat_f32_u]:
-    Source: 'src/code.rs', lines 2446:4-2448:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_sat_f32_u.default
@@ -7594,7 +7594,7 @@ def code.OpVisitor.on_i32_trunc_sat_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_sat_f32_s]:
-    Source: 'src/code.rs', lines 2442:4-2444:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_sat_f32_s.default
@@ -7604,7 +7604,7 @@ def code.OpVisitor.on_i32_trunc_sat_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend32_s]:
-    Source: 'src/code.rs', lines 2438:4-2440:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend32_s.default
@@ -7614,7 +7614,7 @@ def code.OpVisitor.on_i64_extend32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend16_s]:
-    Source: 'src/code.rs', lines 2434:4-2436:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend16_s.default
@@ -7624,7 +7624,7 @@ def code.OpVisitor.on_i64_extend16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend8_s]:
-    Source: 'src/code.rs', lines 2430:4-2432:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend8_s.default
@@ -7634,7 +7634,7 @@ def code.OpVisitor.on_i64_extend8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_extend16_s]:
-    Source: 'src/code.rs', lines 2426:4-2428:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_extend16_s.default
@@ -7644,7 +7644,7 @@ def code.OpVisitor.on_i32_extend16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_extend8_s]:
-    Source: 'src/code.rs', lines 2422:4-2424:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_extend8_s.default
@@ -7654,7 +7654,7 @@ def code.OpVisitor.on_i32_extend8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd_shuffle]:
-    Source: 'src/code.rs', lines 2418:4-2420:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd_shuffle.default
@@ -7665,7 +7665,7 @@ def code.OpVisitor.on_simd_shuffle.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd_const]:
-    Source: 'src/code.rs', lines 2413:4-2415:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd_const.default
@@ -7676,7 +7676,7 @@ def code.OpVisitor.on_simd_const.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd_memory_lane]:
-    Source: 'src/code.rs', lines 2402:4-2410:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd_memory_lane.default
@@ -7687,7 +7687,7 @@ def code.OpVisitor.on_simd_memory_lane.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd_memory]:
-    Source: 'src/code.rs', lines 2392:4-2399:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd_memory.default
@@ -7698,7 +7698,7 @@ def code.OpVisitor.on_simd_memory.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd_lane]:
-    Source: 'src/code.rs', lines 2387:4-2389:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd_lane.default
@@ -7709,7 +7709,7 @@ def code.OpVisitor.on_simd_lane.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_simd]:
-    Source: 'src/code.rs', lines 2382:4-2384:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_simd.default
@@ -7719,7 +7719,7 @@ def code.OpVisitor.on_simd.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_fill]:
-    Source: 'src/code.rs', lines 2377:4-2379:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_fill.default
@@ -7729,7 +7729,7 @@ def code.OpVisitor.on_table_fill.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_size]:
-    Source: 'src/code.rs', lines 2373:4-2375:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_size.default
@@ -7739,7 +7739,7 @@ def code.OpVisitor.on_table_size.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_grow]:
-    Source: 'src/code.rs', lines 2369:4-2371:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_grow.default
@@ -7749,7 +7749,7 @@ def code.OpVisitor.on_table_grow.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_copy]:
-    Source: 'src/code.rs', lines 2365:4-2367:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_copy.default
@@ -7760,7 +7760,7 @@ def code.OpVisitor.on_table_copy.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_elem_drop]:
-    Source: 'src/code.rs', lines 2361:4-2363:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_elem_drop.default
@@ -7770,7 +7770,7 @@ def code.OpVisitor.on_elem_drop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_init]:
-    Source: 'src/code.rs', lines 2357:4-2359:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_init.default
@@ -7781,7 +7781,7 @@ def code.OpVisitor.on_table_init.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_fill]:
-    Source: 'src/code.rs', lines 2353:4-2355:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_fill.default
@@ -7791,7 +7791,7 @@ def code.OpVisitor.on_memory_fill.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_copy]:
-    Source: 'src/code.rs', lines 2349:4-2351:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_copy.default
@@ -7801,7 +7801,7 @@ def code.OpVisitor.on_memory_copy.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_data_drop]:
-    Source: 'src/code.rs', lines 2345:4-2347:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_data_drop.default
@@ -7811,7 +7811,7 @@ def code.OpVisitor.on_data_drop.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_memory_init]:
-    Source: 'src/code.rs', lines 2341:4-2343:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_memory_init.default
@@ -7821,7 +7821,7 @@ def code.OpVisitor.on_memory_init.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_set]:
-    Source: 'src/code.rs', lines 2337:4-2339:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_set.default
@@ -7831,7 +7831,7 @@ def code.OpVisitor.on_table_set.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_table_get]:
-    Source: 'src/code.rs', lines 2333:4-2335:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_table_get.default
@@ -7841,7 +7841,7 @@ def code.OpVisitor.on_table_get.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_select_typed]:
-    Source: 'src/code.rs', lines 2329:4-2331:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_select_typed.default
@@ -7852,7 +7852,7 @@ def code.OpVisitor.on_select_typed.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_ref_func]:
-    Source: 'src/code.rs', lines 2325:4-2327:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_ref_func.default
@@ -7862,7 +7862,7 @@ def code.OpVisitor.on_ref_func.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_ref_is_null]:
-    Source: 'src/code.rs', lines 2321:4-2323:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_ref_is_null.default
@@ -7872,7 +7872,7 @@ def code.OpVisitor.on_ref_is_null.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_ref_null]:
-    Source: 'src/code.rs', lines 2317:4-2319:5
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_ref_null.default
@@ -7883,7 +7883,7 @@ def code.OpVisitor.on_ref_null.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store32]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store32.default
@@ -7894,7 +7894,7 @@ def code.OpVisitor.on_i64_store32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store16]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store16.default
@@ -7905,7 +7905,7 @@ def code.OpVisitor.on_i64_store16.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store8]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store8.default
@@ -7916,7 +7916,7 @@ def code.OpVisitor.on_i64_store8.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store16]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store16.default
@@ -7927,7 +7927,7 @@ def code.OpVisitor.on_i32_store16.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store8]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store8.default
@@ -7938,7 +7938,7 @@ def code.OpVisitor.on_i32_store8.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_store]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_store.default
@@ -7949,7 +7949,7 @@ def code.OpVisitor.on_f64_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_store]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_store.default
@@ -7960,7 +7960,7 @@ def code.OpVisitor.on_f32_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_store]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_store.default
@@ -7971,7 +7971,7 @@ def code.OpVisitor.on_i64_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_store]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_store.default
@@ -7982,7 +7982,7 @@ def code.OpVisitor.on_i32_store.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load32_u]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load32_u.default
@@ -7993,7 +7993,7 @@ def code.OpVisitor.on_i64_load32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load32_s]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load32_s.default
@@ -8004,7 +8004,7 @@ def code.OpVisitor.on_i64_load32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load16_u]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load16_u.default
@@ -8015,7 +8015,7 @@ def code.OpVisitor.on_i64_load16_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load16_s]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load16_s.default
@@ -8026,7 +8026,7 @@ def code.OpVisitor.on_i64_load16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load8_u]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load8_u.default
@@ -8037,7 +8037,7 @@ def code.OpVisitor.on_i64_load8_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load8_s]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load8_s.default
@@ -8048,7 +8048,7 @@ def code.OpVisitor.on_i64_load8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load16_u]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load16_u.default
@@ -8059,7 +8059,7 @@ def code.OpVisitor.on_i32_load16_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load16_s]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load16_s.default
@@ -8070,7 +8070,7 @@ def code.OpVisitor.on_i32_load16_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load8_u]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load8_u.default
@@ -8081,7 +8081,7 @@ def code.OpVisitor.on_i32_load8_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load8_s]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load8_s.default
@@ -8092,7 +8092,7 @@ def code.OpVisitor.on_i32_load8_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_load]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_load.default
@@ -8103,7 +8103,7 @@ def code.OpVisitor.on_f64_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_load]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_load.default
@@ -8114,7 +8114,7 @@ def code.OpVisitor.on_f32_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_load]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_load.default
@@ -8125,7 +8125,7 @@ def code.OpVisitor.on_i64_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_load]:
-    Source: 'src/code.rs', lines 2300:10-2302:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_load.default
@@ -8136,7 +8136,7 @@ def code.OpVisitor.on_i32_load.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_reinterpret_i64]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_reinterpret_i64.default
@@ -8146,7 +8146,7 @@ def code.OpVisitor.on_f64_reinterpret_i64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_reinterpret_i32]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_reinterpret_i32.default
@@ -8156,7 +8156,7 @@ def code.OpVisitor.on_f32_reinterpret_i32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_reinterpret_f64]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_reinterpret_f64.default
@@ -8166,7 +8166,7 @@ def code.OpVisitor.on_i64_reinterpret_f64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_reinterpret_f32]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_reinterpret_f32.default
@@ -8176,7 +8176,7 @@ def code.OpVisitor.on_i32_reinterpret_f32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_promote_f32]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_promote_f32.default
@@ -8186,7 +8186,7 @@ def code.OpVisitor.on_f64_promote_f32.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i64_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i64_u.default
@@ -8196,7 +8196,7 @@ def code.OpVisitor.on_f64_convert_i64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i64_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i64_s.default
@@ -8206,7 +8206,7 @@ def code.OpVisitor.on_f64_convert_i64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i32_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i32_u.default
@@ -8216,7 +8216,7 @@ def code.OpVisitor.on_f64_convert_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_convert_i32_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_convert_i32_s.default
@@ -8226,7 +8226,7 @@ def code.OpVisitor.on_f64_convert_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_demote_f64]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_demote_f64.default
@@ -8236,7 +8236,7 @@ def code.OpVisitor.on_f32_demote_f64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i64_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i64_u.default
@@ -8246,7 +8246,7 @@ def code.OpVisitor.on_f32_convert_i64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i64_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i64_s.default
@@ -8256,7 +8256,7 @@ def code.OpVisitor.on_f32_convert_i64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i32_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i32_u.default
@@ -8266,7 +8266,7 @@ def code.OpVisitor.on_f32_convert_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_convert_i32_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_convert_i32_s.default
@@ -8276,7 +8276,7 @@ def code.OpVisitor.on_f32_convert_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f64_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f64_u.default
@@ -8286,7 +8286,7 @@ def code.OpVisitor.on_i64_trunc_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f64_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f64_s.default
@@ -8296,7 +8296,7 @@ def code.OpVisitor.on_i64_trunc_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f32_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f32_u.default
@@ -8306,7 +8306,7 @@ def code.OpVisitor.on_i64_trunc_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_trunc_f32_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_trunc_f32_s.default
@@ -8316,7 +8316,7 @@ def code.OpVisitor.on_i64_trunc_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend_i32_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend_i32_u.default
@@ -8326,7 +8326,7 @@ def code.OpVisitor.on_i64_extend_i32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_extend_i32_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_extend_i32_s.default
@@ -8336,7 +8336,7 @@ def code.OpVisitor.on_i64_extend_i32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f64_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f64_u.default
@@ -8346,7 +8346,7 @@ def code.OpVisitor.on_i32_trunc_f64_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f64_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f64_s.default
@@ -8356,7 +8356,7 @@ def code.OpVisitor.on_i32_trunc_f64_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f32_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f32_u.default
@@ -8366,7 +8366,7 @@ def code.OpVisitor.on_i32_trunc_f32_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_trunc_f32_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_trunc_f32_s.default
@@ -8376,7 +8376,7 @@ def code.OpVisitor.on_i32_trunc_f32_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_wrap_i64]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_wrap_i64.default
@@ -8386,7 +8386,7 @@ def code.OpVisitor.on_i32_wrap_i64.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_sqrt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_sqrt.default
@@ -8396,7 +8396,7 @@ def code.OpVisitor.on_f64_sqrt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_nearest]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_nearest.default
@@ -8406,7 +8406,7 @@ def code.OpVisitor.on_f64_nearest.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_trunc]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_trunc.default
@@ -8416,7 +8416,7 @@ def code.OpVisitor.on_f64_trunc.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_floor]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_floor.default
@@ -8426,7 +8426,7 @@ def code.OpVisitor.on_f64_floor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ceil]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ceil.default
@@ -8436,7 +8436,7 @@ def code.OpVisitor.on_f64_ceil.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_neg]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_neg.default
@@ -8446,7 +8446,7 @@ def code.OpVisitor.on_f64_neg.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_abs]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_abs.default
@@ -8456,7 +8456,7 @@ def code.OpVisitor.on_f64_abs.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_sqrt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_sqrt.default
@@ -8466,7 +8466,7 @@ def code.OpVisitor.on_f32_sqrt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_nearest]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_nearest.default
@@ -8476,7 +8476,7 @@ def code.OpVisitor.on_f32_nearest.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_trunc]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_trunc.default
@@ -8486,7 +8486,7 @@ def code.OpVisitor.on_f32_trunc.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_floor]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_floor.default
@@ -8496,7 +8496,7 @@ def code.OpVisitor.on_f32_floor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ceil]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ceil.default
@@ -8506,7 +8506,7 @@ def code.OpVisitor.on_f32_ceil.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_neg]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_neg.default
@@ -8516,7 +8516,7 @@ def code.OpVisitor.on_f32_neg.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_abs]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_abs.default
@@ -8526,7 +8526,7 @@ def code.OpVisitor.on_f32_abs.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_popcnt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_popcnt.default
@@ -8536,7 +8536,7 @@ def code.OpVisitor.on_i64_popcnt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ctz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ctz.default
@@ -8546,7 +8546,7 @@ def code.OpVisitor.on_i64_ctz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_clz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_clz.default
@@ -8556,7 +8556,7 @@ def code.OpVisitor.on_i64_clz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_add]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_add.default
@@ -8566,7 +8566,7 @@ def code.OpVisitor.on_i32_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_popcnt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_popcnt.default
@@ -8576,7 +8576,7 @@ def code.OpVisitor.on_i32_popcnt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ctz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ctz.default
@@ -8586,7 +8586,7 @@ def code.OpVisitor.on_i32_ctz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_clz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_clz.default
@@ -8596,7 +8596,7 @@ def code.OpVisitor.on_i32_clz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_copysign]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_copysign.default
@@ -8606,7 +8606,7 @@ def code.OpVisitor.on_f64_copysign.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_max]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_max.default
@@ -8616,7 +8616,7 @@ def code.OpVisitor.on_f64_max.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_min]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_min.default
@@ -8626,7 +8626,7 @@ def code.OpVisitor.on_f64_min.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_div]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_div.default
@@ -8636,7 +8636,7 @@ def code.OpVisitor.on_f64_div.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_mul]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_mul.default
@@ -8646,7 +8646,7 @@ def code.OpVisitor.on_f64_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_sub]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_sub.default
@@ -8656,7 +8656,7 @@ def code.OpVisitor.on_f64_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_add]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_add.default
@@ -8666,7 +8666,7 @@ def code.OpVisitor.on_f64_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_copysign]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_copysign.default
@@ -8676,7 +8676,7 @@ def code.OpVisitor.on_f32_copysign.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_max]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_max.default
@@ -8686,7 +8686,7 @@ def code.OpVisitor.on_f32_max.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_min]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_min.default
@@ -8696,7 +8696,7 @@ def code.OpVisitor.on_f32_min.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_div]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_div.default
@@ -8706,7 +8706,7 @@ def code.OpVisitor.on_f32_div.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_mul]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_mul.default
@@ -8716,7 +8716,7 @@ def code.OpVisitor.on_f32_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_sub]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_sub.default
@@ -8726,7 +8726,7 @@ def code.OpVisitor.on_f32_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_add]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_add.default
@@ -8736,7 +8736,7 @@ def code.OpVisitor.on_f32_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rotr]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rotr.default
@@ -8746,7 +8746,7 @@ def code.OpVisitor.on_i64_rotr.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rotl]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rotl.default
@@ -8756,7 +8756,7 @@ def code.OpVisitor.on_i64_rotl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shr_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shr_u.default
@@ -8766,7 +8766,7 @@ def code.OpVisitor.on_i64_shr_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shr_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shr_s.default
@@ -8776,7 +8776,7 @@ def code.OpVisitor.on_i64_shr_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_shl]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_shl.default
@@ -8786,7 +8786,7 @@ def code.OpVisitor.on_i64_shl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_xor]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_xor.default
@@ -8796,7 +8796,7 @@ def code.OpVisitor.on_i64_xor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_or]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_or.default
@@ -8806,7 +8806,7 @@ def code.OpVisitor.on_i64_or.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_and]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_and.default
@@ -8816,7 +8816,7 @@ def code.OpVisitor.on_i64_and.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rem_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rem_u.default
@@ -8826,7 +8826,7 @@ def code.OpVisitor.on_i64_rem_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_rem_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_rem_s.default
@@ -8836,7 +8836,7 @@ def code.OpVisitor.on_i64_rem_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_div_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_div_u.default
@@ -8846,7 +8846,7 @@ def code.OpVisitor.on_i64_div_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_div_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_div_s.default
@@ -8856,7 +8856,7 @@ def code.OpVisitor.on_i64_div_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_mul]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_mul.default
@@ -8866,7 +8866,7 @@ def code.OpVisitor.on_i64_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_sub]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_sub.default
@@ -8876,7 +8876,7 @@ def code.OpVisitor.on_i64_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_add]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_add.default
@@ -8886,7 +8886,7 @@ def code.OpVisitor.on_i64_add.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rotr]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rotr.default
@@ -8896,7 +8896,7 @@ def code.OpVisitor.on_i32_rotr.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rotl]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rotl.default
@@ -8906,7 +8906,7 @@ def code.OpVisitor.on_i32_rotl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shr_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shr_u.default
@@ -8916,7 +8916,7 @@ def code.OpVisitor.on_i32_shr_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shr_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shr_s.default
@@ -8926,7 +8926,7 @@ def code.OpVisitor.on_i32_shr_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_shl]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_shl.default
@@ -8936,7 +8936,7 @@ def code.OpVisitor.on_i32_shl.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_xor]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_xor.default
@@ -8946,7 +8946,7 @@ def code.OpVisitor.on_i32_xor.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_or]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_or.default
@@ -8956,7 +8956,7 @@ def code.OpVisitor.on_i32_or.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_and]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_and.default
@@ -8966,7 +8966,7 @@ def code.OpVisitor.on_i32_and.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rem_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rem_u.default
@@ -8976,7 +8976,7 @@ def code.OpVisitor.on_i32_rem_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_rem_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_rem_s.default
@@ -8986,7 +8986,7 @@ def code.OpVisitor.on_i32_rem_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_div_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_div_u.default
@@ -8996,7 +8996,7 @@ def code.OpVisitor.on_i32_div_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_div_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_div_s.default
@@ -9006,7 +9006,7 @@ def code.OpVisitor.on_i32_div_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_mul]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_mul.default
@@ -9016,7 +9016,7 @@ def code.OpVisitor.on_i32_mul.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_sub]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_sub.default
@@ -9026,7 +9026,7 @@ def code.OpVisitor.on_i32_sub.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ge]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ge.default
@@ -9036,7 +9036,7 @@ def code.OpVisitor.on_f64_ge.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_le]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_le.default
@@ -9046,7 +9046,7 @@ def code.OpVisitor.on_f64_le.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_gt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_gt.default
@@ -9056,7 +9056,7 @@ def code.OpVisitor.on_f64_gt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_lt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_lt.default
@@ -9066,7 +9066,7 @@ def code.OpVisitor.on_f64_lt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_ne]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_ne.default
@@ -9076,7 +9076,7 @@ def code.OpVisitor.on_f64_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f64_eq]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f64_eq.default
@@ -9086,7 +9086,7 @@ def code.OpVisitor.on_f64_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ge]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ge.default
@@ -9096,7 +9096,7 @@ def code.OpVisitor.on_f32_ge.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_le]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_le.default
@@ -9106,7 +9106,7 @@ def code.OpVisitor.on_f32_le.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_gt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_gt.default
@@ -9116,7 +9116,7 @@ def code.OpVisitor.on_f32_gt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_lt]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_lt.default
@@ -9126,7 +9126,7 @@ def code.OpVisitor.on_f32_lt.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_ne]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_ne.default
@@ -9136,7 +9136,7 @@ def code.OpVisitor.on_f32_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_f32_eq]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_f32_eq.default
@@ -9146,7 +9146,7 @@ def code.OpVisitor.on_f32_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ge_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ge_u.default
@@ -9156,7 +9156,7 @@ def code.OpVisitor.on_i64_ge_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ge_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ge_s.default
@@ -9166,7 +9166,7 @@ def code.OpVisitor.on_i64_ge_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_le_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_le_u.default
@@ -9176,7 +9176,7 @@ def code.OpVisitor.on_i64_le_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_le_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_le_s.default
@@ -9186,7 +9186,7 @@ def code.OpVisitor.on_i64_le_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_gt_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_gt_u.default
@@ -9196,7 +9196,7 @@ def code.OpVisitor.on_i64_gt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_gt_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_gt_s.default
@@ -9206,7 +9206,7 @@ def code.OpVisitor.on_i64_gt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_lt_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_lt_u.default
@@ -9216,7 +9216,7 @@ def code.OpVisitor.on_i64_lt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_lt_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_lt_s.default
@@ -9226,7 +9226,7 @@ def code.OpVisitor.on_i64_lt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_ne]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_ne.default
@@ -9236,7 +9236,7 @@ def code.OpVisitor.on_i64_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_eq]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_eq.default
@@ -9246,7 +9246,7 @@ def code.OpVisitor.on_i64_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i64_eqz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i64_eqz.default
@@ -9256,7 +9256,7 @@ def code.OpVisitor.on_i64_eqz.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ge_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ge_u.default
@@ -9266,7 +9266,7 @@ def code.OpVisitor.on_i32_ge_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ge_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ge_s.default
@@ -9276,7 +9276,7 @@ def code.OpVisitor.on_i32_ge_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_le_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_le_u.default
@@ -9286,7 +9286,7 @@ def code.OpVisitor.on_i32_le_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_le_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_le_s.default
@@ -9296,7 +9296,7 @@ def code.OpVisitor.on_i32_le_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_gt_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_gt_u.default
@@ -9306,7 +9306,7 @@ def code.OpVisitor.on_i32_gt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_gt_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_gt_s.default
@@ -9316,7 +9316,7 @@ def code.OpVisitor.on_i32_gt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_lt_u]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_lt_u.default
@@ -9326,7 +9326,7 @@ def code.OpVisitor.on_i32_lt_u.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_lt_s]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_lt_s.default
@@ -9336,7 +9336,7 @@ def code.OpVisitor.on_i32_lt_s.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_ne]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_ne.default
@@ -9346,7 +9346,7 @@ def code.OpVisitor.on_i32_ne.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_eq]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_eq.default
@@ -9356,7 +9356,7 @@ def code.OpVisitor.on_i32_eq.default
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::code::OpVisitor::on_i32_eqz]:
-    Source: 'src/code.rs', lines 2292:10-2294:9
+    Source: 'src/code.rs'
     Visibility: public -/
 @[trait_default]
 def code.OpVisitor.on_i32_eqz.default
@@ -9366,7 +9366,7 @@ def code.OpVisitor.on_i32_eqz.default
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::code::{impl itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}]
-    Source: 'src/code.rs', lines 2667:0-2667:36 -/
+    Source: 'src/code.rs' -/
 @[reducible]
 def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
   code.EmptyOpVisitor := {
@@ -9582,7 +9582,7 @@ def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
 }
 
 /-- [itasca::code::branch_table]:
-    Source: 'src/code.rs', lines 1903:0-1911:1 -/
+    Source: 'src/code.rs' -/
 def code.branch_table
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -9594,7 +9594,7 @@ def code.branch_table
   ok (r, st1)
 
 /-- [itasca::code::apply_func_type]:
-    Source: 'src/code.rs', lines 1913:0-1921:1 -/
+    Source: 'src/code.rs' -/
 def code.apply_func_type
   (st : code.OpIterState) (ft : wasm_types.FuncType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
@@ -9629,7 +9629,7 @@ def code.apply_func_type
     ok (r1, st)
 
 /-- [itasca::code::call_info]:
-    Source: 'src/code.rs', lines 1923:0-1931:1 -/
+    Source: 'src/code.rs' -/
 def code.call_info
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
   Result ((core.result.Result Std.U32 error.OpError) × code.BodyState)
@@ -9663,7 +9663,7 @@ def code.call_info
     ok (r1, { core := ois })
 
 /-- [itasca::code::call_indirect_info]:
-    Source: 'src/code.rs', lines 1933:0-1956:1 -/
+    Source: 'src/code.rs' -/
 def code.call_indirect_info
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -9751,7 +9751,7 @@ def code.call_indirect_info
     ok (r1, { core := ois })
 
 /-- [itasca::code::call]:
-    Source: 'src/code.rs', lines 1960:0-1973:1 -/
+    Source: 'src/code.rs' -/
 def code.call
   (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) (indirect : Bool) :
@@ -9782,7 +9782,7 @@ def code.call
       ok (r1, st1)
 
 /-- [itasca::code::initial_state]:
-    Source: 'src/code.rs', lines 1978:0-1997:1 -/
+    Source: 'src/code.rs' -/
 def code.initial_state
   (env : metadata.Env) (type_index : Std.U32) :
   Result (core.result.Result code.BodyState error.OpError)
@@ -9815,7 +9815,7 @@ def code.initial_state
         code.BodyState (core.convert.FromSame error.OpError) residual
 
 /-- [itasca::code::step_profile]:
-    Source: 'src/code.rs', lines 2025:0-2095:1 -/
+    Source: 'src/code.rs' -/
 def code.step_profile
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
@@ -10083,7 +10083,7 @@ def code.step_profile
     ok (r1, st, visitor)
 
 /-- [itasca::code::body_loop]: loop body 0:
-    Source: 'src/code.rs', lines 2009:4-2019:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.body_loop_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -10126,7 +10126,7 @@ def code.body_loop_loop.body
       ok (done (r1, visitor))
 
 /-- [itasca::code::body_loop]: loop 0:
-    Source: 'src/code.rs', lines 2009:4-2019:5 -/
+    Source: 'src/code.rs' -/
 @[rust_loop]
 def code.body_loop_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -10140,7 +10140,7 @@ def code.body_loop_loop
     (visitor, st)
 
 /-- [itasca::code::body_loop]:
-    Source: 'src/code.rs', lines 2000:0-2020:1 -/
+    Source: 'src/code.rs' -/
 @[reducible]
 def code.body_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
@@ -10151,13 +10151,13 @@ def code.body_loop
   code.body_loop_loop OpVisitorInst data env ctx type_index profile visitor st
 
 /-- [itasca::limits::MAX_FUNCTION_BYTES]
-    Source: 'src/limits.rs', lines 36:0-36:48
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_FUNCTION_BYTES : Std.Usize := 7654321#usize
 
 /-- [itasca::code::validate_body_with]:
-    Source: 'src/code.rs', lines 2106:0-2119:1 -/
+    Source: 'src/code.rs' -/
 def code.validate_body_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
@@ -10180,34 +10180,34 @@ def code.validate_body_with
       ok (r1, visitor)
 
 /-- [itasca::code::OP_I32_EXTEND8_S]
-    Source: 'src/code.rs', lines 2706:0-2706:34 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_EXTEND8_S : Std.U8 := 192#u8
 
 /-- [itasca::code::OP_I32_EXTEND16_S]
-    Source: 'src/code.rs', lines 2707:0-2707:35 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_EXTEND16_S : Std.U8 := 193#u8
 
 /-- [itasca::code::OP_I64_EXTEND8_S]
-    Source: 'src/code.rs', lines 2708:0-2708:34 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND8_S : Std.U8 := 194#u8
 
 /-- [itasca::code::OP_I64_EXTEND16_S]
-    Source: 'src/code.rs', lines 2709:0-2709:35 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND16_S : Std.U8 := 195#u8
 
 /-- [itasca::code::OP_I64_EXTEND32_S]
-    Source: 'src/code.rs', lines 2710:0-2710:35 -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND32_S : Std.U8 := 196#u8
 
 /-- [itasca::error::{impl core::convert::From<itasca::error::OpError> for itasca::error::Error}::from]:
-    Source: 'src/error.rs', lines 112:4-114:5
+    Source: 'src/error.rs'
     Visibility: public -/
 def error.Error.Insts.CoreConvertFromOpError.from
   (e : error.OpError) : Result error.Error := do
   ok (error.Error.Read e)
 
 /-- Trait implementation: [itasca::error::{impl core::convert::From<itasca::error::OpError> for itasca::error::Error}]
-    Source: 'src/error.rs', lines 111:0-115:1 -/
+    Source: 'src/error.rs' -/
 @[reducible]
 def error.Error.Insts.CoreConvertFromOpError : core.convert.From error.Error
   error.OpError := {
@@ -10215,44 +10215,44 @@ def error.Error.Insts.CoreConvertFromOpError : core.convert.From error.Error
 }
 
 /-- [itasca::limits::MAX_MEMORY_PAGES]
-    Source: 'src/limits.rs', lines 10:0-10:40
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_MEMORY_PAGES : Std.U32 := 65536#u32
 
 /-- [itasca::limits::MAX_TABLE_ELEMS]
-    Source: 'src/limits.rs', lines 13:0-13:42
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_TABLE_ELEMS : Std.U32 := core.num.U32.MAX
 
 /-- [itasca::limits::MAX_TABLES]
-    Source: 'src/limits.rs', lines 16:0-16:32
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_TABLES : Std.Usize := 1#usize
 
 /-- [itasca::limits::MAX_MEMORIES]
-    Source: 'src/limits.rs', lines 19:0-19:34
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_MEMORIES : Std.Usize := 1#usize
 
 /-- [itasca::limits::MAX_RESULTS]
-    Source: 'src/limits.rs', lines 25:0-25:33
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_RESULTS : Std.Usize := 1#usize
 
 /-- [itasca::limits::MAX_MODULE_BYTES]
-    Source: 'src/limits.rs', lines 40:0-40:50
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_MODULE_BYTES : Std.Usize := 1073741824#usize
 
 /-- [itasca::limits::MAX_LEB_BYTES]
-    Source: 'src/limits.rs', lines 45:0-45:35
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_LEB_BYTES : Std.Usize := 5#usize
 
 /-- [itasca::limits::MAX_CODE_HEADER_BYTES]
-    Source: 'src/limits.rs', lines 49:0-49:63
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible]
 def limits.MAX_CODE_HEADER_BYTES : Result Std.Usize := do
@@ -10260,12 +10260,12 @@ def limits.MAX_CODE_HEADER_BYTES : Result Std.Usize := do
   1#usize + i
 
 /-- [itasca::limits::MAX_LOCALS]
-    Source: 'src/limits.rs', lines 54:0-54:37
+    Source: 'src/limits.rs'
     Visibility: public -/
 @[global_simps, irreducible] def limits.MAX_LOCALS : Std.Usize := 50000#usize
 
 /-- [itasca::limits::validate_limits]:
-    Source: 'src/limits.rs', lines 58:0-71:1 -/
+    Source: 'src/limits.rs' -/
 def limits.validate_limits
   (limits : wasm_types.Limits) (range : Std.U32) :
   Result (core.result.Result Unit error.Error)
@@ -10284,7 +10284,7 @@ def limits.validate_limits
         else ok (core.result.Result.Ok ())
 
 /-- [itasca::limits::add_offset]:
-    Source: 'src/limits.rs', lines 75:0-80:1 -/
+    Source: 'src/limits.rs' -/
 def limits.add_offset
   (a : Std.Usize) (b : Std.Usize) :
   Result (core.result.Result Std.Usize error.Error)
@@ -10299,59 +10299,59 @@ def limits.add_offset
          ok (core.result.Result.Ok i1)
 
 /-- [itasca::metadata::SECTION_CUSTOM]
-    Source: 'src/module.rs', lines 29:0-29:29 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_CUSTOM : Std.U8 := 0#u8
 
 /-- [itasca::metadata::SECTION_TYPE]
-    Source: 'src/module.rs', lines 30:0-30:27 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_TYPE : Std.U8 := 1#u8
 
 /-- [itasca::metadata::SECTION_IMPORT]
-    Source: 'src/module.rs', lines 31:0-31:29 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_IMPORT : Std.U8 := 2#u8
 
 /-- [itasca::metadata::SECTION_FUNCTION]
-    Source: 'src/module.rs', lines 32:0-32:31 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_FUNCTION : Std.U8 := 3#u8
 
 /-- [itasca::metadata::SECTION_TABLE]
-    Source: 'src/module.rs', lines 33:0-33:28 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_TABLE : Std.U8 := 4#u8
 
 /-- [itasca::metadata::SECTION_MEMORY]
-    Source: 'src/module.rs', lines 34:0-34:29 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_MEMORY : Std.U8 := 5#u8
 
 /-- [itasca::metadata::SECTION_GLOBAL]
-    Source: 'src/module.rs', lines 35:0-35:29 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_GLOBAL : Std.U8 := 6#u8
 
 /-- [itasca::metadata::SECTION_EXPORT]
-    Source: 'src/module.rs', lines 36:0-36:29 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_EXPORT : Std.U8 := 7#u8
 
 /-- [itasca::metadata::SECTION_START]
-    Source: 'src/module.rs', lines 37:0-37:28 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_START : Std.U8 := 8#u8
 
 /-- [itasca::metadata::SECTION_ELEMENT]
-    Source: 'src/module.rs', lines 38:0-38:30 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_ELEMENT : Std.U8 := 9#u8
 
 /-- [itasca::metadata::SECTION_CODE]
-    Source: 'src/module.rs', lines 39:0-39:39 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_CODE : Std.U8 := 10#u8
 
 /-- [itasca::metadata::SECTION_DATA]
-    Source: 'src/module.rs', lines 40:0-40:28 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_DATA : Std.U8 := 11#u8
 
 /-- [itasca::metadata::SECTION_DATA_COUNT]
-    Source: 'src/module.rs', lines 41:0-41:45 -/
+    Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_DATA_COUNT : Std.U8 := 12#u8
 
 /-- [itasca::metadata::{itasca::metadata::Env}::new]:
-    Source: 'src/module.rs', lines 153:4-171:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.new : Result metadata.Env := do
   ok
@@ -10374,119 +10374,119 @@ def metadata.Env.new : Result metadata.Env := do
     }
 
 /-- [itasca::metadata::{itasca::metadata::Env}::types]:
-    Source: 'src/module.rs', lines 174:4-176:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.types
   (self : metadata.Env) : Result (Slice wasm_types.FuncType) := do
   ok (alloc.vec.Vec.deref self.types)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::imports]:
-    Source: 'src/module.rs', lines 179:4-181:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.imports
   (self : metadata.Env) : Result (Slice metadata.Import) := do
   ok (alloc.vec.Vec.deref self.imports)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::globals]:
-    Source: 'src/module.rs', lines 184:4-186:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.globals
   (self : metadata.Env) : Result (Slice metadata.Global) := do
   ok (alloc.vec.Vec.deref self.globals)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::exports]:
-    Source: 'src/module.rs', lines 189:4-191:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.exports
   (self : metadata.Env) : Result (Slice metadata.Export) := do
   ok (alloc.vec.Vec.deref self.exports)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::elements]:
-    Source: 'src/module.rs', lines 194:4-196:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.elements
   (self : metadata.Env) : Result (Slice metadata.Element) := do
   ok (alloc.vec.Vec.deref self.elements)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::data_count]:
-    Source: 'src/module.rs', lines 199:4-201:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.data_count
   (self : metadata.Env) : Result (Option Std.U32) := do
   ok self.data_count
 
 /-- [itasca::metadata::{itasca::metadata::Env}::start]:
-    Source: 'src/module.rs', lines 218:4-220:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.start
   (self : metadata.Env) : Result (Option Std.U32) := do
   ok self.start
 
 /-- [itasca::metadata::{itasca::metadata::Env}::func_type_indices]:
-    Source: 'src/module.rs', lines 223:4-225:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.func_type_indices
   (self : metadata.Env) : Result (Slice Std.U32) := do
   ok (alloc.vec.Vec.deref self.func_type_indices)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::func_types]:
-    Source: 'src/module.rs', lines 228:4-230:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.func_types
   (self : metadata.Env) : Result (Slice wasm_types.FuncType) := do
   ok (alloc.vec.Vec.deref self.func_types)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::table_types]:
-    Source: 'src/module.rs', lines 233:4-235:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.table_types
   (self : metadata.Env) : Result (Slice wasm_types.TableType) := do
   ok (alloc.vec.Vec.deref self.table_types)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::mem_types]:
-    Source: 'src/module.rs', lines 238:4-240:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.mem_types
   (self : metadata.Env) : Result (Slice wasm_types.MemType) := do
   ok (alloc.vec.Vec.deref self.mem_types)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::global_types]:
-    Source: 'src/module.rs', lines 243:4-245:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.global_types
   (self : metadata.Env) : Result (Slice wasm_types.GlobalType) := do
   ok (alloc.vec.Vec.deref self.global_types)
 
 /-- [itasca::metadata::{itasca::metadata::Env}::num_imported_funcs]:
-    Source: 'src/module.rs', lines 248:4-250:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.num_imported_funcs
   (self : metadata.Env) : Result Std.Usize := do
   ok self.num_imported_funcs
 
 /-- [itasca::metadata::{itasca::metadata::Env}::num_imported_globals]:
-    Source: 'src/module.rs', lines 253:4-255:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Env.impl.num_imported_globals
   (self : metadata.Env) : Result Std.Usize := do
   ok self.num_imported_globals
 
 /-- [itasca::metadata::{itasca::metadata::Module}::env]:
-    Source: 'src/module.rs', lines 288:4-290:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Module.impl.env
   (self : metadata.Module) : Result metadata.Env := do
   ok self.env
 
 /-- [itasca::metadata::{itasca::metadata::Module}::tail]:
-    Source: 'src/module.rs', lines 293:4-295:5
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.Module.impl.tail
   (self : metadata.Module) : Result metadata.Tail := do
   ok self.tail
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::tail_ready]:
-    Source: 'src/stream.rs', lines 624:4-627:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
   (self : stream.SyncVisitor) (tail : metadata.Tail) :
@@ -10495,7 +10495,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
   ok (core.result.Result.Ok (), { self with tail := (some tail) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::code_end]:
-    Source: 'src/stream.rs', lines 620:4-622:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
   (self : stream.SyncVisitor) :
@@ -10504,7 +10504,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::poll_code_batch]:
-    Source: 'src/stream.rs', lines 613:4-618:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   (self : stream.SyncVisitor) :
@@ -10518,7 +10518,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   | some cb => ok (core.result.Result.Ok cb, { self with completed := o1 })
 
 /-- [itasca::metadata::copy_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 846:4-852:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.copy_value_types_loop.body
   (src : Slice wasm_types.ValueType) (out : alloc.vec.Vec wasm_types.ValueType)
@@ -10536,7 +10536,7 @@ def metadata.copy_value_types_loop.body
     ok (cont (out1, i2))
 
 /-- [itasca::metadata::copy_value_types]: loop 0:
-    Source: 'src/module.rs', lines 846:4-852:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.copy_value_types_loop
   (src : Slice wasm_types.ValueType) (out : alloc.vec.Vec wasm_types.ValueType)
@@ -10548,7 +10548,7 @@ def metadata.copy_value_types_loop
     (out, i)
 
 /-- [itasca::metadata::copy_value_types]:
-    Source: 'src/module.rs', lines 843:0-853:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.copy_value_types
   (src : Slice wasm_types.ValueType) :
@@ -10558,7 +10558,7 @@ def metadata.copy_value_types
     0#usize
 
 /-- [itasca::metadata::build_func_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1492:4-1498:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.build_func_locals_loop.body
   (declared : Slice wasm_types.ValueType)
@@ -10576,7 +10576,7 @@ def metadata.build_func_locals_loop.body
     ok (cont (locals1, i2))
 
 /-- [itasca::metadata::build_func_locals]: loop 0:
-    Source: 'src/module.rs', lines 1492:4-1498:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.build_func_locals_loop
   (declared : Slice wasm_types.ValueType)
@@ -10589,7 +10589,7 @@ def metadata.build_func_locals_loop
     (locals, i)
 
 /-- [itasca::metadata::build_func_locals]:
-    Source: 'src/module.rs', lines 1489:0-1499:1 -/
+    Source: 'src/module.rs' -/
 def metadata.build_func_locals
   (params : Slice wasm_types.ValueType) (declared : Slice wasm_types.ValueType)
   :
@@ -10599,7 +10599,7 @@ def metadata.build_func_locals
   metadata.build_func_locals_loop declared locals 0#usize
 
 /-- [itasca::metadata::push_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1452:4-1458:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.push_locals_loop.body
   (count : Std.U32) (vt : wasm_types.ValueType)
@@ -10615,7 +10615,7 @@ def metadata.push_locals_loop.body
     ok (cont (out1, i1))
 
 /-- [itasca::metadata::push_locals]: loop 0:
-    Source: 'src/module.rs', lines 1452:4-1458:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.push_locals_loop
   (out : alloc.vec.Vec wasm_types.ValueType) (count : Std.U32)
@@ -10627,7 +10627,7 @@ def metadata.push_locals_loop
     (out, i)
 
 /-- [itasca::metadata::push_locals]:
-    Source: 'src/module.rs', lines 1450:0-1459:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.push_locals
   (out : alloc.vec.Vec wasm_types.ValueType) (count : Std.U32)
@@ -10637,7 +10637,7 @@ def metadata.push_locals
   metadata.push_locals_loop out count vt 0#u32
 
 /-- [itasca::metadata::decode_value_type]:
-    Source: 'src/module.rs', lines 438:0-463:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_value_type
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result (wasm_types.ValueType × Std.Usize) error.Error)
@@ -10677,7 +10677,7 @@ def metadata.decode_value_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_locals]: loop body 0:
-    Source: 'src/module.rs', lines 1472:4-1486:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_locals_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (groups : Std.U32)
@@ -10722,7 +10722,7 @@ def metadata.decode_locals_loop.body
       ok (done r1)
 
 /-- [itasca::metadata::decode_locals]: loop 0:
-    Source: 'src/module.rs', lines 1472:4-1486:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_locals_loop
   (data : Slice Std.U8) (profile : ValidationProfile) (groups : Std.U32)
@@ -10736,7 +10736,7 @@ def metadata.decode_locals_loop
     (out, q, i)
 
 /-- [itasca::metadata::decode_locals]:
-    Source: 'src/module.rs', lines 1463:0-1487:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_locals
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result ((alloc.vec.Vec wasm_types.ValueType) ×
@@ -10755,7 +10755,7 @@ def metadata.decode_locals
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::have_bytes]:
-    Source: 'src/module.rs', lines 398:0-403:1 -/
+    Source: 'src/module.rs' -/
 def metadata.have_bytes
   (data : Slice Std.U8) (pos : Std.Usize) (n : Std.Usize) :
   Result (core.result.Result Unit error.Error)
@@ -10767,7 +10767,7 @@ def metadata.have_bytes
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::metadata::validate_code_entry_with]:
-    Source: 'src/module.rs', lines 1507:0-1551:1 -/
+    Source: 'src/module.rs' -/
 def metadata.validate_code_entry_with
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
   (pos : Std.Usize) (env : metadata.Env) (index : Std.Usize)
@@ -10851,7 +10851,7 @@ def metadata.validate_code_entry_with
       ok (r1, v)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_next]:
-    Source: 'src/stream.rs', lines 234:4-246:5 -/
+    Source: 'src/stream.rs' -/
 def stream.CodeBatch.validate_next
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (self : stream.CodeBatch)
   (index : Std.Usize) (visitor : V) :
@@ -10868,7 +10868,7 @@ def stream.CodeBatch.validate_next
         self.validated_end self.env index self.profile visitor
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
-    Source: 'src/stream.rs', lines 207:4-221:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.validate_func
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (self : stream.CodeBatch)
@@ -10903,7 +10903,7 @@ def stream.CodeBatch.validate_func
       visitor1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop body 0:
-    Source: 'src/stream.rs', lines 226:8-231:9 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.CodeBatch.validate_all_loop.body
   (self : stream.CodeBatch) (ok1 : Bool) :
@@ -10934,7 +10934,7 @@ def stream.CodeBatch.validate_all_loop.body
       self.validated_end, self.error))
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
-    Source: 'src/stream.rs', lines 226:8-231:9 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.CodeBatch.validate_all_loop
   (self : stream.CodeBatch) (ok1 : Bool) :
@@ -10947,7 +10947,7 @@ def stream.CodeBatch.validate_all_loop
     (self, ok1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]:
-    Source: 'src/stream.rs', lines 224:4-232:5 -/
+    Source: 'src/stream.rs' -/
 def stream.CodeBatch.validate_all
   (self : stream.CodeBatch) : Result stream.CodeBatch := do
   let (i, i1, vp, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
@@ -10970,7 +10970,7 @@ def stream.CodeBatch.validate_all
     }
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::submit_code_batch]:
-    Source: 'src/stream.rs', lines 607:4-611:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   (self : stream.SyncVisitor) (batch : stream.CodeBatch) :
@@ -10980,7 +10980,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   ok (core.result.Result.Ok (), { self with completed := (some batch1) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
-    Source: 'src/stream.rs', lines 600:4-605:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
   (self : stream.SyncVisitor) (_env : metadata.Env) :
@@ -10990,7 +10990,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
     { batch_bytes := 25000#usize, max_batches := 1#usize }, self)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::custom_region]:
-    Source: 'src/stream.rs', lines 598:4-598:51
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
   (self : stream.SyncVisitor) (_region : stream.Region) :
@@ -10999,7 +10999,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
   ok self
 
 /-- [itasca::metadata::ModuleVisitor::on_custom_section]:
-    Source: 'src/module.rs', lines 1690:4-1692:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[trait_default]
 def metadata.ModuleVisitor.on_custom_section.default
@@ -11009,7 +11009,7 @@ def metadata.ModuleVisitor.on_custom_section.default
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::stream::{impl itasca::metadata::ModuleVisitor for itasca::stream::SyncVisitor<'_0>}]
-    Source: 'src/stream.rs', lines 595:0-595:51 -/
+    Source: 'src/stream.rs' -/
 @[reducible]
 def stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor :
   metadata.ModuleVisitor stream.SyncVisitor := {
@@ -11017,7 +11017,7 @@ def stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor :
 }
 
 /-- Trait implementation: [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}]
-    Source: 'src/stream.rs', lines 597:0-628:1 -/
+    Source: 'src/stream.rs' -/
 @[reducible]
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
   stream.StreamingVisitor stream.SyncVisitor := {
@@ -11037,7 +11037,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
 }
 
 /-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::tail]:
-    Source: 'src/stream.rs', lines 582:4-584:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SliceSource.Insts.ItascaStreamSource.tail
   (self : stream.SliceSource) :
@@ -11046,7 +11046,7 @@ def stream.SliceSource.Insts.ItascaStreamSource.tail
   ok (core.result.Result.Ok self.tail)
 
 /-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code]:
-    Source: 'src/stream.rs', lines 575:4-580:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SliceSource.Insts.ItascaStreamSource.code
   (self : stream.SliceSource) (start : Std.Usize) («end» : Std.Usize) :
@@ -11066,14 +11066,14 @@ def stream.SliceSource.Insts.ItascaStreamSource.code
       ok (core.result.Result.Ok s)
 
 /-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code_len]:
-    Source: 'src/stream.rs', lines 571:4-573:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SliceSource.Insts.ItascaStreamSource.code_len
   (self : stream.SliceSource) : Result Std.Usize := do
   ok (Slice.len self.code)
 
 /-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::environment]:
-    Source: 'src/stream.rs', lines 567:4-569:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SliceSource.Insts.ItascaStreamSource.environment
   (self : stream.SliceSource) :
@@ -11082,7 +11082,7 @@ def stream.SliceSource.Insts.ItascaStreamSource.environment
   ok (core.result.Result.Ok self.env)
 
 /-- Trait implementation: [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}]
-    Source: 'src/stream.rs', lines 565:0-585:1 -/
+    Source: 'src/stream.rs' -/
 @[reducible]
 def stream.SliceSource.Insts.ItascaStreamSource : stream.Source
   stream.SliceSource := {
@@ -11093,7 +11093,7 @@ def stream.SliceSource.Insts.ItascaStreamSource : stream.Source
 }
 
 /-- [itasca::stream::read_len]:
-    Source: 'src/stream.rs', lines 487:0-493:1 -/
+    Source: 'src/stream.rs' -/
 def stream.read_len
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize) error.Error)
@@ -11173,7 +11173,7 @@ def stream.read_len
       ok (core.result.Result.Err (error.Error.Read oe))
 
 /-- [itasca::stream::find_code_region]: loop body 0:
-    Source: 'src/stream.rs', lines 536:4-556:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.find_code_region_loop.body
   (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
@@ -11223,7 +11223,7 @@ def stream.find_code_region_loop.body
            else ok (cont «end»)
 
 /-- [itasca::stream::find_code_region]: loop 0:
-    Source: 'src/stream.rs', lines 536:4-556:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.find_code_region_loop
   (bytes : Slice Std.U8) (len : Std.Usize) (pos : Std.Usize) :
@@ -11234,14 +11234,14 @@ def stream.find_code_region_loop
     pos
 
 /-- [itasca::stream::find_code_region]:
-    Source: 'src/stream.rs', lines 533:0-556:1 -/
+    Source: 'src/stream.rs' -/
 def stream.find_code_region
   (bytes : Slice Std.U8) : Result (Std.Usize × Std.Usize) := do
   let len := Slice.len bytes
   stream.find_code_region_loop bytes len 8#usize
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::finish]:
-    Source: 'src/stream.rs', lines 248:4-258:5 -/
+    Source: 'src/stream.rs' -/
 def stream.CodeBatch.finish
   (self : stream.CodeBatch) :
   Result (core.result.Result Unit error.Error)
@@ -11258,7 +11258,7 @@ def stream.CodeBatch.finish
   | some e => ok (core.result.Result.Err e)
 
 /-- [itasca::stream::retire_code_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 447:4-449:5 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.retire_code_batch_loop.body
   (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
@@ -11277,7 +11277,7 @@ def stream.retire_code_batch_loop.body
   else ok (done i1)
 
 /-- [itasca::stream::retire_code_batch]: loop 0:
-    Source: 'src/stream.rs', lines 447:4-449:5 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.retire_code_batch_loop
   (pending : alloc.vec.Vec Std.Usize) (i : Std.Usize) (i1 : Std.Usize) :
@@ -11288,7 +11288,7 @@ def stream.retire_code_batch_loop
     i1
 
 /-- [itasca::stream::retire_code_batch]:
-    Source: 'src/stream.rs', lines 437:0-457:1 -/
+    Source: 'src/stream.rs' -/
 def stream.retire_code_batch
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
   (module_id : Std.U64) (visitor : V) (pending : alloc.vec.Vec Std.Usize) :
@@ -11326,7 +11326,7 @@ def stream.retire_code_batch
     ok (r1, visitor1, pending)
 
 /-- [itasca::stream::retire_all_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 467:4-471:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.retire_all_code_batches_loop.body
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -11351,7 +11351,7 @@ def stream.retire_all_code_batches_loop.body
       ok (done (r1, visitor1, pending1))
 
 /-- [itasca::stream::retire_all_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 467:4-471:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.retire_all_code_batches_loop
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -11365,7 +11365,7 @@ def stream.retire_all_code_batches_loop
     (visitor, pending)
 
 /-- [itasca::stream::retire_all_code_batches]:
-    Source: 'src/stream.rs', lines 462:0-471:1 -/
+    Source: 'src/stream.rs' -/
 @[reducible]
 def stream.retire_all_code_batches
   {V : Type} (StreamingVisitorInst : stream.StreamingVisitor V)
@@ -11377,7 +11377,7 @@ def stream.retire_all_code_batches
     pending
 
 /-- [itasca::stream::read_exact]:
-    Source: 'src/stream.rs', lines 495:0-501:1 -/
+    Source: 'src/stream.rs' -/
 def stream.read_exact
   {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
   («end» : Std.Usize) :
@@ -11397,7 +11397,7 @@ def stream.read_exact
       (Slice Std.U8) (core.convert.FromSame error.Error) residual
 
 /-- [itasca::stream::get_next_batch]: loop body 0:
-    Source: 'src/stream.rs', lines 416:4-433:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.get_next_batch_loop.body
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
@@ -11502,7 +11502,7 @@ def stream.get_next_batch_loop.body
   else ok (done (core.result.Result.Ok (pos, func)))
 
 /-- [itasca::stream::get_next_batch]: loop 0:
-    Source: 'src/stream.rs', lines 416:4-433:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.get_next_batch_loop
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
@@ -11518,7 +11518,7 @@ def stream.get_next_batch_loop
     (pos, func, batch_bytes, done1)
 
 /-- [itasca::stream::get_next_batch]:
-    Source: 'src/stream.rs', lines 404:0-433:1 -/
+    Source: 'src/stream.rs' -/
 @[reducible]
 def stream.get_next_batch
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
@@ -11530,7 +11530,7 @@ def stream.get_next_batch
     threshold start first_func 0#usize false
 
 /-- [itasca::stream::submit_code_batches]: loop body 0:
-    Source: 'src/stream.rs', lines 368:4-399:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.submit_code_batches_loop.body
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -11716,7 +11716,7 @@ def stream.submit_code_batches_loop.body
     else ok (done (core.result.Result.Ok pending, visitor))
 
 /-- [itasca::stream::submit_code_batches]: loop 0:
-    Source: 'src/stream.rs', lines 368:4-399:1 -/
+    Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.submit_code_batches_loop
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -11743,7 +11743,7 @@ def stream.submit_code_batches_loop
     (visitor, pending, pos, func, batch_id)
 
 /-- [itasca::stream::submit_code_batches]:
-    Source: 'src/stream.rs', lines 353:0-399:1 -/
+    Source: 'src/stream.rs' -/
 def stream.submit_code_batches
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
   stream.StreamingVisitor V) (module_id : Std.U64)
@@ -11761,7 +11761,7 @@ def stream.submit_code_batches
     (alloc.vec.Vec.new Std.Usize) pos 0#usize 0#usize num_funcs
 
 /-- [itasca::stream::read_code_header]:
-    Source: 'src/stream.rs', lines 323:0-350:1 -/
+    Source: 'src/stream.rs' -/
 def stream.read_code_header
   {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
   (env : metadata.Env) :
@@ -11827,7 +11827,7 @@ def stream.read_code_header
         Std.Usize (core.convert.FromSame error.Error) residual
 
 /-- [itasca::metadata::decode_segment_index]:
-    Source: 'src/module.rs', lines 1172:0-1189:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_segment_index
   (data : Slice Std.U8) (pos : Std.Usize) (index_or_flags : Std.U32)
   (profile : ValidationProfile) :
@@ -11853,7 +11853,7 @@ def metadata.decode_segment_index
     | _ => ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
 
 /-- [itasca::wasm_types::{impl core::cmp::PartialEq<itasca::wasm_types::Mut> for itasca::wasm_types::Mut}::eq]:
-    Source: 'src/types.rs', lines 46:4-52:5
+    Source: 'src/types.rs'
     Visibility: public -/
 def wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq
   (self : wasm_types.Mut) (other : wasm_types.Mut) : Result Bool := do
@@ -11868,7 +11868,7 @@ def wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq
     | wasm_types.Mut.Var => ok true
 
 /-- Trait implementation: [itasca::wasm_types::{impl core::cmp::PartialEq<itasca::wasm_types::Mut> for itasca::wasm_types::Mut}]
-    Source: 'src/types.rs', lines 45:0-53:1 -/
+    Source: 'src/types.rs' -/
 @[reducible]
 impl_def wasm_types.Mut.Insts.CoreCmpPartialEqMut : core.cmp.PartialEq
   wasm_types.Mut wasm_types.Mut := {
@@ -11878,7 +11878,7 @@ impl_def wasm_types.Mut.Insts.CoreCmpPartialEqMut : core.cmp.PartialEq
 }
 
 /-- [itasca::metadata::const_global]:
-    Source: 'src/module.rs', lines 743:0-756:1 -/
+    Source: 'src/module.rs' -/
 def metadata.const_global
   (env : metadata.Env) (idx : Std.U32) :
   Result (core.result.Result wasm_types.GlobalType error.Error)
@@ -11903,7 +11903,7 @@ def metadata.const_global
       else ok (core.result.Result.Ok gt)
 
 /-- [itasca::metadata::read_expr_end]:
-    Source: 'src/module.rs', lines 734:0-740:1 -/
+    Source: 'src/module.rs' -/
 def metadata.read_expr_end
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result Std.Usize error.Error)
@@ -11921,7 +11921,7 @@ def metadata.read_expr_end
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::expect_const_type]:
-    Source: 'src/module.rs', lines 727:0-732:1 -/
+    Source: 'src/module.rs' -/
 def metadata.expect_const_type
   (actual : wasm_types.ValueType) (expected : wasm_types.ValueType) :
   Result (core.result.Result Unit error.Error)
@@ -11934,7 +11934,7 @@ def metadata.expect_const_type
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::metadata::decode_elem_type]:
-    Source: 'src/module.rs', lines 550:0-564:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_elem_type
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result (wasm_types.ElemType × Std.Usize) error.Error)
@@ -11960,7 +11960,7 @@ def metadata.decode_elem_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_const_expr]:
-    Source: 'src/module.rs', lines 759:0-839:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_const_expr
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (expected : wasm_types.ValueType) (profile : ValidationProfile) :
@@ -12248,7 +12248,7 @@ def metadata.decode_const_expr
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::copy_bytes]: loop body 0:
-    Source: 'src/module.rs', lines 388:4-394:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.copy_bytes_loop.body
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -12265,7 +12265,7 @@ def metadata.copy_bytes_loop.body
     ok (cont (out1, i2))
 
 /-- [itasca::metadata::copy_bytes]: loop 0:
-    Source: 'src/module.rs', lines 388:4-394:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.copy_bytes_loop
   (data : Slice Std.U8) («to» : Std.Usize) (out : alloc.vec.Vec Std.U8)
@@ -12277,7 +12277,7 @@ def metadata.copy_bytes_loop
     (out, i)
 
 /-- [itasca::metadata::copy_bytes]:
-    Source: 'src/module.rs', lines 385:0-395:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.copy_bytes
   (data : Slice Std.U8) («from» : Std.Usize) («to» : Std.Usize) :
@@ -12286,7 +12286,7 @@ def metadata.copy_bytes
   metadata.copy_bytes_loop data «to» (alloc.vec.Vec.new Std.U8) «from»
 
 /-- [itasca::metadata::decode_data_segment]:
-    Source: 'src/module.rs', lines 1568:0-1593:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_data_segment
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -12432,7 +12432,7 @@ def metadata.decode_data_segment
       residual
 
 /-- [itasca::metadata::decode_data_section]: loop body 0:
-    Source: 'src/module.rs', lines 1605:4-1613:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_data_section_loop.body
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -12461,7 +12461,7 @@ def metadata.decode_data_section_loop.body
       ok (done r1)
 
 /-- [itasca::metadata::decode_data_section]: loop 0:
-    Source: 'src/module.rs', lines 1605:4-1613:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_data_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -12476,7 +12476,7 @@ def metadata.decode_data_section_loop
     (out, q, i)
 
 /-- [itasca::metadata::decode_data_section]:
-    Source: 'src/module.rs', lines 1595:0-1614:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_data_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -12496,7 +12496,7 @@ def metadata.decode_data_section
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::utf8_cont]:
-    Source: 'src/module.rs', lines 634:0-643:1 -/
+    Source: 'src/module.rs' -/
 def metadata.utf8_cont
   (bytes : Slice Std.U8) (i : Std.Usize) (lo : Std.U8) (hi : Std.U8) :
   Result (core.result.Result Unit error.Error)
@@ -12514,7 +12514,7 @@ def metadata.utf8_cont
       else ok (core.result.Result.Ok ())
 
 /-- [itasca::metadata::utf8_sequence_len]:
-    Source: 'src/module.rs', lines 646:0-689:1 -/
+    Source: 'src/module.rs' -/
 def metadata.utf8_sequence_len
   (bytes : Slice Std.U8) (i : Std.Usize) :
   Result (core.result.Result Std.Usize error.Error)
@@ -12801,7 +12801,7 @@ def metadata.utf8_sequence_len
           else ok (core.result.Result.Err error.Error.InvalidUtf8)
 
 /-- [itasca::metadata::validate_utf8]: loop body 0:
-    Source: 'src/module.rs', lines 693:4-700:1 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.validate_utf8_loop.body
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -12824,7 +12824,7 @@ def metadata.validate_utf8_loop.body
       ok (done r1)
 
 /-- [itasca::metadata::validate_utf8]: loop 0:
-    Source: 'src/module.rs', lines 693:4-700:1 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.validate_utf8_loop
   (bytes : Slice Std.U8) (i : Std.Usize) :
@@ -12835,14 +12835,14 @@ def metadata.validate_utf8_loop
     i
 
 /-- [itasca::metadata::validate_utf8]:
-    Source: 'src/module.rs', lines 691:0-700:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.validate_utf8
   (bytes : Slice Std.U8) : Result (core.result.Result Unit error.Error) := do
   metadata.validate_utf8_loop bytes 0#usize
 
 /-- [itasca::metadata::decode_name]:
-    Source: 'src/module.rs', lines 703:0-710:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_name
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result ((alloc.vec.Vec Std.U8) × Std.Usize) error.Error)
@@ -12879,7 +12879,7 @@ def metadata.decode_name
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_custom_section]:
-    Source: 'src/module.rs', lines 713:0-723:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_custom_section
   (data : Slice Std.U8) (pos : Std.Usize) («end» : Std.Usize) :
   Result (core.result.Result wasm_types.CustomSection error.Error)
@@ -12900,7 +12900,7 @@ def metadata.decode_custom_section
       wasm_types.CustomSection (core.convert.FromSame error.Error) residual
 
 /-- [itasca::metadata::read_section_header]:
-    Source: 'src/module.rs', lines 428:0-434:1 -/
+    Source: 'src/module.rs' -/
 def metadata.read_section_header
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.U8 × Std.Usize × Std.Usize) error.Error)
@@ -12936,7 +12936,7 @@ def metadata.read_section_header
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::validate_tail_with]: loop body 0:
-    Source: 'src/module.rs', lines 1642:4-1670:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.validate_tail_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
@@ -13011,7 +13011,7 @@ def metadata.validate_tail_with_loop.body
       ok (done (r1, v))
 
 /-- [itasca::metadata::validate_tail_with]: loop 0:
-    Source: 'src/module.rs', lines 1642:4-1670:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.validate_tail_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
@@ -13027,7 +13027,7 @@ def metadata.validate_tail_with_loop
     (v, segments, q, seen_data)
 
 /-- [itasca::metadata::validate_tail_with]:
-    Source: 'src/module.rs', lines 1632:0-1671:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.validate_tail_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
@@ -13039,7 +13039,7 @@ def metadata.validate_tail_with
     (alloc.vec.Vec.new metadata.Data) pos false
 
 /-- [itasca::stream::validate_remaining]:
-    Source: 'src/stream.rs', lines 293:0-319:1 -/
+    Source: 'src/stream.rs' -/
 def stream.validate_remaining
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
   stream.StreamingVisitor V) (module_id : Std.U64)
@@ -13151,7 +13151,7 @@ def stream.validate_remaining
     ok (r1, visitor)
 
 /-- [itasca::metadata::decode_data_count]:
-    Source: 'src/module.rs', lines 1351:0-1365:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_data_count
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -13175,7 +13175,7 @@ def metadata.decode_data_count
       ok (r1, env)
 
 /-- [itasca::metadata::decode_element_initializer]:
-    Source: 'src/module.rs', lines 1276:0-1293:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_element_initializer
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (elem : wasm_types.ElemType) (expressions : Bool)
@@ -13204,7 +13204,7 @@ def metadata.decode_element_initializer
         error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::declare_initializer]:
-    Source: 'src/module.rs', lines 1192:0-1196:1 -/
+    Source: 'src/module.rs' -/
 def metadata.declare_initializer
   (env : metadata.Env) (init : wasm_types.ConstExpr) :
   Result metadata.Env
@@ -13222,7 +13222,7 @@ def metadata.declare_initializer
   | wasm_types.ConstExpr.GlobalGet _ => ok env
 
 /-- [itasca::metadata::decode_element_initializers]: loop body 0:
-    Source: 'src/module.rs', lines 1308:4-1317:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_element_initializers_loop.body
   (data : Slice Std.U8) (elem : wasm_types.ElemType) (expressions : Bool)
@@ -13253,7 +13253,7 @@ def metadata.decode_element_initializers_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_element_initializers]: loop 0:
-    Source: 'src/module.rs', lines 1308:4-1317:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_element_initializers_loop
   (data : Slice Std.U8) (env : metadata.Env) (elem : wasm_types.ElemType)
@@ -13269,7 +13269,7 @@ def metadata.decode_element_initializers_loop
     (env, q, init, i)
 
 /-- [itasca::metadata::decode_element_initializers]:
-    Source: 'src/module.rs', lines 1296:0-1318:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_element_initializers
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (elem : wasm_types.ElemType) (expressions : Bool)
@@ -13292,7 +13292,7 @@ def metadata.decode_element_initializers
     ok (r1, env)
 
 /-- [itasca::metadata::decode_element_header]:
-    Source: 'src/module.rs', lines 1198:0-1273:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_element_header
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14035,7 +14035,7 @@ def metadata.decode_element_header
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_element]:
-    Source: 'src/module.rs', lines 1320:0-1329:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_element
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14069,7 +14069,7 @@ def metadata.decode_element
     ok (r1, env)
 
 /-- [itasca::metadata::decode_element_section]: loop body 0:
-    Source: 'src/module.rs', lines 1340:4-1348:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_element_section_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -14095,7 +14095,7 @@ def metadata.decode_element_section_loop.body
       ok (done (r1, env1))
 
 /-- [itasca::metadata::decode_element_section]: loop 0:
-    Source: 'src/module.rs', lines 1340:4-1348:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_element_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -14108,7 +14108,7 @@ def metadata.decode_element_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_element_section]:
-    Source: 'src/module.rs', lines 1331:0-1349:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_element_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14127,7 +14127,7 @@ def metadata.decode_element_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_start_section]:
-    Source: 'src/module.rs', lines 1139:0-1150:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_start_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
@@ -14160,7 +14160,7 @@ def metadata.decode_start_section
     ok (r1, env)
 
 /-- [itasca::metadata::export_desc]:
-    Source: 'src/module.rs', lines 1082:0-1111:1 -/
+    Source: 'src/module.rs' -/
 def metadata.export_desc
   (env : metadata.Env) (kind : Std.U8) (idx : Std.U32) :
   Result (core.result.Result metadata.ExportDesc error.Error)
@@ -14190,7 +14190,7 @@ def metadata.export_desc
   | _ => ok (core.result.Result.Err (error.Error.InvalidType kind))
 
 /-- [itasca::metadata::names_equal]: loop body 0:
-    Source: 'src/module.rs', lines 1057:4-1065:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.names_equal_loop.body
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) :
@@ -14208,7 +14208,7 @@ def metadata.names_equal_loop.body
          ok (cont i4)
 
 /-- [itasca::metadata::names_equal]: loop 0:
-    Source: 'src/module.rs', lines 1057:4-1065:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.names_equal_loop
   (a : Slice Std.U8) (b : Slice Std.U8) (i : Std.Usize) : Result Bool := do
@@ -14217,7 +14217,7 @@ def metadata.names_equal_loop
     i
 
 /-- [itasca::metadata::names_equal]:
-    Source: 'src/module.rs', lines 1052:0-1066:1 -/
+    Source: 'src/module.rs' -/
 def metadata.names_equal
   (a : Slice Std.U8) (b : Slice Std.U8) : Result Bool := do
   let i := Slice.len a
@@ -14227,7 +14227,7 @@ def metadata.names_equal
   else metadata.names_equal_loop a b 0#usize
 
 /-- [itasca::metadata::export_name_taken]: loop body 0:
-    Source: 'src/module.rs', lines 1071:4-1080:1 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.export_name_taken_loop.body
   (env : metadata.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -14248,7 +14248,7 @@ def metadata.export_name_taken_loop.body
          ok (cont i2)
 
 /-- [itasca::metadata::export_name_taken]: loop 0:
-    Source: 'src/module.rs', lines 1071:4-1080:1 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.export_name_taken_loop
   (env : metadata.Env) («name» : Slice Std.U8) (i : Std.Usize) :
@@ -14259,14 +14259,14 @@ def metadata.export_name_taken_loop
     i
 
 /-- [itasca::metadata::export_name_taken]:
-    Source: 'src/module.rs', lines 1069:0-1080:1 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.export_name_taken
   (env : metadata.Env) («name» : Slice Std.U8) : Result Bool := do
   metadata.export_name_taken_loop env «name» 0#usize
 
 /-- [itasca::metadata::decode_export_section]: loop body 0:
-    Source: 'src/module.rs', lines 1117:4-1134:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_export_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
@@ -14338,7 +14338,7 @@ def metadata.decode_export_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_export_section]: loop 0:
-    Source: 'src/module.rs', lines 1117:4-1134:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_export_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
@@ -14351,7 +14351,7 @@ def metadata.decode_export_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_export_section]:
-    Source: 'src/module.rs', lines 1113:0-1135:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_export_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
@@ -14369,7 +14369,7 @@ def metadata.decode_export_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_global_type]:
-    Source: 'src/module.rs', lines 605:0-629:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_global_type
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result (wasm_types.GlobalType × Std.Usize) error.Error)
@@ -14402,7 +14402,7 @@ def metadata.decode_global_type
       residual
 
 /-- [itasca::metadata::decode_global_section]: loop body 0:
-    Source: 'src/module.rs', lines 1038:4-1049:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_global_section_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -14441,7 +14441,7 @@ def metadata.decode_global_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_global_section]: loop 0:
-    Source: 'src/module.rs', lines 1038:4-1049:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_global_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -14454,7 +14454,7 @@ def metadata.decode_global_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_global_section]:
-    Source: 'src/module.rs', lines 1029:0-1050:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_global_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14473,7 +14473,7 @@ def metadata.decode_global_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_limits]:
-    Source: 'src/module.rs', lines 527:0-547:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_limits
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.Limits × Std.Usize) error.Error)
@@ -14522,7 +14522,7 @@ def metadata.decode_limits
       residual
 
 /-- [itasca::metadata::decode_mem_type]:
-    Source: 'src/module.rs', lines 598:0-602:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_mem_type
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (wasm_types.MemType × Std.Usize) error.Error)
@@ -14547,7 +14547,7 @@ def metadata.decode_mem_type
       residual
 
 /-- [itasca::metadata::decode_memory_section]: loop body 0:
-    Source: 'src/module.rs', lines 1015:4-1026:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_memory_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
@@ -14578,7 +14578,7 @@ def metadata.decode_memory_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_memory_section]: loop 0:
-    Source: 'src/module.rs', lines 1015:4-1026:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_memory_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
@@ -14591,7 +14591,7 @@ def metadata.decode_memory_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_memory_section]:
-    Source: 'src/module.rs', lines 1011:0-1027:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_memory_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
@@ -14609,7 +14609,7 @@ def metadata.decode_memory_section
     ok (r1, env)
 
 /-- [itasca::metadata::check_table_count]:
-    Source: 'src/module.rs', lines 585:0-595:1 -/
+    Source: 'src/module.rs' -/
 def metadata.check_table_count
   (env : metadata.Env) (profile : ValidationProfile) :
   Result (core.result.Result Unit error.Error)
@@ -14623,7 +14623,7 @@ def metadata.check_table_count
   | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
 
 /-- [itasca::metadata::decode_table_type]:
-    Source: 'src/module.rs', lines 567:0-582:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_table_type
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result (wasm_types.TableType × Std.Usize) error.Error)
@@ -14657,7 +14657,7 @@ def metadata.decode_table_type
       residual
 
 /-- [itasca::metadata::decode_table_section]: loop body 0:
-    Source: 'src/module.rs', lines 999:4-1008:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_table_section_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -14693,7 +14693,7 @@ def metadata.decode_table_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_table_section]: loop 0:
-    Source: 'src/module.rs', lines 999:4-1008:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_table_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -14706,7 +14706,7 @@ def metadata.decode_table_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_table_section]:
-    Source: 'src/module.rs', lines 990:0-1009:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_table_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14725,7 +14725,7 @@ def metadata.decode_table_section
     ok (r1, env)
 
 /-- [itasca::metadata::copy_func_type]:
-    Source: 'src/module.rs', lines 855:0-860:1 -/
+    Source: 'src/module.rs' -/
 def metadata.copy_func_type
   (ft : wasm_types.FuncType) : Result wasm_types.FuncType := do
   let s := alloc.vec.Vec.deref ft.params
@@ -14735,7 +14735,7 @@ def metadata.copy_func_type
   ok { params := v, results := v1 }
 
 /-- [itasca::metadata::lookup_type]:
-    Source: 'src/module.rs', lines 863:0-869:1 -/
+    Source: 'src/module.rs' -/
 def metadata.lookup_type
   (env : metadata.Env) (idx : Std.U32) :
   Result (core.result.Result wasm_types.FuncType error.Error)
@@ -14752,7 +14752,7 @@ def metadata.lookup_type
     ok (core.result.Result.Ok ft1)
 
 /-- [itasca::metadata::decode_function_section]: loop body 0:
-    Source: 'src/module.rs', lines 977:4-987:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_function_section_loop.body
   (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
@@ -14789,7 +14789,7 @@ def metadata.decode_function_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_function_section]: loop 0:
-    Source: 'src/module.rs', lines 977:4-987:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_function_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
@@ -14802,7 +14802,7 @@ def metadata.decode_function_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_function_section]:
-    Source: 'src/module.rs', lines 973:0-988:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_function_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
@@ -14820,7 +14820,7 @@ def metadata.decode_function_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_import]:
-    Source: 'src/module.rs', lines 894:0-953:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_import
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -14967,7 +14967,7 @@ def metadata.decode_import
     ok (r1, env)
 
 /-- [itasca::metadata::decode_import_section]: loop body 0:
-    Source: 'src/module.rs', lines 964:4-970:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_import_section_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -14991,7 +14991,7 @@ def metadata.decode_import_section_loop.body
       ok (done (r1, env1))
 
 /-- [itasca::metadata::decode_import_section]: loop 0:
-    Source: 'src/module.rs', lines 964:4-970:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_import_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -15004,7 +15004,7 @@ def metadata.decode_import_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_import_section]:
-    Source: 'src/module.rs', lines 955:0-971:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_import_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -15023,7 +15023,7 @@ def metadata.decode_import_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_value_types]: loop body 0:
-    Source: 'src/module.rs', lines 479:4-487:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_value_types_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -15051,7 +15051,7 @@ def metadata.decode_value_types_loop.body
       ok (done r1)
 
 /-- [itasca::metadata::decode_value_types]: loop 0:
-    Source: 'src/module.rs', lines 479:4-487:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_value_types_loop
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -15065,7 +15065,7 @@ def metadata.decode_value_types_loop
     (out, q, i)
 
 /-- [itasca::metadata::decode_value_types]:
-    Source: 'src/module.rs', lines 465:0-488:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_value_types
   (data : Slice Std.U8) (pos : Std.Usize) (limit : Std.Usize)
   (count_error : error.OpError) (profile : ValidationProfile) :
@@ -15089,7 +15089,7 @@ def metadata.decode_value_types
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_func_type]:
-    Source: 'src/module.rs', lines 492:0-524:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_func_type
   (data : Slice Std.U8) (pos : Std.Usize) (profile : ValidationProfile) :
   Result (core.result.Result (wasm_types.FuncType × Std.Usize) error.Error)
@@ -15138,7 +15138,7 @@ def metadata.decode_func_type
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::decode_type_section]: loop body 0:
-    Source: 'src/module.rs', lines 882:4-890:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_type_section_loop.body
   (data : Slice Std.U8) (profile : ValidationProfile) (count : Std.U32)
@@ -15164,7 +15164,7 @@ def metadata.decode_type_section_loop.body
       ok (done (r1, env))
 
 /-- [itasca::metadata::decode_type_section]: loop 0:
-    Source: 'src/module.rs', lines 882:4-890:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_type_section_loop
   (data : Slice Std.U8) (env : metadata.Env) (profile : ValidationProfile)
@@ -15177,7 +15177,7 @@ def metadata.decode_type_section_loop
     (env, q, i)
 
 /-- [itasca::metadata::decode_type_section]:
-    Source: 'src/module.rs', lines 873:0-891:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_type_section
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -15196,7 +15196,7 @@ def metadata.decode_type_section
     ok (r1, env)
 
 /-- [itasca::metadata::decode_env_section]:
-    Source: 'src/module.rs', lines 1378:0-1398:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_env_section
   (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -15216,7 +15216,7 @@ def metadata.decode_env_section
   | _ => ok (core.result.Result.Err (error.Error.UnknownSection id), env)
 
 /-- [itasca::metadata::section_order]:
-    Source: 'src/module.rs', lines 1368:0-1376:1 -/
+    Source: 'src/module.rs' -/
 def metadata.section_order
   (id : Std.U8) : Result (core.result.Result Std.U8 error.Error) := do
   if 1#u8 <= id
@@ -15237,7 +15237,7 @@ def metadata.section_order
     | _ => ok (core.result.Result.Err (error.Error.UnknownSection id))
 
 /-- [itasca::metadata::read_header]:
-    Source: 'src/module.rs', lines 408:0-424:1 -/
+    Source: 'src/module.rs' -/
 def metadata.read_header
   (data : Slice Std.U8) :
   Result (core.result.Result Std.Usize error.Error)
@@ -15345,7 +15345,7 @@ def metadata.read_header
       Std.Usize error.Error.Insts.CoreConvertFromOpError residual
 
 /-- [itasca::metadata::validate_env_with]: loop body 0:
-    Source: 'src/module.rs', lines 1419:4-1445:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.validate_env_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
@@ -15426,7 +15426,7 @@ def metadata.validate_env_with_loop.body
       ok (done (r1, v))
 
 /-- [itasca::metadata::validate_env_with]: loop 0:
-    Source: 'src/module.rs', lines 1419:4-1445:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.validate_env_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
@@ -15440,7 +15440,7 @@ def metadata.validate_env_with_loop
     (v, env, q, last_id)
 
 /-- [itasca::metadata::validate_env_with]:
-    Source: 'src/module.rs', lines 1411:0-1446:1 -/
+    Source: 'src/module.rs' -/
 def metadata.validate_env_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
   (data : Slice Std.U8) (profile : ValidationProfile) (v : V) :
@@ -15461,7 +15461,7 @@ def metadata.validate_env_with
     ok (r1, v)
 
 /-- [itasca::stream::validate_streaming]:
-    Source: 'src/stream.rs', lines 274:0-290:1
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.validate_streaming
   {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
@@ -15512,7 +15512,7 @@ def stream.validate_streaming
     ok (r1, visitor, env)
 
 /-- [itasca::stream::validate_module_slice]:
-    Source: 'src/stream.rs', lines 507:0-527:1 -/
+    Source: 'src/stream.rs' -/
 def stream.validate_module_slice
   (bytes : Slice Std.U8) (profile : ValidationProfile) :
   Result (core.result.Result metadata.Module error.Error)
@@ -15545,7 +15545,7 @@ def stream.validate_module_slice
       metadata.Module (core.convert.FromSame error.Error) residual
 
 /-- [itasca::metadata::validate_module]:
-    Source: 'src/module.rs', lines 305:0-307:1
+    Source: 'src/module.rs'
     Visibility: public -/
 def metadata.validate_module
   (data : Slice Std.U8) (profile : ValidationProfile) :
@@ -15554,7 +15554,7 @@ def metadata.validate_module
   stream.validate_module_slice data profile
 
 /-- [itasca::metadata::import_types]: loop body 0:
-    Source: 'src/module.rs', lines 318:4-333:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
 def metadata.import_types_loop.body
@@ -15599,7 +15599,7 @@ def metadata.import_types_loop.body
       ok (cont (out1, i3))
 
 /-- [itasca::metadata::import_types]: loop 0:
-    Source: 'src/module.rs', lines 318:4-333:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
 def metadata.import_types_loop
@@ -15612,7 +15612,7 @@ def metadata.import_types_loop
     (out, i)
 
 /-- [itasca::metadata::import_types]:
-    Source: 'src/module.rs', lines 315:0-334:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
 def metadata.import_types
@@ -15623,7 +15623,7 @@ def metadata.import_types
     0#usize
 
 /-- [itasca::metadata::export_types]: loop body 0:
-    Source: 'src/module.rs', lines 343:4-379:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
 def metadata.export_types_loop.body
@@ -15691,7 +15691,7 @@ def metadata.export_types_loop.body
         ok (cont (out1, i3))
 
 /-- [itasca::metadata::export_types]: loop 0:
-    Source: 'src/module.rs', lines 343:4-379:5
+    Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
 def metadata.export_types_loop
@@ -15704,7 +15704,7 @@ def metadata.export_types_loop
     (out, i)
 
 /-- [itasca::metadata::export_types]:
-    Source: 'src/module.rs', lines 340:0-380:1
+    Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
 def metadata.export_types
@@ -15715,7 +15715,7 @@ def metadata.export_types
     0#usize
 
 /-- [itasca::metadata::decode_func_indices]: loop body 0:
-    Source: 'src/module.rs', lines 1157:4-1168:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_func_indices_loop.body
   (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
@@ -15747,7 +15747,7 @@ def metadata.decode_func_indices_loop.body
       ok (done r1)
 
 /-- [itasca::metadata::decode_func_indices]: loop 0:
-    Source: 'src/module.rs', lines 1157:4-1168:5 -/
+    Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_func_indices_loop
   (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
@@ -15761,7 +15761,7 @@ def metadata.decode_func_indices_loop
     (out, q, i)
 
 /-- [itasca::metadata::decode_func_indices]:
-    Source: 'src/module.rs', lines 1152:0-1169:1 -/
+    Source: 'src/module.rs' -/
 def metadata.decode_func_indices
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize)
@@ -15780,7 +15780,7 @@ def metadata.decode_func_indices
       error.Error.Insts.CoreConvertFromOpError residual
 
 /-- Trait implementation: [itasca::metadata::{impl itasca::metadata::ModuleVisitor for itasca::metadata::EmptyModuleVisitor}]
-    Source: 'src/module.rs', lines 1697:0-1697:44 -/
+    Source: 'src/module.rs' -/
 @[reducible]
 def metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor :
   metadata.ModuleVisitor metadata.EmptyModuleVisitor := {
@@ -15788,7 +15788,7 @@ def metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor :
 }
 
 /-- [itasca::metadata::validate_env]:
-    Source: 'src/module.rs', lines 1402:0-1405:1 -/
+    Source: 'src/module.rs' -/
 def metadata.validate_env
   (data : Slice Std.U8) (profile : ValidationProfile) :
   Result (core.result.Result (metadata.Env × Std.Usize) error.Error)
@@ -15800,7 +15800,7 @@ def metadata.validate_env
   ok r
 
 /-- [itasca::metadata::validate_code_entry]:
-    Source: 'src/module.rs', lines 1555:0-1564:1 -/
+    Source: 'src/module.rs' -/
 def metadata.validate_code_entry
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (index : Std.Usize) (profile : ValidationProfile) :
@@ -15813,7 +15813,7 @@ def metadata.validate_code_entry
   ok r
 
 /-- [itasca::metadata::validate_tail]:
-    Source: 'src/module.rs', lines 1618:0-1626:1 -/
+    Source: 'src/module.rs' -/
 def metadata.validate_tail
   (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
   (profile : ValidationProfile) :
@@ -15826,7 +15826,7 @@ def metadata.validate_tail
   ok r
 
 /-- [itasca::metadata::code_entry_extent]:
-    Source: 'src/module.rs', lines 1674:0-1679:1 -/
+    Source: 'src/module.rs' -/
 def metadata.code_entry_extent
   (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize) error.Error)
@@ -15852,7 +15852,7 @@ def metadata.code_entry_extent
       residual
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::scalar]:
-    Source: 'src/runtime/bytecode.rs', lines 88:12-90:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.scalar
   (self : runtime.bytecode.Instr) :
   Result (Option (Std.U16 × Std.U32 × Std.U32 × Std.U32))
@@ -16331,7 +16331,7 @@ def runtime.bytecode.Instr.scalar
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::make_scalar]:
-    Source: 'src/runtime/bytecode.rs', lines 91:12-93:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.make_scalar
   (op : Std.U16) (dst : Std.U32) (a : Std.U32) (b : Std.U32) :
   Result (Option runtime.bytecode.Instr)
@@ -16476,7 +16476,7 @@ def runtime.bytecode.Instr.make_scalar
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::load]:
-    Source: 'src/runtime/bytecode.rs', lines 94:12-96:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.load
   (self : runtime.bytecode.Instr) :
   Result (Option (Std.U16 × Std.U32 × Std.U32 × Std.U32))
@@ -16930,7 +16930,7 @@ def runtime.bytecode.Instr.load
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::make_load]:
-    Source: 'src/runtime/bytecode.rs', lines 97:12-99:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.make_load
   (op : Std.U16) (dst : Std.U32) (addr : Std.U32) (offset : Std.U32) :
   Result (Option runtime.bytecode.Instr)
@@ -16953,7 +16953,7 @@ def runtime.bytecode.Instr.make_load
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::store]:
-    Source: 'src/runtime/bytecode.rs', lines 100:12-102:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.store
   (self : runtime.bytecode.Instr) :
   Result (Option (Std.U16 × Std.U32 × Std.U32 × Std.U32))
@@ -17402,7 +17402,7 @@ def runtime.bytecode.Instr.store
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::make_store]:
-    Source: 'src/runtime/bytecode.rs', lines 103:12-105:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.make_store
   (op : Std.U16) (addr : Std.U32) (value : Std.U32) (offset : Std.U32) :
   Result (Option runtime.bytecode.Instr)
@@ -17425,7 +17425,7 @@ def runtime.bytecode.Instr.make_store
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::simd]:
-    Source: 'src/runtime/bytecode.rs', lines 106:12-108:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.simd
   (self : runtime.bytecode.Instr) :
   Result (Option (Std.U32 × Std.U32 × Std.U32 × Std.U32))
@@ -18100,7 +18100,7 @@ def runtime.bytecode.Instr.simd
     ok (some (255#u32, dst, a, entry))
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::make_simd]:
-    Source: 'src/runtime/bytecode.rs', lines 109:12-111:13 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.make_simd
   (op : Std.U32) (dst : Std.U32) (a : Std.U32) (entry : Std.U32) :
   Result (Option runtime.bytecode.Instr)
@@ -18406,7 +18406,7 @@ def runtime.bytecode.Instr.make_simd
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::Instr}::retarget]:
-    Source: 'src/runtime/bytecode.rs', lines 120:4-127:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.Instr.retarget
   (self : runtime.bytecode.Instr) (target : Std.U32) :
   Result (Option runtime.bytecode.Instr)
@@ -18849,7 +18849,7 @@ def runtime.bytecode.Instr.retarget
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok none
 
 /-- [itasca::runtime::bytecode::simd_shape]:
-    Source: 'src/runtime/bytecode.rs', lines 131:0-159:1 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.simd_shape
   (op : Std.U32) :
   Result (Option (Std.U32 × Std.U32 × Std.U32 × Std.U32))
@@ -19093,7 +19093,7 @@ def runtime.bytecode.simd_shape
   | _ => ok none
 
 /-- [itasca::runtime::bytecode::is_return]:
-    Source: 'src/runtime/bytecode.rs', lines 161:0-163:1 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.is_return
   (instruction : runtime.bytecode.Instr) : Result Bool := do
   match instruction with
@@ -19531,7 +19531,7 @@ def runtime.bytecode.is_return
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::slots_fit]:
-    Source: 'src/runtime/bytecode.rs', lines 166:4-168:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.CompiledFunction.slots_fit
   (self : runtime.bytecode.CompiledFunction) (start : Std.U32) (n : Std.U32) :
   Result Bool
@@ -19542,7 +19542,7 @@ def runtime.bytecode.CompiledFunction.slots_fit
   else ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::other_valid]:
-    Source: 'src/runtime/bytecode.rs', lines 192:4-258:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.CompiledFunction.other_valid
   (self : runtime.bytecode.CompiledFunction)
   (instruction : runtime.bytecode.Instr) :
@@ -20106,7 +20106,7 @@ def runtime.bytecode.CompiledFunction.other_valid
   | runtime.bytecode.Instr.F64x2ConvertLowI32x4U _ _ _ => ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::instruction_valid]:
-    Source: 'src/runtime/bytecode.rs', lines 170:4-189:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.CompiledFunction.instruction_valid
   (self : runtime.bytecode.CompiledFunction)
   (instruction : runtime.bytecode.Instr) :
@@ -20170,7 +20170,7 @@ def runtime.bytecode.CompiledFunction.instruction_valid
     else ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 0:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop0.body
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20243,7 +20243,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop0.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 0:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop0
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20264,7 +20264,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop0
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 1:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop1.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20288,7 +20288,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop1.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 1:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop1
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20302,7 +20302,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop1
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 2:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop2.body
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20339,7 +20339,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop2.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 2:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop2
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20353,7 +20353,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop2
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 3:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop3.body
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20426,7 +20426,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop3.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 3:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop3
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20447,7 +20447,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop3
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 4:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop4.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20471,7 +20471,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop4.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 4:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop4
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20485,7 +20485,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop4
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 5:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop5.body
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20522,7 +20522,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop5.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 5:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop5
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20536,7 +20536,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop5
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 6:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop6.body
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20609,7 +20609,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop6.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 6:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop6
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20630,7 +20630,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop6
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 7:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop7.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20654,7 +20654,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop7.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 7:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop7
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20668,7 +20668,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop7
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 8:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop8.body
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20705,7 +20705,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop8.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 8:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop8
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20719,7 +20719,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop8
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 9:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop9.body
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20792,7 +20792,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop9.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 9:
-    Source: 'src/runtime/bytecode.rs', lines 277:8-293:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop9
   (v : alloc.vec.Vec wasm_types.ValueType) (i : Std.U32) (i1 : Std.U32)
@@ -20813,7 +20813,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop9
     (valid, i7)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 10:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop10.body
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20837,7 +20837,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop10.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 10:
-    Source: 'src/runtime/bytecode.rs', lines 295:8-300:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop10
   (v : alloc.vec.Vec Std.U32) (length : Std.Usize) (valid : Bool)
@@ -20851,7 +20851,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop10
     (valid, i)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop body 11:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop_body]
 def runtime.bytecode.CompiledFunction.well_formed_loop11.body
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20888,7 +20888,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop11.body
   else ok (done valid)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]: loop 11:
-    Source: 'src/runtime/bytecode.rs', lines 302:8-313:9 -/
+    Source: 'src/runtime/bytecode.rs' -/
 @[rust_loop]
 def runtime.bytecode.CompiledFunction.well_formed_loop11
   (v : alloc.vec.Vec runtime.compiler.ControlMap) (i : Std.Usize)
@@ -20902,7 +20902,7 @@ def runtime.bytecode.CompiledFunction.well_formed_loop11
     (valid, i2)
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::well_formed]:
-    Source: 'src/runtime/bytecode.rs', lines 261:4-315:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.CompiledFunction.well_formed
   (self : runtime.bytecode.CompiledFunction) : Result Bool := do
   let length := alloc.vec.Vec.len self.code
@@ -21044,7 +21044,7 @@ def runtime.bytecode.CompiledFunction.well_formed
               else ok false
 
 /-- [itasca::runtime::bytecode::{itasca::runtime::bytecode::CompiledFunction}::synthetic]:
-    Source: 'src/runtime/bytecode.rs', lines 321:4-339:5 -/
+    Source: 'src/runtime/bytecode.rs' -/
 def runtime.bytecode.CompiledFunction.synthetic
   (code : alloc.vec.Vec runtime.bytecode.Instr) (slot_count : Std.U32) :
   Result runtime.bytecode.CompiledFunction
@@ -21069,7 +21069,7 @@ def runtime.bytecode.CompiledFunction.synthetic
     }
 
 /-- [itasca::runtime::value::width]:
-    Source: 'src/runtime/value.rs', lines 6:0-11:1 -/
+    Source: 'src/runtime/value.rs' -/
 def runtime.value.width (ty : wasm_types.ValueType) : Result Std.U32 := do
   match ty with
   | wasm_types.ValueType.I32 => ok 1#u32
@@ -21081,7 +21081,7 @@ def runtime.value.width (ty : wasm_types.ValueType) : Result Std.U32 := do
   | wasm_types.ValueType.ExternRef => ok 1#u32
 
 /-- [itasca::runtime::compiler::operand_at]:
-    Source: 'src/runtime/compiler/mod.rs', lines 399:0-407:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.operand_at
   (before : Slice Std.U32) (depth : Std.Usize) :
   Result (core.result.Result Std.U32 error.VisitError)
@@ -21099,7 +21099,7 @@ def runtime.compiler.operand_at
       ok (core.result.Result.Ok i3)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::operand]:
-    Source: 'src/runtime/compiler/mod.rs', lines 662:4-664:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.operand
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (depth : Std.Usize) :
@@ -21109,7 +21109,7 @@ def runtime.compiler.FunctionCompiler.operand
   runtime.compiler.operand_at s depth
 
 /-- [itasca::runtime::clear]: loop body 0:
-    Source: 'src/runtime/mod.rs', lines 182:4-184:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop_body]
 def runtime.clear_loop.body
   {T : Type} (values : alloc.vec.Vec T) :
@@ -21122,7 +21122,7 @@ def runtime.clear_loop.body
        ok (cont values1)
 
 /-- [itasca::runtime::clear]: loop 0:
-    Source: 'src/runtime/mod.rs', lines 182:4-184:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop]
 def runtime.clear_loop
   {T : Type} (values : alloc.vec.Vec T) : Result (alloc.vec.Vec T) := do
@@ -21131,21 +21131,21 @@ def runtime.clear_loop
     values
 
 /-- [itasca::runtime::clear]:
-    Source: 'src/runtime/mod.rs', lines 181:0-185:1 -/
+    Source: 'src/runtime/mod.rs' -/
 @[reducible]
 def runtime.clear
   {T : Type} (values : alloc.vec.Vec T) : Result (alloc.vec.Vec T) := do
   runtime.clear_loop values
 
 /-- [itasca::runtime::compiler::stack_width]:
-    Source: 'src/runtime/compiler/mod.rs', lines 546:0-551:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.stack_width (ty : code.StackType) : Result Std.U32 := do
   match ty with
   | code.StackType.Val ty1 => runtime.value.width ty1
   | code.StackType.Bot => ok 1#u32
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::Budget<A>}::reject]:
-    Source: 'src/runtime/compiler/mod.rs', lines 116:4-119:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.Budget.reject
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.Budget A)
@@ -21155,7 +21155,7 @@ def runtime.compiler.Budget.reject
   ok (error.VisitError.OutOfMemory, { self with error := (some resource) })
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::Budget<A>}::push]:
-    Source: 'src/runtime/compiler/mod.rs', lines 136:4-142:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.Budget.push
   {A : Type} {T : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.Budget A) (values : alloc.vec.Vec T) (value : T) :
@@ -21174,7 +21174,7 @@ def runtime.compiler.Budget.push
     ok (core.result.Result.Err ve, self1, values1)
 
 /-- [itasca::runtime::compiler::observe_value]:
-    Source: 'src/runtime/compiler/mod.rs', lines 735:0-746:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.observe_value
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (budget : runtime.compiler.Budget A) (before : alloc.vec.Vec Std.U32)
@@ -21206,7 +21206,7 @@ def runtime.compiler.observe_value
     ok (r1, budget1, before1, height)
 
 /-- [itasca::runtime::compiler::observe_values]: loop body 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 756:4-759:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop_body]
 def runtime.compiler.observe_values_loop.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -21234,7 +21234,7 @@ def runtime.compiler.observe_values_loop.body
   else ok (done (result, budget, before, height))
 
 /-- [itasca::runtime::compiler::observe_values]: loop 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 756:4-759:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop]
 def runtime.compiler.observe_values_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -21251,7 +21251,7 @@ def runtime.compiler.observe_values_loop
     (budget, before, height, i, result)
 
 /-- [itasca::runtime::compiler::observe_values]:
-    Source: 'src/runtime/compiler/mod.rs', lines 748:0-761:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
 def runtime.compiler.observe_values
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -21264,7 +21264,7 @@ def runtime.compiler.observe_values
     values 0#usize (core.result.Result.Ok ())
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::observe]:
-    Source: 'src/runtime/compiler/mod.rs', lines 644:4-661:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.observe
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (st : code.OpIterState) :
@@ -21319,7 +21319,7 @@ def runtime.compiler.FunctionCompiler.observe
       { self with budget := b, function := cf, before := v1, height := i })
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::pc]:
-    Source: 'src/runtime/compiler/mod.rs', lines 628:4-634:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.pc
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) :
@@ -21340,7 +21340,7 @@ def runtime.compiler.FunctionCompiler.pc
     ok (core.result.Result.Ok i3, self)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::Budget<A>}::charge]:
-    Source: 'src/runtime/compiler/mod.rs', lines 120:4-135:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.Budget.charge
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.Budget A)
@@ -21411,7 +21411,7 @@ def runtime.compiler.Budget.charge
     ok (core.result.Result.Err ve, self1)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::emit]:
-    Source: 'src/runtime/compiler/mod.rs', lines 635:4-643:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.emit
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A)
@@ -21470,7 +21470,7 @@ def runtime.compiler.FunctionCompiler.emit
     ok (r1, self1)
 
 /-- [itasca::runtime::compiler::bounded_index]:
-    Source: 'src/runtime/compiler/mod.rs', lines 528:0-534:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.bounded_index
   (value : Std.Usize) :
   Result (core.result.Result Std.U32 error.VisitError)
@@ -21482,7 +21482,7 @@ def runtime.compiler.bounded_index
        ok (core.result.Result.Ok i1)
 
 /-- [itasca::runtime::compiler::simd::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::simd_op]:
-    Source: 'src/runtime/compiler/simd.rs', lines 5:4-53:5 -/
+    Source: 'src/runtime/compiler/simd.rs' -/
 def runtime.compiler.simd.FunctionCompiler.simd_op
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (st : code.OpIterState)
@@ -21659,7 +21659,7 @@ def runtime.compiler.simd.FunctionCompiler.simd_op
     else ok (core.result.Result.Err error.VisitError.OutOfMemory, self)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::pair]:
-    Source: 'src/runtime/compiler/mod.rs', lines 677:4-681:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.pair
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (a : Std.U32) (b : Std.U32) :
@@ -21700,7 +21700,7 @@ def runtime.compiler.FunctionCompiler.pair
     ok (r1, self)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::copy]:
-    Source: 'src/runtime/compiler/mod.rs', lines 666:4-676:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.copy
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (dst : Std.U32) (src : Std.U32)
@@ -21722,7 +21722,7 @@ def runtime.compiler.FunctionCompiler.copy
       runtime.compiler.FunctionCompiler.emit platformAllocInst self instruction
 
 /-- [itasca::runtime::compiler::lower::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::finish_op]:
-    Source: 'src/runtime/compiler/lower.rs', lines 95:4-98:5 -/
+    Source: 'src/runtime/compiler/lower.rs' -/
 def runtime.compiler.lower.FunctionCompiler.finish_op
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (st : code.OpIterState)
@@ -21743,7 +21743,7 @@ def runtime.compiler.lower.FunctionCompiler.finish_op
     ok (r1, self1)
 
 /-- [itasca::runtime::compiler::lower::scalar_binary]:
-    Source: 'src/runtime/compiler/lower.rs', lines 12:0-91:1 -/
+    Source: 'src/runtime/compiler/lower.rs' -/
 def runtime.compiler.lower.scalar_binary (opcode : Std.U16) : Result Bool := do
   match opcode with
   | 70#uscalar => ok true
@@ -21825,7 +21825,7 @@ def runtime.compiler.lower.scalar_binary (opcode : Std.U16) : Result Bool := do
   | _ => ok false
 
 /-- [itasca::runtime::compiler::lower::top_is_v128]:
-    Source: 'src/runtime/compiler/lower.rs', lines 4:0-10:1 -/
+    Source: 'src/runtime/compiler/lower.rs' -/
 def runtime.compiler.lower.top_is_v128
   (values : Slice code.StackType) : Result Bool := do
   let b ← core.slice.Slice.is_empty values
@@ -21848,7 +21848,7 @@ def runtime.compiler.lower.top_is_v128
     | code.StackType.Bot => ok false
 
 /-- [itasca::runtime::compiler::lower::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::op]:
-    Source: 'src/runtime/compiler/lower.rs', lines 105:4-321:5 -/
+    Source: 'src/runtime/compiler/lower.rs' -/
 def runtime.compiler.lower.FunctionCompiler.op
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (st : code.OpIterState)
@@ -29064,7 +29064,7 @@ def runtime.compiler.lower.FunctionCompiler.op
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_ref_is_null]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_is_null
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29076,7 +29076,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_is_null
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_memory_copy]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_copy
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29088,7 +29088,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_copy
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_memory_fill]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_fill
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29100,7 +29100,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_fill
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_extend8_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_extend8_s
@@ -29113,7 +29113,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_extend16_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_extend16_s
@@ -29126,7 +29126,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_extend8_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_extend8_s
@@ -29139,7 +29139,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_extend16_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_extend16_s
@@ -29152,7 +29152,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_extend32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_extend32_s
@@ -29165,7 +29165,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_sat_f32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_sat_f32_s
@@ -29178,7 +29178,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_sat_f32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_sat_f32_u
@@ -29191,7 +29191,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_sat_f64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_sat_f64_s
@@ -29204,7 +29204,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_sat_f64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_sat_f64_u
@@ -29217,7 +29217,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_sat_f32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_sat_f32_s
@@ -29230,7 +29230,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_sat_f32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_sat_f32_u
@@ -29243,7 +29243,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_sat_f64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_sat_f64_s
@@ -29256,7 +29256,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_sat_f64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_sat_f64_u
@@ -29269,7 +29269,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_nop]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_nop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29281,7 +29281,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_nop
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_memory_size]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_size
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29293,7 +29293,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_size
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_memory_grow]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_grow
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29305,7 +29305,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_grow
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_eqz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_eqz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29317,7 +29317,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_eqz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_eq]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_eq
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29329,7 +29329,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_eq
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_ne]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ne
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29341,7 +29341,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ne
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_lt_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_lt_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29353,7 +29353,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_lt_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_lt_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_lt_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29365,7 +29365,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_lt_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_gt_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_gt_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29377,7 +29377,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_gt_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_gt_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_gt_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29389,7 +29389,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_gt_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_le_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_le_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29401,7 +29401,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_le_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_le_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_le_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29413,7 +29413,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_le_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_ge_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ge_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29425,7 +29425,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ge_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_ge_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ge_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29437,7 +29437,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ge_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_eqz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_eqz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29449,7 +29449,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_eqz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_eq]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_eq
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29461,7 +29461,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_eq
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_ne]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ne
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29473,7 +29473,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ne
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_lt_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_lt_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29485,7 +29485,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_lt_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_lt_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_lt_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29497,7 +29497,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_lt_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_gt_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_gt_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29509,7 +29509,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_gt_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_gt_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_gt_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29521,7 +29521,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_gt_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_le_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_le_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29533,7 +29533,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_le_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_le_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_le_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29545,7 +29545,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_le_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_ge_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ge_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29557,7 +29557,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ge_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_ge_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ge_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29569,7 +29569,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ge_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_eq]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_eq
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29581,7 +29581,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_eq
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_ne]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ne
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29593,7 +29593,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ne
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_lt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_lt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29605,7 +29605,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_lt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_gt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_gt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29617,7 +29617,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_gt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_le]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_le
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29629,7 +29629,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_le
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_ge]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ge
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29641,7 +29641,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ge
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_eq]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_eq
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29653,7 +29653,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_eq
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_ne]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ne
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29665,7 +29665,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ne
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_lt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_lt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29677,7 +29677,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_lt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_gt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_gt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29689,7 +29689,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_gt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_le]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_le
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29701,7 +29701,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_le
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_ge]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ge
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29713,7 +29713,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ge
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_sub]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_sub
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29725,7 +29725,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_sub
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_mul]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_mul
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29737,7 +29737,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_mul
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_div_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_div_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29749,7 +29749,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_div_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_div_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_div_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29761,7 +29761,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_div_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_rem_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rem_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29773,7 +29773,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rem_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_rem_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rem_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29785,7 +29785,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rem_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_and]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_and
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29797,7 +29797,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_and
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_or]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_or
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29809,7 +29809,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_or
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_xor]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_xor
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29821,7 +29821,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_xor
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_shl]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shl
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29833,7 +29833,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shl
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_shr_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shr_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29845,7 +29845,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shr_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_shr_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shr_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29857,7 +29857,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_shr_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_rotl]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rotl
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29869,7 +29869,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rotl
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_rotr]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rotr
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29881,7 +29881,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_rotr
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_add]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_add
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29893,7 +29893,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_add
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_sub]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_sub
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29905,7 +29905,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_sub
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_mul]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_mul
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29917,7 +29917,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_mul
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_div_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_div_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29929,7 +29929,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_div_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_div_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_div_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29941,7 +29941,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_div_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_rem_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rem_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29953,7 +29953,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rem_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_rem_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rem_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29965,7 +29965,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rem_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_and]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_and
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29977,7 +29977,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_and
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_or]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_or
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -29989,7 +29989,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_or
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_xor]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_xor
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30001,7 +30001,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_xor
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_shl]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shl
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30013,7 +30013,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shl
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_shr_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shr_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30025,7 +30025,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shr_s
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_shr_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shr_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30037,7 +30037,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_shr_u
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_rotl]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rotl
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30049,7 +30049,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rotl
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_rotr]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rotr
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30061,7 +30061,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_rotr
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_add]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_add
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30073,7 +30073,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_add
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_sub]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_sub
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30085,7 +30085,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_sub
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_mul]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_mul
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30097,7 +30097,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_mul
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_div]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_div
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30109,7 +30109,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_div
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_min]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_min
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30121,7 +30121,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_min
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_max]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_max
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30133,7 +30133,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_max
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_copysign]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_copysign
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30145,7 +30145,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_copysign
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_add]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_add
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30157,7 +30157,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_add
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_sub]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_sub
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30169,7 +30169,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_sub
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_mul]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_mul
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30181,7 +30181,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_mul
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_div]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_div
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30193,7 +30193,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_div
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_min]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_min
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30205,7 +30205,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_min
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_max]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_max
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30217,7 +30217,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_max
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_copysign]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_copysign
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30229,7 +30229,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_copysign
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_clz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_clz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30241,7 +30241,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_clz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_ctz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ctz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30253,7 +30253,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_ctz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_popcnt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_popcnt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30265,7 +30265,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_popcnt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_add]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_add
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30277,7 +30277,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_add
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_clz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_clz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30289,7 +30289,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_clz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_ctz]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ctz
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30301,7 +30301,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_ctz
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_popcnt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_popcnt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30313,7 +30313,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_popcnt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_abs]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_abs
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30325,7 +30325,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_abs
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_neg]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_neg
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30337,7 +30337,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_neg
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_ceil]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ceil
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30349,7 +30349,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_ceil
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_floor]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_floor
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30361,7 +30361,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_floor
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_trunc]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_trunc
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30373,7 +30373,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_trunc
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_nearest]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_nearest
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30385,7 +30385,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_nearest
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_sqrt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_sqrt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30397,7 +30397,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_sqrt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_abs]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_abs
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30409,7 +30409,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_abs
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_neg]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_neg
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30421,7 +30421,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_neg
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_ceil]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ceil
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30433,7 +30433,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_ceil
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_floor]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_floor
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30445,7 +30445,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_floor
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_trunc]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_trunc
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30457,7 +30457,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_trunc
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_nearest]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_nearest
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30469,7 +30469,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_nearest
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_sqrt]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_sqrt
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30481,7 +30481,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_sqrt
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_wrap_i64]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_wrap_i64
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30493,7 +30493,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_wrap_i64
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_f32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_f32_s
@@ -30506,7 +30506,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_f32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_f32_u
@@ -30519,7 +30519,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_f64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_f64_s
@@ -30532,7 +30532,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_trunc_f64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_trunc_f64_u
@@ -30545,7 +30545,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_extend_i32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_extend_i32_s
@@ -30558,7 +30558,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_extend_i32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_extend_i32_u
@@ -30571,7 +30571,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_f32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_f32_s
@@ -30584,7 +30584,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_f32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_f32_u
@@ -30597,7 +30597,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_f64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_f64_s
@@ -30610,7 +30610,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_trunc_f64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_trunc_f64_u
@@ -30623,7 +30623,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_convert_i32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_convert_i32_s
@@ -30636,7 +30636,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_convert_i32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_convert_i32_u
@@ -30649,7 +30649,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_convert_i64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_convert_i64_s
@@ -30662,7 +30662,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_convert_i64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_convert_i64_u
@@ -30675,7 +30675,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_demote_f64]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_demote_f64
@@ -30688,7 +30688,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_convert_i32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_convert_i32_s
@@ -30701,7 +30701,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_convert_i32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_convert_i32_u
@@ -30714,7 +30714,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_convert_i64_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_convert_i64_s
@@ -30727,7 +30727,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_convert_i64_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_convert_i64_u
@@ -30740,7 +30740,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_promote_f32]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_promote_f32
@@ -30753,7 +30753,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_reinterpret_f32]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_reinterpret_f32
@@ -30766,7 +30766,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_reinterpret_f64]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_reinterpret_f64
@@ -30779,7 +30779,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_reinterpret_i32]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_reinterpret_i32
@@ -30792,7 +30792,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_reinterpret_i64]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 7:8-7:94
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_reinterpret_i64
@@ -30805,7 +30805,7 @@ def
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_ref_func]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_func
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30818,7 +30818,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_func
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_get]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_get
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30831,7 +30831,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_get
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_set]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_set
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30844,7 +30844,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_set
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_memory_init]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_init
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30857,7 +30857,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_memory_init
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_data_drop]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_data_drop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30870,7 +30870,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_data_drop
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_elem_drop]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_elem_drop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30883,7 +30883,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_elem_drop
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_grow]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_grow
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30896,7 +30896,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_grow
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_size]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_size
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30909,7 +30909,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_size
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_fill]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_fill
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30922,7 +30922,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_fill
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_call]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30935,7 +30935,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_local_get]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_get
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30948,7 +30948,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_get
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_local_set]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_set
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30961,7 +30961,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_set
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_local_tee]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_tee
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30974,7 +30974,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_tee
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_global_get]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_get
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -30987,7 +30987,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_get
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_global_set]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 12:8-14:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_set
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31000,7 +31000,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_set
     index 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_load]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31013,7 +31013,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31026,7 +31026,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_load]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_load
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31039,7 +31039,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_load
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_load]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_load
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31052,7 +31052,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_load
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_load8_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load8_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31065,7 +31065,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load8_s
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_load8_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load8_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31078,7 +31078,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load8_u
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_load16_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load16_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31091,7 +31091,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load16_s
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_load16_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load16_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31104,7 +31104,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_load16_u
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load8_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load8_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31117,7 +31117,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load8_s
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load8_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load8_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31130,7 +31130,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load8_u
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load16_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load16_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31143,7 +31143,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load16_s
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load16_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load16_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31156,7 +31156,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load16_u
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load32_s]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load32_s
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31169,7 +31169,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load32_s
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_load32_u]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load32_u
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31182,7 +31182,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_load32_u
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_store]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31195,7 +31195,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_store]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31208,7 +31208,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_store]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_store
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31221,7 +31221,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_store
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_store]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_store
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31234,7 +31234,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_store
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_store8]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store8
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31247,7 +31247,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store8
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_store16]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store16
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31260,7 +31260,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_store16
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_store8]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store8
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31273,7 +31273,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store8
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_store16]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store16
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31286,7 +31286,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store16
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_store32]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 19:8-21:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store32
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31299,7 +31299,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_store32
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd_shuffle]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 244:4-246:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_shuffle
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31316,7 +31316,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_shuffle
     0#u32 0#u32 i3
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd_const]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 241:4-243:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_const
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31333,7 +31333,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_const
     0#u32 0#u32 i3
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd_memory_lane]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 226:4-240:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory_lane
@@ -31350,7 +31350,7 @@ def
     arg.offset arg.align i2
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd_memory]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 223:4-225:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31365,7 +31365,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory
     arg.offset arg.align 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd_lane]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 220:4-222:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_lane
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31381,7 +31381,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_lane
     0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_simd]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 217:4-219:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31396,7 +31396,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd
     0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_copy]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 214:4-216:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_copy
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31409,7 +31409,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_copy
     destination source 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_table_init]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 211:4-213:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_init
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31422,7 +31422,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_table_init
     element table 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_ref_null]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 203:4-210:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31442,7 +31442,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null
     reference_type 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f64_const]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 200:4-202:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31456,7 +31456,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const
     0#u32 0#u32 i
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_f32_const]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 197:4-199:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31470,7 +31470,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const
     0#u32 0#u32 i
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i64_const]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 194:4-196:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31485,7 +31485,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const
     0#u32 0#u32 i1
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_i32_const]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 191:4-193:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31500,7 +31500,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const
     0#u32 0#u32 i1
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_select_typed]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 188:4-190:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select_typed
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31513,7 +31513,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select_typed
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_select]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 185:4-187:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31526,7 +31526,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_drop]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 182:4-184:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_drop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31539,7 +31539,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_drop
     0#u32 0#u32 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_call_indirect]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 179:4-181:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call_indirect
@@ -31553,7 +31553,7 @@ def
     type_idx table_idx 0#u128
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_unreachable]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 172:4-178:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31579,7 +31579,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_return]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 163:4-171:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -31618,7 +31618,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::patch]:
-    Source: 'src/runtime/compiler/control.rs', lines 100:4-106:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.FunctionCompiler.patch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (pc : Std.Usize)
@@ -31647,7 +31647,7 @@ def runtime.compiler.control.FunctionCompiler.patch
     ok (r1, self)
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::branch]:
-    Source: 'src/runtime/compiler/control.rs', lines 51:4-99:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.FunctionCompiler.branch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (depth : Std.U32)
@@ -33060,7 +33060,7 @@ def runtime.compiler.control.FunctionCompiler.branch
     ok (r1, self)
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::table_branch]:
-    Source: 'src/runtime/compiler/control.rs', lines 46:4-50:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.FunctionCompiler.table_branch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (index : Std.Usize) :
@@ -33104,7 +33104,7 @@ def runtime.compiler.control.FunctionCompiler.table_branch
     ok (r1, self1)
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::lower_table_branches]: loop body 0:
-    Source: 'src/runtime/compiler/control.rs', lines 40:8-43:9 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 @[rust_loop_body]
 def runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33141,7 +33141,7 @@ def runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body
       self.table_depths, result))
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::lower_table_branches]: loop 0:
-    Source: 'src/runtime/compiler/control.rs', lines 40:8-43:9 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 @[rust_loop]
 def runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33161,7 +33161,7 @@ def runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
     (self, i, result)
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::lower_table_branches]:
-    Source: 'src/runtime/compiler/control.rs', lines 33:4-45:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.FunctionCompiler.lower_table_branches
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) :
@@ -33230,7 +33230,7 @@ def runtime.compiler.control.FunctionCompiler.lower_table_branches
     ok (result, self)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_br_table_label]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 150:4-153:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label
@@ -33256,7 +33256,7 @@ def
     ok (r1, { self with budget := b })
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_br_table]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 154:4-162:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33298,7 +33298,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
     ok (r1, self1)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_br_if]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 144:4-149:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33324,7 +33324,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_br]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 137:4-143:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33351,7 +33351,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
   else runtime.compiler.FunctionCompiler.observe platformAllocInst self st
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_end]: loop body 0:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 117:8-120:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -33394,7 +33394,7 @@ def
       self.table_depths, result))
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_end]: loop 0:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 117:8-120:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop]
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
@@ -33416,7 +33416,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
     (self, i, result)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_end]: loop body 1:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 117:8-120:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -33459,7 +33459,7 @@ def
       self.table_depths, result))
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_end]: loop 1:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 117:8-120:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop]
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1
@@ -33481,7 +33481,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1
     (self, i, result)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_end]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 109:4-136:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33743,7 +33743,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
     ok (r1, { self with frames := v })
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_else]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 87:4-108:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -33894,7 +33894,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
           ok (r1, self1)
 
 /-- [itasca::runtime::compiler::control::stack_height]: loop body 0:
-    Source: 'src/runtime/compiler/control.rs', lines 25:4-28:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 @[rust_loop_body]
 def runtime.compiler.control.stack_height_loop.body
   (values : Slice code.StackType) (count : Std.Usize) (height : Std.U32)
@@ -33911,7 +33911,7 @@ def runtime.compiler.control.stack_height_loop.body
   else ok (done height)
 
 /-- [itasca::runtime::compiler::control::stack_height]: loop 0:
-    Source: 'src/runtime/compiler/control.rs', lines 25:4-28:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 @[rust_loop]
 def runtime.compiler.control.stack_height_loop
   (values : Slice code.StackType) (count : Std.Usize) (height : Std.U32)
@@ -33924,7 +33924,7 @@ def runtime.compiler.control.stack_height_loop
     (height, i)
 
 /-- [itasca::runtime::compiler::control::stack_height]:
-    Source: 'src/runtime/compiler/control.rs', lines 22:0-30:1 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 @[reducible]
 def runtime.compiler.control.stack_height
   (values : Slice code.StackType) (count : Std.Usize) (initial : Std.U32) :
@@ -33933,7 +33933,7 @@ def runtime.compiler.control.stack_height
   runtime.compiler.control.stack_height_loop values count initial 0#usize
 
 /-- [itasca::runtime::compiler::control::block_signature]:
-    Source: 'src/runtime/compiler/control.rs', lines 4:0-20:1 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.block_signature
   (signatures : Slice runtime.compiler.Signature) (bt : signature.BlockType) :
   Result runtime.compiler.Signature
@@ -33961,7 +33961,7 @@ def runtime.compiler.control.block_signature
     Slice.index_usize signatures i
 
 /-- [itasca::runtime::compiler::control::{itasca::runtime::compiler::FunctionCompiler<'_0, A>}::enter]:
-    Source: 'src/runtime/compiler/control.rs', lines 107:4-169:5 -/
+    Source: 'src/runtime/compiler/control.rs' -/
 def runtime.compiler.control.FunctionCompiler.enter
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (st : code.OpIterState)
@@ -34825,7 +34825,7 @@ def runtime.compiler.control.FunctionCompiler.enter
         ok (r1, self1)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_if]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 84:4-86:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_if
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -34838,7 +34838,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_if
     code.LabelKind.Then bt
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_loop]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 81:4-83:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -34851,7 +34851,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_loop
     code.LabelKind.Loop bt
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_block]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 78:4-80:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_block
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -34864,7 +34864,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_block
     code.LabelKind.Block bt
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::add_local]:
-    Source: 'src/runtime/compiler/mod.rs', lines 682:4-693:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.add_local
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A) (ty : wasm_types.ValueType) :
@@ -34940,7 +34940,7 @@ def runtime.compiler.FunctionCompiler.add_local
     ok (r1, { self with budget := b })
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_function_start]: loop body 0:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 40:8-43:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -34981,7 +34981,7 @@ def
       self.table_depths, result))
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_function_start]: loop 0:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 40:8-43:9
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 @[rust_loop]
 def
@@ -35003,7 +35003,7 @@ def
     (self, i, result)
 
 /-- [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}::on_function_start]:
-    Source: 'src/runtime/compiler/callbacks.rs', lines 26:4-77:5
+    Source: 'src/runtime/compiler/callbacks.rs'
     Visibility: public -/
 def
   runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
@@ -35170,7 +35170,7 @@ def
       })
 
 /-- Trait implementation: [itasca::runtime::compiler::callbacks::{impl itasca::code::OpVisitor for itasca::runtime::compiler::FunctionCompiler<'_0, A>}]
-    Source: 'src/runtime/compiler/callbacks.rs', lines 25:0-427:1 -/
+    Source: 'src/runtime/compiler/callbacks.rs' -/
 @[reducible]
 def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor {A : Type}
   (platformAllocInst : runtime.platform.Alloc A) : code.OpVisitor
@@ -35801,7 +35801,7 @@ def runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor {A : Type}
 }
 
 /-- [itasca::runtime::compiler::initialize::emit]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 5:0-12:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.emit
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (budget : runtime.compiler.Budget A)
@@ -35824,7 +35824,7 @@ def runtime.compiler.initialize.emit
     ok (r1, budget1, code)
 
 /-- [itasca::runtime::compiler::initialize::constant]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 14:0-45:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.constant
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (budget : runtime.compiler.Budget A)
@@ -35919,7 +35919,7 @@ def runtime.compiler.initialize.constant
     ok (r, budget1, { function with code := v })
 
 /-- [itasca::runtime::compiler::initialize::expression]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 47:0-69:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.expression
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -35978,14 +35978,14 @@ def runtime.compiler.initialize.expression
     ok (r1, module, budget1)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::env]:
-    Source: 'src/runtime/compiler/mod.rs', lines 208:4-210:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.env
   (self : runtime.compiler.ExecutableModule) : Result metadata.Env := do
   metadata.Module.impl.env self.module
 
 /-- [itasca::runtime::compiler::initialize::lower_global]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 71:0-79:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.lower_global
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36013,7 +36013,7 @@ def runtime.compiler.initialize.lower_global
     ok (r1, module1, budget1)
 
 /-- [itasca::runtime::compiler::initialize::lower_element_value]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 80:0-91:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.lower_element_value
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36048,7 +36048,7 @@ def runtime.compiler.initialize.lower_element_value
     ok (r1, module1, budget1, indices)
 
 /-- [itasca::runtime::compiler::initialize::element_offset]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 92:0-98:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.element_offset
   (env : metadata.Env) (i : Std.Usize) :
   Result (Option wasm_types.ConstExpr)
@@ -36061,7 +36061,7 @@ def runtime.compiler.initialize.element_offset
   | metadata.ElementMode.Declarative => ok none
 
 /-- [itasca::runtime::compiler::initialize::lower_element]: loop body 0:
-    Source: 'src/runtime/compiler/initialize.rs', lines 108:4-111:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_element_loop.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A) (i : Std.Usize)
@@ -36092,7 +36092,7 @@ def runtime.compiler.initialize.lower_element_loop.body
   else ok (done (module, budget, indices, result))
 
 /-- [itasca::runtime::compiler::initialize::lower_element]: loop 0:
-    Source: 'src/runtime/compiler/initialize.rs', lines 108:4-111:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_element_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36110,7 +36110,7 @@ def runtime.compiler.initialize.lower_element_loop
     (module, budget, indices, j, result)
 
 /-- [itasca::runtime::compiler::initialize::lower_element]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 100:0-119:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.lower_element
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36171,14 +36171,14 @@ def runtime.compiler.initialize.lower_element
     ok (r, module1, budget1)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::tail]:
-    Source: 'src/runtime/compiler/mod.rs', lines 212:4-214:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.tail
   (self : runtime.compiler.ExecutableModule) : Result metadata.Tail := do
   metadata.Module.impl.tail self.module
 
 /-- [itasca::runtime::compiler::initialize::lower_data_offset]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 120:0-133:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.lower_data_offset
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36214,7 +36214,7 @@ def runtime.compiler.initialize.lower_data_offset
     ok (r, { module with data_offsets := v }, budget1)
 
 /-- [itasca::runtime::compiler::initialize::emit_element]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 134:0-179:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.emit_element
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36348,7 +36348,7 @@ def runtime.compiler.initialize.emit_element
       ok (r1, budget, function)
 
 /-- [itasca::runtime::compiler::initialize::emit_data]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 180:0-221:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.emit_data
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36452,7 +36452,7 @@ def runtime.compiler.initialize.emit_data
     ok (core.result.Result.Ok (), budget, function)
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop body 0:
-    Source: 'src/runtime/compiler/initialize.rs', lines 228:4-231:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_loop0.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36481,7 +36481,7 @@ def runtime.compiler.initialize.lower_loop0.body
   else ok (done (module, budget, result))
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop 0:
-    Source: 'src/runtime/compiler/initialize.rs', lines 228:4-231:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_loop0
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36498,7 +36498,7 @@ def runtime.compiler.initialize.lower_loop0
     (module, budget, i, result)
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop body 1:
-    Source: 'src/runtime/compiler/initialize.rs', lines 234:4-237:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_loop1.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36527,7 +36527,7 @@ def runtime.compiler.initialize.lower_loop1.body
   else ok (done (module, budget, result))
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop 1:
-    Source: 'src/runtime/compiler/initialize.rs', lines 234:4-237:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_loop1
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36544,7 +36544,7 @@ def runtime.compiler.initialize.lower_loop1
     (module, budget, i, result)
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop body 2:
-    Source: 'src/runtime/compiler/initialize.rs', lines 240:4-243:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_loop2.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36572,7 +36572,7 @@ def runtime.compiler.initialize.lower_loop2.body
   else ok (done (module, budget, result))
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop 2:
-    Source: 'src/runtime/compiler/initialize.rs', lines 240:4-243:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_loop2
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36589,7 +36589,7 @@ def runtime.compiler.initialize.lower_loop2
     (module, budget, i, result)
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop body 3:
-    Source: 'src/runtime/compiler/initialize.rs', lines 247:4-250:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_loop3.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36620,7 +36620,7 @@ def runtime.compiler.initialize.lower_loop3.body
   else ok (done (budget, result, function))
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop 3:
-    Source: 'src/runtime/compiler/initialize.rs', lines 247:4-250:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_loop3
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36638,7 +36638,7 @@ def runtime.compiler.initialize.lower_loop3
     (budget, i, result, function)
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop body 4:
-    Source: 'src/runtime/compiler/initialize.rs', lines 253:4-256:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop_body]
 def runtime.compiler.initialize.lower_loop4.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36668,7 +36668,7 @@ def runtime.compiler.initialize.lower_loop4.body
   else ok (done (budget, result, function))
 
 /-- [itasca::runtime::compiler::initialize::lower]: loop 4:
-    Source: 'src/runtime/compiler/initialize.rs', lines 253:4-256:5 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 @[rust_loop]
 def runtime.compiler.initialize.lower_loop4
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -36686,7 +36686,7 @@ def runtime.compiler.initialize.lower_loop4
     (budget, i, result, function)
 
 /-- [itasca::runtime::compiler::initialize::lower]:
-    Source: 'src/runtime/compiler/initialize.rs', lines 222:0-264:1 -/
+    Source: 'src/runtime/compiler/initialize.rs' -/
 def runtime.compiler.initialize.lower
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (module : runtime.compiler.ExecutableModule)
@@ -36779,7 +36779,7 @@ def runtime.compiler.initialize.lower
     ok (r, module1, budget1)
 
 /-- [itasca::runtime::compiler::{impl core::default::Default for itasca::runtime::compiler::CompileLimits}::default]:
-    Source: 'src/runtime/compiler/mod.rs', lines 48:4-58:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.CompileLimits.Insts.CoreDefaultDefault.default
   : Result runtime.compiler.CompileLimits := do
@@ -36797,7 +36797,7 @@ def runtime.compiler.CompileLimits.Insts.CoreDefaultDefault.default
     }
 
 /-- Trait implementation: [itasca::runtime::compiler::{impl core::default::Default for itasca::runtime::compiler::CompileLimits}]
-    Source: 'src/runtime/compiler/mod.rs', lines 47:0-59:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
 def runtime.compiler.CompileLimits.Insts.CoreDefaultDefault :
   core.default.Default runtime.compiler.CompileLimits := {
@@ -36805,7 +36805,7 @@ def runtime.compiler.CompileLimits.Insts.CoreDefaultDefault :
 }
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::Budget<A>}::copy_state]:
-    Source: 'src/runtime/compiler/mod.rs', lines 105:4-115:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.Budget.copy_state
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.Budget A) :
@@ -36814,14 +36814,14 @@ def runtime.compiler.Budget.copy_state
   ok { self with marker := () }
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::profile]:
-    Source: 'src/runtime/compiler/mod.rs', lines 216:4-218:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.impl.profile
   (self : runtime.compiler.ExecutableModule) : Result ValidationProfile := do
   ok self.profile
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::function_count]:
-    Source: 'src/runtime/compiler/mod.rs', lines 220:4-222:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.function_count
   (self : runtime.compiler.ExecutableModule) : Result Std.Usize := do
@@ -36830,7 +36830,7 @@ def runtime.compiler.ExecutableModule.function_count
   ok (Slice.len s)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::function_stats]:
-    Source: 'src/runtime/compiler/mod.rs', lines 224:4-244:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.function_stats
   (self : runtime.compiler.ExecutableModule) (index : Std.Usize) :
@@ -36870,7 +36870,7 @@ def runtime.compiler.ExecutableModule.function_stats
         })
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::function_source_offsets]:
-    Source: 'src/runtime/compiler/mod.rs', lines 249:4-257:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.function_source_offsets
   (self : runtime.compiler.ExecutableModule) (index : Std.Usize) :
@@ -36891,7 +36891,7 @@ def runtime.compiler.ExecutableModule.function_source_offsets
       ok (some s1)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::ExecutableModule}::function_control_map]:
-    Source: 'src/runtime/compiler/mod.rs', lines 259:4-267:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.ExecutableModule.function_control_map
   (self : runtime.compiler.ExecutableModule) (index : Std.Usize) :
@@ -36912,7 +36912,7 @@ def runtime.compiler.ExecutableModule.function_control_map
       ok (some s1)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::tail_ready]:
-    Source: 'src/runtime/compiler/mod.rs', lines 507:4-510:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready
@@ -36924,7 +36924,7 @@ def
   ok (core.result.Result.Ok (), { self with tail := (some tail) })
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::code_end]:
-    Source: 'src/runtime/compiler/mod.rs', lines 504:4-506:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.code_end
@@ -36936,7 +36936,7 @@ def
   ok (core.result.Result.Ok (), self)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::poll_code_batch]:
-    Source: 'src/runtime/compiler/mod.rs', lines 499:4-503:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
@@ -36950,13 +36950,13 @@ def
   ok (r, { self with completed := v })
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::len]:
-    Source: 'src/stream.rs', lines 159:4-161:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.len (self : stream.CodeBatch) : Result Std.Usize := do
   ok self.num_funcs
 
 /-- [itasca::stream::frame_entry]:
-    Source: 'src/stream.rs', lines 475:0-483:1 -/
+    Source: 'src/stream.rs' -/
 def stream.frame_entry
   (code : Slice Std.U8) (pos : Std.Usize) (index : Std.Usize)
   (code_offset : Std.Usize) :
@@ -36995,7 +36995,7 @@ def stream.frame_entry
       stream.CodeEntry (core.convert.FromSame error.Error) residual
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::next_entry]:
-    Source: 'src/stream.rs', lines 188:4-197:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.next_entry
   (self : stream.CodeBatch) :
@@ -37022,14 +37022,14 @@ def stream.CodeBatch.next_entry
       ok (r1, self)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code_offset]:
-    Source: 'src/stream.rs', lines 180:4-182:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.impl.code_offset
   (self : stream.CodeBatch) : Result Std.Usize := do
   ok self.code_offset
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::finish]:
-    Source: 'src/runtime/compiler/mod.rs', lines 619:4-627:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.finish
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.FunctionCompiler A)
@@ -37051,7 +37051,7 @@ def runtime.compiler.FunctionCompiler.finish
     ok (core.result.Result.Err error, self.budget)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::new]:
-    Source: 'src/runtime/compiler/mod.rs', lines 582:4-618:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.FunctionCompiler.new
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (signatures : Slice runtime.compiler.Signature)
@@ -37093,7 +37093,7 @@ def runtime.compiler.FunctionCompiler.new
     }
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::CompileScheduler<'a, A>}::compile_entry]:
-    Source: 'src/runtime/compiler/mod.rs', lines 715:4-732:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.CompileScheduler.compile_entry
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch) :
@@ -37155,7 +37155,7 @@ def runtime.compiler.CompileScheduler.compile_entry
     ok (r1, self, batch1)
 
 /-- [itasca::runtime::compiler::visitor_result]:
-    Source: 'src/runtime/compiler/mod.rs', lines 521:0-526:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.visitor_result
   (result : core.result.Result Unit error.VisitError) :
   Result (core.result.Result Unit error.Error)
@@ -37166,7 +37166,7 @@ def runtime.compiler.visitor_result
     ok (core.result.Result.Err (error.Error.Visitor err))
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::submit_code_batch]: loop body 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 491:8-494:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -37211,7 +37211,7 @@ def
       batch.error, result))
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::submit_code_batch]: loop 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 491:8-494:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop]
 def
@@ -37234,7 +37234,7 @@ def
     (self, batch, i, result)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::submit_code_batch]:
-    Source: 'src/runtime/compiler/mod.rs', lines 488:4-498:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
@@ -37311,7 +37311,7 @@ def
       })
 
 /-- [itasca::runtime::value::type_slots]: loop body 0:
-    Source: 'src/runtime/value.rs', lines 17:4-23:5 -/
+    Source: 'src/runtime/value.rs' -/
 @[rust_loop_body]
 def runtime.value.type_slots_loop.body
   (types : Slice wasm_types.ValueType) (slots : Std.Usize) (i : Std.Usize)
@@ -37337,7 +37337,7 @@ def runtime.value.type_slots_loop.body
   else ok (done (slots, overflow))
 
 /-- [itasca::runtime::value::type_slots]: loop 0:
-    Source: 'src/runtime/value.rs', lines 17:4-23:5 -/
+    Source: 'src/runtime/value.rs' -/
 @[rust_loop]
 def runtime.value.type_slots_loop
   (types : Slice wasm_types.ValueType) (slots : Std.Usize) (i : Std.Usize)
@@ -37350,7 +37350,7 @@ def runtime.value.type_slots_loop
     (slots, i, overflow)
 
 /-- [itasca::runtime::value::type_slots]:
-    Source: 'src/runtime/value.rs', lines 13:0-29:1 -/
+    Source: 'src/runtime/value.rs' -/
 def runtime.value.type_slots
   (types : Slice wasm_types.ValueType) : Result (Option Std.Usize) := do
   let (slots, overflow) ←
@@ -37360,7 +37360,7 @@ def runtime.value.type_slots
   else ok (some slots)
 
 /-- [itasca::runtime::compiler::type_slots]:
-    Source: 'src/runtime/compiler/mod.rs', lines 536:0-543:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.type_slots
   (types : Slice wasm_types.ValueType) :
   Result (core.result.Result Std.U32 error.Error)
@@ -37380,7 +37380,7 @@ def runtime.compiler.type_slots
       Std.U32 (core.convert.FromSame error.Error) residual
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::CompileScheduler<'a, A>}::capture_func_slots]:
-    Source: 'src/runtime/compiler/mod.rs', lines 709:4-714:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.CompileScheduler.capture_func_slots
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.CompileScheduler A) (env : metadata.Env)
@@ -37407,7 +37407,7 @@ def runtime.compiler.CompileScheduler.capture_func_slots
     ok (r1, self)
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::CompileScheduler<'a, A>}::capture_signature]:
-    Source: 'src/runtime/compiler/mod.rs', lines 697:4-708:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.CompileScheduler.capture_signature
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.CompileScheduler A) (env : metadata.Env)
@@ -37452,7 +37452,7 @@ def runtime.compiler.CompileScheduler.capture_signature
     ok (r1, self)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop body 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 466:8-469:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -37487,7 +37487,7 @@ def
       self.functions, self.tail, self.code_start, self.budget, result))
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 466:8-469:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop]
 def
@@ -37507,7 +37507,7 @@ def
     (self, i, result)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop body 1:
-    Source: 'src/runtime/compiler/mod.rs', lines 472:8-475:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -37542,7 +37542,7 @@ def
       self.functions, self.tail, self.code_start, self.budget, result))
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop 1:
-    Source: 'src/runtime/compiler/mod.rs', lines 472:8-475:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop]
 def
@@ -37562,7 +37562,7 @@ def
     (self, i, result)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop body 2:
-    Source: 'src/runtime/compiler/mod.rs', lines 478:8-481:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop_body]
 def
@@ -37594,7 +37594,7 @@ def
   else ok (done (v, b, result))
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]: loop 2:
-    Source: 'src/runtime/compiler/mod.rs', lines 478:8-481:9
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 @[rust_loop]
 def
@@ -37613,7 +37613,7 @@ def
     (v, b, i, result)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::environment_ready]:
-    Source: 'src/runtime/compiler/mod.rs', lines 455:4-487:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
@@ -37724,7 +37724,7 @@ def
           })
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}::custom_region]:
-    Source: 'src/runtime/compiler/mod.rs', lines 454:4-454:51
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region
@@ -37735,7 +37735,7 @@ def
   ok self
 
 /-- [itasca::runtime::compiler::{impl itasca::metadata::ModuleVisitor for itasca::runtime::compiler::CompileScheduler<'_0, A>}::on_custom_section]:
-    Source: 'src/runtime/compiler/mod.rs', lines 449:4-451:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def
   runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section
@@ -37748,7 +37748,7 @@ def
   ok (core.result.Result.Ok (), self)
 
 /-- Trait implementation: [itasca::runtime::compiler::{impl itasca::metadata::ModuleVisitor for itasca::runtime::compiler::CompileScheduler<'_0, A>}]
-    Source: 'src/runtime/compiler/mod.rs', lines 448:0-452:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
 def runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor {A :
   Type} (platformAllocInst : runtime.platform.Alloc A) : metadata.ModuleVisitor
@@ -37759,7 +37759,7 @@ def runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor {A :
 }
 
 /-- Trait implementation: [itasca::runtime::compiler::{impl itasca::stream::StreamingVisitor<'a> for itasca::runtime::compiler::CompileScheduler<'a, A>}]
-    Source: 'src/runtime/compiler/mod.rs', lines 453:0-511:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
 def runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor {A :
   Type} (platformAllocInst : runtime.platform.Alloc A) :
@@ -37788,7 +37788,7 @@ def runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor {A :
 }
 
 /-- [itasca::runtime::compiler::take_function]:
-    Source: 'src/runtime/compiler/mod.rs', lines 424:0-437:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.take_function
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (budget : runtime.compiler.Budget A)
@@ -37829,7 +37829,7 @@ def runtime.compiler.take_function
     ok (r1, budget, pending1, functions)
 
 /-- [itasca::runtime::compiler::collect_functions]: loop body 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 416:4-419:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop_body]
 def runtime.compiler.collect_functions_loop.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -37861,7 +37861,7 @@ def runtime.compiler.collect_functions_loop.body
   else ok (done (budget, pending, functions, result))
 
 /-- [itasca::runtime::compiler::collect_functions]: loop 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 416:4-419:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop]
 def runtime.compiler.collect_functions_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
@@ -37882,7 +37882,7 @@ def runtime.compiler.collect_functions_loop
     (budget, pending, functions, index, result)
 
 /-- [itasca::runtime::compiler::collect_functions]:
-    Source: 'src/runtime/compiler/mod.rs', lines 409:0-422:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.collect_functions
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (budget : runtime.compiler.Budget A)
@@ -37907,7 +37907,7 @@ def runtime.compiler.collect_functions
     ok (r, budget1, pending1)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::tail]:
-    Source: 'src/runtime/compiler/mod.rs', lines 394:4-396:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
   (self : runtime.compiler.CompileSource) :
@@ -37920,14 +37920,14 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
   ok (core.result.Result.Ok s)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::code_len]:
-    Source: 'src/runtime/compiler/mod.rs', lines 385:4-387:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len
   (self : runtime.compiler.CompileSource) : Result Std.Usize := do
   self.code_end - self.code_start
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::code]:
-    Source: 'src/runtime/compiler/mod.rs', lines 388:4-393:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
   (self : runtime.compiler.CompileSource) (start : Std.Usize)
@@ -37951,7 +37951,7 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
       ok (core.result.Result.Ok s)
 
 /-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::environment]:
-    Source: 'src/runtime/compiler/mod.rs', lines 382:4-384:5
+    Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
 def runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
   (self : runtime.compiler.CompileSource) :
@@ -37963,7 +37963,7 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
   ok (core.result.Result.Ok s)
 
 /-- Trait implementation: [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}]
-    Source: 'src/runtime/compiler/mod.rs', lines 381:0-397:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
 def runtime.compiler.CompileSource.Insts.ItascaStreamSource : stream.Source
   runtime.compiler.CompileSource := {
@@ -37975,7 +37975,7 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource : stream.Source
 }
 
 /-- [itasca::runtime::compiler::code_region]: loop body 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 356:4-372:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop_body]
 def runtime.compiler.code_region_loop.body
   (bytes : Slice Std.U8) (pos : Std.Usize) (found : Bool) (i : Std.Usize)
@@ -38031,7 +38031,7 @@ def runtime.compiler.code_region_loop.body
   else ok (done (i, i1))
 
 /-- [itasca::runtime::compiler::code_region]: loop 0:
-    Source: 'src/runtime/compiler/mod.rs', lines 356:4-372:5 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 @[rust_loop]
 def runtime.compiler.code_region_loop
   (bytes : Slice Std.U8) (pos : Std.Usize) (found : Bool) (i : Std.Usize)
@@ -38044,7 +38044,7 @@ def runtime.compiler.code_region_loop
     (pos, found, i, i1)
 
 /-- [itasca::runtime::compiler::code_region]:
-    Source: 'src/runtime/compiler/mod.rs', lines 352:0-374:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.code_region
   (bytes : Slice Std.U8) : Result (Std.Usize × Std.Usize) := do
   let i := Slice.len bytes
@@ -38052,7 +38052,7 @@ def runtime.compiler.code_region
   runtime.compiler.code_region_loop bytes 8#usize false i i1
 
 /-- [itasca::runtime::compiler::compile_with]:
-    Source: 'src/runtime/compiler/mod.rs', lines 284:0-350:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.compile_with
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (bytes : Slice Std.U8) (profile : ValidationProfile)
@@ -38148,7 +38148,7 @@ def runtime.compiler.compile_with
           resource))
 
 /-- [itasca::runtime::compiler::compile_default_with]:
-    Source: 'src/runtime/compiler/mod.rs', lines 272:0-281:1 -/
+    Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.compile_default_with
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (bytes : Slice Std.U8) (profile : ValidationProfile) :
@@ -38167,7 +38167,7 @@ def runtime.compiler.compile_default_with
         error.VisitError.OutOfMemory))
 
 /-- [itasca::runtime::range]:
-    Source: 'src/runtime/mod.rs', lines 205:0-215:1 -/
+    Source: 'src/runtime/mod.rs' -/
 def runtime.range
   (start : Std.U64) (len : Std.U64) (size : Std.Usize) (trap : runtime.Trap) :
   Result (core.result.Result (core.ops.range.Range Std.Usize)
@@ -38188,7 +38188,7 @@ def runtime.range
       ok (core.result.Result.Ok { start := i3, «end» := i5 })
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 0:
-    Source: 'src/runtime/interp/bulk.rs', lines 52:24-55:25 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop0.body
   (len : Std.U64) (i : Std.Usize) (i1 : Std.Usize) (target : Slice Std.U8)
@@ -38207,7 +38207,7 @@ def runtime.interp.bulk.execute_loop0.body
   else ok (done target)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 0:
-    Source: 'src/runtime/interp/bulk.rs', lines 52:24-55:25 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop0
   (len : Std.U64) (i : Std.Usize) (i1 : Std.Usize) (target : Slice Std.U8)
@@ -38220,7 +38220,7 @@ def runtime.interp.bulk.execute_loop0
     (target, i2)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 1:
-    Source: 'src/runtime/interp/bulk.rs', lines 58:24-61:25 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop1.body
   (i : Std.Usize) (i1 : Std.Usize) (target : Slice Std.U8) (i2 : Std.Usize) :
@@ -38237,7 +38237,7 @@ def runtime.interp.bulk.execute_loop1.body
   else ok (done target)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 1:
-    Source: 'src/runtime/interp/bulk.rs', lines 58:24-61:25 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop1
   (i : Std.Usize) (i1 : Std.Usize) (target : Slice Std.U8) (i2 : Std.Usize) :
@@ -38249,7 +38249,7 @@ def runtime.interp.bulk.execute_loop1
     (target, i2)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 2:
-    Source: 'src/runtime/interp/bulk.rs', lines 139:12-142:13 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop2.body
   (value : Std.U64) (t : Std.Usize) (i : Std.Usize)
@@ -38272,7 +38272,7 @@ def runtime.interp.bulk.execute_loop2.body
   else ok (done v)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 2:
-    Source: 'src/runtime/interp/bulk.rs', lines 139:12-142:13 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop2
   (v : alloc.vec.Vec runtime.store.TableInst) (value : Std.U64) (t : Std.Usize)
@@ -38284,7 +38284,7 @@ def runtime.interp.bulk.execute_loop2
     (v, i1)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 3:
-    Source: 'src/runtime/interp/bulk.rs', lines 112:20-116:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop3.body
   (table : Std.Usize) (i : Std.Usize) (src_table : Std.Usize) (i1 : Std.Usize)
@@ -38315,7 +38315,7 @@ def runtime.interp.bulk.execute_loop3.body
   else ok (done v)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 3:
-    Source: 'src/runtime/interp/bulk.rs', lines 112:20-116:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop3
   (v : alloc.vec.Vec runtime.store.TableInst) (table : Std.Usize)
@@ -38328,7 +38328,7 @@ def runtime.interp.bulk.execute_loop3
     (v, i2)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 4:
-    Source: 'src/runtime/interp/bulk.rs', lines 119:20-123:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop4.body
   (len : Std.U64) (table : Std.Usize) (i : Std.Usize) (src_table : Std.Usize)
@@ -38361,7 +38361,7 @@ def runtime.interp.bulk.execute_loop4.body
   else ok (done v)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 4:
-    Source: 'src/runtime/interp/bulk.rs', lines 119:20-123:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop4
   (v : alloc.vec.Vec runtime.store.TableInst) (len : Std.U64)
@@ -38375,7 +38375,7 @@ def runtime.interp.bulk.execute_loop4
     (v, i2)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 5:
-    Source: 'src/runtime/interp/bulk.rs', lines 119:20-123:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop5.body
   (len : Std.U64) (table : Std.Usize) (dst : core.ops.range.Range Std.Usize)
@@ -38408,7 +38408,7 @@ def runtime.interp.bulk.execute_loop5.body
   else ok (done v)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 5:
-    Source: 'src/runtime/interp/bulk.rs', lines 119:20-123:21 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop5
   (v : alloc.vec.Vec runtime.store.TableInst) (len : Std.U64)
@@ -38423,7 +38423,7 @@ def runtime.interp.bulk.execute_loop5
     (v, i)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop body 6:
-    Source: 'src/runtime/interp/bulk.rs', lines 97:16-101:17 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop_body]
 def runtime.interp.bulk.execute_loop6.body
   (v : alloc.vec.Vec runtime.store.ModuleInst)
@@ -38465,7 +38465,7 @@ def runtime.interp.bulk.execute_loop6.body
   else ok (done v2)
 
 /-- [itasca::runtime::interp::bulk::execute]: loop 6:
-    Source: 'src/runtime/interp/bulk.rs', lines 97:16-101:17 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 @[rust_loop]
 def runtime.interp.bulk.execute_loop6
   (v : alloc.vec.Vec runtime.store.TableInst)
@@ -38481,7 +38481,7 @@ def runtime.interp.bulk.execute_loop6
     (v, i)
 
 /-- [itasca::runtime::interp::bulk::execute]:
-    Source: 'src/runtime/interp/bulk.rs', lines 9:0-147:1 -/
+    Source: 'src/runtime/interp/bulk.rs' -/
 def runtime.interp.bulk.execute
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (store : runtime.store.Store M) (inst : Std.Usize) (function : Std.Usize)
@@ -39786,7 +39786,7 @@ def runtime.interp.bulk.execute
     ok (core.result.Result.Err runtime.ExecError.Internal, store)
 
 /-- [itasca::runtime::interp::float::quiet32]:
-    Source: 'src/runtime/interp/float.rs', lines 5:0-11:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.quiet32 (bits : Std.U32) : Result Std.U32 := do
   let i ← lift (bits &&& 2147483647#u32)
   if i > 2139095040#u32
@@ -39794,7 +39794,7 @@ def runtime.interp.float.quiet32 (bits : Std.U32) : Result Std.U32 := do
   else ok bits
 
 /-- [itasca::runtime::interp::float::quiet64]:
-    Source: 'src/runtime/interp/float.rs', lines 13:0-19:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.quiet64 (bits : Std.U64) : Result Std.U64 := do
   let i ← lift (bits &&& 9223372036854775807#u64)
   if i > 9218868437227405312#u64
@@ -39802,7 +39802,7 @@ def runtime.interp.float.quiet64 (bits : Std.U64) : Result Std.U64 := do
   else ok bits
 
 /-- [itasca::runtime::interp::float::less_float_bits]:
-    Source: 'src/runtime/interp/float.rs', lines 46:0-54:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.less_float_bits
   (a : Std.U64) (b : Std.U64) (sign : Std.U64) : Result Bool := do
   let i ← lift (a &&& sign)
@@ -39817,7 +39817,7 @@ def runtime.interp.float.less_float_bits
     else ok (a > b)
 
 /-- [itasca::runtime::interp::float::compare_float]:
-    Source: 'src/runtime/interp/float.rs', lines 22:0-43:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.compare_float
   (op : Std.U16) (a : Std.U64) (b : Std.U64) (width : Std.U32) :
   Result Bool
@@ -39858,7 +39858,7 @@ def runtime.interp.float.compare_float
       | _ => ok (¬ less)
 
 /-- [itasca::runtime::interp::float::unary32]:
-    Source: 'src/runtime/interp/float.rs', lines 56:0-66:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.unary32
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U16) (bits : Std.U32) :
@@ -39884,7 +39884,7 @@ def runtime.interp.float.unary32
     runtime.interp.float.quiet32 i
 
 /-- [itasca::runtime::interp::float::unary64]:
-    Source: 'src/runtime/interp/float.rs', lines 67:0-77:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.unary64
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U16) (bits : Std.U64) :
@@ -39910,7 +39910,7 @@ def runtime.interp.float.unary64
     runtime.interp.float.quiet64 i
 
 /-- [itasca::runtime::interp::float::binary32]:
-    Source: 'src/runtime/interp/float.rs', lines 78:0-102:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.binary32
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U16) (a : Std.U32) (b : Std.U32) :
@@ -39981,7 +39981,7 @@ def runtime.interp.float.binary32
     ok (i ||| i1)
 
 /-- [itasca::runtime::interp::float::binary64]:
-    Source: 'src/runtime/interp/float.rs', lines 103:0-129:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.binary64
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U16) (a : Std.U64) (b : Std.U64) :
@@ -40044,7 +40044,7 @@ def runtime.interp.float.binary64
     ok (i ||| i1)
 
 /-- [itasca::runtime::interp::float::promote]: loop body 0:
-    Source: 'src/runtime/interp/float.rs', lines 150:4-153:5 -/
+    Source: 'src/runtime/interp/float.rs' -/
 @[rust_loop_body]
 def runtime.interp.float.promote_loop.body
   (fraction : Std.U32) (exponent64 : Std.U64) :
@@ -40058,7 +40058,7 @@ def runtime.interp.float.promote_loop.body
   else ok (done (fraction, exponent64))
 
 /-- [itasca::runtime::interp::float::promote]: loop 0:
-    Source: 'src/runtime/interp/float.rs', lines 150:4-153:5 -/
+    Source: 'src/runtime/interp/float.rs' -/
 @[rust_loop]
 def runtime.interp.float.promote_loop
   (fraction : Std.U32) (exponent64 : Std.U64) :
@@ -40070,7 +40070,7 @@ def runtime.interp.float.promote_loop
     (fraction, exponent64)
 
 /-- [itasca::runtime::interp::float::promote]:
-    Source: 'src/runtime/interp/float.rs', lines 132:0-155:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.promote (bits : Std.U32) : Result Std.U64 := do
   let i ← lift (bits &&& 2147483648#u32)
   let i1 ← lift (UScalar.cast .U64 i)
@@ -40107,7 +40107,7 @@ def runtime.interp.float.promote (bits : Std.U32) : Result Std.U64 := do
         ok (i4 ||| i7)
 
 /-- [itasca::runtime::interp::float::overflow]:
-    Source: 'src/runtime/interp/float.rs', lines 157:0-177:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.overflow
   (negative : Bool) (width : Std.U32) (signed : Bool) (saturating : Bool) :
   Result (core.result.Result Std.U64 runtime.ExecError)
@@ -40137,7 +40137,7 @@ def runtime.interp.float.overflow
       runtime.Trap.IntegerOverflow))
 
 /-- [itasca::runtime::interp::float::trunc_int]:
-    Source: 'src/runtime/interp/float.rs', lines 181:0-240:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.trunc_int
   (bits : Std.U64) (input32 : Bool) (width : Std.U32) (signed : Bool)
   (saturating : Bool) :
@@ -40232,7 +40232,7 @@ def runtime.interp.float.trunc_int
             else ok (core.result.Result.Ok magnitude)
 
 /-- [itasca::runtime::interp::float::scalar]:
-    Source: 'src/runtime/interp/float.rs', lines 243:0-283:1 -/
+    Source: 'src/runtime/interp/float.rs' -/
 def runtime.interp.float.scalar
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (opcode : Std.U16) (a : Std.U64) (b : Std.U64) :
@@ -40918,7 +40918,7 @@ def runtime.interp.float.scalar
   | _ => ok (core.result.Result.Err runtime.ExecError.Internal)
 
 /-- [itasca::runtime::interp::int::compare_int]:
-    Source: 'src/runtime/interp/int.rs', lines 5:0-20:1 -/
+    Source: 'src/runtime/interp/int.rs' -/
 def runtime.interp.int.compare_int
   (op : Std.U16) (x : Std.U64) (y : Std.U64) (width : Std.U32) :
   Result Bool
@@ -40943,7 +40943,7 @@ def runtime.interp.int.compare_int
   | _ => ok (x >= y)
 
 /-- [itasca::runtime::interp::int::scalar]:
-    Source: 'src/runtime/interp/int.rs', lines 28:0-119:1 -/
+    Source: 'src/runtime/interp/int.rs' -/
 def runtime.interp.int.scalar
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (opcode : Std.U16) (a : Std.U64) (b : Std.U64) :
@@ -42057,7 +42057,7 @@ def runtime.interp.int.scalar
   | _ => runtime.interp.float.scalar platformFloatOpsInst opcode a b
 
 /-- [itasca::runtime::interp::memory::address]:
-    Source: 'src/runtime/interp/memory.rs', lines 5:0-19:1 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 def runtime.interp.memory.address
   (addr : Std.U32) (offset : Std.U32) (len : Std.Usize) (bytes : Std.Usize) :
   Result (core.result.Result Std.Usize runtime.ExecError)
@@ -42076,7 +42076,7 @@ def runtime.interp.memory.address
       Std.Usize (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::interp::memory::load]: loop body 0:
-    Source: 'src/runtime/interp/memory.rs', lines 31:4-34:5 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 @[rust_loop_body]
 def runtime.interp.memory.load_loop.body
   (bytes : Slice Std.U8) (n : Std.Usize) (start : Std.Usize) (x : Std.U64)
@@ -42096,7 +42096,7 @@ def runtime.interp.memory.load_loop.body
   else ok (done x)
 
 /-- [itasca::runtime::interp::memory::load]: loop 0:
-    Source: 'src/runtime/interp/memory.rs', lines 31:4-34:5 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 @[rust_loop]
 def runtime.interp.memory.load_loop
   (bytes : Slice Std.U8) (n : Std.Usize) (start : Std.Usize) (x : Std.U64)
@@ -42108,7 +42108,7 @@ def runtime.interp.memory.load_loop
     (x, i)
 
 /-- [itasca::runtime::interp::memory::load]:
-    Source: 'src/runtime/interp/memory.rs', lines 21:0-43:1 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 def runtime.interp.memory.load
   (op : Std.U16) (addr : Std.U32) (offset : Std.U32) (bytes : Slice Std.U8) :
   Result (core.result.Result Std.U64 runtime.ExecError)
@@ -42166,7 +42166,7 @@ def runtime.interp.memory.load
       Std.U64 (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::interp::memory::store]: loop body 0:
-    Source: 'src/runtime/interp/memory.rs', lines 60:4-63:5 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 @[rust_loop_body]
 def runtime.interp.memory.store_loop.body
   (value : Std.U64) (n : Std.Usize) (start : Std.Usize) (bytes : Slice Std.U8)
@@ -42185,7 +42185,7 @@ def runtime.interp.memory.store_loop.body
   else ok (done bytes)
 
 /-- [itasca::runtime::interp::memory::store]: loop 0:
-    Source: 'src/runtime/interp/memory.rs', lines 60:4-63:5 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 @[rust_loop]
 def runtime.interp.memory.store_loop
   (value : Std.U64) (bytes : Slice Std.U8) (n : Std.Usize) (start : Std.Usize)
@@ -42198,7 +42198,7 @@ def runtime.interp.memory.store_loop
     (bytes, i)
 
 /-- [itasca::runtime::interp::memory::store]:
-    Source: 'src/runtime/interp/memory.rs', lines 45:0-65:1 -/
+    Source: 'src/runtime/interp/memory.rs' -/
 def runtime.interp.memory.store
   (op : Std.U16) (addr : Std.U32) (offset : Std.U32) (value : Std.U64)
   (bytes : Slice Std.U8) :
@@ -42228,7 +42228,7 @@ def runtime.interp.memory.store
     ok (r1, bytes)
 
 /-- [itasca::runtime::interp::{itasca::runtime::interp::Execution}::new]:
-    Source: 'src/runtime/interp/mod.rs', lines 34:4-42:5
+    Source: 'src/runtime/interp/mod.rs'
     Visibility: public -/
 def runtime.interp.Execution.new : Result runtime.interp.Execution := do
   ok
@@ -42241,14 +42241,14 @@ def runtime.interp.Execution.new : Result runtime.interp.Execution := do
     }
 
 /-- [itasca::runtime::interp::{impl core::default::Default for itasca::runtime::interp::Execution}::default]:
-    Source: 'src/runtime/interp/mod.rs', lines 28:4-30:5
+    Source: 'src/runtime/interp/mod.rs'
     Visibility: public -/
 def runtime.interp.Execution.Insts.CoreDefaultDefault.default
   : Result runtime.interp.Execution := do
   runtime.interp.Execution.new
 
 /-- Trait implementation: [itasca::runtime::interp::{impl core::default::Default for itasca::runtime::interp::Execution}]
-    Source: 'src/runtime/interp/mod.rs', lines 27:0-31:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[reducible]
 def runtime.interp.Execution.Insts.CoreDefaultDefault : core.default.Default
   runtime.interp.Execution := {
@@ -42256,7 +42256,7 @@ def runtime.interp.Execution.Insts.CoreDefaultDefault : core.default.Default
 }
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::check]:
-    Source: 'src/runtime/store.rs', lines 138:4-144:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.check
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) (id : Std.Usize) :
@@ -42267,7 +42267,7 @@ def runtime.store.Store.check
   else ok (core.result.Result.Err runtime.ExecError.WrongStore)
 
 /-- [itasca::runtime::interp::{itasca::runtime::interp::Execution}::source_offset]:
-    Source: 'src/runtime/interp/mod.rs', lines 44:4-60:5
+    Source: 'src/runtime/interp/mod.rs'
     Visibility: public -/
 def runtime.interp.Execution.source_offset
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -42312,7 +42312,7 @@ def runtime.interp.Execution.source_offset
         (Option Std.Usize) (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::reserve]:
-    Source: 'src/runtime/mod.rs', lines 173:0-179:1 -/
+    Source: 'src/runtime/mod.rs' -/
 def runtime.reserve
   {A : Type} {T : Type} (platformAllocInst : runtime.platform.Alloc A)
   (v : alloc.vec.Vec T) (n : Std.Usize) :
@@ -42326,7 +42326,7 @@ def runtime.reserve
       runtime.ResourceLimit.Allocation), v1)
 
 /-- [itasca::runtime::interp::{itasca::runtime::interp::Execution}::ensure]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 68:12-70:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.Execution.ensure_loop.body
   («end» : Std.Usize) (v : alloc.vec.Vec Std.U64) :
@@ -42339,7 +42339,7 @@ def runtime.interp.Execution.ensure_loop.body
   else ok (done v)
 
 /-- [itasca::runtime::interp::{itasca::runtime::interp::Execution}::ensure]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 68:12-70:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.Execution.ensure_loop
   (v : alloc.vec.Vec Std.U64) («end» : Std.Usize) :
@@ -42350,7 +42350,7 @@ def runtime.interp.Execution.ensure_loop
     v
 
 /-- [itasca::runtime::interp::{itasca::runtime::interp::Execution}::ensure]:
-    Source: 'src/runtime/interp/mod.rs', lines 61:4-73:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.Execution.ensure
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.interp.Execution) («end» : Std.Usize) (limit : Std.Usize) :
@@ -42381,7 +42381,7 @@ def runtime.interp.Execution.ensure
     else ok (core.result.Result.Ok (), self)
 
 /-- [itasca::runtime::interp::interrupt]:
-    Source: 'src/runtime/interp/mod.rs', lines 75:0-80:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.interrupt
   {M : Type} {P : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -42396,7 +42396,7 @@ def runtime.interp.interrupt
     ok (core.result.Result.Err runtime.ExecError.Terminated, platform1)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::check_value]:
-    Source: 'src/runtime/store.rs', lines 158:4-164:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.check_value
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) (v : runtime.Value) :
@@ -42418,7 +42418,7 @@ def runtime.store.Store.check_value
     | some a => runtime.store.Store.check platformMemoryBufferInst self a.store
 
 /-- [itasca::runtime::{itasca::runtime::Value}::value_type]:
-    Source: 'src/runtime/mod.rs', lines 74:4-84:5
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 def runtime.Value.value_type
   (self : runtime.Value) : Result wasm_types.ValueType := do
@@ -42432,7 +42432,7 @@ def runtime.Value.value_type
   | runtime.Value.ExternRef _ => ok wasm_types.ValueType.ExternRef
 
 /-- [itasca::runtime::interp::check_values]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 91:4-97:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.check_values_loop.body
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -42471,7 +42471,7 @@ def runtime.interp.check_values_loop.body
   else ok (done status)
 
 /-- [itasca::runtime::interp::check_values]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 91:4-97:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.check_values_loop
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -42486,7 +42486,7 @@ def runtime.interp.check_values_loop
     (i, status)
 
 /-- [itasca::runtime::interp::check_values]:
-    Source: 'src/runtime/interp/mod.rs', lines 81:0-99:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.check_values
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (store : runtime.store.Store M) (values : Slice runtime.Value)
@@ -42502,7 +42502,7 @@ def runtime.interp.check_values
       types 0#usize (core.result.Result.Ok ())
 
 /-- [itasca::runtime::interp::check_failed]:
-    Source: 'src/runtime/interp/mod.rs', lines 100:0-105:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.check_failed
   (result : core.result.Result Unit runtime.ExecError) : Result Bool := do
   match result with
@@ -42510,7 +42510,7 @@ def runtime.interp.check_failed
   | core.result.Result.Err _ => ok true
 
 /-- [itasca::runtime::value::encode]:
-    Source: 'src/runtime/value.rs', lines 30:0-39:1 -/
+    Source: 'src/runtime/value.rs' -/
 def runtime.value.encode
   (value : runtime.Value) : Result (Std.U64 × Std.U64) := do
   match value with
@@ -42541,7 +42541,7 @@ def runtime.value.encode
       ok (i1, 0#u64)
 
 /-- [itasca::runtime::interp::encode_slot]:
-    Source: 'src/runtime/interp/mod.rs', lines 106:0-112:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.encode_slot
   (slots : Slice Std.U64) (position : Std.Usize) (ty : wasm_types.ValueType)
   (value : runtime.Value) :
@@ -42558,7 +42558,7 @@ def runtime.interp.encode_slot
   else ok (index_mut_back lo)
 
 /-- [itasca::runtime::value::decode]:
-    Source: 'src/runtime/value.rs', lines 40:0-64:1 -/
+    Source: 'src/runtime/value.rs' -/
 def runtime.value.decode
   (ty : wasm_types.ValueType) (lo : Std.U64) (hi : Std.U64) (store : Std.Usize)
   :
@@ -42595,7 +42595,7 @@ def runtime.value.decode
       ok (runtime.Value.ExternRef (some { store, index := i1 }))
 
 /-- [itasca::runtime::interp::decode_slot]:
-    Source: 'src/runtime/interp/mod.rs', lines 113:0-120:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.decode_slot
   (slots : Slice Std.U64) (position : Std.Usize) (ty : wasm_types.ValueType)
   (store : Std.Usize) :
@@ -42612,7 +42612,7 @@ def runtime.interp.decode_slot
   runtime.value.decode ty i1 hi store
 
 /-- [itasca::runtime::interp::type_slots]:
-    Source: 'src/runtime/interp/mod.rs', lines 121:0-123:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.type_slots
   (types : Slice wasm_types.ValueType) :
   Result (core.result.Result Std.Usize runtime.ExecError)
@@ -42622,7 +42622,7 @@ def runtime.interp.type_slots
     runtime.ResourceLimit.Values)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::func_type]:
-    Source: 'src/runtime/store.rs', lines 289:4-292:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.func_type
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -42645,7 +42645,7 @@ def runtime.store.Store.func_type
       wasm_types.FuncType (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::interp::simd_operands]:
-    Source: 'src/runtime/interp/mod.rs', lines 860:8-865:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.simd_operands
   (instruction : runtime.bytecode.Instr) :
   Result (Std.U32 × Std.U32 × Std.U32)
@@ -43121,7 +43121,7 @@ def runtime.interp.simd_operands
     ok (dst, a, entry)
 
 /-- [itasca::runtime::interp::simd::sat]:
-    Source: 'src/runtime/interp/simd.rs', lines 31:0-49:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.sat
   (x : Std.I128) (width : Std.U32) (is_signed : Bool) : Result Std.U64 := do
   let lo ←
@@ -43147,13 +43147,13 @@ def runtime.interp.simd.sat
        else ok (IScalar.hcast .U64 x)
 
 /-- [itasca::runtime::interp::simd::mask]:
-    Source: 'src/runtime/interp/simd.rs', lines 9:0-11:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.mask (width : Std.U32) : Result Std.U128 := do
   let i ← 1#u128 <<< width
   i - 1#u128
 
 /-- [itasca::runtime::interp::simd::put]:
-    Source: 'src/runtime/interp/simd.rs', lines 18:0-21:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.put
   (v : Std.U128) (width : Std.U32) (index : Std.U32) (x : Std.U64) :
   Result Std.U128
@@ -43169,7 +43169,7 @@ def runtime.interp.simd.put
   ok (i3 ||| i6)
 
 /-- [itasca::runtime::interp::simd::signed]:
-    Source: 'src/runtime/interp/simd.rs', lines 15:0-17:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.signed
   (v : Std.U64) (width : Std.U32) : Result Std.I64 := do
   let i ← 64#u32 - width
@@ -43178,7 +43178,7 @@ def runtime.interp.simd.signed
   i2 >>> i
 
 /-- [itasca::runtime::interp::simd::lane]:
-    Source: 'src/runtime/interp/simd.rs', lines 12:0-14:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.lane
   (v : Std.U128) (width : Std.U32) (index : Std.U32) : Result Std.U64 := do
   let i ← width * index
@@ -43188,7 +43188,7 @@ def runtime.interp.simd.lane
   ok (UScalar.cast .U64 i3)
 
 /-- [itasca::runtime::interp::simd::integer_binary_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 569:4-614:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.integer_binary_lanes_loop.body
   (op : Std.U32) (x : Std.U128) (y : Std.U128) (width : Std.U32)
@@ -43254,7 +43254,7 @@ def runtime.interp.simd.integer_binary_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::integer_binary_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 569:4-614:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.integer_binary_lanes_loop
   (op : Std.U32) (x : Std.U128) (y : Std.U128) (width : Std.U32)
@@ -43267,7 +43267,7 @@ def runtime.interp.simd.integer_binary_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::integer_binary_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 565:0-616:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.integer_binary_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   let i ← op - 96#u32
@@ -43276,7 +43276,7 @@ def runtime.interp.simd.integer_binary_lanes
   runtime.interp.simd.integer_binary_lanes_loop op x y width 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::multiply_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 544:4-560:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.multiply_lanes_loop.body
   (op : Std.U32) (x : Std.U128) (y : Std.U128) (result : Std.U128)
@@ -43362,7 +43362,7 @@ def runtime.interp.simd.multiply_lanes_loop.body
     else ok (done result)
 
 /-- [itasca::runtime::interp::simd::multiply_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 544:4-560:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.multiply_lanes_loop
   (op : Std.U32) (x : Std.U128) (y : Std.U128) (result : Std.U128)
@@ -43375,14 +43375,14 @@ def runtime.interp.simd.multiply_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::multiply_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 541:0-562:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[reducible]
 def runtime.interp.simd.multiply_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   runtime.interp.simd.multiply_lanes_loop op x y 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::shift_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 527:4-536:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.shift_lanes_loop.body
   (op : Std.U32) (x : Std.U128) (width : Std.U32) (shift : Std.U32)
@@ -43409,7 +43409,7 @@ def runtime.interp.simd.shift_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::shift_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 527:4-536:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.shift_lanes_loop
   (op : Std.U32) (x : Std.U128) (width : Std.U32) (shift : Std.U32)
@@ -43422,7 +43422,7 @@ def runtime.interp.simd.shift_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::shift_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 522:0-538:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.shift_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   let i ← op - 96#u32
@@ -43433,7 +43433,7 @@ def runtime.interp.simd.shift_lanes
   runtime.interp.simd.shift_lanes_loop op x width shift 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::widen_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 500:4-517:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.widen_lanes_loop.body
   (x : Std.U128) (width : Std.U32) (extmul : Bool) (high : Bool)
@@ -43474,7 +43474,7 @@ def runtime.interp.simd.widen_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::widen_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 500:4-517:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.widen_lanes_loop
   (x : Std.U128) (width : Std.U32) (extmul : Bool) (high : Bool)
@@ -43487,7 +43487,7 @@ def runtime.interp.simd.widen_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::widen_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 491:0-519:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.widen_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   let i ← op - 128#u32
@@ -43506,7 +43506,7 @@ def runtime.interp.simd.widen_lanes
     (variant < 2#u32) y1 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::pairwise_add_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 476:4-486:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.pairwise_add_lanes_loop.body
   (x : Std.U128) (width : Std.U32) (is_signed : Bool) (result : Std.U128)
@@ -43536,7 +43536,7 @@ def runtime.interp.simd.pairwise_add_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::pairwise_add_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 476:4-486:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.pairwise_add_lanes_loop
   (x : Std.U128) (width : Std.U32) (is_signed : Bool) (result : Std.U128)
@@ -43549,7 +43549,7 @@ def runtime.interp.simd.pairwise_add_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::pairwise_add_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 471:0-488:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.pairwise_add_lanes
   (op : Std.U32) (x : Std.U128) : Result Std.U128 := do
   let width ← if op < 126#u32
@@ -43559,7 +43559,7 @@ def runtime.interp.simd.pairwise_add_lanes
   runtime.interp.simd.pairwise_add_lanes_loop x width (i = 0#u32) 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::narrow_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 461:4-466:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.narrow_lanes_loop.body
   (x : Std.U128) (y : Std.U128) (width : Std.U32) (is_signed : Bool)
@@ -43585,7 +43585,7 @@ def runtime.interp.simd.narrow_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::narrow_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 461:4-466:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.narrow_lanes_loop
   (x : Std.U128) (y : Std.U128) (width : Std.U32) (is_signed : Bool)
@@ -43598,7 +43598,7 @@ def runtime.interp.simd.narrow_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::narrow_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 456:0-468:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.narrow_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   let width ← if op < 128#u32
@@ -43608,7 +43608,7 @@ def runtime.interp.simd.narrow_lanes
   runtime.interp.simd.narrow_lanes_loop x y width (i = 1#u32) 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::integer_unary_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 426:4-445:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.integer_unary_lanes_loop.body
   (x : Std.U128) (width : Std.U32) (action : Std.U32) (result : Std.U128)
@@ -43650,7 +43650,7 @@ def runtime.interp.simd.integer_unary_lanes_loop.body
   else ok (done (result, all, signs))
 
 /-- [itasca::runtime::interp::simd::integer_unary_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 426:4-445:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.integer_unary_lanes_loop
   (x : Std.U128) (width : Std.U32) (action : Std.U32) (result : Std.U128)
@@ -43664,7 +43664,7 @@ def runtime.interp.simd.integer_unary_lanes_loop
     (result, all, signs, i)
 
 /-- [itasca::runtime::interp::simd::integer_unary_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 419:0-453:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.integer_unary_lanes
   (op : Std.U32) (x : Std.U128) : Result Std.U128 := do
   let i ← op - 96#u32
@@ -43681,7 +43681,7 @@ def runtime.interp.simd.integer_unary_lanes
        else ok result
 
 /-- [itasca::runtime::interp::simd::float_binary_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 394:4-414:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.float_binary_lanes_loop.body
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43725,7 +43725,7 @@ def runtime.interp.simd.float_binary_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::float_binary_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 394:4-414:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.float_binary_lanes_loop
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43739,7 +43739,7 @@ def runtime.interp.simd.float_binary_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::float_binary_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 389:0-416:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.float_binary_lanes
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U32) (x : Std.U128) (y : Std.U128) :
@@ -43755,7 +43755,7 @@ def runtime.interp.simd.float_binary_lanes
     bin 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::float_unary_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 375:4-384:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.float_unary_lanes_loop.body
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43785,7 +43785,7 @@ def runtime.interp.simd.float_unary_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::float_unary_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 375:4-384:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.float_unary_lanes_loop
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43799,7 +43799,7 @@ def runtime.interp.simd.float_unary_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::float_unary_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 359:0-386:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.float_unary_lanes
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U32) (x : Std.U128) :
@@ -43833,7 +43833,7 @@ def runtime.interp.simd.float_unary_lanes
     0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::convert_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 335:4-356:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.convert_lanes_loop.body
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43957,7 +43957,7 @@ def runtime.interp.simd.convert_lanes_loop.body
   else ok (done (core.result.Result.Ok result))
 
 /-- [itasca::runtime::interp::simd::convert_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 335:4-356:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.convert_lanes_loop
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
@@ -43971,7 +43971,7 @@ def runtime.interp.simd.convert_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::convert_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 327:0-356:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.convert_lanes
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U32) (x : Std.U128) :
@@ -43990,7 +43990,7 @@ def runtime.interp.simd.convert_lanes
     count
 
 /-- [itasca::runtime::interp::simd::select_bits]:
-    Source: 'src/runtime/interp/simd.rs', lines 322:0-324:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.select_bits
   (x : Std.U128) (y : Std.U128) (c : Std.U128) : Result Std.U128 := do
   let i ← lift (x &&& c)
@@ -43999,7 +43999,7 @@ def runtime.interp.simd.select_bits
   ok (i ||| i2)
 
 /-- [itasca::runtime::interp::simd::bitwise_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 312:0-319:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.bitwise_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   match op with
@@ -44010,7 +44010,7 @@ def runtime.interp.simd.bitwise_lanes
   | _ => ok (x ^^^ y)
 
 /-- [itasca::runtime::interp::simd::compare_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 295:4-307:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.compare_lanes_loop.body
   (x : Std.U128) (y : Std.U128) (width : Std.U32) (cmp : Std.U32)
@@ -44041,7 +44041,7 @@ def runtime.interp.simd.compare_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::compare_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 295:4-307:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.compare_lanes_loop
   (x : Std.U128) (y : Std.U128) (width : Std.U32) (cmp : Std.U32)
@@ -44054,7 +44054,7 @@ def runtime.interp.simd.compare_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::compare_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 267:0-309:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.compare_lanes
   (op : Std.U32) (x : Std.U128) (y : Std.U128) : Result Std.U128 := do
   let (width, cmp, float) ←
@@ -44199,7 +44199,7 @@ def runtime.interp.simd.compare_lanes
   runtime.interp.simd.compare_lanes_loop x y width cmp float 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::access_lane]:
-    Source: 'src/runtime/interp/simd.rs', lines 234:0-264:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.access_lane
   (op : Std.U32) (lane_index : Std.U32) (x : Std.U128) (y : Std.U128) :
   Result (core.result.Result Std.U128 runtime.ExecError)
@@ -44275,7 +44275,7 @@ def runtime.interp.simd.access_lane
         ok (core.result.Result.Ok i2)
 
 /-- [itasca::runtime::interp::simd::splat]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 25:4-28:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.splat_loop.body
   (x : Std.U64) (width : Std.U32) (result : Std.U128) (i : Std.U32) :
@@ -44290,7 +44290,7 @@ def runtime.interp.simd.splat_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::splat]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 25:4-28:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.splat_loop
   (x : Std.U64) (width : Std.U32) (result : Std.U128) (i : Std.U32) :
@@ -44302,14 +44302,14 @@ def runtime.interp.simd.splat_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::splat]:
-    Source: 'src/runtime/interp/simd.rs', lines 22:0-30:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[reducible]
 def runtime.interp.simd.splat
   (x : Std.U64) (width : Std.U32) : Result Std.U128 := do
   runtime.interp.simd.splat_loop x width 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::splat_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 223:0-231:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.splat_lanes
   (op : Std.U32) (x : Std.U128) : Result Std.U128 := do
   let (value, width) ←
@@ -44349,7 +44349,7 @@ def runtime.interp.simd.splat_lanes
   runtime.interp.simd.splat value width
 
 /-- [itasca::runtime::interp::simd::shuffle_lanes]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 207:4-218:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.shuffle_lanes_loop.body
   (op : Std.U32) (bits : Std.U128) (x : Std.U128) (y : Std.U128)
@@ -44381,7 +44381,7 @@ def runtime.interp.simd.shuffle_lanes_loop.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::shuffle_lanes]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 207:4-218:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.shuffle_lanes_loop
   (op : Std.U32) (bits : Std.U128) (x : Std.U128) (y : Std.U128)
@@ -44394,7 +44394,7 @@ def runtime.interp.simd.shuffle_lanes_loop
     (result, i)
 
 /-- [itasca::runtime::interp::simd::shuffle_lanes]:
-    Source: 'src/runtime/interp/simd.rs', lines 204:0-220:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[reducible]
 def runtime.interp.simd.shuffle_lanes
   (op : Std.U32) (bits : Std.U128) (x : Std.U128) (y : Std.U128) :
@@ -44403,7 +44403,7 @@ def runtime.interp.simd.shuffle_lanes
   runtime.interp.simd.shuffle_lanes_loop op bits x y 0#u128 0#u32
 
 /-- [itasca::runtime::interp::simd::write]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 61:4-64:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.write_loop.body
   (start : Std.Usize) (size : Std.Usize) (x : Std.U128) (memory : Slice Std.U8)
@@ -44422,7 +44422,7 @@ def runtime.interp.simd.write_loop.body
   else ok (done memory)
 
 /-- [itasca::runtime::interp::simd::write]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 61:4-64:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.write_loop
   (memory : Slice Std.U8) (start : Std.Usize) (size : Std.Usize) (x : Std.U128)
@@ -44435,7 +44435,7 @@ def runtime.interp.simd.write_loop
     (memory, i)
 
 /-- [itasca::runtime::interp::simd::write]:
-    Source: 'src/runtime/interp/simd.rs', lines 59:0-65:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[reducible]
 def runtime.interp.simd.write
   (memory : Slice Std.U8) (start : Std.Usize) (size : Std.Usize) (x : Std.U128)
@@ -44445,7 +44445,7 @@ def runtime.interp.simd.write
   runtime.interp.simd.write_loop memory start size x 0#usize
 
 /-- [itasca::runtime::interp::simd::read]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 53:4-56:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.read_loop.body
   (memory : Slice Std.U8) (start : Std.Usize) (size : Std.Usize) (x : Std.U128)
@@ -44465,7 +44465,7 @@ def runtime.interp.simd.read_loop.body
   else ok (done x)
 
 /-- [itasca::runtime::interp::simd::read]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 53:4-56:5 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.read_loop
   (memory : Slice Std.U8) (start : Std.Usize) (size : Std.Usize) (x : Std.U128)
@@ -44478,7 +44478,7 @@ def runtime.interp.simd.read_loop
     (x, i)
 
 /-- [itasca::runtime::interp::simd::read]:
-    Source: 'src/runtime/interp/simd.rs', lines 50:0-58:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[reducible]
 def runtime.interp.simd.read
   (memory : Slice Std.U8) (start : Std.Usize) (size : Std.Usize) :
@@ -44487,7 +44487,7 @@ def runtime.interp.simd.read
   runtime.interp.simd.read_loop memory start size 0#u128 0#usize
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 0:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop0.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44513,7 +44513,7 @@ def runtime.interp.simd.memory_op_loop0.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 0:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop0
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44526,7 +44526,7 @@ def runtime.interp.simd.memory_op_loop0
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 1:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop1.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44552,7 +44552,7 @@ def runtime.interp.simd.memory_op_loop1.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 1:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop1
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44565,7 +44565,7 @@ def runtime.interp.simd.memory_op_loop1
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 2:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop2.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44591,7 +44591,7 @@ def runtime.interp.simd.memory_op_loop2.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 2:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop2
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44604,7 +44604,7 @@ def runtime.interp.simd.memory_op_loop2
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 3:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop3.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44630,7 +44630,7 @@ def runtime.interp.simd.memory_op_loop3.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 3:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop3
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44643,7 +44643,7 @@ def runtime.interp.simd.memory_op_loop3
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 4:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop4.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44669,7 +44669,7 @@ def runtime.interp.simd.memory_op_loop4.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 4:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop4
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44682,7 +44682,7 @@ def runtime.interp.simd.memory_op_loop4
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 5:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop5.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44708,7 +44708,7 @@ def runtime.interp.simd.memory_op_loop5.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 5:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop5
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44721,7 +44721,7 @@ def runtime.interp.simd.memory_op_loop5
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 6:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop6.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44747,7 +44747,7 @@ def runtime.interp.simd.memory_op_loop6.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 6:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop6
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44760,7 +44760,7 @@ def runtime.interp.simd.memory_op_loop6
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 7:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop7.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44786,7 +44786,7 @@ def runtime.interp.simd.memory_op_loop7.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 7:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop7
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44799,7 +44799,7 @@ def runtime.interp.simd.memory_op_loop7
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 8:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop8.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44825,7 +44825,7 @@ def runtime.interp.simd.memory_op_loop8.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 8:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop8
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44838,7 +44838,7 @@ def runtime.interp.simd.memory_op_loop8
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 9:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop9.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44864,7 +44864,7 @@ def runtime.interp.simd.memory_op_loop9.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 9:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop9
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44877,7 +44877,7 @@ def runtime.interp.simd.memory_op_loop9
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 10:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop10.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44903,7 +44903,7 @@ def runtime.interp.simd.memory_op_loop10.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 10:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop10
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44916,7 +44916,7 @@ def runtime.interp.simd.memory_op_loop10
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 11:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop11.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44942,7 +44942,7 @@ def runtime.interp.simd.memory_op_loop11.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 11:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop11
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44955,7 +44955,7 @@ def runtime.interp.simd.memory_op_loop11
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 12:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop12.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44981,7 +44981,7 @@ def runtime.interp.simd.memory_op_loop12.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 12:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop12
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -44994,7 +44994,7 @@ def runtime.interp.simd.memory_op_loop12
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 13:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop13.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45020,7 +45020,7 @@ def runtime.interp.simd.memory_op_loop13.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 13:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop13
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45033,7 +45033,7 @@ def runtime.interp.simd.memory_op_loop13
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 14:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop14.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45059,7 +45059,7 @@ def runtime.interp.simd.memory_op_loop14.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 14:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop14
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45072,7 +45072,7 @@ def runtime.interp.simd.memory_op_loop14
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 15:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop15.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45098,7 +45098,7 @@ def runtime.interp.simd.memory_op_loop15.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 15:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop15
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45111,7 +45111,7 @@ def runtime.interp.simd.memory_op_loop15
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 16:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop16.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45137,7 +45137,7 @@ def runtime.interp.simd.memory_op_loop16.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 16:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop16
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45150,7 +45150,7 @@ def runtime.interp.simd.memory_op_loop16
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 17:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop17.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45176,7 +45176,7 @@ def runtime.interp.simd.memory_op_loop17.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 17:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop17
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45189,7 +45189,7 @@ def runtime.interp.simd.memory_op_loop17
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 18:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop18.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45215,7 +45215,7 @@ def runtime.interp.simd.memory_op_loop18.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 18:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop18
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45228,7 +45228,7 @@ def runtime.interp.simd.memory_op_loop18
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 19:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop19.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45254,7 +45254,7 @@ def runtime.interp.simd.memory_op_loop19.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 19:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop19
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45267,7 +45267,7 @@ def runtime.interp.simd.memory_op_loop19
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 20:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop20.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45293,7 +45293,7 @@ def runtime.interp.simd.memory_op_loop20.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 20:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop20
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45306,7 +45306,7 @@ def runtime.interp.simd.memory_op_loop20
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 21:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop21.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45332,7 +45332,7 @@ def runtime.interp.simd.memory_op_loop21.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 21:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop21
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45345,7 +45345,7 @@ def runtime.interp.simd.memory_op_loop21
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 22:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop22.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45371,7 +45371,7 @@ def runtime.interp.simd.memory_op_loop22.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 22:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop22
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45384,7 +45384,7 @@ def runtime.interp.simd.memory_op_loop22
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 23:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop23.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45410,7 +45410,7 @@ def runtime.interp.simd.memory_op_loop23.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 23:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop23
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45423,7 +45423,7 @@ def runtime.interp.simd.memory_op_loop23
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 24:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop24.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45449,7 +45449,7 @@ def runtime.interp.simd.memory_op_loop24.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 24:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop24
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45462,7 +45462,7 @@ def runtime.interp.simd.memory_op_loop24
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 25:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop25.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45488,7 +45488,7 @@ def runtime.interp.simd.memory_op_loop25.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 25:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop25
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45501,7 +45501,7 @@ def runtime.interp.simd.memory_op_loop25
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 26:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop26.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45527,7 +45527,7 @@ def runtime.interp.simd.memory_op_loop26.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 26:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop26
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45540,7 +45540,7 @@ def runtime.interp.simd.memory_op_loop26
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 27:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop27.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45566,7 +45566,7 @@ def runtime.interp.simd.memory_op_loop27.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 27:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop27
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45579,7 +45579,7 @@ def runtime.interp.simd.memory_op_loop27
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 28:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop28.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45605,7 +45605,7 @@ def runtime.interp.simd.memory_op_loop28.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 28:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop28
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45618,7 +45618,7 @@ def runtime.interp.simd.memory_op_loop28
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 29:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop29.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45644,7 +45644,7 @@ def runtime.interp.simd.memory_op_loop29.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 29:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop29
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45657,7 +45657,7 @@ def runtime.interp.simd.memory_op_loop29
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 30:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop30.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45683,7 +45683,7 @@ def runtime.interp.simd.memory_op_loop30.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 30:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop30
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45696,7 +45696,7 @@ def runtime.interp.simd.memory_op_loop30
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 31:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop31.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45722,7 +45722,7 @@ def runtime.interp.simd.memory_op_loop31.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 31:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop31
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45735,7 +45735,7 @@ def runtime.interp.simd.memory_op_loop31
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 32:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop32.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45761,7 +45761,7 @@ def runtime.interp.simd.memory_op_loop32.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 32:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop32
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45774,7 +45774,7 @@ def runtime.interp.simd.memory_op_loop32
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 33:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop33.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45800,7 +45800,7 @@ def runtime.interp.simd.memory_op_loop33.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 33:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop33
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45813,7 +45813,7 @@ def runtime.interp.simd.memory_op_loop33
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 34:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop34.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45839,7 +45839,7 @@ def runtime.interp.simd.memory_op_loop34.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 34:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop34
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45852,7 +45852,7 @@ def runtime.interp.simd.memory_op_loop34
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 35:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop35.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45878,7 +45878,7 @@ def runtime.interp.simd.memory_op_loop35.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 35:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop35
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45891,7 +45891,7 @@ def runtime.interp.simd.memory_op_loop35
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 36:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop36.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45917,7 +45917,7 @@ def runtime.interp.simd.memory_op_loop36.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 36:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop36
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45930,7 +45930,7 @@ def runtime.interp.simd.memory_op_loop36
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 37:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop37.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45956,7 +45956,7 @@ def runtime.interp.simd.memory_op_loop37.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 37:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop37
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45969,7 +45969,7 @@ def runtime.interp.simd.memory_op_loop37
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 38:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop38.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -45995,7 +45995,7 @@ def runtime.interp.simd.memory_op_loop38.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 38:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop38
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46008,7 +46008,7 @@ def runtime.interp.simd.memory_op_loop38
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 39:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop39.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46034,7 +46034,7 @@ def runtime.interp.simd.memory_op_loop39.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 39:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop39
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46047,7 +46047,7 @@ def runtime.interp.simd.memory_op_loop39
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 40:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop40.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46073,7 +46073,7 @@ def runtime.interp.simd.memory_op_loop40.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 40:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop40
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46086,7 +46086,7 @@ def runtime.interp.simd.memory_op_loop40
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 41:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop41.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46112,7 +46112,7 @@ def runtime.interp.simd.memory_op_loop41.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 41:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop41
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46125,7 +46125,7 @@ def runtime.interp.simd.memory_op_loop41
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 42:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop42.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46151,7 +46151,7 @@ def runtime.interp.simd.memory_op_loop42.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 42:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop42
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46164,7 +46164,7 @@ def runtime.interp.simd.memory_op_loop42
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 43:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop43.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46190,7 +46190,7 @@ def runtime.interp.simd.memory_op_loop43.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 43:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop43
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46203,7 +46203,7 @@ def runtime.interp.simd.memory_op_loop43
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 44:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop44.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46229,7 +46229,7 @@ def runtime.interp.simd.memory_op_loop44.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 44:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop44
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46242,7 +46242,7 @@ def runtime.interp.simd.memory_op_loop44
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 45:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop45.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46268,7 +46268,7 @@ def runtime.interp.simd.memory_op_loop45.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 45:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop45
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46281,7 +46281,7 @@ def runtime.interp.simd.memory_op_loop45
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 46:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop46.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46307,7 +46307,7 @@ def runtime.interp.simd.memory_op_loop46.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 46:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop46
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46320,7 +46320,7 @@ def runtime.interp.simd.memory_op_loop46
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 47:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop47.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46346,7 +46346,7 @@ def runtime.interp.simd.memory_op_loop47.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 47:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop47
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46359,7 +46359,7 @@ def runtime.interp.simd.memory_op_loop47
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 48:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop48.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46385,7 +46385,7 @@ def runtime.interp.simd.memory_op_loop48.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 48:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop48
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46398,7 +46398,7 @@ def runtime.interp.simd.memory_op_loop48
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 49:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop49.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46424,7 +46424,7 @@ def runtime.interp.simd.memory_op_loop49.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 49:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop49
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46437,7 +46437,7 @@ def runtime.interp.simd.memory_op_loop49
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 50:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop50.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46463,7 +46463,7 @@ def runtime.interp.simd.memory_op_loop50.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 50:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop50
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46476,7 +46476,7 @@ def runtime.interp.simd.memory_op_loop50
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 51:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop51.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46502,7 +46502,7 @@ def runtime.interp.simd.memory_op_loop51.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 51:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop51
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46515,7 +46515,7 @@ def runtime.interp.simd.memory_op_loop51
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 52:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop52.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46541,7 +46541,7 @@ def runtime.interp.simd.memory_op_loop52.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 52:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop52
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46554,7 +46554,7 @@ def runtime.interp.simd.memory_op_loop52
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 53:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop53.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46580,7 +46580,7 @@ def runtime.interp.simd.memory_op_loop53.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 53:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop53
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46593,7 +46593,7 @@ def runtime.interp.simd.memory_op_loop53
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 54:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop54.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46619,7 +46619,7 @@ def runtime.interp.simd.memory_op_loop54.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 54:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop54
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46632,7 +46632,7 @@ def runtime.interp.simd.memory_op_loop54
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 55:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop55.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46658,7 +46658,7 @@ def runtime.interp.simd.memory_op_loop55.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 55:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop55
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46671,7 +46671,7 @@ def runtime.interp.simd.memory_op_loop55
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 56:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop56.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46697,7 +46697,7 @@ def runtime.interp.simd.memory_op_loop56.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 56:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop56
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46710,7 +46710,7 @@ def runtime.interp.simd.memory_op_loop56
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 57:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop57.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46736,7 +46736,7 @@ def runtime.interp.simd.memory_op_loop57.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 57:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop57
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46749,7 +46749,7 @@ def runtime.interp.simd.memory_op_loop57
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 58:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop58.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46775,7 +46775,7 @@ def runtime.interp.simd.memory_op_loop58.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 58:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop58
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46788,7 +46788,7 @@ def runtime.interp.simd.memory_op_loop58
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 59:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop59.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46814,7 +46814,7 @@ def runtime.interp.simd.memory_op_loop59.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 59:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop59
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46827,7 +46827,7 @@ def runtime.interp.simd.memory_op_loop59
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 60:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop60.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46853,7 +46853,7 @@ def runtime.interp.simd.memory_op_loop60.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 60:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop60
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46866,7 +46866,7 @@ def runtime.interp.simd.memory_op_loop60
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 61:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop61.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46892,7 +46892,7 @@ def runtime.interp.simd.memory_op_loop61.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 61:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop61
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46905,7 +46905,7 @@ def runtime.interp.simd.memory_op_loop61
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 62:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop62.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46931,7 +46931,7 @@ def runtime.interp.simd.memory_op_loop62.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 62:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop62
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46944,7 +46944,7 @@ def runtime.interp.simd.memory_op_loop62
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 63:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop63.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46970,7 +46970,7 @@ def runtime.interp.simd.memory_op_loop63.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 63:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop63
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -46983,7 +46983,7 @@ def runtime.interp.simd.memory_op_loop63
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 64:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop64.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47009,7 +47009,7 @@ def runtime.interp.simd.memory_op_loop64.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 64:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop64
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47022,7 +47022,7 @@ def runtime.interp.simd.memory_op_loop64
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 65:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop65.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47048,7 +47048,7 @@ def runtime.interp.simd.memory_op_loop65.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 65:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop65
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47061,7 +47061,7 @@ def runtime.interp.simd.memory_op_loop65
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 66:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop66.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47087,7 +47087,7 @@ def runtime.interp.simd.memory_op_loop66.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 66:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop66
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47100,7 +47100,7 @@ def runtime.interp.simd.memory_op_loop66
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 67:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop67.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47126,7 +47126,7 @@ def runtime.interp.simd.memory_op_loop67.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 67:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop67
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47139,7 +47139,7 @@ def runtime.interp.simd.memory_op_loop67
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 68:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop68.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47165,7 +47165,7 @@ def runtime.interp.simd.memory_op_loop68.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 68:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop68
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47178,7 +47178,7 @@ def runtime.interp.simd.memory_op_loop68
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 69:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop69.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47204,7 +47204,7 @@ def runtime.interp.simd.memory_op_loop69.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 69:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop69
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47217,7 +47217,7 @@ def runtime.interp.simd.memory_op_loop69
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 70:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop70.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47243,7 +47243,7 @@ def runtime.interp.simd.memory_op_loop70.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 70:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop70
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47256,7 +47256,7 @@ def runtime.interp.simd.memory_op_loop70
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 71:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop71.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47282,7 +47282,7 @@ def runtime.interp.simd.memory_op_loop71.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 71:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop71
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47295,7 +47295,7 @@ def runtime.interp.simd.memory_op_loop71
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 72:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop72.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47321,7 +47321,7 @@ def runtime.interp.simd.memory_op_loop72.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 72:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop72
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47334,7 +47334,7 @@ def runtime.interp.simd.memory_op_loop72
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 73:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop73.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47360,7 +47360,7 @@ def runtime.interp.simd.memory_op_loop73.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 73:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop73
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47373,7 +47373,7 @@ def runtime.interp.simd.memory_op_loop73
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 74:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop74.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47399,7 +47399,7 @@ def runtime.interp.simd.memory_op_loop74.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 74:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop74
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47412,7 +47412,7 @@ def runtime.interp.simd.memory_op_loop74
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 75:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop75.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47438,7 +47438,7 @@ def runtime.interp.simd.memory_op_loop75.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 75:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop75
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47451,7 +47451,7 @@ def runtime.interp.simd.memory_op_loop75
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 76:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop76.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47477,7 +47477,7 @@ def runtime.interp.simd.memory_op_loop76.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 76:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop76
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47490,7 +47490,7 @@ def runtime.interp.simd.memory_op_loop76
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 77:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop77.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47516,7 +47516,7 @@ def runtime.interp.simd.memory_op_loop77.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 77:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop77
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47529,7 +47529,7 @@ def runtime.interp.simd.memory_op_loop77
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 78:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop78.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47555,7 +47555,7 @@ def runtime.interp.simd.memory_op_loop78.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 78:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop78
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47568,7 +47568,7 @@ def runtime.interp.simd.memory_op_loop78
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 79:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop79.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47594,7 +47594,7 @@ def runtime.interp.simd.memory_op_loop79.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 79:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop79
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47607,7 +47607,7 @@ def runtime.interp.simd.memory_op_loop79
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 80:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop80.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47633,7 +47633,7 @@ def runtime.interp.simd.memory_op_loop80.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 80:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop80
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47646,7 +47646,7 @@ def runtime.interp.simd.memory_op_loop80
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 81:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop81.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47672,7 +47672,7 @@ def runtime.interp.simd.memory_op_loop81.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 81:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop81
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47685,7 +47685,7 @@ def runtime.interp.simd.memory_op_loop81
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 82:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop82.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47711,7 +47711,7 @@ def runtime.interp.simd.memory_op_loop82.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 82:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop82
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47724,7 +47724,7 @@ def runtime.interp.simd.memory_op_loop82
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 83:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop83.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47750,7 +47750,7 @@ def runtime.interp.simd.memory_op_loop83.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 83:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop83
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47763,7 +47763,7 @@ def runtime.interp.simd.memory_op_loop83
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 84:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop84.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47789,7 +47789,7 @@ def runtime.interp.simd.memory_op_loop84.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 84:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop84
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47802,7 +47802,7 @@ def runtime.interp.simd.memory_op_loop84
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 85:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop85.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47828,7 +47828,7 @@ def runtime.interp.simd.memory_op_loop85.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 85:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop85
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47841,7 +47841,7 @@ def runtime.interp.simd.memory_op_loop85
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 86:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop86.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47867,7 +47867,7 @@ def runtime.interp.simd.memory_op_loop86.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 86:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop86
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47880,7 +47880,7 @@ def runtime.interp.simd.memory_op_loop86
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 87:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop87.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47906,7 +47906,7 @@ def runtime.interp.simd.memory_op_loop87.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 87:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop87
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47919,7 +47919,7 @@ def runtime.interp.simd.memory_op_loop87
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 88:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop88.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47945,7 +47945,7 @@ def runtime.interp.simd.memory_op_loop88.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 88:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop88
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47958,7 +47958,7 @@ def runtime.interp.simd.memory_op_loop88
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 89:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop89.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47984,7 +47984,7 @@ def runtime.interp.simd.memory_op_loop89.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 89:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop89
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -47997,7 +47997,7 @@ def runtime.interp.simd.memory_op_loop89
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 90:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop90.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48023,7 +48023,7 @@ def runtime.interp.simd.memory_op_loop90.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 90:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop90
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48036,7 +48036,7 @@ def runtime.interp.simd.memory_op_loop90
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 91:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop91.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48062,7 +48062,7 @@ def runtime.interp.simd.memory_op_loop91.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 91:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop91
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48075,7 +48075,7 @@ def runtime.interp.simd.memory_op_loop91
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 92:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop92.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48101,7 +48101,7 @@ def runtime.interp.simd.memory_op_loop92.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 92:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop92
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48114,7 +48114,7 @@ def runtime.interp.simd.memory_op_loop92
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 93:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop93.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48140,7 +48140,7 @@ def runtime.interp.simd.memory_op_loop93.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 93:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop93
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48153,7 +48153,7 @@ def runtime.interp.simd.memory_op_loop93
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 94:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop94.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48179,7 +48179,7 @@ def runtime.interp.simd.memory_op_loop94.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 94:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop94
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48192,7 +48192,7 @@ def runtime.interp.simd.memory_op_loop94
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 95:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop95.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48218,7 +48218,7 @@ def runtime.interp.simd.memory_op_loop95.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 95:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop95
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48231,7 +48231,7 @@ def runtime.interp.simd.memory_op_loop95
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 96:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop96.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48257,7 +48257,7 @@ def runtime.interp.simd.memory_op_loop96.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 96:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop96
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48270,7 +48270,7 @@ def runtime.interp.simd.memory_op_loop96
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 97:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop97.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48296,7 +48296,7 @@ def runtime.interp.simd.memory_op_loop97.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 97:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop97
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48309,7 +48309,7 @@ def runtime.interp.simd.memory_op_loop97
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 98:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop98.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48335,7 +48335,7 @@ def runtime.interp.simd.memory_op_loop98.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 98:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop98
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48348,7 +48348,7 @@ def runtime.interp.simd.memory_op_loop98
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 99:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop99.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48374,7 +48374,7 @@ def runtime.interp.simd.memory_op_loop99.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 99:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop99
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48387,7 +48387,7 @@ def runtime.interp.simd.memory_op_loop99
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 100:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop100.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48413,7 +48413,7 @@ def runtime.interp.simd.memory_op_loop100.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 100:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop100
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48426,7 +48426,7 @@ def runtime.interp.simd.memory_op_loop100
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 101:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop101.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48452,7 +48452,7 @@ def runtime.interp.simd.memory_op_loop101.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 101:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop101
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48465,7 +48465,7 @@ def runtime.interp.simd.memory_op_loop101
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 102:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop102.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48491,7 +48491,7 @@ def runtime.interp.simd.memory_op_loop102.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 102:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop102
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48504,7 +48504,7 @@ def runtime.interp.simd.memory_op_loop102
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 103:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop103.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48530,7 +48530,7 @@ def runtime.interp.simd.memory_op_loop103.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 103:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop103
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48543,7 +48543,7 @@ def runtime.interp.simd.memory_op_loop103
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 104:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop104.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48569,7 +48569,7 @@ def runtime.interp.simd.memory_op_loop104.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 104:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop104
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48582,7 +48582,7 @@ def runtime.interp.simd.memory_op_loop104
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 105:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop105.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48608,7 +48608,7 @@ def runtime.interp.simd.memory_op_loop105.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 105:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop105
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48621,7 +48621,7 @@ def runtime.interp.simd.memory_op_loop105
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 106:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop106.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48647,7 +48647,7 @@ def runtime.interp.simd.memory_op_loop106.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 106:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop106
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48660,7 +48660,7 @@ def runtime.interp.simd.memory_op_loop106
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 107:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop107.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48686,7 +48686,7 @@ def runtime.interp.simd.memory_op_loop107.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 107:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop107
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48699,7 +48699,7 @@ def runtime.interp.simd.memory_op_loop107
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 108:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop108.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48725,7 +48725,7 @@ def runtime.interp.simd.memory_op_loop108.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 108:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop108
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48738,7 +48738,7 @@ def runtime.interp.simd.memory_op_loop108
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 109:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop109.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48764,7 +48764,7 @@ def runtime.interp.simd.memory_op_loop109.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 109:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop109
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48777,7 +48777,7 @@ def runtime.interp.simd.memory_op_loop109
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 110:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop110.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48803,7 +48803,7 @@ def runtime.interp.simd.memory_op_loop110.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 110:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop110
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48816,7 +48816,7 @@ def runtime.interp.simd.memory_op_loop110
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 111:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop111.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48842,7 +48842,7 @@ def runtime.interp.simd.memory_op_loop111.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 111:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop111
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48855,7 +48855,7 @@ def runtime.interp.simd.memory_op_loop111
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 112:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop112.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48881,7 +48881,7 @@ def runtime.interp.simd.memory_op_loop112.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 112:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop112
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48894,7 +48894,7 @@ def runtime.interp.simd.memory_op_loop112
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 113:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop113.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48920,7 +48920,7 @@ def runtime.interp.simd.memory_op_loop113.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 113:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop113
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48933,7 +48933,7 @@ def runtime.interp.simd.memory_op_loop113
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 114:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop114.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48959,7 +48959,7 @@ def runtime.interp.simd.memory_op_loop114.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 114:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop114
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48972,7 +48972,7 @@ def runtime.interp.simd.memory_op_loop114
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 115:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop115.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -48998,7 +48998,7 @@ def runtime.interp.simd.memory_op_loop115.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 115:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop115
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49011,7 +49011,7 @@ def runtime.interp.simd.memory_op_loop115
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 116:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop116.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49037,7 +49037,7 @@ def runtime.interp.simd.memory_op_loop116.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 116:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop116
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49050,7 +49050,7 @@ def runtime.interp.simd.memory_op_loop116
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 117:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop117.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49076,7 +49076,7 @@ def runtime.interp.simd.memory_op_loop117.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 117:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop117
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49089,7 +49089,7 @@ def runtime.interp.simd.memory_op_loop117
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 118:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop118.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49115,7 +49115,7 @@ def runtime.interp.simd.memory_op_loop118.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 118:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop118
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49128,7 +49128,7 @@ def runtime.interp.simd.memory_op_loop118
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 119:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop119.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49154,7 +49154,7 @@ def runtime.interp.simd.memory_op_loop119.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 119:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop119
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49167,7 +49167,7 @@ def runtime.interp.simd.memory_op_loop119
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 120:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop120.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49193,7 +49193,7 @@ def runtime.interp.simd.memory_op_loop120.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 120:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop120
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49206,7 +49206,7 @@ def runtime.interp.simd.memory_op_loop120
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 121:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop121.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49232,7 +49232,7 @@ def runtime.interp.simd.memory_op_loop121.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 121:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop121
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49245,7 +49245,7 @@ def runtime.interp.simd.memory_op_loop121
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 122:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop122.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49271,7 +49271,7 @@ def runtime.interp.simd.memory_op_loop122.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 122:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop122
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49284,7 +49284,7 @@ def runtime.interp.simd.memory_op_loop122
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 123:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop123.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49310,7 +49310,7 @@ def runtime.interp.simd.memory_op_loop123.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 123:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop123
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49323,7 +49323,7 @@ def runtime.interp.simd.memory_op_loop123
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 124:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop124.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49349,7 +49349,7 @@ def runtime.interp.simd.memory_op_loop124.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 124:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop124
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49362,7 +49362,7 @@ def runtime.interp.simd.memory_op_loop124
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 125:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop125.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49388,7 +49388,7 @@ def runtime.interp.simd.memory_op_loop125.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 125:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop125
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49401,7 +49401,7 @@ def runtime.interp.simd.memory_op_loop125
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 126:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop126.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49427,7 +49427,7 @@ def runtime.interp.simd.memory_op_loop126.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 126:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop126
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49440,7 +49440,7 @@ def runtime.interp.simd.memory_op_loop126
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 127:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop127.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49466,7 +49466,7 @@ def runtime.interp.simd.memory_op_loop127.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 127:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop127
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49479,7 +49479,7 @@ def runtime.interp.simd.memory_op_loop127
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 128:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop128.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49505,7 +49505,7 @@ def runtime.interp.simd.memory_op_loop128.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 128:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop128
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49518,7 +49518,7 @@ def runtime.interp.simd.memory_op_loop128
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 129:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop129.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49544,7 +49544,7 @@ def runtime.interp.simd.memory_op_loop129.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 129:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop129
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49557,7 +49557,7 @@ def runtime.interp.simd.memory_op_loop129
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 130:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop130.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49583,7 +49583,7 @@ def runtime.interp.simd.memory_op_loop130.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 130:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop130
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49596,7 +49596,7 @@ def runtime.interp.simd.memory_op_loop130
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 131:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop131.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49622,7 +49622,7 @@ def runtime.interp.simd.memory_op_loop131.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 131:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop131
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49635,7 +49635,7 @@ def runtime.interp.simd.memory_op_loop131
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 132:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop132.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49661,7 +49661,7 @@ def runtime.interp.simd.memory_op_loop132.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 132:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop132
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49674,7 +49674,7 @@ def runtime.interp.simd.memory_op_loop132
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 133:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop133.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49700,7 +49700,7 @@ def runtime.interp.simd.memory_op_loop133.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 133:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop133
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49713,7 +49713,7 @@ def runtime.interp.simd.memory_op_loop133
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 134:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop134.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49739,7 +49739,7 @@ def runtime.interp.simd.memory_op_loop134.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 134:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop134
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49752,7 +49752,7 @@ def runtime.interp.simd.memory_op_loop134
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 135:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop135.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49778,7 +49778,7 @@ def runtime.interp.simd.memory_op_loop135.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 135:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop135
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49791,7 +49791,7 @@ def runtime.interp.simd.memory_op_loop135
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 136:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop136.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49817,7 +49817,7 @@ def runtime.interp.simd.memory_op_loop136.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 136:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop136
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49830,7 +49830,7 @@ def runtime.interp.simd.memory_op_loop136
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 137:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop137.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49856,7 +49856,7 @@ def runtime.interp.simd.memory_op_loop137.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 137:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop137
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49869,7 +49869,7 @@ def runtime.interp.simd.memory_op_loop137
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 138:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop138.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49895,7 +49895,7 @@ def runtime.interp.simd.memory_op_loop138.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 138:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop138
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49908,7 +49908,7 @@ def runtime.interp.simd.memory_op_loop138
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 139:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop139.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49934,7 +49934,7 @@ def runtime.interp.simd.memory_op_loop139.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 139:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop139
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49947,7 +49947,7 @@ def runtime.interp.simd.memory_op_loop139
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 140:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop140.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49973,7 +49973,7 @@ def runtime.interp.simd.memory_op_loop140.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 140:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop140
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -49986,7 +49986,7 @@ def runtime.interp.simd.memory_op_loop140
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 141:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop141.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50012,7 +50012,7 @@ def runtime.interp.simd.memory_op_loop141.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 141:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop141
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50025,7 +50025,7 @@ def runtime.interp.simd.memory_op_loop141
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 142:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop142.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50051,7 +50051,7 @@ def runtime.interp.simd.memory_op_loop142.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 142:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop142
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50064,7 +50064,7 @@ def runtime.interp.simd.memory_op_loop142
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 143:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop143.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50090,7 +50090,7 @@ def runtime.interp.simd.memory_op_loop143.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 143:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop143
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50103,7 +50103,7 @@ def runtime.interp.simd.memory_op_loop143
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 144:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop144.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50129,7 +50129,7 @@ def runtime.interp.simd.memory_op_loop144.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 144:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop144
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50142,7 +50142,7 @@ def runtime.interp.simd.memory_op_loop144
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 145:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop145.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50168,7 +50168,7 @@ def runtime.interp.simd.memory_op_loop145.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 145:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop145
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50181,7 +50181,7 @@ def runtime.interp.simd.memory_op_loop145
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 146:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop146.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50207,7 +50207,7 @@ def runtime.interp.simd.memory_op_loop146.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 146:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop146
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50220,7 +50220,7 @@ def runtime.interp.simd.memory_op_loop146
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 147:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop147.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50246,7 +50246,7 @@ def runtime.interp.simd.memory_op_loop147.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 147:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop147
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50259,7 +50259,7 @@ def runtime.interp.simd.memory_op_loop147
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 148:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop148.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50285,7 +50285,7 @@ def runtime.interp.simd.memory_op_loop148.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 148:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop148
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50298,7 +50298,7 @@ def runtime.interp.simd.memory_op_loop148
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 149:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop149.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50324,7 +50324,7 @@ def runtime.interp.simd.memory_op_loop149.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 149:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop149
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50337,7 +50337,7 @@ def runtime.interp.simd.memory_op_loop149
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 150:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop150.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50363,7 +50363,7 @@ def runtime.interp.simd.memory_op_loop150.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 150:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop150
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50376,7 +50376,7 @@ def runtime.interp.simd.memory_op_loop150
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 151:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop151.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50402,7 +50402,7 @@ def runtime.interp.simd.memory_op_loop151.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 151:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop151
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50415,7 +50415,7 @@ def runtime.interp.simd.memory_op_loop151
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 152:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop152.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50441,7 +50441,7 @@ def runtime.interp.simd.memory_op_loop152.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 152:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop152
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50454,7 +50454,7 @@ def runtime.interp.simd.memory_op_loop152
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 153:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop153.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50480,7 +50480,7 @@ def runtime.interp.simd.memory_op_loop153.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 153:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop153
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50493,7 +50493,7 @@ def runtime.interp.simd.memory_op_loop153
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 154:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop154.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50519,7 +50519,7 @@ def runtime.interp.simd.memory_op_loop154.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 154:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop154
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50532,7 +50532,7 @@ def runtime.interp.simd.memory_op_loop154
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop body 155:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop_body]
 def runtime.interp.simd.memory_op_loop155.body
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50558,7 +50558,7 @@ def runtime.interp.simd.memory_op_loop155.body
   else ok (done result)
 
 /-- [itasca::runtime::interp::simd::memory_op]: loop 155:
-    Source: 'src/runtime/interp/simd.rs', lines 121:12-130:13 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 @[rust_loop]
 def runtime.interp.simd.memory_op_loop155
   (op : Std.U32) (value : Std.U128) (width : Std.U32) (result : Std.U128)
@@ -50571,7 +50571,7 @@ def runtime.interp.simd.memory_op_loop155
     (result, i)
 
 /-- [itasca::runtime::interp::simd::memory_op]:
-    Source: 'src/runtime/interp/simd.rs', lines 66:0-136:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.memory_op
   (op : Std.U32) (offset : Std.U32) (lane_index : Std.U32) (x : Std.U128)
   (y : Std.U128) (memory : Slice Std.U8) :
@@ -52377,7 +52377,7 @@ def runtime.interp.simd.memory_op
       | _ => ok (core.result.Result.Err runtime.ExecError.Internal, memory)
 
 /-- [itasca::runtime::interp::simd::simd]:
-    Source: 'src/runtime/interp/simd.rs', lines 142:0-201:1 -/
+    Source: 'src/runtime/interp/simd.rs' -/
 def runtime.interp.simd.simd
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (op : Std.U32) (offset : Std.U32) (lane_index : Std.U32) (bits : Std.U128)
@@ -53753,7 +53753,7 @@ def runtime.interp.simd.simd
       | _ => ok (core.result.Result.Err runtime.ExecError.Internal, memory)
 
 /-- [itasca::runtime::interp::get]:
-    Source: 'src/runtime/interp/mod.rs', lines 256:0-262:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.get
   (slots : Slice Std.U64) (pos : Std.Usize) : Result Std.U64 := do
   let i := Slice.len slots
@@ -53762,7 +53762,7 @@ def runtime.interp.get
   else ok 0#u64
 
 /-- [itasca::runtime::interp::vector]:
-    Source: 'src/runtime/interp/mod.rs', lines 263:0-265:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.vector
   (slots : Slice Std.U64) (pos : Std.Usize) : Result Std.U128 := do
   let i ← runtime.interp.get slots pos
@@ -53774,7 +53774,7 @@ def runtime.interp.vector
   ok (i1 ||| i5)
 
 /-- [itasca::runtime::interp::execute_simd]:
-    Source: 'src/runtime/interp/mod.rs', lines 354:0-410:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_simd
   {M : Type} {F : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformFloatOpsInst :
@@ -53941,7 +53941,7 @@ def runtime.interp.execute_simd
         ok (r1, exec, store)
 
 /-- [itasca::runtime::interp::dispatch_simd]:
-    Source: 'src/runtime/interp/mod.rs', lines 901:8-912:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.dispatch_simd
   {M : Type} {F : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformFloatOpsInst :
@@ -53956,7 +53956,7 @@ def runtime.interp.dispatch_simd
     exec store inst function base op dst a entry
 
 /-- [itasca::runtime::interp::store_operands]:
-    Source: 'src/runtime/interp/mod.rs', lines 853:8-858:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.store_operands
   (instruction : runtime.bytecode.Instr) :
   Result (Std.U32 × Std.U32 × Std.U32)
@@ -54441,7 +54441,7 @@ def runtime.interp.store_operands
     ok (0#u32, 0#u32, 0#u32)
 
 /-- [itasca::runtime::interp::execute_store]:
-    Source: 'src/runtime/interp/mod.rs', lines 334:0-352:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_store
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -54477,7 +54477,7 @@ def runtime.interp.execute_store
   ok (r, { store with memories := v })
 
 /-- [itasca::runtime::interp::dispatch_store]:
-    Source: 'src/runtime/interp/mod.rs', lines 889:8-899:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.dispatch_store
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -54491,7 +54491,7 @@ def runtime.interp.dispatch_store
     addr value offset
 
 /-- [itasca::runtime::interp::load_operands]:
-    Source: 'src/runtime/interp/mod.rs', lines 846:8-851:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.load_operands
   (instruction : runtime.bytecode.Instr) :
   Result (Std.U32 × Std.U32 × Std.U32)
@@ -54967,7 +54967,7 @@ def runtime.interp.load_operands
     ok (0#u32, 0#u32, 0#u32)
 
 /-- [itasca::runtime::interp::execute_load]:
-    Source: 'src/runtime/interp/mod.rs', lines 313:0-332:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_load
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55010,7 +55010,7 @@ def runtime.interp.execute_load
     ok (r1, exec)
 
 /-- [itasca::runtime::interp::dispatch_load]:
-    Source: 'src/runtime/interp/mod.rs', lines 877:8-887:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.dispatch_load
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55024,7 +55024,7 @@ def runtime.interp.dispatch_load
     dst addr offset
 
 /-- [itasca::runtime::interp::scalar_operands]:
-    Source: 'src/runtime/interp/mod.rs', lines 839:8-844:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.scalar_operands
   (instruction : runtime.bytecode.Instr) :
   Result (Std.U32 × Std.U32 × Std.U32)
@@ -55500,7 +55500,7 @@ def runtime.interp.scalar_operands
     ok (0#u32, 0#u32, 0#u32)
 
 /-- [itasca::runtime::interp::execute_scalar]:
-    Source: 'src/runtime/interp/mod.rs', lines 296:0-311:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_scalar
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (exec : runtime.interp.Execution) (base : Std.Usize) (op : Std.U16)
@@ -55536,7 +55536,7 @@ def runtime.interp.execute_scalar
     ok (r1, exec)
 
 /-- [itasca::runtime::interp::dispatch_scalar]:
-    Source: 'src/runtime/interp/mod.rs', lines 867:8-875:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.dispatch_scalar
   {F : Type} (platformFloatOpsInst : runtime.platform.FloatOps F)
   (exec : runtime.interp.Execution) (base : Std.Usize) (op : Std.U16)
@@ -55548,7 +55548,7 @@ def runtime.interp.dispatch_scalar
   runtime.interp.execute_scalar platformFloatOpsInst exec base op dst a b
 
 /-- [itasca::runtime::interp::execute_bulk]:
-    Source: 'src/runtime/interp/mod.rs', lines 822:0-831:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_bulk
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55564,7 +55564,7 @@ def runtime.interp.execute_bulk
   ok (r, exec, store1)
 
 /-- [itasca::runtime::store::within]:
-    Source: 'src/runtime/store.rs', lines 538:0-543:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.within
   (current : Std.Usize) (additional : Std.Usize) (limit : Std.Usize) :
   Result Bool
@@ -55575,7 +55575,7 @@ def runtime.store.within
   | some total => ok (total <= limit)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_table_index]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 469:8-472:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.Store.grow_table_index_loop.body
   (v : Std.U64) (n : Std.U64) (v1 : alloc.vec.Vec Std.U64) (i : Std.Usize) :
@@ -55591,7 +55591,7 @@ def runtime.store.Store.grow_table_index_loop.body
   else ok (done v1)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_table_index]: loop 0:
-    Source: 'src/runtime/store.rs', lines 469:8-472:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.Store.grow_table_index_loop
   (v : Std.U64) (n : Std.U64) (v1 : alloc.vec.Vec Std.U64) (i : Std.Usize) :
@@ -55602,7 +55602,7 @@ def runtime.store.Store.grow_table_index_loop
     (v1, i)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_table_index]:
-    Source: 'src/runtime/store.rs', lines 451:4-475:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.grow_table_index
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -55651,7 +55651,7 @@ def runtime.store.Store.grow_table_index
       else ok (core.num.U32.MAX, self)
 
 /-- [itasca::runtime::interp::execute_table_grow]:
-    Source: 'src/runtime/interp/mod.rs', lines 806:0-819:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_table_grow
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -55692,7 +55692,7 @@ def runtime.interp.execute_table_grow
   ok (core.result.Result.Ok (), { exec with slots := v1 }, store1)
 
 /-- [itasca::runtime::interp::execute_table_size]:
-    Source: 'src/runtime/interp/mod.rs', lines 792:0-803:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_table_size
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55721,14 +55721,14 @@ def runtime.interp.execute_table_size
   ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::{impl core::convert::From<itasca::runtime::Trap> for itasca::runtime::ExecError}::from]:
-    Source: 'src/runtime/mod.rs', lines 159:4-161:5
+    Source: 'src/runtime/mod.rs'
     Visibility: public -/
 def runtime.ExecError.Insts.CoreConvertFromTrap.from
   (t : runtime.Trap) : Result runtime.ExecError := do
   ok (runtime.ExecError.Trap t)
 
 /-- Trait implementation: [itasca::runtime::{impl core::convert::From<itasca::runtime::Trap> for itasca::runtime::ExecError}]
-    Source: 'src/runtime/mod.rs', lines 158:0-162:1 -/
+    Source: 'src/runtime/mod.rs' -/
 @[reducible]
 def runtime.ExecError.Insts.CoreConvertFromTrap : core.convert.From
   runtime.ExecError runtime.Trap := {
@@ -55736,7 +55736,7 @@ def runtime.ExecError.Insts.CoreConvertFromTrap : core.convert.From
 }
 
 /-- [itasca::runtime::interp::execute_table_set]:
-    Source: 'src/runtime/interp/mod.rs', lines 773:0-789:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_table_set
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55786,7 +55786,7 @@ def runtime.interp.execute_table_set
     ok (core.result.Result.Ok (), exec, { store with tables := v1 })
 
 /-- [itasca::runtime::interp::execute_table_get]:
-    Source: 'src/runtime/interp/mod.rs', lines 754:0-770:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_table_get
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55832,7 +55832,7 @@ def runtime.interp.execute_table_get
     ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::interp::execute_ref_func]:
-    Source: 'src/runtime/interp/mod.rs', lines 737:0-751:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_ref_func
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55861,7 +55861,7 @@ def runtime.interp.execute_ref_func
     ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::interp::execute_ref_is_null]:
-    Source: 'src/runtime/interp/mod.rs', lines 722:0-734:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_ref_is_null
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (a : Std.U32) :
@@ -55885,7 +55885,7 @@ def runtime.interp.execute_ref_is_null
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::execute_ref_null]:
-    Source: 'src/runtime/interp/mod.rs', lines 716:0-719:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_ref_null
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32) :
   Result ((core.result.Result Unit runtime.ExecError) ×
@@ -55900,7 +55900,7 @@ def runtime.interp.execute_ref_null
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_memory_index]:
-    Source: 'src/runtime/store.rs', lines 427:4-450:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.grow_memory_index
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) (index : Std.Usize) (delta : Std.U32) :
@@ -55959,7 +55959,7 @@ def runtime.store.Store.grow_memory_index
           else ok (core.num.U32.MAX, self)
 
 /-- [itasca::runtime::interp::execute_memory_grow]:
-    Source: 'src/runtime/interp/mod.rs', lines 702:0-713:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_memory_grow
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -55992,7 +55992,7 @@ def runtime.interp.execute_memory_grow
   ok (core.result.Result.Ok (), { exec with slots := v }, store1)
 
 /-- [itasca::runtime::interp::execute_memory_size]:
-    Source: 'src/runtime/interp/mod.rs', lines 689:0-699:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_memory_size
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56022,7 +56022,7 @@ def runtime.interp.execute_memory_size
   ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::interp::execute_global_set2]:
-    Source: 'src/runtime/interp/mod.rs', lines 674:0-686:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_global_set2
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56055,7 +56055,7 @@ def runtime.interp.execute_global_set2
   ok (core.result.Result.Ok (), exec, { store with globals := v })
 
 /-- [itasca::runtime::interp::execute_global_set]:
-    Source: 'src/runtime/interp/mod.rs', lines 660:0-671:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_global_set
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56082,7 +56082,7 @@ def runtime.interp.execute_global_set
   ok (core.result.Result.Ok (), exec, { store with globals := v })
 
 /-- [itasca::runtime::interp::execute_global_get2]:
-    Source: 'src/runtime/interp/mod.rs', lines 645:0-657:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_global_get2
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56116,7 +56116,7 @@ def runtime.interp.execute_global_get2
   ok (core.result.Result.Ok (), { exec with slots := v1 }, store)
 
 /-- [itasca::runtime::interp::execute_global_get]:
-    Source: 'src/runtime/interp/mod.rs', lines 631:0-642:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_global_get
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56143,7 +56143,7 @@ def runtime.interp.execute_global_get
   ok (core.result.Result.Ok (), { exec with slots := v }, store)
 
 /-- [itasca::runtime::interp::copy]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 251:4-254:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.copy_loop.body
   (dst : Std.Usize) (src : Std.Usize) (n : Std.Usize) (slots : Slice Std.U64)
@@ -56161,7 +56161,7 @@ def runtime.interp.copy_loop.body
   else ok (done slots)
 
 /-- [itasca::runtime::interp::copy]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 251:4-254:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.copy_loop
   (slots : Slice Std.U64) (dst : Std.Usize) (src : Std.Usize) (n : Std.Usize)
@@ -56173,7 +56173,7 @@ def runtime.interp.copy_loop
     (slots, i)
 
 /-- [itasca::runtime::interp::copy]:
-    Source: 'src/runtime/interp/mod.rs', lines 249:0-255:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[reducible]
 def runtime.interp.copy
   (slots : Slice Std.U64) (dst : Std.Usize) (src : Std.Usize) (n : Std.Usize) :
@@ -56182,7 +56182,7 @@ def runtime.interp.copy
   runtime.interp.copy_loop slots dst src n 0#usize
 
 /-- [itasca::runtime::interp::execute_select2]:
-    Source: 'src/runtime/interp/mod.rs', lines 617:0-628:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_select2
   (exec : runtime.interp.Execution) (base : Std.Usize) (a : Std.U32)
   (b : Std.U32) (cond : Std.U32) :
@@ -56208,7 +56208,7 @@ def runtime.interp.execute_select2
   else ok (core.result.Result.Ok (), exec)
 
 /-- [itasca::runtime::interp::execute_select]:
-    Source: 'src/runtime/interp/mod.rs', lines 603:0-614:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_select
   (exec : runtime.interp.Execution) (base : Std.Usize) (a : Std.U32)
   (b : Std.U32) (cond : Std.U32) :
@@ -56238,7 +56238,7 @@ def runtime.interp.execute_select
   else ok (core.result.Result.Ok (), exec)
 
 /-- [itasca::runtime::interp::execute_unreachable]:
-    Source: 'src/runtime/interp/mod.rs', lines 598:0-600:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_unreachable
   : Result (core.result.Result Unit runtime.ExecError) := do
   let ee ←
@@ -56247,7 +56247,7 @@ def runtime.interp.execute_unreachable
   ok (core.result.Result.Err ee)
 
 /-- [itasca::runtime::interp::execute_return]:
-    Source: 'src/runtime/interp/mod.rs', lines 591:0-595:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_return
   (exec : runtime.interp.Execution) (base : Std.Usize) (src : Std.U32)
   (n : Std.U32) :
@@ -56264,7 +56264,7 @@ def runtime.interp.execute_return
   ok (core.result.Result.Ok (), { exec with slots := v1, frames := v })
 
 /-- [itasca::runtime::{itasca::runtime::Value}::zero]:
-    Source: 'src/runtime/mod.rs', lines 85:4-95:5 -/
+    Source: 'src/runtime/mod.rs' -/
 def runtime.Value.zero (t : wasm_types.ValueType) : Result runtime.Value := do
   match t with
   | wasm_types.ValueType.I32 => ok (runtime.Value.I32 0#u32)
@@ -56276,7 +56276,7 @@ def runtime.Value.zero (t : wasm_types.ValueType) : Result runtime.Value := do
   | wasm_types.ValueType.ExternRef => ok (runtime.Value.ExternRef none)
 
 /-- [itasca::runtime::interp::call]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 213:12-219:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.call_loop0.body
   (v : alloc.vec.Vec Std.U64) (i : Std.Usize)
@@ -56302,7 +56302,7 @@ def runtime.interp.call_loop0.body
   else ok (done v2)
 
 /-- [itasca::runtime::interp::call]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 213:12-219:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.call_loop0
   (v : alloc.vec.Vec Std.U64) (v1 : alloc.vec.Vec runtime.Value)
@@ -56315,7 +56315,7 @@ def runtime.interp.call_loop0
     (v1, i1, pos)
 
 /-- [itasca::runtime::interp::call]: loop body 1:
-    Source: 'src/runtime/interp/mod.rs', lines 221:12-224:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.call_loop1.body
   (v : alloc.vec.Vec wasm_types.ValueType) (v1 : alloc.vec.Vec runtime.Value)
@@ -56336,7 +56336,7 @@ def runtime.interp.call_loop1.body
   else ok (done v1)
 
 /-- [itasca::runtime::interp::call]: loop 1:
-    Source: 'src/runtime/interp/mod.rs', lines 221:12-224:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.call_loop1
   (v : alloc.vec.Vec runtime.Value) (v1 : alloc.vec.Vec wasm_types.ValueType)
@@ -56348,7 +56348,7 @@ def runtime.interp.call_loop1
     (v, i)
 
 /-- [itasca::runtime::interp::call]: loop body 2:
-    Source: 'src/runtime/interp/mod.rs', lines 239:12-244:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.call_loop2.body
   (v : alloc.vec.Vec runtime.Value) (v1 : alloc.vec.Vec wasm_types.ValueType)
@@ -56376,7 +56376,7 @@ def runtime.interp.call_loop2.body
   else ok (done v2)
 
 /-- [itasca::runtime::interp::call]: loop 2:
-    Source: 'src/runtime/interp/mod.rs', lines 239:12-244:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.call_loop2
   (v : alloc.vec.Vec Std.U64) (v1 : alloc.vec.Vec runtime.Value)
@@ -56388,7 +56388,7 @@ def runtime.interp.call_loop2
     (v, i, pos)
 
 /-- [itasca::runtime::interp::call]: loop body 3:
-    Source: 'src/runtime/interp/mod.rs', lines 185:12-188:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.call_loop3.body
   (base : Std.Usize) (i : Std.U32) (exec : runtime.interp.Execution)
@@ -56409,7 +56409,7 @@ def runtime.interp.call_loop3.body
   else ok (done exec)
 
 /-- [itasca::runtime::interp::call]: loop 3:
-    Source: 'src/runtime/interp/mod.rs', lines 185:12-188:13 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.call_loop3
   (exec : runtime.interp.Execution) (base : Std.Usize) (i : Std.U32)
@@ -56421,7 +56421,7 @@ def runtime.interp.call_loop3
     (exec, i1)
 
 /-- [itasca::runtime::interp::call]:
-    Source: 'src/runtime/interp/mod.rs', lines 165:0-248:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.call
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -56628,7 +56628,7 @@ def runtime.interp.call
     ok (r1, exec, store, platform1)
 
 /-- [itasca::runtime::interp::execute_call_indirect]:
-    Source: 'src/runtime/interp/mod.rs', lines 553:0-588:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_call_indirect
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -56706,7 +56706,7 @@ def runtime.interp.execute_call_indirect
           { store := store.id, index := f } i12
 
 /-- [itasca::runtime::interp::execute_call]:
-    Source: 'src/runtime/interp/mod.rs', lines 539:0-550:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_call
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -56731,7 +56731,7 @@ def runtime.interp.execute_call
     platformFloatOpsInst platformAllocInst exec store platform addr i2
 
 /-- [itasca::runtime::interp::execute_loop_head]:
-    Source: 'src/runtime/interp/mod.rs', lines 534:0-536:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_loop_head
   {M : Type} {P : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -56742,7 +56742,7 @@ def runtime.interp.execute_loop_head
     platform
 
 /-- [itasca::runtime::interp::execute_jump_table]:
-    Source: 'src/runtime/interp/mod.rs', lines 514:0-531:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_jump_table
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56779,7 +56779,7 @@ def runtime.interp.execute_jump_table
   ok (core.result.Result.Ok (), { exec with frames := v }, store)
 
 /-- [itasca::runtime::interp::execute_jump_if_non_zero]:
-    Source: 'src/runtime/interp/mod.rs', lines 500:0-511:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_jump_if_non_zero
   (exec : runtime.interp.Execution) (frame_index : Std.Usize)
   (base : Std.Usize) (cond : Std.U32) (target : Std.U32) :
@@ -56802,7 +56802,7 @@ def runtime.interp.execute_jump_if_non_zero
   else ok (core.result.Result.Ok (), exec)
 
 /-- [itasca::runtime::interp::execute_jump_if_zero]:
-    Source: 'src/runtime/interp/mod.rs', lines 486:0-497:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_jump_if_zero
   (exec : runtime.interp.Execution) (frame_index : Std.Usize)
   (base : Std.Usize) (cond : Std.U32) (target : Std.U32) :
@@ -56825,7 +56825,7 @@ def runtime.interp.execute_jump_if_zero
   else ok (core.result.Result.Ok (), exec)
 
 /-- [itasca::runtime::interp::execute_jump]:
-    Source: 'src/runtime/interp/mod.rs', lines 480:0-483:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_jump
   (exec : runtime.interp.Execution) (frame_index : Std.Usize)
   (target : Std.U32) :
@@ -56839,7 +56839,7 @@ def runtime.interp.execute_jump
   ok (core.result.Result.Ok (), { exec with frames := v })
 
 /-- [itasca::runtime::interp::execute_const_v128]:
-    Source: 'src/runtime/interp/mod.rs', lines 464:0-477:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_const_v128
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (exec : runtime.interp.Execution) (store : runtime.store.Store M)
@@ -56877,7 +56877,7 @@ def runtime.interp.execute_const_v128
   ok (core.result.Result.Ok (), { exec with slots := v2 }, store)
 
 /-- [itasca::runtime::interp::execute_const64]:
-    Source: 'src/runtime/interp/mod.rs', lines 453:0-461:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_const64
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (value : Std.U64) :
@@ -56893,7 +56893,7 @@ def runtime.interp.execute_const64
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::execute_const32]:
-    Source: 'src/runtime/interp/mod.rs', lines 442:0-450:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_const32
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (value : Std.U32) :
@@ -56910,7 +56910,7 @@ def runtime.interp.execute_const32
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::execute_copy_n]:
-    Source: 'src/runtime/interp/mod.rs', lines 425:0-439:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_copy_n
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (src : Std.U32) (n : Std.U32) :
@@ -56928,7 +56928,7 @@ def runtime.interp.execute_copy_n
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::execute_copy2]:
-    Source: 'src/runtime/interp/mod.rs', lines 419:0-422:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_copy2
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (src : Std.U32) :
@@ -56945,7 +56945,7 @@ def runtime.interp.execute_copy2
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::execute_copy]:
-    Source: 'src/runtime/interp/mod.rs', lines 413:0-416:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.execute_copy
   (exec : runtime.interp.Execution) (base : Std.Usize) (dst : Std.U32)
   (src : Std.U32) :
@@ -56966,7 +56966,7 @@ def runtime.interp.execute_copy
   ok (core.result.Result.Ok (), { exec with slots := v })
 
 /-- [itasca::runtime::interp::dispatch]:
-    Source: 'src/runtime/interp/mod.rs', lines 914:8-1012:9 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.dispatch
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59114,7 +59114,7 @@ def runtime.interp.dispatch
     ok (r, exec1, store1, platform)
 
 /-- [itasca::runtime::interp::step]:
-    Source: 'src/runtime/interp/mod.rs', lines 267:0-293:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.step
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59155,7 +59155,7 @@ def runtime.interp.step
       platform frame_index frame.instance frame.function frame.base instruction
 
 /-- [itasca::runtime::interp::invoke_with]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 140:4-144:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.invoke_with_loop0.body
   (args : Slice runtime.Value) (v : alloc.vec.Vec wasm_types.ValueType)
@@ -59181,7 +59181,7 @@ def runtime.interp.invoke_with_loop0.body
   else ok (done v1)
 
 /-- [itasca::runtime::interp::invoke_with]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 140:4-144:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.invoke_with_loop0
   (v : alloc.vec.Vec Std.U64) (args : Slice runtime.Value)
@@ -59195,7 +59195,7 @@ def runtime.interp.invoke_with_loop0
     (v, i, slot)
 
 /-- [itasca::runtime::interp::invoke_with]: loop body 1:
-    Source: 'src/runtime/interp/mod.rs', lines 147:4-149:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.invoke_with_loop1.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -59229,7 +59229,7 @@ def runtime.interp.invoke_with_loop1.body
       exec.host_results, store, platform, status))
 
 /-- [itasca::runtime::interp::invoke_with]: loop 1:
-    Source: 'src/runtime/interp/mod.rs', lines 147:4-149:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.invoke_with_loop1
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -59251,7 +59251,7 @@ def runtime.interp.invoke_with_loop1
     (exec, store, platform, status)
 
 /-- [itasca::runtime::interp::invoke_with]: loop body 2:
-    Source: 'src/runtime/interp/mod.rs', lines 156:4-162:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.invoke_with_loop2.body
   {M : Type} (v : alloc.vec.Vec Std.U64) (store : runtime.store.Store M)
@@ -59277,7 +59277,7 @@ def runtime.interp.invoke_with_loop2.body
   else ok (done (store, results))
 
 /-- [itasca::runtime::interp::invoke_with]: loop 2:
-    Source: 'src/runtime/interp/mod.rs', lines 156:4-162:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.invoke_with_loop2
   {M : Type} (v : alloc.vec.Vec Std.U64) (store : runtime.store.Store M)
@@ -59291,7 +59291,7 @@ def runtime.interp.invoke_with_loop2
     (results, i, slot)
 
 /-- [itasca::runtime::interp::invoke_with]:
-    Source: 'src/runtime/interp/mod.rs', lines 124:0-164:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.invoke_with
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59444,7 +59444,7 @@ def runtime.interp.invoke_with
     ok (r1, exec, store, platform, results)
 
 /-- [itasca::runtime::interp::run_synthetic]: loop body 0:
-    Source: 'src/runtime/interp/mod.rs', lines 1037:4-1039:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop_body]
 def runtime.interp.run_synthetic_loop.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -59473,7 +59473,7 @@ def runtime.interp.run_synthetic_loop.body
   else ok (done (store, platform, exec.slots, status))
 
 /-- [itasca::runtime::interp::run_synthetic]: loop 0:
-    Source: 'src/runtime/interp/mod.rs', lines 1037:4-1039:5 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 @[rust_loop]
 def runtime.interp.run_synthetic_loop
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -59494,7 +59494,7 @@ def runtime.interp.run_synthetic_loop
     (store, platform, exec, status)
 
 /-- [itasca::runtime::interp::run_synthetic]:
-    Source: 'src/runtime/interp/mod.rs', lines 1019:0-1042:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.run_synthetic
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59558,7 +59558,7 @@ def runtime.interp.run_synthetic
     ok (r1, store, platform)
 
 /-- [itasca::runtime::interp::eval_const]:
-    Source: 'src/runtime/interp/mod.rs', lines 1045:0-1054:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.eval_const
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59586,7 +59586,7 @@ def runtime.interp.eval_const
     ok (r1, store1, platform1)
 
 /-- [itasca::runtime::interp::initialize_segments]:
-    Source: 'src/runtime/interp/mod.rs', lines 1057:0-1065:1 -/
+    Source: 'src/runtime/interp/mod.rs' -/
 def runtime.interp.initialize_segments
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59614,7 +59614,7 @@ def runtime.interp.initialize_segments
     ok (r1, store1, platform1)
 
 /-- [itasca::runtime::{itasca::runtime::Value}::i32]:
-    Source: 'src/runtime/mod.rs', lines 96:4-101:5 -/
+    Source: 'src/runtime/mod.rs' -/
 def runtime.Value.i32
   (self : runtime.Value) :
   Result (core.result.Result Std.U32 runtime.ExecError)
@@ -59635,7 +59635,7 @@ def runtime.Value.i32
     ok (core.result.Result.Err runtime.ExecError.Internal)
 
 /-- [itasca::runtime::copy_type]: loop body 0:
-    Source: 'src/runtime/mod.rs', lines 193:4-196:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop_body]
 def runtime.copy_type_loop0.body
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -59655,7 +59655,7 @@ def runtime.copy_type_loop0.body
   else ok (done params)
 
 /-- [itasca::runtime::copy_type]: loop 0:
-    Source: 'src/runtime/mod.rs', lines 193:4-196:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop]
 def runtime.copy_type_loop0
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -59667,7 +59667,7 @@ def runtime.copy_type_loop0
     (params, i)
 
 /-- [itasca::runtime::copy_type]: loop body 1:
-    Source: 'src/runtime/mod.rs', lines 198:4-201:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop_body]
 def runtime.copy_type_loop1.body
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -59687,7 +59687,7 @@ def runtime.copy_type_loop1.body
   else ok (done results)
 
 /-- [itasca::runtime::copy_type]: loop 1:
-    Source: 'src/runtime/mod.rs', lines 198:4-201:5 -/
+    Source: 'src/runtime/mod.rs' -/
 @[rust_loop]
 def runtime.copy_type_loop1
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -59699,7 +59699,7 @@ def runtime.copy_type_loop1
     (results, i)
 
 /-- [itasca::runtime::copy_type]:
-    Source: 'src/runtime/mod.rs', lines 187:0-203:1 -/
+    Source: 'src/runtime/mod.rs' -/
 def runtime.copy_type
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (t : wasm_types.FuncType) :
@@ -59730,7 +59730,7 @@ def runtime.copy_type
       wasm_types.FuncType (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::grow_with]: loop body 0:
-    Source: 'src/runtime/platform.rs', lines 123:8-125:9 -/
+    Source: 'src/runtime/platform.rs' -/
 @[rust_loop_body]
 def runtime.platform.VecMemory.grow_with_loop.body
   (new_len : Std.Usize) (v : alloc.vec.Vec Std.U8) :
@@ -59743,7 +59743,7 @@ def runtime.platform.VecMemory.grow_with_loop.body
   else ok (done v)
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::grow_with]: loop 0:
-    Source: 'src/runtime/platform.rs', lines 123:8-125:9 -/
+    Source: 'src/runtime/platform.rs' -/
 @[rust_loop]
 def runtime.platform.VecMemory.grow_with_loop
   (v : alloc.vec.Vec Std.U8) (new_len : Std.Usize) :
@@ -59754,7 +59754,7 @@ def runtime.platform.VecMemory.grow_with_loop
     v
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::grow_with]:
-    Source: 'src/runtime/platform.rs', lines 115:4-127:5 -/
+    Source: 'src/runtime/platform.rs' -/
 def runtime.platform.VecMemory.grow_with
   {A : Type} (AllocInst : runtime.platform.Alloc A)
   (self : runtime.platform.VecMemory) (new_len : Std.Usize) :
@@ -59774,7 +59774,7 @@ def runtime.platform.VecMemory.grow_with
     else ok (false, { data := v })
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::new_zeroed_with]:
-    Source: 'src/runtime/platform.rs', lines 101:4-108:5 -/
+    Source: 'src/runtime/platform.rs' -/
 def runtime.platform.VecMemory.new_zeroed_with
   {A : Type} (AllocInst : runtime.platform.Alloc A) (len : Std.Usize) :
   Result (Option runtime.platform.VecMemory)
@@ -59787,13 +59787,13 @@ def runtime.platform.VecMemory.new_zeroed_with
   else ok none
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::as_bytes]:
-    Source: 'src/runtime/platform.rs', lines 109:4-111:5 -/
+    Source: 'src/runtime/platform.rs' -/
 def runtime.platform.VecMemory.as_bytes
   (self : runtime.platform.VecMemory) : Result (Slice Std.U8) := do
   ok (alloc.vec.Vec.deref self.data)
 
 /-- [itasca::runtime::platform::{itasca::runtime::platform::VecMemory}::as_bytes_mut]:
-    Source: 'src/runtime/platform.rs', lines 112:4-114:5 -/
+    Source: 'src/runtime/platform.rs' -/
 def runtime.platform.VecMemory.as_bytes_mut
   (self : runtime.platform.VecMemory) :
   Result ((Slice Std.U8) × (Slice Std.U8 → runtime.platform.VecMemory))
@@ -59806,7 +59806,7 @@ def runtime.platform.VecMemory.as_bytes_mut
   ok (s, back)
 
 /-- [itasca::runtime::store::instantiation_failed]:
-    Source: 'src/runtime/store.rs', lines 489:0-494:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.instantiation_failed
   (result : core.result.Result runtime.Instantiated runtime.ExecError) :
   Result Bool
@@ -59816,7 +59816,7 @@ def runtime.store.instantiation_failed
   | core.result.Result.Err _ => ok true
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::commit_instance]:
-    Source: 'src/runtime/store/instantiate.rs', lines 202:4-218:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.commit_instance
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59858,7 +59858,7 @@ def runtime.store.instantiate.Store.commit_instance
     ok (r1, self1, platform1, true)
 
 /-- [itasca::runtime::store::add_items]:
-    Source: 'src/runtime/store.rs', lines 528:0-536:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.add_items
   (items : Std.Usize) (additional : Std.Usize) :
   Result ((core.result.Result Unit runtime.ExecError) × Std.Usize)
@@ -59871,14 +59871,14 @@ def runtime.store.add_items
   | some n => ok (core.result.Result.Ok (), n)
 
 /-- [itasca::runtime::store::wasm1]:
-    Source: 'src/runtime/store.rs', lines 495:0-500:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.wasm1 (profile : ValidationProfile) : Result Bool := do
   match profile with
   | ValidationProfile.Wasm1 => ok true
   | ValidationProfile.Wasm2 => ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_data_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 413:4-440:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.check_data_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -59958,7 +59958,7 @@ def runtime.store.instantiate.Store.check_data_bounds
   | metadata.DataMode.Passive => ok (core.result.Result.Ok (), self, platform)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::check_element_bounds]:
-    Source: 'src/runtime/store/instantiate.rs', lines 384:4-411:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.check_element_bounds
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -60038,7 +60038,7 @@ def runtime.store.instantiate.Store.check_element_bounds
     ok (core.result.Result.Ok (), self, platform)
 
 /-- [itasca::runtime::store::copy_bytes]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 522:4-525:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.copy_bytes_loop.body
   (source : Slice Std.U8) (bytes : alloc.vec.Vec Std.U8) (i : Std.Usize) :
@@ -60055,7 +60055,7 @@ def runtime.store.copy_bytes_loop.body
   else ok (done bytes)
 
 /-- [itasca::runtime::store::copy_bytes]: loop 0:
-    Source: 'src/runtime/store.rs', lines 522:4-525:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.copy_bytes_loop
   (source : Slice Std.U8) (bytes : alloc.vec.Vec Std.U8) (i : Std.Usize) :
@@ -60066,7 +60066,7 @@ def runtime.store.copy_bytes_loop
     (bytes, i)
 
 /-- [itasca::runtime::store::copy_bytes]:
-    Source: 'src/runtime/store.rs', lines 518:0-527:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.copy_bytes
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (source : Slice Std.U8) :
@@ -60085,7 +60085,7 @@ def runtime.store.copy_bytes
       (alloc.vec.Vec Std.U8) (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_data]:
-    Source: 'src/runtime/store/instantiate.rs', lines 374:4-382:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_data
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60131,7 +60131,7 @@ def runtime.store.instantiate.Store.add_instance_data
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 353:8-363:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.add_instance_element_loop.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -60183,7 +60183,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop.body
   else ok (done (self, platform, values, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 353:8-363:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.add_instance_element_loop
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -60205,7 +60205,7 @@ def runtime.store.instantiate.Store.add_instance_element_loop
     (self, platform, values, j, status)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_element]:
-    Source: 'src/runtime/store/instantiate.rs', lines 340:4-373:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_element
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -60274,7 +60274,7 @@ def runtime.store.instantiate.Store.add_instance_element
     ok (r1, self, platform)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::room]:
-    Source: 'src/runtime/store.rs', lines 145:4-157:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.room
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) :
@@ -60298,7 +60298,7 @@ def runtime.store.Store.room
   else ok (core.result.Result.Ok ())
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_global_with]:
-    Source: 'src/runtime/store.rs', lines 269:4-287:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.define_global_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60351,7 +60351,7 @@ def runtime.store.Store.define_global_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_global]:
-    Source: 'src/runtime/store/instantiate.rs', lines 327:4-339:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_global
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -60402,7 +60402,7 @@ def runtime.store.instantiate.Store.add_instance_global
     ok (r1, self1, platform1)
 
 /-- [itasca::runtime::store::check_limits]:
-    Source: 'src/runtime/store.rs', lines 501:0-507:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.check_limits
   (l : wasm_types.Limits) (max : Std.U32) :
   Result (core.result.Result Unit runtime.ExecError)
@@ -60420,7 +60420,7 @@ def runtime.store.check_limits
       else ok (core.result.Result.Ok ())
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_memory_with]:
-    Source: 'src/runtime/store.rs', lines 204:4-233:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.define_memory_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60484,7 +60484,7 @@ def runtime.store.Store.define_memory_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_memory]:
-    Source: 'src/runtime/store/instantiate.rs', lines 308:4-326:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_memory
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60534,7 +60534,7 @@ def runtime.store.instantiate.Store.add_instance_memory
         runtime.ResourceLimit.Allocation), self, inst)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_table_with]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 251:8-254:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.Store.define_table_with_loop.body
   (i : Std.U32) (elements : alloc.vec.Vec Std.U64) (i1 : Std.U32) :
@@ -60549,7 +60549,7 @@ def runtime.store.Store.define_table_with_loop.body
   else ok (done elements)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_table_with]: loop 0:
-    Source: 'src/runtime/store.rs', lines 251:8-254:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.Store.define_table_with_loop
   (i : Std.U32) (elements : alloc.vec.Vec Std.U64) (i1 : Std.U32) :
@@ -60561,7 +60561,7 @@ def runtime.store.Store.define_table_with_loop
     (elements, i1)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_table_with]:
-    Source: 'src/runtime/store.rs', lines 235:4-267:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.define_table_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60635,7 +60635,7 @@ def runtime.store.Store.define_table_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_table]:
-    Source: 'src/runtime/store/instantiate.rs', lines 299:4-307:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_table
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60662,7 +60662,7 @@ def runtime.store.instantiate.Store.add_instance_table
     ok (r1, self1, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_function]:
-    Source: 'src/runtime/store/instantiate.rs', lines 277:4-298:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_function
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -60710,7 +60710,7 @@ def runtime.store.instantiate.Store.add_instance_function
     ok (r1, self, inst)
 
 /-- [itasca::runtime::store::same_func_type]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 551:4-554:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.same_func_type_loop0.body
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -60736,7 +60736,7 @@ def runtime.store.same_func_type_loop0.body
   else ok (done same)
 
 /-- [itasca::runtime::store::same_func_type]: loop 0:
-    Source: 'src/runtime/store.rs', lines 551:4-554:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.same_func_type_loop0
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -60748,7 +60748,7 @@ def runtime.store.same_func_type_loop0
     (i, same)
 
 /-- [itasca::runtime::store::same_func_type]: loop body 1:
-    Source: 'src/runtime/store.rs', lines 556:4-559:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.same_func_type_loop1.body
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -60774,7 +60774,7 @@ def runtime.store.same_func_type_loop1.body
   else ok (done same)
 
 /-- [itasca::runtime::store::same_func_type]: loop 1:
-    Source: 'src/runtime/store.rs', lines 556:4-559:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.same_func_type_loop1
   (v : alloc.vec.Vec wasm_types.ValueType)
@@ -60786,7 +60786,7 @@ def runtime.store.same_func_type_loop1
     (i, same)
 
 /-- [itasca::runtime::store::same_func_type]:
-    Source: 'src/runtime/store.rs', lines 545:0-561:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.same_func_type
   (a : wasm_types.FuncType) (b : wasm_types.FuncType) : Result Bool := do
   let i := alloc.vec.Vec.len a.params
@@ -60804,7 +60804,7 @@ def runtime.store.same_func_type
       runtime.store.same_func_type_loop1 a.results b.results 0#usize same
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 296:8-298:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.Store.intern_type_loop.body
   {M : Type} (self : runtime.store.Store M) (ty : wasm_types.FuncType)
@@ -60840,7 +60840,7 @@ def runtime.store.Store.intern_type_loop.body
       self.memory_bytes, self.table_elements, i))
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]: loop 0:
-    Source: 'src/runtime/store.rs', lines 296:8-298:9 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.Store.intern_type_loop
   {M : Type} (self : runtime.store.Store M) (ty : wasm_types.FuncType)
@@ -60859,7 +60859,7 @@ def runtime.store.Store.intern_type_loop
     i
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::intern_type]:
-    Source: 'src/runtime/store.rs', lines 294:4-319:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.intern_type
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -61063,7 +61063,7 @@ def runtime.store.Store.intern_type
         })
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::add_instance_type]:
-    Source: 'src/runtime/store/instantiate.rs', lines 268:4-276:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.add_instance_type
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -61090,7 +61090,7 @@ def runtime.store.instantiate.Store.add_instance_type
     ok (r1, self1, inst)
 
 /-- [itasca::runtime::store::matches_limits]:
-    Source: 'src/runtime/store.rs', lines 508:0-517:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.matches_limits
   (size : Std.U64) (maximum : Option Std.U32) (required : wasm_types.Limits) :
   Result Bool
@@ -61106,7 +61106,7 @@ def runtime.store.matches_limits
   else ok false
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::link_import]:
-    Source: 'src/runtime/store/instantiate.rs', lines 219:4-267:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.link_import
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) (inst : runtime.store.ModuleInst)
@@ -61282,7 +61282,7 @@ def runtime.store.instantiate.Store.link_import
         ok (r1, self, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 96:8-99:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop0.body
   (counts : Array Std.Usize 7#usize) (items : Std.Usize)
@@ -61305,7 +61305,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop0.body
   else ok (done (items, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 96:8-99:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop0
   (items : Std.Usize) (status : core.result.Result Unit runtime.ExecError)
@@ -61319,7 +61319,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop0
     (items, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 101:8-105:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop1.body
   (module : runtime.compiler.ExecutableModule) (items : Std.Usize)
@@ -61345,7 +61345,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop1.body
   else ok (done (items, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 101:8-105:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop1
   (module : runtime.compiler.ExecutableModule) (items : Std.Usize)
@@ -61359,7 +61359,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop1
     (items, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 125:8-128:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop2.body
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -61387,7 +61387,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop2.body
   else ok (done (self, status, inst))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 125:8-128:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop2
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -61404,7 +61404,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop2
     (self, status, i, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 136:8-139:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop3.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61441,7 +61441,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop3.body
       inst.memories, inst.globals, inst.elems, inst.datas))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 136:8-139:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop3
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61463,7 +61463,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop3
     (self, status, i, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 142:8-145:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop4.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61500,7 +61500,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop4.body
       inst.memories, inst.globals, inst.elems, inst.datas))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 142:8-145:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop4
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61522,7 +61522,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop4
     (self, status, i, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop5.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61559,7 +61559,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop5.body
       inst.memories, inst.globals, inst.elems, inst.datas))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 148:8-151:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop5
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61581,7 +61581,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop5
     (self, status, i, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 154:8-157:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop6.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61618,7 +61618,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop6.body
       inst.memories, inst.globals, inst.elems, inst.datas))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 154:8-157:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop6
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61640,7 +61640,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop6
     (self, status, i, inst)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 162:8-165:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop7.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61689,7 +61689,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop7.body
       self.memory_bytes, self.table_elements, platform, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 162:8-165:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop7
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61716,7 +61716,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop7
     (self, platform, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 8:
-    Source: 'src/runtime/store/instantiate.rs', lines 170:8-173:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop8.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61765,7 +61765,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop8.body
       self.memory_bytes, self.table_elements, platform, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 8:
-    Source: 'src/runtime/store/instantiate.rs', lines 170:8-173:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop8
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61792,7 +61792,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop8
     (self, platform, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 9:
-    Source: 'src/runtime/store/instantiate.rs', lines 178:8-181:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop9.body
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61837,7 +61837,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop9.body
       self.memory_bytes, self.table_elements, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 9:
-    Source: 'src/runtime/store/instantiate.rs', lines 178:8-181:9 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop9
   {M : Type} {A : Type} (platformMemoryBufferInst :
@@ -61861,7 +61861,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop9
     (self, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 10:
-    Source: 'src/runtime/store/instantiate.rs', lines 185:12-189:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop10.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61910,7 +61910,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop10.body
       self.memory_bytes, self.table_elements, platform, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 10:
-    Source: 'src/runtime/store/instantiate.rs', lines 185:12-189:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop10
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61937,7 +61937,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop10
     (self, platform, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop body 11:
-    Source: 'src/runtime/store/instantiate.rs', lines 192:12-195:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.prepare_instance_loop11.body
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -61985,7 +61985,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop11.body
       self.memory_bytes, self.table_elements, platform, status))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]: loop 11:
-    Source: 'src/runtime/store/instantiate.rs', lines 192:12-195:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.prepare_instance_loop11
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
@@ -62012,7 +62012,7 @@ def runtime.store.instantiate.Store.prepare_instance_loop11
     (self, platform, status, i)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::prepare_instance]:
-    Source: 'src/runtime/store/instantiate.rs', lines 72:4-199:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.prepare_instance
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -62732,7 +62732,7 @@ def runtime.store.instantiate.Store.prepare_instance
         ok (r, self, platform)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_inner]:
-    Source: 'src/runtime/store/instantiate.rs', lines 57:4-67:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.instantiate_inner
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -62762,7 +62762,7 @@ def runtime.store.instantiate.Store.instantiate_inner
     ok (r1, self1, platform1, committed)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 27:12-29:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop0.body
   {M : Type} (elems : Std.Usize) (self : runtime.store.Store M) :
@@ -62786,7 +62786,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop0.body
       self.externs, self.instance_items))
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 0:
-    Source: 'src/runtime/store/instantiate.rs', lines 27:12-29:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop0
   {M : Type} (self : runtime.store.Store M) (elems : Std.Usize) :
@@ -62804,7 +62804,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop0
     self
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 30:12-32:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop1.body
   (datas : Std.Usize) (v : alloc.vec.Vec runtime.store.DataInst) :
@@ -62818,7 +62818,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop1.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 1:
-    Source: 'src/runtime/store/instantiate.rs', lines 30:12-32:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop1
   (v : alloc.vec.Vec runtime.store.DataInst) (datas : Std.Usize) :
@@ -62830,7 +62830,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop1
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 33:12-35:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop2.body
   (instances : Std.Usize) (v : alloc.vec.Vec runtime.store.ModuleInst) :
@@ -62844,7 +62844,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop2.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 2:
-    Source: 'src/runtime/store/instantiate.rs', lines 33:12-35:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop2
   (v : alloc.vec.Vec runtime.store.ModuleInst) (instances : Std.Usize) :
@@ -62856,7 +62856,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop2
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 36:12-38:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop3.body
   (functions : Std.Usize) (v : alloc.vec.Vec runtime.store.FuncInst) :
@@ -62870,7 +62870,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop3.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 3:
-    Source: 'src/runtime/store/instantiate.rs', lines 36:12-38:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop3
   (v : alloc.vec.Vec runtime.store.FuncInst) (functions : Std.Usize) :
@@ -62882,7 +62882,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop3
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 39:12-41:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop4.body
   (tables : Std.Usize) (v : alloc.vec.Vec runtime.store.TableInst) :
@@ -62896,7 +62896,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop4.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 4:
-    Source: 'src/runtime/store/instantiate.rs', lines 39:12-41:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop4
   (v : alloc.vec.Vec runtime.store.TableInst) (tables : Std.Usize) :
@@ -62908,7 +62908,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop4
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 42:12-44:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop5.body
   {M : Type} (memories : Std.Usize)
@@ -62923,7 +62923,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop5.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 5:
-    Source: 'src/runtime/store/instantiate.rs', lines 42:12-44:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop5
   {M : Type} (v : alloc.vec.Vec (runtime.store.MemInst M))
@@ -62936,7 +62936,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop5
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 45:12-47:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop6.body
   (globals : Std.Usize) (v : alloc.vec.Vec runtime.store.GlobalInst) :
@@ -62950,7 +62950,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop6.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 6:
-    Source: 'src/runtime/store/instantiate.rs', lines 45:12-47:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop6
   (v : alloc.vec.Vec runtime.store.GlobalInst) (globals : Std.Usize) :
@@ -62962,7 +62962,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop6
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop body 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 48:12-50:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop_body]
 def runtime.store.instantiate.Store.instantiate_with_loop7.body
   (types : Std.Usize) (v : alloc.vec.Vec wasm_types.FuncType) :
@@ -62976,7 +62976,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop7.body
   else ok (done v)
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]: loop 7:
-    Source: 'src/runtime/store/instantiate.rs', lines 48:12-50:13 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 @[rust_loop]
 def runtime.store.instantiate.Store.instantiate_with_loop7
   (v : alloc.vec.Vec wasm_types.FuncType) (types : Std.Usize) :
@@ -62988,7 +62988,7 @@ def runtime.store.instantiate.Store.instantiate_with_loop7
     v
 
 /-- [itasca::runtime::store::instantiate::{itasca::runtime::store::Store<M>}::instantiate_with]:
-    Source: 'src/runtime/store/instantiate.rs', lines 5:4-56:5 -/
+    Source: 'src/runtime/store/instantiate.rs' -/
 def runtime.store.instantiate.Store.instantiate_with
   {M : Type} {P : Type} {F : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformPlatformInst :
@@ -63053,7 +63053,7 @@ def runtime.store.instantiate.Store.instantiate_with
   else ok (result, self1, platform1)
 
 /-- [itasca::runtime::store::{impl core::default::Default for itasca::runtime::store::StoreLimits}::default]:
-    Source: 'src/runtime/store.rs', lines 38:4-49:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.StoreLimits.Insts.CoreDefaultDefault.default
   : Result runtime.store.StoreLimits := do
@@ -63072,7 +63072,7 @@ def runtime.store.StoreLimits.Insts.CoreDefaultDefault.default
     }
 
 /-- Trait implementation: [itasca::runtime::store::{impl core::default::Default for itasca::runtime::store::StoreLimits}]
-    Source: 'src/runtime/store.rs', lines 37:0-50:1 -/
+    Source: 'src/runtime/store.rs' -/
 @[reducible]
 def runtime.store.StoreLimits.Insts.CoreDefaultDefault : core.default.Default
   runtime.store.StoreLimits := {
@@ -63080,7 +63080,7 @@ def runtime.store.StoreLimits.Insts.CoreDefaultDefault : core.default.Default
 }
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::with_identity]:
-    Source: 'src/runtime/store.rs', lines 119:4-137:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.with_identity
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (id : Std.Usize) (limits : runtime.store.StoreLimits) :
@@ -63106,7 +63106,7 @@ def runtime.store.Store.with_identity
     }
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_host_with]:
-    Source: 'src/runtime/store.rs', lines 166:4-183:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.define_host_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -63153,7 +63153,7 @@ def runtime.store.Store.define_host_with
     ok (r1, self1)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::define_extern_with]:
-    Source: 'src/runtime/store.rs', lines 185:4-197:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.define_extern_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -63185,7 +63185,7 @@ def runtime.store.Store.define_extern_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::extern_identity]:
-    Source: 'src/runtime/store.rs', lines 199:4-202:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.extern_identity
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63205,7 +63205,7 @@ def runtime.store.Store.extern_identity
       Std.U64 (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::global]:
-    Source: 'src/runtime/store.rs', lines 321:4-325:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.global
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63226,7 +63226,7 @@ def runtime.store.Store.global
       runtime.Value (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::set_global]:
-    Source: 'src/runtime/store.rs', lines 327:4-338:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.set_global
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63281,7 +63281,7 @@ def runtime.store.Store.set_global
     ok (r1, self)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::memory]:
-    Source: 'src/runtime/store.rs', lines 340:4-343:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.memory
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63302,7 +63302,7 @@ def runtime.store.Store.memory
       (Slice Std.U8) (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::memory_mut]:
-    Source: 'src/runtime/store.rs', lines 345:4-351:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.memory_mut
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63331,7 +63331,7 @@ def runtime.store.Store.memory_mut
     ok (core.result.Result.Ok s, back)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::table_size]:
-    Source: 'src/runtime/store.rs', lines 353:4-356:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.table_size
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63353,7 +63353,7 @@ def runtime.store.Store.table_size
       Std.U32 (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::table_get]:
-    Source: 'src/runtime/store.rs', lines 358:4-370:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.table_get
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63386,7 +63386,7 @@ def runtime.store.Store.table_get
       runtime.Value (core.convert.FromSame runtime.ExecError) residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::set_table]:
-    Source: 'src/runtime/store.rs', lines 372:4-384:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.set_table
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63445,7 +63445,7 @@ def runtime.store.Store.set_table
     ok (r1, self)
 
 /-- [itasca::runtime::store::same_bytes]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 483:4-486:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop_body]
 def runtime.store.same_bytes_loop.body
   (left : Slice Std.U8) (right : Slice Std.U8) (index : Std.Usize)
@@ -63465,7 +63465,7 @@ def runtime.store.same_bytes_loop.body
   else ok (done same)
 
 /-- [itasca::runtime::store::same_bytes]: loop 0:
-    Source: 'src/runtime/store.rs', lines 483:4-486:5 -/
+    Source: 'src/runtime/store.rs' -/
 @[rust_loop]
 def runtime.store.same_bytes_loop
   (left : Slice Std.U8) (right : Slice Std.U8) (index : Std.Usize)
@@ -63478,7 +63478,7 @@ def runtime.store.same_bytes_loop
     (index, same)
 
 /-- [itasca::runtime::store::same_bytes]:
-    Source: 'src/runtime/store.rs', lines 477:0-488:1 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.same_bytes
   (left : Slice Std.U8) (right : Slice Std.U8) : Result Bool := do
   let i := Slice.len left
@@ -63488,7 +63488,7 @@ def runtime.store.same_bytes
   else runtime.store.same_bytes_loop left right 0#usize true
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::export]: loop body 0:
-    Source: 'src/runtime/store.rs', lines 392:8-403:9
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 @[rust_loop_body]
 def runtime.store.Store.export_loop.body
@@ -63552,7 +63552,7 @@ def runtime.store.Store.export_loop.body
   else ok (done found)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::export]: loop 0:
-    Source: 'src/runtime/store.rs', lines 392:8-403:9
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 @[rust_loop]
 def runtime.store.Store.export_loop
@@ -63569,7 +63569,7 @@ def runtime.store.Store.export_loop
     (i, found)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::export]:
-    Source: 'src/runtime/store.rs', lines 386:4-405:5
+    Source: 'src/runtime/store.rs'
     Visibility: public -/
 def runtime.store.Store.export
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
@@ -63595,7 +63595,7 @@ def runtime.store.Store.export
       residual
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_memory_with]:
-    Source: 'src/runtime/store.rs', lines 406:4-413:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.grow_memory_with
   {M : Type} (platformMemoryBufferInst : runtime.platform.MemoryBuffer M)
   (self : runtime.store.Store M) (addr : runtime.MemoryAddr) (delta : Std.U32)
@@ -63618,7 +63618,7 @@ def runtime.store.Store.grow_memory_with
     ok (r1, self)
 
 /-- [itasca::runtime::store::{itasca::runtime::store::Store<M>}::grow_table_with]:
-    Source: 'src/runtime/store.rs', lines 414:4-426:5 -/
+    Source: 'src/runtime/store.rs' -/
 def runtime.store.Store.grow_table_with
   {M : Type} {A : Type} (platformMemoryBufferInst :
   runtime.platform.MemoryBuffer M) (platformAllocInst : runtime.platform.Alloc
@@ -63663,20 +63663,20 @@ def runtime.store.Store.grow_table_with
     ok (r1, self)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::profile]:
-    Source: 'src/stream.rs', lines 154:4-156:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.impl.profile
   (self : stream.CodeBatch) : Result ValidationProfile := do
   ok self.profile
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_empty]:
-    Source: 'src/stream.rs', lines 164:4-166:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.is_empty (self : stream.CodeBatch) : Result Bool := do
   ok (self.num_funcs = 0#usize)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_last]:
-    Source: 'src/stream.rs', lines 169:4-171:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.is_last (self : stream.CodeBatch) : Result Bool := do
   let i ← self.first_func + self.num_funcs
@@ -63684,14 +63684,14 @@ def stream.CodeBatch.is_last (self : stream.CodeBatch) : Result Bool := do
   ok (i = i1)
 
 /-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code]:
-    Source: 'src/stream.rs', lines 175:4-177:5
+    Source: 'src/stream.rs'
     Visibility: public -/
 def stream.CodeBatch.impl.code
   (self : stream.CodeBatch) : Result (Slice Std.U8) := do
   ok self.code
 
 /-- Trait implementation: [itasca::wasm_types::{impl core::cmp::Eq for itasca::wasm_types::ValueType}]
-    Source: 'src/types.rs', lines 35:0-35:24 -/
+    Source: 'src/types.rs' -/
 @[reducible]
 def wasm_types.ValueType.Insts.CoreCmpEq : core.cmp.Eq wasm_types.ValueType
   := {
@@ -63699,7 +63699,7 @@ def wasm_types.ValueType.Insts.CoreCmpEq : core.cmp.Eq wasm_types.ValueType
 }
 
 /-- Trait implementation: [itasca::wasm_types::{impl core::cmp::Eq for itasca::wasm_types::Mut}]
-    Source: 'src/types.rs', lines 55:0-55:18 -/
+    Source: 'src/types.rs' -/
 @[reducible]
 def wasm_types.Mut.Insts.CoreCmpEq : core.cmp.Eq wasm_types.Mut := {
   partialEqInst := wasm_types.Mut.Insts.CoreCmpPartialEqMut
