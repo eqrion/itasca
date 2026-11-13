@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!
 The compiler's copy helper elides an empty or identity transfer.

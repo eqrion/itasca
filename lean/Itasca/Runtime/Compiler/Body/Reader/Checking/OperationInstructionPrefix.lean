@@ -8,8 +8,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper

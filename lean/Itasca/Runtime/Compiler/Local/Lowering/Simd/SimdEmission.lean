@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowering
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Binary.Wasm2.Simd
 
 namespace Itasca.Runtime.Compiler

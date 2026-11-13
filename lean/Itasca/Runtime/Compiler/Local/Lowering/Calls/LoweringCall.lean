@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+
 /-! Actual direct-call lowering constructs a retained structured certificate
 from source signature and compiler slot metadata. -/
 

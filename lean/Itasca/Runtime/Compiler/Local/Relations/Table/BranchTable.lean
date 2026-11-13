@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.SourceMachine.BrTable

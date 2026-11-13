@@ -1,11 +1,10 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Support.TypeTranslation
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- Complete retained syntax/layout evidence for one defined function. The

@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCode
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 

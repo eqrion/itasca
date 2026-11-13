@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!
 Compilation of an unreachable instruction.

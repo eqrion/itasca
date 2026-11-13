@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!
 Block signatures and the source-scope form at reader closure.

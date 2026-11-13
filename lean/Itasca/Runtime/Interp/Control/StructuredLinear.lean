@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.Equations

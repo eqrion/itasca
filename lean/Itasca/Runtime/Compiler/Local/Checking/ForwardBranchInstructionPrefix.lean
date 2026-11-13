@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Checking.InstructionAppendEffect
 import Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety

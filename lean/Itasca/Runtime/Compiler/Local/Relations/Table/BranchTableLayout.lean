@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 /-- An emitted table destination has the ordinary branch layout and exact

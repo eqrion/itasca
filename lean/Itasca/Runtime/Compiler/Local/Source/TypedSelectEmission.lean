@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std

@@ -1,5 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+
 /-! Actual RETURN callback emission and terminal structured source certificate. -/
 
 namespace Itasca.Runtime.Compiler

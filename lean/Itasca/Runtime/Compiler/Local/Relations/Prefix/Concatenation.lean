@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!
 Changing a label's retained source continuation does not change its instruction layout, target, or reachability.

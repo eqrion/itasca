@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 
 /-!
 Extension of source/code segment and guarded-skip certificates.
