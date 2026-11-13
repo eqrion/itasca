@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.BulkTable
-import Itasca.Runtime.Platform.Memory
+import Itasca.Runtime.Platform.Laws
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

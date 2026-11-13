@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Invocation.Recording
-import Itasca.Runtime.Platform.Recording
+import Itasca.Runtime.Platform.Laws
 
 /-!
 Erasing the writer recovers the extracted invocation for arbitrary hooks and internal states, including failure and divergence.

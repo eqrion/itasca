@@ -1,5 +1,5 @@
 import Itasca.Runtime.Equations
-import Itasca.Runtime.Platform.Float
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Spec.Integer
 import SpecExt.Builtins.Float.Sign
 

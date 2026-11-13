@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Representation.Layout
-import Itasca.Runtime.Platform.Alloc
+import Itasca.Runtime.Platform.Laws
 import Itasca.Support.TypeTranslation
 
 /-!

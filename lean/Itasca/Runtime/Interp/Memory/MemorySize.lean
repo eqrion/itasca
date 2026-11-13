@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.State.TableAccess
-import Itasca.Runtime.Platform.Memory
+import Itasca.Runtime.Platform.Laws
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

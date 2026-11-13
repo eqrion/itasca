@@ -1,5 +1,5 @@
 import Itasca.Runtime.Representation.StoreCapacity
-import Itasca.Runtime.Platform.Alloc
+import Itasca.Runtime.Platform.Laws
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

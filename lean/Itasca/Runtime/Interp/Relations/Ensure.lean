@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Relations.Execute
-import Itasca.Runtime.Platform.Alloc
+import Itasca.Runtime.Platform.Laws
 
 /-! Slot storage growth returns normally under the allocator law. Its only
 rejections are the requested value limit and an actual allocator rejection. -/

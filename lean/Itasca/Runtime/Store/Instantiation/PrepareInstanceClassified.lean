@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Linking.LinkLoop
 import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Invariant.InvalidWrite
-import Itasca.Runtime.Platform.Alloc
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Invariant.InstanceItems
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementEffects

@@ -1,5 +1,6 @@
-import Itasca.Runtime.Platform.DivSpec
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Calls.DirectCall
+
 set_option maxRecDepth 4096
 
 namespace Itasca.Runtime.Interp

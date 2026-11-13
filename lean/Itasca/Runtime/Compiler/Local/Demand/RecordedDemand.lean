@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Demand.ObservationDemand
-import Itasca.Runtime.Platform.ReturnedLoop
+import Itasca.Runtime.Platform.Laws
 import Itasca.Wasm2.Trace.ControlRefinement
 
 namespace Itasca.Runtime.Compiler

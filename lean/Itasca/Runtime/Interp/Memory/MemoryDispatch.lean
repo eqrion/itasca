@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Memory.MemoryScalar
 import Itasca.Runtime.Interp.Relations.Fetch
-import Itasca.Runtime.Platform.Memory
+import Itasca.Runtime.Platform.Laws
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Relations.OperandsBounded
 import Itasca.Runtime.Interp.Simd.Execution.ExecutePure
-import Itasca.Runtime.Platform.Memory
+import Itasca.Runtime.Platform.Laws
 
 /-!
 Bounded execution of SIMD operations with memory inputs.

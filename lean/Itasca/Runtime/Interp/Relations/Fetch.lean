@@ -1,4 +1,4 @@
-import Itasca.Runtime.Platform.DivSpec
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Relations.Execute
 
 /-! Fetching an instruction in the extracted interpreter. The compiler/frame

@@ -2,7 +2,7 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Wasm2.Invariant
 import Itasca.Profile.BodySpec
 import Itasca.Runtime.Equations
-import Itasca.Runtime.Platform.Memory
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.CallSafety
 import Itasca.Binary.Unicode
 

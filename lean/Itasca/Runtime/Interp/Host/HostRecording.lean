@@ -1,4 +1,4 @@
-import Itasca.Runtime.Platform.Recording
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Host.HostPreparationCauses
 
 namespace Itasca.Runtime.Interp

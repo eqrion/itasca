@@ -1,4 +1,4 @@
-import Itasca.Runtime.Platform.DivSpec
+import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Relations.FrameStorePrefix
 import Itasca.Runtime.Interp.Relations.Readback
 import Itasca.Runtime.Interp.Invocation.ResourceCauses
