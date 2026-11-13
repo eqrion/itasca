@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.BrTable
-import Itasca.Runtime.SourceMachine.Cumulative.Heap
+import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.SourceMachine.Supported.CoreStuck
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.CallSafety
