@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Numeric.Semantics
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Equations
 

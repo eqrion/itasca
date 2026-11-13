@@ -37,8 +37,7 @@ import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Core.SelectPositive
-import Itasca.Runtime.SourceMachine.Numeric.OperandBounds
-import Itasca.Runtime.SourceMachine.Numeric.Instruction
+import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
 import Itasca.Runtime.SourceMachine.Sim.Branch
 import Itasca.Runtime.SourceMachine.Sim.Return

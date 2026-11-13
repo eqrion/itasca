@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntRotate
 import Itasca.Runtime.Interp.Numeric.Integer.IntSigned
-import Itasca.Runtime.SourceMachine.Numeric.Instruction
+import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
 import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.Interp

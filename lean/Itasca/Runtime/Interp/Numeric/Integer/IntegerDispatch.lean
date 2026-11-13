@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntegerBinary
 import Itasca.Runtime.Interp.Numeric.Integer.IntCompareSigned
-import Itasca.Runtime.SourceMachine.Numeric.Instruction
+import Itasca.Runtime.SourceMachine.Numeric.TransitionSafety
 import Itasca.Runtime.Interp.Numeric.Integer.IntExtend
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
 import Itasca.Runtime.Interp.Relations.ScalarDispatch
