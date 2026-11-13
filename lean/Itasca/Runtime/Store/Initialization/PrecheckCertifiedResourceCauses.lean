@@ -1,5 +1,6 @@
 import Itasca.Runtime.Store.Initialization.InitializerCertificates
 import Itasca.Runtime.Store.Initialization.PrecheckResources
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-! Full Wasm1 precommit checks derived from retained compiler maps and canonical
 validator segment typing. Every path returns normally without changing the

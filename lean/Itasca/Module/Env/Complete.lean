@@ -86,7 +86,7 @@ theorem metadata.validate_env.profile_complete (data : Slice U8) (raw : ModuleBi
   rw [hbytes] at hs
   obtain ⟨start, hheader, hsections⟩ := hs.split
   have hread := metadata.read_header.complete data start hheader
-  obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists metadata.Env.new.declarations
+  obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.Env.new.profile_declarations profile)
   have hready : Ready raw 0 {} initial := by
     refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
   have hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []} := by
@@ -98,15 +98,5 @@ theorem metadata.validate_env.profile_complete (data : Slice U8) (raw : ModuleBi
   refine ⟨env, finalDecls, ?_, hready⟩
   simp [metadata.validate_env, metadata.validate_env_with, hnew, hread,
     core.result.Result.Insts.CoreOpsTry.branch, hrun]
-
-/-- `metadata.validate_env.profile_complete` for Wasm 1.0. -/
-theorem metadata.validate_env.complete (data : Slice U8) (raw : ModuleBinary.Module)
-    (decls : Declarations) (next : Usize)
-    (hprefix : At PrefixEncoding data 0#usize decls next)
-    (hraw : raw = decls.module raw.codes raw.data)
-    (hstop : StopAt data next) (hrequirements : Requirements raw) :
-    ∃ env finalDecls, metadata.validate_env data .Wasm1 = .ok (.Ok (env, next)) ∧
-      Ready raw 10 finalDecls env := by
-  exact metadata.validate_env.profile_complete data raw .Wasm1 decls next hprefix hraw hstop hrequirements
 
 end Itasca

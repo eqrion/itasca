@@ -18,7 +18,7 @@ namespace Itasca.ModuleSections
 
 /-- The semantic requirements for one import against the index spaces built so far. -/
 def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   match desc with
   | .Func idx => idx.val < env.types.val.length
   | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS ∧
@@ -38,7 +38,7 @@ def rawMemories (entries : List ModuleBinary.Import) : List wasm_types.MemType :
 /-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
 on the merged table and memory spaces, so imports can be processed in order. -/
 structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import)
-    (profile : ValidationProfile := .Wasm1) : Prop where
+    (profile : ValidationProfile) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
     | .Func idx => idx.val < env.types.val.length
     | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
@@ -148,7 +148,7 @@ structure Ready (raw : ModuleBinary.Module) (last : Nat) (decls : Declarations)
 /-- The semantic requirements of declaration section rank `id` of `raw` against `env`. Binary
 framing, UTF-8 names, and cursor and capacity bounds come separately from the grammar. -/
 def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   match id with
   | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible profile ft
   | 2 => ModuleSections.ImportsValid env raw.imports profile
@@ -169,7 +169,7 @@ def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
 /-- Every declaration section of `raw` meets its requirements whenever the preceding slots are
 ready. Declarative assembly discharges this once, and it has no parser-execution or
 successful-decoding premise. -/
-def Requirements (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop :=
+def Requirements (raw : ModuleBinary.Module) (profile : ValidationProfile) : Prop :=
   ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env profile
 
 end Itasca.ModuleEnv

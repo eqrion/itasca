@@ -50,7 +50,7 @@ def Layout.Future (last : Nat) (l : Layout) : Prop :=
 /-- Each chunk of `l` is the canonical padded encoding of the matching slot of `decls`, the
 trailing customs are well formed, and slots after `last` are empty. -/
 structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
-    (profile : ValidationProfile := .Wasm1) : Prop where
+    (profile : ValidationProfile) : Prop where
   types : PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] decls.types l.types
   imports : PaddedEncoding 2#u8 (VecEncoding ImportEncoding) [] decls.imports l.imports
   functions : PaddedEncoding 3#u8 (VecEncoding IndexEncoding) [] decls.functions l.functions
@@ -66,7 +66,7 @@ structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
   allowed : ModuleTypesAllowed profile (decls.module [] [])
 
 /-- The empty layout encodes the empty declarations. -/
-theorem Layout.valid_empty (profile : ValidationProfile := .Wasm1) :
+theorem Layout.valid_empty (profile : ValidationProfile) :
     Layout.Valid 0 ({} : Declarations) ({} : Layout) profile := by
   constructor
   · exact ⟨[], [], .nil, .absent, rfl⟩

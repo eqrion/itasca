@@ -30,7 +30,7 @@ namespace SectionDecode
 
 /-- The standard fields of a raw module as payloads of a raw section list. -/
 structure Fields (raw : Module) (sections : List (U8 × List U8))
-    (profile : ValidationProfile := .Wasm1) (codeRel : Code → List U8 → Prop := CodeEncoding) : Prop where
+    (profile : ValidationProfile) (codeRel : Code → List U8 → Prop := CodeEncoding) : Prop where
   types : Field (VecEncoding FuncTypeEncoding) [] raw.types (payloads 1#u8 sections)
   imports : Field (VecEncoding ImportEncoding) [] raw.imports (payloads 2#u8 sections)
   functions : Field (VecEncoding IndexEncoding) [] raw.functions (payloads 3#u8 sections)

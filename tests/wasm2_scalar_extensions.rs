@@ -42,13 +42,12 @@ fn check(input: u8, output: u8, operation: &[u8]) {
         .validate_all(&bytes)
         .unwrap();
     assert!(validate_module(&bytes, ValidationProfile::Wasm2).is_ok());
-    assert!(validate_module(&bytes, ValidationProfile::Wasm1).is_err());
     let wrong = if input == 127 { 126 } else { 127 };
     assert!(validate_module(&module(wrong, output, operation), ValidationProfile::Wasm2).is_err());
 }
 
 #[test]
-fn sign_extensions_preserve_integer_width_and_profile_gate() {
+fn sign_extensions_preserve_integer_width_and_feature_gate() {
     for opcode in 0xc0..=0xc4 {
         let ty = if opcode < 0xc2 { 127 } else { 126 };
         check(ty, ty, &[opcode]);

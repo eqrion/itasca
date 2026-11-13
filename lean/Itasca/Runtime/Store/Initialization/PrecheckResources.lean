@@ -3,6 +3,7 @@ import Itasca.Runtime.Store.Initialization.PrecheckLoop
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.PrecheckWitness
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Precheck resource causes and their loop transport. The construction is used before returning the resolved start handle; it does not invoke the start function.

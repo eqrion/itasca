@@ -60,7 +60,7 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
       obtain ⟨rfl, rfl, rfl⟩ := hm
       have hpos := hindex.empty
       subst afterMemory
-      simp [metadata.decode_data_segment, hrf, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
       step
       have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
       simp [hguard, hro, hrc]

@@ -1,4 +1,5 @@
 import Itasca.Runtime.Store.Initialization.PrecheckErrors
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Independent initializer-precheck witnesses through the validation loop. The construction is used before returning the resolved start handle; it does not invoke the start function.

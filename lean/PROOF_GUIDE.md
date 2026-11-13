@@ -22,8 +22,8 @@ guarantees about `Itasca.metadata.validate_module`:
 | `profile_complete` | Independently encoded, well-typed modules within the limits are accepted, with matching returned metadata. |
 | `profile_complete_with_metadata` | Also identifies the results of the import and export type accessors. |
 
-`profile_*` theorems cover both `.Wasm1` and `.Wasm2`; the `wasm_*` variants
-specialize to Wasm 1.0. Allocation failure is outside the model, and nothing
+`profile_*` theorems cover both `.Wasm1` and `.Wasm2`. Allocation failure is
+outside the model, and nothing
 here says anything about Wasm execution or a compiler consuming the callbacks.
 
 ### The soundness certificate

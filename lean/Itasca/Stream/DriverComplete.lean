@@ -13,7 +13,7 @@ and the scheduler is accepting (`StreamAcceptingScheduler.Accepts`). The returne
 delivered tail describe the same raw module, including public metadata
 (`Matches`, `AccessorTypes`). Both premises on the embedding are required: completeness fails if
 reads are unavailable or workers do not accept. `Itasca/Results/Stream` states the public
-`profile_complete` and `wasm_complete`.
+`profile_complete`.
 -/
 
 open Aeneas Aeneas.Std

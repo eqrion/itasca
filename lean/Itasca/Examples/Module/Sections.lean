@@ -6,7 +6,7 @@ import Itasca.Examples.Module.Support
 /-!
 # A module with tables, memories, globals, exports and segments
 
-A 51-byte Wasm 1.0 module with one table, one memory, one immutable `i32` global, an export of
+A 51-byte Wasm 2.0 module with one table, one memory, one immutable `i32` global, an export of
 that global, an active element segment and an active data segment, and no functions.
 `sections_accepted` shows that `metadata.validate_module` accepts it using the section-layout
 completeness theorems, and `sections_validated` adds the soundness certificate.
@@ -58,7 +58,7 @@ def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.byt
 private theorem zero_const : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
   .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
 
-private theorem layout_valid : Layout.Valid 9 declarations layout := by
+private theorem layout_valid : Layout.Valid 9 declarations layout .Wasm2 := by
   constructor
   · exact omitted _ _ _
   · exact omitted _ _ _
@@ -70,15 +70,16 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
       ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩,
         .cons (.one _ (by decide)) .nil⟩, .global _ (leb 0#u8), rfl⟩) rfl
   · exact omitted _ _ _
-  · exact padded _ 6#u8 _ (one ⟨0#u32, .I32 0#i32, [], [0#u8], [0x41#u8,0#u8,0x0B#u8], [0#u8],
-      rfl, leb 0#u8, zero_const, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
-  · exact ⟨rfl, rfl⟩
+  · exact padded _ 6#u8 _ (one (Wasm2ElementEncoding.activeIndices
+      (leb 0#u8) zero_const (show VecEncoding IndexEncoding [] [0#u8] from
+        ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩))) rfl
+  · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
   · simp [ModuleTypesAllowed, ValueTypeAllowed, ElemTypeAllowed, ConstAllowed,
       declarations, Declarations.module, tableType, global, element]
 
-private theorem requirements : Requirements raw := by
+private theorem requirements : Requirements raw .Wasm2 := by
   intro id decls env hlo hhi hr
   interval_cases id
   · simp [SectionValid, raw, declarations, Declarations.module]
@@ -128,31 +129,31 @@ private theorem requirements : Requirements raw := by
     cases ht : env.table_types.val[0].elem <;> simp_all [Translate.referenceType, element]
   · trivial
 
-private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
+private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding (DataEncodingFor .Wasm2))
     [ModuleData.raw segment] dataBytes := by
   refine ⟨[7#u8], [1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8], leb 7#u8, ?_, rfl⟩
-  exact one ⟨0#u32, .I32 0#i32, [0#u8], [0x41#u8,0#u8,0x0B#u8], [1#u8,42#u8],
-    rfl, leb 0#u8, zero_const, ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, rfl⟩
+  exact one (Wasm2DataEncoding.active (.implicit (leb 0#u8)) zero_const
+    (ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩))
 
-/-- `metadata.validate_module` accepts the 51-byte module `input` under Wasm 1.0, with sections in
+/-- `metadata.validate_module` accepts the 51-byte module `input` under Wasm 2.0, with sections in
 order, a constant global initializer, a named global export, and both kinds of active segment. -/
-theorem sections_accepted : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) := by
-  have hp : At PrefixEncoding input 0#usize declarations 42#usize := by
+theorem sections_accepted : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.Ok decoded) := by
+  have hp : At (fun ds bs => PrefixEncoding ds bs .Wasm2) input 0#usize declarations 42#usize := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
     constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
-  have hd : At (SectionEncoding 11#u8 (VecEncoding DataEncoding)) input 42#usize
+  have hd : At (SectionEncoding 11#u8 (VecEncoding (DataEncodingFor .Wasm2))) input 42#usize
       [ModuleData.raw segment] 51#usize := by
     refine ⟨dataBytes, data_encoding, ?_⟩
     constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   obtain ⟨first, hh, _⟩ := hd.section_split
   let tail : metadata.Tail := ⟨alloc.vec.Vec.from [segment] (by simp; scalar_tac)⟩
-  have ht : At ModuleTail.Encoding input 42#usize (tail.data.val.map ModuleData.raw) (Slice.len input) := by
+  have ht : At (fun ds bs => ModuleTail.Encoding ds bs .Wasm2) input 42#usize (tail.data.val.map ModuleData.raw) (Slice.len input) := by
     refine ⟨dataBytes, ⟨dataBytes, [], ⟨[], dataBytes, .nil, .present data_encoding, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
-  have hl : ModuleLayout.Layout input raw declarations 42#usize 42#usize :=
+  have hl : ModuleLayout.Layout input raw declarations 42#usize 42#usize .Wasm2 :=
     ⟨rfl, hp, .inr ⟨rfl, rfl, .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩,
       by simpa [tail, raw, declarations, Declarations.module] using ht,
       .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩
@@ -160,7 +161,7 @@ theorem sections_accepted : ∃ decoded, metadata.validate_module input .Wasm1 =
     42#usize 42#usize hl (by
       simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
         magicVersion, layout, Layout.bytes, dataBytes, limits.MAX_MODULE_BYTES])
-    requirements tail rfl (by
+    requirements rfl tail rfl (by
       intro decls env hr
       rw [hr.functions_eq (by decide)]
       exact .nil) (by
@@ -176,10 +177,10 @@ theorem sections_accepted : ∃ decoded, metadata.validate_module input .Wasm1 =
   exact ⟨⟨env, tail⟩, ha⟩
 
 /-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`, which
-covers generated module typing, the Wasm 1.0 profile and ordered external metadata. -/
-theorem sections_validated : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
-    ModuleSound.Validated input decoded := by
+covers generated module typing, the Wasm 2.0 profile and ordered external metadata. -/
+theorem sections_validated : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.Ok decoded) ∧
+    ModuleSound.Validated input decoded .Wasm2 := by
   obtain ⟨decoded, ha⟩ := sections_accepted
-  exact ⟨decoded, ha, metadata.validate_module.wasm_sound _ _ ha⟩
+  exact ⟨decoded, ha, metadata.validate_module.profile_sound _ _ .Wasm2 ha⟩
 
 end Itasca.Examples.ModuleSections

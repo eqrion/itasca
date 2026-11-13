@@ -1,5 +1,5 @@
-//! Pinned complete wg-2.0 corpus. No binary normalization or feature exclusions
-//! in the full-profile tests; the older control-flow gate remains during migration.
+//! Pinned complete wg-2.0 corpus. The control-flow subset is also checked with
+//! only MVP and multi-value features enabled to isolate that supported subset.
 use std::path::{Path, PathBuf};
 use wast::{QuoteWat, Wast, WastDirective, WastExecute};
 

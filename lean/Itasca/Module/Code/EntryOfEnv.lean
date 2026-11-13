@@ -33,16 +33,6 @@ theorem profile_accepted_entry_conditions (data : Slice U8) (env : metadata.Env)
   exact ⟨CodeEntry.Bounds.of_module_bound env (hsig.mono (by have := hb.span.2; omega)),
     hv.environment hr.cache, hv.environmentWithinLimits hr.cache⟩
 
-/-- A Wasm 1.0 environment accepted from bounded input supplies the allocation bound and the
-single-result arity needed by separately invoked entry validators. The code bytes may be in a
-different buffer. -/
-theorem accepted_entry_conditions (data : Slice U8) (env : metadata.Env) (next : Usize)
-    (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (h : metadata.validate_env data .Wasm1 = .ok (.Ok (env, next))) :
-    CodeEntry.Bounds env ∧ (∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) := by
-  obtain ⟨hb, he, _⟩ := profile_accepted_entry_conditions data env next .Wasm1 hsize h
-  exact ⟨hb, he.1⟩
-
 end Itasca.ModuleEnv
 
 namespace Itasca

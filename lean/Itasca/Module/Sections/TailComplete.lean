@@ -33,7 +33,7 @@ theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
 
 /-- The tail loop at EOF returns the accumulated segments. -/
 theorem loop_eof (data : Slice U8) (env : metadata.Env) (segments : alloc.vec.Vec metadata.Data) (seen : Bool)
-    (profile : ValidationProfile := .Wasm1)
+    (profile : ValidationProfile)
     (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
     metadata.validate_tail_with_loop metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
       data env profile () segments (Slice.len data) seen = .ok (.Ok ⟨segments⟩, ()) := by

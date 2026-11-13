@@ -42,7 +42,7 @@ limits and allowed element types. -/
 theorem metadata.decode_table_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.table_types.val.length ≤ start.val)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_table_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ TablesAdded env r.2 added ∧
           At (Rep TableTypeEncoding) data start added next ∧
@@ -111,7 +111,7 @@ with valid limits and allowed element types. -/
 @[step]
 theorem metadata.decode_table_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hsize : env.table_types.val.length ≤ pos.val)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_table_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, TablesAdded env r.2 added ∧
           At (VecEncoding TableTypeEncoding) data pos added next ∧

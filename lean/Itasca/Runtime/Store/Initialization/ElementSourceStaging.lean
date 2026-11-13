@@ -2,6 +2,7 @@ import Itasca.Runtime.Store.Initialization.SegmentGlobalMetadata
 import Itasca.Runtime.Store.Initialization.ElementValues
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementEffects
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

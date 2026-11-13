@@ -24,7 +24,7 @@ open ModuleBinary
 /-- The code section occupies `start` to `finish` with entries `entries`, or it is absent and
 `ModuleCode.AbsentAt` holds at `start`. The absence case carries the lookahead that the parser
 performs, which an empty optional byte span alone does not justify. -/
-def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) (profile : ValidationProfile := .Wasm1) : Prop :=
+def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usize) (profile : ValidationProfile) : Prop :=
   At (SectionEncoding 10#u8 (VecEncoding (Profile.CodeEncodingWithinLimits profile))) data start entries finish ∨
     entries = [] ∧ finish = start ∧ ModuleCode.AbsentAt data start
 
@@ -32,7 +32,7 @@ def CodeAt (data : Slice U8) (start : Usize) (entries : List Code) (finish : Usi
 greedy environment, code and tail parsers consume them. `stop` says that `codePos` is a place
 where the environment scan stops (EOF, or a code or data section header). -/
 structure Layout (data : Slice U8) (raw : Module) (decls : ModuleEnv.Declarations)
-    (codePos tailPos : Usize) (profile : ValidationProfile := .Wasm1) : Prop where
+    (codePos tailPos : Usize) (profile : ValidationProfile) : Prop where
   raw_eq : raw = decls.module raw.codes raw.data
   environment : At (fun ds bs => ModuleEnv.PrefixEncoding ds bs profile) data 0#usize decls codePos
   code : CodeAt data codePos raw.codes tailPos profile

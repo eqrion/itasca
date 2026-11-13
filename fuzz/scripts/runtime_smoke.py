@@ -10,7 +10,7 @@ import tempfile
 
 ROOT = Path(__file__).resolve().parents[2]
 TARGETS = [
-    "wasm1_execute", "wasm2_execute", "runtime_linking",
+    "wasm2_execute", "runtime_linking",
     "runtime_stateful", "runtime_numeric", "runtime_compile",
 ]
 
@@ -27,17 +27,32 @@ def main():
         corpus = work / target
         corpus.mkdir()
         if target == "runtime_compile":
-            for index, fixture in enumerate(sorted((ROOT / "tests/spec/valid").glob("*.wasm"))[:100]):
-                for profile in (0, 1):
-                    (corpus / f"seed-{profile}-{index}").write_bytes(bytes([profile]) + fixture.read_bytes())
-        else:
-            for seed in range(64):
-                state = seed + 1
-                data = bytearray()
-                for _ in range(1024 + seed * 16):
-                    state = (state * 6364136223846793005 + 1) % (1 << 64)
-                    data.append((state >> 32) & 255)
-                (corpus / f"seed-{seed}").write_bytes(data)
+            modules = [
+                bytes.fromhex("0061736d01000000"),
+                bytes.fromhex(
+                    "0061736d01000000"
+                    "0106016000017f"
+                    "03020100"
+                    "07050101660000"
+                    "0a06010400412a0b"
+                ),
+                bytes.fromhex(
+                    "0061736d01000000"
+                    "0106016000027f7e"
+                    "03020100"
+                    "07050101660000"
+                    "0a08010600412a42000b"
+                ),
+            ]
+            for index, module in enumerate(modules):
+                (corpus / f"wasm2-{index}").write_bytes(module)
+        for seed in range(64):
+            state = seed + 1
+            data = bytearray()
+            for _ in range(1024 + seed * 16):
+                state = (state * 6364136223846793005 + 1) % (1 << 64)
+                data.append((state >> 32) & 255)
+            (corpus / f"seed-{seed}").write_bytes(data)
         log = work / f"{target}.log"
         command = [
             str(target_dir / "debug" / target), "-runs=1024", f"-seed={number}",

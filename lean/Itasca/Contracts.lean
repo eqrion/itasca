@@ -177,7 +177,7 @@ result. Submission is only required to return for seeds of bounded issued batche
 profile. Rust errors and malformed returned worker records are allowed, and nothing is assumed
 about the workers. This is independent of the soundness provenance contract. -/
 structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V)
-    (profile : ValidationProfile := .Wasm1) : Prop where
+    (profile : ValidationProfile) : Prop where
   custom : ModuleTail.HooksTotal visitor.metadataModuleVisitorInst
   region : ∀ v region, ∃ v', visitor.custom_region v region = .ok v'
   environment : ∀ v env, ∃ r, visitor.environment_ready v env = .ok r
@@ -195,7 +195,7 @@ Unknown, foreign, unfinished and replayed batches are permitted. The driver chec
 finish. -/
 structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (profile : ValidationProfile := .Wasm1) : Prop where
+    (profile : ValidationProfile) : Prop where
   custom : ∀ id history, ModuleTail.PreservesInvariant
     visitor.metadataModuleVisitorInst (Tracks id history)
   region : ∀ id history v region v', Tracks id history v →
@@ -223,7 +223,7 @@ namespace Itasca.StreamAcceptingScheduler
 
 /-- Independent byte, typing, and size premises for an issued batch. -/
 structure Valid (issued : StreamBatch.Issued)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
+    (validationProfile : ValidationProfile) : Prop where
   validation_profile : issued.profile = validationProfile
   bounded : issued.Bounded
   entry_bounds : CodeEntry.Bounds issued.env
@@ -235,7 +235,7 @@ structure Valid (issued : StreamBatch.Issued)
 
 /-- Every batch in the queue belongs to module `id` and is `Valid`. -/
 def ValidQueue (id : U64) (queue : List StreamBatch.Issued)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
+    (validationProfile : ValidationProfile) : Prop :=
   ∀ issued ∈ queue, issued.module_id = id ∧ Valid issued validationProfile
 
 /-- Completeness premise on the scheduler: positive batch settings, accepting callbacks, and
@@ -246,7 +246,7 @@ strategy. The visitor state is tracked by `Queued`, which lists the issued batch
 polled. -/
 structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
     (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
+    (validationProfile : ValidationProfile) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
   custom_accepts : ModuleTail.HooksAccept visitor.metadataModuleVisitorInst

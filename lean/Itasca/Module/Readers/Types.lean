@@ -108,7 +108,7 @@ end ModuleBinary
 
 /-- The counted loop returns `count` value types forming a `Rep ValueTypeEncoding` span. -/
 theorem metadata.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
-    (count : U32) (hb : start.val ≤ data.length) (profile : ValidationProfile := .Wasm1) :
+    (count : U32) (hb : start.val ≤ data.length) (profile : ValidationProfile) :
     metadata.decode_value_types_loop data profile count (alloc.vec.Vec.new wasm_types.ValueType) start 0#u32 ⦃ r =>
       match r with
       | .Ok (out, next) => At (Rep ValueTypeEncoding) data start out.val next ∧
@@ -251,7 +251,7 @@ theorem metadata.decode_func_type.profile_spec (data : Slice U8) (start : Usize)
 /-- `metadata.decode_global_type` returns a `GlobalTypeEncoding` span whose value type the profile
 allows. -/
 theorem metadata.decode_global_type.allowed_spec (data : Slice U8) (start : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_global_type data start profile ⦃ r => match r with
       | .Ok (ty, next) => At GlobalTypeEncoding data start ty next ∧ ValueTypeAllowed profile ty.valtype
       | .Err _ => True ⦄ := by
@@ -284,7 +284,7 @@ theorem metadata.decode_global_type.allowed_spec (data : Slice U8) (start : Usiz
 
 /-- `metadata.decode_table_type.spec` plus the profile allowing the element type. -/
 theorem metadata.decode_table_type.allowed_spec (data : Slice U8) (start : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_table_type data start profile ⦃ r => match r with
       | .Ok (ty, next) => (At TableTypeEncoding data start ty next ∧
           LimitsValid ty.limits limits.MAX_TABLE_ELEMS) ∧ ElemTypeAllowed profile ty.elem

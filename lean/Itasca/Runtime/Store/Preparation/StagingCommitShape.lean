@@ -7,6 +7,7 @@ import Itasca.Runtime.Store.Initialization.ElementCompleteLoop
 import Itasca.Runtime.Store.Invariant.OwnedDataLoop
 import Itasca.Runtime.Store.Invariant.InstanceMapShape
 import Itasca.Runtime.Store.Invariant.ShapeAssembly
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Store shape at staging commit. Allocation certificates and issued ownership establish staged instance shape and the final committed-store invariant.

@@ -30,7 +30,7 @@ theorem customs_append {xs ys} (hx : CustomsEncoding xs) (hy : CustomsEncoding y
 /-- The loop invariant: the bytes so far are custom sections plus at most one data section whose
 segments are listed. The flag records whether the data section has occurred. -/
 inductive Prefix :
-    Bool → List ModuleBinary.Data → List U8 → (profile : optParam ValidationProfile .Wasm1) → Prop where
+    Bool → List ModuleBinary.Data → List U8 → (profile : ValidationProfile) → Prop where
   | empty {profile} : Prefix false [] [] profile
   | custom {profile seen segments before bytes} : Prefix seen segments before profile →
       CustomEncoding bytes → Prefix seen segments (before ++ bytes) profile
@@ -51,7 +51,7 @@ theorem Prefix.not_seen {profile seen segments bytes} (h : Prefix seen segments 
 /-- The independent grammar of the tail: padded data section (custom sections, then an optional
 data section) followed by custom sections. -/
 def Encoding (segments : List ModuleBinary.Data) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   ∃ chunk customs, PaddedEncoding 11#u8 (VecEncoding (DataEncodingFor profile)) [] segments chunk ∧
     CustomsEncoding customs ∧ bytes = chunk ++ customs
 
@@ -129,7 +129,7 @@ count. Hooks may reject. -/
 theorem metadata.validate_tail_with.spec {V : Type} (visitor : metadata.ModuleVisitor V)
     (htotal : ModuleTail.HooksTotal visitor) (data : Slice U8) (start : Usize)
     (env : metadata.Env) (v : V) (hstart : start.val ≤ data.length)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.validate_tail_with visitor data start env profile v ⦃ r => match r.1 with
       | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧
@@ -224,7 +224,7 @@ theorem metadata.validate_tail_with.spec {V : Type} (visitor : metadata.ModuleVi
 
 /-- `metadata.validate_tail` satisfies the same specification as `metadata.validate_tail_with`. -/
 theorem metadata.validate_tail.spec (data : Slice U8) (start : Usize) (env : metadata.Env)
-    (hstart : start.val ≤ data.length) (profile : ValidationProfile := .Wasm1) :
+    (hstart : start.val ≤ data.length) (profile : ValidationProfile) :
     metadata.validate_tail data start env profile ⦃ r => match r with
       | .Ok tail => ModuleBinary.At (fun segments bytes => ModuleTail.Encoding segments bytes profile) data start
           (tail.data.val.map ModuleData.raw) (Slice.len data) ∧

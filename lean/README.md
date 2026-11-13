@@ -135,8 +135,7 @@ The `SpecTecSupport` library compiles upstream's handwritten
 
 [Itasca/Main.lean](Itasca/Main.lean) lists every headline theorem, and each is
 stated in full under [Itasca/Results/](Itasca/Results). `profile_*` theorems
-quantify over both `ValidationProfile` values; `wasm_*` corollaries specialize to
-Wasm 1.0.
+quantify over both `ValidationProfile` values.
 
 | Layer | Contracts |
 | --- | --- |
@@ -234,8 +233,7 @@ The proofs supplement the pinned specification without editing it:
   and `v128.load64_zero`. The grammar and Rust use 92 and 93. The proofs use
   SpecTec typing, not its binary decoding, so no assumption is needed.
 - Wasm 1.0 requires `br_table` targets to be equal, which Wasm 2.0 typing does
-  not; [Examples/Wasm1/ProfileBoundary](Itasca/Examples/Wasm1/ProfileBoundary.lean)
-  shows why.
+  not.
 - The generated specification contains three unproved well-formedness theorems:
   `Step_is_wf`, `Step_read_is_wf`, and `Step_pure_is_wf`. No handwritten
   declaration may use them; `just audit` fails if a declaration in `Itasca/` or

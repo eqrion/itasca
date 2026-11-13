@@ -43,7 +43,7 @@ entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : metadata.Env) (id : U64) (config : stream.Config)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   batchId.val ≤ func.val ∧ pending.length ≤ batchId.val ∧ pending.length ≤ config.max_batches.val ∧
     ∃ queue entries, Queued id queue v ∧ ValidQueue id queue profile ∧
       pending.val.Perm (queue.map StreamBatch.Issued.batch_id) ∧
@@ -55,7 +55,7 @@ def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → V
 IDs, so the final drain can retire exactly this queue. Errors are excluded. -/
 def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (id : U64) (config : stream.Config)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ queue, Queued id queue v ∧ ValidQueue id queue profile ∧
       pending.val.Perm (queue.map StreamBatch.Issued.batch_id) ∧ pending.length ≤ config.max_batches.val
@@ -63,7 +63,7 @@ def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → 
 
 private def CompleteBodyPost {V : Type} (Queued : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : metadata.Env) (id : U64) (config : stream.Config) (func : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | .done result => CompletePost (profile := profile) Queued id config result

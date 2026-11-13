@@ -3,12 +3,11 @@ import Itasca.Examples.Module.Basic
 import Itasca.Examples.Module.Support
 
 /-!
-# A two-result module under both profiles
+# A two-result module under Wasm 2.0
 
 A module with one function of type `[] -> [i32, i64]` whose body is `i32.const 0; i64.const 0`.
 `accepted` and `validated` show that `metadata.validate_module` accepts its bytes under Wasm 2.0 via
-the shared completeness and soundness theorems, and `wasm1_rejected` shows the same bytes are
-rejected under Wasm 1.0 because of the second result. `typed` builds `Module_ok` directly from
+the shared completeness and soundness theorems. `typed` builds `Module_ok` directly from
 declarative pieces, without running the validator.
 -/
 
@@ -86,20 +85,6 @@ private theorem zero64 : SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
   norm_num [SignedLeb.finalValue, Leb128.payload]
 
-private theorem base_body_encoding : Itasca.Profile.BodyBytes .Wasm1 entry.body
-    [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by
-  refine ⟨[.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
-  · exact Rep.cons
-      (show Wasm1.TokenEncoding (.plain (Spec.i32Const 0#i32)) [0x41#u8,0#u8] from
-        ⟨0x41#u8, [0#u8], rfl, .i32Const 0#i32 zero32⟩)
-      (Rep.cons
-        (show Wasm1.TokenEncoding (.plain (ScalarConst.i64 0#i64)) [0x42#u8,0#u8] from
-          ⟨0x42#u8, [0#u8], rfl, .i64Const 0#i64 zero64⟩)
-        (Rep.cons (show Wasm1.TokenEncoding .end_ [0x0B#u8] from
-          ⟨0x0B#u8, [], rfl, .end_⟩) .nil))
-  · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Spec.i32Const_wf _)))
-      (.plain _ (ScalarConst.i64_wf _))⟩
-
 private theorem body_encoding : Itasca.Profile.BodyBytes .Wasm2 entry.body
     [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by
   refine ⟨[.plain (Spec.i32Const 0#i32), .plain (ScalarConst.i64 0#i64), .end_], ?_, ?_⟩
@@ -115,8 +100,8 @@ private theorem body_encoding : Itasca.Profile.BodyBytes .Wasm2 entry.body
       (.plain _ (ScalarConst.i64_wf _))⟩
 
 /-- `input` encodes `raw` within the module and function size limits, stated directly on the byte
-lists for either profile. No parser execution or canonical re-encoding is assumed. -/
-theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw input.val profile := by
+lists for Wasm 2.0. No parser execution or canonical re-encoding is assumed. -/
+theorem encoded : ModuleEncodingWithinLimits raw input.val .Wasm2 := by
   constructor
   · simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
   · refine ⟨[1#u8,6#u8,1#u8,0x60#u8,0#u8,2#u8,0x7F#u8,0x7E#u8], [],
@@ -130,16 +115,14 @@ theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw i
         Rep.cons (show ValueTypeEncoding .I32 [0x7F#u8] from rfl)
           (Rep.cons (show ValueTypeEncoding .I64 [0x7E#u8] from rfl) .nil), rfl⟩
     · exact padded _ 2#u8 _ (one (leb 0#u8)) rfl
-    · cases profile with
-      | Wasm1 => exact ⟨rfl, rfl⟩
-      | Wasm2 => exact omitted _ _ _
+    · exact omitted _ _ _
     · apply padded _ 8#u8 _ (one (x := entry) ?_) rfl
       exact ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [0#u8],
         [0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], leb 6#u8,
         ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩,
-        by cases profile; exact base_body_encoding; exact body_encoding,
+        body_encoding,
         by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
-    · cases profile <;> simp [ModuleTypesAllowed, ValueTypeAllowed, raw, fromEnv, env,
+    · simp [ModuleTypesAllowed, ValueTypeAllowed, raw, fromEnv, env,
         Examples.ModuleBasic.emptyEnv, functionType, entry]
     · simp [DataCountValid, raw, fromEnv, env, Examples.ModuleBasic.emptyEnv, entry,
         instructionsUseData, instructionUsesData, Spec.i32Const, ScalarConst.i64]
@@ -148,7 +131,7 @@ theorem encoded (profile : ValidationProfile) : ModuleEncodingWithinLimits raw i
 `raw`, by the shared completeness theorem. -/
 theorem accepted : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.Ok decoded) ∧
     Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw := by
-  exact metadata.validate_module.profile_complete_with_metadata input raw .Wasm2 (encoded .Wasm2)
+  exact metadata.validate_module.profile_complete_with_metadata input raw .Wasm2 encoded
     (by simp [ModuleSignaturesWithinLimits, raw, fromEnv, env, functionType,
       Itasca.Profile.FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS])
     (ModuleElaboration.elaborates cache codes_typed) typed
@@ -159,17 +142,5 @@ theorem validated : ∃ decoded, metadata.validate_module input .Wasm2 = .ok (.O
     ModuleSound.Validated input decoded .Wasm2 := by
   obtain ⟨decoded, ha, _, _⟩ := accepted
   exact ⟨decoded, ha, metadata.validate_module.profile_sound input decoded .Wasm2 ha⟩
-
-/-- The same bytes are rejected under Wasm 1.0 because the function signature has two results. -/
-theorem wasm1_rejected : ∃ err, metadata.validate_module input .Wasm1 = .ok (.Err err) := by
-  obtain ⟨result, hr⟩ := metadata.validate_module.wasm_total input
-  cases result with
-  | Err err => exact ⟨err, hr⟩
-  | Ok decoded =>
-    obtain ⟨other, hb, _, _, _, hp, _⟩ := metadata.validate_module.wasm_sound input decoded hr
-    have he : raw = other := ModuleEncoding.unique (encoded .Wasm1).encoding hb
-    subst other
-    have h := hp.arity functionType (by simp [raw, fromEnv, env])
-    norm_num [Itasca.Profile.FuncType, functionType] at h
 
 end Itasca.Examples.Wasm2Module

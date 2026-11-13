@@ -87,17 +87,6 @@ def DataPrecheckReady {M : Type} (store : runtime.store.Store M)
       inst.memories.val[memoryIndex.val]? = some addr ∧ store.memories.val[addr.index.val]? = some mem
   | _ => True
 
-variable {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
-  (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F)
-  (allocator : runtime.platform.Alloc A)
-
-def storeParts {M P : Type} (store : runtime.store.Store M) (platform : P)
-    (status : core.result.Result Unit runtime.ExecError) :=
-  (store.id, store.limits, store.funcs, store.types, store.tables, store.memories,
-    store.globals, store.instances, store.elems, store.datas, store.externs,
-    store.instance_items, store.signature_values, store.memory_bytes, store.table_elements,
-    platform, status)
-
 end Itasca.Runtime.Store
 
 end

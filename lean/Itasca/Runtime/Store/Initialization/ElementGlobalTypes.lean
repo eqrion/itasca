@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Api.GlobalMapPreservation
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

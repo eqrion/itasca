@@ -17,7 +17,7 @@ open ModuleBinary
 /-- The ten ordered optional declaration slots, followed by all custom bytes consumed before the
 first code or data section. -/
 inductive Chain (raw : ModuleBinary.Module) :
-    Nat → List U8 → (profile : optParam ValidationProfile .Wasm1) → Prop where
+    Nat → List U8 → (profile : ValidationProfile) → Prop where
   | done {profile bytes} : CustomsEncoding bytes → Chain raw 10 bytes profile
   | step {profile} {n : Nat} {id : U8} {first rest : List U8} :
       n < 10 → (sectionRank id).val = n + 1 → SlotEncoding raw id first profile → Chain raw (n + 1) rest profile →

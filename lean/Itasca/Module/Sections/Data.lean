@@ -93,7 +93,8 @@ theorem metadata.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize
           simp only [metadata.decode_segment_index, Result.ok.injEq, core.result.Result.Ok.injEq,
             Prod.mk.injEq] at hseg
           rcases hseg with ⟨rfl, rfl, rfl⟩
-          simp [metadata.decode_data_segment, hr, core.result.Result.Insts.CoreOpsTry.branch]
+          simp [metadata.decode_data_segment, metadata.decode_segment_index, hr,
+            core.result.Result.Insts.CoreOpsTry.branch]
           step
           split
           · simp

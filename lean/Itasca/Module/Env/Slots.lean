@@ -18,7 +18,7 @@ namespace Itasca.ModuleEnv
 
 /-- The payload encoding of the declaration section with rank `id` of `raw`. -/
 def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   match id with
   | 1 => ModuleBinary.VecEncoding ModuleBinary.FuncTypeEncoding raw.types bytes
   | 2 => ModuleBinary.VecEncoding ModuleBinary.ImportEncoding raw.imports bytes
@@ -66,7 +66,7 @@ def update (raw : ModuleBinary.Module) (id : Nat) (decls : Declarations) : Decla
 or nothing when the slot is empty. An omitted empty section completes its slot just as a present
 section does. -/
 def SlotEncoding (raw : ModuleBinary.Module) (id : U8) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   ∃ customs body, ModuleBinary.CustomsEncoding customs ∧
     ((Empty raw (ModuleBinary.sectionRank id).val ∧ body = []) ∨
       ModuleBinary.SectionEncoding id (fun u bytes => Payload raw (ModuleBinary.sectionRank id).val u bytes profile) () body) ∧

@@ -19,9 +19,4 @@ theorem Profile.module_unique {profile : ValidationProfile} {x y : ModuleBinary.
     (hy : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) y bytes profile) : x = y :=
   ModuleBinary.ModuleEncodingWith.unique (Profile.code_prefix_unique profile) hx hy
 
-/-- A byte string encodes at most one raw module under `ModuleEncoding` (Wasm 1.0). -/
-theorem ModuleBinary.ModuleEncoding.unique {x y : ModuleBinary.Module} {bytes : List U8}
-    (hx : ModuleBinary.ModuleEncoding x bytes) (hy : ModuleBinary.ModuleEncoding y bytes) : x = y :=
-  ModuleBinary.ModuleEncodingWith.unique ModuleBinary.code_prefix_unique hx hy
-
 end Itasca

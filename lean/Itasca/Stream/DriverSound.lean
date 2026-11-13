@@ -12,7 +12,7 @@ for the returned environment and tail, and is within the module size cap. The pr
 coherence (`StreamSource.Coherent`) and scheduler provenance (`StreamScheduler.Provenance`), both
 obligations on the embedding. Read errors and callback failures are allowed, and neither callback
 termination nor a canonical region split is needed. `Itasca/Results/Stream` states the public
-`profile_sound` and `wasm_sound`.
+`profile_sound`.
 -/
 
 open Aeneas Aeneas.Std

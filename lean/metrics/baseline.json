@@ -1,17 +1,17 @@
 {
   "all_goals": 1199,
-  "bare_simp": 9107,
-  "extra_unfold_files": 1793,
+  "bare_simp": 9087,
+  "extra_unfold_files": 1790,
   "extracted_functions_unfolded": 766,
   "extracted_functions_unfolded_in_3_or_more_files": 278,
-  "handwritten_lines": 278197,
+  "handwritten_lines": 277850,
   "heartbeat_overrides": 266,
   "layer_violations": 0,
   "lean_lines_by_area": {
     "compiler": 92928,
     "interp": 46164,
-    "store": 28515,
-    "validator": 62550
+    "store": 28558,
+    "validator": 62512
   },
   "lean_lines_per_rust_line": {
     "compiler": 44.7,
@@ -25,7 +25,7 @@
   "median_module_lines": 82.0,
   "modules": 2418,
   "modules_over_1500_lines": 1,
-  "modules_under_50_lines": 663,
+  "modules_under_50_lines": 665,
   "recdepth_overrides": 335,
   "rust_lines_by_area": {
     "compiler": 2080,
@@ -34,6 +34,6 @@
     "validator": 5716
   },
   "sorry": 0,
-  "theorems": 9069,
-  "theorems_with_15_or_more_binders": 1036
+  "theorems": 9040,
+  "theorems_with_15_or_more_binders": 1035
 }

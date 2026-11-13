@@ -232,9 +232,4 @@ theorem metadata.read_section_header.spec (data : Slice U8) (start : Usize) :
               step*
               exact ⟨pos, size, hp, hd, by scalar_tac, by scalar_tac⟩
 
-/-- Under Wasm 1.0 the segment flag is the index and nothing is consumed. -/
-@[simp]
-theorem metadata.decode_segment_index.wasm1 (data : Slice U8) (pos : Usize) (idx : U32) :
-    metadata.decode_segment_index data pos idx .Wasm1 = .ok (.Ok (idx, pos, false)) := rfl
-
 end Itasca

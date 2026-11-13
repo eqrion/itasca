@@ -73,7 +73,7 @@ def Declarations.module (decls : Declarations) (codes : List ModuleBinary.Code)
 /-- `bytes` is the module header followed by the canonical encoding of `value`, ending just before
 the code or data section and including all custom sections before that point. -/
 def PrefixEncoding (value : Declarations) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   ∃ types imports functions tables memories globals exports start elements dataCount customs,
     ModuleBinary.PaddedEncoding 1#u8 (ModuleBinary.VecEncoding ModuleBinary.FuncTypeEncoding)
       [] value.types types ∧

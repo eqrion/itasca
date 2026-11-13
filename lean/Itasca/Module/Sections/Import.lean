@@ -21,7 +21,7 @@ namespace Itasca.ModuleSections
 Functions must resolve their type, tables and memories satisfy their limits and count caps,
 and tables and globals use types the profile allows. -/
 def ImportAdded (env result : metadata.Env) (entry : metadata.Import)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
   match entry.desc with
   | .Func idx => ∃ ft, ModuleEnv.Resolves env.types.val idx ft ∧
@@ -64,7 +64,7 @@ open ModuleBinary ModuleSections
 `ImportEncoding` span, and the environment stays within the byte bound. -/
 @[step]
 theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :
+    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile) :
     metadata.decode_import data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ entry, ImportAdded env r.2 entry profile ∧
           At ImportEncoding data pos (ModuleEnv.rawImport entry) next ∧

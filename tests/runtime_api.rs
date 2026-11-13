@@ -90,46 +90,39 @@ fn cross_instance_calls_use_defining_globals_memory_and_functions() {
     assert_eq!(run(&mut store, indirect, &[]), [Value::I32(38)]);
 }
 #[test]
-fn failed_segments_preserve_profile_specific_effects_and_escaped_functions() {
+fn failed_segments_preserve_prior_effects_and_escaped_functions() {
     let wat = r#"(module (import "h" "t" (table 1 funcref)) (import "h" "m" (memory 1))
       (global i32 (i32.const 77)) (func (result i32) global.get 0)
       (elem (i32.const 0) 0) (data (i32.const 0) "A") (data (i32.const 65536) "B"))"#;
-    for profile in [ValidationProfile::Wasm1, ValidationProfile::Wasm2] {
-        let mut store = Store::new();
-        let table = store
-            .define_table(TableType {
-                elem: ElemType::FuncRef,
+    let mut store = Store::new();
+    let table = store
+        .define_table(TableType {
+            elem: ElemType::FuncRef,
+            limits: Limits { min: 1, max: None },
+        })
+        .unwrap();
+    let memory = store
+        .define_memory(
+            MemType {
                 limits: Limits { min: 1, max: None },
-            })
-            .unwrap();
-        let memory = store
-            .define_memory(
-                MemType {
-                    limits: Limits { min: 1, max: None },
-                },
-                VecMemory::new_zeroed(65536).unwrap(),
-            )
-            .unwrap();
-        assert!(matches!(
-            store.instantiate(
-                module(wat, profile),
-                &[Extern::Table(table), Extern::Memory(memory)],
-                &mut Hooks::new()
-            ),
-            Err(ExecError::Trap(Trap::MemoryOutOfBounds))
-        ));
-        if profile == ValidationProfile::Wasm1 {
-            assert_eq!(store.memory(memory).unwrap()[0], 0);
-            assert_eq!(store.table_get(table, 0).unwrap(), Value::FuncRef(None));
-        } else {
-            assert_eq!(store.memory(memory).unwrap()[0], b'A');
-            let f = match store.table_get(table, 0).unwrap() {
-                Value::FuncRef(Some(f)) => f,
-                _ => panic!(),
-            };
-            assert_eq!(run(&mut store, f, &[]), [Value::I32(77)]);
-        }
-    }
+            },
+            VecMemory::new_zeroed(65536).unwrap(),
+        )
+        .unwrap();
+    assert!(matches!(
+        store.instantiate(
+            module(wat, ValidationProfile::Wasm2),
+            &[Extern::Table(table), Extern::Memory(memory)],
+            &mut Hooks::new()
+        ),
+        Err(ExecError::Trap(Trap::MemoryOutOfBounds))
+    ));
+    assert_eq!(store.memory(memory).unwrap()[0], b'A');
+    let f = match store.table_get(table, 0).unwrap() {
+        Value::FuncRef(Some(f)) => f,
+        _ => panic!(),
+    };
+    assert_eq!(run(&mut store, f, &[]), [Value::I32(77)]);
 }
 #[test]
 fn dropped_segments_are_empty_and_zero_length_bounds_are_checked() {

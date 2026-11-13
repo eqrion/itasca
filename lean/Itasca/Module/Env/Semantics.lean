@@ -9,8 +9,7 @@ import Itasca.Module.Env.Encoding
 `metadata.validate_env.profile_semantic_spec` shows that for arbitrary bytes, `metadata.validate_env`
 either rejects or returns an environment with `SemanticPostWith`. That is a `Represents`
 declaration record, `Valid`, signature and size bounds, and an independent `PrefixEncoding` of the
-consumed bytes. The same holds for `metadata.validate_env_with` with total custom-section hooks, and
-the Wasm 1.0 instances are the `semantic_spec` theorems.
+consumed bytes. The same holds for `metadata.validate_env_with` with total custom-section hooks.
 -/
 
 open Aeneas Aeneas.Std
@@ -51,9 +50,6 @@ theorem PostWith.semantic {profile data result} (h : PostWith profile data resul
       exact ⟨decls, hrun.represents hr hp, hrun.valid hr hv hp,
         hrun.signatureBounded (hs.mono (Nat.zero_le _)), hbound, hrun.encoding hheader⟩
 
-/-- `SemanticPostWith` for Wasm 1.0. -/
-abbrev SemanticPost (data : Slice U8) := SemanticPostWith .Wasm1 data
-
 end Itasca.ModuleEnv
 
 namespace Itasca
@@ -65,10 +61,5 @@ theorem metadata.validate_env.profile_semantic_spec (data : Slice U8) (profile :
   obtain ⟨result, hr, hp⟩ := WP.spec_imp_exists (metadata.validate_env.profile_spec data profile)
   rw [hr]
   simpa only [WP.spec_ok] using ModuleEnv.PostWith.semantic hp
-
-/-- `metadata.validate_env.profile_semantic_spec` for Wasm 1.0. -/
-theorem metadata.validate_env.semantic_spec (data : Slice U8) :
-    metadata.validate_env data .Wasm1 ⦃ ModuleEnv.SemanticPost data ⦄ := by
-  exact metadata.validate_env.profile_semantic_spec data .Wasm1
 
 end Itasca

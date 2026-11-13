@@ -1,6 +1,6 @@
 import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Examples.Wasm1.Support
+import Itasca.Examples.Module.BodySupport
 import Itasca.Examples.Module.Support
 
 /-!
@@ -39,9 +39,9 @@ private theorem bad_size : Leb128.Decoded badBytes 0#usize 2#u32 1#usize :=
   (show Wasm1.BytesAt badBytes 0#usize [2#u8] 1#usize by
     constructor <;> simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]).u32_decoded _ (leb 2#u8)
 
-private theorem bad_locals : metadata.decode_locals badBytes 1#usize .Wasm1 =
+private theorem bad_locals : metadata.decode_locals badBytes 1#usize .Wasm2 =
     .ok (.Ok (alloc.vec.Vec.new _, 2#usize)) := by
-  obtain ⟨locals, hl, hv⟩ := metadata.decode_locals.complete badBytes 1#usize .Wasm1 [] 2#usize
+  obtain ⟨locals, hl, hv⟩ := metadata.decode_locals.complete badBytes 1#usize .Wasm2 [] 2#usize
     ⟨[0#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, by
       constructor <;> simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]⟩
     (by simp)
@@ -50,28 +50,28 @@ private theorem bad_locals : metadata.decode_locals badBytes 1#usize .Wasm1 =
   simpa [he] using hl
 
 private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
-    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm1 () =
+    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm2 () =
       .ok (.Err .UnrecognizedOpcode, ()) := by
   obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm1 ()
+    (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 .Wasm2 ()
   have he := code.validate_body_with.eq_core (Examples.BodySupport.bytes [0xFF#u8]) badEnv
-    Examples.BodySupport.emptyContext 0#u32 .Wasm1
+    Examples.BodySupport.emptyContext 0#u32 .Wasm2
   rw [show Examples.BodySupport.emptyContext.locals = alloc.vec.Vec.new _ from rfl,
     show Examples.BodySupport.emptyContext.results = alloc.vec.Vec.new _ from rfl,
-    Examples.BodySupport.unknown_opcode_rejected badEnv .Wasm1 rfl, hr] at he
+    Examples.BodySupport.unknown_opcode_rejected badEnv .Wasm2 rfl, hr] at he
   cases v
   simp at he
   subst he
   exact hr
 
 /-- `metadata.validate_code_entry` on `badBytes` returns `Body UnrecognizedOpcode`. -/
-theorem bad_body_entry_rejected : metadata.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 =
+theorem bad_body_entry_rejected : metadata.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm2 =
     .ok (.Err (.Body .UnrecognizedOpcode)) := by
   have hread := reader.read_u32_leb.complete badBytes 0#usize 2#u32 1#usize bad_size
   have htypes : badEnv.types.val = [Examples.BodySupport.voidFunction] := rfl
   have hfuncs : badEnv.func_type_indices.val = [0#u32] := rfl
-  have hs : metadata.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm1 ⦃ r =>
+  have hs : metadata.validate_code_entry badBytes 0#usize badEnv 0#usize .Wasm2 ⦃ r =>
       r = .Err (.Body .UnrecognizedOpcode) ⦄ := by
     unfold metadata.validate_code_entry metadata.validate_code_entry_with
     simp [hfuncs, hread, core.result.Result.Insts.CoreOpsTry.branch]
@@ -115,8 +115,8 @@ theorem bad_body_entry_rejected : metadata.validate_code_entry badBytes 0#usize 
   exact hr
 
 /-- An issued batch for module 0, batch 0, covering function 0 at code offset 0 of `badBytes`
-under Wasm 1.0. -/
-def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
+under Wasm 2.0. -/
+def badIssued : StreamBatch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize, .Wasm2⟩
 
 private theorem bad_bounds : CodeEntry.Bounds badEnv := by
   intro ft hm
@@ -133,7 +133,7 @@ theorem bad_batch_validation_rejected : ∃ after,
     after.error = some (.Body .UnrecognizedOpcode) := by
   obtain ⟨⟨r, v⟩, hr⟩ := metadata.validate_code_entry_with.profile_total
     code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_total
-    badBytes 0#usize badEnv 0#usize () bad_bounds .Wasm1
+    badBytes 0#usize badEnv 0#usize () bad_bounds .Wasm2
   cases v
   have he : r = .Err (.Body .UnrecognizedOpcode) := by
     simpa [metadata.validate_code_entry, hr] using bad_body_entry_rejected
@@ -162,7 +162,7 @@ def tailBuffer : Slice U8 := Examples.ModuleSupport.bytes [0#u8,1#u8,0#u8]
 def emptyTail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
 
 private theorem good_tail (env : metadata.Env) (hcount : env.data_count = none) :
-    metadata.validate_tail tailBuffer 0#usize env .Wasm1 = .ok (.Ok emptyTail) := by
+    metadata.validate_tail tailBuffer 0#usize env .Wasm2 = .ok (.Ok emptyTail) := by
   apply metadata.validate_tail.complete emptyTail
   · refine ⟨[0#u8,1#u8,0#u8], ?_, ?_⟩
     · refine ⟨[], [0#u8,1#u8,0#u8], ⟨[], [], .nil, .absent, rfl⟩, ?_, rfl⟩
@@ -191,7 +191,7 @@ private theorem observe_customs_preserve : ModuleTail.Preserves observeCustoms i
 /-- Validating the trailing custom section with `observeCustoms` accepts and returns the
 outstanding batch list `[badIssued]` unchanged. -/
 theorem tail_custom_preserves_work (env : metadata.Env) (hcount : env.data_count = none) :
-    metadata.validate_tail_with observeCustoms tailBuffer 0#usize env .Wasm1 [badIssued] =
+    metadata.validate_tail_with observeCustoms tailBuffer 0#usize env .Wasm2 [badIssued] =
       .ok (.Ok emptyTail, [badIssued]) := by
   obtain ⟨v', hv⟩ := metadata.validate_tail_with.accepted_lift observeCustoms observe_customs_accept
     tailBuffer 0#usize env [badIssued] emptyTail (good_tail env hcount)

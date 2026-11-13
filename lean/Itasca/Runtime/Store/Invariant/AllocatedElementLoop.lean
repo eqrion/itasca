@@ -2,6 +2,7 @@ import Itasca.Runtime.Store.Preparation.AllocationInitializers
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Initialization.ElementContentEffect
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 import Itasca.Runtime.Store.Initialization.SegmentGlobalMetadata
 

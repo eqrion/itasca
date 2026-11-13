@@ -85,7 +85,7 @@ structure Elaborates (raw : ModuleBinary.Module) (spec : _root_.module) : Prop w
 /-- The module-level conditions that `Module_ok` does not express: unique export names, the
 profile's table count limit, at most one memory, and function types admitted by the profile.
 Instruction syntax itself is restricted by `ModuleBinary`. -/
-structure ModuleConditions (raw : ModuleBinary.Module) (profile : ValidationProfile := .Wasm1) : Prop where
+structure ModuleConditions (raw : ModuleBinary.Module) (profile : ValidationProfile) : Prop where
   unique_exports : (raw.exports.map (fun entry => ModuleBinary.nameOfBytes entry.name)).Nodup
   table_count : profile = .Wasm1 → (ModuleTranslation.tables (raw.imports.map (fun entry => importType raw.types entry.desc))).length +
     raw.tables.length ≤ 1

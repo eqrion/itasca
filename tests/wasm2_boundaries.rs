@@ -319,11 +319,6 @@ fn wasm2_inline_block_value_tags() {
     for tag in [0x7f, 0x7e, 0x7d, 0x7c, 0x7b, 0x70, 0x6f] {
         let bytes = block_module(&[tag], true, 1);
         check_block(&bytes, true);
-        assert_eq!(
-            itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm1).is_ok(),
-            tag >= 0x7c,
-            "Wasm 1.0 block tag {tag:02x}",
-        );
     }
 }
 

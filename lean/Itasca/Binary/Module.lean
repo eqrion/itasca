@@ -472,7 +472,7 @@ def DataCountSectionEncoding (profile : ValidationProfile) (value : Option U32)
 /-- The module format for the profile, parameterized by the code entry grammar, with custom
 sections between the ordered optional sections. Typing checks are separate from this grammar. -/
 def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   ∃ types imports functions tables memories globals exports start elements dataCount codes datas customs,
     PaddedEncoding 1#u8 (VecEncoding FuncTypeEncoding) [] value.types types ∧
     PaddedEncoding 2#u8 (VecEncoding ImportEncoding) [] value.imports imports ∧
@@ -491,9 +491,10 @@ def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (b
       globals ++ exports ++ start ++ elements ++ dataCount ++ codes ++ datas ++ customs ∧
     ModuleTypesAllowed profile value ∧ DataCountValid value
 
-/-- The Wasm 1.0 module grammar (the default profile of `ModuleEncodingWith`) with `CodeEncoding`
+/-- The Wasm 1.0 module grammar using `ModuleEncodingWith` and `CodeEncoding`
 for code entries. Implementation limits are separate premises of completeness. -/
-def ModuleEncoding : Module → List U8 → Prop := ModuleEncodingWith CodeEncoding
+def ModuleEncoding (value : Module) (bytes : List U8) : Prop :=
+  ModuleEncodingWith CodeEncoding value bytes .Wasm1
 
 /-- An `At` interval lies within the buffer. -/
 theorem At.span {α : Type} {R : α → List U8 → Prop} {data start value next}

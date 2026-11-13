@@ -73,7 +73,7 @@ theorem ModuleEncodingWith.guards {profile R raw bytes}
 `CodeEncodingWithinLimits`. Only the code entries' encoding witnesses are strengthened. Padded
 LEB encodings stay admitted, and the caps constrain the actual encoded body bytes. -/
 def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   bytes.length ≤ limits.MAX_MODULE_BYTES.val ∧
     ModuleEncodingWith (Profile.CodeEncodingWithinLimits profile) raw bytes profile
 

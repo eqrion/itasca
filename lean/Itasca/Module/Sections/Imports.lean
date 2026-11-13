@@ -15,7 +15,7 @@ namespace Itasca.ModuleSections
 
 /-- `result` is `initial` after adding `entries` one at a time by `ImportAdded`. -/
 inductive ImportsAdded (initial : metadata.Env) : List metadata.Import → metadata.Env →
-    (profile : optParam ValidationProfile .Wasm1) → Prop where
+    (profile : ValidationProfile) → Prop where
   | nil {profile} : ImportsAdded initial [] initial profile
   | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
       ImportAdded before after entry profile → ImportsAdded initial (entries ++ [entry]) after profile
@@ -58,7 +58,7 @@ open ModuleBinary ModuleSections
 @[step]
 theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hbound : ModuleEnv.Bounded env start.val) (profile : ValidationProfile := .Wasm1) :
+    (hbound : ModuleEnv.Bounded env start.val) (profile : ValidationProfile) :
     metadata.decode_import_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ entries, entries.length = count.val ∧ ImportsAdded env entries r.2 profile ∧
           At (Rep ImportEncoding) data start (entries.map ModuleEnv.rawImport) next ∧
@@ -99,7 +99,7 @@ theorem metadata.decode_import_section_loop.spec (data : Slice U8) (env : metada
 /-- `metadata.decode_import_section` adds the imports of a `VecEncoding ImportEncoding` span. -/
 @[step]
 theorem metadata.decode_import_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile := .Wasm1) :
+    (hbound : ModuleEnv.Bounded env pos.val) (profile : ValidationProfile) :
     metadata.decode_import_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ entries, ImportsAdded env entries r.2 profile ∧
           At (VecEncoding ImportEncoding) data pos (entries.map ModuleEnv.rawImport) next ∧

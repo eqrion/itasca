@@ -5,6 +5,7 @@ import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings
 import Itasca.Runtime.Store.Api.GlobalErrorLoop
 import Itasca.Runtime.Store.Preparation.PreparationCalls
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Global staging resource causes from definition through initialization and the staging loop. Actual allocation requests and initializer failures remain distinct explanations of errors.

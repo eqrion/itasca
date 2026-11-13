@@ -22,9 +22,9 @@ to install the pinned tools.
 | `lean/SpecExt/` | Handwritten execution extensions and proofs about the patched builtins. |
 | `lean/SpecTec/` | Committed generated specification. |
 | `vendor/`, `patches/` | Pinned tool/specification sources and reproducible source repairs. |
-| `tests/spec_tests.rs`, `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
+| `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
 | `tests/runtime_wast.rs`, `tests/runtime_api.rs` | Full execution corpora and store/host/interrupt regressions. |
-| `tests/support/`, `examples/wast_extract.rs` | Fixture normalization and generation. |
+| `tests/support/` | Fixture normalization and generation. |
 | `fuzz/` | Differential fuzzers against wasmparser. |
 
 The internal Rust modules follow the implementation and proof boundaries. Keep

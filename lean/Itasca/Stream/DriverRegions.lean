@@ -83,7 +83,7 @@ of the shared environment and tail validators and the encoded, typed code entrie
 is later obtained from the typed, bounded encodings by the streaming driver. -/
 structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
     (source : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
+    (validationProfile : ValidationProfile) : Prop where
   split : Split data source
   bytes : data.val = source.env.val ++ source.code.val ++ source.tail.val
   bounded : data.length ≤ limits.MAX_MODULE_BYTES.val

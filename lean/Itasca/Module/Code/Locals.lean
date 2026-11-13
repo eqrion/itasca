@@ -106,7 +106,7 @@ output by their expansion, and keeps it within `limits.MAX_LOCALS`. -/
 theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
     (out : alloc.vec.Vec wasm_types.ValueType) (q : Usize) (i : U32)
     (hi : i.val ≤ groups.val) (hq : q.val ≤ data.length)
-    (hsize : out.val.length ≤ limits.MAX_LOCALS.val) (profile : ValidationProfile := .Wasm1) :
+    (hsize : out.val.length ≤ limits.MAX_LOCALS.val) (profile : ValidationProfile) :
     metadata.decode_locals_loop data profile groups out q i ⦃ r => match r with
       | .Ok (locals, next) => ∃ decoded,
           decoded.length = groups.val - i.val ∧
@@ -190,7 +190,7 @@ theorem metadata.decode_locals_loop.spec (data : Slice U8) (groups : U32)
 /-- `metadata.decode_locals` terminates, and on success returns the expansion of independently
 encoded local groups within `limits.MAX_LOCALS` whose types the profile allows. -/
 @[step]
-theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile := .Wasm1) :
+theorem metadata.decode_locals.spec (data : Slice U8) (pos : Usize) (profile : ValidationProfile) :
     metadata.decode_locals data pos profile ⦃ r => match r with
       | .Ok (locals, next) => ∃ groups,
           ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding) data pos groups next ∧

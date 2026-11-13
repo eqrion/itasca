@@ -56,7 +56,7 @@ def instructionType (ft : wasm_types.FuncType) : functype :=
 `bodyContext` with the parameters followed by the declared locals, is admitted by the profile, uses
 allowed local types, and mentions only declared function references. -/
 structure Typed (env : metadata.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop where
+    (validationProfile : ValidationProfile) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body

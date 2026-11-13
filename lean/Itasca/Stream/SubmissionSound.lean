@@ -30,7 +30,7 @@ retirement. -/
 structure SoundInvariant (code : Slice U8) (env : metadata.Env) (start : Usize)
     (id : U64) (capacity : Usize) (history : List StreamBatch.Issued)
     (pending : alloc.vec.Vec Usize) (pos func nextId : Usize)
-    (profile : ValidationProfile := .Wasm1) : Prop where
+    (profile : ValidationProfile) : Prop where
   partition : Partition code env start 0 history pos func.val
   position : pos.val ≤ code.length
   functions : func.val ≤ env.func_type_indices.val.length
@@ -173,7 +173,7 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
 pending or completed, with the scheduler tracking the resulting history. -/
 def SoundPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64) (capacity : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ history nextId,
       SoundInvariant (profile := profile) code env start id capacity history pending (Slice.len code)
@@ -183,7 +183,7 @@ def SoundPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Pro
 private def BodyPost {V : Type} (Tracks : U64 → List StreamBatch.Issued → V → Prop)
     (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64)
     (capacity func : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | .done result => SoundPost (profile := profile) Tracks code env start id capacity result

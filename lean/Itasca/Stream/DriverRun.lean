@@ -23,7 +23,7 @@ validator. -/
 structure Remaining {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : metadata.Env) (environmentLength : Usize) (before after : V)
-    (profile : ValidationProfile := .Wasm1) where
+    (profile : ValidationProfile) where
   codeLength : Usize
   codeEnd : Usize
   entries : Usize
@@ -61,7 +61,7 @@ custom-section region callback, the environment decode, and the `Remaining` phas
 structure Accepted {S V : Type} (source : stream.Source S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (before after : V) (env : metadata.Env)
-    (profile : ValidationProfile := .Wasm1) where
+    (profile : ValidationProfile) where
   environment : Slice U8
   environmentLength : Usize
   region : V

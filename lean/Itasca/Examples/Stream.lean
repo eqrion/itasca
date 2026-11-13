@@ -40,7 +40,7 @@ def emptyBytes : Slice U8 := bytes []
 
 /-- An issued-batch descriptor over the empty environment, which has no function to validate. -/
 def impossibleIssued : StreamBatch.Issued :=
-  ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize, .Wasm1⟩
+  ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize, .Wasm2⟩
 
 /-- An arbitrary extracted record can forge the private validation cursor. -/
 def forgedBatch : stream.CodeBatch :=
@@ -163,7 +163,7 @@ theorem empty_split : stream.find_code_region emptyBytes = .ok (0#usize, 0#usize
 
 /-- `stream.validate_module_slice` on an empty buffer reports `UnexpectedEof` from the missing
 module header. -/
-theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm1 =
+theorem empty_slice_rejected : stream.validate_module_slice emptyBytes .Wasm2 =
     .ok (.Err (.Read .UnexpectedEof)) := by
   have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
       emptyBytes { start := 0#usize, «end» := 0#usize } = .ok emptyBytes := by

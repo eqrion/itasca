@@ -11,6 +11,7 @@ import Itasca.Runtime.Store.Preparation.StagingCommitShape
 import Itasca.Runtime.Store.Instantiation.PublishInstance
 import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Store.Preparation.PreparationTableMemoryAllocations
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Prepared-run table and memory allocation certificates. Publication boundaries and the resolved, unexecuted start function remain explicit.

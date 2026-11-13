@@ -14,15 +14,14 @@ fn compilation_owns_metadata_and_checks_the_entire_tail() {
         "(module (memory 1) (func (result i32) i32.const 5)
         (data (i32.const 0) \"hello\"))",
     );
-    let module = compile(&input, ValidationProfile::Wasm1).unwrap();
+    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
     input.fill(0);
     assert_eq!(module.tail().data[0].init, b"hello");
     assert_eq!(module.function_count(), 1);
-    assert_eq!(module.profile(), ValidationProfile::Wasm1);
+    assert_eq!(module.profile(), ValidationProfile::Wasm2);
 
     let mut invalid = bytes("(module (func))");
     invalid.extend_from_slice(&[11, 2, 1, 0]);
-    assert!(compile(&invalid, ValidationProfile::Wasm1).is_err());
     assert!(compile(&invalid, ValidationProfile::Wasm2).is_err());
 }
 
@@ -83,13 +82,12 @@ fn function_identity_survives_multiple_batches_and_reverse_retirement() {
 }
 
 #[test]
-fn profiles_and_unreachable_multivalue_branches_remain_distinct() {
+fn unreachable_multivalue_branches_preserve_stack_behavior() {
     let input = bytes(
         "(module (func (result i32 i64)
         unreachable (block (result f32 f64)
             unreachable br_table 0 1) drop drop))",
     );
-    assert!(compile(&input, ValidationProfile::Wasm1).is_err());
     let module = compile(&input, ValidationProfile::Wasm2).unwrap();
     assert_eq!(module.function_stats(0).unwrap().max_stack, 0);
 }

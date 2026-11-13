@@ -70,7 +70,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
     (hglobals : env.globals.val.length ≤ start.val)
     (htypes : env.global_types.val.length ≤ start.val)
     (hreferences : env.declared_funcs.val.length ≤ start.val)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_global_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ GlobalsAdded env r.2 added ∧
           At (Rep GlobalEncoding) data start added next ∧
@@ -160,7 +160,7 @@ theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env
     (hglobals : env.globals.val.length ≤ pos.val)
     (htypes : env.global_types.val.length ≤ pos.val)
     (hreferences : env.declared_funcs.val.length ≤ pos.val)
-    (profile : ValidationProfile := .Wasm1) :
+    (profile : ValidationProfile) :
     metadata.decode_global_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, GlobalsAdded env r.2 added ∧
           At (VecEncoding GlobalEncoding) data pos added next ∧

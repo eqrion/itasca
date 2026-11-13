@@ -20,6 +20,7 @@ import Itasca.Runtime.Store.Initialization.ElementErrorLoop
 import Itasca.Runtime.Store.Initialization.DataErrorLoop
 import Itasca.Runtime.Store.Initialization.PrecheckCertifiedWitness
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Every actual preparation either returns an ordinary precommit rejection retaining the old store prefix, with its resource evidence, or a staged instance whose item charge yields a fully shaped store. This decomposition imposes no normal-return or termination premise on the computation.

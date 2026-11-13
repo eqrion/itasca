@@ -28,7 +28,7 @@ checked environment update. Emptiness of later sections distinguishes an initial
 vector from an append performed by the extracted parser. -/
 inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (before : Declarations) : U8 → Usize → metadata.Env → Declarations →
-      (profile : optParam ValidationProfile .Wasm1) → Prop where
+      (profile : ValidationProfile) → Prop where
   | types {profile} {result next added} : TypesAdded env result added →
       At (VecEncoding FuncTypeEncoding) data pos added next →
       (∀ ft ∈ added, Profile.FuncTypeAdmissible profile ft ∧

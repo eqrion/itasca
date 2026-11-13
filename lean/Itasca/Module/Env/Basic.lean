@@ -51,7 +51,7 @@ structure Cache (env : metadata.Env) (tables : List wasm_types.TableType) (memor
 
 /-- The semantic checks that are stored in, or derivable from, the environment under `profile`.
 Byte-format evidence is tracked separately. -/
-structure Valid (env : metadata.Env) (profile : ValidationProfile := .Wasm1) : Prop where
+structure Valid (env : metadata.Env) (profile : ValidationProfile) : Prop where
   types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
@@ -177,7 +177,7 @@ namespace Itasca
 /-- The empty environment is cached, valid and bounded by `0`. -/
 @[step]
 theorem metadata.Env.new.spec : metadata.Env.new ⦃ env =>
-    ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env ∧ ModuleEnv.Bounded env 0 ⦄ := by
+    ModuleEnv.Cache env [] [] ∧ ModuleEnv.Valid env .Wasm1 ∧ ModuleEnv.Bounded env 0 ⦄ := by
   unfold metadata.Env.new
   simp only [WP.spec_ok]
   constructor

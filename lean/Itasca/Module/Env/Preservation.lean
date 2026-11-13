@@ -30,12 +30,6 @@ theorem metadata.Env.new.profile_declarations (profile : ValidationProfile) : me
   · constructor <;> simp
   · simp [ModuleEnv.Phase]
 
-/-- `metadata.Env.new.profile_declarations` for Wasm 1.0. -/
-theorem metadata.Env.new.declarations : metadata.Env.new ⦃ env =>
-    ModuleEnv.Represents env {} ∧ ModuleEnv.Valid env ∧
-    ModuleEnv.SignatureBounded env 0 ∧ ModuleEnv.Bounded env 0 ∧ ModuleEnv.Phase 0 {} ⦄ :=
-  metadata.Env.new.profile_declarations .Wasm1
-
 end Itasca
 
 namespace Itasca.ModuleSections

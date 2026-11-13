@@ -4,6 +4,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementTypes
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Element allocation bounds and staging-loop preservation. The bounded effect retains typed segment contents and supplies the loop certificate used by preparation.

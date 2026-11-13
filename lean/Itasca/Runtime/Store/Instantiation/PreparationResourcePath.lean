@@ -8,6 +8,7 @@ import Itasca.Runtime.Store.Initialization.ElementStagingCauses
 import Itasca.Runtime.Store.Initialization.DataStagingCauses
 import Itasca.Runtime.Store.Initialization.PrecheckCertifiedResourceCauses
 import Itasca.Runtime.Store.Invariant.InstanceItemCauses
+import Itasca.Runtime.Store.Initialization.StoreParts
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

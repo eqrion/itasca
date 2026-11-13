@@ -148,7 +148,6 @@ fn every_core2_simd_opcode_and_its_operand_types() {
                 let op = operation(*opcode, immediate, padded);
                 let bytes = module(inputs, outputs, &op, true);
                 compare(&bytes, true);
-                assert!(validate_module(&bytes, ValidationProfile::Wasm1).is_err());
                 for index in 0..inputs.len() {
                     let mut wrong = inputs.to_vec();
                     wrong[index] = if wrong[index] == I32 { I64 } else { I32 };

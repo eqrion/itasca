@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Api.GlobalLoop
 import Itasca.Runtime.Store.Api.GlobalErrors
 import Itasca.Runtime.Store.Invariant.ErrorPost
+import Itasca.Runtime.Store.Initialization.StoreParts
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 theorem global_staging_loop_errors {M P F A : Type}

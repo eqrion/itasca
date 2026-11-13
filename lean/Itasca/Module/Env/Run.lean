@@ -19,7 +19,7 @@ final ones, ending at position `next` after a section of rank `id`. It records b
 changes rather than calls to the extracted parser. -/
 inductive Run (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
     (start : Usize) (initialId : U8) : metadata.Env → Declarations → Usize → U8 →
-      (profile : optParam ValidationProfile .Wasm1) → Prop where
+      (profile : ValidationProfile) → Prop where
   | nil {profile} : Run (profile := profile) data initial decls start initialId initial decls start initialId
   | custom {profile} {before beforeDecls pos last next} :
       Run (profile := profile) data initial decls start initialId before beforeDecls pos last →

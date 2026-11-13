@@ -5,8 +5,7 @@ import Itasca.Stream.DriverComplete
 /-!
 # Streaming validation
 
-Soundness, termination and completeness of `stream.validate_streaming` for both profiles, with
-Wasm 1.0 instances (`wasm_*`). Each claim rests on its own embedding premises from
+Soundness, termination and completeness of `stream.validate_streaming` for both profiles. Each claim rests on its own embedding premises from
 `Itasca/Contracts`: soundness on `StreamSource.Coherent` and `StreamScheduler.Provenance`,
 termination on `StreamSource.CallbacksTotal` and `StreamScheduler.CallbacksTotal`, completeness on
 `StreamSource.CanonicalAvailable` and `StreamAcceptingScheduler.Accepts`.
@@ -72,49 +71,6 @@ theorem stream.validate_streaming.profile_complete {profile : ValidationProfile}
       stream.validate_streaming source visitor id profile state before storage = .ok (.Ok (), after, env) ∧
       Matches env run.remaining.tail raw ∧ AccessorTypes env raw ∧ Queued id [] after :=
   stream.validate_streaming.complete source visitor config Queued ha id state before storage
-    data raw hb hsignatures he ht hp hs hv
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_sound`. -/
-theorem stream.validate_streaming.wasm_sound {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (Tracks : U64 → List StreamBatch.Issued → V → Prop)
-    (hp : StreamScheduler.Provenance visitor Tracks)
-    (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
-    (data environment code tail : Slice U8)
-    (hsource : StreamSource.Coherent source state environment.val code.val tail.val)
-    (hbytes : data.val = environment.val ++ code.val ++ tail.val)
-    (hv : Tracks id [] v)
-    (h : stream.validate_streaming source visitor id .Wasm1 state v storage = .ok (.Ok (), v', env)) :
-    ∃ run : StreamRun.Accepted source visitor id state v v' env,
-      ModuleSound.Validated data ⟨env, run.remaining.tail⟩ ∧
-      data.length ≤ limits.MAX_MODULE_BYTES.val :=
-  stream.validate_streaming.profile_sound source visitor Tracks hp id state v v' storage env
-    data environment code tail hsource hbytes hv h
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_total`. -/
-theorem stream.validate_streaming.wasm_total {S V : Type} (source : stream.Source S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : metadata.Env)
-    (hs : StreamSource.CallbacksTotal source state) (hv : StreamScheduler.CallbacksTotal visitor) :
-    ∃ r, stream.validate_streaming source visitor moduleId .Wasm1 state v storage = .ok r :=
-  stream.validate_streaming.profile_total source visitor moduleId state v storage hs hv
-
-/-- The Wasm 1.0 instance of `stream.validate_streaming.profile_complete`. -/
-theorem stream.validate_streaming.wasm_complete {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List StreamBatch.Issued → V → Prop)
-    (ha : StreamAcceptingScheduler.Accepts visitor config Queued)
-    (id : U64) (state : S) (before : V) (storage : metadata.Env)
-    (data : Slice U8) (raw : ModuleBinary.Module)
-    (hb : ModuleEncodingWithinLimits raw data.val)
-    (hsignatures : ModuleSignaturesWithinLimits raw)
-    (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw)
-    (hs : StreamSource.CanonicalAvailable source state data) (hv : Queued id [] before) :
-    ∃ env after, ∃ run : StreamRun.Accepted source visitor id state before after env,
-      stream.validate_streaming source visitor id .Wasm1 state before storage = .ok (.Ok (), after, env) ∧
-      Matches env run.remaining.tail raw ∧ AccessorTypes env raw ∧ Queued id [] after :=
-  stream.validate_streaming.profile_complete source visitor config Queued ha id state before storage
     data raw hb hsignatures he ht hp hs hv
 
 end Itasca

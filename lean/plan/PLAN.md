@@ -54,6 +54,13 @@ first thing to do with one is to make it typecheck.
   (no knowledge of Rust integer types; slower re-checking in an editor) do not
   make proofs harder to maintain here.
 
+## Additional decision (2026-11-13)
+
+- Step 1.0 may raise `modules_under_50_lines` from 663 to 665: the new
+  foundational `StoreParts.lean` and removal of the Wasm 1.0 wrapper from
+  `EntryOfEnv.lean` are approved exceptions. Record 665 as the new ceiling;
+  retain every other metric ratchet unchanged.
+
 ## Rules for whoever executes this plan
 
 1. Read `AGENTS.md`, `DEVELOPMENT.md`, `lean/README.md` and

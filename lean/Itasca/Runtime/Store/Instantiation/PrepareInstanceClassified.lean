@@ -19,6 +19,7 @@ import Itasca.Runtime.Store.Initialization.ElementErrorLoop
 import Itasca.Runtime.Store.Initialization.DataErrorLoop
 import Itasca.Runtime.Store.Initialization.PrecheckCertifiedWitness
 import Itasca.Runtime.Store.Instantiation.PrecommitOrigins
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 set_option maxRecDepth 8192
 set_option maxHeartbeats 2000000

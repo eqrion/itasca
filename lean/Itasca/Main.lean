@@ -14,18 +14,15 @@ import Itasca.Results.Invoke
 
 The public guarantees of the validator. Every headline theorem is stated in full in one of the
 files below; everything else in the library supports them. `profile_*` theorems quantify over both
-`ValidationProfile` values, and `wasm_*` corollaries specialize to Wasm 1.0. The embedding
+`ValidationProfile` values. The embedding
 obligations of the streaming results are defined in [Contracts](Contracts.lean).
 
 [Results/Validate](Results/Validate.lean), whole-module validation:
 - `metadata.validate_module.profile_spec`, `profile_total`, `profile_sound`
 - `metadata.validate_module.profile_complete`, `profile_complete_with_metadata`
-- `metadata.validate_module.wasm_spec`, `wasm_total`, `wasm_sound`, `wasm_complete`,
-  `wasm_complete_with_metadata`
 
 [Results/Stream](Results/Stream.lean), the streaming driver:
 - `stream.validate_streaming.profile_sound`, `profile_total`, `profile_complete`
-- `stream.validate_streaming.wasm_sound`, `wasm_total`, `wasm_complete`
 
 [Results/Batch](Results/Batch.lean), worker batches:
 - `stream.CodeBatch.validate_func.total`, `complete`
@@ -38,7 +35,7 @@ obligations of the streaming results are defined in [Contracts](Contracts.lean).
 - `metadata.validate_code_entry_with.trace_sound`
 
 [Results/Unique](Results/Unique.lean), decoding uniqueness:
-- `Profile.module_unique`, `ModuleBinary.ModuleEncoding.unique`
+- `Profile.module_unique`
 
 [Contracts](Contracts.lean), streaming premises:
 - soundness: `StreamSource.Coherent`, `StreamScheduler.Provenance`

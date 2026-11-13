@@ -22,7 +22,7 @@ code encoding, elaborates to `moduleOf raw`, matches the returned environment an
 the generated `Module_ok`, meets the profile restrictions, and has the types returned by the
 public external-type accessors. -/
 def Validated (data : Slice U8) (decoded : metadata.Module)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
+    (validationProfile : ValidationProfile) : Prop :=
   ∃ raw, ModuleBinary.ModuleEncodingWith (Itasca.Profile.CodeEncoding validationProfile) raw data.val validationProfile ∧
     Elaborates raw (moduleOf raw) ∧ Matches decoded.env decoded.tail raw ∧
     Module_ok (moduleOf raw) ∧ Profile raw validationProfile ∧ AccessorTypes decoded.env raw

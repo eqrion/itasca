@@ -21,7 +21,7 @@ variable {profile : ValidationProfile}
 
 /-- A completed batch has exact byte coverage and ordered entry certificates. This is derived at
 successful retirement and is never a premise on polls. -/
-def Completed (issued : StreamBatch.Issued) (profile : ValidationProfile := .Wasm1) : Prop :=
+def Completed (issued : StreamBatch.Issued) (profile : ValidationProfile) : Prop :=
   ∃ entries, entries.length = issued.num_funcs.val ∧
     ModuleBinary.Rep (Profile.CodeEncoding profile) entries issued.code.val ∧
     ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries

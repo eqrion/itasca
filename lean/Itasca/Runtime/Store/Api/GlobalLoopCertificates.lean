@@ -3,6 +3,7 @@ import Itasca.Runtime.Store.Api.GlobalLoop
 import Itasca.Runtime.Store.Api.GlobalEffects
 import Itasca.Runtime.Store.Invariant.AddressOrder
 import Itasca.Runtime.Store.Api.GlobalTypeMap
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Global allocation-loop content, order, type and source certificates. These retain success and error distinctions used by preparation and instantiation.

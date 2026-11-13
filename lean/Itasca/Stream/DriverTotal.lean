@@ -9,7 +9,7 @@ import Itasca.Module.Custom.Visitor
 returns success or an error whenever the source and scheduler callbacks return
 (`StreamSource.CallbacksTotal`, `StreamScheduler.CallbacksTotal`). Coherence, availability and
 worker provenance are not premises. `stream.validate_remaining.total_spec` covers the phases after
-the environment. `Itasca/Results/Stream` states the public `profile_total` and `wasm_total`.
+the environment. `Itasca/Results/Stream` states the public `profile_total`.
 -/
 
 open Aeneas Aeneas.Std

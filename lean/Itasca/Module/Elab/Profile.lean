@@ -25,13 +25,13 @@ def profileContext (results : List wasm_types.ValueType) : context :=
 /-- The body of a code entry with type index `idx` satisfies the profile's instruction
 restrictions, with `idx` in range of the type list. -/
 def FunctionProfile (types : List wasm_types.FuncType) (idx : U32) (entry : ModuleBinary.Code)
-    (validationProfile : ValidationProfile := .Wasm1) : Prop :=
+    (validationProfile : ValidationProfile) : Prop :=
   ∃ hi : idx.val < types.length,
     Itasca.Profile.Instructions validationProfile (profileContext types[idx.val].results.val) entry.body
 
 /-- The explicit profile-specific conditions that supplement the generated 2.0 judgment. Neither
 these conditions nor elaboration mention validator calls. -/
-structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile := .Wasm1) : Prop
+structure Profile (raw : ModuleBinary.Module) (validationProfile : ValidationProfile) : Prop
     extends ModuleConditions raw validationProfile where
   bodies : List.Forall₂ (fun idx entry => FunctionProfile raw.types idx entry validationProfile) raw.functions raw.codes
   declared : DeclaredReferences.Module (moduleOf raw)

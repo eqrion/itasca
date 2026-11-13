@@ -20,7 +20,6 @@ pub enum Coverage {
     Compared,
     Invalid,
     ResourceLimit,
-    ProfileDifference,
     UnsupportedReference,
     NumericNondeterminism,
 }
@@ -28,13 +27,13 @@ pub enum Coverage {
 /// Records semantic comparisons and exclusions separately during fuzz campaigns.
 pub fn record(status: Coverage) {
     use std::sync::atomic::{AtomicU64, Ordering};
-    static COUNTS: [AtomicU64; 6] = [const { AtomicU64::new(0) }; 6];
+    static COUNTS: [AtomicU64; 5] = [const { AtomicU64::new(0) }; 5];
     static TOTAL: AtomicU64 = AtomicU64::new(0);
     COUNTS[status as usize].fetch_add(1, Ordering::Relaxed);
     let total = TOTAL.fetch_add(1, Ordering::Relaxed) + 1;
     if total == 1 || total % 1024 == 0 || std::env::var_os("ITASCA_FUZZ_REPORT_EACH").is_some() {
         let counts: Vec<_> = COUNTS.iter().map(|c| c.load(Ordering::Relaxed)).collect();
-        eprintln!("execution coverage total={total} [compared,invalid,resource,profile,reference,numeric]={counts:?}");
+        eprintln!("execution coverage total={total} [compared,invalid,resource,reference,numeric]={counts:?}");
     }
 }
 
@@ -285,17 +284,16 @@ fn our_error(error: ExecError) -> ResultKind {
 }
 
 impl Pair {
-    pub fn new(profile: ValidationProfile) -> Self {
-        let wasm2 = profile == ValidationProfile::Wasm2;
+    pub fn new() -> Self {
         let mut config = wasmi::Config::default();
         config
             .wasm_mutable_global(true)
-            .wasm_sign_extension(wasm2)
-            .wasm_saturating_float_to_int(wasm2)
-            .wasm_multi_value(wasm2)
-            .wasm_bulk_memory(wasm2)
-            .wasm_reference_types(wasm2)
-            .wasm_simd(wasm2)
+            .wasm_sign_extension(true)
+            .wasm_saturating_float_to_int(true)
+            .wasm_multi_value(true)
+            .wasm_bulk_memory(true)
+            .wasm_reference_types(true)
+            .wasm_simd(true)
             .wasm_multi_memory(false)
             .wasm_tail_call(false)
             .wasm_extended_const(false)
@@ -424,28 +422,14 @@ impl Pair {
     }
 
     /// Instantiates a module, optionally resolving imports from an earlier module.
-    pub fn instantiate(
-        &mut self,
-        bytes: &[u8],
-        profile: ValidationProfile,
-        provider: Option<usize>,
-    ) -> Coverage {
-        let normalized;
-        let input = if profile == ValidationProfile::Wasm1 {
-            normalized = match crate::mvp_binary::normalize_to_wasm1(bytes) {
-                Ok(bytes) => bytes,
-                Err(_) => return Coverage::Invalid,
-            };
-            &normalized
-        } else {
-            bytes
-        };
-        let module = match rt::compile(input, profile) {
+    pub fn instantiate(&mut self, bytes: &[u8], provider: Option<usize>) -> Coverage {
+        let input = bytes;
+        let module = match rt::compile(input, ValidationProfile::Wasm2) {
             Ok(module) => module,
             Err(_) => return Coverage::Invalid,
         };
-        let oracle_module = wasmi::Module::new(&self.engine, bytes)
-            .expect("oracle rejected accepted profile module");
+        let oracle_module =
+            wasmi::Module::new(&self.engine, bytes).expect("oracle rejected accepted Wasm2 module");
         let mut our_imports = Vec::new();
         let mut oracle_imports = Vec::new();
         for (id, import) in module.env().imports().iter().enumerate() {
@@ -640,16 +624,8 @@ impl Pair {
                     .unwrap();
                 self.register_object(a, b);
             }
-        } else if profile == ValidationProfile::Wasm1
-            && matches!(
-                our_result,
-                ResultKind::Trap(Trap::MemoryOutOfBounds | Trap::TableOutOfBounds)
-            )
-        {
-            // Wasmi uses current sequential segment writes even with proposal
-            // features disabled. Wasm 1's historical precheck is covered by WAST.
-            return Coverage::ProfileDifference;
         }
+
         self.observe()
     }
 
@@ -724,9 +700,9 @@ impl Pair {
 }
 
 /// Compare bounded instantiation and three rounds of calls to every export.
-pub fn compare(bytes: &[u8], profile: ValidationProfile, argument_seed: &[u8]) -> Coverage {
-    let mut pair = Pair::new(profile);
-    let status = pair.instantiate(bytes, profile, None);
+pub fn compare(bytes: &[u8], argument_seed: &[u8]) -> Coverage {
+    let mut pair = Pair::new();
+    let status = pair.instantiate(bytes, None);
     if status != Coverage::Compared || pair.instances.is_empty() {
         return status;
     }

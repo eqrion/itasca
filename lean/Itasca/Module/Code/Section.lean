@@ -54,7 +54,7 @@ def Section (data : Slice U8) (start : Usize) (env : metadata.Env) (cs : Header)
 /-- The code entry is typed against the `i`-th defined function and has a declared local count
 within `limits.MAX_LOCALS`. -/
 def EntryAt (env : metadata.Env) (i : Nat) (entry : ModuleBinary.Code)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (profile : ValidationProfile) : Prop :=
   ∃ hi : i < env.func_type_indices.val.length,
     CodeEntry.Typed env env.func_type_indices.val[i] entry profile ∧
     entry.declared.length ≤ limits.MAX_LOCALS.val
@@ -68,7 +68,7 @@ inductive EntriesTypedFor (profile : ValidationProfile) (env : metadata.Env) : N
 /-- `EntriesTypedFor` with `profile` defaulting to Wasm 1.0. The profile selects the instruction
 restrictions of each entry. -/
 abbrev EntriesTyped (env : metadata.Env) (i : Nat) (entries : List ModuleBinary.Code)
-    (profile : ValidationProfile := .Wasm1) : Prop := EntriesTypedFor profile env i entries
+    (profile : ValidationProfile) : Prop := EntriesTypedFor profile env i entries
 
 /-- Typed entries extend by one more entry at the next function index. -/
 theorem EntriesTyped.snoc {env i entries entry} {profile : ValidationProfile}
@@ -122,7 +122,7 @@ theorem entries_at_append {data start middle finish first second} {R : ModuleBin
   exact ⟨bs ++ cs, hb.append hc, hs.append ht⟩
 
 /-- The independent encoding of the code section, which may be absent, for `profile`. -/
-def Encoding (profile : ValidationProfile := .Wasm1) := ModuleBinary.OptionalSectionEncoding 10#u8
+def Encoding (profile : ValidationProfile) := ModuleBinary.OptionalSectionEncoding 10#u8
   (ModuleBinary.VecEncoding (Profile.CodeEncoding profile)) []
 
 /-- A section header and an independent entry repetition with the right count give the section

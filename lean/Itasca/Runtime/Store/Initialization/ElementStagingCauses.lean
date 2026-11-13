@@ -10,6 +10,7 @@ import Itasca.Runtime.Store.Initialization.ElementEffects
 import Itasca.Runtime.Store.Initialization.ElementErrors
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Invariant.ErrorPost
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 /-!
 Element-segment staging resource causes. Initializer-loop failures and element allocation requests assemble the resource classification for the complete staging loop.

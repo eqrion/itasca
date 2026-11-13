@@ -79,14 +79,14 @@ fn cases() -> Vec<Case> {
     };
     add(
         "call_boundary",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         r#"(module (func (export "run") (param i32) (result i32) local.get 0))"#,
         10000,
         10000,
     );
     add(
         "integer_loop",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum i32)
         loop $loop
           local.get $sum local.get $n i32.add local.set $sum
@@ -105,7 +105,7 @@ fn cases() -> Vec<Case> {
         end local.get $sum))"#;
     add(
         "direct_calls",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         direct,
         10000,
         50_015_000,
@@ -118,14 +118,14 @@ fn cases() -> Vec<Case> {
         .replace("call $inc", "i32.const 0 call_indirect (type $unary)");
     add(
         "indirect_calls",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         &indirect,
         10000,
         50_015_000,
     );
     add(
         "float_loop",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum f64)
         loop $loop
           local.get $sum f64.const 0.5 f64.add local.set $sum
@@ -146,7 +146,7 @@ fn cases() -> Vec<Case> {
     );
     add(
         "memory_sum_64k",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         &memory,
         16384,
         0x01010101u32.wrapping_mul(16384) as i32,
@@ -185,7 +185,7 @@ fn cases() -> Vec<Case> {
     many.push_str("(func (export \"run\") (param i32) (result i32) local.get 0 call $f127))");
     add(
         "many_functions",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         &many,
         10000,
         10032,
@@ -204,7 +204,7 @@ fn cases() -> Vec<Case> {
     );
     add(
         "memory_widths",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         r#"(module (memory 1)
         (func (export "run") (param $n i32) (result i32) (local $sum i32)
         loop $loop
@@ -222,7 +222,7 @@ fn cases() -> Vec<Case> {
     );
     add(
         "recursive_calls",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         r#"(module (func $recur (export "run") (param $n i32) (result i32)
           local.get $n i32.eqz if (result i32) i32.const 0 else
             local.get $n local.get $n i32.const 1 i32.sub call $recur i32.add
@@ -245,14 +245,14 @@ fn cases() -> Vec<Case> {
     }
     add(
         "large_mixed_body",
-        ValidationProfile::Wasm1,
+        ValidationProfile::Wasm2,
         &mixed,
         10000,
         expected,
     );
     cases.push(Case {
         name: "cross_instance",
-        profile: ValidationProfile::Wasm1,
+        profile: ValidationProfile::Wasm2,
         text: direct.replace(
             "(func $inc (type $unary) local.get 0 i32.const 1 i32.add)",
             "(import \"provider\" \"inc\" (func $inc (type $unary)))",

@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Invariant.AddressOrder
 import Itasca.Runtime.Store.Initialization.InitializerMetadata
 import Itasca.Runtime.Store.Initialization.ElementEffects
+import Itasca.Runtime.Store.Initialization.StoreParts
 
 
 namespace Itasca.Runtime.Store
