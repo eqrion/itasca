@@ -2,7 +2,6 @@ import Itasca.Stream.SplitComplete
 import Itasca.Stream.HeaderComplete
 import Itasca.Module.Env.Complete
 import Itasca.Module.Elab.Requirements
-import Itasca.Module.Env.ReadyContexts
 import Itasca.Module.Layout
 import Itasca.Module.Sections.DataMaterialize
 import Itasca.Module.Sections.TailComplete

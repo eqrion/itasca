@@ -1,4 +1,4 @@
-import Itasca.Module.Env.Parser
+import Itasca.Module.Env.Encoding
 import Itasca.Support.Result
 import Itasca.Contracts
 

@@ -1,9 +1,9 @@
 import Itasca.Module.Limits
-import Itasca.Module.Env.NameFacts
+import Itasca.Module.Env.Encoding
 import Itasca.Module.Code.LocalsComplete
 import Itasca.Module.Composition
 import Itasca.Module.Env.Requirements
-import Itasca.Module.Env.ReadyContexts
+import Itasca.Module.Env.Complete
 import Itasca.Module.Code.FuncTyping
 
 /-!

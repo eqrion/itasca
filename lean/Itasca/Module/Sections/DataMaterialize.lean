@@ -1,6 +1,6 @@
-import Itasca.Module.Env.ReadyContexts
+import Itasca.Module.Env.Complete
 import Itasca.Module.Sections.Tail
-import Itasca.Module.Env.NameFacts
+import Itasca.Module.Env.Encoding
 
 /-!
 # Materializing independent data segments

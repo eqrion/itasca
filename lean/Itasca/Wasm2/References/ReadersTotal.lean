@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Scalar.ReadersTotal
-import Itasca.Module.Env.References
+import Itasca.Module.Env.Externals
 
 /-!
 # Totality of reference and table readers

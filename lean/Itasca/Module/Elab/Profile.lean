@@ -1,4 +1,4 @@
-import Itasca.Module.Env.NameFacts
+import Itasca.Module.Env.Encoding
 import Itasca.Binary.UnicodeUnique
 import Itasca.Module.Code.Encoding
 import Itasca.Module.Elab.SegmentTyping

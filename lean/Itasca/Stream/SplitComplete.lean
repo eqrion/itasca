@@ -1,6 +1,6 @@
 import Itasca.Stream.SplitTotal
 import Itasca.Module.Layout
-import Itasca.Module.Env.Chain
+import Itasca.Module.Env.Complete
 
 /-!
 # Code region splitter completeness
