@@ -45,6 +45,8 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 
 ## Proof discipline
 
+Follow the [proof engineering guide](lean/PROOF_ENGINEERING.md).
+
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
 kernel bypasses. Use only the standard logical axioms `propext`, `Classical.choice`,
 and `Quot.sound`. Keep `Support/`, `Spec/`, `Binary/`, and `Handler/` free of
@@ -52,7 +54,8 @@ imports from higher layers. `just lint` checks layering and forbidden
 constructs; `just audit` checks the headline theorem axiom allowlist and
 statement cone. Review proof-bearing adapters as well as exported theorems.
 
-Use `just check Itasca.ModuleName` for iteration and `just prove` for integration.
+Iterate with the Lean language server tools, confirm with
+`just check Itasca.ModuleName`, and use `just prove` for integration.
 Preserve dependency and build caches. Scratch files belong in `$TMPDIR`, outside
 the proof source tree. Report any trust-boundary change explicitly.
 

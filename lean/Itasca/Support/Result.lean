@@ -10,6 +10,13 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ResultFacts
 
+/-- A returned result satisfies the postcondition of any specification of the same computation. -/
+theorem post_of_ok {α : Type} {m : Result α} {P : α → Prop} {r : α}
+    (spec : m ⦃ P ⦄) (called : m = .ok r) : P r := by
+  obtain ⟨r', run, post⟩ := WP.spec_imp_exists spec
+  rw [called, Result.ok.injEq] at run
+  exact run ▸ post
+
 /-- A bind returns `.ok` only if both the producer and the continuation return `.ok`. -/
 theorem bind_ok_inv {A B : Type} (read : Result A) (next : A → Result B) (b : B)
     (h : (read >>= next) = .ok b) :

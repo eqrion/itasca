@@ -4,8 +4,10 @@ Lean checks the extracted Rust validator against SpecTec-generated Wasm 2.0
 typing rules, an independent binary grammar, and explicit Wasm 1.0 and Wasm 2.0
 profiles. The [project README](../README.md#formal-verification) states the
 public guarantees and trust boundary, and [DEVELOPMENT.md](../DEVELOPMENT.md)
-the change workflow. This guide covers setup, proof contracts, and layout. If
-you are new to Lean, start with [A guide to the itasca proofs](PROOF_GUIDE.md).
+the change workflow. This guide covers setup, proof contracts, and layout. The
+[proof engineering guide](PROOF_ENGINEERING.md) explains how to write
+maintainable proofs. If you are new to Lean, start with
+[A guide to the itasca proofs](PROOF_GUIDE.md).
 
 ## Setup
 
@@ -36,6 +38,20 @@ just tools
 cd lean
 lake exe cache get
 ```
+
+For proof work, install `uv` (`brew install uv`) and register the Lean language
+server with the editor you use. From the repository root, these portable
+commands set the project root to this checkout's `lean/` directory:
+
+```sh
+LEAN_ROOT="$(pwd)/lean"
+claude mcp add lean-lsp --env LEAN_PROJECT_PATH="$LEAN_ROOT" -- uvx lean-lsp-mcp
+codex mcp add lean-lsp --env LEAN_PROJECT_PATH="$LEAN_ROOT" -- uvx lean-lsp-mcp
+```
+
+The server provides Lean goals, diagnostics, and tactic attempts during
+iteration. See [Use the language server](PROOF_ENGINEERING.md#use-the-language-server)
+for the proof workflow.
 
 Use the committed `lake-manifest.json`; builds do not need `lake update`.
 `OPAM_SWITCH` selects another compatible switch. Dune stays at 3.23.1 because

@@ -282,6 +282,9 @@ at most one decoding, so the trees agree.
 
 ## Names and proof units
 
+Follow the [proof engineering guide](PROOF_ENGINEERING.md) for proof contracts,
+proof structure, and iteration practices.
+
 Module paths describe dependency placement; namespaces describe the semantic
 owner. A store decoder belongs to `Store` even when its module lives in
 `Runtime/Representation`, below compiler, interpreter, and store constructions.

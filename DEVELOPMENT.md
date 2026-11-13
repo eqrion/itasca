@@ -156,11 +156,12 @@ results, coordinate systems, error behavior, and caller obligations. Keep
 proof limitations precise. Implementation rationale belongs beside the code;
 public docs should describe the consumer's contract.
 
-The four guides have separate responsibilities: `README.md` describes usage and
+The five guides have separate responsibilities: `README.md` describes usage and
 public guarantees; this guide describes changes and integration;
-`lean/README.md` describes tool setup and proof contracts; `AGENTS.md` records
-mandatory editing and verification rules. Historical migration records are not
-sources of current API or toolchain requirements.
+`lean/README.md` describes tool setup and proof contracts;
+`lean/PROOF_ENGINEERING.md` describes how to write maintainable proofs; and
+`AGENTS.md` records mandatory editing and verification rules. Historical
+migration records are not sources of current API or toolchain requirements.
 
 ## Streaming contract
 
