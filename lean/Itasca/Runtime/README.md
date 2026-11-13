@@ -137,7 +137,7 @@ it does not assume store typing or execution correctness as another field.
 | --- | --- |
 | Global values, memories, tables and reference membership | `Shape` and the object lemmas in [Invariant/Typing](Store/Invariant/Typing.lean). |
 | Data and element segments | `SegmentBounds`, reference shape, and the same object-typing lemmas. |
-| Wasm bodies and module environments | `CoreFunctionsTyped` retains `Func_ok` under the exact canonical `ModuleBindings`. [SourceMachine/StoreTyping](SourceMachine/StoreTyping.lean) recovers generated module-instance typing. |
+| Wasm bodies and module environments | `CoreFunctionsTyped` retains `Func_ok` under the exact canonical `ModuleBindings`. [SourceMachine/BrTable](SourceMachine/BrTable.lean) recovers generated module-instance typing. |
 | Export membership and unique source names | `ExportBounds` retains descriptor bounds and decoded-name uniqueness, constructed from validator `ModuleEnv.Valid`. Completed instance maps resolve each export into its own module namespace. |
 | Host functions | The repaired generated host `Funcinst_ok` rule types signatures without Wasm bodies; the decoder's empty module environment is well formed. |
 

@@ -68,6 +68,17 @@ first thing to do with one is to make it typecheck.
   the redundant body certificate shortened `Profile/Body.lean` from 51 to
   42 lines. This increase is approved; retain every other metric ratchet
   unchanged.
+- For the remaining step 2.1 merges, use targeted checks for each directory
+  and defer full integration, lint and audit to the final clean build. The
+  user approved this after the SpecExt and Runtime/Spec areas passed full
+  integration: changes to foundational imports were repeatedly rebuilding
+  most runtime proofs. This supersedes the per-area integration schedule
+  below.
+- More generally, avoid large rebuilds until needed: iterate with the language
+  server and targeted builds, and batch broad validation at meaningful
+  checkpoints rather than repeating it automatically after each small step.
+  Retain Phase 2's clean-build benchmarks and final integration, lint and
+  audit checks. Use local results for iteration without also polling PR CI.
 
 ## Rules for whoever executes this plan
 
