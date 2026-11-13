@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
-import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState

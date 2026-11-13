@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
