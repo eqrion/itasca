@@ -1,4 +1,4 @@
-import Itasca.Runtime.Integration.Execution.Mutation.Certificate
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
 import Itasca.Runtime.SourceMachine.BrTable
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Api.GrowthLimits
-import Itasca.Runtime.Integration.Execution.Mutation.Certificate
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 import Itasca.Runtime.Integration.Execution.Mutation.TableShape
 import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Store.Invariant.SemanticApi
@@ -18,7 +18,6 @@ import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Runtime.Store.Invariant.ErrorPost
-import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors

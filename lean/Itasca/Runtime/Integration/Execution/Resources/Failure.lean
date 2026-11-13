@@ -4,7 +4,7 @@ import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Interp.Machine.Outcomes.ScalarTraps
-import Itasca.Runtime.Integration.Execution.Mutation.Certificate
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
