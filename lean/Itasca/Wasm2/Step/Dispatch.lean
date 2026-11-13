@@ -1,4 +1,4 @@
-import Itasca.Wasm2.NumericExt.Dispatch
+import Itasca.Wasm2.NumericExt.Total
 import Itasca.Binary.Leb128
 
 /-!

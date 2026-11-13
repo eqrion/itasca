@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.SoundLoop
 import Itasca.Binary.Wasm2.SyntaxUnique
-import Itasca.Wasm2.NumericExt.Complete
+import Itasca.Wasm2.NumericExt.Sound
 import Itasca.Wasm2.Scalar.Complete
 
 /-!

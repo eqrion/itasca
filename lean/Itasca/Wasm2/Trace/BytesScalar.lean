@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Trace.Bytes
 import Itasca.Wasm2.Scalar.Step
-import Itasca.Wasm2.NumericExt.Dispatch
+import Itasca.Wasm2.NumericExt.Total
 import Itasca.Visitor.BodyReplay
 
 /-!
