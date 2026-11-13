@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableDead
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic

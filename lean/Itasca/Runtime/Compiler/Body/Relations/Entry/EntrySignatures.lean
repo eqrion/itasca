@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable
+import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 
 /-!

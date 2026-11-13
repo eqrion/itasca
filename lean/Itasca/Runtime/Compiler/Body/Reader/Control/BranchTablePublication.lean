@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableWasm2
 import Itasca.Runtime.Compiler.Local.Coordinates.TableSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSuffix
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableOperands
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSource
 
 /-!

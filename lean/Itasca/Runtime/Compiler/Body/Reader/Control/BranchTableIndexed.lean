@@ -1,11 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 import Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackLayout
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableScopeFrames
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity
-import Itasca.Runtime.Compiler.Local.Relations.Table.TableSources
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePost
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead

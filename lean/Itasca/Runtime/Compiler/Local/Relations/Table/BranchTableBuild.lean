@@ -1,9 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Relations.Layout.ValueRegions
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSuccess
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableDepths
 

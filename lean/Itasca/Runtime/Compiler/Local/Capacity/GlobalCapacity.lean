@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering

@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 

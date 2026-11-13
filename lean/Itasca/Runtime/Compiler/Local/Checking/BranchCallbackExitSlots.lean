@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds
 import Itasca.Runtime.Compiler.Local.Checking.ConditionalInstructionPrefix
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSkip
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments
+import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Checking.NumericInstructionPrefix
 
 /-!

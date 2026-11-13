@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable
+import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf

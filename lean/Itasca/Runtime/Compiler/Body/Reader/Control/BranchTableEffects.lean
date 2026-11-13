@@ -1,7 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSource
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSuffix
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableOperands
 
 /-!
 Complete instruction effects at reader boundaries, after the private label buffer has been consumed. Applies to live and unreachable paths.

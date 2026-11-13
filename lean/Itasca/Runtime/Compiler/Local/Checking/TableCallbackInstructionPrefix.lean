@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Checking.InstructionAppendEffect
 import Itasca.Runtime.Compiler.Local.Source.TableTransferBounds
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLower
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance
 
 /-!

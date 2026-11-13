@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableBuild
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackProduction
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableDead
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Binary.Wasm1.BrTableLabels
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 

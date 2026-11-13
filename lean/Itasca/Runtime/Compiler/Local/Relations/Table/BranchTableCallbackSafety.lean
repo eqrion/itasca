@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
 

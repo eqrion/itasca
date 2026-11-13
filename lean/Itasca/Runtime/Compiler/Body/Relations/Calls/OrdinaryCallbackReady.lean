@@ -3,7 +3,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
-import Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable
+import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

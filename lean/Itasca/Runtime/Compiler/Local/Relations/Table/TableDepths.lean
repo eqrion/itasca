@@ -1,6 +1,118 @@
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
+
+/-!
+Sections, each formerly its own module: BranchTableLayout, BranchTableLayoutAlgebra, TableDepths.
+-/
+
+/-! ## BranchTableLayout -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas.Std
+/-- An emitted table destination has the ordinary branch layout and exact
+transfer/jump fragment for its source depth. -/
+def BranchTableEntry (locals : List valtype) (labels : List LabelTarget)
+    (stack : List valtype) (code : List Bytecode) (depth : labelidx) (entry : U32) (next : Nat) : Prop :=
+  ∃ label dst src count fragmentEnd,
+    labels[proj_uN_0 depth]? = some label ∧ label.branchLive = true ∧
+    BranchLayout locals stack label dst src count ∧
+    Segment code entry.val (branchInstructions dst src count label.target) fragmentEnd ∧
+    fragmentEnd ≤ next ∧ next ≤ code.length
+
+/-- Pure compiler evidence for a branch table, including its default entry.
+Every retained side-table PC is tied to an emitted branch fragment. -/
+structure BranchTableLayout (jumpTables : List U32) (locals : List valtype)
+    (labels : List LabelTarget) (stack : List valtype) (code : List Bytecode)
+    (depths : List labelidx) (fallback : labelidx) (pc next : Nat)
+    (selector start len : U32) : Prop where
+  selectorSlot : selector.val = slots locals + slots stack
+  length : len.val = depths.length+1
+  instruction : code[pc]? = some (.JumpTable selector start len)
+  arithmetic : start.val + depths.length ≤ U32.max
+  entries : ∀ index depth, (depths ++ [fallback])[index]? = some depth →
+    ∃ entry, jumpTables[start.val+index]? = some entry ∧
+      BranchTableEntry locals labels stack code depth entry next
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## BranchTableLayoutAlgebra -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas.Std
+
+theorem BranchTableEntry.extend {locals labels stack code depth entry next}
+    (fragment : BranchTableEntry locals labels stack code depth entry next) (suffix : List Bytecode) :
+    BranchTableEntry locals labels stack (code ++ suffix) depth entry next := by
+  obtain ⟨label,dst,src,count,last,foundAt,live,layout,segment,remaining,scope⟩ := fragment
+  exact ⟨label,dst,src,count,last,foundAt,live,layout,segment.extend suffix,remaining,by simp; omega⟩
+
+theorem BranchTableEntry.relabel {locals labels stack code depth entry next other}
+    (fragment : BranchTableEntry locals labels stack code depth entry next) (shape : LabelsShape labels other) :
+    BranchTableEntry locals other stack code depth entry next := by
+  obtain ⟨label,dst,src,count,last,foundAt,live,layout,segment,remaining,scope⟩ := fragment
+  obtain ⟨target,found,same⟩ := shape.lookup foundAt
+  refine ⟨target,dst,src,count,last,found,same.branchLive.symm.trans live,?_,?_,remaining,scope⟩
+  · simpa only [BranchLayout,← same.front,← same.branchTypes] using layout
+  · simpa only [← same.target] using segment
+
+theorem BranchTableEntry.weaken_next {locals labels stack code depth entry next final}
+    (fragment : BranchTableEntry locals labels stack code depth entry next)
+    (order : next ≤ final) (bound : final ≤ code.length) :
+    BranchTableEntry locals labels stack code depth entry final := by
+  obtain ⟨label,dst,src,count,last,foundAt,live,layout,segment,remaining,scope⟩ := fragment
+  exact ⟨label,dst,src,count,last,foundAt,live,layout,segment,remaining.trans order,bound⟩
+
+theorem BranchTableLayout.extend {tables locals labels stack code depths fallback pc next selector start len}
+    (table : BranchTableLayout tables locals labels stack code depths fallback pc next selector start len)
+    (suffix : List Bytecode) :
+    BranchTableLayout tables locals labels stack (code ++ suffix) depths fallback pc next selector start len := by
+  refine ⟨table.selectorSlot,table.length,fetch_extend table.instruction suffix,table.arithmetic,?_⟩
+  intro index depth found
+  obtain ⟨entry,lookup,fragment⟩ := table.entries index depth found
+  exact ⟨entry,lookup,fragment.extend suffix⟩
+
+theorem BranchTableLayout.relabel {tables locals labels stack code depths fallback pc next selector start len other}
+    (table : BranchTableLayout tables locals labels stack code depths fallback pc next selector start len)
+    (shape : LabelsShape labels other) :
+    BranchTableLayout tables locals other stack code depths fallback pc next selector start len := by
+  refine ⟨table.selectorSlot,table.length,table.instruction,table.arithmetic,?_⟩
+  intro index depth found
+  obtain ⟨entry,lookup,fragment⟩ := table.entries index depth found
+  exact ⟨entry,lookup,fragment.relabel shape⟩
+
+theorem BranchTableLayout.weaken_next {tables locals labels stack code depths fallback pc next selector start len final}
+    (table : BranchTableLayout tables locals labels stack code depths fallback pc next selector start len)
+    (order : next ≤ final) (bound : final ≤ code.length) :
+    BranchTableLayout tables locals labels stack code depths fallback pc final selector start len := by
+  refine ⟨table.selectorSlot,table.length,table.instruction,table.arithmetic,?_⟩
+  intro index depth found
+  obtain ⟨entry,lookup,fragment⟩ := table.entries index depth found
+  exact ⟨entry,lookup,fragment.weaken_next order bound⟩
+
+theorem BranchTableLayout.append_tables {tables locals labels stack code depths fallback pc next selector start len}
+    (table : BranchTableLayout tables locals labels stack code depths fallback pc next selector start len)
+    (suffix : List U32) :
+    BranchTableLayout (tables ++ suffix) locals labels stack code depths fallback pc next selector start len := by
+  refine ⟨table.selectorSlot,table.length,table.instruction,table.arithmetic,?_⟩
+  intro index depth found
+  obtain ⟨entry,lookup,fragment⟩ := table.entries index depth found
+  exact ⟨entry,by rw [List.getElem?_append_left (List.getElem?_eq_some_iff.mp lookup).1]; exact lookup,fragment⟩
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## TableDepths -/
+
+section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
@@ -151,3 +263,5 @@ theorem compiler_table_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
   unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
   repeat' depths_step accepted using ops
 end Itasca.Runtime.Compiler
+
+end

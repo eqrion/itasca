@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableTargetsWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSuffix
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableOperands
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 
 /-!
 The postcondition of a br_table reader step.

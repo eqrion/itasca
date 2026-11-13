@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments
+import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.ConditionalInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix

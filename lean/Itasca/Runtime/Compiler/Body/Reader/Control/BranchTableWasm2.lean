@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Wasm2.Visitor.BrTable
 import Itasca.Binary.Leb128
 import Itasca.Binary.Wasm1.EncodingComplete

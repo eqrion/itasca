@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments
+import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
