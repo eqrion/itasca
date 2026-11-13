@@ -614,6 +614,8 @@ step, and write the numbers into the commit messages.
 
 ### 2.1 Consolidate small modules
 
+Completed 2026-11-13: [results and clean-build comparison](notes/step21-results.md).
+
 Background, from simulation on the current tree: merging files freely within
 directories (2,422 to about 570 modules) halves CPU but triples the estimated
 critical path, so the build gets slower. `scripts/merge_modules.py` only merges
