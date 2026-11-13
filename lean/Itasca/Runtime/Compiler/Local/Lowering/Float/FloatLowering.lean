@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.Equations
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 
 /-!
 Sections, each formerly its own module: FloatOpcode, FloatLowering.

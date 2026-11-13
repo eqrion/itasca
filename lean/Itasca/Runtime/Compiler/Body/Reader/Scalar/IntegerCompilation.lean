@@ -12,7 +12,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceCursor
 import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 

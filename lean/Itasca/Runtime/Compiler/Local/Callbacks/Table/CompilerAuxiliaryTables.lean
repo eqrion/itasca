@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceLengths
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Relations.Table.TableDepths
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering

@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering

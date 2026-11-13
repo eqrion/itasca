@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.NumericSafety
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemorySafety
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 
 /-!

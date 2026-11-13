@@ -20,7 +20,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
 import Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.ScalarExitSlotBounds

@@ -1,5 +1,4 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
 
