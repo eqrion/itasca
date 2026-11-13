@@ -49,7 +49,7 @@ ownership. Handwritten compiler declarations belong to `Itasca.Runtime.Compiler`
 and the flat source model to `Itasca.Runtime.SourceMachine`. Machine adapters
 use `Interp.Machine`, and joined constructions use `Integration`. For example,
 `Store.decodeStore` belongs to `Store` but lives in
-[Representation/Store](Representation/Store.lean), below its interpreter and
+[Representation/StoreCapacity](Representation/StoreCapacity.lean), below its interpreter and
 store-construction consumers.
 
 The source model retains its `astep` transition system. Moving a proof to
@@ -237,7 +237,7 @@ The atomic host-call proofs live directly in `Integration/Host/`. They take the
 per-host `HostRetention` laws of [Contracts](Contracts.lean) as premises and
 never model a particular callback; the world layers above take `HostLaws`.
 Callbacks may diverge, so these proofs conclude `DivSpec (HostDiverges hooks
-store)` ([Platform/DivSpec](Platform/DivSpec.lean)): each step returns with its
+store)` ([Platform/Laws](Platform/Laws.lean)): each step returns with its
 outcome or diverges in a callback called from the current store. [Examples/TrapHost](../Examples/TrapHost.lean) shows the laws
 are satisfiable: a trapping callback, continuing interrupts and a granting
 allocator discharge every host, interrupt and allocator premise of
@@ -261,8 +261,8 @@ not every transitive import.
    module acceptance. [EntryFinishAvailable](Compiler/Module/EntryFinishAvailable.lean)
    joins entry reading, [BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
    and finishing.
-4. [FunctionCapacity](Representation/FunctionCapacity.lean) and
-   [StackLayout](Representation/StackLayout.lean) describe independent source
+4. [FunctionCapacity](Representation/StoreCapacity.lean) and
+   [StackLayout](Representation/Values.lean) describe independent source
    demand and slot layout, which the compiler certificate supplies to execution.
 
 ### Invocation
@@ -279,7 +279,7 @@ not every transitive import.
    and [World/Infinite](Integration/Execution/World/Infinite.lean) connect machine
    histories to finite or infinite source execution.
 4. [ExecutableInv](Integration/Api/ExecutableInv.lean),
-   [Store](Representation/Store.lean) and [StoreCapacity](Representation/StoreCapacity.lean)
+   [Store](Representation/StoreCapacity.lean) and [StoreCapacity](Representation/StoreCapacity.lean)
    provide the store invariant, decoding and source resource demand.
 
 For one concrete operation, read
@@ -309,7 +309,7 @@ floating-point premises.
    type/function tables; [FunctionTables](Store/Invariant/FunctionTables.lean)
    defines `installCode` at the new instance key. [Rollback](Store/Invariant/Rollback.lean)
    preserves the old store before publication. Their common decoding contract
-   is [Representation/Store](Representation/Store.lean).
+   is [Representation/StoreCapacity](Representation/StoreCapacity.lean).
 
 ## Naming and extending the proofs
 
@@ -351,7 +351,7 @@ versions. In particular:
 | `ExecutableInv` | The public API store certificate together with segment accounting and function-capacity certificates; host freedom is not a field. |
 
 Shared slice lookup and list transport lemmas live in
-[Representation/Collection.lean](Representation/Collection.lean).
+[Representation/Values.lean](Representation/Values.lean).
 Keep shared helpers at the lowest layer supported by their actual dependencies.
 
 Run `just check Itasca.Runtime.Store.Api.MemoryFill` while iterating and

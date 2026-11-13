@@ -21,10 +21,10 @@ compiler and source-resource contracts stay with their constructions. All are li
 
 | Contract | Obligation |
 | --- | --- |
-| [`Platform.AllocCorrect`](Platform/Alloc.lean) | `reserve` returns normally and preserves vector contents; it may refuse. |
-| [`Platform.AllocationAvailable`](Platform/Alloc.lean) | `reserve` succeeds for every request within a fixed bound. `no_spurious_errors` only. |
-| [`Platform.FloatOpsCorrect`](Platform/Float.lean) | The 27 rounding operations return a value the source semantics permits, NaN sets included. |
-| [`Platform.MemoryLaws`](Platform/Memory.lean) | The memory buffer reads, writes, allocates and grows exactly the bytes `view` decodes. |
+| [`Platform.AllocCorrect`](Platform/Laws.lean) | `reserve` returns normally and preserves vector contents; it may refuse. |
+| [`Platform.AllocationAvailable`](Platform/Laws.lean) | `reserve` succeeds for every request within a fixed bound. `no_spurious_errors` only. |
+| [`Platform.FloatOpsCorrect`](Platform/Laws.lean) | The 27 rounding operations return a value the source semantics permits, NaN sets included. |
+| [`Platform.MemoryLaws`](Platform/Laws.lean) | The memory buffer reads, writes, allocates and grows exactly the bytes `view` decodes. |
 | interrupts, `∀ p, hooks.interrupt p ⦃ _ => True ⦄` | The interrupt hook returns normally. `no_spurious_errors` also requires it never to answer `.Terminate`. |
 
 ## Host callbacks
