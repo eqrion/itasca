@@ -1,5 +1,5 @@
 import Itasca.Module.Const.Parser
-import Itasca.Module.Elab.SegmentSyntax
+import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Env.References
 import Itasca.Module.Env.Externals
 import Itasca.Profile.Types

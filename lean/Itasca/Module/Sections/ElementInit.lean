@@ -1,6 +1,6 @@
 import Itasca.Module.Const.Parser
 import Itasca.Module.Env.References
-import Itasca.Module.Elab.SegmentSyntax
+import Itasca.Module.Elab.SegmentTyping
 
 /-!
 # Element initializer parsers

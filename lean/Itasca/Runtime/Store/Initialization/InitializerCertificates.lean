@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Store.Initialization.ElementLoop
-import Itasca.Module.Elab.SegmentSyntax
+import Itasca.Module.Elab.SegmentTyping
 
 /-! Compiler map certificates and canonical validator constant typing discharge
 the structural initializer premises of the actual staged store operations. -/

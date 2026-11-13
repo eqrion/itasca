@@ -1,4 +1,4 @@
-import Itasca.Module.Elab.SegmentSyntax
+import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Readers.Basic
 import Itasca.Module.Const.Parser
 import Itasca.Module.Readers.SegmentIndex

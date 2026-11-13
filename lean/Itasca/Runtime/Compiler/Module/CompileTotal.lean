@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Module.InitializerTotal
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
-import Itasca.Module.Elab.Metadata
+import Itasca.Module.Elab.TypingInversion
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs

@@ -3,7 +3,7 @@ import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Module.Env.Basic
-import Itasca.Module.Elab.Metadata
+import Itasca.Module.Elab.TypingInversion
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.ElementLoop
 

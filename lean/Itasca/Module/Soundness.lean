@@ -1,4 +1,4 @@
-import Itasca.Module.Elab.Metadata
+import Itasca.Module.Elab.TypingInversion
 import Itasca.Module.Composition
 import Itasca.Profile.CodeEntry
 
