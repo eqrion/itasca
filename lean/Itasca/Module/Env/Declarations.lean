@@ -95,13 +95,6 @@ def PrefixEncoding (value : Declarations) (bytes : List U8)
     ModuleBinary.DataCountSectionEncoding profile value.dataCount dataCount ∧
     ModuleBinary.CustomsEncoding customs ∧
     bytes = ModuleBinary.magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
-      globals ++ exports ++ start ++ elements ++ dataCount ++ customs ∧
-    ModuleBinary.ModuleTypesAllowed profile (value.module [] [])
-
-/-- A prefix encoding carries the profile's type restrictions on its declarations. -/
-theorem PrefixEncoding.allowed {profile value bytes} (h : PrefixEncoding value bytes profile) :
-    ModuleBinary.ModuleTypesAllowed profile (value.module [] []) := by
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, ha⟩ := h
-  exact ha
+      globals ++ exports ++ start ++ elements ++ dataCount ++ customs
 
 end Itasca.ModuleEnv

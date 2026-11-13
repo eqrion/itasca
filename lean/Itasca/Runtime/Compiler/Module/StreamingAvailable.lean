@@ -64,7 +64,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -136,7 +136,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     simp only [Slice.length] at hlen ⊢
     omega
   have hvalid : Valid issued profile :=
-    ⟨rfl, hbounded, henv, hprofile, hlimits, taken, hcountval.symm, htaken, hrep⟩
+    ⟨rfl, hbounded, henv, hlimits, taken, hcountval.symm, htaken, hrep⟩
   have hqueuelen : queue.length = pending.length := by
     simpa [alloc.vec.Vec.length] using hp.length_eq.symm
   obtain ⟨v', hsubmit, hv'⟩ := ha.submit moduleId queue func.val issued v hv hvalid rfl rfl rfl (by omega)
@@ -182,7 +182,7 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -211,14 +211,14 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
       rw [hr]
       simp only [bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
       have hresume := resume_complete source visitor Queued config state moduleId env code ha
-        environment tail hs henv hprofile hlimits hcap v' remaining pos func batchId rest entries
+        environment tail hs henv hlimits hcap v' remaining pos func batchId rest entries
         hv' hvalid hids hcount htyped hbytes hbatch (by omega) hfunc (by omega)
       simp [core.result.Result.Insts.CoreOpsTry.branch] at hresume ⊢
       convert hresume using 1
       rfl
     · rw [if_neg hfull]
       exact resume_complete source visitor Queued config state moduleId env code ha
-        environment tail hs henv hprofile hlimits hcap v pending pos func batchId queue entries
+        environment tail hs henv hlimits hcap v pending pos func batchId queue entries
         hv hq hp hcount htyped hbytes hbatch hpending hfunc (by scalar_tac)
   · rw [if_neg hmore]
     have hn : env.func_type_indices.val.length ≤ func.val := by scalar_tac
@@ -245,7 +245,7 @@ theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -262,7 +262,7 @@ theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
       s.1 s.2.1 s.2.2.1 s.2.2.2.1 s.2.2.2.2)
   · rintro ⟨v', pending', pos', func', batchId'⟩ h
     apply WP.spec_mono (body_complete source visitor Queued config state moduleId env
-      code ha environment tail hs henv hprofile hlimits hcap v' pending' pos' func' batchId' h)
+      code ha environment tail hs henv hlimits hcap v' pending' pos' func' batchId' h)
     intro out hout
     cases out with
     | done result => exact hout
@@ -284,7 +284,7 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env profile Queued) (start : Usize)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (entries : List ModuleBinary.Code) (hcount : entries.length = env.func_type_indices.val.length)
@@ -304,7 +304,7 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     · simp [alloc.vec.Vec.new]
   obtain ⟨⟨r, v'⟩, hr, hp⟩ := WP.spec_imp_exists
     (submit_loop_complete_spec source visitor Queued config state moduleId env code ha
-      environment tail hs henv hprofile hlimits hcap v (alloc.vec.Vec.new _) start 0#usize 0#usize hi)
+      environment tail hs henv hlimits hcap v (alloc.vec.Vec.new _) start 0#usize 0#usize hi)
   cases r with
   | Err e => exact False.elim hp
   | Ok pending =>
@@ -372,7 +372,7 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
   subst reply
   obtain ⟨pending,submitted,queue,submitCall,submittedReady,valid,ids,pendingBound⟩ := StreamAvailability.submit_complete source visitor Queued
     ⟨25000#usize,4#usize⟩ state id env regions.code policy entries regions.env.val regions.tail.val available
-    certificate.entry_bounds certificate.profile certificate.signature_limits (by omega) raw.codes certificate.code_count certificate.typed encoded
+    certificate.entry_bounds certificate.signature_limits (by omega) raw.codes certificate.code_count certificate.typed encoded
     configured configuredReady
   obtain ⟨tailBytes,tailCall,tailValue⟩ := available.tail_read
   have tailEq : tailBytes = regions.tail := Slice.ext _ _ tailValue

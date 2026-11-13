@@ -31,10 +31,6 @@ private theorem padded_all {α : Type} {R : α → List U8 → Prop} {P : α →
 theorem body_bytes {profile source bytes} (encoded : Profile.BodyBytes profile source bytes) :
     Forall SourceMachine.BinaryInstr source := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨tokens, encoded, inner, rfl, emitted⟩ := encoded
-    have known := rep_all (fun _ _ h => token_wasm1 h) encoded
-    exact emits_wasm2 emitted (fun token member => known token (List.mem_append_left _ member))
   | Wasm2 =>
     obtain ⟨tokens, encoded, inner, rfl, emitted⟩ := encoded
     have known := rep_all (fun _ _ h => token_wasm2 h) encoded
@@ -51,7 +47,7 @@ theorem module {profile raw bytes}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes profile) :
     ModuleExecutable raw := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, _, _, _, _, _, _, _, _, _, _, codeSection, _, _, _, _, _⟩ := encoded
+    codes, datas, customs, _, _, _, _, _, _, _, _, _, _, codeSection, _, _, _, _⟩ := encoded
   exact padded_all (fun _ _ h => code h) codeSection
 
 /-- The canonical function-code list retains the coverage of its decoded bodies. -/

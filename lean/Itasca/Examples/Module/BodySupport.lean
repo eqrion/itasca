@@ -96,7 +96,7 @@ theorem read_at (data : Slice U8) (pos next : Usize) (opcode : U8)
   have heq : p = next := UScalar.eq_of_val_eq (hq.trans hn.symm)
   simpa [heq, hb] using hr
 
-/-- The byte `0xff` is no opcode in either profile. -/
+/-- The byte `0xff` is not a recognized opcode. -/
 theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (profile : ValidationProfile) (ctx : code.Context) (index : U32)
     (h : st.core.vals.val.length < Usize.max) :
@@ -115,7 +115,7 @@ theorem unknown_opcode_rejected (env : metadata.Env) (profile : ValidationProfil
   exact run_error _ env profile _ 0#u32 _ _ 0xFF#u8 1#usize .UnrecognizedOpcode
     (by simp [Wasm2.initial])
     (read_at _ _ _ _ (by simp [Wasm2.initial, bytes, alloc.vec.Vec.deref]) rfl rfl)
-    (code.check_opcode.complete profile _ (by decide))
+    (code.check_opcode.complete profile _)
     (step_unknown _ _ env profile _ 0#u32 (by simp [Wasm2.initial]; scalar_tac))
 
 end Itasca.Examples.BodySupport

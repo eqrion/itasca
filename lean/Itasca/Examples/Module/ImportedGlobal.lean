@@ -56,8 +56,6 @@ private theorem layout_valid : Layout.Valid 9 declarations layout .Wasm2 := by
   · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
-  · simp [ModuleTypesAllowed, ValueTypeAllowed, ConstAllowed, declarations,
-      Declarations.module, globalType, imported, global]
 
 private theorem init_typed : Expr_ok_const (ModuleElaboration.initializerContextOf raw)
     (ModuleConstants.expression (.GlobalGet 0#u32)) (Translate.valueType .I32) := by
@@ -82,13 +80,9 @@ private theorem requirements : Requirements raw .Wasm2 := by
       have he : e = imported := by simpa [raw, declarations, Declarations.module] using he
       subst e
       trivial
-    · simp [hr.empty_tables (by decide), ModuleSections.rawTables, raw, declarations, Declarations.module, imported]
     · simp [hr.empty_memories (by decide), ModuleSections.rawMemories, raw, declarations, Declarations.module, imported]
   · simp [SectionValid, raw, declarations, Declarations.module]
-  · constructor
-    · simp [raw, declarations, Declarations.module]
-    · rw [hr.tables_count (by decide) (by decide)]
-      simp [raw, declarations, Declarations.module, imported, ModuleElaboration.importType, ModuleTranslation.tables]
+  · simp [SectionValid, raw, declarations, Declarations.module]
   · constructor
     · simp [raw, declarations, Declarations.module]
     · rw [hr.memories_count (by decide) (by decide)]
@@ -150,13 +144,13 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hg1 := metadata.decode_global_type.complete data 11#usize globalType 13#usize
     ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
-    .Wasm2 trivial
+    .Wasm2
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
     .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := metadata.decode_const_expr.complete
     (env := initial) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
-      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm2 trivial
+      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm2
   obtain ⟨types, htypes, htval⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, Examples.ModuleBasic.emptyEnv]; scalar_tac))
   obtain ⟨globals, hglobals, hgval⟩ := WP.spec_imp_exists
@@ -169,7 +163,7 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     simp [metadata.const_global, hcast, lift, hgt, updated, initial, Examples.ModuleBasic.emptyEnv]
   have hg2 := metadata.decode_global_type.complete data 16#usize globalType 18#usize
     ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
-    .Wasm2 trivial
+    .Wasm2
   have hop := (show At ByteEncoding data 18#usize 0x23#u8 19#usize from
     ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
   have hidx := (show At IndexEncoding data 19#usize 0#u32 20#usize from

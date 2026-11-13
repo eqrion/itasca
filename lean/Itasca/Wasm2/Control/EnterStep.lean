@@ -58,7 +58,7 @@ theorem Pending.enter_reader {data env profile locals index st} (p : Pending dat
   apply WP.spec_mono (code.enter.sound st data env profile form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, base]) p.opened.shape.core hcap)
   intro r hr hok
-  obtain ⟨bt, ins, outs, hdecoded, hscalar, hin, hout, hip, hop, remaining, newBase,
+  obtain ⟨bt, ins, outs, hdecoded, hin, hout, hip, hop, remaining, newBase,
     hlen, hbase, hpop, hctrls, hblocks, hvals⟩ := hr hok
   have encoded : At data p.start (form.token bt) r.2.core.pos := by
     apply At.of_block_type bt p.inbounds hbyte p.pos _ hdecoded
@@ -76,17 +76,12 @@ theorem Pending.enter_reader {data env profile locals index st} (p : Pending dat
     (by simpa [Control.polymorphic, ctrls] using hpop),
     (by simpa [base] using hbase), ho, ?_⟩
   refine p.running_after r.2 _ _ (form.token bt) encoded ho ?_ ?_ ?_
-    (p.profileFrames.enter form initial bt ins outs newBase remaining hscalar) ?_
     (by cases form <;> simp [Frames.Form.token, Token.Declared])
   · simpa [Frames.bodyType_enter] using p.bodyType
   · have he : form.opening bt = [form.token bt] := by
       rcases initial with rfl | rfl | rfl <;> rfl
     simpa [he] using htrace
   · simp [hblocks]
-  · intro hp
-    refine p.wasm1_at encoded ?_ ?_ hp
-    · rw [hbyte]; rcases initial with rfl | rfl | rfl <;> decide
-    · rcases initial with rfl | rfl | rfl <;> exact hscalar hp
 
 /-- Opening a `block`, `loop` or `if` frame with `code.enter` preserves `Pending` on success. -/
 theorem Pending.enter_after {data env profile locals index st} (p : Pending data env profile locals index st)

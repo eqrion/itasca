@@ -54,7 +54,7 @@ theorem reader_table_targets_wasm2 {V : Type} (visitor : code.OpVisitor V)
       have checked := Wasm2.branchTableLoop.spec ⟨popped⟩ data env .Wasm2 count cs c
         (by simpa only [popSpec.2.1] using controls) popSpec.1
       rw [loopCall,WP.spec_ok] at checked
-      obtain ⟨all,arity,length,decoded,targets,_,_,_,_⟩ := checked rfl
+      obtain ⟨all,arity,length,decoded,targets,_,_,_⟩ := checked rfl
       exact ⟨count,first,selector,popped,all,arity,readSpec,popCall,popSpec.2.1,popSpec.2.2.1,
         length,by simpa only [popSpec.2.2.1] using decoded,targets⟩
 end Itasca.Runtime.Compiler

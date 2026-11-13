@@ -5,7 +5,7 @@ import Itasca.Module.Sections.Data
 /-!
 # Completeness of the data section parser
 
-`metadata.decode_data_section.profile_complete` (and the Wasm 1.0 `.complete`): an independently
+`metadata.decode_data_section.profile_complete`: an independently
 encoded vector of `ModuleData.Valid` segments is accepted and returned unchanged. The segment
 lemmas split active and passive encodings. Soundness is in `Module/Sections/Data`.
 -/
@@ -22,10 +22,6 @@ private theorem data_active_parts {profile idx offset init bytes}
       SegmentIndexEncoding profile flags idx explicit mb ∧ ConstEncoding offset ob ∧
       ByteVecEncoding init ib ∧ bytes = fb ++ mb ++ ob ++ ib := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨memory, off, mb, ob, ib, hm, hi, ho, hb, rfl⟩ := h
-    obtain ⟨rfl, rfl⟩ := metadata.DataMode.Active.inj hm
-    exact ⟨idx, false, mb, [], ob, ib, hi, ⟨rfl, rfl, rfl⟩, ho, hb, by simp⟩
   | Wasm2 =>
     cases h with
     | active hi ho hb =>
@@ -51,34 +47,16 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
     (show At (fun pair => SegmentIndexEncoding profile flags pair.1 pair.2)
       data first (idx, explicit) afterMemory from ⟨memory, hm, hindex⟩)
   have hro := metadata.decode_const_expr.complete (env := env) ⟨encodedOffset, ho, hoffset⟩ hv.2
-    profile (hv.2.const_allowed (by cases profile <;> trivial))
+    profile
   have hrc := reader.read_u32_leb.complete data afterOffset count content hcount
   have hx : metadata.decode_data_segment data pos env profile ⦃ r =>
       r = .Ok (⟨.Active idx offset, init⟩, next) ⦄ := by
     cases profile with
-    | Wasm1 =>
-      obtain ⟨rfl, rfl, rfl⟩ := hm
-      have hpos := hindex.empty
-      subst afterMemory
-      simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
-      step
-      have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
-      simp [hguard, hro, hrc]
-      step
-      have havail : content.val + n.val ≤ data.length := by
-        have := hpayload.length
-        have := hpayload.bound
-        scalar_tac
-      rw [metadata.have_bytes.complete data content n havail]
-      simp only [bind_ok]
-      step
-      have hend : i2 = next := UScalar.eq_of_val_eq (by have := hpayload.length; scalar_tac)
-      rw [hend, metadata.copy_bytes.complete data content next init hpayload]
-      simp
     | Wasm2 =>
       have hpass : flags ≠ 1#u32 := by
         rcases hm with ⟨rfl, _, _, _⟩ | ⟨rfl, _, _⟩ <;> decide
-      simp [metadata.decode_data_segment, hrf, hrm, hpass, core.result.Result.Insts.CoreOpsTry.branch]
+      simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
+      split <;> try contradiction
       step
       have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
       simp [hguard, hro, hrc]
@@ -138,10 +116,6 @@ theorem metadata.decode_data_segment.profile_complete {data : Slice U8} {pos nex
   | Passive =>
     cases profile with
     | Wasm2 => exact data_passive_complete init hb
-    | Wasm1 =>
-      obtain ⟨bytes, ⟨idx, offset, mb, ob, ib, he, _⟩, hs⟩ := hb
-      cases he
-
 /-- The data loop accepts the remaining valid segments of a repetition span and appends them to
 `out`. -/
 theorem metadata.decode_data_section_loop.profile_complete (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)

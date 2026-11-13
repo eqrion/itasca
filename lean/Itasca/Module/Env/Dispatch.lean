@@ -31,7 +31,7 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
     | Err e => trivial
     | Ok next =>
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
-      refine ⟨_, .types hadd hbytes (by intro ft hm; exact ⟨(Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm).1, (hv ft hm).2⟩), ?_⟩
+      refine ⟨_, .types hadd hbytes (by intro ft hm; exact (Profile.funcTypeAdmissible_iff profile ft).mpr (hv ft hm)), ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
@@ -60,8 +60,8 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
     cases r with
     | Err e => trivial
     | Ok next =>
-      obtain ⟨added, hadd, hbytes, hv, hs, hc⟩ := hp
-      refine ⟨_, .tables hadd hbytes hv hc, ?_⟩
+      obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
+      refine ⟨_, .tables hadd hbytes hv, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
@@ -123,8 +123,8 @@ theorem metadata.decode_env_section.profile_spec (data : Slice U8) (pos : Usize)
     cases r with
     | Err e => trivial
     | Ok next =>
-      obtain ⟨count, hbytes, he, hprofile⟩ := hp
-      refine ⟨_, .dataCount hprofile he hbytes, ?_⟩
+      obtain ⟨count, hbytes, he⟩ := hp
+      refine ⟨_, .dataCount he hbytes, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [he]
       cases hold

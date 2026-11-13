@@ -5,7 +5,7 @@ import Itasca.Module.Readers.BasicComplete
 # Element segment header and entry parser
 
 `ModuleElements.HeaderEncoding` is the independent grammar of the flag word and prefix of an
-element segment for each profile (the eight Wasm 2.0 forms and the Wasm 1.0 form).
+element segment for the supported profile (the eight Wasm 2.0 forms).
 `metadata.decode_element_header.spec` shows an accepted header is a `HeaderEncoding` span whose
 table and offset are valid. `metadata.decode_element.spec` assembles a full entry: an
 `ElementEncodingFor` span that is valid, extends the declared functions by its references and
@@ -20,8 +20,6 @@ open ModuleBinary
 /-- The bytes of an element segment header for a profile, mode, element type and initializer
 form (`true` for expressions). The first argument of each constructor is the flag word. -/
 inductive HeaderEncoding : ValidationProfile → metadata.ElementMode → wasm_types.ElemType → Bool → List U8 → Prop where
-  | legacy {index offset ib ob} : IndexEncoding index ib → ConstEncoding offset ob →
-      HeaderEncoding .Wasm1 (.Active index offset) .FuncRef false (ib ++ ob)
   | activeIndices {offset fb ob} : IndexEncoding 0#u32 fb → ConstEncoding offset ob →
       HeaderEncoding .Wasm2 (.Active 0#u32 offset) .FuncRef false (fb ++ ob)
   | passiveIndices {fb} : IndexEncoding 1#u32 fb →
@@ -73,9 +71,6 @@ theorem HeaderEncoding.append {profile mode elem expressions header init bytes}
     (hi : VecEncoding (InitializerEncoding expressions) init bytes) :
     ElementEncodingFor profile ⟨elem, mode, init⟩ (header ++ bytes) := by
   cases h with
-  | legacy hf ho =>
-    obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
-    exact ⟨_, _, _, _, _, _, rfl, hf, ho, hindices, rfl⟩
   | activeIndices hf ho =>
     obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
     exact .activeIndices hf ho hindices
@@ -114,9 +109,6 @@ theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry
     ∃ expressions header encoded, HeaderEncoding profile entry.mode entry.elem expressions header ∧
       VecEncoding (InitializerEncoding expressions) entry.init encoded ∧ bytes = header ++ encoded := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨index, offset, initializers, ib, ob, entries, rfl, hi, ho, hv, rfl⟩ := h
-    exact ⟨false, ib ++ ob, entries, .legacy hi ho, indices_vector_intro hv, rfl⟩
   | Wasm2 =>
     cases h with
     | activeIndices hf ho hi => exact ⟨false, _, _, .activeIndices hf ho, indices_vector_intro hi, rfl⟩
@@ -127,12 +119,6 @@ theorem header_parts {profile entry bytes} (h : ElementEncodingFor profile entry
     | passiveExpressions hf hi => exact ⟨true, _, _, .passiveExpressions hf, hi, rfl⟩
     | explicitExpressions hf ht ho hi => exact ⟨true, _, _, .explicitExpressions hf ht ho, hi, rfl⟩
     | declarativeExpressions hf hi => exact ⟨true, _, _, .declarativeExpressions hf, hi, rfl⟩
-
-/-- Expression initializers are allowed in every header that has them. -/
-theorem HeaderEncoding.const_allowed {profile mode elem expressions bytes}
-    (h : HeaderEncoding profile mode elem expressions bytes) (value : wasm_types.ConstExpr)
-    (he : expressions = true) : ConstAllowed profile value := by
-  cases h <;> simp_all [ConstAllowed]
 
 end Itasca.ModuleElements
 
@@ -159,33 +145,6 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
     obtain ⟨fb, hf, hfs⟩ := At.of_u32 hp
     simp only [metadata.decode_element_header, hr, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
     cases profile with
-    | Wasm1 =>
-      dsimp only
-      step
-      split
-      · simp
-      · obtain ⟨r, hconst, hc⟩ := WP.spec_imp_exists
-          (metadata.decode_const_expr.spec data first env .I32 .Wasm1)
-        rw [hconst]
-        cases r with
-        | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok pair =>
-          obtain ⟨offset, next⟩ := pair
-          obtain ⟨⟨ob, ho, hos⟩, hv⟩ := hc
-          simp only [bind_ok]
-          step
-          split
-          · simp
-          · have hi : tag.val < env.table_types.val.length := by scalar_tac
-            simp only [wasm_types.ElemType.value_type, bind_ok]
-            step
-            cases ht : tt.elem <;>
-              simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-                wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-            exact ⟨⟨fb ++ ob, .legacy hf ho, hfs.append hos⟩,
-              hi, (by
-                have hrval : r.val = tag.val := by scalar_tac
-                simpa [tt_post, hrval] using ht), hv⟩
     | Wasm2 =>
       change (if tag > 7#u32 then _ else _) ⦃_⦄
       by_cases htag : tag > 7#u32
@@ -354,7 +313,7 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨elem, elemNext⟩ := pair
-            obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
+            obtain ⟨eb, he, hes⟩ := he
             have heq : eb = [elemByte elem] := he
             subst eb
             simp only [bind_ok]
@@ -397,7 +356,7 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                 | Ok pair =>
                   obtain ⟨elem, elemNext⟩ := pair
-                  obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
+                  obtain ⟨eb, he, hes⟩ := he
                   have heq : eb = [elemByte elem] := he
                   subst eb
                   try with_unfolding_all simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
@@ -429,7 +388,7 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨elem, elemNext⟩ := pair
-            obtain ⟨eb, ⟨he, ha⟩, hes⟩ := he
+            obtain ⟨eb, he, hes⟩ := he
             have heq : eb = [elemByte elem] := he
             subst eb
             simp only [bind_ok]

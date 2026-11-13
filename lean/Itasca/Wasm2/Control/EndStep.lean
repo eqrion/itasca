@@ -91,12 +91,8 @@ theorem Pending.end_reader {data env profile locals index st} (p : Pending data 
           simp_all
         obtain ⟨gps, parent, he, ho, htrace⟩ := p.opened.close hroot htypes op closed hres hthen hc hb
           (by simpa [htake, List.map_eq_nil_iff, hn] using hv)
-        have hframes := p.profileFrames
-        rw [he] at hframes
         refine ⟨encoded, hres, .inr ⟨gps, parent, op, he, closed, ho⟩, ?_⟩
         refine p.running_after r.2 gps _ .end_ encoded ho ?_ htrace ?_
-          (hframes.close closed header.inputs header.outputs _ _)
-          (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
         · simpa [List.append_assoc] using (Frames.bodyType_close gps parent p.current op).trans
             (by simpa [← he] using p.bodyType)
         · simp [hb, blocks]; omega
@@ -112,7 +108,6 @@ theorem Pending.end_reader {data env profile locals index st} (p : Pending data 
       hb (by simpa [htake] using hv)
     refine ⟨hform, encoded, hres, ho, ?_⟩
     refine p.running_after r.2 p.parents p.current.nextElse .else_ encoded ho ?_ ht ?_
-      (p.profileFrames.else_ hform) (p.wasm1_at encoded (by rw [hbyte, hop]; decide))
     · simpa [Frames.bodyType_else] using p.bodyType
     · simp [hb]
 

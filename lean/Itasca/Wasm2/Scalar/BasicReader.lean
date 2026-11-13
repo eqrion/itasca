@@ -22,12 +22,10 @@ theorem Pending.nop_reader {data env profile locals index st}
   have encoded : Wasm1.At data p.start (.plain .NOP) st.core.pos :=
     .no_immediate p.inbounds (by simpa [global_simps] using byte) p.pos .nop
   apply p.append_reader st.core .NOP p.current.ctrl.polymorphic_base p.current.vals .instr_case_0
-    (.plain encoded) (fun C wf priorTyped => priorTyped.nop wf) ?_ ?_ ?_ ?_
+    (.plain encoded) (fun C wf priorTyped => priorTyped.nop wf) ?_ ?_ ?_
   · simpa using controls
   · simp [vals, base]
   · simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]
-  · intro _ C
-    exact ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩
 
 /-- A successful i32 constant read retains its exact source prefix and stack effect. -/
 theorem Pending.read_i32_const {data env profile locals index st}
@@ -50,7 +48,7 @@ theorem Pending.read_i32_const {data env profile locals index st}
   refine p.append_reader out (Spec.i32Const value) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .I32]) (Spec.i32Const_wf value) (.plain encoded)
     (fun C wf priorTyped => priorTyped.i32Const wf value) ?_ ?_ ?_
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
@@ -76,7 +74,7 @@ theorem Pending.read_i64_const {data env profile locals index st}
   refine p.append_reader out (ScalarConst.i64 value) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .I64]) (ScalarConst.i64_wf value) (.plain encoded)
     (fun C wf priorTyped => priorTyped.i64Const wf value) ?_ ?_ ?_
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
@@ -102,7 +100,7 @@ theorem Pending.read_f32_const {data env profile locals index st}
   refine p.append_reader out (ScalarConst.f32 value) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .F32]) (ScalarConst.f32_wf value) (.plain encoded)
     (fun C wf priorTyped => priorTyped.f32Const wf value) ?_ ?_ ?_
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
@@ -128,7 +126,7 @@ theorem Pending.read_f64_const {data env profile locals index st}
   refine p.append_reader out (ScalarConst.f64 value) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .F64]) (ScalarConst.f64_wf value) (.plain encoded)
     (fun C wf priorTyped => priorTyped.f64Const wf value) ?_ ?_ ?_
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base, List.append_assoc] using values
   · exact encoded.declared _
@@ -151,7 +149,7 @@ theorem Pending.read_unreachable {data env profile locals index st}
       (by simpa [markedPos] using p.pos) .unreachable
   refine p.append_reader marked .UNREACHABLE true [] .instr_case_1 (.plain encoded)
     (fun C wf priorTyped => priorTyped.unreachable wf) markedControls ?_ ?_
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa using markedVals
   · exact encoded.declared _
 

@@ -42,7 +42,7 @@ theorem module_segment_counts {R raw bytes profile}
     (encoded : ModuleBinary.ModuleEncodingWith R raw bytes profile) :
     raw.elements.length < 2^32 ∧ raw.data.length < 2^32 := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, _, _, _⟩ := encoded
+    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, _, _⟩ := encoded
   exact ⟨padded_count hel, padded_count hd⟩
 
 private theorem evaluation_value_wf {before after : state} {expression : expr} {value : val}

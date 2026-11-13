@@ -124,7 +124,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     (noError : batch.error = none) (iteration : loopIndex = batch.num_validated)
     (count : batch.num_validated.val+entries.length = batch.num_funcs.val)
     (range : batch.first_func.val+batch.num_funcs.val ≤ batch.env.func_type_indices.val.length)
-    (bounds : CodeEntry.Bounds batch.env) (environment : Profile.Environment batch.profile batch.env)
+    (bounds : CodeEntry.Bounds batch.env)
     (limits : Profile.EnvironmentWithinLimits batch.env)
     (signatures : SignatureSequence before.signatures.val batch.env.types.val)
     (functionSlots : before.func_param_slots.val.map (fun word => word.val) =
@@ -174,7 +174,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
           prepared.ctx prepared.body.length _ bytes locals operands
       obtain ⟨validatedCount,final,validatedValue,compiled,w,finished,effect⟩ := compiler_scheduled_entry_available ops law bound allocation
         before batch dispatched frame prepared.finish entry dispatch noError more ordinalValue
-        indexBound typed bounds environment limits
+        indexBound typed bounds limits
         encoded signatures functionSlots arithmetic
         (by rw [slots.length]; exact indexBound)
         (by rw [ordinalValue]; exact slots.vacant _ (Nat.le_refl _) (by omega))
@@ -205,7 +205,7 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
       obtain ⟨after,worker,continued,validated,ended,error,queue,published,charged⟩ := ih nextScheduler nextBatch validatedCount restSource
         envelope nextPaid nextSlots (by apply UScalar.eq_of_val_eq; dsimp only [nextBatch,dispatched]; rw [dispatchedValue,validatedValue]) rfl
         noError rfl (by dsimp only [nextBatch,dispatched]; simp only [List.length_cons] at count; omega)
-        range bounds environment limits signatures functionSlots coordinates arithmetic
+        range bounds limits signatures functionSlots coordinates arithmetic
       refine ⟨after,worker,?_,validated,ended,error,queue,published,charged⟩
       subst loopIndex
       obtain ⟨incremented,increment,incrementValue⟩ := WP.spec_imp_exists

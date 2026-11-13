@@ -1,13 +1,11 @@
-//! Function-body validation for both supported profiles.
+//! Function-body validation for the supported profile.
 //!
 //! One body worker owns initialization and iteration over the shared operand and
-//! control stacks. Wasm 1.0 and Wasm 2.0 select their control rules; shared
-//! readers and operator callbacks are shared.
+//! control stacks. Profile-aware helpers keep the validation entry points
+//! explicit while sharing readers and operator callbacks.
 
 use crate::error::{OpError, VisitError};
-use crate::limits::{
-    MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS,
-};
+use crate::limits::{MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS};
 use crate::metadata::Env;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
@@ -1535,55 +1533,30 @@ fn step_wasm2<V: OpVisitor>(
 
 // --- Multi-value control and signature handling ---
 
-// --- Wasm 1.0 profile filters ---
-//
-// Wasm 1.0 runs the Wasm 2.0 rules after these checks. Each accepts everything
-// under Wasm 2.0.
+// --- Profile-sensitive validation entry points ---
 
-/// Rejects opcodes outside the Wasm 1.0 instruction grammar.
+/// Checks whether an opcode is allowed by the selected profile.
 fn check_opcode(profile: crate::ValidationProfile, op: u8) -> Result<()> {
     match profile {
-        crate::ValidationProfile::Wasm1 => match op {
-            0x1c | 0x25 | 0x26 | 0xc0 | 0xc1 | 0xc2 | 0xc3 | 0xc4 | 0xd0 | 0xd1 | 0xd2 | 0xfc
-            | 0xfd => Err(OpError::UnrecognizedOpcode),
-            _ => Ok(()),
-        },
         crate::ValidationProfile::Wasm2 => Ok(()),
     }
 }
 
-/// Rejects block types other than empty or one number type under Wasm 1.0.
+/// Checks whether a block type is allowed by the selected profile.
 fn check_block_type(profile: crate::ValidationProfile, bt: BlockSignature) -> Result<()> {
     match profile {
-        crate::ValidationProfile::Wasm1 => match bt {
-            BlockSignature::Empty => Ok(()),
-            BlockSignature::Value(t) => match t {
-                ValueType::I32 | ValueType::I64 | ValueType::F32 | ValueType::F64 => Ok(()),
-                _ => Err(OpError::InvalidBlockType),
-            },
-            BlockSignature::TypeIndex(_) => Err(OpError::InvalidBlockType),
-        },
         crate::ValidationProfile::Wasm2 => Ok(()),
     }
 }
 
-/// Under Wasm 1.0, requires the `call_indirect` table immediate at `pos` to be
-/// the reserved zero byte.
+/// Checks the `call_indirect` table immediate at `pos` for the selected profile.
 fn check_table_byte(profile: crate::ValidationProfile, data: &[u8], pos: usize) -> Result<()> {
     match profile {
-        crate::ValidationProfile::Wasm1 => {
-            let (b, _) = read_byte(data, pos)?;
-            if b != 0 {
-                return Err(OpError::ReservedByteNotZero);
-            }
-            Ok(())
-        }
         crate::ValidationProfile::Wasm2 => Ok(()),
     }
 }
 
-/// Under Wasm 1.0, requires every branch-table target to have the first
-/// target's exact types.
+/// Checks a branch-table target against the first target for the selected profile.
 fn check_table_target(
     profile: crate::ValidationProfile,
     env: &Env,
@@ -1591,12 +1564,6 @@ fn check_table_target(
     ts: ResultType,
 ) -> Result<()> {
     match profile {
-        crate::ValidationProfile::Wasm1 => {
-            if !same_types(env, first, ts)? {
-                return Err(OpError::TypeMismatch);
-            }
-            Ok(())
-        }
         crate::ValidationProfile::Wasm2 => Ok(()),
     }
 }
@@ -2019,9 +1986,7 @@ fn body_loop<V: OpVisitor>(
     }
 }
 
-/// Dispatches one opcode. Wasm 1.0 runs the Wasm 2.0 rules after rejecting the
-/// opcodes, block types, table immediates and branch tables outside its grammar
-/// and typing profile.
+/// Dispatches one opcode after profile-specific validation.
 fn step_profile<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],

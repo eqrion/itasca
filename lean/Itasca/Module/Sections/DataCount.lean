@@ -74,10 +74,9 @@ theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : m
     metadata.decode_data_count data pos env profile ⦃ result => match result.1 with
       | .Ok next => ∃ count,
           ModuleBinary.At ModuleBinary.StartEncoding data pos (some count) next ∧
-          result.2 = { env with data_count := some count } ∧ profile = .Wasm2
+          result.2 = { env with data_count := some count }
       | .Err _ => True ⦄ := by
   cases profile with
-  | Wasm1 => simp [metadata.decode_data_count]
   | Wasm2 =>
     obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
     cases r with
@@ -90,7 +89,7 @@ theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : m
       simp only [metadata.decode_data_count, hr, bind_ok,
         core.result.Result.Insts.CoreOpsTry.branch]
       obtain ⟨bytes, hs, hl, hb, he⟩ := hd
-      exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl, trivial⟩
+      exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl⟩
 
 /-- Under Wasm 2.0, `metadata.decode_data_count` accepts a count span and sets `data_count`. -/
 theorem metadata.decode_data_count.complete (data : Slice U8) (pos : Usize) (env : metadata.Env)

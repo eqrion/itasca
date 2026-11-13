@@ -45,11 +45,6 @@ private theorem vec_count {α : Type} {R : α → List U8 → Prop} {values byte
 private theorem element_cost {profile entry bytes}
     (h : ElementEncodingFor profile entry bytes) : entry.init.length + 3 ≤ 3 * bytes.length := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨_, _, _, table, offset, entries, rfl, _, _, he, rfl⟩ := h
-    have := vec_count he (fun _ _ h => leb_nonempty h)
-    simp only [List.length_map, List.length_append]
-    omega
   | Wasm2 =>
     cases h with
     | activeIndices _ _ he | passiveIndices _ he | explicitIndices _ _ _ he | declarativeIndices _ he =>
@@ -75,11 +70,6 @@ private theorem data_cost {profile entry bytes}
     simp only [List.length_append]
     omega
   cases profile with
-  | Wasm1 =>
-    obtain ⟨_, _, memory, offset, entries, _, _, _, he, rfl⟩ := h
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
   | Wasm2 =>
     cases h with
     | active _ _ he | passive _ he =>
@@ -119,7 +109,7 @@ theorem initializer_cost_bytes {R raw bytes profile}
       (raw.elements.map (fun e => e.init.length + 3)).sum + 2 * raw.data.length ≤
       3 * bytes.length := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, _, _, hf, _, _, hg, _, _, he, _, _, hd, _, rfl, _, _⟩ := encoding
+    codes, datas, customs, _, _, hf, _, _, hg, _, _, he, _, _, hd, _, rfl, _⟩ := encoding
   have hf := padded_cost (fun _ => 1) hf (fun _ _ h => by have := leb_nonempty h; omega)
   have hg := padded_cost (fun _ => 2) hg (fun _ _ h => global_cost h)
   have he := padded_cost (fun e => e.init.length + 3) he (fun _ _ h => element_cost h)

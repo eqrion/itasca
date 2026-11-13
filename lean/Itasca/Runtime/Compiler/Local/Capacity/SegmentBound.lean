@@ -20,12 +20,6 @@ private theorem vec_positive {α : Type} {R : α → List U8 → Prop} {values b
 private theorem element_bytes {profile entry bytes}
     (h : ElementEncodingFor profile entry bytes) : 2 ≤ bytes.length := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨_, _, _, table, offset, entries, _, ht, _, he, rfl⟩ := h
-    have := leb_positive ht
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
   | Wasm2 =>
     cases h with
     | activeIndices hf _ he | activeExpressions hf _ he =>
@@ -53,12 +47,6 @@ private theorem active_positive {index explicit bytes}
 private theorem data_bytes {profile entry bytes}
     (h : DataEncodingFor profile entry bytes) : 2 ≤ bytes.length := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨_, _, memory, offset, entries, _, hm, _, he, rfl⟩ := h
-    have := leb_positive hm
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
   | Wasm2 =>
     cases h with
     | active hi _ he =>
@@ -96,12 +84,12 @@ private theorem padded_size {α : Type} {R : α → List U8 → Prop} {id values
     omega
 
 /-- Segment vectors consume at least two bytes per entry, including empty
-passive segments. This holds for both binary profiles and non-minimal LEBs. -/
+passive segments. This holds for Wasm 2.0 and non-minimal LEBs. -/
 theorem segment_count_bytes {R raw bytes profile}
     (h : ModuleEncodingWith R raw bytes profile) :
     2 * (raw.elements.length + raw.data.length) ≤ bytes.length := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, rfl, _, _⟩ := h
+    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, rfl, _⟩ := h
   have he := padded_size hel (fun _ _ h => element_bytes h)
   have hd := padded_size hd (fun _ _ h => data_bytes h)
   simp only [List.length_append]

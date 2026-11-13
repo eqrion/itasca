@@ -25,7 +25,6 @@ structure Prepared (data : Slice U8) (env : metadata.Env) (index start : Usize)
   locals_bytes : ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding)
     data content groups bodyStart
   locals_bound : (ModuleLocals.declared groups).length ≤ limits.MAX_LOCALS.val
-  locals_allowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2
   context_locals : ctx.locals.val = ft.params.val ++ ModuleLocals.declared groups
   context_results : ctx.results.val = ft.results.val
   body_bytes : Wasm1.BytesAt data bodyStart body.val finish
@@ -78,7 +77,7 @@ theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.Op
                 simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
                 obtain ⟨declared, bodyStart⟩ := pair
-                obtain ⟨groups, hg, hd, hcap, hallowed⟩ := hlpost
+                obtain ⟨groups, hg, hd, hcap⟩ := hlpost
                 simp
                 split
                 · simp
@@ -117,7 +116,6 @@ theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.Op
                       function_type := by simpa [t_post] using ft_post.symm
                       header := hp, extent := by scalar_tac, locals_bytes := hg
                       locals_bound := by simpa [hd] using hcap
-                      locals_allowed := hallowed
                       context_locals := by simpa [alloc.vec.Vec.deref,hd] using v1_post
                       context_results := by simpa [alloc.vec.Vec.deref] using v2_post
                       body_bytes := ModuleBinary.slice_bytes (by scalar_tac) (by scalar_tac) bodyValue }

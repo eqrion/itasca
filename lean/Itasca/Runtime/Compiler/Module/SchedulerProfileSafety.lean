@@ -5,9 +5,9 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
-/-- Signature restrictions retained from actual profile environment decoding. -/
+/-- Signature limits retained from actual profile environment decoding. -/
 def ProfileEnvironment (profile : ValidationProfile) (env : metadata.Env) : Prop :=
-  Profile.Environment profile env ∧ Profile.EnvironmentWithinLimits env
+  Profile.EnvironmentWithinLimits env
 
 def ReachedProfileEntriesTotal {A : Type} (ops : runtime.platform.Alloc A)
     (profile : ValidationProfile) : Prop :=
@@ -67,7 +67,7 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
     intro _
     exact ⟨⟨held.1.signatures,held.1.functionSlots,held.1.functions,held.1.origin,held.1.queue,held.1.cursorBound⟩,held.2⟩
 
-/-- Actual environment decoding supplies the profile restriction before any
+/-- Actual environment decoding supplies the signature limits before any
 worker is issued. It is retained through every reached scheduler state. -/
 theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (profile : ValidationProfile)

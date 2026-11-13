@@ -17,7 +17,7 @@ theorem prepared_entry_replay {V : Type} (visitor : code.OpVisitor V)
       ⦃ result => result = (.Ok w.finish,after) ⦄ := by
   have read := reader.read_u32_leb.complete data start w.size w.content w.header
   obtain ⟨declared,decoded,declaredValues⟩ := metadata.decode_locals.complete data w.content profile w.groups w.bodyStart
-    w.locals_bytes w.locals_allowed w.locals_bound
+    w.locals_bytes w.locals_bound
   have indexBound : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by
     have bound := w.index_lt
     scalar_tac

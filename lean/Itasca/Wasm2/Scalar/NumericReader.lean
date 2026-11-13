@@ -14,9 +14,7 @@ theorem Pending.numeric_reader {data env profile locals index st}
     (position : Usize) (capacity : st.core.vals.val.length < Usize.max)
     (encoded : At data p.start (.plain operation.instruction) position)
     (declared : DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction)
-    (wasm1 : profile = .Wasm1 → ∀ C, Wasm1.At data p.start (.plain operation.instruction) position ∧
-      Wasm1.Instruction C operation.instruction := by intro h; cases h) :
+      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction) :
     Numeric.read operation {st.core with pos := position} ⦃ r =>
       r.2.ctrls = st.core.ctrls ∧ r.2.pos = position ∧
       ∀ unit, r.1 = .Ok unit → ∃ values,
@@ -40,11 +38,8 @@ theorem Pending.numeric_reader {data env profile locals index st}
   refine p.append_reader out operation.instruction p.current.ctrl.polymorphic_base values
     operation.wellFormed (cursor ▸ encoded)
     (fun C wf prior => numeric.wasm2_prefix C wf p.current.ops operation.instruction prior
-      operation.wellFormed (operation.typed C wf)) ?_ ?_ declared ?_
+      operation.wellFormed (operation.typed C wf)) ?_ ?_ declared
   · simpa [controls] using ctrls
   · simpa [vals,base] using stack
-  · intro hp C
-    obtain ⟨bytes, restriction⟩ := wasm1 hp C
-    exact ⟨cursor ▸ bytes, restriction⟩
 
 end Itasca.Wasm2

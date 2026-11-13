@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.TypedStepsWasm2
 
 /-!
-An accepted body of either profile has the Wasm 2.0 typed instruction run from its actual initialization, since an accepted Wasm 1.0 body is accepted by the Wasm 2.0 reader with the same callbacks.
+An accepted body has the Wasm 2.0 typed instruction run from its actual initialization.
 
 Main declarations: `witness_typed_steps` and `batch_typed_steps`. A direct consumer is `Compiler.Module.CompileEntry`.
 -/
@@ -10,18 +10,13 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca
 
-/-- An accepted body of either profile has the Wasm 2.0 typed instruction run from its actual
-initialization, since an accepted Wasm 1.0 body is accepted by the Wasm 2.0 reader with the same
-callbacks. -/
+/-- An accepted body has the Wasm 2.0 typed instruction run from its actual initialization. -/
 theorem witness_typed_steps {V : Type} {visitor : code.OpVisitor V}
     {data env index start finish before after profile}
     (w : CodeEntry.Witness visitor data env index start finish before after profile) :
     TypedRunWasm2 visitor w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) w.startedState after := by
   have accepted := w.body_accepted
   cases profile with
-  | Wasm1 =>
-    exact typed_body_wasm2 visitor w.body env w.ctx w.typeIdx w.startedState after
-      (code.validate_body_with.wasm1_accepted _ _ _ _ _ _ _ accepted)
   | Wasm2 => exact typed_body_wasm2 visitor w.body env w.ctx w.typeIdx w.startedState after accepted
 
 /-- Successful real entry validation exposes both the exact start callback and

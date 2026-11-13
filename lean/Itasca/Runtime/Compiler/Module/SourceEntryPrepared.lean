@@ -27,7 +27,6 @@ def preparedOfSourceWitness {V : Type} {visitor : code.OpVisitor V} {data env in
   extent := w.extent
   locals_bytes := w.locals_bytes
   locals_bound := w.locals_bound
-  locals_allowed := w.locals_allowed
   context_locals := w.context_locals
   context_results := w.context_results
   body_bytes := w.body_bytes
@@ -39,7 +38,7 @@ theorem source_entry_prepared (data : Slice U8) (env : metadata.Env) (index star
     (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
     (bounds : CodeEntry.Bounds env)
-    (environment : Profile.Environment profile env) (limits : Profile.EnvironmentWithinLimits env)
+    (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish) :
     ∃ w : CodeEntry.Prepared data env index start profile,
       w.finish = finish ∧ Profile.Body profile w.body env w.ctx.locals w.typeIdx := by
@@ -54,8 +53,7 @@ theorem source_entry_prepared (data : Slice U8) (env : metadata.Env) (index star
   obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
     data start env index finish () after bounds profile called
   refine ⟨preparedOfSourceWitness w,rfl,?_⟩
-  exact code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after
-    (by simp only [List.getElem?_eq_getElem w.type_lt,w.function_type])
-    (environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _)) w.body_accepted
+  exact code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.startedState after
+    w.body_accepted
 
 end Itasca.Runtime.Compiler

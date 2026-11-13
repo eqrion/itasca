@@ -1,10 +1,9 @@
 import Itasca.Binary.ModuleUniquePrimitives
-import Itasca.Binary.Wasm1.PrefixUnique
 
 /-!
 # Section framing
 
-Proves prefix uniqueness of code entries and defines the raw section framing
+Defines the raw section framing
 (`SectionDecode.Encoding`) that erases payload interpretation. `PaddedEncoding.frames` shows
 that a field preceded by custom sections is a uniquely framed section list with at most one
 payload for the field. `SectionDecode.Field.unique` lifts payload uniqueness to fields.
@@ -13,21 +12,6 @@ payload for the field. `SectionDecode.Field.unique` lifts payload uniqueness to 
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
-
-/-- Code entry encodings are prefix-unique. -/
-theorem code_prefix_unique : PrefixUnique CodeEncoding := by
-  intro x y a b rest tail hx hy he
-  obtain ⟨xn, xl, xb, hn, hl, hb, rfl⟩ := hx
-  obtain ⟨yn, yl, yb, hn', hl', hb', rfl⟩ := hy
-  obtain ⟨hlen, rfl, hcontent⟩ := leb_prefix_unique hn hn'
-    (by simpa [List.append_assoc] using he)
-  obtain ⟨hpayload, rfl⟩ := split_of_length
-    (by simpa [List.append_assoc] using hcontent : (xl ++ xb) ++ rest = (yl ++ yb) ++ tail)
-    (by simpa using hlen)
-  obtain ⟨hlv, rfl, rfl⟩ := local_prefix_unique.vec hl hl' hpayload
-  have hbv := BodyEncoding.unique hb hb'
-  have hv : x = y := by cases x; cases y; simp_all
-  exact ⟨hv, rfl, rfl⟩
 
 namespace SectionDecode
 

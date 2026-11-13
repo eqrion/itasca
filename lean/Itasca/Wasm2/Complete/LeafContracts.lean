@@ -98,7 +98,6 @@ theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Fram
     (henv : Profile.EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
     (he : Leb128.Encoding bytes idx.val) (hte : Leb128.Encoding tableBytes table.val)
     (hb : Wasm1.BytesAt data st.core.pos (bytes ++ tableBytes) next)
-    (hzero : profile = .Wasm1 → tableBytes = [0#u8])
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))
@@ -115,15 +114,9 @@ theorem Frame.call_indirect_indexed {st} {profile : ValidationProfile} (f : Fram
     have hlimits := (henv.types ft (ht ▸ List.getElem_mem hi)).bounds
     obtain ⟨middle, hindex, htablespan⟩ := hb.split
     obtain ⟨htableenv, hfun⟩ := hmatch.table_funcref table lim htable htabletype
-    have hbyte : profile = .Wasm1 → ∃ h : middle.val < data.length, data.val[middle.val] = 0#u8 := by
-      intro hp
-      have hs := htablespan
-      rw [hzero hp] at hs
-      obtain ⟨hm, hz, _⟩ := hs.single
-      exact ⟨hm, hz⟩
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
       (code.call.indirect_complete st data env profile idx table middle next ft
-        ⟨bytes, hindex.suffix, hindex.length, hindex.bound, he⟩ hbyte
+        ⟨bytes, hindex.suffix, hindex.length, hindex.bound, he⟩
         ⟨tableBytes, htablespan.suffix, htablespan.length, htablespan.bound, hte⟩ htableenv hfun hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front
         f.core.vals f.core.base_eq (by omega) (by simpa [f.core.poly_eq, hparams] using hr))
     dsimp only at hc hblocks hp hvals hlen hreal
@@ -145,7 +138,7 @@ theorem Frame.call_indirect {st} {profile : ValidationProfile} (f : Frame st) (d
     (hcap : st.core.vals.val.length + 1000 < Usize.max) :
     LeafResult f data env profile ctx index 0x11#u8 (bytes ++ [0#u8]) next (front ++ output) := by
   apply f.call_indirect_indexed data env ctx index C hmatch henv idx 0#u32 bytes [0#u8]
-    next he _ hb (fun _ => rfl) front input output hr ht hcap
+    next he _ hb front input output hr ht hcap
   exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Leb128.payload]⟩
 
 theorem Frame.branch {st} {profile : ValidationProfile} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
@@ -228,8 +221,7 @@ theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (da
     (hb : Wasm1.BytesAt data st.core.pos (count ++ entries ++ final) next)
     (front input output : List valtype)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C (BrTable.instruction depths default) (.mk_functype (.mk_list input) (.mk_list output)))
-    (hprofile : profile = .Wasm1 → Wasm1.Instruction C (BrTable.instruction depths default)) :
+    (ht : Instr_ok C (BrTable.instruction depths default) (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env profile ctx index 0x0E#u8 (count ++ entries ++ final) next (front ++ output) := by
   cases ht with
   | br_table _ _ _ before common after hbound hsub hdefaultbound hdefaultsub _ _ =>
@@ -245,25 +237,10 @@ theorem Frame.branch_table {st} {profile : ValidationProfile} (f : Frame st) (da
         subst d
         obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup default hdefaultbound
         exact ⟨view, ts, hl, hts, by simpa [proj_uN_0, hlookup] using hdefaultsub⟩
-    have hsame : profile = .Wasm1 → ∃ us, ∀ d ∈ depths ++ [default], ∃ view,
-        labelAt st d.val = some view ∧ resolve env view = some us := by
-      intro hp
-      have hst := Wasm1.Instruction.br_table_iff.mp (hprofile hp)
-      obtain ⟨dview, us, hdl, hdts, hdlookup⟩ := hlabels.lookup default hdefaultbound
-      refine ⟨us, fun d hd => ?_⟩
-      rcases List.mem_append.mp hd with hd | hd
-      · have hm : uN.mk_uN d.val ∈ depths.map (fun d => uN.mk_uN d.val) := List.mem_map.mpr ⟨d, hd, rfl⟩
-        obtain ⟨view, ts, hl, hts, hlookup⟩ := hlabels.lookup d (hbound _ hm)
-        have he := hst _ hm
-        simp only [proj_uN_0, hlookup, hdlookup, list.mk_list.injEq] at he
-        exact ⟨view, hl, by rw [hts, List.map_injective_iff.mpr Translate.valueType_injective he]⟩
-      · have he : d = default := by simpa using hd
-        subst d
-        exact ⟨dview, hdl, hdts⟩
     obtain ⟨s, hrun, hc, hblocks, hp, hv⟩ := code.branch_table.complete st data env profile
       f.core.parents f.core.current f.core.outer f.core.operands (front ++ before) common depths default next
       f.core.ctrls f.core.vals f.core.base
-      (hb.br_table_decoded depths default hcount hentries hdefault) htargets hsame
+      (hb.br_table_decoded depths default hcount hentries hdefault) htargets
       (by simpa [f.core.poly_eq, List.append_assoc] using hr)
     refine ⟨s, by simpa [step] using hrun, hp,
       ⟨⟨true, [], hc, by simpa using hv, Sequence.realizes_polymorphic_empty _⟩, hblocks⟩, ?_⟩
@@ -282,15 +259,14 @@ theorem control_leaf (data : Slice U8) (env : metadata.Env) (profile : Validatio
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
     (hi : ControlImmediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
-    (hprofile : profile = .Wasm1 → Wasm1.Instruction C op) :
+    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
   cases hi with
   | br depth he => exact f.branch data env ctx index C hlabels depth _ next he hb front input output hr ht
   | brIf depth he => exact f.branch_if data env ctx index C hlabels henv depth _ next he hb front input output hr ht hcap
   | brTable depths default hc he hd =>
     exact f.branch_table data env ctx index C hlabels
-      depths default _ _ _ next hc he hd hb front input output hr ht hprofile
+      depths default _ _ _ next hc he hd hb front input output hr ht
   | return_ => exact f.return_ data env ctx index C hmatch hroot next hb front input output hr ht
   | call idx he => exact f.call data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
   | callIndirect idx he => exact f.call_indirect data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
@@ -307,8 +283,7 @@ theorem reference_leaf (data : Slice U8) (env : metadata.Env) (profile : Validat
     (hi : ReferencesBinary.Immediate opcode op bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
-    (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
-    (hwasm2 : profile ≠ .Wasm1) :
+    (hdecl : DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op) :
     LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
   cases hi with
   | refNull rt =>
@@ -351,7 +326,7 @@ theorem reference_leaf (data : Slice U8) (env : metadata.Env) (profile : Validat
       exact ⟨s, hs, hp, by simpa [Simd.outputTypes] using ho, by omega⟩
   | callIndirect idx table he hte =>
     exact f.call_indirect_indexed data env ctx index C hmatch henv idx table _ _ next he hte hb
-      (fun hp => absurd hp hwasm2) front input output hr ht hcap
+      front input output hr ht hcap
 
 private theorem reference_type_injective {a b : wasm_types.ElemType}
     (h : Translate.valueType (ModuleConstants.referenceValueType a) =
@@ -459,31 +434,26 @@ theorem plain_leaf (data : Slice U8) (env : metadata.Env) (profile : ValidationP
     (hcap : st.core.vals.val.length + 1000 < Usize.max)
     (hi : Wasm1.Immediate opcode (.plain op) bytes) (hb : Wasm1.BytesAt data st.core.pos bytes next)
     (hr : Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
-    (hprofile : profile = .Wasm1 → Wasm1.Instruction C op) :
+    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env profile ctx index opcode bytes next (front ++ output) := by
   rcases classify_plain hi with hscalar | hcontrol
   · exact scalar_leaf data env profile ctx index C st f opcode op bytes next front input output
       hmatch hcap hscalar hi hb hr ht
   · exact control_leaf data env profile ctx index henv hroot C st f opcode op bytes next front
-      input output hmatch hlabels hcap hcontrol hb hr ht hprofile
+      input output hmatch hlabels hcap hcontrol hb hr ht
 
 theorem leaf_contract (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
     (ctx : code.Context) (index : U32) (henv : Profile.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val) :
     LeafContract data env profile ctx index := by
-  intro C st f opcode op bytes next front input output hmatch hlabels hcap hi hb hr ht hdecl hw1
-  by_cases hp : profile = .Wasm1
-  · obtain ⟨hi1, hinstr⟩ := hw1 hp
-    exact plain_leaf data env profile ctx index henv hroot C st f opcode op bytes next front input
-      output hmatch hlabels hcap hi1 hb hr ht (fun _ => hinstr)
+  intro C st f opcode op bytes next front input output hmatch hlabels hcap hi hb hr ht hdecl
   cases hi with
   | plain hi =>
     exact plain_leaf data env profile ctx index henv hroot C st f opcode op bytes next front input
-      output hmatch hlabels hcap hi hb hr ht (fun h => absurd h hp)
+      output hmatch hlabels hcap hi hb hr ht
   | reference hi =>
     exact reference_leaf data env profile ctx index henv C st f opcode op bytes next front input
-      output hmatch hcap hi hb hr ht hdecl hp
+      output hmatch hcap hi hb hr ht hdecl
   | signExtension opcode operation hmap =>
     obtain ⟨s, hs, hp, ho, hl⟩ := f.sign_extension data env ctx index opcode operation next C
       front input output hmap hb (by omega) ht hr

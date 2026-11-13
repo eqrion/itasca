@@ -41,7 +41,6 @@ theorem stream.CodeBatch.validate_func.complete {profile : ValidationProfile} {V
     (hindex : index.val = batch.first_func.val + batch.num_validated.val)
     (hi : index.val < batch.env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed batch.env batch.env.func_type_indices.val[index.val] entry profile)
-    (henv : Profile.Environment profile batch.env)
     (hlimits : Profile.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) batch.code batch.validated_end entry finish)
     (hprofile : batch.profile = profile) :
@@ -49,7 +48,7 @@ theorem stream.CodeBatch.validate_func.complete {profile : ValidationProfile} {V
       stream.CodeBatch.validate_func visitor batch index v = .ok (.Ok (),
         { batch with num_validated := count, validated_end := finish }, v') :=
   stream.CodeBatch.validate_func.complete_at visitor haccept batch index entry finish v herror
-    hcount hindex hi htyped henv hlimits hbound hbytes hprofile
+    hcount hindex hi htyped hlimits hbound hbytes hprofile
 
 /-- Running `stream.CodeBatch.validate_all` terminates in a reachable state, including on invalid
 bytes and stored errors. -/
@@ -80,13 +79,12 @@ theorem stream.CodeBatch.validate_all.complete {profile : ValidationProfile}
     (hcount : batch.num_validated.val + entries.length = batch.num_funcs.val)
     (htyped : ModuleCode.EntriesTyped (profile := profile) batch.env
       (batch.first_func.val + batch.num_validated.val) entries)
-    (henv : Profile.Environment profile batch.env)
     (hlimits : Profile.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) batch.code batch.validated_end entries finish)
     (hprofile : batch.profile = profile) :
     stream.CodeBatch.validate_all batch = .ok
       { batch with num_validated := batch.num_funcs, validated_end := finish, error := none } :=
-  stream.CodeBatch.validate_all.complete_at batch entries finish herror hcount htyped henv hlimits
+  stream.CodeBatch.validate_all.complete_at batch entries finish herror hcount htyped hlimits
     hbound hbytes hprofile
 
 /-- A bounded issued batch whose contents are independently valid runs from its seed to a
@@ -96,13 +94,12 @@ theorem stream.CodeBatch.validate_all.complete_seed {profile : ValidationProfile
     (entries : List Code) (hissued : issued.Bounded)
     (hcount : entries.length = issued.num_funcs.val)
     (htyped : ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries)
-    (henv : Profile.Environment profile issued.env)
     (hlimits : Profile.EnvironmentWithinLimits issued.env) (hbound : CodeEntry.Bounds issued.env)
     (hbytes : Rep (Profile.CodeEncodingWithinLimits profile) entries issued.code.val)
     (hprofile : issued.profile = profile) :
     ∃ after, stream.CodeBatch.validate_all issued.seed = .ok after ∧
       StreamBatch.Reachable issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) :=
-  stream.CodeBatch.validate_all.complete_at_seed issued entries hissued hcount htyped henv hlimits
+  stream.CodeBatch.validate_all.complete_at_seed issued entries hissued hcount htyped hlimits
     hbound hbytes hprofile
 
 /-- Finishing a reachable batch implies validation of every entry, in order, and consumption of
@@ -110,12 +107,11 @@ exactly its issued bytes. No premise prevalidates workers. -/
 theorem stream.CodeBatch.finish.sound {profile : ValidationProfile} {issued : StreamBatch.Issued}
     {batch : stream.CodeBatch}
     (h : StreamBatch.Reachable issued batch) (hbound : CodeEntry.Bounds issued.env)
-    (hresults : ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
     (hprofile : issued.profile = profile)
     (hfinish : stream.CodeBatch.finish batch = .ok (.Ok ())) :
     ∃ entries, entries.length = issued.num_funcs.val ∧
       ModuleBinary.Rep (Profile.CodeEncoding profile) entries issued.code.val ∧
       ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries :=
-  StreamBatch.Reachable.finished h hbound hresults hprofile hfinish
+  StreamBatch.Reachable.finished h hbound hprofile hfinish
 
 end Itasca

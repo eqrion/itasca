@@ -68,8 +68,6 @@ theorem layout_valid : Layout.Valid 9 declarations layout .Wasm2 := by
   · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
-  · simp [ModuleTypesAllowed, ValueTypeAllowed, declarations, Declarations.module,
-      functionType, imported, exported]
 
 private theorem functions_context {last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
     env.func_types.val.map EnvTranslation.funcType =
@@ -88,13 +86,9 @@ theorem requirements : Requirements raw .Wasm2 := by
       have he : e = imported := by simpa [raw, declarations, Declarations.module] using he
       subst e
       simp [imported, hr.types_eq (by decide), raw, declarations, Declarations.module]
-    · simp [hr.empty_tables (by decide), ModuleSections.rawTables, raw, declarations, Declarations.module, imported]
     · simp [hr.empty_memories (by decide), ModuleSections.rawMemories, raw, declarations, Declarations.module, imported]
   · simp [SectionValid, hr.types_eq (by decide), raw, declarations, Declarations.module]
-  · constructor
-    · simp [raw, declarations, Declarations.module]
-    · rw [hr.tables_count (by decide) (by decide)]
-      simp [raw, declarations, Declarations.module, imported, ModuleElaboration.importType, ModuleTranslation.tables]
+  · simp [SectionValid, raw, declarations, Declarations.module]
   · constructor
     · simp [raw, declarations, Declarations.module]
     · rw [hr.memories_count (by decide) (by decide)]
@@ -138,7 +132,7 @@ theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.Profile.CodeE
 function. -/
 theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry .Wasm2 := by
   have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
-  refine ⟨by simp [htypes], ?_, ?_, ?_, ?_⟩
+  refine ⟨by simp [htypes], ?_, ?_⟩
   · let C := CodeEntry.bodyContext env [] entry.declared []
     have hf : C.FUNCS = [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] :=
       functions_context hr (by decide)
@@ -151,8 +145,6 @@ theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed 
         (.instr_case_10 _ (EnvTranslation.index_wf 0#u32))
     simpa [htypes, functionType, entry, CodeEntry.instructionType, C] using
       Instrs_ok.instr C _ _ _ hi hw (.instr_case_10 _ (EnvTranslation.index_wf 0#u32))
-  · trivial
-  · simp [entry, ModuleBinary.ValueTypeAllowed]
   · simp [entry, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices,
       DeclaredReferences.instructionIndices]
 

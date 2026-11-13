@@ -8,9 +8,8 @@ import Itasca.Module.Readers.SegmentIndex
 
 Soundness of `metadata.decode_data_segment`, `metadata.decode_data_section_loop` and
 `metadata.decode_data_section`. Accepted segments are spans of the independent grammar
-(`DataEncodingFor` for the profile, `DataEncoding` for Wasm 1.0) and satisfy `ModuleData.Valid`,
-which covers the memory index and the offset initializer of active segments. Passive segments
-need Wasm 2.0. Completeness is in `Module/Sections/DataComplete`.
+(`DataEncodingFor` for the profile) and satisfy `ModuleData.Valid`,
+which covers the memory index and the offset initializer of active segments. Completeness is in `Module/Sections/DataComplete`.
 -/
 
 open Aeneas Aeneas.Std
@@ -83,54 +82,6 @@ theorem metadata.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize
     rcases pair with ⟨flags, first⟩
     change Leb128.Decoded data pos flags first at hm
     cases profile with
-    | Wasm1 =>
-      obtain ⟨r, hseg, hindex⟩ := WP.spec_imp_exists
-        (metadata.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm1 hm.span.2.2)
-      cases r with
-      | Err e => simp [metadata.decode_segment_index] at hseg
-      | Ok triple =>
-          obtain ⟨memory, p1, explicit⟩ := triple
-          simp only [metadata.decode_segment_index, Result.ok.injEq, core.result.Result.Ok.injEq,
-            Prod.mk.injEq] at hseg
-          rcases hseg with ⟨rfl, rfl, rfl⟩
-          simp [metadata.decode_data_segment, metadata.decode_segment_index, hr,
-            core.result.Result.Insts.CoreOpsTry.branch]
-          step
-          split
-          · simp
-          · have hmem : flags.val < env.mem_types.val.length := by scalar_tac
-            obtain ⟨r, hr, ho⟩ := WP.spec_imp_exists (metadata.decode_const_expr.spec data first env .I32 ValidationProfile.Wasm1)
-            cases r with
-            | Err e =>
-              simp [hr, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok pair =>
-              rcases pair with ⟨offset, p2⟩
-              change ModuleBinary.At ModuleBinary.ConstEncoding data first offset p2 ∧
-                ModuleConstants.Valid env offset .I32 at ho
-              obtain ⟨r, hlen, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data p2)
-              cases r with
-              | Err e =>
-                simp [hr, hlen, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-                  error.Error.Insts.CoreConvertFromOpError.from]
-              | Ok pair =>
-                rcases pair with ⟨count, p3⟩
-                change Leb128.Decoded data p2 count p3 at hc
-                simp [hr, hlen]
-                step
-                have hp3 : p3.val ≤ data.length := hc.span.2.2
-                obtain ⟨r, hh, havail⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data p3 n hp3)
-                cases r with
-                | Err e =>
-                  simp [hh, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                | Ok u =>
-                  cases u
-                  simp only [hh, bind_ok]
-                  have havail' : p3.val + n.val ≤ data.length := havail.1.mp rfl
-                  step
-                  step
-                  refine ⟨ModuleData.profile_encoded hm hindex ho.1 hc init_post ?_, hmem, ho.2⟩
-                  have hl := init_post.length
-                  scalar_tac
     | Wasm2 =>
       by_cases hpass : flags = 1#u32
       · subst flags
@@ -161,11 +112,13 @@ theorem metadata.decode_data_segment.profile_spec (data : Slice U8) (pos : Usize
           (metadata.decode_segment_index.profile_spec data first flags ValidationProfile.Wasm2 hm.span.2.2)
         cases r with
         | Err e =>
-            simp [metadata.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch,
+            simp [metadata.decode_data_segment, hr, hseg, core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+            split <;> first | contradiction | simp
         | Ok triple =>
             obtain ⟨memory, p1, explicit⟩ := triple
-            simp [metadata.decode_data_segment, hr, hpass, hseg, core.result.Result.Insts.CoreOpsTry.branch]
+            simp [metadata.decode_data_segment, hr, hseg, core.result.Result.Insts.CoreOpsTry.branch]
+            split <;> try contradiction
             step
             split
             · simp

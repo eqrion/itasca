@@ -7,7 +7,7 @@ import Itasca.Module.Elab.TypingInversion
 
 The converse of `CodeEntry.typed_func_ok`. `function_body` inverts the generated `Func_ok`, and
 `Typed.of_func_ok` builds a `Typed` certificate for a code entry from `Func_ok` in a module
-context, using the profile's function restrictions and declared references. A body that uses no
+context, using declared references. A body that uses no
 data index may have a data space unrelated to the environment's.
 -/
 
@@ -36,9 +36,7 @@ theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32
     (hc : ModuleContext env C)
     (he : C.ELEMS = EnvTranslation.elementTypes env)
     (hd : C.DATAS = EnvTranslation.dataTypes env ∨ ModuleBinary.instructionsUseData entry.body = false)
-    (hp : ModuleElaboration.FunctionProfile env.types.val idx entry profile)
     (hf : Func_ok C (function idx entry) ft)
-    (hallowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2)
     (hdeclared : DeclaredReferences.Instructions
       (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) : Typed env idx entry profile := by
   have hi : idx.val < env.types.val.length := by
@@ -73,7 +71,7 @@ theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32
     · rfl
   cases hb with
   | mk_Expr_ok ts hbody hw hws =>
-    refine ⟨hi, ?_, hp.choose_spec.congr_labels _ rfl, hallowed, hdeclared⟩
+    refine ⟨hi, ?_, hdeclared⟩
     rcases hd with hd | hno
     · apply BodyContext.instrs_transport_extend hbody _ _ hcore
       · change C.ELEMS.IsPrefix (EnvTranslation.elementTypes env)

@@ -44,7 +44,6 @@ private theorem bad_locals : metadata.decode_locals badBytes 1#usize .Wasm2 =
   obtain ⟨locals, hl, hv⟩ := metadata.decode_locals.complete badBytes 1#usize .Wasm2 [] 2#usize
     ⟨[0#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, by
       constructor <;> simp [badBytes, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref]⟩
-    (by simp)
     (by simp [ModuleLocals.declared, limits.MAX_LOCALS])
   have he : locals = alloc.vec.Vec.new _ := alloc.vec.Vec.ext _ _ (by simpa [ModuleLocals.declared] using hv)
   simpa [he] using hl

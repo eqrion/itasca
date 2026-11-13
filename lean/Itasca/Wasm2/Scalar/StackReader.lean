@@ -30,7 +30,7 @@ theorem Pending.read_drop {data env profile locals index st}
       (by simpa [position] using p.pos) .drop
   refine p.append_reader out .DROP p.current.ctrl.polymorphic_base values .instr_case_2 (.plain encoded)
     (fun C wf prior => effect.wasm2_prefix_drop C wf p.current.ops prior) ?_ ?_ (encoded.declared _)
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base] using stack
 
@@ -57,7 +57,7 @@ theorem Pending.read_select {data env profile locals index st}
       (by simpa [position] using p.pos) .select
   refine p.append_reader out (.SELECT none) p.current.ctrl.polymorphic_base values (.instr_case_3 _) (.plain encoded)
     (fun C wf prior => effect.wasm2_prefix C wf p.current.ops prior) ?_ ?_ (encoded.declared _)
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; simp [global_simps]) C⟩)
+
   · simpa [controls] using ctrls
   · simpa [vals, base] using stack
 

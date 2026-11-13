@@ -11,10 +11,7 @@ use crate::code::{
     OP_GLOBAL_GET, OP_I32_CONST, OP_I64_CONST,
 };
 use crate::error::{Error, OpError};
-use crate::limits::{
-    validate_limits, MAX_LOCALS, MAX_MEMORIES, MAX_MEMORY_PAGES, MAX_RESULTS, MAX_TABLES,
-    MAX_TABLE_ELEMS,
-};
+use crate::limits::{validate_limits, MAX_LOCALS, MAX_MEMORIES, MAX_MEMORY_PAGES, MAX_TABLE_ELEMS};
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
@@ -298,9 +295,9 @@ impl Module {
 /// Validates a complete module under the selected profile and returns its
 /// metadata.
 ///
-/// Accepts arbitrary bytes with no caller preconditions. Both profiles have
-/// termination, soundness, and completeness guarantees within the implementation
-/// limits, assuming allocation succeeds. `ValidationProfile::Wasm2` enables
+/// Accepts arbitrary bytes with no caller preconditions. It has termination,
+/// soundness, and completeness guarantees within the implementation limits,
+/// assuming allocation succeeds. `ValidationProfile::Wasm2` enables
 /// the complete WebAssembly Core 2.0 instruction and module grammar.
 pub fn validate_module(data: &[u8], profile: ValidationProfile) -> Result<Module> {
     crate::stream::validate_module_slice(data, profile)
@@ -447,15 +444,12 @@ pub(crate) fn decode_value_type(
         0x7d => Ok((ValueType::F32, p)),
         0x7c => Ok((ValueType::F64, p)),
         0x7b => match profile {
-            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
             ValidationProfile::Wasm2 => Ok((ValueType::V128, p)),
         },
         0x70 => match profile {
-            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
             ValidationProfile::Wasm2 => Ok((ValueType::FuncRef, p)),
         },
         0x6f => match profile {
-            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
             ValidationProfile::Wasm2 => Ok((ValueType::ExternRef, p)),
         },
         _ => Err(Error::InvalidType(b)),
@@ -487,8 +481,7 @@ fn decode_value_types(
     }
 }
 
-/// Decodes a function type within the multi-value limits; Wasm 1.0 also allows
-/// at most one result.
+/// Decodes a function type within the multi-value limits.
 fn decode_func_type(
     data: &[u8],
     pos: usize,
@@ -513,11 +506,6 @@ fn decode_func_type(
         profile,
     )?;
     match profile {
-        ValidationProfile::Wasm1 => {
-            if results.len() > MAX_RESULTS {
-                return Err(Error::TooManyResults);
-            }
-        }
         ValidationProfile::Wasm2 => {}
     }
     Ok((FuncType { params, results }, p2))
@@ -556,7 +544,6 @@ fn decode_elem_type(
     match b {
         0x70 => Ok((ElemType::FuncRef, p)),
         0x6f => match profile {
-            ValidationProfile::Wasm1 => Err(Error::InvalidType(b)),
             ValidationProfile::Wasm2 => Ok((ElemType::ExternRef, p)),
         },
         _ => Err(Error::InvalidType(b)),
@@ -581,14 +568,9 @@ fn decode_table_type(
     ))
 }
 
-/// Enforces the original profile's combined imported and defined table bound.
+/// Checks the combined imported and defined table count for the selected profile.
 fn check_table_count(env: &Env, profile: ValidationProfile) -> Result<()> {
     match profile {
-        ValidationProfile::Wasm1 => {
-            if env.table_types.len() > MAX_TABLES {
-                return Err(Error::MultipleTables);
-            }
-        }
         ValidationProfile::Wasm2 => {}
     }
     Ok(())
@@ -798,7 +780,6 @@ pub(crate) fn decode_const_expr(
         }
         0xd0 => {
             match profile {
-                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
                 ValidationProfile::Wasm2 => {}
             }
             let (ty, p1) = decode_elem_type(data, p, profile)?;
@@ -808,7 +789,6 @@ pub(crate) fn decode_const_expr(
         }
         0xd2 => {
             match profile {
-                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
                 ValidationProfile::Wasm2 => {}
             }
             let (idx, p1) = read_u32_leb(data, p)?;
@@ -821,7 +801,6 @@ pub(crate) fn decode_const_expr(
         }
         0xfd => {
             match profile {
-                ValidationProfile::Wasm1 => return Err(Error::InvalidConstExpr),
                 ValidationProfile::Wasm2 => {}
             }
             let (sub, p1) = read_u32_leb(data, p)?;
@@ -1168,7 +1147,7 @@ pub(crate) fn decode_func_indices(data: &[u8], pos: usize, env: &Env) -> Result<
     }
 }
 
-/// Decodes a Wasm 1.0 segment index or Wasm 2.0 active-segment flags.
+/// Decodes the selected profile's segment index or active-segment flags.
 fn decode_segment_index(
     data: &[u8],
     pos: usize,
@@ -1176,7 +1155,6 @@ fn decode_segment_index(
     profile: ValidationProfile,
 ) -> Result<(u32, usize, bool)> {
     match profile {
-        ValidationProfile::Wasm1 => Ok((index_or_flags, pos, false)),
         ValidationProfile::Wasm2 => match index_or_flags {
             0 => Ok((0, pos, false)),
             2 => {
@@ -1203,21 +1181,6 @@ fn decode_element_header(
 ) -> Result<(ElementMode, ElemType, bool, usize)> {
     let (tag, mut q) = read_u32_leb(data, pos)?;
     let (mode, elem, expressions) = match profile {
-        ValidationProfile::Wasm1 => {
-            if tag as usize >= env.table_types.len() {
-                return Err(Error::UnknownTable(tag));
-            }
-            let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
-            q = next;
-            (
-                ElementMode::Active {
-                    table_idx: tag,
-                    offset,
-                },
-                ElemType::FuncRef,
-                false,
-            )
-        }
         ValidationProfile::Wasm2 => {
             if tag > 7 {
                 return Err(Error::InvalidType(0xff));
@@ -1355,7 +1318,6 @@ fn decode_data_count(
     profile: ValidationProfile,
 ) -> Result<usize> {
     match profile {
-        ValidationProfile::Wasm1 => Err(Error::UnknownSection(SECTION_DATA_COUNT)),
         ValidationProfile::Wasm2 => {
             let (count, next) = read_u32_leb(data, pos)?;
             env.data_count = Some(count);
@@ -1573,17 +1535,19 @@ fn decode_data_segment(
 ) -> Result<(Data, usize)> {
     let (tag, mut q) = read_u32_leb(data, pos)?;
     let mode = match profile {
-        ValidationProfile::Wasm2 if tag == 1 => DataMode::Passive,
-        _ => {
-            let (memory_idx, next, _) = decode_segment_index(data, q, tag, profile)?;
-            q = next;
-            if memory_idx as usize >= env.mem_types.len() {
-                return Err(Error::UnknownMemory(memory_idx));
+        ValidationProfile::Wasm2 => match tag {
+            1 => DataMode::Passive,
+            _ => {
+                let (memory_idx, next, _) = decode_segment_index(data, q, tag, profile)?;
+                q = next;
+                if memory_idx as usize >= env.mem_types.len() {
+                    return Err(Error::UnknownMemory(memory_idx));
+                }
+                let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
+                q = next;
+                DataMode::Active { memory_idx, offset }
             }
-            let (offset, next) = decode_const_expr(data, q, env, ValueType::I32, profile)?;
-            q = next;
-            DataMode::Active { memory_idx, offset }
-        }
+        },
     };
     let (len, p) = read_u32_leb(data, q)?;
     let n = len as usize;

@@ -5307,37 +5307,7 @@ def code.check_opcode
   (profile : ValidationProfile) (op : Std.U8) :
   Result (core.result.Result Unit error.OpError)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    match op with
-    | 28#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 37#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 38#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 192#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 193#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 194#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 195#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 196#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 208#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 209#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 210#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 252#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | 253#uscalar =>
-      ok (core.result.Result.Err error.OpError.UnrecognizedOpcode)
-    | _ => ok (core.result.Result.Ok ())
-  | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
+  ok (core.result.Result.Ok ())
 
 /-- [itasca::code::check_block_type]:
     Source: 'src/code.rs' -/
@@ -5345,25 +5315,7 @@ def code.check_block_type
   (profile : ValidationProfile) (bt : signature.BlockType) :
   Result (core.result.Result Unit error.OpError)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    match bt with
-    | signature.BlockType.Empty => ok (core.result.Result.Ok ())
-    | signature.BlockType.Value t =>
-      match t with
-      | wasm_types.ValueType.I32 => ok (core.result.Result.Ok ())
-      | wasm_types.ValueType.I64 => ok (core.result.Result.Ok ())
-      | wasm_types.ValueType.F32 => ok (core.result.Result.Ok ())
-      | wasm_types.ValueType.F64 => ok (core.result.Result.Ok ())
-      | wasm_types.ValueType.V128 =>
-        ok (core.result.Result.Err error.OpError.InvalidBlockType)
-      | wasm_types.ValueType.FuncRef =>
-        ok (core.result.Result.Err error.OpError.InvalidBlockType)
-      | wasm_types.ValueType.ExternRef =>
-        ok (core.result.Result.Err error.OpError.InvalidBlockType)
-    | signature.BlockType.TypeIndex _ =>
-      ok (core.result.Result.Err error.OpError.InvalidBlockType)
-  | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
+  ok (core.result.Result.Ok ())
 
 /-- [itasca::code::check_table_byte]:
     Source: 'src/code.rs' -/
@@ -5371,20 +5323,159 @@ def code.check_table_byte
   (profile : ValidationProfile) (data : Slice Std.U8) (pos : Std.Usize) :
   Result (core.result.Result Unit error.OpError)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    let r ← reader.read_byte data pos
+  ok (core.result.Result.Ok ())
+
+/-- [itasca::code::check_table_target]:
+    Source: 'src/code.rs' -/
+def code.check_table_target
+  (profile : ValidationProfile) (env : metadata.Env)
+  (first : signature.ResultType) (ts : signature.ResultType) :
+  Result (core.result.Result Unit error.OpError)
+  := do
+  ok (core.result.Result.Ok ())
+
+/-- [itasca::limits::MAX_MULTI_VALUE_RESULTS]
+    Source: 'src/limits.rs'
+    Visibility: public -/
+@[global_simps, irreducible]
+def limits.MAX_MULTI_VALUE_RESULTS : Std.Usize := 1000#usize
+
+/-- [itasca::limits::MAX_MULTI_VALUE_PARAMS]
+    Source: 'src/limits.rs'
+    Visibility: public -/
+@[global_simps, irreducible]
+def limits.MAX_MULTI_VALUE_PARAMS : Std.Usize := 1000#usize
+
+/-- [itasca::code::check_func_type]:
+    Source: 'src/code.rs' -/
+def code.check_func_type
+  (ft : wasm_types.FuncType) :
+  Result (core.result.Result Unit error.OpError)
+  := do
+  let i := alloc.vec.Vec.len ft.params
+  if i > limits.MAX_MULTI_VALUE_PARAMS
+  then ok (core.result.Result.Err error.OpError.TooManyParams)
+  else
+    let i1 := alloc.vec.Vec.len ft.results
+    if i1 > limits.MAX_MULTI_VALUE_RESULTS
+    then ok (core.result.Result.Err error.OpError.TooManyResults)
+    else ok (core.result.Result.Ok ())
+
+/-- [itasca::code::pop_results]:
+    Source: 'src/code.rs' -/
+def code.pop_results
+  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
+  Result ((core.result.Result Unit error.OpError) × code.OpIterState)
+  := do
+  match ts with
+  | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
+  | signature.ResultType.One t =>
+    let (r, st1) ← code.pop_with_type st t
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (b, _) := val
-      if b != 0#u8
-      then ok (core.result.Result.Err error.OpError.ReservedByteNotZero)
-      else ok (core.result.Result.Ok ())
+    | core.ops.control_flow.ControlFlow.Continue _ =>
+      ok (core.result.Result.Ok (), st1)
     | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame error.OpError) residual
+      ok (r1, st1)
+  | signature.ResultType.Type index part =>
+    let i ← lift (UScalar.cast .Usize index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType, st)
+    else
+      match part with
+      | signature.TypePart.Params =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.FuncType) env.types i
+        let s := alloc.vec.Vec.deref ft.params
+        code.pop_types st s
+      | signature.TypePart.Results =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.FuncType) env.types i
+        let s := alloc.vec.Vec.deref ft.results
+        code.pop_types st s
+
+/-- [itasca::signature::{itasca::signature::ResultType}::len]:
+    Source: 'src/signature.rs'
+    Visibility: public -/
+def signature.ResultType.len
+  (self : signature.ResultType) (env : metadata.Env) :
+  Result (core.result.Result Std.Usize error.OpError)
+  := do
+  match self with
+  | signature.ResultType.Empty => ok (core.result.Result.Ok 0#usize)
+  | signature.ResultType.One _ => ok (core.result.Result.Ok 1#usize)
+  | signature.ResultType.Type index part =>
+    let i ← lift (UScalar.cast .Usize index)
+    let i1 := alloc.vec.Vec.len env.types
+    if i >= i1
+    then ok (core.result.Result.Err error.OpError.UnknownType)
+    else
+      match part with
+      | signature.TypePart.Params =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.params
+        ok (core.result.Result.Ok i2)
+      | signature.TypePart.Results =>
+        let ft ←
+          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+            wasm_types.FuncType) env.types i
+        let i2 := alloc.vec.Vec.len ft.results
+        ok (core.result.Result.Ok i2)
+
+/-- [itasca::code::push_results]:
+    Source: 'src/code.rs' -/
+def code.push_results
+  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
+  Result ((core.result.Result Unit error.OpError) × code.OpIterState)
+  := do
+  let r ← signature.ResultType.len ts env
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let i := alloc.vec.Vec.len st.vals
+    let i1 ← core.num.Usize.MAX - i
+    if val > i1
+    then ok (core.result.Result.Err error.OpError.StackTooLarge, st)
+    else
+      match ts with
+      | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
+      | signature.ResultType.One t =>
+        let v ← alloc.vec.Vec.push st.vals (code.StackType.Val t)
+        ok (core.result.Result.Ok (), { st with vals := v })
+      | signature.ResultType.Type index part =>
+        let i2 ← lift (UScalar.cast .Usize index)
+        let i3 := alloc.vec.Vec.len env.types
+        if i2 >= i3
+        then ok (core.result.Result.Err error.OpError.UnknownType, st)
+        else
+          match part with
+          | signature.TypePart.Params =>
+            let ft ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                wasm_types.FuncType) env.types i2
+            let s := alloc.vec.Vec.deref ft.params
+            let st1 ← code.push_types st s
+            ok (core.result.Result.Ok (), st1)
+          | signature.TypePart.Results =>
+            let ft ←
+              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                wasm_types.FuncType) env.types i2
+            let s := alloc.vec.Vec.deref ft.results
+            let st1 ← code.push_types st s
+            ok (core.result.Result.Ok (), st1)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
         Unit (core.convert.FromSame error.OpError) residual
-  | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
+    ok (r1, st)
 
 /-- [itasca::signature::{itasca::signature::ResultType}::get]:
     Source: 'src/signature.rs'
@@ -5430,36 +5521,6 @@ def signature.ResultType.get
             alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
               wasm_types.ValueType) ft.results element
           ok (core.result.Result.Ok (some vt))
-
-/-- [itasca::signature::{itasca::signature::ResultType}::len]:
-    Source: 'src/signature.rs'
-    Visibility: public -/
-def signature.ResultType.len
-  (self : signature.ResultType) (env : metadata.Env) :
-  Result (core.result.Result Std.Usize error.OpError)
-  := do
-  match self with
-  | signature.ResultType.Empty => ok (core.result.Result.Ok 0#usize)
-  | signature.ResultType.One _ => ok (core.result.Result.Ok 1#usize)
-  | signature.ResultType.Type index part =>
-    let i ← lift (UScalar.cast .Usize index)
-    let i1 := alloc.vec.Vec.len env.types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownType)
-    else
-      match part with
-      | signature.TypePart.Params =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.params
-        ok (core.result.Result.Ok i2)
-      | signature.TypePart.Results =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) env.types i
-        let i2 := alloc.vec.Vec.len ft.results
-        ok (core.result.Result.Ok i2)
 
 /-- [itasca::code::same_types]: loop body 0:
     Source: 'src/code.rs' -/
@@ -5540,140 +5601,6 @@ def code.same_types
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       Bool (core.convert.FromSame error.OpError) residual
-
-/-- [itasca::code::check_table_target]:
-    Source: 'src/code.rs' -/
-def code.check_table_target
-  (profile : ValidationProfile) (env : metadata.Env)
-  (first : signature.ResultType) (ts : signature.ResultType) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    let r ← code.same_types env first ts
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      if val
-      then ok (core.result.Result.Ok ())
-      else ok (core.result.Result.Err error.OpError.TypeMismatch)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame error.OpError) residual
-  | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
-
-/-- [itasca::limits::MAX_MULTI_VALUE_RESULTS]
-    Source: 'src/limits.rs'
-    Visibility: public -/
-@[global_simps, irreducible]
-def limits.MAX_MULTI_VALUE_RESULTS : Std.Usize := 1000#usize
-
-/-- [itasca::limits::MAX_MULTI_VALUE_PARAMS]
-    Source: 'src/limits.rs'
-    Visibility: public -/
-@[global_simps, irreducible]
-def limits.MAX_MULTI_VALUE_PARAMS : Std.Usize := 1000#usize
-
-/-- [itasca::code::check_func_type]:
-    Source: 'src/code.rs' -/
-def code.check_func_type
-  (ft : wasm_types.FuncType) :
-  Result (core.result.Result Unit error.OpError)
-  := do
-  let i := alloc.vec.Vec.len ft.params
-  if i > limits.MAX_MULTI_VALUE_PARAMS
-  then ok (core.result.Result.Err error.OpError.TooManyParams)
-  else
-    let i1 := alloc.vec.Vec.len ft.results
-    if i1 > limits.MAX_MULTI_VALUE_RESULTS
-    then ok (core.result.Result.Err error.OpError.TooManyResults)
-    else ok (core.result.Result.Ok ())
-
-/-- [itasca::code::pop_results]:
-    Source: 'src/code.rs' -/
-def code.pop_results
-  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
-  Result ((core.result.Result Unit error.OpError) × code.OpIterState)
-  := do
-  match ts with
-  | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
-  | signature.ResultType.One t =>
-    let (r, st1) ← code.pop_with_type st t
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      ok (core.result.Result.Ok (), st1)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame error.OpError) residual
-      ok (r1, st1)
-  | signature.ResultType.Type index part =>
-    let i ← lift (UScalar.cast .Usize index)
-    let i1 := alloc.vec.Vec.len env.types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownType, st)
-    else
-      match part with
-      | signature.TypePart.Params =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) env.types i
-        let s := alloc.vec.Vec.deref ft.params
-        code.pop_types st s
-      | signature.TypePart.Results =>
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) env.types i
-        let s := alloc.vec.Vec.deref ft.results
-        code.pop_types st s
-
-/-- [itasca::code::push_results]:
-    Source: 'src/code.rs' -/
-def code.push_results
-  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
-  Result ((core.result.Result Unit error.OpError) × code.OpIterState)
-  := do
-  let r ← signature.ResultType.len ts env
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let i := alloc.vec.Vec.len st.vals
-    let i1 ← core.num.Usize.MAX - i
-    if val > i1
-    then ok (core.result.Result.Err error.OpError.StackTooLarge, st)
-    else
-      match ts with
-      | signature.ResultType.Empty => ok (core.result.Result.Ok (), st)
-      | signature.ResultType.One t =>
-        let v ← alloc.vec.Vec.push st.vals (code.StackType.Val t)
-        ok (core.result.Result.Ok (), { st with vals := v })
-      | signature.ResultType.Type index part =>
-        let i2 ← lift (UScalar.cast .Usize index)
-        let i3 := alloc.vec.Vec.len env.types
-        if i2 >= i3
-        then ok (core.result.Result.Err error.OpError.UnknownType, st)
-        else
-          match part with
-          | signature.TypePart.Params =>
-            let ft ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                wasm_types.FuncType) env.types i2
-            let s := alloc.vec.Vec.deref ft.params
-            let st1 ← code.push_types st s
-            ok (core.result.Result.Ok (), st1)
-          | signature.TypePart.Results =>
-            let ft ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                wasm_types.FuncType) env.types i2
-            let s := alloc.vec.Vec.deref ft.results
-            let st1 ← code.push_types st s
-            ok (core.result.Result.Ok (), st1)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame error.OpError) residual
-    ok (r1, st)
 
 /-- [itasca::code::push_frame]:
     Source: 'src/code.rs' -/
@@ -10652,24 +10579,11 @@ def metadata.decode_value_type
     | 126#uscalar => ok (core.result.Result.Ok (wasm_types.ValueType.I64, p))
     | 125#uscalar => ok (core.result.Result.Ok (wasm_types.ValueType.F32, p))
     | 124#uscalar => ok (core.result.Result.Ok (wasm_types.ValueType.F64, p))
-    | 123#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err (error.Error.InvalidType b))
-      | ValidationProfile.Wasm2 =>
-        ok (core.result.Result.Ok (wasm_types.ValueType.V128, p))
+    | 123#uscalar => ok (core.result.Result.Ok (wasm_types.ValueType.V128, p))
     | 112#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err (error.Error.InvalidType b))
-      | ValidationProfile.Wasm2 =>
-        ok (core.result.Result.Ok (wasm_types.ValueType.FuncRef, p))
+      ok (core.result.Result.Ok (wasm_types.ValueType.FuncRef, p))
     | 111#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err (error.Error.InvalidType b))
-      | ValidationProfile.Wasm2 =>
-        ok (core.result.Result.Ok (wasm_types.ValueType.ExternRef, p))
+      ok (core.result.Result.Ok (wasm_types.ValueType.ExternRef, p))
     | _ => ok (core.result.Result.Err (error.Error.InvalidType b))
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -11833,24 +11747,20 @@ def metadata.decode_segment_index
   (profile : ValidationProfile) :
   Result (core.result.Result (Std.U32 × Std.Usize × Bool) error.Error)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    ok (core.result.Result.Ok (index_or_flags, pos, false))
-  | ValidationProfile.Wasm2 =>
-    match index_or_flags with
-    | 0#uscalar => ok (core.result.Result.Ok (0#u32, pos, false))
-    | 2#uscalar =>
-      let r ← reader.read_u32_leb data pos
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let (index, next) := val
-        ok (core.result.Result.Ok (index, next, true))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          (Std.U32 × Std.Usize × Bool)
-          error.Error.Insts.CoreConvertFromOpError residual
-    | _ => ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
+  match index_or_flags with
+  | 0#uscalar => ok (core.result.Result.Ok (0#u32, pos, false))
+  | 2#uscalar =>
+    let r ← reader.read_u32_leb data pos
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (index, next) := val
+      ok (core.result.Result.Ok (index, next, true))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        (Std.U32 × Std.Usize × Bool) error.Error.Insts.CoreConvertFromOpError
+        residual
+  | _ => ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
 
 /-- [itasca::wasm_types::{impl core::cmp::PartialEq<itasca::wasm_types::Mut> for itasca::wasm_types::Mut}::eq]:
     Source: 'src/types.rs'
@@ -11948,11 +11858,7 @@ def metadata.decode_elem_type
     | 112#uscalar =>
       ok (core.result.Result.Ok (wasm_types.ElemType.FuncRef, p))
     | 111#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err (error.Error.InvalidType b))
-      | ValidationProfile.Wasm2 =>
-        ok (core.result.Result.Ok (wasm_types.ElemType.ExternRef, p))
+      ok (core.result.Result.Ok (wasm_types.ElemType.ExternRef, p))
     | _ => ok (core.result.Result.Err (error.Error.InvalidType b))
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -12117,17 +12023,46 @@ def metadata.decode_const_expr
           (wasm_types.ConstExpr × Std.Usize)
           error.Error.Insts.CoreConvertFromOpError residual
     | 208#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err error.Error.InvalidConstExpr)
-      | ValidationProfile.Wasm2 =>
-        let r1 ← metadata.decode_elem_type data p ValidationProfile.Wasm2
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (ty, p1) := val1
-          let vt ← wasm_types.ElemType.value_type ty
-          let r2 ← metadata.expect_const_type vt expected
+      let r1 ← metadata.decode_elem_type data p profile
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (ty, p1) := val1
+        let vt ← wasm_types.ElemType.value_type ty
+        let r2 ← metadata.expect_const_type vt expected
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let r3 ← metadata.read_expr_end data p1
+          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+          match cf3 with
+          | core.ops.control_flow.ControlFlow.Continue val2 =>
+            ok (core.result.Result.Ok (wasm_types.ConstExpr.RefNull ty, val2))
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
+              error.Error) residual
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
+            error.Error) residual
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
+          error.Error) residual
+    | 210#uscalar =>
+      let r1 ← reader.read_u32_leb data p
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (idx, p1) := val1
+        let i ← lift (UScalar.cast .Usize idx)
+        let i1 := alloc.vec.Vec.len env.func_types
+        if i >= i1
+        then ok (core.result.Result.Err (error.Error.UnknownFunc idx))
+        else
+          let r2 ←
+            metadata.expect_const_type wasm_types.ValueType.FuncRef expected
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue _ =>
@@ -12135,7 +12070,7 @@ def metadata.decode_const_expr
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue val2 =>
-              ok (core.result.Result.Ok (wasm_types.ConstExpr.RefNull ty,
+              ok (core.result.Result.Ok (wasm_types.ConstExpr.RefFunc idx,
                 val2))
             | core.ops.control_flow.ControlFlow.Break residual =>
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -12145,102 +12080,60 @@ def metadata.decode_const_expr
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
               (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
               error.Error) residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
-            error.Error) residual
-    | 210#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err error.Error.InvalidConstExpr)
-      | ValidationProfile.Wasm2 =>
-        let r1 ← reader.read_u32_leb data p
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (idx, p1) := val1
-          let i ← lift (UScalar.cast .Usize idx)
-          let i1 := alloc.vec.Vec.len env.func_types
-          if i >= i1
-          then ok (core.result.Result.Err (error.Error.UnknownFunc idx))
-          else
-            let r2 ←
-              metadata.expect_const_type wasm_types.ValueType.FuncRef expected
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue _ =>
-              let r3 ← metadata.read_expr_end data p1
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue val2 =>
-                ok (core.result.Result.Ok (wasm_types.ConstExpr.RefFunc idx,
-                  val2))
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
-                  error.Error) residual
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
-                error.Error) residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (wasm_types.ConstExpr × Std.Usize)
-            error.Error.Insts.CoreConvertFromOpError residual
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (wasm_types.ConstExpr × Std.Usize)
+          error.Error.Insts.CoreConvertFromOpError residual
     | 253#uscalar =>
-      match profile with
-      | ValidationProfile.Wasm1 =>
-        ok (core.result.Result.Err error.Error.InvalidConstExpr)
-      | ValidationProfile.Wasm2 =>
-        let r1 ← reader.read_u32_leb data p
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (sub, p1) := val1
-          if sub != 12#u32
-          then ok (core.result.Result.Err error.Error.InvalidConstExpr)
-          else
-            let r2 ← reader.read_f64_bits data p1
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue val2 =>
-              let (low, p2) := val2
-              let r3 ← reader.read_f64_bits data p2
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue val3 =>
-                let (high, p3) := val3
-                let r4 ←
-                  metadata.expect_const_type wasm_types.ValueType.V128 expected
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  let r5 ← metadata.read_expr_end data p3
-                  let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                  match cf5 with
-                  | core.ops.control_flow.ControlFlow.Continue val4 =>
-                    ok (core.result.Result.Ok (wasm_types.ConstExpr.V128 low
-                      high, val4))
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      (wasm_types.ConstExpr × Std.Usize)
-                      (core.convert.FromSame error.Error) residual
+      let r1 ← reader.read_u32_leb data p
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (sub, p1) := val1
+        if sub != 12#u32
+        then ok (core.result.Result.Err error.Error.InvalidConstExpr)
+        else
+          let r2 ← reader.read_f64_bits data p1
+          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+          match cf2 with
+          | core.ops.control_flow.ControlFlow.Continue val2 =>
+            let (low, p2) := val2
+            let r3 ← reader.read_f64_bits data p2
+            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+            match cf3 with
+            | core.ops.control_flow.ControlFlow.Continue val3 =>
+              let (high, p3) := val3
+              let r4 ←
+                metadata.expect_const_type wasm_types.ValueType.V128 expected
+              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+              match cf4 with
+              | core.ops.control_flow.ControlFlow.Continue _ =>
+                let r5 ← metadata.read_expr_end data p3
+                let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
+                match cf5 with
+                | core.ops.control_flow.ControlFlow.Continue val4 =>
+                  ok (core.result.Result.Ok (wasm_types.ConstExpr.V128 low
+                    high, val4))
                 | core.ops.control_flow.ControlFlow.Break residual =>
                   core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                     (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
                     error.Error) residual
               | core.ops.control_flow.ControlFlow.Break residual =>
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (wasm_types.ConstExpr × Std.Usize)
-                  error.Error.Insts.CoreConvertFromOpError residual
+                  (wasm_types.ConstExpr × Std.Usize) (core.convert.FromSame
+                  error.Error) residual
             | core.ops.control_flow.ControlFlow.Break residual =>
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                 (wasm_types.ConstExpr × Std.Usize)
                 error.Error.Insts.CoreConvertFromOpError residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (wasm_types.ConstExpr × Std.Usize)
-            error.Error.Insts.CoreConvertFromOpError residual
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (wasm_types.ConstExpr × Std.Usize)
+              error.Error.Insts.CoreConvertFromOpError residual
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (wasm_types.ConstExpr × Std.Usize)
+          error.Error.Insts.CoreConvertFromOpError residual
     | _ => ok (core.result.Result.Err error.Error.InvalidConstExpr)
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -12297,10 +12190,32 @@ def metadata.decode_data_segment
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tag, q) := val
-    match profile with
-    | ValidationProfile.Wasm1 =>
-      let r1 ←
-        metadata.decode_segment_index data q tag ValidationProfile.Wasm1
+    match tag with
+    | 1#uscalar =>
+      let r1 ← reader.read_u32_leb data q
+      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+      match cf1 with
+      | core.ops.control_flow.ControlFlow.Continue val1 =>
+        let (len, p) := val1
+        let n ← lift (UScalar.cast .Usize len)
+        let r2 ← metadata.have_bytes data p n
+        let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+        match cf2 with
+        | core.ops.control_flow.ControlFlow.Continue _ =>
+          let i ← p + n
+          let init ← metadata.copy_bytes data p i
+          ok (core.result.Result.Ok
+            ({ mode := metadata.DataMode.Passive, init }, i))
+        | core.ops.control_flow.ControlFlow.Break residual =>
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            (metadata.Data × Std.Usize) (core.convert.FromSame error.Error)
+            residual
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (metadata.Data × Std.Usize) error.Error.Insts.CoreConvertFromOpError
+          residual
+    | _ =>
+      let r1 ← metadata.decode_segment_index data q tag profile
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
       match cf1 with
       | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -12312,7 +12227,7 @@ def metadata.decode_data_segment
         else
           let r2 ←
             metadata.decode_const_expr data next env wasm_types.ValueType.I32
-              ValidationProfile.Wasm1
+              profile
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -12348,84 +12263,6 @@ def metadata.decode_data_segment
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           (metadata.Data × Std.Usize) (core.convert.FromSame error.Error)
           residual
-    | ValidationProfile.Wasm2 =>
-      if tag = 1#u32
-      then
-        let r1 ← reader.read_u32_leb data q
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (len, p) := val1
-          let n ← lift (UScalar.cast .Usize len)
-          let r2 ← metadata.have_bytes data p n
-          let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-          match cf2 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            let i ← p + n
-            let init ← metadata.copy_bytes data p i
-            ok (core.result.Result.Ok
-              ({ mode := metadata.DataMode.Passive, init }, i))
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (metadata.Data × Std.Usize) (core.convert.FromSame error.Error)
-              residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (metadata.Data × Std.Usize)
-            error.Error.Insts.CoreConvertFromOpError residual
-      else
-        let r1 ←
-          metadata.decode_segment_index data q tag ValidationProfile.Wasm2
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (memory_idx, next, _) := val1
-          let i ← lift (UScalar.cast .Usize memory_idx)
-          let i1 := alloc.vec.Vec.len env.mem_types
-          if i >= i1
-          then
-            ok (core.result.Result.Err (error.Error.UnknownMemory memory_idx))
-          else
-            let r2 ←
-              metadata.decode_const_expr data next env wasm_types.ValueType.I32
-                ValidationProfile.Wasm2
-            let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-            match cf2 with
-            | core.ops.control_flow.ControlFlow.Continue val2 =>
-              let (offset, next1) := val2
-              let r3 ← reader.read_u32_leb data next1
-              let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-              match cf3 with
-              | core.ops.control_flow.ControlFlow.Continue val3 =>
-                let (len, p) := val3
-                let n ← lift (UScalar.cast .Usize len)
-                let r4 ← metadata.have_bytes data p n
-                let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-                match cf4 with
-                | core.ops.control_flow.ControlFlow.Continue _ =>
-                  let i2 ← p + n
-                  let init ← metadata.copy_bytes data p i2
-                  ok (core.result.Result.Ok
-                    ({
-                       mode := (metadata.DataMode.Active memory_idx offset),
-                       init
-                     }, i2))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (metadata.Data × Std.Usize) (core.convert.FromSame
-                    error.Error) residual
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (metadata.Data × Std.Usize)
-                  error.Error.Insts.CoreConvertFromOpError residual
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                (metadata.Data × Std.Usize) (core.convert.FromSame
-                error.Error) residual
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (metadata.Data × Std.Usize) (core.convert.FromSame error.Error)
-            residual
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       (metadata.Data × Std.Usize) error.Error.Insts.CoreConvertFromOpError
@@ -13157,22 +12994,17 @@ def metadata.decode_data_count
   (profile : ValidationProfile) :
   Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    ok (core.result.Result.Err (error.Error.UnknownSection
-      metadata.SECTION_DATA_COUNT), env)
-  | ValidationProfile.Wasm2 =>
-    let r ← reader.read_u32_leb data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (count, next) := val
-      ok (core.result.Result.Ok next, { env with data_count := (some count) })
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Std.Usize error.Error.Insts.CoreConvertFromOpError residual
-      ok (r1, env)
+  let r ← reader.read_u32_leb data pos
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let (count, next) := val
+    ok (core.result.Result.Ok next, { env with data_count := (some count) })
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Std.Usize error.Error.Insts.CoreConvertFromOpError residual
+    ok (r1, env)
 
 /-- [itasca::metadata::decode_element_initializer]:
     Source: 'src/module.rs' -/
@@ -13304,51 +13136,181 @@ def metadata.decode_element_header
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (tag, q) := val
-    match profile with
-    | ValidationProfile.Wasm1 =>
-      let i ← lift (UScalar.cast .Usize tag)
-      let i1 := alloc.vec.Vec.len env.table_types
-      if i >= i1
-      then ok (core.result.Result.Err (error.Error.UnknownTable tag))
-      else
-        let r1 ←
-          metadata.decode_const_expr data q env wasm_types.ValueType.I32
-            ValidationProfile.Wasm1
-        let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-        match cf1 with
-        | core.ops.control_flow.ControlFlow.Continue val1 =>
-          let (offset, next) := val1
-          let i2 ← lift (UScalar.cast .Usize tag)
-          let i3 := alloc.vec.Vec.len env.table_types
-          if i2 >= i3
-          then ok (core.result.Result.Err (error.Error.UnknownTable tag))
-          else
-            let vt ←
-              wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef
-            let tt ←
-              alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                wasm_types.TableType) env.table_types i2
-            let vt1 ← wasm_types.ElemType.value_type tt.elem
-            let b ←
-              core.cmp.PartialEq.ne.trait_default
-                wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt vt1
-            if b
-            then ok (core.result.Result.Err error.Error.InvalidConstExpr)
-            else
-              ok (core.result.Result.Ok (metadata.ElementMode.Active tag
-                offset, wasm_types.ElemType.FuncRef, false, next))
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (metadata.ElementMode × wasm_types.ElemType × Bool × Std.Usize)
-            (core.convert.FromSame error.Error) residual
-    | ValidationProfile.Wasm2 =>
-      if tag > 7#u32
-      then ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
-      else
-        let i ← tag % 2#u32
-        if i = 0#u32
+    if tag > 7#u32
+    then ok (core.result.Result.Err (error.Error.InvalidType 255#u8))
+    else
+      let i ← tag % 2#u32
+      if i = 0#u32
+      then
+        if tag = 2#u32
         then
-          if tag = 2#u32
+          let r1 ← reader.read_u32_leb data q
+          let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+          match cf1 with
+          | core.ops.control_flow.ControlFlow.Continue val1 =>
+            let (index, next) := val1
+            let i1 ← lift (UScalar.cast .Usize index)
+            let i2 := alloc.vec.Vec.len env.table_types
+            if i1 >= i2
+            then ok (core.result.Result.Err (error.Error.UnknownTable index))
+            else
+              let r2 ←
+                metadata.decode_const_expr data next env
+                  wasm_types.ValueType.I32 profile
+              let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+              match cf2 with
+              | core.ops.control_flow.ControlFlow.Continue val2 =>
+                let (offset, next1) := val2
+                if tag = 0#u32
+                then
+                  let i3 ← lift (UScalar.cast .Usize index)
+                  let i4 := alloc.vec.Vec.len env.table_types
+                  if i3 >= i4
+                  then
+                    ok (core.result.Result.Err (error.Error.UnknownTable
+                      index))
+                  else
+                    let vt ←
+                      wasm_types.ElemType.value_type
+                        wasm_types.ElemType.FuncRef
+                    let tt ←
+                      alloc.vec.Vec.index
+                        (core.slice.index.SliceIndexUsizeSlice
+                        wasm_types.TableType) env.table_types i3
+                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                    let b ←
+                      core.cmp.PartialEq.ne.trait_default
+                        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
+                        vt1
+                    if b
+                    then
+                      ok (core.result.Result.Err error.Error.InvalidConstExpr)
+                    else
+                      ok (core.result.Result.Ok (metadata.ElementMode.Active
+                        index offset, wasm_types.ElemType.FuncRef, tag >=
+                        4#u32, next1))
+                else
+                  if tag = 4#u32
+                  then
+                    let i3 ← lift (UScalar.cast .Usize index)
+                    let i4 := alloc.vec.Vec.len env.table_types
+                    if i3 >= i4
+                    then
+                      ok (core.result.Result.Err (error.Error.UnknownTable
+                        index))
+                    else
+                      let vt ←
+                        wasm_types.ElemType.value_type
+                          wasm_types.ElemType.FuncRef
+                      let tt ←
+                        alloc.vec.Vec.index
+                          (core.slice.index.SliceIndexUsizeSlice
+                          wasm_types.TableType) env.table_types i3
+                      let vt1 ← wasm_types.ElemType.value_type tt.elem
+                      let b ←
+                        core.cmp.PartialEq.ne.trait_default
+                          wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
+                          vt vt1
+                      if b
+                      then
+                        ok (core.result.Result.Err
+                          error.Error.InvalidConstExpr)
+                      else
+                        ok (core.result.Result.Ok (metadata.ElementMode.Active
+                          index offset, wasm_types.ElemType.FuncRef, tag >=
+                          4#u32, next1))
+                  else
+                    if tag >= 4#u32
+                    then
+                      let r3 ← metadata.decode_elem_type data next1 profile
+                      let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+                      match cf3 with
+                      | core.ops.control_flow.ControlFlow.Continue val3 =>
+                        let (ty, next2) := val3
+                        let i3 ← lift (UScalar.cast .Usize index)
+                        let i4 := alloc.vec.Vec.len env.table_types
+                        if i3 >= i4
+                        then
+                          ok (core.result.Result.Err (error.Error.UnknownTable
+                            index))
+                        else
+                          let vt ← wasm_types.ElemType.value_type ty
+                          let tt ←
+                            alloc.vec.Vec.index
+                              (core.slice.index.SliceIndexUsizeSlice
+                              wasm_types.TableType) env.table_types i3
+                          let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          let b ←
+                            core.cmp.PartialEq.ne.trait_default
+                              wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
+                              vt vt1
+                          if b
+                          then
+                            ok (core.result.Result.Err
+                              error.Error.InvalidConstExpr)
+                          else
+                            ok (core.result.Result.Ok
+                              (metadata.ElementMode.Active index offset, ty,
+                              tag >= 4#u32, next2))
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (metadata.ElementMode × wasm_types.ElemType × Bool
+                          × Std.Usize) (core.convert.FromSame error.Error)
+                          residual
+                    else
+                      let r3 ← reader.read_byte data next1
+                      let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+                      match cf3 with
+                      | core.ops.control_flow.ControlFlow.Continue val3 =>
+                        let (kind, next2) := val3
+                        if kind != 0#u8
+                        then
+                          ok (core.result.Result.Err (error.Error.InvalidType
+                            kind))
+                        else
+                          let i3 ← lift (UScalar.cast .Usize index)
+                          let i4 := alloc.vec.Vec.len env.table_types
+                          if i3 >= i4
+                          then
+                            ok (core.result.Result.Err
+                              (error.Error.UnknownTable index))
+                          else
+                            let vt ←
+                              wasm_types.ElemType.value_type
+                                wasm_types.ElemType.FuncRef
+                            let tt ←
+                              alloc.vec.Vec.index
+                                (core.slice.index.SliceIndexUsizeSlice
+                                wasm_types.TableType) env.table_types i3
+                            let vt1 ← wasm_types.ElemType.value_type tt.elem
+                            let b ←
+                              core.cmp.PartialEq.ne.trait_default
+                                wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
+                                vt vt1
+                            if b
+                            then
+                              ok (core.result.Result.Err
+                                error.Error.InvalidConstExpr)
+                            else
+                              ok (core.result.Result.Ok
+                                (metadata.ElementMode.Active index offset,
+                                wasm_types.ElemType.FuncRef, tag >= 4#u32,
+                                next2))
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (metadata.ElementMode × wasm_types.ElemType × Bool
+                          × Std.Usize)
+                          error.Error.Insts.CoreConvertFromOpError residual
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (metadata.ElementMode × wasm_types.ElemType × Bool ×
+                  Std.Usize) (core.convert.FromSame error.Error) residual
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+              (metadata.ElementMode × wasm_types.ElemType × Bool ×
+              Std.Usize) error.Error.Insts.CoreConvertFromOpError residual
+        else
+          if tag = 6#u32
           then
             let r1 ← reader.read_u32_leb data q
             let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -13362,7 +13324,7 @@ def metadata.decode_element_header
               else
                 let r2 ←
                   metadata.decode_const_expr data next env
-                    wasm_types.ValueType.I32 ValidationProfile.Wasm2
+                    wasm_types.ValueType.I32 profile
                 let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
                 match cf2 with
                 | core.ops.control_flow.ControlFlow.Continue val2 =>
@@ -13429,9 +13391,7 @@ def metadata.decode_element_header
                     else
                       if tag >= 4#u32
                       then
-                        let r3 ←
-                          metadata.decode_elem_type data next1
-                            ValidationProfile.Wasm2
+                        let r3 ← metadata.decode_elem_type data next1 profile
                         let cf3 ←
                           core.result.Result.Insts.CoreOpsTry.branch r3
                         match cf3 with
@@ -13522,196 +13482,48 @@ def metadata.decode_element_header
                 (metadata.ElementMode × wasm_types.ElemType × Bool ×
                 Std.Usize) error.Error.Insts.CoreConvertFromOpError residual
           else
-            if tag = 6#u32
-            then
-              let r1 ← reader.read_u32_leb data q
+            let i1 ← lift (UScalar.cast .Usize 0#u32)
+            let i2 := alloc.vec.Vec.len env.table_types
+            if i1 >= i2
+            then ok (core.result.Result.Err (error.Error.UnknownTable 0#u32))
+            else
+              let r1 ←
+                metadata.decode_const_expr data q env wasm_types.ValueType.I32
+                  profile
               let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
               match cf1 with
               | core.ops.control_flow.ControlFlow.Continue val1 =>
-                let (index, next) := val1
-                let i1 ← lift (UScalar.cast .Usize index)
-                let i2 := alloc.vec.Vec.len env.table_types
-                if i1 >= i2
+                let (offset, next) := val1
+                if tag = 0#u32
                 then
-                  ok (core.result.Result.Err (error.Error.UnknownTable index))
-                else
-                  let r2 ←
-                    metadata.decode_const_expr data next env
-                      wasm_types.ValueType.I32 ValidationProfile.Wasm2
-                  let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-                  match cf2 with
-                  | core.ops.control_flow.ControlFlow.Continue val2 =>
-                    let (offset, next1) := val2
-                    if tag = 0#u32
+                  let i3 ← lift (UScalar.cast .Usize 0#u32)
+                  let i4 := alloc.vec.Vec.len env.table_types
+                  if i3 >= i4
+                  then
+                    ok (core.result.Result.Err (error.Error.UnknownTable
+                      0#u32))
+                  else
+                    let vt ←
+                      wasm_types.ElemType.value_type
+                        wasm_types.ElemType.FuncRef
+                    let tt ←
+                      alloc.vec.Vec.index
+                        (core.slice.index.SliceIndexUsizeSlice
+                        wasm_types.TableType) env.table_types i3
+                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                    let b ←
+                      core.cmp.PartialEq.ne.trait_default
+                        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
+                        vt1
+                    if b
                     then
-                      let i3 ← lift (UScalar.cast .Usize index)
-                      let i4 := alloc.vec.Vec.len env.table_types
-                      if i3 >= i4
-                      then
-                        ok (core.result.Result.Err (error.Error.UnknownTable
-                          index))
-                      else
-                        let vt ←
-                          wasm_types.ElemType.value_type
-                            wasm_types.ElemType.FuncRef
-                        let tt ←
-                          alloc.vec.Vec.index
-                            (core.slice.index.SliceIndexUsizeSlice
-                            wasm_types.TableType) env.table_types i3
-                        let vt1 ← wasm_types.ElemType.value_type tt.elem
-                        let b ←
-                          core.cmp.PartialEq.ne.trait_default
-                            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                            vt vt1
-                        if b
-                        then
-                          ok (core.result.Result.Err
-                            error.Error.InvalidConstExpr)
-                        else
-                          ok (core.result.Result.Ok
-                            (metadata.ElementMode.Active index offset,
-                            wasm_types.ElemType.FuncRef, tag >= 4#u32, next1))
+                      ok (core.result.Result.Err error.Error.InvalidConstExpr)
                     else
-                      if tag = 4#u32
-                      then
-                        let i3 ← lift (UScalar.cast .Usize index)
-                        let i4 := alloc.vec.Vec.len env.table_types
-                        if i3 >= i4
-                        then
-                          ok (core.result.Result.Err (error.Error.UnknownTable
-                            index))
-                        else
-                          let vt ←
-                            wasm_types.ElemType.value_type
-                              wasm_types.ElemType.FuncRef
-                          let tt ←
-                            alloc.vec.Vec.index
-                              (core.slice.index.SliceIndexUsizeSlice
-                              wasm_types.TableType) env.table_types i3
-                          let vt1 ← wasm_types.ElemType.value_type tt.elem
-                          let b ←
-                            core.cmp.PartialEq.ne.trait_default
-                              wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                              vt vt1
-                          if b
-                          then
-                            ok (core.result.Result.Err
-                              error.Error.InvalidConstExpr)
-                          else
-                            ok (core.result.Result.Ok
-                              (metadata.ElementMode.Active index offset,
-                              wasm_types.ElemType.FuncRef, tag >= 4#u32,
-                              next1))
-                      else
-                        if tag >= 4#u32
-                        then
-                          let r3 ←
-                            metadata.decode_elem_type data next1
-                              ValidationProfile.Wasm2
-                          let cf3 ←
-                            core.result.Result.Insts.CoreOpsTry.branch r3
-                          match cf3 with
-                          | core.ops.control_flow.ControlFlow.Continue val3 =>
-                            let (ty, next2) := val3
-                            let i3 ← lift (UScalar.cast .Usize index)
-                            let i4 := alloc.vec.Vec.len env.table_types
-                            if i3 >= i4
-                            then
-                              ok (core.result.Result.Err
-                                (error.Error.UnknownTable index))
-                            else
-                              let vt ← wasm_types.ElemType.value_type ty
-                              let tt ←
-                                alloc.vec.Vec.index
-                                  (core.slice.index.SliceIndexUsizeSlice
-                                  wasm_types.TableType) env.table_types i3
-                              let vt1 ←
-                                wasm_types.ElemType.value_type tt.elem
-                              let b ←
-                                core.cmp.PartialEq.ne.trait_default
-                                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                                  vt vt1
-                              if b
-                              then
-                                ok (core.result.Result.Err
-                                  error.Error.InvalidConstExpr)
-                              else
-                                ok (core.result.Result.Ok
-                                  (metadata.ElementMode.Active index offset,
-                                  ty, tag >= 4#u32, next2))
-                          | core.ops.control_flow.ControlFlow.Break residual =>
-                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                              (metadata.ElementMode × wasm_types.ElemType ×
-                              Bool × Std.Usize) (core.convert.FromSame
-                              error.Error) residual
-                        else
-                          let r3 ← reader.read_byte data next1
-                          let cf3 ←
-                            core.result.Result.Insts.CoreOpsTry.branch r3
-                          match cf3 with
-                          | core.ops.control_flow.ControlFlow.Continue val3 =>
-                            let (kind, next2) := val3
-                            if kind != 0#u8
-                            then
-                              ok (core.result.Result.Err
-                                (error.Error.InvalidType kind))
-                            else
-                              let i3 ← lift (UScalar.cast .Usize index)
-                              let i4 := alloc.vec.Vec.len env.table_types
-                              if i3 >= i4
-                              then
-                                ok (core.result.Result.Err
-                                  (error.Error.UnknownTable index))
-                              else
-                                let vt ←
-                                  wasm_types.ElemType.value_type
-                                    wasm_types.ElemType.FuncRef
-                                let tt ←
-                                  alloc.vec.Vec.index
-                                    (core.slice.index.SliceIndexUsizeSlice
-                                    wasm_types.TableType) env.table_types i3
-                                let vt1 ←
-                                  wasm_types.ElemType.value_type tt.elem
-                                let b ←
-                                  core.cmp.PartialEq.ne.trait_default
-                                    wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                                    vt vt1
-                                if b
-                                then
-                                  ok (core.result.Result.Err
-                                    error.Error.InvalidConstExpr)
-                                else
-                                  ok (core.result.Result.Ok
-                                    (metadata.ElementMode.Active index offset,
-                                    wasm_types.ElemType.FuncRef, tag >= 4#u32,
-                                    next2))
-                          | core.ops.control_flow.ControlFlow.Break residual =>
-                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                              (metadata.ElementMode × wasm_types.ElemType ×
-                              Bool × Std.Usize)
-                              error.Error.Insts.CoreConvertFromOpError residual
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      (metadata.ElementMode × wasm_types.ElemType × Bool ×
-                      Std.Usize) (core.convert.FromSame error.Error) residual
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (metadata.ElementMode × wasm_types.ElemType × Bool ×
-                  Std.Usize) error.Error.Insts.CoreConvertFromOpError residual
-            else
-              let i1 ← lift (UScalar.cast .Usize 0#u32)
-              let i2 := alloc.vec.Vec.len env.table_types
-              if i1 >= i2
-              then ok (core.result.Result.Err (error.Error.UnknownTable 0#u32))
-              else
-                let r1 ←
-                  metadata.decode_const_expr data q env
-                    wasm_types.ValueType.I32 ValidationProfile.Wasm2
-                let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-                match cf1 with
-                | core.ops.control_flow.ControlFlow.Continue val1 =>
-                  let (offset, next) := val1
-                  if tag = 0#u32
+                      ok (core.result.Result.Ok (metadata.ElementMode.Active
+                        0#u32 offset, wasm_types.ElemType.FuncRef, tag >=
+                        4#u32, next))
+                else
+                  if tag = 4#u32
                   then
                     let i3 ← lift (UScalar.cast .Usize 0#u32)
                     let i4 := alloc.vec.Vec.len env.table_types
@@ -13741,46 +13553,54 @@ def metadata.decode_element_header
                           0#u32 offset, wasm_types.ElemType.FuncRef, tag >=
                           4#u32, next))
                   else
-                    if tag = 4#u32
+                    if tag >= 4#u32
                     then
-                      let i3 ← lift (UScalar.cast .Usize 0#u32)
-                      let i4 := alloc.vec.Vec.len env.table_types
-                      if i3 >= i4
-                      then
-                        ok (core.result.Result.Err (error.Error.UnknownTable
-                          0#u32))
-                      else
-                        let vt ←
-                          wasm_types.ElemType.value_type
-                            wasm_types.ElemType.FuncRef
-                        let tt ←
-                          alloc.vec.Vec.index
-                            (core.slice.index.SliceIndexUsizeSlice
-                            wasm_types.TableType) env.table_types i3
-                        let vt1 ← wasm_types.ElemType.value_type tt.elem
-                        let b ←
-                          core.cmp.PartialEq.ne.trait_default
-                            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                            vt vt1
-                        if b
+                      let r2 ← metadata.decode_elem_type data next profile
+                      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+                      match cf2 with
+                      | core.ops.control_flow.ControlFlow.Continue val2 =>
+                        let (ty, next1) := val2
+                        let i3 ← lift (UScalar.cast .Usize 0#u32)
+                        let i4 := alloc.vec.Vec.len env.table_types
+                        if i3 >= i4
                         then
-                          ok (core.result.Result.Err
-                            error.Error.InvalidConstExpr)
+                          ok (core.result.Result.Err (error.Error.UnknownTable
+                            0#u32))
                         else
-                          ok (core.result.Result.Ok
-                            (metadata.ElementMode.Active 0#u32 offset,
-                            wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
+                          let vt ← wasm_types.ElemType.value_type ty
+                          let tt ←
+                            alloc.vec.Vec.index
+                              (core.slice.index.SliceIndexUsizeSlice
+                              wasm_types.TableType) env.table_types i3
+                          let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          let b ←
+                            core.cmp.PartialEq.ne.trait_default
+                              wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
+                              vt vt1
+                          if b
+                          then
+                            ok (core.result.Result.Err
+                              error.Error.InvalidConstExpr)
+                          else
+                            ok (core.result.Result.Ok
+                              (metadata.ElementMode.Active 0#u32 offset, ty,
+                              tag >= 4#u32, next1))
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (metadata.ElementMode × wasm_types.ElemType × Bool
+                          × Std.Usize) (core.convert.FromSame error.Error)
+                          residual
                     else
-                      if tag >= 4#u32
-                      then
-                        let r2 ←
-                          metadata.decode_elem_type data next
-                            ValidationProfile.Wasm2
-                        let cf2 ←
-                          core.result.Result.Insts.CoreOpsTry.branch r2
-                        match cf2 with
-                        | core.ops.control_flow.ControlFlow.Continue val2 =>
-                          let (ty, next1) := val2
+                      let r2 ← reader.read_byte data next
+                      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+                      match cf2 with
+                      | core.ops.control_flow.ControlFlow.Continue val2 =>
+                        let (kind, next1) := val2
+                        if kind != 0#u8
+                        then
+                          ok (core.result.Result.Err (error.Error.InvalidType
+                            kind))
+                        else
                           let i3 ← lift (UScalar.cast .Usize 0#u32)
                           let i4 := alloc.vec.Vec.len env.table_types
                           if i3 >= i4
@@ -13788,7 +13608,9 @@ def metadata.decode_element_header
                             ok (core.result.Result.Err
                               (error.Error.UnknownTable 0#u32))
                           else
-                            let vt ← wasm_types.ElemType.value_type ty
+                            let vt ←
+                              wasm_types.ElemType.value_type
+                                wasm_types.ElemType.FuncRef
                             let tt ←
                               alloc.vec.Vec.index
                                 (core.slice.index.SliceIndexUsizeSlice
@@ -13804,72 +13626,58 @@ def metadata.decode_element_header
                                 error.Error.InvalidConstExpr)
                             else
                               ok (core.result.Result.Ok
-                                (metadata.ElementMode.Active 0#u32 offset, ty,
-                                tag >= 4#u32, next1))
-                        | core.ops.control_flow.ControlFlow.Break residual =>
-                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                            (metadata.ElementMode × wasm_types.ElemType ×
-                            Bool × Std.Usize) (core.convert.FromSame
-                            error.Error) residual
-                      else
-                        let r2 ← reader.read_byte data next
-                        let cf2 ←
-                          core.result.Result.Insts.CoreOpsTry.branch r2
-                        match cf2 with
-                        | core.ops.control_flow.ControlFlow.Continue val2 =>
-                          let (kind, next1) := val2
-                          if kind != 0#u8
-                          then
-                            ok (core.result.Result.Err (error.Error.InvalidType
-                              kind))
-                          else
-                            let i3 ← lift (UScalar.cast .Usize 0#u32)
-                            let i4 := alloc.vec.Vec.len env.table_types
-                            if i3 >= i4
-                            then
-                              ok (core.result.Result.Err
-                                (error.Error.UnknownTable 0#u32))
-                            else
-                              let vt ←
-                                wasm_types.ElemType.value_type
-                                  wasm_types.ElemType.FuncRef
-                              let tt ←
-                                alloc.vec.Vec.index
-                                  (core.slice.index.SliceIndexUsizeSlice
-                                  wasm_types.TableType) env.table_types i3
-                              let vt1 ←
-                                wasm_types.ElemType.value_type tt.elem
-                              let b ←
-                                core.cmp.PartialEq.ne.trait_default
-                                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                                  vt vt1
-                              if b
-                              then
-                                ok (core.result.Result.Err
-                                  error.Error.InvalidConstExpr)
-                              else
-                                ok (core.result.Result.Ok
-                                  (metadata.ElementMode.Active 0#u32 offset,
-                                  wasm_types.ElemType.FuncRef, tag >= 4#u32,
-                                  next1))
-                        | core.ops.control_flow.ControlFlow.Break residual =>
-                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                            (metadata.ElementMode × wasm_types.ElemType ×
-                            Bool × Std.Usize)
-                            error.Error.Insts.CoreConvertFromOpError residual
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (metadata.ElementMode × wasm_types.ElemType × Bool ×
-                    Std.Usize) (core.convert.FromSame error.Error) residual
-        else
-          let mode ←
-            if tag = 1#u32
+                                (metadata.ElementMode.Active 0#u32 offset,
+                                wasm_types.ElemType.FuncRef, tag >= 4#u32,
+                                next1))
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (metadata.ElementMode × wasm_types.ElemType × Bool
+                          × Std.Usize)
+                          error.Error.Insts.CoreConvertFromOpError residual
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (metadata.ElementMode × wasm_types.ElemType × Bool ×
+                  Std.Usize) (core.convert.FromSame error.Error) residual
+      else
+        let mode ←
+          if tag = 1#u32
+          then ok metadata.ElementMode.Passive
+          else
+            if tag = 5#u32
             then ok metadata.ElementMode.Passive
+            else ok metadata.ElementMode.Declarative
+        if tag = 0#u32
+        then
+          match mode with
+          | metadata.ElementMode.Active table_idx _ =>
+            let i1 ← lift (UScalar.cast .Usize table_idx)
+            let i2 := alloc.vec.Vec.len env.table_types
+            if i1 >= i2
+            then
+              ok (core.result.Result.Err (error.Error.UnknownTable table_idx))
             else
-              if tag = 5#u32
-              then ok metadata.ElementMode.Passive
-              else ok metadata.ElementMode.Declarative
-          if tag = 0#u32
+              let vt ←
+                wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef
+              let tt ←
+                alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+                  wasm_types.TableType) env.table_types i1
+              let vt1 ← wasm_types.ElemType.value_type tt.elem
+              let b ←
+                core.cmp.PartialEq.ne.trait_default
+                  wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt vt1
+              if b
+              then ok (core.result.Result.Err error.Error.InvalidConstExpr)
+              else
+                ok (core.result.Result.Ok (mode, wasm_types.ElemType.FuncRef,
+                  tag >= 4#u32, q))
+          | metadata.ElementMode.Passive =>
+            ok (core.result.Result.Ok (metadata.ElementMode.Passive,
+              wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
+          | metadata.ElementMode.Declarative =>
+            ok (core.result.Result.Ok (metadata.ElementMode.Declarative,
+              wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
+        else
+          if tag = 4#u32
           then
             match mode with
             | metadata.ElementMode.Active table_idx _ =>
@@ -13901,47 +13709,56 @@ def metadata.decode_element_header
               ok (core.result.Result.Ok (metadata.ElementMode.Declarative,
                 wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
           else
-            if tag = 4#u32
+            if tag >= 4#u32
             then
-              match mode with
-              | metadata.ElementMode.Active table_idx _ =>
-                let i1 ← lift (UScalar.cast .Usize table_idx)
-                let i2 := alloc.vec.Vec.len env.table_types
-                if i1 >= i2
-                then
-                  ok (core.result.Result.Err (error.Error.UnknownTable
-                    table_idx))
-                else
-                  let vt ←
-                    wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef
-                  let tt ←
-                    alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                      wasm_types.TableType) env.table_types i1
-                  let vt1 ← wasm_types.ElemType.value_type tt.elem
-                  let b ←
-                    core.cmp.PartialEq.ne.trait_default
-                      wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
-                      vt1
-                  if b
-                  then ok (core.result.Result.Err error.Error.InvalidConstExpr)
+              let r1 ← metadata.decode_elem_type data q profile
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue val1 =>
+                let (ty, next) := val1
+                match mode with
+                | metadata.ElementMode.Active table_idx _ =>
+                  let i1 ← lift (UScalar.cast .Usize table_idx)
+                  let i2 := alloc.vec.Vec.len env.table_types
+                  if i1 >= i2
+                  then
+                    ok (core.result.Result.Err (error.Error.UnknownTable
+                      table_idx))
                   else
-                    ok (core.result.Result.Ok (mode,
-                      wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
-              | metadata.ElementMode.Passive =>
-                ok (core.result.Result.Ok (metadata.ElementMode.Passive,
-                  wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
-              | metadata.ElementMode.Declarative =>
-                ok (core.result.Result.Ok (metadata.ElementMode.Declarative,
-                  wasm_types.ElemType.FuncRef, tag >= 4#u32, q))
+                    let vt ← wasm_types.ElemType.value_type ty
+                    let tt ←
+                      alloc.vec.Vec.index
+                        (core.slice.index.SliceIndexUsizeSlice
+                        wasm_types.TableType) env.table_types i1
+                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                    let b ←
+                      core.cmp.PartialEq.ne.trait_default
+                        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
+                        vt1
+                    if b
+                    then
+                      ok (core.result.Result.Err error.Error.InvalidConstExpr)
+                    else
+                      ok (core.result.Result.Ok (mode, ty, tag >= 4#u32, next))
+                | metadata.ElementMode.Passive =>
+                  ok (core.result.Result.Ok (metadata.ElementMode.Passive, ty,
+                    tag >= 4#u32, next))
+                | metadata.ElementMode.Declarative =>
+                  ok (core.result.Result.Ok (metadata.ElementMode.Declarative,
+                    ty, tag >= 4#u32, next))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (metadata.ElementMode × wasm_types.ElemType × Bool ×
+                  Std.Usize) (core.convert.FromSame error.Error) residual
             else
-              if tag >= 4#u32
-              then
-                let r1 ←
-                  metadata.decode_elem_type data q ValidationProfile.Wasm2
-                let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-                match cf1 with
-                | core.ops.control_flow.ControlFlow.Continue val1 =>
-                  let (ty, next) := val1
+              let r1 ← reader.read_byte data q
+              let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+              match cf1 with
+              | core.ops.control_flow.ControlFlow.Continue val1 =>
+                let (kind, next) := val1
+                if kind != 0#u8
+                then ok (core.result.Result.Err (error.Error.InvalidType kind))
+                else
                   match mode with
                   | metadata.ElementMode.Active table_idx _ =>
                     let i1 ← lift (UScalar.cast .Usize table_idx)
@@ -13951,7 +13768,9 @@ def metadata.decode_element_header
                       ok (core.result.Result.Err (error.Error.UnknownTable
                         table_idx))
                     else
-                      let vt ← wasm_types.ElemType.value_type ty
+                      let vt ←
+                        wasm_types.ElemType.value_type
+                          wasm_types.ElemType.FuncRef
                       let tt ←
                         alloc.vec.Vec.index
                           (core.slice.index.SliceIndexUsizeSlice
@@ -13966,69 +13785,19 @@ def metadata.decode_element_header
                         ok (core.result.Result.Err
                           error.Error.InvalidConstExpr)
                       else
-                        ok (core.result.Result.Ok (mode, ty, tag >= 4#u32,
-                          next))
+                        ok (core.result.Result.Ok (mode,
+                          wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
                   | metadata.ElementMode.Passive =>
                     ok (core.result.Result.Ok (metadata.ElementMode.Passive,
-                      ty, tag >= 4#u32, next))
+                      wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
                   | metadata.ElementMode.Declarative =>
                     ok (core.result.Result.Ok
-                      (metadata.ElementMode.Declarative, ty, tag >= 4#u32,
-                      next))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (metadata.ElementMode × wasm_types.ElemType × Bool ×
-                    Std.Usize) (core.convert.FromSame error.Error) residual
-              else
-                let r1 ← reader.read_byte data q
-                let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-                match cf1 with
-                | core.ops.control_flow.ControlFlow.Continue val1 =>
-                  let (kind, next) := val1
-                  if kind != 0#u8
-                  then
-                    ok (core.result.Result.Err (error.Error.InvalidType kind))
-                  else
-                    match mode with
-                    | metadata.ElementMode.Active table_idx _ =>
-                      let i1 ← lift (UScalar.cast .Usize table_idx)
-                      let i2 := alloc.vec.Vec.len env.table_types
-                      if i1 >= i2
-                      then
-                        ok (core.result.Result.Err (error.Error.UnknownTable
-                          table_idx))
-                      else
-                        let vt ←
-                          wasm_types.ElemType.value_type
-                            wasm_types.ElemType.FuncRef
-                        let tt ←
-                          alloc.vec.Vec.index
-                            (core.slice.index.SliceIndexUsizeSlice
-                            wasm_types.TableType) env.table_types i1
-                        let vt1 ← wasm_types.ElemType.value_type tt.elem
-                        let b ←
-                          core.cmp.PartialEq.ne.trait_default
-                            wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
-                            vt vt1
-                        if b
-                        then
-                          ok (core.result.Result.Err
-                            error.Error.InvalidConstExpr)
-                        else
-                          ok (core.result.Result.Ok (mode,
-                            wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
-                    | metadata.ElementMode.Passive =>
-                      ok (core.result.Result.Ok (metadata.ElementMode.Passive,
-                        wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
-                    | metadata.ElementMode.Declarative =>
-                      ok (core.result.Result.Ok
-                        (metadata.ElementMode.Declarative,
-                        wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    (metadata.ElementMode × wasm_types.ElemType × Bool ×
-                    Std.Usize) error.Error.Insts.CoreConvertFromOpError
-                    residual
+                      (metadata.ElementMode.Declarative,
+                      wasm_types.ElemType.FuncRef, tag >= 4#u32, next))
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (metadata.ElementMode × wasm_types.ElemType × Bool ×
+                  Std.Usize) error.Error.Insts.CoreConvertFromOpError residual
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
       (metadata.ElementMode × wasm_types.ElemType × Bool × Std.Usize)
@@ -14614,13 +14383,7 @@ def metadata.check_table_count
   (env : metadata.Env) (profile : ValidationProfile) :
   Result (core.result.Result Unit error.Error)
   := do
-  match profile with
-  | ValidationProfile.Wasm1 =>
-    let i := alloc.vec.Vec.len env.table_types
-    if i > limits.MAX_TABLES
-    then ok (core.result.Result.Err error.Error.MultipleTables)
-    else ok (core.result.Result.Ok ())
-  | ValidationProfile.Wasm2 => ok (core.result.Result.Ok ())
+  ok (core.result.Result.Ok ())
 
 /-- [itasca::metadata::decode_table_type]:
     Source: 'src/module.rs' -/
@@ -15116,14 +14879,7 @@ def metadata.decode_func_type
         match cf2 with
         | core.ops.control_flow.ControlFlow.Continue val2 =>
           let (results, p2) := val2
-          match profile with
-          | ValidationProfile.Wasm1 =>
-            let i := alloc.vec.Vec.len results
-            if i > limits.MAX_RESULTS
-            then ok (core.result.Result.Err error.Error.TooManyResults)
-            else ok (core.result.Result.Ok ({ params, results }, p2))
-          | ValidationProfile.Wasm2 =>
-            ok (core.result.Result.Ok ({ params, results }, p2))
+          ok (core.result.Result.Ok ({ params, results }, p2))
         | core.ops.control_flow.ControlFlow.Break residual =>
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             (wasm_types.FuncType × Std.Usize) (core.convert.FromSame

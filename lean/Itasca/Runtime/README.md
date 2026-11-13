@@ -196,8 +196,8 @@ Cross-family composition uses:
 | `Replay/` | Callback/profile agreement, reader folds and whole-body preservation. |
 | `Source/` | Source opcode families and independent source demand. |
 
-Both profiles use the Wasm 2.0 reader proofs. A valid Wasm 1.0 body has the same
-run under both profiles (`code.validate_body_with.wasm1_of_body`).
+The Wasm 2.0 compiler reader shares reader proofs with the validator's Wasm 2.0
+body checks.
 The exact source-prefix certificate is shared with the validator in
 [Wasm2/Scalar/ReaderPost](../Wasm2/Scalar/ReaderPost.lean). Shared reader proofs
 cover scalar constants and stack operations, numeric instructions, local/global
@@ -225,8 +225,8 @@ constructs actual body success with the checker premises at root close.
 parsing, body compilation and actual finishing. Module demand envelopes account
 for metadata, functions, initializers, scheduling, collection, output counters
 and temporary reserves. [Compilation/Complete](Integration/Compilation/Complete.lean)
-constructs successful compilation and the existing certificate for both complete
-profiles from independent source validity, conservative source-only
+constructs successful compilation and the existing certificate for the complete
+Wasm 2.0 profile from independent source validity, conservative source-only
 `CompileEligible`, allocator correctness and bounded allocation availability.
 It assumes neither compiler success nor a completed callback trace. Uniform
 source maxima can exclude modules whose actual output fits exactly at a limit.
@@ -252,7 +252,7 @@ not every transitive import.
 ### Compilation
 
 1. [Results/Compile](../Results/Compile.lean) states soundness, normal return
-   and completeness for both profiles.
+   and completeness for the Wasm 2.0 profile.
 2. [Compilation/Certificate](Integration/Compilation/Certificate.lean) constructs
    `CompilationCertificate` and `ModuleCodeRel`;
    [Compilation/Complete](Integration/Compilation/Complete.lean) combines the

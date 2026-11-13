@@ -29,7 +29,7 @@ def Payload (raw : ModuleBinary.Module) (id : Nat) (_ : Unit) (bytes : List U8)
   | 7 => ModuleBinary.VecEncoding ModuleBinary.ExportEncoding raw.exports bytes
   | 8 => ModuleBinary.StartEncoding raw.start bytes
   | 9 => ModuleBinary.VecEncoding (ModuleBinary.ElementEncodingFor profile) raw.elements bytes
-  | 10 => profile = .Wasm2 ∧ ModuleBinary.StartEncoding raw.dataCount bytes
+  | 10 => ModuleBinary.StartEncoding raw.dataCount bytes
   | _ => False
 
 /-- The slot of rank `id` is empty in `raw`, so the section may be omitted. -/

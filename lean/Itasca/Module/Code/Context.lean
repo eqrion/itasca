@@ -1,7 +1,6 @@
 import Itasca.Module.Code.BodyContext
 import Itasca.Binary.Module
 import Itasca.Module.Code.BodyContextComplete
-import Itasca.Profile.Instructions
 import Itasca.Spec.DeclaredReferences
 
 /-!
@@ -53,17 +52,14 @@ def instructionType (ft : wasm_types.FuncType) : functype :=
   .mk_functype (.mk_list []) (.mk_list (ft.results.val.map Translate.valueType))
 
 /-- The code entry has a function type in the environment's type table. Its body is typed in
-`bodyContext` with the parameters followed by the declared locals, is admitted by the profile, uses
-allowed local types, and mentions only declared function references. -/
+`bodyContext` with the parameters followed by the declared locals and mentions only
+declared function references. -/
 structure Typed (env : metadata.Env) (typeIdx : U32) (entry : ModuleBinary.Code)
     (validationProfile : ValidationProfile) : Prop where
   type_lt : typeIdx.val < env.types.val.length
   typed : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
     (instructionType env.types.val[typeIdx.val])
-  profile : Profile.Instructions validationProfile (bodyContext env env.types.val[typeIdx.val].params.val
-    entry.declared env.types.val[typeIdx.val].results.val) entry.body
-  locals_allowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed validationProfile group.2
   declared : DeclaredReferences.Instructions
     (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
@@ -141,7 +137,7 @@ theorem typed_func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary
     Function.comp_def, ds, ps, rs, ft, localC] using
     Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
 
-/-- A `Typed` certificate in either profile gives `Func_ok` in the full module context. -/
+/-- A `Typed` certificate gives `Func_ok` in the full module context. -/
 theorem Typed.func_ok {env : metadata.Env} {typeIdx : U32} {entry : ModuleBinary.Code}
     {profile : ValidationProfile} (h : Typed env typeIdx entry profile) (C : context) (hc : ModuleContext env C)
     (hsegments : SegmentContext env C) :

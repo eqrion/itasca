@@ -5,12 +5,12 @@
 A streaming WebAssembly validator and interpreter written in Rust and verified
 in Lean.
 
-Validation supports the WebAssembly 1.0 and 2.0 core profiles, including
-streaming and parallel function validation. Both profiles have whole-module
-termination, soundness, and completeness proofs.
+Validation supports the WebAssembly 2.0 core profile, including streaming and
+parallel function validation. Whole-module termination, soundness, and
+completeness are proved for that profile.
 
 The execution runtime has checked compilation, invocation, instantiation, API
-invariant, resource-cause, and progress theorems for both profiles. These are
+invariant, resource-cause, and progress theorems for Wasm 2.0. These are
 conditional guarantees under [explicit contracts that the embedder must uphold.](lean/README.md#execution-boundary)
 
 This is an experiment in AI-assisted formal verification, built extensively
@@ -21,16 +21,15 @@ more details.
 
 ```rust
 let bytes = b"\x00asm\x01\x00\x00\x00";
-let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm1)?;
+let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm2)?;
 let imports = itasca::import_types(module.env())?;
 let exports = itasca::export_types(module.env())?;
 ```
 
-The two profiles:
+The `ValidationProfile` parameter currently has one supported value:
 
 | Profile | Extensions |
 | --- | --- |
-| `Wasm1` | None |
 | `Wasm2` | multi-value, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, SIMD instructions. |
 
 `validate_module` is internally implemented using the more powerful and complex
@@ -87,7 +86,7 @@ impl<'a> StreamingVisitor<'a> for Visitor<'a> {
 let source = Input(b"\x00asm\x01\x00\x00\x00");
 let mut visitor = Visitor::default();
 let mut env = Env::new();
-itasca::validate_streaming(0, ValidationProfile::Wasm1, &source, &mut visitor, &mut env)?;
+itasca::validate_streaming(0, ValidationProfile::Wasm2, &source, &mut visitor, &mut env)?;
 ```
 
 ## Formal verification
@@ -113,8 +112,8 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
-Runtime instantiation uses Wasm 2.0 segment semantics under either validation
-profile: segment traps preserve completed writes and allocated objects.
+Runtime instantiation uses Wasm 2.0 segment semantics: segment traps preserve
+completed writes and allocated objects.
 Rejection before publication leaves the store unchanged and never reports a trap.
 
 ### Trust boundary

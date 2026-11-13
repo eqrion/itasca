@@ -25,7 +25,7 @@ theorem Valid.finished {issued : StreamBatch.Issued} (h : Valid issued validatio
     StreamBatch.Identity issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
   obtain ⟨entries, hn, ht, hb⟩ := h.entries
   obtain ⟨result, hrun, hreachable, hfinish⟩ := stream.CodeBatch.validate_all.complete_at_seed
-    issued entries h.bounded hn ht h.profile h.limits h.entry_bounds hb h.validation_profile
+    issued entries h.bounded hn ht h.limits h.entry_bounds hb h.validation_profile
   have he : result = after := by simpa using hrun.symm.trans hr
   subst result
   exact ⟨hreachable.validation.1, hfinish⟩

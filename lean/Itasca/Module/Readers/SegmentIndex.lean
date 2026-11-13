@@ -23,9 +23,6 @@ theorem metadata.decode_segment_index.profile_spec (data : Slice U8) (pos : Usiz
             data pos (idx, explicit) next
       | .Err _ => True ⦄ := by
   cases profile with
-  | Wasm1 =>
-      simp only [metadata.decode_segment_index, WP.spec_ok]
-      exact ⟨[], ⟨rfl, rfl, rfl⟩, Wasm1.BytesAt.nil data pos hpos⟩
   | Wasm2 =>
       by_cases hzero : flags = 0#u32
       · subst flags
@@ -61,10 +58,6 @@ theorem metadata.decode_segment_index.profile_complete {data : Slice U8} {pos ne
     metadata.decode_segment_index data pos flags profile = .ok (.Ok (idx, next, explicit)) := by
   obtain ⟨bytes, he, hs⟩ := h
   cases profile with
-  | Wasm1 =>
-      obtain ⟨rfl, rfl, rfl⟩ := he
-      rw [hs.empty]
-      rfl
   | Wasm2 =>
       rcases he with ⟨rfl, rfl, rfl, rfl⟩ | ⟨rfl, rfl, he⟩
       · rw [hs.empty]

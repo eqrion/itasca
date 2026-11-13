@@ -76,22 +76,16 @@ private theorem layout_valid : Layout.Valid 9 declarations layout .Wasm2 := by
   · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
-  · simp [ModuleTypesAllowed, ValueTypeAllowed, ElemTypeAllowed, ConstAllowed,
-      declarations, Declarations.module, tableType, global, element]
 
 private theorem requirements : Requirements raw .Wasm2 := by
   intro id decls env hlo hhi hr
   interval_cases id
   · simp [SectionValid, raw, declarations, Declarations.module]
-  · refine ⟨?_, ?_, ?_⟩
+  · refine ⟨?_, ?_⟩
     · simp [raw, declarations, Declarations.module]
-    · simp [hr.empty_tables (by decide), ModuleSections.rawTables, raw, declarations, Declarations.module]
     · simp [hr.empty_memories (by decide), ModuleSections.rawMemories, raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
-  · constructor
-    · simp [raw, declarations, Declarations.module, tableType, LimitsValid, limits.MAX_TABLE_ELEMS]
-    · rw [hr.tables_count (by decide) (by decide)]
-      simp [raw, declarations, Declarations.module, ModuleTranslation.tables]
+  · simp [SectionValid, raw, declarations, Declarations.module, tableType, LimitsValid, limits.MAX_TABLE_ELEMS]
   · constructor
     · simp [raw, declarations, Declarations.module, memoryType, LimitsValid, limits.MAX_MEMORY_PAGES]
     · rw [hr.memories_count (by decide) (by decide)]

@@ -48,8 +48,7 @@ theorem retire_sound {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
     (pending remaining : alloc.vec.Vec Usize) (hv : Tracks id history v)
-    (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
+    (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env)
     (hprofiles : ∀ issued ∈ history, issued.profile = profile)
     (h : stream.retire_code_batch visitor id v pending = .ok (.Ok (), v', remaining)) :
     Tracks id history v' ∧ ∃ batchId,
@@ -60,7 +59,7 @@ theorem retire_sound {V : Type} (visitor : stream.StreamingVisitor V)
   obtain ⟨hv', hr⟩ := hp.poll id history v batch v' hv hpolled
   refine ⟨hv', batch.batch_id, hperm, ?_⟩
   intro issued hm hid hbatch
-  exact (hr issued hm (hid.trans hmodule.symm) hbatch).finished (henv issued hm).1 (henv issued hm).2 (hprofiles issued hm) hfinish
+  exact (hr issued hm (hid.trans hmodule.symm) hbatch).finished (henv issued hm) (hprofiles issued hm) hfinish
 
 end Itasca.StreamScheduler
 
@@ -76,8 +75,7 @@ theorem drain_sound {V : Type} (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List StreamBatch.Issued → V → Prop) (hp : Provenance visitor Tracks profile)
     (id : U64) (history : List StreamBatch.Issued) (v v' : V)
     (pending remaining : alloc.vec.Vec Usize) (hv : Tracks id history v)
-    (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
+    (henv : ∀ issued ∈ history, CodeEntry.Bounds issued.env)
     (hprofiles : ∀ issued ∈ history, issued.profile = profile)
     (h : stream.retire_all_code_batches visitor id v pending = .ok (.Ok (), v', remaining)) :
     Tracks id history v' ∧ remaining.val = [] ∧

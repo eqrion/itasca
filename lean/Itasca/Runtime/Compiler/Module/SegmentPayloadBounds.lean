@@ -10,9 +10,6 @@ private theorem vector_length_bound {α : Type} {R : α → List U8 → Prop} {v
 private theorem element_payload_bound {profile entry bytes}
     (encoded : ElementEncodingFor profile entry bytes) : entry.init.length < 2^32 := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨table, offset, values, tb, ob, ib, rfl, _, _, encoded, _⟩ := encoded
-    simpa using vector_length_bound encoded
   | Wasm2 =>
     cases encoded with
     | activeIndices _ _ encoded | passiveIndices _ encoded | explicitIndices _ _ _ encoded
@@ -23,9 +20,6 @@ private theorem element_payload_bound {profile entry bytes}
 private theorem data_payload_bound {profile entry bytes}
     (encoded : DataEncodingFor profile entry bytes) : entry.init.length < 2^32 := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨memory, offset, mb, ob, ib, _, _, _, encoded, _⟩ := encoded
-    exact vector_length_bound encoded
   | Wasm2 =>
     cases encoded with
     | active _ _ encoded | passive _ encoded => exact vector_length_bound encoded
@@ -58,7 +52,7 @@ theorem module_segment_payload_bounds {R raw bytes profile}
     (∀ element ∈ raw.elements, element.init.length < 2^32) ∧
     (∀ segment ∈ raw.data, segment.init.length < 2^32) := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, _, _, _⟩ := encoded
+    codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, _, _⟩ := encoded
   exact ⟨padded_property hel (fun _ _ h => element_payload_bound h),
     padded_property hd (fun _ _ h => data_payload_bound h)⟩
 

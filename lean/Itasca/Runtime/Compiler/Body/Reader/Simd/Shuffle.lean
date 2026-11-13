@@ -36,7 +36,7 @@ theorem reader_simd_shuffle_wasm2 {data env locals index st}
   have within : next.val ≤ data.length := by
     obtain ⟨_, _, _, bound, _⟩ := decoded
     exact bound
-  have effect := p.shuffle_reader (by intro h; cases h) next within capacity (by
+  have effect := p.shuffle_reader next within capacity (by
     intro low high position bits
     obtain ⟨prefixBytes, first, last, within, leb⟩ := decoded
     obtain ⟨lower, upper, lo, hi, span⟩ := bits

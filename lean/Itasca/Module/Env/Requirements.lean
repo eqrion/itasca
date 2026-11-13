@@ -21,8 +21,7 @@ def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc)
     (profile : ValidationProfile) : Prop :=
   match desc with
   | .Func idx => idx.val < env.types.val.length
-  | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS ∧
-      (profile = .Wasm1 → env.table_types.val.length + 1 ≤ 1)
+  | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
   | .Memory mt => ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES ∧
       env.mem_types.val.length + 1 ≤ 1
   | .Global _ => True
@@ -36,7 +35,7 @@ def rawMemories (entries : List ModuleBinary.Import) : List wasm_types.MemType :
   entries.filterMap (fun e => match e.desc with | .Memory mt => some mt | _ => none)
 
 /-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
-on the merged table and memory spaces, so imports can be processed in order. -/
+on the merged memory space, so imports can be processed in order. -/
 structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import)
     (profile : ValidationProfile) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
@@ -44,7 +43,6 @@ structure ImportsValid (env : metadata.Env) (entries : List ModuleBinary.Import)
     | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
     | .Memory mt => ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES
     | .Global _ => True
-  tables : profile = .Wasm1 → env.table_types.val.length + (rawTables entries).length ≤ 1
   memories : env.mem_types.val.length + (rawMemories entries).length ≤ 1
 
 /-- A raw element segment is valid against `env`. An active segment names a table of its element
@@ -60,15 +58,10 @@ def ElementValidRaw (env : metadata.Env) (entry : ModuleBinary.Element) : Prop :
 theorem ImportsValid.head {profile} {env entry entries} (h : ImportsValid env (entry :: entries) profile) :
     ImportValid env entry.desc profile := by
   have hd := h.descriptors entry (by simp)
-  have ht := h.tables
   have hm := h.memories
   cases he : entry.desc <;> simp only [he, ImportValid] at hd ⊢
   · exact hd
-  · refine ⟨hd, ?_⟩
-    intro hprofile
-    have ht := ht hprofile
-    simp [rawTables, he] at ht
-    omega
+  · exact hd
   · refine ⟨hd, ?_⟩
     simp [rawMemories, he] at hm
     omega
@@ -84,28 +77,17 @@ theorem ImportsValid.tail {profile} {env result actual entries}
       | .Table tt => ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
       | .Memory mt => ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES
       | .Global _ => True := fun e he => h.descriptors e (by simp [he])
-  have ht := h.tables
   have hm := h.memories
   cases he : actual.desc <;> simp only [he] at ha
   · obtain ⟨_, _, hr, _, _⟩ := ha
     rw [hr]
-    exact ⟨hd, by simpa [rawTables, ModuleEnv.rawImport, he] using ht,
-      by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
+    exact ⟨hd, by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
+  · obtain ⟨hr, _, _⟩ := ha
+    rw [hr]
+    exact ⟨hd, by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
   · obtain ⟨hr, hs, _, _⟩ := ha
     rw [hr]
-    refine ⟨hd, ?_, by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
-    simp only
-    intro hprofile
-    have ht := ht hprofile
-    rw [hs]
-    have hl : (rawTables (ModuleEnv.rawImport actual :: entries)).length = (rawTables entries).length + 1 := by
-      simp [rawTables, ModuleEnv.rawImport, he]
-    rw [hl] at ht
-    simp only [List.length_append, List.length_singleton]
-    omega
-  · obtain ⟨hr, hs, _, _⟩ := ha
-    rw [hr]
-    refine ⟨hd, by simpa [rawTables, ModuleEnv.rawImport, he] using ht, ?_⟩
+    refine ⟨hd, ?_⟩
     simp only
     rw [hs]
     have hl : (rawMemories (ModuleEnv.rawImport actual :: entries)).length = (rawMemories entries).length + 1 := by
@@ -115,8 +97,7 @@ theorem ImportsValid.tail {profile} {env result actual entries}
     omega
   · obtain ⟨hr, _, _⟩ := ha
     rw [hr]
-    exact ⟨hd, by simpa [rawTables, ModuleEnv.rawImport, he] using ht,
-      by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
+    exact ⟨hd, by simpa [rawMemories, ModuleEnv.rawImport, he] using hm⟩
 
 end Itasca.ModuleSections
 
@@ -153,8 +134,7 @@ def SectionValid (raw : ModuleBinary.Module) (id : Nat) (env : metadata.Env)
   | 1 => ∀ ft ∈ raw.types, Profile.FuncTypeAdmissible profile ft
   | 2 => ModuleSections.ImportsValid env raw.imports profile
   | 3 => ∀ idx ∈ raw.functions, idx.val < env.types.val.length
-  | 4 => (∀ tt ∈ raw.tables, ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS) ∧
-      (profile = .Wasm1 → env.table_types.val.length + raw.tables.length ≤ 1)
+  | 4 => ∀ tt ∈ raw.tables, ModuleBinary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
   | 5 => (∀ mt ∈ raw.memories, ModuleBinary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES) ∧
       env.mem_types.val.length + raw.memories.length ≤ 1
   | 6 => ∀ g ∈ raw.globals, ModuleConstants.Valid env g.init g.gtype.valtype

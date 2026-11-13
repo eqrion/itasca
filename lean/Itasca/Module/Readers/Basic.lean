@@ -88,13 +88,12 @@ theorem metadata.have_bytes.spec (data : Slice U8) (pos n : Usize)
   unfold metadata.have_bytes
   step* <;> scalar_tac
 
-/-- `metadata.decode_value_type` returns a value type allowed by the profile, with its exact
-encoding. -/
+/-- `metadata.decode_value_type` returns a value type with its exact encoding. -/
 @[step]
 theorem metadata.decode_value_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
     metadata.decode_value_type data pos profile ⦃ r =>
-      ModuleBinary.ParserPost (ModuleBinary.ValueTypeEncodingFor profile) data pos r ⦄ := by
+      ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
   cases r with
   | Err e =>
@@ -109,16 +108,15 @@ theorem metadata.decode_value_type.spec (data : Slice U8) (pos : Usize)
           ModuleBinary.ParserPost]
       all_goals split
       all_goals first
-        | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
+        | exact ⟨_, rfl, by with_unfolding_all exact hs⟩
         | simp
 
-/-- `metadata.decode_elem_type` returns an element type allowed by the profile, with its exact
-encoding. -/
+/-- `metadata.decode_elem_type` returns an element type with its exact encoding. -/
 @[step]
 theorem metadata.decode_elem_type.spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
     metadata.decode_elem_type data pos profile ⦃ r =>
-      ModuleBinary.ParserPost (ModuleBinary.ElemTypeEncodingFor profile) data pos r ⦄ := by
+      ModuleBinary.ParserPost ModuleBinary.ElemTypeEncoding data pos r ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_byte.module_spec data pos)
   cases r with
   | Err e =>
@@ -133,23 +131,15 @@ theorem metadata.decode_elem_type.spec (data : Slice U8) (pos : Usize)
           ModuleBinary.ParserPost]
       all_goals split
       all_goals first
-        | exact ⟨_, ⟨rfl, trivial⟩, by with_unfolding_all exact hs⟩
+        | exact ⟨_, rfl, by with_unfolding_all exact hs⟩
         | simp
 
-/-- `metadata.decode_value_type` returns a value type with its exact encoding, whatever the
-profile admits. -/
+/-- `metadata.decode_value_type` returns a value type with its exact encoding. -/
 theorem metadata.decode_value_type.syntax_spec (data : Slice U8) (pos : Usize)
     (profile : ValidationProfile) :
     metadata.decode_value_type data pos profile ⦃ r =>
-      ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ := by
-  apply WP.spec_mono (metadata.decode_value_type.spec data pos profile)
-  intro result h
-  cases result with
-  | Err _ => trivial
-  | Ok pair =>
-    obtain ⟨ty, next⟩ := pair
-    obtain ⟨bytes, he, hs⟩ := h
-    exact ⟨bytes, he.1, hs⟩
+      ModuleBinary.ParserPost ModuleBinary.ValueTypeEncoding data pos r ⦄ :=
+  metadata.decode_value_type.spec data pos profile
 
 private theorem copy_bytes_body (data : Slice U8) (last : Usize) (out : alloc.vec.Vec U8)
     (i : Usize) (hi : i.val < last.val) (hb : last.val ≤ data.length)

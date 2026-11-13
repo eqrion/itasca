@@ -65,7 +65,7 @@ theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : metadata.Env) (p
     (bodyBytes localCount peak index : Nat) (start finish : Usize) (entries : List ModuleBinary.Code)
     (typed : ModuleCode.EntriesTyped (profile := profile) env index entries)
     (encoded : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncodingWithinLimits profile)) data start entries finish)
-    (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
+    (bounds : CodeEntry.Bounds env)
     (limits : Profile.EnvironmentWithinLimits env)
     (maxima : ∀ (ordinal position next : Usize) (entry : ModuleBinary.Code),
       ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data position entry next →
@@ -83,13 +83,13 @@ theorem PreparedBatchSource.of_encoded (data : Slice U8) (env : metadata.Env) (p
     cases typed with
     | cons head rest =>
       obtain ⟨indexBound,entryTyped,_⟩ := head
-      have fullTyped := Profile.EntryTyped.of_core entryTyped (environment.1 _ (List.getElem_mem _))
+      have fullTyped := Profile.EntryTyped.of_core (profile := profile) entryTyped
       let ordinal := sourceOrdinal env index indexBound
       have value : ordinal.val = index := rfl
       obtain ⟨next,entryBytes,remaining⟩ := encoded.rep_cons
       obtain ⟨w,ending,body⟩ := source_entry_prepared data env ordinal start next profile entry
         (by simpa only [value] using indexBound) (by simpa only [value] using fullTyped)
-        bounds environment limits entryBytes
+        bounds limits entryBytes
       obtain ⟨bytes,locals,operands⟩ := maxima ordinal start next entry entryBytes w ending body
       exact .cons ordinal value (by simpa only [value] using indexBound) (by simpa only [value] using fullTyped)
         entryBytes w ending bytes locals operands (ih (index+1) next rest remaining)
@@ -120,7 +120,7 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
     (paid : CompilationBudgetEffect base before.budget
       (fun counter => issued.first_func.val*functionDemandRate bodyBytes localCount counter))
     (slots : FunctionSlotPrefix issued.env.func_type_indices.val.length issued.first_func.val before.functions.val)
-    (bounds : CodeEntry.Bounds issued.env) (environment : Profile.Environment issued.profile issued.env)
+    (bounds : CodeEntry.Bounds issued.env)
     (limits : Profile.EnvironmentWithinLimits issued.env)
     (signatures : SignatureSequence before.signatures.val issued.env.types.val)
     (functionSlots : before.func_param_slots.val.map (fun word => word.val) =
@@ -144,7 +144,7 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
     base bodyBytes localCount peak before issued.seed 0#usize (Slice.len issued.code) entries
     (by simpa only [StreamBatch.Issued.seed,show (0#usize).val = 0 from rfl,Nat.add_zero] using source)
     envelope (by simpa [StreamBatch.Issued.seed] using paid) (by simpa [StreamBatch.Issued.seed] using slots)
-    rfl rfl rfl rfl (by simpa [StreamBatch.Issued.seed] using count) bounded.2.1 bounds environment limits signatures functionSlots bounded.2.2 arithmetic
+    rfl rfl rfl rfl (by simpa [StreamBatch.Issued.seed] using count) bounded.2.1 bounds limits signatures functionSlots bounded.2.2 arithmetic
   have run := (submit_loop_accepted ops before middle issued.seed worker 0#usize (.Ok ()) compiled).2
   have identity := (run.reachable .seed).validation.1
   obtain ⟨_,_,_,sameCode,_,_,sameCount,_⟩ := identity
@@ -233,7 +233,7 @@ theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
     have source := PreparedBatchSource.of_encoded issued.code issued.env issued.profile bodyBytes localCount peak
       issued.first_func.val 0#usize (Slice.len issued.code) entries
       (by simpa only [selected] using typed) ⟨issued.code.val,by simpa only [selected] using encoded,by constructor <;> simp⟩
-      valid.entry_bounds (by simpa only [selected] using valid.profile) (by simpa only [selected] using valid.limits)
+      valid.entry_bounds (by simpa only [selected] using valid.limits)
       (by cases sameEnv; cases selected; exact maxima issued.code)
     have length := workers.length_eq
     have capacity : before.completed.length < 4 := by
@@ -242,7 +242,7 @@ theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
       (compiler_submit_batch_available ops law bound allocation base bodyBytes localCount peak before issued entries source count valid.bounded
         (by simpa only [sameEnv] using envelope) (by simpa only [sameEnv,first] using ready.paid)
         (by simpa only [sameEnv,first] using ready.slots) valid.entry_bounds
-        (by simpa only [selected] using valid.profile) (by simpa only [selected] using valid.limits)
+        (by simpa only [selected] using valid.limits)
         (by simpa only [sameEnv] using ready.signatures) (by simpa only [sameEnv] using ready.functionSlots) ready.origin
         (four_room _ capacity) (by omega))
     dsimp only at status slots paid queueEq finished

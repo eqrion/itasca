@@ -24,12 +24,4 @@ theorem source_functions_eq (raw : ModuleBinary.Module) :
     sourceFunctions raw = (List.zipWith CodeEntry.function raw.functions raw.codes).map functionCode := by
   simp [sourceFunctions, List.map_zipWith, Function.comp_def]
 
-theorem witness_type_profile {V : Type} {visitor : code.OpVisitor V}
-    {data env index start finish before after profile}
-    (w : CodeEntry.Witness visitor data env index start finish before after profile)
-    (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft) : Profile.FuncType profile w.ft := by
-  apply types
-  rw [← w.function_type]
-  exact List.getElem_mem _
-
 end Itasca.Runtime.Compiler

@@ -49,12 +49,11 @@ theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted 
   obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
   exact hr
 
-/-- `metadata.decode_const_expr` accepts a valid, allowed `ConstEncoding` span and returns its end. -/
+/-- `metadata.decode_const_expr` accepts a valid `ConstEncoding` span and returns its end. -/
 theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     {env : metadata.Env} {expr : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hb : ModuleBinary.At ModuleBinary.ConstEncoding data pos expr next)
-    (hv : ModuleConstants.Valid env expr ty) (profile : ValidationProfile)
-    (hallowed : ModuleBinary.ConstAllowed profile expr) :
+    (hv : ModuleConstants.Valid env expr ty) (profile : ValidationProfile) :
     metadata.decode_const_expr data pos env ty profile = .ok (.Ok (expr, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   cases he with
@@ -108,14 +107,13 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
   | refNull refTy =>
     cases hv
     cases profile with
-    | Wasm1 => exact hallowed.elim
     | Wasm2 =>
       obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
         (first := [0xD0#u8]) (rest := [ModuleBinary.elemByte refTy, 0x0B#u8]) hs
       obtain ⟨beforeEnd, himm, hend⟩ := Wasm1.BytesAt.split
         (first := [ModuleBinary.elemByte refTy]) (rest := [0x0B#u8]) hrest
       have hr := metadata.decode_elem_type.complete data afterOp refTy beforeEnd
-        ⟨_, rfl, himm⟩ .Wasm2 (by cases refTy <;> trivial)
+        ⟨_, rfl, himm⟩ .Wasm2
       have ht : wasm_types.ElemType.value_type refTy = .ok (ModuleConstants.referenceValueType refTy) := by
         cases refTy <;> rfl
       simp [metadata.decode_const_expr, hop.read_byte, hr, ht,
@@ -125,7 +123,6 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     cases hv with
     | refFunc _ hidx =>
       cases profile with
-      | Wasm1 => exact hallowed.elim
       | Wasm2 =>
         obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
           (first := [0xD2#u8]) (rest := immediate ++ [0x0B#u8]) hs
@@ -138,7 +135,6 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
   | @v128 low high subBytes lowBytes highBytes hsub hlo hhi =>
     cases hv
     cases profile with
-    | Wasm1 => exact hallowed.elim
     | Wasm2 =>
       obtain ⟨afterOp, hop, hrest⟩ := Wasm1.BytesAt.split
         (first := [0xFD#u8]) (rest := subBytes ++ lowBytes ++ highBytes ++ [0x0B#u8]) hs

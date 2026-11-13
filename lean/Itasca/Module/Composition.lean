@@ -31,17 +31,16 @@ theorem encoding {profile : ValidationProfile} {codeRel : Code → List U8 → P
     (henv : ModuleEnv.PrefixEncoding decls before profile)
     (hcode : PaddedEncoding 10#u8 (VecEncoding codeRel) [] codes codeBytes)
     (htail : ModuleTail.Encoding segments tailBytes profile)
-    (hallowed : ModuleTypesAllowed profile (decls.module codes segments))
     (hcount : DataCountValid (decls.module codes segments)) :
     ModuleEncodingWith codeRel (decls.module codes segments) (before ++ codeBytes ++ tailBytes) profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start,
     elements, dataCount, customs, htypes, himports, hfunctions, htables, hmemories, hglobals,
-    hexports, hstart, helements, hdataCount, hcustoms, he, _⟩ := henv
+    hexports, hstart, helements, hdataCount, hcustoms, he⟩ := henv
   obtain ⟨datas, trailing, hdatas, htrailing, ht⟩ := htail
   refine ⟨types, imports, functions, tables, memories, globals, exports, start,
     elements, dataCount, customs ++ codeBytes, datas, trailing, htypes, himports, hfunctions,
     htables, hmemories, hglobals, hexports, hstart, helements, hdataCount,
-    padded_prepend_custom hcustoms hcode, hdatas, htrailing, ?_, hallowed, hcount⟩
+    padded_prepend_custom hcustoms hcode, hdatas, htrailing, ?_, hcount⟩
   simp only [he, ht, List.append_assoc]
 
 end Itasca.ModuleComposition

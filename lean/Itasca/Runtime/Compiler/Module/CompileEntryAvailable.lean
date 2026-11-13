@@ -23,7 +23,7 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
     (position : index.val = batch.first_func.val+batch.num_validated.val)
     (indexBound : index.val < batch.env.func_type_indices.val.length)
     (typed : Profile.EntryTyped batch.profile batch.env batch.env.func_type_indices.val[index.val] entry)
-    (bounds : CodeEntry.Bounds batch.env) (environment : Profile.Environment batch.profile batch.env)
+    (bounds : CodeEntry.Bounds batch.env)
     (limits : Profile.EnvironmentWithinLimits batch.env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits batch.profile) batch.code batch.validated_end entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
@@ -42,7 +42,7 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
         w.finish = finish ∧ CompilationBudgetEffect budget after.budget (preparedFunctionAllowance w.ctx w.body.length) := by
   obtain ⟨⟨reply,after⟩,called,accepted,ranges,header,closed,codeBound,finished,effect⟩ := WP.spec_imp_exists
     (compiler_entry_finish_available ops law bound allocation batch.code batch.env index batch.validated_end finish batch.profile
-      entry indexBound typed bounds environment limits encoded signatures functionSlots budget batchStart initial
+      entry indexBound typed bounds limits encoded signatures functionSlots budget batchStart initial
       signaturesMatch slotsMatch batchBound created demand)
   dsimp only at accepted ranges header closed codeBound finished effect
   subst reply
@@ -82,7 +82,7 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (position : frame.index.val = dispatched.first_func.val+dispatched.num_validated.val)
     (indexBound : frame.index.val < dispatched.env.func_type_indices.val.length)
     (typed : Profile.EntryTyped dispatched.profile dispatched.env dispatched.env.func_type_indices.val[frame.index.val] entry)
-    (bounds : CodeEntry.Bounds dispatched.env) (environment : Profile.Environment dispatched.profile dispatched.env)
+    (bounds : CodeEntry.Bounds dispatched.env)
     (limits : Profile.EnvironmentWithinLimits dispatched.env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits dispatched.profile)
       dispatched.code dispatched.validated_end entry finish)
@@ -107,7 +107,7 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
     (alloc.vec.Vec.deref before.signatures) (alloc.vec.Vec.deref before.func_param_slots)
     {before.budget with marker := ()} batchStart)
   obtain ⟨count,final,countValue,validated,finished,w,ending,effect⟩ := compiler_batch_entry_available ops law bound allocation
-    dispatched frame.index finish entry noError remaining position indexBound typed bounds environment limits encoded
+    dispatched frame.index finish entry noError remaining position indexBound typed bounds limits encoded
     (alloc.vec.Vec.deref before.signatures) (alloc.vec.Vec.deref before.func_param_slots)
     {before.budget with marker := ()} batchStart initial (by simpa [alloc.vec.Vec.deref] using signaturesMatch)
     (by simpa [alloc.vec.Vec.deref] using slotsMatch) (by omega) created demand

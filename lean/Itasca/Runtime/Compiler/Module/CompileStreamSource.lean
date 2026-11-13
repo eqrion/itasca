@@ -41,7 +41,7 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 source (initialScheduler A limits codeStart) scheduler storage env accepted
-  obtain ⟨raw,encoded,matched,valid,entryBounds,environmentProfile,functions,types,codeCount,
+  obtain ⟨raw,encoded,matched,valid,entryBounds,functions,types,codeCount,
     header,entries,codeBound,moduleBound⟩ := stream_run_source
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)

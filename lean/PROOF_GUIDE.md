@@ -1,8 +1,8 @@
 # A guide to the itasca proofs
 
 itasca proves that its Rust validator terminates on every input, accepts only
-valid modules, and accepts every valid module within its implementation limits,
-for both Wasm 1.0 and Wasm 2.0. This guide starts at the public theorems and
+valid modules, and accepts every valid module within its implementation limits
+for Wasm 2.0. This guide starts at the public theorems and
 works inward. It assumes you know Wasm but not Lean. For setup, commands, and the
 directory layout, see the [Lean guide](README.md).
 
@@ -16,13 +16,14 @@ guarantees about `Itasca.metadata.validate_module`:
 
 | Theorem | Guarantee |
 | --- | --- |
-| `profile_total` | For any bytes and either profile, validation returns an ordinary result (`Ok` or `Err`) without panic, overflow, out-of-bounds access, or divergence. |
+| `profile_total` | For any bytes, validation returns an ordinary result (`Ok` or `Err`) without panic, overflow, out-of-bounds access, or divergence. |
 | `profile_sound` | If validation returns `Ok decoded`, then `ModuleSound.Validated data decoded profile` holds. |
 | `profile_spec` | `profile_total` and `profile_sound` together. |
 | `profile_complete` | Independently encoded, well-typed modules within the limits are accepted, with matching returned metadata. |
 | `profile_complete_with_metadata` | Also identifies the results of the import and export type accessors. |
 
-`profile_*` theorems cover both `.Wasm1` and `.Wasm2`. Allocation failure is
+The `profile_*` theorem names and `ValidationProfile` parameter remain during
+this cleanup; the only supported profile is `.Wasm2`. Allocation failure is
 outside the model, and nothing
 here says anything about Wasm execution or a compiler consuming the callbacks.
 
@@ -37,7 +38,7 @@ module** such that:
 | `Elaborates raw (moduleOf raw)` | The raw module translates to SpecTec syntax with valid type references and matching function/code counts ([Module/Elab/Elaboration](Itasca/Module/Elab/Elaboration.lean)). |
 | `Matches decoded.env decoded.tail raw` | The returned declarations, data, and index-space caches describe that module ([Module/Elab/Metadata](Itasca/Module/Elab/Metadata.lean)). |
 | `Module_ok (moduleOf raw)` | The module is valid under the generated SpecTec typing rules. |
-| `ModuleElaboration.Profile raw profile` | Extra language conditions hold: export-name uniqueness, table/memory counts, profile-specific signatures and bodies, and `ref.func` declarations ([Module/Elab/Profile](Itasca/Module/Elab/Profile.lean)). |
+| `ModuleElaboration.Profile raw profile` | Extra language conditions hold: export-name uniqueness, the memory-count bound, and `ref.func` declarations ([Module/Elab/Profile](Itasca/Module/Elab/Profile.lean)). |
 | `AccessorTypes decoded.env raw` | `import_types` and `export_types` return this module's external types in order. |
 
 Because every component talks about the same witness, the bytes, the typing
@@ -125,19 +126,15 @@ bytes". It allows nonminimal LEB128 and keeps raw float and vector bits.
 `moduleOf` translates raw modules to SpecTec syntax, and `Elaborates` rules out
 bad lookups hidden by that total function.
 
-The profile fills in what generated typing does not say. Wasm 1.0 adds its
-single-result and strict `br_table` restrictions. Both profiles add
+The profile fills in what generated typing does not say. It adds
 export-name uniqueness and the `ref.func` declaration condition in
-[Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean). The Wasm 2.0
-instruction restriction is `True` because the binary grammar already bounds the
-instruction set.
+[Spec/DeclaredReferences](Itasca/Spec/DeclaredReferences.lean). The binary grammar bounds the Wasm 2.0 instruction set.
 
 ## From the API inward
 
 ```mermaid
 flowchart BT
-  W1[Wasm 1.0 body proofs] --> P[Shared profile body and entry certificates]
-  W2[Wasm 2.0 body proofs] --> P
+  W[Wasm 2.0 body proofs] --> P[Profile body and entry certificates]
   P --> B[Issued batches and worker provenance]
   B --> D[Generic streaming driver]
   M[Environment and tail parsing plus module assembly] --> D
@@ -189,10 +186,8 @@ instruction trees. The body invariant connects them midway through a function.
 carries cursor and stack bounds, a partially rebuilt instruction tree (a
 *zipper*, in [Wasm2/Frames](Itasca/Wasm2/Frames.lean)) related to the runtime
 stacks, typing for processed instructions, and byte provenance for the consumed
-prefix. These are proof witnesses, not runtime state. The state takes the
-profile: under Wasm 1.0 it also carries Wasm 1.0 byte provenance and the
-Wasm 1.0 restrictions for each open frame
-([Wasm2/ProfileFrames](Itasca/Wasm2/ProfileFrames.lean)).
+prefix. These are proof witnesses, not runtime state. The state retains the
+profile parameter for the current single supported profile, Wasm 2.0.
 
 The invariant constrains only consumed bytes, so the rest of the body may be
 malformed. `Pending` is the state after reading an opcode but before its
@@ -209,15 +204,9 @@ instruction cases, [Wasm2/SoundLoop](Itasca/Wasm2/SoundLoop.lean) lifts them
 through the loop, and `State.finished` turns a closed state at the end of the
 body into encoding and typing evidence.
 
-Both profiles run the same Rust body reader. Wasm 1.0 adds filters before the
-shared rules: opcodes outside the Wasm 1.0 grammar, block types other than the
-empty and single-value ones, a non-zero `call_indirect` table byte, and
-`br_table` targets of different types
-([Wasm2/ProfileFilters](Itasca/Wasm2/ProfileFilters.lean)).
-[Wasm2/ProfileAgreement](Itasca/Wasm2/ProfileAgreement.lean) shows a Wasm 1.0
-run either matches the Wasm 2.0 run or stops at a filter.
-[Profile/Body](Itasca/Profile/Body.lean) connects each profile to the common
-contract in [Profile/BodySpec](Itasca/Profile/BodySpec.lean).
+The Rust body reader and its proofs implement the Wasm 2.0 instruction grammar.
+The profile-parameterized body contract remains the interface used by the
+current proof layers.
 
 ### Following `nop`
 
@@ -251,7 +240,7 @@ concrete blocks, `if`s, loops, and branch tables.
 ## Callbacks and uniqueness
 
 [Profile/BodyVisitor](Itasca/Profile/BodyVisitor.lean) relates visiting to plain
-validation. `FullVisitor.Total` allows callback errors; `FullVisitor.Accepts`
+validation for Wasm 2.0. `FullVisitor.Total` allows callback errors; `FullVisitor.Accepts`
 requires callback success. The trace theorems (`trace_sound` and
 `trace_complete` in [Results/Trace](Itasca/Results/Trace.lean), proved in
 [Wasm2/Trace/Correspondence](Itasca/Wasm2/Trace/Correspondence.lean)) identify
@@ -270,7 +259,7 @@ at most one decoding, so the trees agree.
 2. Read `empty_accepted` and `empty_validated` in
    [Examples/Module/Basic](Itasca/Examples/Module/Basic.lean), and
    [Examples/Wasm2/Module](Itasca/Examples/Wasm2/Module.lean), where a
-   multi-result module is accepted under Wasm 2.0 and rejected under Wasm 1.0.
+   multi-result module is accepted.
 3. Follow `nop`, then read `Wasm2.State` and `State.finished`.
 4. Follow `Profile.Entry` into `ModuleSound.assembled_regions`, and the stream
    [Contracts](Itasca/Contracts.lean) if streaming interests you.

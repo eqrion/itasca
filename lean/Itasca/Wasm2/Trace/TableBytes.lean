@@ -230,7 +230,7 @@ theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x0e#u8 v =
       code.branch_table_with visitor st data env profile v := by
   have hc : code.check_opcode profile 0x0e#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

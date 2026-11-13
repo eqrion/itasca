@@ -20,8 +20,7 @@ theorem Pending.fixed_reader {data env profile locals index st}
     (typed : ∀ C, wf_context C → EnvTranslation.Matches env ⟨locals,p.ft.results⟩ C →
       Instr_ok C source (.mk_functype (.mk_list (Wasm2.Simd.inputTypes inputs))
         (.mk_list (Wasm2.Simd.outputTypes output))))
-    (encoded : Wasm2.At data p.start (.plain source) position)
-    (hwasm2 : profile ≠ .Wasm1) :
+    (encoded : Wasm2.At data p.start (.plain source) position) :
     Wasm2.Simd.readFixed {st.core with pos := position} inputs output ⦃ r =>
       r.2.ctrls = st.core.ctrls ∧ r.2.pos = position ∧
       ∀ unit, r.1 = .Ok unit → ∃ values,
@@ -59,7 +58,7 @@ theorem Pending.fixed_reader {data env profile locals index st}
   refine ⟨values,finalEffect,?_⟩
   exact p.append_reader_context C outer spine header base out source
     p.current.ctrl.polymorphic_base values wf finalEncoded finalTyped finalControls finalBlocks valuesEq
-    declared (fun hp => absurd hp hwasm2)
+    declared
 
 theorem Pending.fixed_reader_accepted {data env locals index st}
     (p : Wasm2.Pending data env .Wasm2 locals index st)
@@ -77,7 +76,7 @@ theorem Pending.fixed_reader_accepted {data env locals index st}
     out.ctrls = st.core.ctrls ∧ out.pos = position ∧
       ∃ values, Wasm2.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
         inputs output values ∧ Wasm2.ReaderPost p out source p.current.ctrl.polymorphic_base values := by
-  have effect := p.fixed_reader position inputs output source capacity wf declared typed encoded (by intro h; cases h)
+  have effect := p.fixed_reader position inputs output source capacity wf declared typed encoded
   rw [read, WP.spec_ok] at effect
   exact ⟨effect.1, effect.2.1, effect.2.2 () rfl⟩
 

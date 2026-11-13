@@ -29,50 +29,28 @@ def Validated (data : Slice U8) (decoded : metadata.Module)
 
 private theorem code_guards {env indices codes profile}
     (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes) :
-    (∀ entry ∈ codes, ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2) ∧
-    (env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false) := by
+    env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false := by
   induction h with
   | nil => simp
   | cons hp _ ih =>
-    constructor
-    · intro entry hm
-      rcases List.mem_cons.mp hm with rfl | hm
-      · exact hp.locals_allowed
-      · exact ih.1 entry hm
-    · intro hc entry hm
-      rcases List.mem_cons.mp hm with rfl | hm
-      · exact hp.no_data hc
-      · exact ih.2 hc entry hm
+    intro hc entry hm
+    rcases List.mem_cons.mp hm with rfl | hm
+    · exact hp.no_data hc
+    · exact ih hc entry hm
 
 private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
-    (ha : ModuleBinary.ModuleTypesAllowed profile (decls.module [] []))
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
-    (hs : ∀ segment ∈ segments, ModuleData.Valid env segment)
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
-    ModuleBinary.ModuleTypesAllowed profile (decls.module codes (segments.map ModuleData.raw)) ∧
     ModuleBinary.DataCountValid (decls.module codes (segments.map ModuleData.raw)) := by
-  have hg := code_guards hcodes
-  constructor
-  · refine ⟨ha.1, ha.2.1, ha.2.2.1, ha.2.2.2.1, hg.1, ha.2.2.2.2.2.1, ?_⟩
-    intro entry hm
-    obtain ⟨actual, hactual, rfl⟩ := List.mem_map.mp hm
-    have hv := hs actual hactual
-    cases hm : actual.mode with
-    | Passive => simp [ModuleData.raw, hm]
-    | Active idx offset =>
-      have ho : ModuleConstants.Valid env offset .I32 := by
-        exact (show idx.val < env.mem_types.val.length ∧ ModuleConstants.Valid env offset .I32 from by simpa [ModuleData.Valid, hm] using hv).2
-      simpa only [ModuleData.raw, hm] using ho.const_allowed
-        (show ModuleBinary.ValueTypeAllowed profile .I32 from by cases profile <;> trivial)
-  · unfold ModuleBinary.DataCountValid
-    change (match decls.dataCount with
-      | none => ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false
-      | some count => count.val = (segments.map ModuleData.raw).length)
-    rw [hr.dataCount]
-    cases he : env.data_count with
-    | none => exact hg.2 he
-    | some count => simpa using hc count he
+  unfold ModuleBinary.DataCountValid
+  change (match decls.dataCount with
+    | none => ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false
+    | some count => count.val = (segments.map ModuleData.raw).length)
+  rw [hr.dataCount]
+  cases he : env.data_count with
+  | none => exact code_guards hcodes he
+  | some count => simpa using hc count he
 
 /-- Like `assembled`, from byte lists that tile `data` exactly as `before ++ codeBytes ++
 tailBytes` instead of spans of one slice. Every semantic witness still belongs to one raw
@@ -104,7 +82,7 @@ theorem assembled_regions {validationProfile : ValidationProfile} {data : Slice 
     typed hrep.cache hv hiNames heNames hcodes hsegments hdataCount hxts,
     profile hrep.cache hv hcodes, accessorTypes hrep.cache hv heNames⟩
   rw [hbytes, ← represents_module hrep]
-  have hg := assembly_guards hrep henv.allowed hcodes hsegments hdataCount
-  exact ModuleComposition.encoding henv hcode htail hg.1 hg.2
+  have hg := assembly_guards hrep hcodes hdataCount
+  exact ModuleComposition.encoding henv hcode htail hg
 
 end Itasca.ModuleSound

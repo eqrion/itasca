@@ -5,8 +5,8 @@ import Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody
 
 /-!
 Opcode bytes a body reader step can start with, grouped by the compiler entry
-point that handles them. Both profiles share every family except the Wasm 2.0
-extensions: table access, references, the `0xFC` prefix, SIMD and typed select.
+point that handles them. The base dispatcher is extended by Wasm 2.0
+families: table access, references, the `0xFC` prefix, SIMD and typed select.
 -/
 
 set_option maxHeartbeats 8000000
@@ -106,6 +106,18 @@ theorem float_base_opcode_of_mem {opcode : U8} (member : opcode.val ∈ floatBas
   · exact ⟨.promote,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
   · exact ⟨.demote,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
 
+/-- Opcode families handled by the base `code.step` dispatcher. -/
+inductive BaseOpcode : U8 → Prop where
+  | ordinary {opcode} : opcode ∈ readerOrdinaryOpcodes → BaseOpcode opcode
+  | scope {opcode} : ScopeOpcode opcode → BaseOpcode opcode
+  | else_ {opcode} : opcode = 5#u8 → BaseOpcode opcode
+  | end_ {opcode} : opcode = 11#u8 → BaseOpcode opcode
+  | scalar {opcode} : opcode.val ∈ scalarOpcodeValues → BaseOpcode opcode
+  | float {opcode} : opcode.val ∈ floatBaseOpcodeValues → BaseOpcode opcode
+  | memory {opcode} : opcode.val ∈ [63, 64] → BaseOpcode opcode
+  | callIndirect {opcode} : opcode = 17#u8 → BaseOpcode opcode
+  | brTable {opcode} : opcode = 14#u8 → BaseOpcode opcode
+
 /-- The opcode families a successful reader step under `profile` starts
 with, one constructor per compiler entry point. -/
 inductive ReaderOpcode : ValidationProfile → U8 → Prop where
@@ -122,6 +134,11 @@ inductive ReaderOpcode : ValidationProfile → U8 → Prop where
   | misc {opcode} : opcode = 252#u8 → ReaderOpcode .Wasm2 opcode
   | simd {opcode} : opcode = 253#u8 → ReaderOpcode .Wasm2 opcode
   | typedSelect {opcode} : opcode = 28#u8 → ReaderOpcode .Wasm2 opcode
+
+theorem BaseOpcode.reader {profile opcode} : BaseOpcode opcode → ReaderOpcode profile opcode
+  | .ordinary h => .ordinary h | .scope h => .scope h | .else_ h => .else_ h | .end_ h => .end_ h
+  | .scalar h => .scalar h | .float h => .float h | .memory h => .memory h
+  | .callIndirect h => .callIndirect h | .brTable h => .brTable h
 
 /-- The Wasm 2.0 stateful entry point also handles `memory.size` and `memory.grow`. -/
 theorem stateful_opcode_values {opcode : U8}
@@ -155,12 +172,16 @@ macro "reader_opcode_cases " opcode:ident : tactic => `(tactic| all_goals
   reader_opcode)
 
 set_option maxHeartbeats 2000000 in
-theorem numeric_reader_opcode {profile opcode operation}
-    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode := by
+theorem numeric_base_opcode {opcode operation}
+    (meaning : Numeric.opcodeMeaning opcode = some operation) : BaseOpcode opcode := by
   unfold Numeric.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
+
+theorem numeric_reader_opcode {profile opcode operation}
+    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode :=
+  (numeric_base_opcode meaning).reader
 
 theorem memory_reader_opcode {profile opcode operation}
     (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode := by

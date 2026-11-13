@@ -37,13 +37,12 @@ private theorem Pending.append_scalar {data env profile locals index st}
     (hc : s.ctrls.val = p.parents.map Frames.Saved.ctrl ++
       [{ p.current.ctrl with polymorphic_base := poly }])
     (hv : s.vals.val = outer ++ newVals)
-    (_hlen : newVals.length ≤ p.current.vals.length + 1)
-    (hbr : data.val[p.start.val]'p.inbounds ≠ 0x0E#u8) : p.After {st with core := s} := by
+    (_hlen : newVals.length ≤ p.current.vals.length + 1) : p.After {st with core := s} := by
   have hb := p.opened
   obtain ⟨_, _, _, _, _, _, _, blocks, _⟩ := hb
   exact p.append_result C outer spine header base {st with core := s} op poly newVals hwf
     (At.plain encoded) typed hc (by simpa [hc, _ctrls] using blocks) hv
-    (fun _ => ⟨encoded, encoded.leaf p.inbounds hbr _⟩) (encoded.declared _)
+     (encoded.declared _)
 
 
 end Itasca.Wasm2
@@ -169,8 +168,7 @@ theorem Pending.step_numeric_mapped {data env profile locals index st}
   have encoded : Wasm1.At data p.start (.plain op.instruction) st.core.pos :=
     .no_immediate p.inbounds hbyte p.pos (.numeric opcode op hmap)
   have effect := p.numeric_reader op st.core.pos hsize (.plain encoded) (encoded.declared _)
-    (fun _ C => ⟨encoded, encoded.leaf p.inbounds
-      (by rw [hbyte]; rintro rfl; simp [Numeric.opcodeMeaning] at hmap) C⟩)
+
   dsimp only at effect
   rw [code.step.numeric_dispatch visitor st.core data env ⟨locals,p.ft.results⟩ opcode v (Numeric.NumericOp.bounds hmap).1]
   rw [code.step_numeric.dispatch visitor st.core opcode op v hmap]
@@ -247,14 +245,14 @@ private theorem Pending.index_post_after {data env profile locals index st} (p :
     (r : core.result.Result U32 error.OpError × code.OpIterState)
     (hpost : Scalar.IndexPost ((p.current.form.params p.current.ins).map Translate.valueType) data st.core outer p.current.vals
       (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops op r)
-    (idx : U32) (hr : r.1 = .Ok idx) (hbr : opcode ≠ 0x0E#u8 := by decide) :
+    (idx : U32) (hr : r.1 = .Ok idx) :
     p.After {st with core := r.2} := by
   rcases r with ⟨result, out⟩
   dsimp only at hr
   subst result
   obtain ⟨_, _, _, _, _, _, _, blocks, _⟩ := p.opened
   obtain ⟨values, _, post⟩ := p.index_reader_post C outer spine header base ctrls blocks
-    opcode op hbyte hwf himm out idx hpost hbr
+    opcode op hbyte hwf himm out idx hpost
   exact post.after
 
 /-- `local.get` preserves `Pending` on success. -/
@@ -365,12 +363,12 @@ private theorem Pending.reserved_post_after {data env profile locals index st} (
     (r : core.result.Result Unit error.OpError × code.OpIterState)
     (hpost : Scalar.ReservedPost ((p.current.form.params p.current.ins).map Translate.valueType) data st.core outer p.current.vals
       (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops op r)
-    (hr : r.1 = .Ok ()) (hbr : opcode ≠ 0x0E#u8 := by decide) :
+    (hr : r.1 = .Ok ()) :
     p.After {st with core := r.2} := by
   obtain ⟨⟨hp, hz, hn⟩, hc, rest, hv, hl, ht⟩ := hpost hr
   have hpoly : Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
     simp [Control.polymorphic, ctrls]
-  apply p.append_scalar (hbr := by rw [hbyte]; exact hbr) C outer spine header base ctrls vals r.2 op
+  apply p.append_scalar C outer spine header base ctrls vals r.2 op
     p.current.ctrl.polymorphic_base rest hwf _ (by simpa [hpoly] using ht) _ hv hl
   · exact .of_immediate p.inbounds hbyte p.pos himm (.byte data st.core.pos r.2.pos 0#u8 hp hz hn)
   · simp [hc, ctrls]

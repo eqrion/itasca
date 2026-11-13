@@ -39,9 +39,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     (hi : i.val ≤ count.val) (hlen : i.val + depths.length = count.val + 1)
     (hd : BrTable.LabelsDecoded data st.core.pos depths next)
     (ht : Wasm2.TableTargets env st depths (some n))
-    (harity : arity = none ∨ arity = some n)
-    (hsame : profile = .Wasm1 → ∃ us, (i ≠ 0#u32 → Wasm2.resolve env first = some us) ∧
-      ∀ d ∈ depths, ∃ view, Wasm2.labelAt st d.val = some view ∧ Wasm2.resolve env view = some us) :
+    (harity : arity = none ∨ arity = some n) :
     ∃ s, Wasm2.branchTableLoop st.core data env profile count arity first i = .ok (.Ok (), s) ∧
       s.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
       s.core.ctrls.val = cs ++ [{ c with polymorphic_base := true }] ∧
@@ -55,18 +53,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
     subst k
     have hread := code.read_label_info.complete st data depth middle view ha hfirst hlabel
     have hfirstOk : code.check_table_target profile env (if i = 0#u32 then view else first) view =
-        .ok (.Ok ()) := by
-      cases profile with
-      | Wasm2 => rfl
-      | Wasm1 =>
-        obtain ⟨us, hf, hds⟩ := hsame rfl
-        obtain ⟨view', hl', hv'⟩ := hds depth (by simp)
-        have he : view' = view := Option.some.inj (hl'.symm.trans hlabel)
-        subst view'
-        apply code.check_table_target.complete _ env _ view us _ hv'
-        by_cases h0 : i = 0#u32
-        · simpa [h0] using hv'
-        · simpa [h0] using hf h0
+        .ok (.Ok ()) := rfl
     obtain ⟨len, hlenread, hlenval⟩ := signature.ResultType.len.complete view env ts hts
     have he : len = n := UScalar.eq_of_val_eq (hlenval.trans hn.symm)
     subst len
@@ -105,15 +92,7 @@ theorem Wasm2.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
         simp at hjv
       obtain ⟨out, hrec, hv, hc, hb, hp⟩ := ih s j (some n) (if i = 0#u32 then view else first)
         hctrls hs' ha (by scalar_tac) (by simp only [List.length_cons] at hlen ⊢; scalar_tac)
-        hrest htargets (.inr rfl) (fun hp => by
-          obtain ⟨us, hf, hds⟩ := hsame hp
-          obtain ⟨view', hl', hv'⟩ := hds depth (by simp)
-          have he : view' = view := Option.some.inj (hl'.symm.trans hlabel)
-          subst view'
-          refine ⟨us, fun _ => ?_, fun x hx => hds x (by simp [hx])⟩
-          by_cases h0 : i = 0#u32
-          · simpa [h0] using hv'
-          · simpa [h0] using hf h0)
+        hrest htargets (.inr rfl)
       refine ⟨out, ?_, hv, hc, hb, hp⟩
       unfold Wasm2.branchTableLoop code.branch_table_with_loop
       rw [loop]
@@ -133,8 +112,6 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
     (htargets : ∀ d ∈ depths ++ [default], ∃ view ts,
       Wasm2.labelAt st d.val = some view ∧ Wasm2.resolve env view = some ts ∧
       Resulttype_sub (.mk_list common) (.mk_list (ts.map Translate.valueType)))
-    (hsame : profile = .Wasm1 → ∃ us, ∀ d ∈ depths ++ [default], ∃ view,
-      Wasm2.labelAt st d.val = some view ∧ Wasm2.resolve env view = some us)
     (hreal : Sequence.Realizes (Control.polymorphic st.core) segment
       (front ++ (common ++ [.I32]))) :
     ∃ s, code.branch_table st data env profile = .ok (.Ok (), s) ∧
@@ -171,10 +148,7 @@ theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
     popped data env profile count 0#u32 none .Empty n cs c (depths ++ [default]) next
     (by simpa [popped, hcc] using hctrls) hs' (by simp [popped, hcc])
     (by simp) (by simp [hlen])
-    (by simpa [popped, hpc] using hlabels.snoc hdefault) htargets' (.inl rfl) (fun hp => by
-      obtain ⟨us, hds⟩ := hsame hp
-      exact ⟨us, fun h => absurd rfl h, fun d hd => by
-        simpa [popped, Wasm2.labelAt, hcc] using hds d hd⟩)
+    (by simpa [popped, hpc] using hlabels.snoc hdefault) htargets' (.inl rfl)
   have hblocks' : popped.blocks = st.blocks := code.BodyState.blocks_eq_of_ctrls hcc
   refine ⟨s, ?_, hctrls', hblocks.trans hblocks', hpos, ?_⟩
   · simp [code.branch_table.eq_core, Wasm2.tableCore, hread, hcond, hloop, popped,

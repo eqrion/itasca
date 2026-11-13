@@ -46,16 +46,10 @@ theorem checkIndex.complete (env : metadata.Env) (bt : signature.BlockType)
 `checkBlock`. -/
 theorem checkBlock.complete (env : metadata.Env) (profile : ValidationProfile)
     (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
-    (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
     checkBlock env profile bt = .ok (.Ok ()) := by
-  have hcheck : code.check_block_type profile bt = .ok (.Ok ()) := by
-    cases profile with
-    | Wasm2 => rfl
-    | Wasm1 =>
-      obtain ⟨b, hb⟩ := hscalar rfl
-      exact code.check_block_type.complete hb _
+  have hcheck := code.check_block_type.complete profile bt
   simp only [checkBlock, hcheck, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
   exact checkIndex.complete env bt ins outs hin hout hip hop
 
@@ -139,7 +133,6 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metad
     (bt : signature.BlockType) (next : Usize) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hdecoded : Wasm2.BlockDecoded data st.core.pos bt next)
-    (hscalar : profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b)
     (hin : Wasm2.resolve env (Wasm2.inputs bt) = some ins)
     (hout : Wasm2.resolve env (Wasm2.outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000)
@@ -151,7 +144,7 @@ theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metad
       Wasm2.EnterForward st r.2 form bt ins outs outer segment ts ⦄ := by
   rw [Wasm2.enter_eq, signature.read_block_type.complete data st.core.pos bt next hdecoded]
   simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [Wasm2.checkBlock.complete env profile bt ins outs hscalar hin hout hip hop]
+  rw [Wasm2.checkBlock.complete env profile bt ins outs hin hout hip hop]
   simp only [bind_ok]
   exact Wasm2.enterArgs.complete { st with core := { st.core with pos := next } } env form bt
     ins outs outer segment ts initial hin hv hb hcap hvalsCap ht

@@ -120,7 +120,7 @@ theorem code.body_loop_loop.trace_of_contract {V : Type}
             (VisitorTrace.Outcomes.empty _)).rejected hi.bounds.pos⟩
         | Ok u =>
         cases u
-        obtain ⟨p, hstart⟩ := hi.pending hc hp (hop rfl) next hnext
+        obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
         have hs' : code.step_profile visitor {core := {st.core with pos := next}}
             data env ctx index profile (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs

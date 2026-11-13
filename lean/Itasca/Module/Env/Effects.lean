@@ -12,8 +12,7 @@ import Itasca.Module.Sections.DataCount
 
 `Effect` relates one declaration section to its effect: the section's independent payload
 encoding, the checked update of the environment, and the update of the `Declarations` record.
-`Effect.allowed` and `Effect.phase` show that an effect preserves the profile's type
-restrictions and advances the section phase.
+`Effect.phase` shows that an effect advances the section phase.
 -/
 
 open Aeneas Aeneas.Std
@@ -31,8 +30,7 @@ inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
       (profile : ValidationProfile) → Prop where
   | types {profile} {result next added} : TypesAdded env result added →
       At (VecEncoding FuncTypeEncoding) data pos added next →
-      (∀ ft ∈ added, Profile.FuncTypeAdmissible profile ft ∧
-        ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) →
+      (∀ ft ∈ added, Profile.FuncTypeAdmissible profile ft) →
       Effect (profile := profile) data pos env before 1#u8 next result { before with types := added }
   | imports {profile} {result next added} : ImportsAdded env added result profile →
       At (VecEncoding ImportEncoding) data pos (added.map rawImport) next →
@@ -42,8 +40,7 @@ inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
       Effect (profile := profile) data pos env before 3#u8 next result { before with functions := indices }
   | tables {profile} {result next added} : TablesAdded env result added →
       At (VecEncoding TableTypeEncoding) data pos added next →
-      (∀ tt ∈ added, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1) ∧ ElemTypeAllowed profile tt.elem) →
-      (profile = .Wasm1 → result.table_types.val.length ≤ max env.table_types.val.length 1) →
+      (∀ tt ∈ added, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)) →
       Effect (profile := profile) data pos env before 4#u8 next result { before with tables := added }
   | memories {profile} {result next added} : MemoriesAdded env result added →
       At (VecEncoding MemTypeEncoding) data pos added next →
@@ -52,7 +49,7 @@ inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
       Effect (profile := profile) data pos env before 5#u8 next result { before with memories := added }
   | globals {profile} {result next added} : GlobalsAdded env result added →
       At (VecEncoding GlobalEncoding) data pos added next →
-      (∀ g ∈ added, ModuleConstants.Valid result g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) →
+      (∀ g ∈ added, ModuleConstants.Valid result g.init g.gtype.valtype) →
       Effect (profile := profile) data pos env before 6#u8 next result { before with globals := added }
   | exports {profile} {result next added} : ExportsAdded env added result →
       At (VecEncoding ExportEncoding) data pos (added.map rawExport) next →
@@ -66,8 +63,7 @@ inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
       At (VecEncoding (ElementEncodingFor profile)) data pos (added.map rawElement) next →
       (∀ entry ∈ added, ElementValid env entry) →
       Effect (profile := profile) data pos env before 9#u8 next result { before with elements := added.map rawElement }
-  | dataCount {profile} {result next count} : profile = .Wasm2 →
-      result = { env with data_count := some count } →
+  | dataCount {profile} {result next count} : result = { env with data_count := some count } →
       At StartEncoding data pos (some count) next →
       Effect (profile := profile) data pos env before 12#u8 next result
         { before with dataCount := some count }
@@ -76,43 +72,6 @@ theorem Effect.span {profile} {data pos env before id next result after}
     (h : Effect (profile := profile) data pos env before id next result after) :
     pos.val ≤ next.val ∧ next.val ≤ data.length := by
   cases h <;> apply At.span <;> assumption
-
-/-- A section effect preserves the profile's type restrictions on the declarations. -/
-theorem Effect.allowed {profile data pos env before id next result after}
-    (h : Effect data pos env before id next result after profile)
-    (hb : ModuleTypesAllowed profile (before.module [] [])) :
-    ModuleTypesAllowed profile (after.module [] []) := by
-  rcases hb with ⟨ht, hi, htable, hg, hc, he, hd⟩
-  cases h with
-  | types ha hbytes hv =>
-    exact ⟨fun ft hm => (hv ft hm).2, hi, htable, hg, hc, he, hd⟩
-  | imports ha hbytes =>
-    refine ⟨ht, ?_, htable, hg, hc, he, hd⟩
-    intro entry hm
-    obtain ⟨actual, hactual, rfl⟩ := List.mem_map.mp hm
-    exact ha.allowed actual hactual
-  | functions => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
-  | tables ha hbytes hv hcount =>
-    exact ⟨ht, hi, fun tt hm => (hv tt hm).2, hg, hc, he, hd⟩
-  | memories => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
-  | globals ha hbytes hv =>
-    exact ⟨ht, hi, htable, fun g hm => ⟨(hv g hm).2, (hv g hm).1.const_allowed (hv g hm).2⟩, hc, he, hd⟩
-  | exports => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
-  | start => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
-  | elements ha hbytes hv =>
-    refine ⟨ht, hi, htable, hg, hc, ?_, hd⟩
-    intro entry hm
-    obtain ⟨actual, hactual, rfl⟩ := List.mem_map.mp hm
-    have helem := (hv actual hactual).1
-    cases hmode : actual.mode with
-    | Passive => simp [rawElement, hmode]
-    | Declarative => simp [rawElement, hmode]
-    | Active idx offset =>
-      obtain ⟨hidx, htable, hoff⟩ := (show ∃ hi : idx.val < env.table_types.val.length,
-        env.table_types.val[idx.val].elem = actual.elem ∧ ModuleConstants.Valid env offset .I32 from by simpa [hmode] using helem)
-      simpa only [rawElement, hmode] using hoff.const_allowed
-        (show ValueTypeAllowed profile .I32 from by cases profile <;> trivial)
-  | dataCount => exact ⟨ht, hi, htable, hg, hc, he, hd⟩
 
 /-- A section effect in increasing section order advances the phase to that section's rank. -/
 theorem Effect.phase {profile} {data pos env before id next result after last}

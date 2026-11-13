@@ -5,15 +5,15 @@ import Itasca.Binary.ModuleUniqueSegments
 # Uniqueness of module decoding
 
 `ModuleEncodingWith.unique` shows that two raw modules with the same encoding are equal, for
-either profile and any prefix-unique code entry grammar. Custom section placement and omitted
-empty sections introduce no ambiguity. `Itasca/Results/Unique` specializes it to the profiles.
+the Wasm 2.0 profile and any prefix-unique code entry grammar. Custom section placement and omitted
+empty sections introduce no ambiguity. `Itasca/Results/Unique` specializes it to the supported profile.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- The data count section frames like other optional fields. Wasm 1.0 forces its absence. -/
+/-- The data count section frames like other optional fields. -/
 theorem DataCountSectionEncoding.frames {profile value bytes}
     (h : DataCountSectionEncoding profile value bytes) :
     ∃ sections payloads, Rep SectionDecode.Encoding sections bytes ∧
@@ -21,16 +21,13 @@ theorem DataCountSectionEncoding.frames {profile value bytes}
       ∀ wanted, wanted ≠ 0#u8 → SectionDecode.payloads wanted sections =
         if wanted = 12#u8 then payloads else [] := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨rfl, rfl⟩ := h
-    exact ⟨[], [], .nil, .absent, by intros; simp [SectionDecode.payloads]⟩
   | Wasm2 => exact PaddedEncoding.frames h
 
 namespace SectionDecode
 
 /-- The standard fields of a raw module as payloads of a raw section list. -/
 structure Fields (raw : Module) (sections : List (U8 × List U8))
-    (profile : ValidationProfile) (codeRel : Code → List U8 → Prop := CodeEncoding) : Prop where
+    (profile : ValidationProfile) (codeRel : Code → List U8 → Prop) : Prop where
   types : Field (VecEncoding FuncTypeEncoding) [] raw.types (payloads 1#u8 sections)
   imports : Field (VecEncoding ImportEncoding) [] raw.imports (payloads 2#u8 sections)
   functions : Field (VecEncoding IndexEncoding) [] raw.functions (payloads 3#u8 sections)
@@ -52,7 +49,7 @@ theorem ModuleEncodingWith.sections {profile codeRel raw bytes}
     ∃ sections, Rep SectionDecode.Encoding sections (bytes.drop magicVersion.length) ∧
       SectionDecode.Fields raw sections profile codeRel := by
   obtain ⟨b1, b2, b3, b4, b5, b6, b7, b8, b9, bc, b10, b11, b12,
-    h1, h2, h3, h4, h5, h6, h7, h8, h9, hc, h10, h11, h12, hb, _, _⟩ := h
+    h1, h2, h3, h4, h5, h6, h7, h8, h9, hc, h10, h11, h12, hb, _⟩ := h
   obtain ⟨s1, p1, hr1, hf1, hl1⟩ := h1.frames
   obtain ⟨s2, p2, hr2, hf2, hl2⟩ := h2.frames
   obtain ⟨s3, p3, hr3, hf3, hl3⟩ := h3.frames

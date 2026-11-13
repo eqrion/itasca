@@ -24,8 +24,7 @@ theorem Pending.index_reader_post {data env profile locals index st}
     (out : code.OpIterState) (idx : U32)
     (post : Scalar.IndexPost ((p.current.form.params p.current.ins).map Translate.valueType)
       data st.core outer p.current.vals (Frames.enter C p.current.form p.current.ins p.current.outs)
-      p.current.ops instruction (.Ok idx, out))
-    (hbr : opcode ≠ 0x0e#u8 := by decide) :
+      p.current.ops instruction (.Ok idx, out)) :
     ∃ values, out.vals.val = outer ++ values ∧
       Wasm2.ReaderPost p out (instruction idx) p.current.ctrl.polymorphic_base values := by
   obtain ⟨decoded, controls, values, stack, length, typed⟩ := post idx rfl
@@ -38,7 +37,7 @@ theorem Pending.index_reader_post {data env profile locals index st}
   refine Wasm2.Pending.append_reader_context p C outer spine header base out (instruction idx)
     p.current.ctrl.polymorphic_base values (wf idx) (.plain encoded)
     (by simpa [polymorphic] using typed) ?_ ?_ ?_ ?_
-    (fun _ => ⟨encoded, encoded.leaf p.inbounds (by rw [byte]; exact hbr) _⟩)
+
   · simpa [controls] using ctrls
   · simpa [controls] using blocks
   · exact stack

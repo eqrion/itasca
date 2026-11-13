@@ -51,7 +51,7 @@ theorem run.sound (data : Slice U8) (env : metadata.Env) (profile : ValidationPr
         | Err e => simp [hrc] at haccepted
         | Ok u =>
         cases u
-        obtain ⟨p, hstart⟩ := hi.pending hc hp (hop rfl) next hn
+        obtain ⟨p, hstart⟩ := hi.pending hc hp next hn
         obtain ⟨⟨result, s⟩, hs, hout⟩ := WP.spec_imp_exists (hsteps _ p)
         simp only [hstart] at hs
         simp only [bind_ok, hrc, hs] at haccepted

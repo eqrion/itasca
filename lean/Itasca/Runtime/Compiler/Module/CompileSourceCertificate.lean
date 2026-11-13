@@ -23,7 +23,6 @@ structure CompileSourceCertificate {A : Type} {ops : runtime.platform.Alloc A}
   matched : ModuleElaboration.Matches w.env run.remaining.tail raw
   valid : ModuleEnv.Valid w.env profile
   entryBounds : CodeEntry.Bounds w.env
-  environmentProfile : Profile.Environment profile w.env
   functions : raw.functions = w.env.func_type_indices.val
   types : raw.types = w.env.types.val
   codeCount : raw.codes.length = w.env.func_type_indices.val.length
@@ -60,12 +59,12 @@ theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.All
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 source (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
-  obtain ⟨raw, encoded, matched, valid, entryBounds, environmentProfile, functions, types, codeCount,
+  obtain ⟨raw, encoded, matched, valid, entryBounds, functions, types, codeCount,
     header, entries, codeBound, moduleBound⟩ := stream_run_source
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     SchedulerTracks (compiler_provenance ops law profile) 0#u64 source
     (initialScheduler A limits w.codeStart) w.scheduler w.env bytes environment code tail coherent recombine initial run
   exact ⟨⟨environment, code, tail, run, coherent, recombine, raw, encoded, matched, valid,
-    entryBounds, environmentProfile, functions, types, codeCount, header, entries, codeBound, moduleBound⟩⟩
+    entryBounds, functions, types, codeCount, header, entries, codeBound, moduleBound⟩⟩
 end Itasca.Runtime.Compiler

@@ -5,8 +5,8 @@ files from
 [WebAssembly/spec wg-2.0](https://github.com/WebAssembly/spec/tree/fffc6e12fa454e475455a7b58d3b5dc343980c10/test/core),
 commit `fffc6e12fa454e475455a7b58d3b5dc343980c10`, including 58 SIMD files.
 The accompanying `LICENSE` is copied from that commit's `test/LICENSE`
-(Apache 2.0). The separate Wasm 1.0 submodule and binary fixtures retain their
-existing pin.
+(Apache 2.0). The Wasm 1.0 test gate and binary fixtures were removed; the active
+corpus is Wasm 2.0.
 
 `cargo test --test spec2_tests wasm2_corpus_matches_reference` checks every
 module-validation assertion with pinned wasmparser's `WasmFeatures::WASM2`.
@@ -23,7 +23,7 @@ The frozen full-suite totals are 1716 accepted modules, 2875 rejected binaries,
 registration directives counted by the validation-only gate. These counts describe
 modules and WAST assertions, not individual operators.
 
-`cargo test --test runtime_wast` now executes both pinned corpora, with zero
+`cargo test --test runtime_wast` executes the pinned Wasm 2.0 corpus, with zero
 unsupported directives. The Core 2.0 execution gate freezes 1599 successful
 module declarations, 22 registrations, 155 standalone invocations, 45734 return
 assertions, 2442 trap assertions, 83 unlinkable assertions, and 15 stack-exhaustion
@@ -33,25 +33,21 @@ is explicit: its 1716 accepted modules include the 1599 declarations, 83
 unlinkable modules, and 34 modules whose instantiation traps. All 48334 formerly
 counted runtime directives and those 117 instantiation failures are executed.
 
-The Wasm 1.0 gate executes all 73 pinned files, including 1894 historical NaN
-assertions. Its adapter preserves their canonical/arithmetic distinction and
-original source coordinates, historical named memory/table segment syntax,
-and prechecked segment-failure effects. Literal binary fixtures remain verbatim.
-Fuel timeouts and unrelated resource failures fail the harness; only a call
-frame limit satisfies an exhaustion assertion. Both scripts' complete coverage
-totals are frozen in [the harness](../support/runtime_wast.rs).
-
 The full itasca gate, `wasm2_complete_corpus`, runs by default and checks the
-same assertions against itasca's `ValidationProfile::Wasm2`:
+same assertions against itasca's only supported profile,
+`ValidationProfile::Wasm2`:
 
 ```sh
 cargo test --test spec2_tests wasm2_complete_corpus
 ```
 
-`wasm2_multivalue_corpus` also retains the previous 15-file
-control-flow gate. Its frozen totals remain 17 accepted modules, 489 rejected
-binaries, 90 quoted malformed-text cases, and 1186 runtime/link assertions.
-Only that older gate excludes four positive modules beyond multi-value:
+`wasm2_multivalue_corpus` retains a 15-file control-flow comparison against
+wasmparser configured for MVP plus multi-value. This reference configuration
+does not represent an itasca Wasm 1.0 profile: every tested module is checked
+with itasca's Wasm 2.0 profile. Its frozen totals remain 17 accepted modules,
+489 rejected binaries, 90 quoted malformed-text cases, and 1186 runtime/link
+assertions. The comparison excludes four positive modules outside the reference
+feature set:
 `br_table.wast:3`, `call_indirect.wast:623`, `select.wast:1`, and
-`select.wast:518`. Each exclusion must pass Wasm 2.0 validation and fail
-Wasm 1.0 + multi-value validation. The full-suite gates include all four.
+`select.wast:518`. Each excluded module is confirmed valid by wasmparser's
+Wasm 2.0 configuration; the full-suite gates exercise all four with itasca.

@@ -8,7 +8,7 @@ import Itasca.Module.Code.LocalsComplete
 Completeness of `metadata.validate_code_entry_with`: a code entry that meets the independent
 specification (`Profile.EntryTyped`, `CodeEncodingWithinLimits`) is accepted.
 `complete_spec_of_body` takes a body completeness hypothesis, and `profile_complete_spec` and
-`profile_complete` discharge it for both profiles.
+`profile_complete` discharge it for Wasm 2.0.
 -/
 
 open Aeneas Aeneas.Std
@@ -46,7 +46,7 @@ theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visi
     have := hbodySpan.length
     omega
   obtain ⟨declared, hdeclared, hdeclaredVal⟩ := metadata.decode_locals.complete data content profile entry.locals bodyStart
-    ⟨localBytes, hlocals, hlocalsSpan⟩ htyped.locals_allowed hcap
+    ⟨localBytes, hlocals, hlocalsSpan⟩ hcap
   have hindex : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by scalar_tac
   unfold metadata.validate_code_entry_with
   simp [hindex, hread, core.result.Result.Insts.CoreOpsTry.branch]
@@ -107,37 +107,37 @@ theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visi
   rw [hfinished]
   simp [hendEq]
 
-/-- Entry validation succeeds, as a weakest-precondition statement, for either profile under the
+/-- Entry validation succeeds, as a weakest-precondition statement, for Wasm 2.0 under the
 profile's environment and size bounds. -/
 theorem metadata.validate_code_entry_with.profile_complete_spec {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
-    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
+    (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
     metadata.validate_code_entry_with visitor data pos env index profile v ⦃ r => r.1 = .Ok next ⦄ := by
   apply metadata.validate_code_entry_with.complete_spec_of_body visitor haccept data pos env index entry next v
-    profile hi (Profile.EntryTyped.of_core htyped (henv.1 _ (List.getElem_mem _))) hbound hbytes
+    profile hi (Profile.EntryTyped.of_core htyped) hbound hbytes
   intro body ctx typeIdx ft hlookup hresults hsize hcert started
   exact code.validate_body_with.profile_complete visitor haccept body env ctx typeIdx profile started
     hlimits hsize hcert
 
-/-- Entry validation returns `.Ok next` for either profile under the profile's environment and size
+/-- Entry validation returns `.Ok next` for Wasm 2.0 under the environment and size
 bounds. -/
 theorem metadata.validate_code_entry_with.profile_complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : FullVisitor.Accepts visitor) (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
     (profile : ValidationProfile) (hi : index.val < env.func_type_indices.val.length)
     (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry profile)
-    (henv : Profile.Environment profile env) (hlimits : Profile.EnvironmentWithinLimits env)
+    (hlimits : Profile.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (Profile.CodeEncodingWithinLimits profile) data pos entry next) :
     ∃ v', metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok next, v') := by
   obtain ⟨⟨r, v'⟩, hr, hok⟩ := WP.spec_imp_exists
     (metadata.validate_code_entry_with.profile_complete_spec visitor haccept data pos env index entry next v
-      profile hi htyped henv hlimits hbound hbytes)
+      profile hi htyped hlimits hbound hbytes)
   dsimp only at hok
   exact ⟨v', by simpa only [hok] using hr⟩
 

@@ -31,7 +31,7 @@ theorem Pending.metadata_read {data env profile locals index st} (p : Pending da
       EnvTranslation.Matches env ⟨locals, p.ft.results⟩ C →
       Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
         (.mk_list (Simd.outputTypes (output a)))))
-    (hsize : st.core.vals.val.length < Usize.max) (hwasm2 : profile ≠ .Wasm1)
+    (hsize : st.core.vals.val.length < Usize.max)
     (hdecl : ∀ a, DeclaredReferences.Instruction
       (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a) := by
         intro a
@@ -39,7 +39,7 @@ theorem Pending.metadata_read {data env profile locals index st} (p : Pending da
     metadataOperands decode pops output metadata ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   apply WP.spec_mono (p.metadata_reader decode pops output metadata operation hd hw ht
-    (fun a _ => hdecl a) hsize hwasm2)
+    (fun a _ => hdecl a) hsize)
   intro r effect accepted
   obtain ⟨value, accepted⟩ := accepted
   obtain ⟨_, _, _, _, _, _, _, _, _, _, _, post, _⟩ := effect value accepted
@@ -54,7 +54,7 @@ theorem Pending.table_get {data env profile locals index st} (p : Pending data e
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_get st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_get.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_table st.core data env) (fun _ => [.I32]) (fun a => some a.2) Prod.fst
     (fun a => .TABLE_GET (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec st.core data env)
@@ -79,7 +79,7 @@ theorem Pending.table_set {data env profile locals index st} (p : Pending data e
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_table_set st.core data env ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_set.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_table st.core data env) (fun a => [a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_SET (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec st.core data env)
@@ -104,7 +104,7 @@ theorem Pending.ref_null {data env profile locals index st} (p : Pending data en
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_null st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_ref_null.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_reference_type st.core data) (fun _ => [])
     (fun rt => some (ModuleConstants.referenceValueType rt)) id
     (fun rt => .REF_NULL (Translate.referenceType rt)) ?_ ?_ ?_ hsize
@@ -142,7 +142,7 @@ theorem Pending.ref_func_reader {data env profile locals index st} (p : Pending 
     (.REF_FUNC (.mk_uN idx.val)) p.current.ctrl.polymorphic_base
     (p.current.vals ++ [.Val .FuncRef]) (.instr_case_41 _ (EnvTranslation.index_wf idx))
     (At.of_immediate p.inbounds hbyte p.pos (.reference (.refFunc idx hencoding))
-      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
+      ⟨hbytes, hlen, hbound⟩) ?_ ?_ ?_ ?_ hdecl
   · apply typed.append hC.wf _ (.instr_case_41 _ (EnvTranslation.index_wf idx))
     intro ts ht
     obtain ⟨front, hfront, rfl⟩ := (Sequence.realizes_append_concrete _ _ [.FuncRef] ts).mp ht
@@ -171,7 +171,7 @@ theorem Pending.typed_select {data env profile locals index st} (p : Pending dat
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_typed_select st.core data ⦃ r => (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_typed_select.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (selectType st.core data) (fun ty => [.I32, ty, ty]) some id
     (fun ty => .SELECT (some [Translate.valueType ty])) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (selectType.spec st.core data)
@@ -192,7 +192,7 @@ theorem Pending.table_grow {data env profile locals index st} (p : Pending data 
     code.read_table_grow {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_grow.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_GROW (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
@@ -220,7 +220,7 @@ theorem Pending.table_size {data env profile locals index st} (p : Pending data 
     code.read_table_size {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_size.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_table {st.core with pos := next} data env) (fun _ => []) (fun _ => some .I32) Prod.fst
     (fun a => .TABLE_SIZE (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
@@ -248,7 +248,7 @@ theorem Pending.table_fill {data env profile locals index st} (p : Pending data 
     code.read_table_fill {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [code.read_table_fill.fixed]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     (code.take_table {st.core with pos := next} data env) (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst
     (fun a => .TABLE_FILL (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_table.spec {st.core with pos := next} data env)
@@ -276,7 +276,7 @@ theorem Pending.data_drop {data env profile locals index st} (p : Pending data e
     code.take_data_index {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [← metadataOperands.empty (code.take_data_index {st.core with pos := next} data env)]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     _ (fun _ => []) (fun _ => none) id
     (fun idx => .DATA_DROP (.mk_uN idx.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_data_index.spec {st.core with pos := next} data env)
@@ -301,7 +301,7 @@ theorem Pending.elem_drop {data env profile locals index st} (p : Pending data e
     code.take_element {st.core with pos := next} data env ⦃ r =>
       (∃ a, r.1 = .Ok a) → p.After {st with core := r.2} ⦄ := by
   rw [← metadataOperands.empty (code.take_element {st.core with pos := next} data env)]
-  apply p.metadata_read (hwasm2 := p.not_wasm1 hbyte (by decide))
+  apply p.metadata_read
     _ (fun _ => []) (fun _ => none) id
     (fun a => .ELEM_DROP (.mk_uN a.1.val)) ?_ ?_ ?_ hsize
   · apply WP.spec_mono (code.take_element.spec {st.core with pos := next} data env)
@@ -348,7 +348,7 @@ theorem Pending.ref_is_null_reader {data env profile locals index st} (p : Pendi
   refine p.append_reader_context C outer spine header base out .REF_IS_NULL
     p.current.ctrl.polymorphic_base after .instr_case_42 ?_
     (by simpa [hpoly, Frames.enter] using htyped) ?_ ?_ hv (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
-    (fun hp => absurd hp (p.not_wasm1 hbyte (by decide)))
+
   · apply At.of_immediate p.inbounds hbyte p.pos (.reference .refIsNull)
     exact ⟨by simp [hp], by simp [hp], by have := p.pos; have := p.inbounds; simp only [hp]; omega⟩
   · simpa [hc] using ctrls

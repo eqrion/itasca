@@ -55,7 +55,7 @@ private theorem environment_valid : ModuleEnv.Valid env .Wasm2 := by
     ModuleReferences.Coherent, ModuleReferences.collected]
 
 private theorem entry_typed : CodeEntry.Typed env 0#u32 entry .Wasm2 := by
-  refine ⟨by simp [env], ?_, trivial, by simp [entry], ?_⟩
+  refine ⟨by simp [env], ?_, ?_⟩
   · let C := CodeEntry.bodyContext env [] [] [.I32, .I64]
     have hC : wf_context C := by
       constructor <;> simp [env, Examples.ModuleBasic.emptyEnv, Forall]
@@ -108,7 +108,7 @@ theorem encoded : ModuleEncodingWithinLimits raw input.val .Wasm2 := by
       [3#u8,2#u8,1#u8,0#u8], [], [], [], [], [], [], [],
       [10#u8,8#u8,1#u8,6#u8,0#u8,0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], [], [],
       ?_, omitted _ _ _, ?_, omitted _ _ _, omitted _ _ _, omitted _ _ _,
-      omitted _ _ _, omitted _ _ _, omitted _ _ _, ?_, ?_, omitted _ _ _, .nil, rfl, ?_, ?_⟩
+      omitted _ _ _, omitted _ _ _, omitted _ _ _, ?_, ?_, omitted _ _ _, .nil, rfl, ?_⟩
     · apply padded _ 6#u8 _ (one (x := functionType) ?_) rfl
       refine ⟨[0#u8], [2#u8,0x7F#u8,0x7E#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ?_, rfl⟩
       exact ⟨[2#u8], [0x7F#u8,0x7E#u8], leb 2#u8,
@@ -122,8 +122,6 @@ theorem encoded : ModuleEncodingWithinLimits raw input.val .Wasm2 := by
         ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩,
         body_encoding,
         by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
-    · simp [ModuleTypesAllowed, ValueTypeAllowed, raw, fromEnv, env,
-        Examples.ModuleBasic.emptyEnv, functionType, entry]
     · simp [DataCountValid, raw, fromEnv, env, Examples.ModuleBasic.emptyEnv, entry,
         instructionsUseData, instructionUsesData, Spec.i32Const, ScalarConst.i64]
 

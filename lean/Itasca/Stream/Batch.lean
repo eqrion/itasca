@@ -205,7 +205,6 @@ theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
 by applying entry soundness to every actual successful validation call. -/
 theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Nat} {finish : Usize}
     (h : Prefix issued count finish) (hbound : CodeEntry.Bounds issued.env)
-    (hresults : ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
     (hprofile : issued.profile = profile) :
     ∃ entries, entries.length = count ∧
       ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile))
@@ -215,7 +214,7 @@ theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Na
   | nil => exact ⟨[], rfl, ⟨[], .nil, Wasm1.BytesAt.nil _ _ (by simp)⟩, .nil _⟩
   | @snoc V visitor v v' count pos index finish previous hindex hentry ih =>
     have hs := metadata.validate_code_entry_with.profile_sound visitor issued.code pos
-      issued.env index finish v v' hbound profile hresults (by simpa [hprofile] using hentry)
+      issued.env index finish v v' hbound profile (by simpa [hprofile] using hentry)
     obtain ⟨entries, hlen, hbytes, htyped⟩ := ih
     obtain ⟨entry, he, hi, ht, hl⟩ := hs
     refine ⟨entries ++ [entry], by simp [hlen], ModuleCode.entries_at_snoc hbytes he,
@@ -227,7 +226,6 @@ theorem Prefix.typed {profile : ValidationProfile} {issued : Issued} {count : Na
 and consumption of exactly its issued bytes. No premise prevalidates workers. -/
 theorem Reachable.finished {profile : ValidationProfile} {issued : Issued} {batch : stream.CodeBatch}
     (h : Reachable issued batch) (hbound : CodeEntry.Bounds issued.env)
-    (hresults : ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft)
     (hprofile : issued.profile = profile)
     (hfinish : stream.CodeBatch.finish batch = .ok (.Ok ())) :
     ∃ entries, entries.length = issued.num_funcs.val ∧
@@ -235,7 +233,7 @@ theorem Reachable.finished {profile : ValidationProfile} {issued : Issued} {batc
       ModuleCode.EntriesTyped (profile := profile) issued.env issued.first_func.val entries := by
   obtain ⟨hid, hp, _⟩ := h.validation
   have hf := (stream.CodeBatch.finish.accepted_iff batch).mp hfinish
-  obtain ⟨entries, hn, hbytes, ht⟩ := hp.typed hbound hresults hprofile
+  obtain ⟨entries, hn, hbytes, ht⟩ := hp.typed hbound hprofile
   obtain ⟨_, _, _, hcode, _, _, hnum, _⟩ := hid
   have hn' : entries.length = issued.num_funcs.val := by rw [hn, hf.2.1, hnum]
   obtain ⟨bytes, he, hb⟩ := hbytes

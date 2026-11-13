@@ -63,7 +63,6 @@ structure Layout.Valid (last : Nat) (decls : Declarations) (l : Layout)
   dataCount : DataCountSectionEncoding profile decls.dataCount l.dataCount
   customs : CustomsEncoding l.customs
   future : l.Future last
-  allowed : ModuleTypesAllowed profile (decls.module [] [])
 
 /-- The empty layout encodes the empty declarations. -/
 theorem Layout.valid_empty (profile : ValidationProfile) :
@@ -78,19 +77,16 @@ theorem Layout.valid_empty (profile : ValidationProfile) :
   · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact ⟨[], [], .nil, .absent, rfl⟩
-  · cases profile with
-    | Wasm1 => exact ⟨rfl, rfl⟩
-    | Wasm2 => exact ⟨[], [], .nil, .absent, rfl⟩
+  · exact ⟨[], [], .nil, .absent, rfl⟩
   · exact .nil
   · simp [global_simps, Layout.Future]
-  · simp [ModuleTypesAllowed, Declarations.module]
 
 theorem Layout.Valid.custom {profile last decls l bytes} (h : Layout.Valid last decls l profile)
     (hc : CustomEncoding bytes) :
     Layout.Valid last decls { l with customs := l.customs ++ bytes } profile := by
   exact ⟨h.types, h.imports, h.functions, h.tables, h.memories, h.globals,
     h.exports, h.start, h.elements, h.dataCount,
-    by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future, h.allowed⟩
+    by simpa using ModuleTail.customs_append h.customs (.cons hc .nil), h.future⟩
 
 /-- A section effect extends a valid layout, whose bytes end at the section header, to a valid
 layout ending at the end of the section. -/
@@ -100,7 +96,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
     (hl : Layout.Valid last before l profile) (ho : last < (sectionRank id).val)
     (hs : Wasm1.BytesAt data origin l.bytes pos) :
     ∃ updated, Layout.Valid (sectionRank id).val after updated profile ∧ Wasm1.BytesAt data origin updated.bytes next := by
-  have hallowed := h.allowed hl.allowed
   rcases hl.future with ⟨hf1, hf2, hf3, hf4, hf5, hf6, hf7, hf8, hf9, hf10⟩
   cases h with
   | types hadd hb hv =>
@@ -130,7 +125,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz1, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
   | imports hadd hb =>
@@ -159,7 +153,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz2, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | functions hadd hb =>
@@ -187,10 +180,9 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz4, hz5, hz6, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz3, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
-  | tables hadd hb hv hc =>
+  | tables hadd hb hv =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
     change last < 4 at ho
     have hz4 : l.tables = [] := hf4 (by omega)
@@ -214,7 +206,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz5, hz6, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz4, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | memories hadd hb hv hc =>
@@ -240,7 +231,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz6, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz5, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | globals hadd hb hv =>
@@ -265,7 +255,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz7, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz6, hz7, hz8, hz9, hz10, List.append_assoc]
   | exports hadd hb =>
@@ -289,7 +278,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz8, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz7, hz8, hz9, hz10, List.append_assoc]
   | start he hb hi =>
@@ -312,7 +300,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz9, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz8, hz9, hz10, List.append_assoc]
   | elements hadd hb hv =>
@@ -334,11 +321,9 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact hl.dataCount
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future, hz10]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz9, hz10, List.append_assoc]
-  | dataCount hprofile hstate hb =>
-    subst profile
+  | dataCount hstate hb =>
     obtain ⟨bytes, he, hbytes⟩ := ModuleTail.header_payload hh hb
     change last < 10 at ho
     have hz10 : l.dataCount = [] := hf10 (by omega)
@@ -356,7 +341,6 @@ theorem Effect.append_layout {profile} {data origin pos first next env result be
       · exact ⟨l.customs, bytes, hl.customs, .present he, rfl⟩
       · exact .nil
       · simp [sectionRank, global_simps, Layout.Future]
-      · exact hallowed
     · convert hs.append hbytes using 1
       simp [Layout.bytes, hz10, List.append_assoc]
 
@@ -384,7 +368,7 @@ theorem Layout.Valid.encoding {profile last decls l} (h : Layout.Valid last decl
   exact ⟨l.types, l.imports, l.functions, l.tables, l.memories, l.globals, l.exports,
     l.start, l.elements, l.dataCount, l.customs, h.types, h.imports, h.functions, h.tables,
     h.memories, h.globals, h.exports, h.start, h.elements, h.dataCount, h.customs,
-    by simp only [Layout.bytes, List.append_assoc], h.allowed⟩
+    by simp only [Layout.bytes, List.append_assoc]⟩
 
 /-- A run from the end of the module header consumes exactly the independent encoding of the
 resulting declarations. -/

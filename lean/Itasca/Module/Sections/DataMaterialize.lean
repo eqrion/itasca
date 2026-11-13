@@ -34,17 +34,10 @@ theorem PaddedEncoding.length_bounded {α : Type} {R : α → List U8 → Prop}
     obtain ⟨_, _, _, hv, _⟩ := hp
     exact hv.length_bounded
 
-/-- A data segment's bytes fit in `Usize`. -/
-theorem DataEncoding.init_bounded {entry bytes} (h : DataEncoding entry bytes) :
-    entry.init.length ≤ Usize.max := by
-  obtain ⟨_, _, _, _, _, _, _, _, hi, _⟩ := h
-  exact VecEncoding.length_bounded hi
-
 /-- A profile data segment's bytes fit in `Usize`. -/
 theorem DataEncodingFor.init_bounded {profile entry bytes}
     (h : DataEncodingFor profile entry bytes) : entry.init.length ≤ Usize.max := by
   cases profile with
-  | Wasm1 => exact DataEncoding.init_bounded h
   | Wasm2 =>
     cases h with
     | active _ _ hi => exact hi.length_bounded

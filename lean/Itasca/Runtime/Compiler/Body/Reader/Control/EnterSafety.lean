@@ -232,7 +232,7 @@ theorem reader_enter_signature_wasm2 {data env locals index st out bt} {form : F
   have effect := code.enter.sound st data env .Wasm2 form initial outer p.current.vals vals
     (by simp [Control.base, ctrls, parentBase]) p.opened.shape.core capacity
   rw [erased, WP.spec_ok] at effect
-  obtain ⟨sourceBt, ins, outs, decoded, _, inputs, outputs, _⟩ := effect rfl
+  obtain ⟨sourceBt, ins, outs, decoded, inputs, outputs, _⟩ := effect rfl
   have info := code.enter_info.bytes st data env .Wasm2 form.kind p.opened.shape.core capacity
   rw [accepted, WP.spec_ok] at info
   obtain ⟨rfl, _⟩ := (info bt rfl).unique decoded

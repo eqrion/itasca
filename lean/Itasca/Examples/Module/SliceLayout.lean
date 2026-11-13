@@ -54,7 +54,7 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
     have := hl.environment.span.2
     simp only [Slice.length] at *
     omega
-  obtain ⟨hbounds, hprofile, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
+  obtain ⟨hbounds, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
     environment env (Slice.len environment) .Wasm2 henvSize henv
   have htypes := htypedReady finalDecls env hready
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
@@ -100,7 +100,7 @@ theorem prepared_layout (data : Slice U8) (raw : ModuleBinary.Module)
   refine ⟨⟨environment, code, tailBytes⟩, env, ?_⟩
   exact ⟨⟨codePos, tailPos, hsplit, henvSlice, hcodeSlice, htailSlice⟩,
     by simpa using ((henvSpan.append hcodeSpan).append htailSpan).suffix,
-    hsize, henv, ⟨finalDecls, hready⟩, hbounds, hprofile, hlimits, hcode, htyped, hcount,
+    hsize, henv, ⟨finalDecls, hready⟩, hbounds, hlimits, hcode, htyped, hcount,
     htail, hmatches, hmeta⟩
 
 
@@ -197,7 +197,7 @@ theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
     refine ⟨⟨Slice.len data, Slice.len data, hsplit, he, hempty, hempty⟩,
       by simp [empty, alloc.vec.Vec.deref], hsize, henv, ⟨decls, hready⟩,
       (ModuleEnv.profile_accepted_entry_conditions data env (Slice.len data) .Wasm2 hsize henv).1,
-      hv.environment hrep.cache, hv.environmentWithinLimits hrep.cache,
+      hv.environmentWithinLimits hrep.cache,
       ⟨0#usize, .inl ⟨rfl, rfl, hfuncs⟩, [], Rep.nil, ?_⟩,
       .nil _, by simp [raw, Declarations.module, hfuncs], htail, hm, hmeta⟩
     constructor <;> simp [empty, alloc.vec.Vec.deref]

@@ -65,8 +65,7 @@ inductive EntriesTypedFor (profile : ValidationProfile) (env : metadata.Env) : N
   | cons {i entry entries} : EntryAt (profile := profile) env i entry →
       EntriesTypedFor profile env (i + 1) entries → EntriesTypedFor profile env i (entry :: entries)
 
-/-- `EntriesTypedFor` with `profile` defaulting to Wasm 1.0. The profile selects the instruction
-restrictions of each entry. -/
+/-- Typed entries with an explicit validation-profile parameter. -/
 abbrev EntriesTyped (env : metadata.Env) (i : Nat) (entries : List ModuleBinary.Code)
     (profile : ValidationProfile) : Prop := EntriesTypedFor profile env i entries
 

@@ -62,8 +62,7 @@ theorem stream.validate_streaming.sound {S V : Type}
     simpa using this
   have hdecoded := metadata.validate_env_with.accepted_erase visitor.metadataModuleVisitorInst
     run.environment run.region env run.environmentLength run.decoded run.decode_environment
-  obtain ⟨henv, hsignatures, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
-  have hresults := hsignatures.1
+  obtain ⟨henv, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
   have hsem := metadata.validate_env.profile_semantic_spec run.environment profile
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
@@ -89,18 +88,17 @@ theorem stream.validate_streaming.sound {S V : Type}
   rw [hcodeLen] at hsubmit
   obtain ⟨history, nextId, hinv, hsubmitted⟩ := stream.submit_code_batches.sound source visitor Tracks hp
     state id env code run.remaining.entries run.remaining.config run.remaining.configured
-    run.remaining.pending run.remaining.submitted environment.val tail.val hsource henv hresults hcap hstart
+    run.remaining.pending run.remaining.submitted environment.val tail.val hsource henv hcap hstart
     hconfigured hsubmit
   have hended := hp.code_end id history _ _ hsubmitted run.remaining.end_call
   have htailRegion := hp.region id history _ .Tail _ hended run.remaining.region_call
   have htailDecoded := hp.tail_preserves id history run.remaining.tailBytes 0#usize _ _ env
     run.remaining.tail run.remaining.decode_tail htailRegion
   have hready := hp.tail_ready id history _ _ _ htailDecoded run.remaining.ready_call
-  have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft := by
+  have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env := by
     intro issued hi
     have he := (hinv.issued issued hi).2.1
-    simpa [he] using And.intro henv hresults
+    simpa [he] using henv
   obtain ⟨_, _, hcompleted⟩ := StreamScheduler.drain_sound visitor Tracks hp id history
     run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry hinv.profiles run.remaining.drain_call
   have hall : ∀ issued ∈ history, StreamScheduler.Completed issued profile := by

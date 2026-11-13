@@ -63,28 +63,26 @@ namespace Itasca
 
 open ModuleBinary
 
-/-- `metadata.decode_value_type` accepts an independently encoded value type that the profile
-allows. -/
+/-- `metadata.decode_value_type` accepts an independently encoded value type. -/
 theorem metadata.decode_value_type.complete (data : Slice U8) (pos : Usize)
     (ty : wasm_types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next)
-    (profile : ValidationProfile) (hallowed : ValueTypeAllowed profile ty) :
+    (profile : ValidationProfile) :
     metadata.decode_value_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [metadata.decode_value_type, valueByte, ValueTypeAllowed,
+    simp_all [metadata.decode_value_type, valueByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 
-/-- `metadata.decode_elem_type` accepts an independently encoded element type that the profile
-allows. -/
+/-- `metadata.decode_elem_type` accepts an independently encoded element type. -/
 theorem metadata.decode_elem_type.complete (data : Slice U8) (pos : Usize)
     (ty : wasm_types.ElemType) (next : Usize) (h : At ElemTypeEncoding data pos ty next)
-    (profile : ValidationProfile) (hallowed : ElemTypeAllowed profile ty) :
+    (profile : ValidationProfile) :
     metadata.decode_elem_type data pos profile = .ok (.Ok (ty, next)) := by
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases profile <;> cases ty <;>
-    simp_all [metadata.decode_elem_type, elemByte, ElemTypeAllowed,
+    simp_all [metadata.decode_elem_type, elemByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca

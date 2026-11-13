@@ -744,7 +744,6 @@ inductive code.SimdSignature where
     Visibility: public -/
 @[discriminant isize]
 inductive ValidationProfile where
-| Wasm1 : ValidationProfile
 | Wasm2 : ValidationProfile
 
 /-- [itasca::code::EmptyOpVisitor]

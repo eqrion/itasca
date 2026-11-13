@@ -5,7 +5,7 @@ import Itasca.Wasm2.Visitor.Total
 /-!
 # Profile code-entry pipeline
 
-Totality of the extracted `metadata.validate_code_entry_with` for both profiles:
+Totality of the extracted `metadata.validate_code_entry_with` for Wasm 2.0:
 `profile_pipeline` gives an execution witness (`CodeEntry.Witness`) for every accepting run, and
 `profile_total` and `metadata.validate_code_entry.profile_total` show that the visitor and
 visitor-free entry validators return.
@@ -15,7 +15,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- Every accepting run of the entry validator, for either profile, has a `CodeEntry.Witness`
+/-- Every accepting run of the entry validator, for Wasm 2.0, has a `CodeEntry.Witness`
 recording the type lookup, locals, body slice and visitor calls. -/
 theorem metadata.validate_code_entry_with.profile_pipeline {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (pos : Usize)

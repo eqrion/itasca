@@ -1,4 +1,4 @@
-import Itasca.Wasm1.ProfileSyntax
+import Itasca.Support.ControlTranslation
 import Itasca.Spec.TypingInversion
 import Itasca.Handler.StackComplete
 import Itasca.Binary.Wasm1.EncodingComplete

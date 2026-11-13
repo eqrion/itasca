@@ -25,8 +25,7 @@ def ReaderBoundaryWasm2.pending {data env locals index ft st parents current}
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length) :
     Wasm2.Pending data env .Wasm2 locals index {core := {st.core with pos := next}} :=
   ⟨st.core.pos, ft, parents, current, boundary.signature, boundary.bounds.size, boundary.opened.with_pos next,
-    boundary.bodyType, boundary.consumed, boundary.declared, inbounds, advance, boundary.bounds.ctrls,
-    (fun h => nomatch h), (fun h => nomatch h), (fun h => nomatch h)⟩
+    boundary.bodyType, boundary.consumed, boundary.declared, inbounds, advance, boundary.bounds.ctrls⟩
 
 theorem _root_.Itasca.Wasm2.ReaderPost.boundary {data env locals index st out instruction poly values}
     {p : Wasm2.Pending data env .Wasm2 locals index st}

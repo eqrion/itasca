@@ -6,7 +6,7 @@ import Itasca.Module.Const.ParserComplete
 # Completeness of the global section parser
 
 `metadata.decode_global_section.complete`: an independently encoded vector of globals with valid
-initializers and profile-allowed value types is accepted, and the environment gains those globals
+initializers is accepted, and the environment gains those globals
 (`GlobalsAdded`). Soundness is in `Module/Sections/Global`.
 -/
 
@@ -43,7 +43,6 @@ theorem metadata.decode_global_section_loop.complete
     (hb : At (Rep GlobalEncoding) data pos added next)
     (hc : i.val + added.length = count.val)
     (hv : ∀ g ∈ added, ModuleConstants.Valid env g.init g.gtype.valtype)
-    (hallowed : ∀ g ∈ added, ValueTypeAllowed profile g.gtype.valtype)
     (hg : env.globals.val.length ≤ pos.val)
     (ht : env.global_types.val.length ≤ pos.val)
     (href : env.declared_funcs.val.length ≤ pos.val) :
@@ -63,9 +62,8 @@ theorem metadata.decode_global_section_loop.complete
     have hprogress := htype.globalType_progress
     have hspan := hexpr.span
     have hmore : ¬ i ≥ count := by simp only [List.length_cons] at hc; scalar_tac
-    have hreadtype := metadata.decode_global_type.complete data pos g.gtype initStart htype profile (hallowed g (by simp))
+    have hreadtype := metadata.decode_global_type.complete data pos g.gtype initStart htype profile
     have hreadexpr := metadata.decode_const_expr.complete hexpr (hv g (by simp)) profile
-      ((hv g (by simp)).const_allowed (hallowed g (by simp)))
     obtain ⟨declared, hdeclare, hdeclared⟩ := WP.spec_imp_exists
       (metadata.declare_initializer.spec env g.init (by scalar_tac))
     have hrefsLength : declared.declared_funcs.val.length ≤ middle.val := by
@@ -83,7 +81,6 @@ theorem metadata.decode_global_section_loop.complete
     obtain ⟨result, hloop, hadded⟩ := ih updated middle j hrest
       (by simp only [List.length_cons] at hc; scalar_tac)
       (by intro g' hx; exact (hv g' (by simp [hx])).append_globals [g.gtype] htypes rfl rfl)
-      (by intro g' hx; exact hallowed g' (by simp [hx]))
       (by simp only [updated, hglobals, List.length_append, List.length_singleton]; omega)
       (by simp only [updated, htypes, List.length_append, List.length_singleton]; omega)
       hrefsLength
@@ -106,7 +103,6 @@ theorem metadata.decode_global_section.complete (data : Slice U8) (pos : Usize)
     (env : metadata.Env) (profile : ValidationProfile) (added : List metadata.Global) (next : Usize)
     (hb : At (VecEncoding GlobalEncoding) data pos added next)
     (hv : ∀ g ∈ added, ModuleConstants.Valid env g.init g.gtype.valtype)
-    (hallowed : ∀ g ∈ added, ValueTypeAllowed profile g.gtype.valtype)
     (hg : env.globals.val.length ≤ pos.val)
     (ht : env.global_types.val.length ≤ pos.val)
     (href : env.declared_funcs.val.length ≤ pos.val) :
@@ -114,7 +110,7 @@ theorem metadata.decode_global_section.complete (data : Slice U8) (pos : Usize)
       GlobalsAdded env result added := by
   obtain ⟨count, middle, hc, hcount, hentries⟩ := hb.vector_split
   obtain ⟨result, hr, hp⟩ := metadata.decode_global_section_loop.complete
-    data env profile count middle 0#u32 added next hentries (by simpa using hc.symm) hv hallowed
+    data env profile count middle 0#u32 added next hentries (by simpa using hc.symm) hv
     (by have := hcount.span; omega) (by have := hcount.span; omega)
     (by have := hcount.span; omega)
   refine ⟨result, ?_, hp⟩

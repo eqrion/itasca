@@ -139,18 +139,10 @@ theorem checkIndex.spec (env : metadata.Env) (bt : signature.BlockType) :
 
 @[step]
 theorem checkBlock.spec (env : metadata.Env) (profile : ValidationProfile) (bt : signature.BlockType) :
-    checkBlock env profile bt ⦃ r => r = .Ok () → (profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) ∧
-      ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
+    checkBlock env profile bt ⦃ r => r = .Ok () → ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
-  unfold checkBlock
-  obtain ⟨r, hr, hscalar⟩ := WP.spec_imp_exists (code.check_block_type.spec profile bt)
-  rw [hr]
-  cases r with
-  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok u =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    exact WP.spec_mono (checkIndex.spec env bt) fun r h hok => ⟨hscalar (by cases u; rfl), h hok⟩
+  simp only [checkBlock, code.check_block_type.complete, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  exact checkIndex.spec env bt
 
 /-- Exact semantic effect of opening a structured frame. -/
 def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.BlockType)
@@ -250,7 +242,6 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata
     (hs : Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter st data env profile form.kind ⦃ r => r.1 = .Ok () → ∃ bt ins outs,
       Wasm2.BlockDecoded data st.core.pos bt r.2.core.pos ∧
-      (profile = .Wasm1 → ∃ b, Wasm1.ScalarBlockByte bt b) ∧
       Wasm2.resolve env (Wasm2.inputs bt) = some ins ∧
       Wasm2.resolve env (Wasm2.outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ∧
@@ -267,12 +258,12 @@ theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata
     cases r with
     | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
-      obtain ⟨hscalar, ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
+      obtain ⟨ins, outs, hin, hout, hip, hop⟩ := hcheck (by cases u; rfl)
       simp only [bind_ok]
       apply WP.spec_mono (Wasm2.enterArgs.sound { st with core := { st.core with pos := next } }
         env form bt ins outs outer segment initial hin hv hb ⟨hs.ordered, hs.bounded⟩ hcap)
       intro result hresult hok
       obtain ⟨hpos, heffect⟩ := hresult hok
-      exact ⟨bt, ins, outs, hpos ▸ hdecoded, hscalar, hin, hout, hip, hop, heffect⟩
+      exact ⟨bt, ins, outs, hpos ▸ hdecoded, hin, hout, hip, hop, heffect⟩
 
 end Itasca

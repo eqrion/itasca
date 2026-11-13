@@ -26,11 +26,10 @@ theorem body_of_programs (data : Slice U8) (env : metadata.Env) (profile : Valid
     (hprograms : ∀ tokens ops, Emits tokens ops →
       Program data env profile ⟨locals, ft.results⟩ index tokens ops)
     (ops : List instr)
-    (hencoding : ∃ tokens next, ProfileConsumed profile data 0#usize tokens next ∧
+    (hencoding : ∃ tokens next, Wasm2.Consumed data 0#usize tokens next ∧
       next.val = data.length ∧ BodyTokens tokens ops)
     (htyped : FunctionTyped env locals ft ops)
-    (hdecl : DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops)
-    (hprofile : profile = .Wasm1 → Wasm1.Instructions (functionContext env locals ft) ops) :
+    (hdecl : DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
     code.bodyCore data env locals results index profile = .ok (.Ok ()) := by
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
   subst tokens
@@ -52,10 +51,10 @@ theorem body_of_programs (data : Slice U8) (env : metadata.Env) (profile : Valid
     constructor <;> simp [st, initial, hsize]
   obtain ⟨s, hrun, hp, hout, _⟩ := hprograms inner ops hemits C st f middle []
     (ft.results.val.map Translate.valueType) hmatch hlabels hbounds hinner
-      (Sequence.realizes_default false []) htyped hdecl hprofile
+      (Sequence.realizes_default false []) htyped hdecl
   obtain ⟨g, hgp, hgc, hcp, hco, hck, hcbase, hreal⟩ := hout.next
   obtain ⟨last, hclose, hp', hc', hb', _⟩ := execute_end g data env profile ⟨locals, ft.results⟩
-    index next ft.params.val ft.results.val (by simpa [hp] using hend.single.1)
+    index next ft.params.val ft.results.val (by simpa [hp] using hend.single)
     (by simp [hgc, f, inputs, resolve, hi]) (by simp [hgc, f, outputs, resolve, hi])
     (by simp [hck, f]) hreal (by simp [hco, f])
   apply ((hrun.append hclose).change_context ⟨locals, results⟩ rfl).public
@@ -93,27 +92,21 @@ end Itasca.Wasm2.Completeness
 
 namespace Itasca
 
-/-- Completeness of `code.bodyCore` for either profile from independent binary encoding,
-generated Wasm 2.0 typing, the independent function-reference declaration condition, and for
-Wasm 1.0 the Wasm 1.0 grammar and restrictions. Implementation bounds constrain body bytes and
-signature sizes. -/
+/-- Completeness of `code.bodyCore` for the supported profile from independent binary encoding,
+generated Wasm 2.0 typing, and the independent function-reference declaration condition.
+Implementation bounds constrain body bytes and signature sizes. -/
 theorem code.bodyCore.complete (data : Slice U8) (env : metadata.Env)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile)
     (henv : Profile.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hbody : Wasm2.Validated profile data env locals index) :
     code.bodyCore data env locals results index profile = .ok (.Ok ()) := by
-  obtain ⟨ft, ops, hi, hbytes, htyped, hdecl, hwasm1⟩ := hbody
+  obtain ⟨ft, ops, hi, hbytes, htyped, hdecl⟩ := hbody
   have hmem : ft ∈ env.types.val := List.mem_of_getElem? hi
   obtain ⟨hparams, hresults⟩ := (henv.types ft hmem).bounds
-  have hencoding : ∃ tokens next, ProfileConsumed profile data 0#usize tokens next ∧
-      next.val = data.length ∧ Wasm2.BodyTokens tokens ops := by
-    cases profile with
-    | Wasm1 => exact (hwasm1 rfl).1
-    | Wasm2 => exact hbytes
   exact Wasm2.Completeness.body_of_programs data env profile locals results index ft hi hparams
     hresults hsize
     (Wasm2.Completeness.programs data env profile ⟨locals, ft.results⟩ index henv
-      (by simp [Wasm2.resolve, hi])) ops hencoding htyped hdecl (fun hp => (hwasm1 hp).2)
+      (by simp [Wasm2.resolve, hi])) ops hbytes htyped hdecl
 
 end Itasca

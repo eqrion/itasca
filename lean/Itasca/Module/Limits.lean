@@ -15,22 +15,6 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.ModuleBinary
 
-/-- A code entry encoding whose flattened declared locals and instruction bytes stay within
-`limits.MAX_LOCALS` and `limits.MAX_FUNCTION_BYTES`. The instruction bytes follow the locals
-vector and include the final `end`. The size prefix and locals bytes do not count toward the
-body cap. -/
-def CodeEncodingWithinLimits (entry : Code) (bytes : List U8) : Prop :=
-  entry.declared.length ≤ limits.MAX_LOCALS.val ∧
-  ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧
-    VecEncoding LocalEncoding entry.locals locals ∧ BodyEncoding entry.body body ∧
-    body.length ≤ limits.MAX_FUNCTION_BYTES.val ∧ bytes = size ++ locals ++ body
-
-end Itasca.ModuleBinary
-
-open Aeneas Aeneas.Std
-
-namespace Itasca.ModuleBinary
-
 theorem Rep.imp {α : Type} {R S : α → List U8 → Prop} {values bytes}
     (h : Rep R values bytes) (hs : ∀ value bs, R value bs → S value bs) : Rep S values bytes := by
   induction h with
@@ -58,16 +42,16 @@ theorem ModuleEncodingWith.imp {profile} {R S : Code → List U8 → Prop} {raw 
     (h : ModuleEncodingWith R raw bytes profile) (hs : ∀ code bs, R code bs → S code bs) :
     ModuleEncodingWith S raw bytes profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, ha, hv⟩ := h
+    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, hv⟩ := h
   exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount,
-    hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb, ha, hv⟩
+    hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb, hv⟩
 
 theorem ModuleEncodingWith.guards {profile R raw bytes}
     (h : ModuleEncodingWith R raw bytes profile) :
-    ModuleTypesAllowed profile raw ∧ DataCountValid raw := by
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, ha, hc⟩ := h
-  exact ⟨ha, hc⟩
+    DataCountValid raw := by
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hc⟩ := h
+  exact hc
 
 /-- A module encoding of at most `limits.MAX_MODULE_BYTES` bytes whose code entries satisfy
 `CodeEncodingWithinLimits`. Only the code entries' encoding witnesses are strengthened. Padded
@@ -84,7 +68,7 @@ theorem ModuleEncodingWithinLimits.encoding {profile raw bytes}
   h.2.imp (fun _ _ hc => hc.encoding)
 
 /-- Every signature in the type section satisfies `Profile.FuncTypeWithinLimits`. This is an
-implementation cap on parameters and results, shared by both profiles and required for
+implementation cap on parameters and results, required for
 completeness only. -/
 def ModuleSignaturesWithinLimits (raw : Module) : Prop :=
   ∀ ft ∈ raw.types, Profile.FuncTypeWithinLimits ft

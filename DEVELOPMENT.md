@@ -9,10 +9,10 @@ to install the pinned tools.
 
 | Path | Responsibility |
 | --- | --- |
-| `src/lib.rs` | Explicit consumer exports and profile selection. |
+| `src/lib.rs` | Explicit consumer exports and the Wasm 2.0 profile selection. |
 | `src/stream.rs` | Module orchestration, source/scheduler contracts, issued batches, and the private contiguous adapter. |
 | `src/module.rs` | Read-only module metadata and internal environment, entry, and tail validation. |
-| `src/code.rs` | Shared body execution, both profiles' control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
+| `src/code.rs` | Wasm 2.0 body execution, control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
 | `src/signature.rs` | Allocation-free block and result descriptors. |
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
@@ -226,13 +226,12 @@ does not supply that condition.
 
 Check encoded counts before allocation where available. `MAX_LOCALS` excludes
 parameters; `MAX_FUNCTION_BYTES` includes the final `end` and excludes local
-declarations. Signatures in either profile have at most 1000 parameters and
-results; Wasm 1.0 additionally allows at most one result.
+declarations. Wasm 2.0 signatures have at most 1000 parameters and results.
 
 Place new proofs by layer, as described in the
 [Lean guide](lean/README.md#proof-architecture): independent grammar in
-`Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
-in `Wasm2/`. Keep imports within the documented dependency layers. Only the
+`Binary/`, per-handler lemmas in `Handler/`, and body proofs in `Wasm2/`. Keep
+imports within the documented dependency layers. Only the
 standard logical axioms `propext`, `Classical.choice`, and `Quot.sound` are
 permitted. `just lint` checks layering and forbidden constructs; `just audit`
 checks the headline theorem axiom allowlist and statement cone. Review

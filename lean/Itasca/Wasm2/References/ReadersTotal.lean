@@ -86,7 +86,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   simp only [alloc.vec.Vec.is_empty, bind_ok]
   step*
 
-@[step] theorem code.read_bulk_operands.total (st : code.OpIterState) 
+@[step] theorem code.read_bulk_operands.total (st : code.OpIterState)
     (hs : Control.Shape st) :
     code.read_bulk_operands st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
@@ -100,7 +100,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   unfold code.read_ref_null
   step*
 
-@[step] theorem code.read_ref_is_null.total (st : code.OpIterState) 
+@[step] theorem code.read_ref_is_null.total (st : code.OpIterState)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_is_null st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by

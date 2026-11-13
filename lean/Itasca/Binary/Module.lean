@@ -125,32 +125,12 @@ def valueByte : wasm_types.ValueType → U8
 def elemByte : wasm_types.ElemType → U8
   | .FuncRef => 0x70#u8 | .ExternRef => 0x6F#u8
 
-/-- Value types that the profile admits: Wasm 1.0 has only the four number types. -/
-def ValueTypeAllowed (profile : ValidationProfile) (ty : wasm_types.ValueType) : Prop :=
-  match profile, ty with
-  | .Wasm1, .V128 | .Wasm1, .FuncRef | .Wasm1, .ExternRef => False
-  | _, _ => True
-
-/-- Element types that the profile admits: Wasm 1.0 has only `funcref`. -/
-def ElemTypeAllowed (profile : ValidationProfile) (ty : wasm_types.ElemType) : Prop :=
-  match profile, ty with
-  | .Wasm1, .ExternRef => False
-  | _, _ => True
-
 /-- A value type as its type byte. -/
 def ValueTypeEncoding (ty : wasm_types.ValueType) (bytes : List U8) : Prop :=
   bytes = [valueByte ty]
 
-/-- A value type encoding restricted to the profile's allowed types. -/
-def ValueTypeEncodingFor (profile : ValidationProfile) (ty : wasm_types.ValueType)
-    (bytes : List U8) : Prop := ValueTypeEncoding ty bytes ∧ ValueTypeAllowed profile ty
-
 /-- An element type as its type byte. -/
 def ElemTypeEncoding (ty : wasm_types.ElemType) (bytes : List U8) : Prop := bytes = [elemByte ty]
-
-/-- An element type encoding restricted to the profile's allowed types. -/
-def ElemTypeEncodingFor (profile : ValidationProfile) (ty : wasm_types.ElemType)
-    (bytes : List U8) : Prop := ElemTypeEncoding ty bytes ∧ ElemTypeAllowed profile ty
 
 /-- A function type: `0x60`, then the parameter vector and the result vector. -/
 def FuncTypeEncoding (ty : wasm_types.FuncType) (bytes : List U8) : Prop :=
@@ -201,13 +181,6 @@ inductive ConstEncoding : wasm_types.ConstExpr → List U8 → Prop where
       FloatBits.Encoding 8 rest high.val →
       ConstEncoding (.V128 low high) (0xFD#u8 :: (sub ++ first ++ rest ++ [0x0B#u8]))
 
-/-- Constant expressions that the profile admits: Wasm 1.0 has no `v128.const`, `ref.null` or
-`ref.func`. -/
-def ConstAllowed (profile : ValidationProfile) (expr : wasm_types.ConstExpr) : Prop :=
-  match profile, expr with
-  | .Wasm1, .V128 _ _ | .Wasm1, .RefNull _ | .Wasm1, .RefFunc _ => False
-  | _, _ => True
-
 /-- An import descriptor: a kind byte followed by a type index or a table, memory or global type. -/
 inductive ImportDescEncoding : metadata.ImportDesc → List U8 → Prop where
   | func (index : U32) {bytes} : IndexEncoding index bytes →
@@ -245,14 +218,6 @@ def ExportEncoding (entry : Export) (bytes : List U8) : Prop :=
 def GlobalEncoding (entry : metadata.Global) (bytes : List U8) : Prop :=
   ∃ ty expr, GlobalTypeEncoding entry.gtype ty ∧ ConstEncoding entry.init expr ∧
     bytes = ty ++ expr
-
-/-- The Wasm 1.0 element segment: an active segment of function indices for a table, read as
-`ref.func` initializers. -/
-def ElementEncoding (entry : Element) (bytes : List U8) : Prop :=
-  ∃ tableIndex offset initializers table encodedOffset entries,
-    entry = ⟨.FuncRef, .Active tableIndex offset, initializers.map wasm_types.ConstExpr.RefFunc⟩ ∧
-    IndexEncoding tableIndex table ∧ ConstEncoding offset encodedOffset ∧
-    VecEncoding IndexEncoding initializers entries ∧ bytes = table ++ encodedOffset ++ entries
 
 /-- The eight Wasm 2.0 element segment encodings, selected by a flag. Flag and index LEBs need not
 be minimal. Index vectors and expression vectors denote the same element syntax. -/
@@ -304,7 +269,6 @@ inductive ActiveIndexEncoding : U32 → Bool → List U8 → Prop where
 def SegmentIndexEncoding (profile : ValidationProfile) (flags index : U32)
     (explicit : Bool) (bytes : List U8) : Prop :=
   match profile with
-  | .Wasm1 => index = flags ∧ explicit = false ∧ bytes = []
   | .Wasm2 =>
       (flags = 0#u32 ∧ index = 0#u32 ∧ explicit = false ∧ bytes = []) ∨
       (flags = 2#u32 ∧ explicit = true ∧ IndexEncoding index bytes)
@@ -313,7 +277,6 @@ def SegmentIndexEncoding (profile : ValidationProfile) (flags index : U32)
 def ElementEncodingFor (profile : ValidationProfile) (entry : Element)
     (bytes : List U8) : Prop :=
   match profile with
-  | .Wasm1 => ElementEncoding entry bytes
   | .Wasm2 => Wasm2ElementEncoding entry bytes
 
 /-- A Wasm 2.0 segment index with its flag is an `ActiveIndexEncoding`. -/
@@ -337,24 +300,6 @@ theorem ActiveIndexEncoding.parts {index explicit bytes}
 def LocalEncoding (entry : U32 × wasm_types.ValueType) (bytes : List U8) : Prop :=
   ∃ count, IndexEncoding entry.1 count ∧ bytes = count ++ [valueByte entry.2]
 
-/-- A function body: tokens including the final `end`, assembled into structured instructions.
-No typing premise is involved. -/
-def BodyEncoding (body : List instr) (bytes : List U8) : Prop :=
-  ∃ tokens, Rep Wasm1.TokenEncoding tokens bytes ∧ Wasm2.BodyTokens tokens body
-
-/-- A code entry: a byte size, the local declaration vector and the body. -/
-def CodeEncoding (entry : Code) (bytes : List U8) : Prop :=
-  ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧
-    VecEncoding LocalEncoding entry.locals locals ∧ BodyEncoding entry.body body ∧
-    bytes = size ++ locals ++ body
-
-/-- The Wasm 1.0 data segment: an active segment with a memory index, offset and bytes. -/
-def DataEncoding (entry : Data) (bytes : List U8) : Prop :=
-  ∃ memoryIndex offset memory encodedOffset entries,
-    entry.mode = .Active memoryIndex offset ∧ IndexEncoding memoryIndex memory ∧
-    ConstEncoding offset encodedOffset ∧ ByteVecEncoding entry.init entries ∧
-    bytes = memory ++ encodedOffset ++ entries
-
 /-- The Wasm 2.0 data segment encodings: active (flag `0` or `2`) and passive (flag `1`). -/
 inductive Wasm2DataEncoding : Data → List U8 → Prop where
   | active {memoryIndex offset init explicit index encodedOffset entries} :
@@ -368,7 +313,6 @@ inductive Wasm2DataEncoding : Data → List U8 → Prop where
 /-- The data segment grammar of the profile. -/
 def DataEncodingFor (profile : ValidationProfile) (entry : Data) (bytes : List U8) : Prop :=
   match profile with
-  | .Wasm1 => DataEncoding entry bytes
   | .Wasm2 => Wasm2DataEncoding entry bytes
 
 /-- A section: its id, a LEB128 size equal to the payload length, and the payload. -/
@@ -402,7 +346,7 @@ def PaddedEncoding {α : Type} (id : U8) (R : α → List U8 → Prop)
   ∃ customs sec, CustomsEncoding customs ∧
     OptionalSectionEncoding id R absent value sec ∧ bytes = customs ++ sec
 
-/-- Assembles an active data segment for either profile from its flag, memory index, offset and
+/-- Assembles an active data segment from its flag, memory index, offset and
 bytes. -/
 theorem DataEncodingFor.of_parts {profile flags memoryIndex explicit offset init fb mb ob ib}
     (hf : IndexEncoding flags fb)
@@ -410,9 +354,6 @@ theorem DataEncodingFor.of_parts {profile flags memoryIndex explicit offset init
     (ho : ConstEncoding offset ob) (hi : ByteVecEncoding init ib) :
     DataEncodingFor profile ⟨.Active memoryIndex offset, init⟩ (fb ++ mb ++ ob ++ ib) := by
   cases profile with
-  | Wasm1 =>
-    obtain ⟨rfl, rfl, rfl⟩ := hm
-    exact ⟨memoryIndex, offset, fb, ob, ib, rfl, hf, ho, hi, by simp⟩
   | Wasm2 => exact .active (hm.active hf) ho hi
 
 /-- The start section payload: a function index. -/
@@ -421,25 +362,6 @@ def StartEncoding (value : Option U32) (bytes : List U8) : Prop :=
 
 /-- The module header: the magic number `\0asm` and version 1. -/
 def magicVersion : List U8 := [0#u8, 0x61#u8, 0x73#u8, 0x6D#u8, 1#u8, 0#u8, 0#u8, 0#u8]
-
-/-- The profile's restrictions on value types, element types and constant expressions throughout a
-module. Resource limits and typing are separate. -/
-def ModuleTypesAllowed (profile : ValidationProfile) (value : Module) : Prop :=
-  (∀ ft ∈ value.types, ∀ ty ∈ ft.params.val ++ ft.results.val, ValueTypeAllowed profile ty) ∧
-  (∀ entry ∈ value.imports, match entry.desc with
-    | .Func _ | .Memory _ => True
-    | .Table ty => ElemTypeAllowed profile ty.elem
-    | .Global ty => ValueTypeAllowed profile ty.valtype) ∧
-  (∀ ty ∈ value.tables, ElemTypeAllowed profile ty.elem) ∧
-  (∀ entry ∈ value.globals,
-    ValueTypeAllowed profile entry.gtype.valtype ∧ ConstAllowed profile entry.init) ∧
-  (∀ entry ∈ value.codes, ∀ decl ∈ entry.locals, ValueTypeAllowed profile decl.2) ∧
-  (∀ entry ∈ value.elements, match entry.mode with
-    | .Active _ offset => ConstAllowed profile offset
-    | _ => True) ∧
-  (∀ entry ∈ value.data, match entry.mode with
-    | .Active _ offset => ConstAllowed profile offset
-    | _ => True)
 
 mutual
   /-- Data indices in instruction syntax trigger the binary data-count requirement. -/
@@ -466,7 +388,6 @@ def DataCountValid (value : Module) : Prop :=
 def DataCountSectionEncoding (profile : ValidationProfile) (value : Option U32)
     (bytes : List U8) : Prop :=
   match profile with
-  | .Wasm1 => value = none ∧ bytes = []
   | .Wasm2 => PaddedEncoding 12#u8 StartEncoding none value bytes
 
 /-- The module format for the profile, parameterized by the code entry grammar, with custom
@@ -489,12 +410,7 @@ def ModuleEncodingWith (codeRel : Code → List U8 → Prop) (value : Module) (b
     CustomsEncoding customs ∧
     bytes = magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
       globals ++ exports ++ start ++ elements ++ dataCount ++ codes ++ datas ++ customs ∧
-    ModuleTypesAllowed profile value ∧ DataCountValid value
-
-/-- The Wasm 1.0 module grammar using `ModuleEncodingWith` and `CodeEncoding`
-for code entries. Implementation limits are separate premises of completeness. -/
-def ModuleEncoding (value : Module) (bytes : List U8) : Prop :=
-  ModuleEncodingWith CodeEncoding value bytes .Wasm1
+    DataCountValid value
 
 /-- An `At` interval lies within the buffer. -/
 theorem At.span {α : Type} {R : α → List U8 → Prop} {data start value next}

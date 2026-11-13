@@ -104,11 +104,10 @@ theorem metadata.validate_code_entry_with.trace_sound {V : Type} (visitor : code
     (observe : V → List VisitorTrace.Observation) (hrecords : VisitorTrace.Records visitor observe)
     (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env) (profile : ValidationProfile)
-    (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (h : metadata.validate_code_entry_with visitor data pos env index profile v = .ok (.Ok finish, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
       CodeEntry.AcceptedTrace profile data env index pos finish observations :=
   (metadata.validate_code_entry_with.witness_profile visitor data pos env index finish v v' hbound
-    profile h).some.trace_sound observe hrecords hresults
+    profile h).some.trace_sound observe hrecords
 
 end Itasca

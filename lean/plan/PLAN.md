@@ -60,6 +60,10 @@ first thing to do with one is to make it typecheck.
   foundational `StoreParts.lean` and removal of the Wasm 1.0 wrapper from
   `EntryOfEnv.lean` are approved exceptions. Record 665 as the new ceiling;
   retain every other metric ratchet unchanged.
+- Step 1.2 may raise `modules_under_50_lines` from 665 to 669: removing
+  obsolete Wasm 1.0 proofs shortened five existing modules below 50 lines,
+  offset by deleting one short module. This increase is approved; retain
+  every other metric ratchet unchanged.
 
 ## Rules for whoever executes this plan
 

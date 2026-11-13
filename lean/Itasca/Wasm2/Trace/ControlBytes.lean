@@ -181,7 +181,7 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x02#u8 v =
       bodyRun (code.enter_info st data env profile .Block) visitor (Action.block) v := by
   have hc : code.check_opcode profile 0x02#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -201,7 +201,7 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x03#u8 v =
       bodyRun (code.enter_info st data env profile .Loop) visitor (Action.loop) v := by
   have hc : code.check_opcode profile 0x03#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -221,7 +221,7 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x04#u8 v =
       bodyRun (code.enter_info st data env profile .Then) visitor (Action.if_) v := by
   have hc : code.check_opcode profile 0x04#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -241,7 +241,7 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x05#u8 v =
       bodyRun (code.end_frame_info st env true) visitor (fun a => Action.else_ a.2) v := by
   have hc : code.check_opcode profile 0x05#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -264,7 +264,7 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x0b#u8 v =
       bodyRun (code.end_frame_info st env false) visitor (fun a => Action.end_ a.1 a.2) v := by
   have hc : code.check_opcode profile 0x0b#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -287,7 +287,7 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x0c#u8 v =
       bodyRun (code.branch_info st data env false) visitor (fun a => Action.br a.1 a.2) v := by
   have hc : code.check_opcode profile 0x0c#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -310,7 +310,7 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x0d#u8 v =
       bodyRun (code.branch_info st data env true) visitor (fun a => Action.br_if a.1 a.2) v := by
   have hc : code.check_opcode profile 0x0d#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -333,7 +333,7 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x10#u8 v =
       bodyRun (code.call_info st data env) visitor (Action.call) v := by
   have hc : code.check_opcode profile 0x10#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -353,7 +353,7 @@ theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x11#u8 v =
       bodyRun (code.call_indirect_info st data env profile) visitor (fun a => Action.call_indirect a.1 a.2) v := by
   have hc : code.check_opcode profile 0x11#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

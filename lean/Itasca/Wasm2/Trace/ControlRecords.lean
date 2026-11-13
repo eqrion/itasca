@@ -245,7 +245,7 @@ theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
     code.step_profile visitor st data env ctx index profile 0x0f#u8 v =
       bodyRun (returnStep st env index) visitor (fun _ => .return_) v := by
   have hc : code.check_opcode profile 0x0f#u8 = .ok (.Ok ()) :=
-    code.check_opcode.complete profile _ (by decide)
+    code.check_opcode.complete profile _
   simp [code.step_profile, hc, global_simps, bodyRun, returnStep, Std.bind_assoc, Std.uncurry,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

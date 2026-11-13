@@ -168,7 +168,7 @@ theorem remaining_complete {S V : Type} (source : stream.Source S)
   obtain ⟨configured, hconfig, hconfigured⟩ := hp.environment id [] before env hv
   obtain ⟨pending, submitted, queue, hsubmit, hqueued, hvalid, hids, _⟩ :=
     stream.submit_code_batches.complete source visitor Queued config hp state id env regions.code
-      entries regions.env.val regions.tail.val ha hc.entry_bounds hc.profile hc.signature_limits hcodeCap
+      entries regions.env.val regions.tail.val ha hc.entry_bounds hc.signature_limits hcodeCap
       raw.codes hc.code_count hc.typed hbytes configured hconfigured
   exact remaining_of_submission source visitor config Queued hp id state data raw regions env tail
     hc ha before configured submitted entries codeEnd pending queue hlen hbound

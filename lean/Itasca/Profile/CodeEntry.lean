@@ -7,7 +7,7 @@ import Itasca.Module.Code.Encoding
 # Profile code entries
 
 Profile-parametric specification of a code entry: `CodeEncoding` (size prefix, local declarations
-and `BodyBytes`), `EntryTyped` (declarative typing, profile restrictions and declared references)
+and `BodyBytes`), `EntryTyped` (declarative typing and declared references)
 and `Entry`, which combines them for the entry an accepted validation run describes. Also relates
 the Wasm 2.0 token consumption to `ModuleBinary.Rep`, and `EntryTyped` to `CodeEntry.Typed`.
 -/
@@ -18,13 +18,11 @@ namespace Itasca.Profile
 
 /-- The bytes of a body for the profile's instruction grammar. -/
 def BodyBytes (profile : ValidationProfile) (ops : List instr) (bytes : List U8) : Prop :=
-  match profile with
-  | .Wasm1 => ModuleBinary.BodyEncoding ops bytes
-  | .Wasm2 => ∃ tokens, ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes ∧
-      Wasm2.BodyTokens tokens ops
+  ∃ tokens, ModuleBinary.Rep Wasm2.TokenEncoding tokens bytes ∧
+    Wasm2.BodyTokens tokens ops
 
-/-- The bytes of a code entry: size prefix, local declarations and body. Only the body grammar
-depends on the profile. -/
+/-- The bytes of a code entry: size prefix, local declarations and body. The body grammar
+is the Wasm 2.0 grammar. -/
 def CodeEncoding (profile : ValidationProfile) (entry : ModuleBinary.Code)
     (bytes : List U8) : Prop :=
   ∃ size locals body, Leb128.Encoding size (locals.length + body.length) ∧
@@ -47,20 +45,14 @@ theorem CodeEncodingWithinLimits.encoding {profile entry bytes}
   obtain ⟨_, size, locals, body, hs, hl, hb, _, he⟩ := h
   exact ⟨size, locals, body, hs, hl, hb, he⟩
 
-/-- The typing facts about a code entry under the type at `typeIdx`: the signature is allowed, the
-body is typed and meets the profile restrictions, the locals are allowed, and references are
-declared. -/
+/-- The typing facts about a code entry under the type at `typeIdx`: the
+body is typed and references are declared. -/
 structure EntryTyped (profile : ValidationProfile) (env : metadata.Env)
     (typeIdx : U32) (entry : ModuleBinary.Code) : Prop where
   type_lt : typeIdx.val < env.types.val.length
-  signature : FuncType profile env.types.val[typeIdx.val]
   typed : Instrs_ok (CodeEntry.bodyContext env env.types.val[typeIdx.val].params.val
     entry.declared env.types.val[typeIdx.val].results.val) entry.body
     (CodeEntry.instructionType env.types.val[typeIdx.val])
-  instructions : Instructions profile (CodeEntry.bodyContext env
-    env.types.val[typeIdx.val].params.val entry.declared
-    env.types.val[typeIdx.val].results.val) entry.body
-  locals_allowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2
   declared : DeclaredReferences.Instructions
     (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body
 
@@ -102,7 +94,6 @@ theorem wasm2_rep_consumed {data start next tokens bytes}
 theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops) :
     BodyBytes profile ops data.val := by
   cases profile with
-  | Wasm1 => exact ModuleBinary.bodyEncoding_of_body h
   | Wasm2 =>
     obtain ⟨tokens, next, hs, hn, ht⟩ := h
     obtain ⟨bytes, he, hb⟩ := wasm2_consumed_rep hs
@@ -113,14 +104,13 @@ theorem BodyEncoding.bytes {profile data ops} (h : BodyEncoding profile data ops
 theorem BodyBytes.body {profile} {data : Slice U8} {ops}
     (h : BodyBytes profile ops data.val) : BodyEncoding profile data ops := by
   cases profile with
-  | Wasm1 => exact ModuleBinary.body_of_bodyEncoding h
   | Wasm2 =>
     obtain ⟨tokens, ht, hb⟩ := h
     exact ⟨tokens, Slice.len data, wasm2_rep_consumed ht
       ⟨by simp, by simp, by simp⟩, rfl, hb⟩
 
 /-- A code entry parses as `CodeEncoding` when its size, locals and body parse in turn. The framing
-proof is shared by both profiles. -/
+proof preserves the profile parameter. -/
 theorem codeEncoding_of_parts {profile data start content localEnd last size groups body ops}
     (hsize : Leb128.Decoded data start size content)
     (hlength : last.val = content.val + size.val)
@@ -150,25 +140,20 @@ theorem functionContext_entry {env : metadata.Env} {locals : alloc.vec.Vec wasm_
     Control.labelContext, CodeEntry.bodyContext, hl]
   rfl
 
-/-- A typed body with allowed locals and declared references gives `EntryTyped`. -/
+/-- A typed body with declared references gives `EntryTyped`. -/
 theorem EntryTyped.of_body {profile env locals index ft groups ops}
-    (hi : env.types.val[index.val]? = some ft) (hs : FuncType profile ft)
+    (hi : env.types.val[index.val]? = some ft)
     (hl : locals.val = ft.params.val ++ ModuleLocals.declared groups)
     (ht : Wasm2.FunctionTyped env locals ft ops)
-    (hp : Instructions profile (Wasm2.functionContext env locals ft) ops)
-    (hallowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2)
     (hdeclared : DeclaredReferences.Instructions
       (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) ops) :
     EntryTyped profile env index ⟨groups, ops⟩ := by
   have hlt := List.getElem?_eq_some_iff.mp hi
-  refine ⟨hlt.1, ?_, ?_, ?_, hallowed, hdeclared⟩
-  · simpa [hlt.2] using hs
-  · change Instrs_ok (Wasm2.functionContext env locals ft) ops _ at ht
-    rw [functionContext_entry hl] at ht
-    simpa only [hlt.2, ModuleBinary.Code.declared, ModuleLocals.declared,
-      CodeEntry.instructionType] using ht
-  · rw [functionContext_entry hl] at hp
-    simpa only [hlt.2, ModuleBinary.Code.declared, ModuleLocals.declared] using hp
+  refine ⟨hlt.1, ?_, hdeclared⟩
+  change Instrs_ok (Wasm2.functionContext env locals ft) ops _ at ht
+  rw [functionContext_entry hl] at ht
+  simpa only [hlt.2, ModuleBinary.Code.declared, ModuleLocals.declared,
+    CodeEntry.instructionType] using ht
 
 /-- `EntryTyped` and a body encoding give `Profile.Body`. -/
 theorem EntryTyped.body {profile env index entry}
@@ -177,20 +162,17 @@ theorem EntryTyped.body {profile env index entry}
     (hl : locals.val = (env.types.val[index.val]'h.type_lt).params.val ++ entry.declared)
     (he : BodyEncoding profile data entry.body) : Body profile data env locals index := by
   refine ⟨env.types.val[index.val]'h.type_lt, entry.body,
-    List.getElem?_eq_getElem h.type_lt, h.signature, he, ?_, ?_, h.declared⟩
-  · change Instrs_ok (Wasm2.functionContext env locals _) entry.body _
-    rw [functionContext_entry hl]
-    exact h.typed
-  · rw [functionContext_entry hl]
-    exact h.instructions
+    List.getElem?_eq_getElem h.type_lt, he, ?_, h.declared⟩
+  change Instrs_ok (Wasm2.functionContext env locals _) entry.body _
+  rw [functionContext_entry hl]
+  exact h.typed
 
-/-- `EntryTyped` gives `CodeEntry.Typed`, which omits the signature restriction. -/
+/-- `EntryTyped` gives `CodeEntry.Typed`. -/
 theorem EntryTyped.core {profile env typeIdx entry} (h : EntryTyped profile env typeIdx entry) :
-    CodeEntry.Typed env typeIdx entry profile := ⟨h.type_lt, h.typed, h.instructions, h.locals_allowed, h.declared⟩
+    CodeEntry.Typed env typeIdx entry profile := ⟨h.type_lt, h.typed, h.declared⟩
 
-/-- `CodeEntry.Typed` and the signature restriction give `EntryTyped`. -/
-theorem EntryTyped.of_core {profile env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry profile)
-    (hs : FuncType profile (env.types.val[typeIdx.val]'h.type_lt)) : EntryTyped profile env typeIdx entry :=
-  ⟨h.type_lt, hs, h.typed, h.profile, h.locals_allowed, h.declared⟩
+/-- `CodeEntry.Typed` gives `EntryTyped`. -/
+theorem EntryTyped.of_core {profile env typeIdx entry} (h : CodeEntry.Typed env typeIdx entry profile) : EntryTyped profile env typeIdx entry :=
+  ⟨h.type_lt, h.typed, h.declared⟩
 
 end Itasca.Profile

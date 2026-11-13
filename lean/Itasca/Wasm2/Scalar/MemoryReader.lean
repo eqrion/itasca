@@ -42,7 +42,6 @@ theorem Pending.memory_reader_post {data env profile locals index st}
   refine ⟨rest, ?_⟩
   exact p.append_reader_context C outer spine header base out (operation.op arg)
     p.current.ctrl.polymorphic_base rest wf (.plain encoded1) finalTyped controlEq newBlocks stack
-    (encoded1.declared _) (fun _ => ⟨encoded1, encoded1.leaf p.inbounds
-      (by rw [byte]; rintro rfl; simp [MemoryMeaning.opcodeMeaning] at meaning) _⟩)
+    (encoded1.declared _)
 
 end Itasca.Wasm2

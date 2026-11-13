@@ -1,6 +1,6 @@
 import Itasca.Binary.Wasm2.Encoding
 import Itasca.Binary.Wasm2.DeclaredReferences
-import Itasca.Wasm1.ProfileSyntax
+import Itasca.Support.ControlTranslation
 
 /-!
 # Wasm 2.0 body contract
@@ -8,8 +8,7 @@ import Itasca.Wasm1.ProfileSyntax
 The contract that the body validator is proved against, stated without reference to the
 validator. `Validated` says that a body is a binary-grammar instruction sequence (`BodyEncoding`),
 is typed by the generated `Instrs_ok` rules (`FunctionTyped`), and satisfies the
-declared-function-reference condition. For Wasm 1.0 the same instructions also follow the Wasm 1.0
-grammar and `Wasm1.Instructions`.
+declared-function-reference condition.
 -/
 
 open Aeneas Aeneas.Std
@@ -35,13 +34,11 @@ def FunctionTyped (env : metadata.Env) (locals : alloc.vec.Vec wasm_types.ValueT
     ops (.mk_functype (.mk_list []) (.mk_list (ft.results.val.map Translate.valueType)))
 
 /-- The whole-body certificate used by both soundness and completeness. It contains no
-validator-success premise and imposes no Wasm 1.0 result-arity restriction. -/
+validator-success premise. -/
 def Validated (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : Prop :=
   ∃ ft ops, env.types.val[index.val]? = some ft ∧ BodyEncoding data ops ∧
     FunctionTyped env locals ft ops ∧
-    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops ∧
-    (profile = .Wasm1 → Wasm1.BodyEncoding data ops ∧
-      Wasm1.Instructions (functionContext env locals ft) ops)
+    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops
 
 end Itasca.Wasm2

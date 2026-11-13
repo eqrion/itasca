@@ -5,8 +5,8 @@ import Itasca.Binary.Wasm1.EncodingComplete
 # Code entry encodings from byte provenance
 
 Conversions between the streaming byte provenance used by the extracted code-entry reader
-(`Wasm1.Consumed`, `Wasm1.BytesAt`, `Wasm1.BodyEncoding`) and the independent module grammar
-(`At`, `Rep`, `BodyEncoding`), and `slice_bytes` for the body slice a parser returns.
+(`Wasm1.Consumed`, `Wasm1.BytesAt`) and the independent module grammar
+(`At`, `Rep`), and `slice_bytes` for the body slice a parser returns.
 -/
 
 open Aeneas Aeneas.Std
@@ -24,14 +24,6 @@ theorem consumed_rep {data start tokens next}
     obtain ⟨bs, he, hs⟩ := ih
     obtain ⟨cs, hc, hp⟩ := ht
     exact ⟨bs ++ cs, he.snoc hc, hs.append hp⟩
-
-/-- Streaming body provenance gives the module grammar's `BodyEncoding` of the slice bytes. -/
-theorem bodyEncoding_of_body {data ops} (h : Wasm1.BodyEncoding data ops) :
-    BodyEncoding ops data.val := by
-  obtain ⟨tokens, next, hs, hn, ht⟩ := h
-  obtain ⟨bytes, he, hb⟩ := consumed_rep hs
-  have heq : data.val = bytes := by simpa [hn] using hb.suffix
-  exact ⟨tokens, heq.symm ▸ he, ht⟩
 
 /-- A slice taken from `first` to `last` holds exactly the parent buffer's bytes in that
 interval. -/
@@ -60,12 +52,5 @@ theorem rep_consumed {data start next tokens bytes}
   | cons ht hrest ih =>
     obtain ⟨middle, hfirst, hrest⟩ := hs.split
     exact Wasm1.Consumed.cons_iff.mpr ⟨middle, ⟨_, ht, hfirst⟩, ih hrest⟩
-
-/-- The module grammar's `BodyEncoding` of a slice gives streaming body provenance. -/
-theorem body_of_bodyEncoding {data : Slice U8} {ops}
-    (he : BodyEncoding ops data.val) : Wasm1.BodyEncoding data ops := by
-  obtain ⟨tokens, ht, hb⟩ := he
-  refine ⟨tokens, Slice.len data, rep_consumed ht ?_, rfl, hb⟩
-  exact ⟨by simp, by simp, by simp⟩
 
 end Itasca.ModuleBinary

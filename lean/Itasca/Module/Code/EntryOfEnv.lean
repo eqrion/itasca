@@ -19,19 +19,18 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleEnv
 
 /-- An accepted environment decoded from input within the size limit supplies the entry
-prerequisites for the profile: the allocation bound, admitted signatures, and signatures within the
+prerequisites for the profile: the allocation bound and signatures within the
 completeness limits. -/
 theorem profile_accepted_entry_conditions (data : Slice U8) (env : metadata.Env) (next : Usize)
     (profile : ValidationProfile) (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (h : metadata.validate_env data profile = .ok (.Ok (env, next))) :
-    CodeEntry.Bounds env ∧ Profile.Environment profile env ∧
-      Profile.EnvironmentWithinLimits env := by
+    CodeEntry.Bounds env ∧ Profile.EnvironmentWithinLimits env := by
   have hs := metadata.validate_env.profile_semantic_spec data profile
   rw [h] at hs
   simp only [WP.spec_ok] at hs
   obtain ⟨decls, hr, hv, hsig, _, hb⟩ := hs
   exact ⟨CodeEntry.Bounds.of_module_bound env (hsig.mono (by have := hb.span.2; omega)),
-    hv.environment hr.cache, hv.environmentWithinLimits hr.cache⟩
+    hv.environmentWithinLimits hr.cache⟩
 
 end Itasca.ModuleEnv
 

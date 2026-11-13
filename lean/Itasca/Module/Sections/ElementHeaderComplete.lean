@@ -26,36 +26,11 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
   obtain ⟨bytes, he, hs⟩ := hb
   have hx : metadata.decode_element_header data pos env profile ⦃ r => r = .Ok (mode, elem, expressions, next) ⦄ := by
     cases he with
-    | @legacy index offset fb ob hf ho =>
-      obtain ⟨hi, ht, hv⟩ := hv
-      obtain ⟨middle, hflags, hoffset⟩ := hs.split
-      have hrf := hflags.read_u32 index hf
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm1
-        (hv.const_allowed (by trivial))
-      simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch]
-      step as ⟨cast1, hcast1⟩
-      have hg1 : ¬env.table_types.val.length ≤ cast1.val := by scalar_tac
-      simp only [hg1, ↓reduceIte]
-      step as ⟨cast2, hcast2⟩
-      have hg2 : ¬env.table_types.val.length ≤ cast2.val := by scalar_tac
-      simp only [hg2, ↓reduceIte]
-      have htype : wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef = .ok (ModuleConstants.referenceValueType wasm_types.ElemType.FuncRef) := by rfl
-      rw [htype]
-      simp only [bind_ok]
-      step as ⟨table, htable⟩
-      have hte : table.elem = wasm_types.ElemType.FuncRef := by
-        have hval : cast2.val = (index).val := by scalar_tac
-        simpa only [htable, hval] using ht
-      rw [hte]
-      simp [ModuleConstants.referenceValueType, wasm_types.ElemType.value_type,
-        core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
-        wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @activeIndices offset fb ob hf ho =>
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
       have hrf := hflags.read_u32 0#u32 hf
       have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
-        (hv.const_allowed (by trivial))
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (0#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -80,7 +55,6 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
       have hrf := hflags.read_u32 4#u32 hf
       have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
-        (hv.const_allowed (by trivial))
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (4#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -119,7 +93,7 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
       have hrf := hflags.read_u32 2#u32 hf
       have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2 (by trivial)
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
       simp [metadata.decode_element_header, hrf, hri, hro, hkind.read_byte,
         show (2#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -143,14 +117,14 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
     | @passiveExpressions elem fb hf =>
       obtain ⟨middle, hflags, helem⟩ := hs.split
       have hrf := hflags.read_u32 5#u32 hf
-      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2 (by trivial)
+      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2
       simp [metadata.decode_element_header, hrf, hre,
         show (5#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
     | @declarativeExpressions elem fb hf =>
       obtain ⟨middle, hflags, helem⟩ := hs.split
       have hrf := hflags.read_u32 7#u32 hf
-      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2 (by trivial)
+      have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩ .Wasm2
       simp [metadata.decode_element_header, hrf, hre,
         show (7#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -161,8 +135,8 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
       have hrf := hflags.read_u32 6#u32 hf
       have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2 (by trivial)
-      have hre := metadata.decode_elem_type.complete data elemPos elem next ⟨_, rfl, helem⟩ .Wasm2 (by trivial)
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv .Wasm2
+      have hre := metadata.decode_elem_type.complete data elemPos elem next ⟨_, rfl, helem⟩ .Wasm2
       simp [metadata.decode_element_header, hrf, hri, hro, hre,
         show (6#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
@@ -211,7 +185,6 @@ theorem metadata.decode_element.complete (data : Slice U8) (env : metadata.Env)
   obtain ⟨result, init, hreadinit, hinit, hadded⟩ := metadata.decode_element_initializers.complete
     data env entry.elem expressions profile middle next entry.init ⟨encoded, hvalues, hentries⟩
     (by omega) (by simpa only [hty] using hv.2)
-    (by intro value hm he; exact hhead.const_allowed value he)
   let actual : metadata.Element := ⟨entry.elem, entry.mode, init⟩
   refine ⟨result, actual, ?_, ?_, ?_⟩
   · simp [metadata.decode_element, hreadheader, hreadinit, actual,

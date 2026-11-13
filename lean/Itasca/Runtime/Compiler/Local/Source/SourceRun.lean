@@ -5,51 +5,29 @@ open Aeneas Aeneas.Std Itasca
 
 private theorem code_guards {env indices codes profile}
     (h : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) indices codes) :
-    (∀ entry ∈ codes, ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2) ∧
-    (env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false) := by
+    env.data_count = none → ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false := by
   induction h with
   | nil => simp
   | cons hp _ ih =>
-    constructor
-    · intro entry hm
-      rcases List.mem_cons.mp hm with rfl | hm
-      · exact hp.locals_allowed
-      · exact ih.1 entry hm
-    · intro hc entry hm
-      rcases List.mem_cons.mp hm with rfl | hm
-      · exact hp.no_data hc
-      · exact ih.2 hc entry hm
+    intro hc entry hm
+    rcases List.mem_cons.mp hm with rfl | hm
+    · exact hp.no_data hc
+    · exact ih hc entry hm
 
 private theorem assembly_guards {profile env decls codes} {segments : List metadata.Data}
     (hr : ModuleEnv.Represents env decls)
-    (ha : ModuleBinary.ModuleTypesAllowed profile (decls.module [] []))
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val codes)
-    (hs : ∀ segment ∈ segments, ModuleData.Valid env segment)
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
-    ModuleBinary.ModuleTypesAllowed profile (decls.module codes (segments.map ModuleData.raw)) ∧
     ModuleBinary.DataCountValid (decls.module codes (segments.map ModuleData.raw)) := by
   have hg := code_guards hcodes
-  constructor
-  · refine ⟨ha.1, ha.2.1, ha.2.2.1, ha.2.2.2.1, hg.1, ha.2.2.2.2.2.1, ?_⟩
-    intro entry hm
-    obtain ⟨actual, hactual, rfl⟩ := List.mem_map.mp hm
-    have hv := hs actual hactual
-    cases hm : actual.mode with
-    | Passive => simp [ModuleData.raw, hm]
-    | Active idx offset =>
-      have ho : ModuleConstants.Valid env offset .I32 := by
-        exact (show idx.val < env.mem_types.val.length ∧ ModuleConstants.Valid env offset .I32 from by simpa [ModuleData.Valid, hm] using hv).2
-      simpa only [ModuleData.raw, hm] using ho.const_allowed
-        (show ModuleBinary.ValueTypeAllowed profile .I32 from by cases profile <;> trivial)
-  · unfold ModuleBinary.DataCountValid
-    change (match decls.dataCount with
-      | none => ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false
-      | some count => count.val = (segments.map ModuleData.raw).length)
-    rw [hr.dataCount]
-    cases he : env.data_count with
-    | none => exact hg.2 he
-    | some count => simpa using hc count he
-
+  unfold ModuleBinary.DataCountValid
+  change (match decls.dataCount with
+    | none => ∀ entry ∈ codes, ModuleBinary.instructionsUseData entry.body = false
+    | some count => count.val = (segments.map ModuleData.raw).length)
+  rw [hr.dataCount]
+  cases he : env.data_count with
+  | none => exact hg he
+  | some count => simpa using hc count he
 
 /-- Accepted driver phases recover the independent code section in the exact
 buffer used for batching. This is source framing, not compiler correctness. -/
@@ -65,7 +43,7 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     (run : StreamRun.Accepted source visitor id state v v' env profile) :
     ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw data.val profile ∧
       ModuleElaboration.Matches env run.remaining.tail raw ∧ ModuleEnv.Valid env profile ∧
-      CodeEntry.Bounds env ∧ Profile.Environment profile env ∧
+      CodeEntry.Bounds env ∧
       raw.functions = env.func_type_indices.val ∧ raw.types = env.types.val ∧
       raw.codes.length = env.func_type_indices.val.length ∧
       StreamFraming.HeaderAt code env run.remaining.entries ∧
@@ -95,8 +73,7 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
     simpa using this
   have hdecoded := metadata.validate_env_with.accepted_erase visitor.metadataModuleVisitorInst
     run.environment run.region env run.environmentLength run.decoded run.decode_environment
-  obtain ⟨henv, hsignatures, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
-  have hresults := hsignatures.1
+  obtain ⟨henv, _⟩ := ModuleEnv.profile_accepted_entry_conditions _ _ _ profile hecap hdecoded
   have hsem := metadata.validate_env.profile_semantic_spec run.environment profile
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
@@ -122,18 +99,17 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
   rw [hcodeLen] at hsubmit
   obtain ⟨history, nextId, hinv, hsubmitted⟩ := stream.submit_code_batches.sound source visitor Tracks hp
     state id env code run.remaining.entries run.remaining.config run.remaining.configured
-    run.remaining.pending run.remaining.submitted environment.val tail.val hsource henv hresults hcap hstart
+    run.remaining.pending run.remaining.submitted environment.val tail.val hsource henv hcap hstart
     hconfigured hsubmit
   have hended := hp.code_end id history _ _ hsubmitted run.remaining.end_call
   have htailRegion := hp.region id history _ .Tail _ hended run.remaining.region_call
   have htailDecoded := hp.tail_preserves id history run.remaining.tailBytes 0#usize _ _ env
     run.remaining.tail run.remaining.decode_tail htailRegion
   have hready := hp.tail_ready id history _ _ _ htailDecoded run.remaining.ready_call
-  have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-      ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft := by
+  have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env := by
     intro issued hi
     have he := (hinv.issued issued hi).2.1
-    simpa [he] using And.intro henv hresults
+    simpa [he] using henv
   obtain ⟨_, _, hcompleted⟩ := StreamScheduler.drain_sound visitor Tracks hp id history
     run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry hinv.profiles run.remaining.drain_call
   have hall : ∀ issued ∈ history, StreamScheduler.Completed issued profile := by
@@ -162,14 +138,14 @@ theorem stream_run_source {S V : Type} {profile : ValidationProfile}
   obtain ⟨⟨tailBytes, ht, hts⟩, hsegments, hdataCount⟩ := htailSem
   have htailWhole : run.remaining.tailBytes.val = tailBytes := by simpa using hts.suffix
   let raw := ModuleElaboration.fromEnv env decls.tables decls.memories codes run.remaining.tail.data.val
-  have guards := assembly_guards hrep hprefix.allowed htyped hsegments hdataCount
+  have guards := assembly_guards hrep htyped hdataCount
   have encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw data.val profile := by
     change ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile)
       (ModuleElaboration.fromEnv env decls.tables decls.memories codes run.remaining.tail.data.val) data.val profile
     rw [← ModuleElaboration.represents_module hrep, hbytes]
     exact ModuleComposition.encoding (by simpa [← hwhole, heq] using hprefix) hcode
-      (by simpa [← htailWhole, hteq] using ht) guards.1 guards.2
-  refine ⟨raw, encoded, ModuleElaboration.matches_fromEnv _ hrep.cache, hvalid, henv, hsignatures,
+      (by simpa [← htailWhole, hteq] using ht) guards
+  refine ⟨raw, encoded, ModuleElaboration.matches_fromEnv _ hrep.cache, hvalid, henv,
     rfl, rfl, hcount, hheader, entriesEncoding, hcap, ?_⟩
   have heLength := congrArg List.length heq
   have htLength := congrArg List.length hteq

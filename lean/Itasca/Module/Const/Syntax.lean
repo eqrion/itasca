@@ -36,18 +36,6 @@ inductive Valid (env : metadata.Env) : wasm_types.ConstExpr → wasm_types.Value
       (himport : idx.val < env.num_imported_globals.val)
       (hconst : gt.mutability = .Const) : Valid env (.GlobalGet idx) gt.valtype
 
-/-- A valid initializer uses only constant forms the profile allows, when its type is allowed. -/
-theorem Valid.const_allowed {env value expected} (h : Valid env value expected)
-    {profile : ValidationProfile} (ha : ModuleBinary.ValueTypeAllowed profile expected) :
-    ModuleBinary.ConstAllowed profile value := by
-  cases h with
-  | i32 _ | i64 _ | f32 _ | f64 _ | globalGet => cases profile <;> trivial
-  | v128 _ _ | refFunc =>
-    cases profile <;> simp_all [ModuleBinary.ValueTypeAllowed, ModuleBinary.ConstAllowed]
-  | refNull ty =>
-    cases profile <;> cases ty <;>
-      simp_all [ModuleBinary.ValueTypeAllowed, ModuleBinary.ConstAllowed, referenceValueType]
-
 /-- Translates an initializer to a SpecTec instruction. `V128` combines the low and high halves in
 little-endian order. -/
 def instruction : wasm_types.ConstExpr → instr

@@ -61,7 +61,7 @@ theorem typed_loop_wasm2 {V : Type} (visitor : code.OpVisitor V)
         rw [hr] at hb
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at hb
         obtain ⟨⟨res, out, w⟩, hs, htail⟩ := ResultFacts.bind_ok_inv _ _ _ hb
-        obtain ⟨p, hstart⟩ := hi.pending hc hp (fun h => nomatch h) next hnext
+        obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
         have hs' : code.step_profile visitor {core := {st.core with pos := next}}
             data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs

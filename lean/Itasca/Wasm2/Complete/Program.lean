@@ -1,12 +1,12 @@
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.Execution
-import Itasca.Binary.ProfileEncoding
+import Itasca.Binary.Wasm2.EncodingComplete
 
 /-!
 # Programs and atoms for completeness
 
-`Program` says that every typed instruction list emitted from a token list in the profile's grammar,
-with the profile's instruction restrictions, executes under the actual body loop within a concrete
+`Program` says that every typed instruction list emitted from a token list in the Wasm 2.0 grammar
+executes under the actual body loop within a concrete
 control frame, and `AtomProgram` says the same for one normalized head instruction. `program_of_atoms` derives `Program` from `AtomProgram` by
 induction on the token list, following an arbitrary declarative derivation (sequence, framing and
 subsumption rules included).
@@ -22,11 +22,10 @@ def Program (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
-    Bounds data st → ProfileConsumed profile data st.core.pos tokens next →
+    Bounds data st → Consumed data st.core.pos tokens next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops →
-    (profile = .Wasm1 → Wasm1.Instructions C ops) →
     ∃ s, Execution data env profile ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
       Bounds data s
 
@@ -37,11 +36,10 @@ def AtomProgram (data : Slice U8) (env : metadata.Env) (profile : ValidationProf
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
     EnvTranslation.Matches env ctx C → Labels env st C →
-    Bounds data st → ProfileConsumed profile data st.core.pos tokens next →
+    Bounds data st → Consumed data st.core.pos tokens next →
     Sequence.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
-    (profile = .Wasm1 → Wasm1.Instruction C op) →
     ∃ s, Execution data env profile ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
@@ -63,7 +61,7 @@ theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : Valid
   generalize hn : tokens.length = n
   induction n using Nat.strong_induction_on generalizing tokens ops with
   | h n ih =>
-    intro C st f next input output hmatch hlabels hbounds hbytes hreal htyped hdecl hprofile
+    intro C st f next input output hmatch hlabels hbounds hbytes hreal htyped hdecl
     cases ops with
     | nil =>
       have hnil := Emits.empty_iff.mp hemits
@@ -82,10 +80,6 @@ theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : Valid
         simp only [List.length_append] at hn
         omega
       obtain ⟨middle, hfirstbytes, hrestbytes⟩ := hbytes.split
-      have hheads : profile = .Wasm1 → Wasm1.Instruction C op ∧ Wasm1.Instructions C ops := by
-        intro hp
-        cases hprofile hp with
-        | cons hh ht => exact ⟨hh, ht⟩
       obtain ⟨front, ins, outs, hop, hinput, htail⟩ :=
         DeclarativeComplete.head_realizes hreal htyped
       have hsmaller : SmallerPrograms data env profile ctx index first.length := by
@@ -94,15 +88,13 @@ theorem program_of_atoms (data : Slice U8) (env : metadata.Env) (profile : Valid
       obtain ⟨mid, hrun, hpos, hout, hbound⟩ :=
         hatom first op hfirst hsmaller C st f middle front ins outs hmatch hlabels
           hbounds hfirstbytes hinput hop (DeclaredReferences.Instructions.cons_iff.mp hdecl).1
-          (fun hp => (hheads hp).1)
       obtain ⟨g, _, _, hgp, hgo, hgk, hgba, hgr⟩ := hout.next
-      have hrestbytes' : ProfileConsumed profile data mid.core.pos rest next := by
+      have hrestbytes' : Consumed data mid.core.pos rest next := by
         simpa [hpos] using hrestbytes
       have hlabels' : Labels env mid C := hout.labels hlabels
       obtain ⟨last, hrun', hpos', hout', hbound'⟩ :=
         ih rest.length hrest_len rest ops hrest rfl C mid g next _ _
           hmatch hlabels' hbound hrestbytes' hgr htail (DeclaredReferences.Instructions.cons_iff.mp hdecl).2
-          (fun hp => (hheads hp).2)
       exact ⟨last, hrun.append hrun', hpos',
         hout'.transfer hout.2 hgp hgo hgk hgba, hbound'⟩
 

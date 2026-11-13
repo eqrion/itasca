@@ -167,7 +167,6 @@ theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops :
     {issued : StreamBatch.Issued} (reachable : StreamBatch.Reachable issued batch)
     (bounded : issued.Bounded) (origin : before.code_start.val ≤ limits.MAX_MODULE_BYTES.val)
     (bounds : CodeEntry.Bounds batch.env)
-    (types : ∀ ft ∈ batch.env.types.val, Profile.FuncType batch.profile ft)
     (signatureTable : SignatureSequence before.signatures.val batch.env.types.val)
     (functionTable : before.func_param_slots.val.map (fun word => word.val) =
       batch.env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
@@ -197,9 +196,7 @@ theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops :
     · have size := (stream.CodeBatch.validate_next.accepted _ _ _ _ _ _ next).1
       simpa only [countEq, count] using size
   have entryBounds : CodeEntry.Bounds w.dispatched.env := by simpa only [w.metadata.1] using bounds
-  have entryTypes : ∀ ft ∈ w.dispatched.env.types.val, Profile.FuncType w.dispatched.profile ft := by
-    simpa only [w.metadata.1, w.metadata.2.1] using types
-  obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds entryTypes encoded countBound
+  obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds encoded countBound
   have position : w.entry.index.val = prior.length + w.dispatched.num_validated.val := by
     have batchIdentity := reachable.validation.1
     have batchFirst := batchIdentity.2.2.2.2.2.1
@@ -268,7 +265,6 @@ theorem scheduler_batch_executable_capacity {A : Type} (ops : runtime.platform.A
     (env : metadata.Env) (profile : ValidationProfile) (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env)
-    (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (before after : runtime.compiler.CompileScheduler A) (issued : StreamBatch.Issued)
     (prior taken remaining : List ModuleBinary.Code)
     (split : raw.codes = prior ++ taken ++ remaining)
@@ -294,7 +290,6 @@ theorem scheduler_batch_executable_capacity {A : Type} (ops : runtime.platform.A
     have certificate := w.compile_executable_source_capacity law reachable bounded
       (by simpa only [fields.2.2] using initial.origin)
       (by simpa only [envEq] using bounds)
-      (by simpa only [envEq, profileEq] using types)
       (by simpa only [fields.1, envEq] using initial.signatures)
       (by simpa only [fields.2.1, envEq] using initial.functionSlots)
       raw (by simpa only [envEq] using declarations) prior taken remaining split first count
@@ -312,7 +307,7 @@ theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime
     (env : metadata.Env) (code : Slice U8) (profile : ValidationProfile) (config : stream.Config)
     (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
-    (bounds : CodeEntry.Bounds env) (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
+    (bounds : CodeEntry.Bounds env)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (start : Usize)
@@ -328,7 +323,7 @@ theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime
     state moduleId env code profile config raw.codes (SchedulerCapacity profile env (sourceFunctions raw))
     environment tail available capacity start encoded count ?_ ?_ before after pending initial accepted
   · intro current next issued prior taken remaining split moduleEq selected sameEnv first counted encoded bounded ready accepted
-    exact scheduler_batch_executable_capacity ops law env profile raw declarations bounds types current next issued
+    exact scheduler_batch_executable_capacity ops law env profile raw declarations bounds current next issued
       prior taken remaining split sameEnv selected first counted encoded bounded ready accepted
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_capacities ops current next worker ready.functions accepted
@@ -362,7 +357,7 @@ theorem CompileSourceCertificate.executable_capacities {A : Type} {ops : runtime
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64
     w.env c.code profile c.run.remaining.config c.raw c.functions c.entryBounds
-    c.environmentProfile.1 c.environment.val c.tail.val c.available c.codeBound
+    c.environment.val c.tail.val c.available c.codeBound
     c.run.remaining.entries c.entries c.codeCount c.run.remaining.configured c.run.remaining.submitted
     c.run.remaining.pending initial submitted
   exact c.capacities_of_submission law certified.functions

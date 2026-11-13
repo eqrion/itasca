@@ -82,7 +82,7 @@ theorem ImportAdded.represents {profile} {env result entry decls}
       · simpa [importedTables, hi, he] using hr.cache.tables
       · simpa [importedMems, hi, he] using hr.cache.memories
   · rename_i tt
-    obtain ⟨henv, htables, _, _⟩ := hd
+    obtain ⟨henv, htables, _⟩ := hd
     rw [henv]
     refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
@@ -106,7 +106,7 @@ theorem ImportAdded.represents {profile} {env result entry decls}
       · simpa [importedTables, hi, he] using hr.cache.tables
       · simpa [importedMems, hi, he, hmemories, hm] using congrArg (· ++ [mt]) hr.cache.memories
   · rename_i gt
-    obtain ⟨henv, htypes, hnum, _⟩ := hd
+    obtain ⟨henv, htypes, hnum⟩ := hd
     rw [henv]
     refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
     · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
@@ -152,7 +152,7 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
       have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
-  | tables ha hb hv hc =>
+  | tables ha hb hv =>
       have ht := congrArg metadata.Env.types ha.1
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
@@ -174,7 +174,7 @@ theorem Effect.signatureBounded {profile} {data pos env before id next result af
       change result.types = env.types at ht
       simpa only [SignatureBounded, ht] using hm
 
-  | dataCount hp he hb => simpa only [SignatureBounded, he] using hm
+  | dataCount he hb => simpa only [SignatureBounded, he] using hm
 
 
 /-- A section update in increasing section order keeps the environment representing the
@@ -225,7 +225,7 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       · exact hr.cache.numGlobals
       · exact hr.cache.tables
       · exact hr.cache.memories
-  | tables ha hb hv hc =>
+  | tables ha hb hv =>
     change last < 4 at horder
     have ht := h4 (by simpa using horder)
     rw [ha.1]
@@ -287,7 +287,7 @@ theorem Effect.represents {profile} {data pos env before id next result after la
       rw [ha.2.1, List.map_append, ← hr.elements, he, List.nil_append]
     · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
 
-  | dataCount hp he hb =>
+  | dataCount he hb =>
     rw [he]
     exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start,
       hr.elements, rfl, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals,

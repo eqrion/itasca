@@ -57,7 +57,7 @@ theorem metadata.validate_code_entry_with.witness_profile {V : Type} (visitor : 
         simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
       | Ok pair =>
         obtain ⟨declared, bodyStart⟩ := pair
-        obtain ⟨groups, hg, hd, hcap, hallowed⟩ := hl
+        obtain ⟨groups, hg, hd, hcap⟩ := hl
         simp at h
         by_cases hbeyond : last.val < bodyStart.val
         · simp [hbeyond] at h
@@ -114,7 +114,7 @@ theorem metadata.validate_code_entry_with.witness_profile {V : Type} (visitor : 
                 content := content, bodyStart := bodyStart, body := body, size := size
                 startedState := started, index_lt := hindex, index_type := htypeIdx.symm
                 type_lt := htype_lt, function_type := hft.symm, header := hp
-                extent := ?_, locals_bytes := hg, locals_bound := ?_, locals_allowed := hallowed
+                extent := ?_, locals_bytes := hg, locals_bound := ?_
                 context_locals := ?_, context_results := ?_, body_bytes := ?_
                 function_start := hstart, body_accepted := hrun }⟩
               · scalar_tac

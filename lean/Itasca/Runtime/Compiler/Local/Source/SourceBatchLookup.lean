@@ -40,17 +40,14 @@ validated prior index. Framing equality, not a compiler premise, selects it. -/
 theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
     {data env index start finish before after profile}
     (w : CodeEntry.Witness visitor data env index start finish before after profile)
-    (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     {entries prior : List ModuleBinary.Code}
     (whole : ModuleBinary.Rep (Profile.CodeEncoding profile) entries data.val)
     (previous : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) data 0#usize prior start)
     (bound : prior.length < entries.length) :
     ∃ entry, entries[prior.length]? = some entry ∧ w.groups = entry.locals ∧
       Profile.BodyEncoding profile w.body entry.body := by
-  have lookup : env.types.val[w.typeIdx.val]? = some w.ft := by
-    simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
-  obtain ⟨ft, source, _, _, body, _⟩ := code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile w.ft
-    w.startedState after lookup (witness_type_profile w types) w.body_accepted
+  obtain ⟨ft, source, _, body, _⟩ := code.validate_body_with.profile_sound visitor w.body env w.ctx w.typeIdx profile
+    w.startedState after w.body_accepted
   have actual := Profile.codeEncoding_of_parts w.header w.extent w.locals_bytes w.body_bytes body
   obtain ⟨first, prefixEncoding, prefixSpan⟩ := previous
   obtain ⟨last, lastEncoding, lastSpan⟩ := actual
@@ -84,7 +81,6 @@ theorem witness_batch_source_lookup {V : Type} {visitor : code.OpVisitor V}
     (w : CodeEntry.Witness visitor batch.code batch.env index batch.validated_end finish before after batch.profile)
     (reachable : StreamBatch.Reachable issued batch)
     (bounds : CodeEntry.Bounds batch.env)
-    (types : ∀ ft ∈ batch.env.types.val, Profile.FuncType batch.profile ft)
     {entries : List ModuleBinary.Code}
     (whole : ModuleBinary.Rep (Profile.CodeEncoding issued.profile) entries issued.code.val)
     (count : batch.num_validated.val < entries.length) :
@@ -93,13 +89,12 @@ theorem witness_batch_source_lookup {V : Type} {visitor : code.OpVisitor V}
   obtain ⟨identity, previous, _⟩ := reachable.validation
   obtain ⟨_, _, envEq, codeEq, _, _, _, profileEq⟩ := identity
   have bound : CodeEntry.Bounds issued.env := by simpa only [envEq] using bounds
-  have signatures : ∀ ft ∈ issued.env.types.val, Profile.FuncType batch.profile ft := by simpa only [envEq] using types
-  obtain ⟨prior, length, encoded, _⟩ := previous.typed bound signatures profileEq.symm
+  obtain ⟨prior, length, encoded, _⟩ := previous.typed bound profileEq.symm
   have priorBytes : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding batch.profile))
       batch.code 0#usize prior batch.validated_end := by simpa only [codeEq] using encoded
   have complete : ModuleBinary.Rep (Profile.CodeEncoding batch.profile) entries batch.code.val := by
     simpa only [profileEq, codeEq] using whole
-  obtain ⟨entry, found, groups, body⟩ := witness_source_lookup w types complete priorBytes (by omega)
+  obtain ⟨entry, found, groups, body⟩ := witness_source_lookup w complete priorBytes (by omega)
   exact ⟨entry, by simpa only [length] using found, groups, body⟩
 
 /-- The code-view ordinal is translated to the complete decoded code list by

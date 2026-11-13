@@ -7,11 +7,9 @@ import Itasca.Visitor.Total
 /-!
 # Code entry validation
 
-Soundness of `metadata.validate_code_entry` and `metadata.validate_code_entry_with`. For any visitor
-with total callbacks they terminate, and `metadata.validate_code_entry_with.pipeline_of_body_total`
-decomposes a successful call into a `CodeEntry.Witness`. `Witness.validated` discharges the body
-call with the body soundness theorem to give `CodeEntry.Validated`, an independent `CodeEncoding`
-and a `Typed` certificate. `metadata.validate_code_entry.spec` is the resulting Wasm 1.0 statement.
+For any visitor with total callbacks, `metadata.validate_code_entry_with.pipeline_of_body_total`
+reduces termination to body termination and records successful calls as a `CodeEntry.Witness`.
+The profile entry proofs combine these witnesses with body soundness.
 -/
 
 open Aeneas Aeneas.Std
@@ -42,7 +40,6 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   locals_bytes : ModuleBinary.At (ModuleBinary.VecEncoding ModuleBinary.LocalEncoding)
     data content groups bodyStart
   locals_bound : (ModuleLocals.declared groups).length ≤ limits.MAX_LOCALS.val
-  locals_allowed : ∀ group ∈ groups, ModuleBinary.ValueTypeAllowed profile group.2
   context_locals : ctx.locals.val = ft.params.val ++ ModuleLocals.declared groups
   context_results : ctx.results.val = ft.results.val
   body_bytes : Wasm1.BytesAt data bodyStart body.val finish
@@ -108,7 +105,7 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
                 simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
             | Ok pair =>
                 obtain ⟨declared, bodyStart⟩ := pair
-                obtain ⟨groups, hg, hd, hcap, hallowed⟩ := hlpost
+                obtain ⟨groups, hg, hd, hcap⟩ := hlpost
                 simp
                 split
                 · simp
@@ -155,7 +152,7 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
                               content := content, bodyStart := bodyStart, body := s3, size := size
                               startedState := started, index_lt := hi, index_type := type_idx_post.symm
                               type_lt := hti, function_type := ?_, header := hp, extent := ?_
-                              locals_bytes := hg, locals_bound := ?_, locals_allowed := hallowed, context_locals := ?_
+                              locals_bytes := hg, locals_bound := ?_, context_locals := ?_
                               context_results := ?_, body_bytes := ?_, function_start := hstart
                               body_accepted := hb }⟩
                             · simpa [t_post] using ft_post.symm

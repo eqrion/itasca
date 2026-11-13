@@ -63,7 +63,7 @@ namespace Itasca
 open ModuleBinary ModuleSections
 
 /-- The global loop adds `count` globals forming a `Rep GlobalEncoding` span, with valid
-initializers and allowed value types. -/
+initializers. -/
 @[step]
 theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metadata.Env)
     (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
@@ -74,7 +74,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
     metadata.decode_global_section_loop data env profile count start 0#u32 ⦃ r => match r.1 with
       | .Ok next => ∃ added, added.length = count.val ∧ GlobalsAdded env r.2 added ∧
           At (Rep GlobalEncoding) data start added next ∧
-          (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) ∧
+          (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype) ∧
           r.2.globals.val.length ≤ next.val ∧ r.2.global_types.val.length ≤ next.val ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by
@@ -82,7 +82,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
   apply loop.spec_decr_nat (fun s => count.val - s.2.2.val)
     (fun s => s.2.2.val ≤ count.val ∧ ∃ added, added.length = s.2.2.val ∧
       GlobalsAdded env s.1 added ∧ At (Rep GlobalEncoding) data start added s.2.1 ∧
-      (∀ g ∈ added, ModuleConstants.Valid s.1 g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) ∧
+      (∀ g ∈ added, ModuleConstants.Valid s.1 g.init g.gtype.valtype) ∧
       s.1.globals.val.length ≤ s.2.1.val ∧ s.1.global_types.val.length ≤ s.2.1.val ∧
       s.1.declared_funcs.val.length ≤ s.2.1.val)
   · rintro ⟨current, pos, i⟩ ⟨hi, added, hlen, henv, hbytes, hvalid, hglobals, htypes, hreferences⟩
@@ -94,14 +94,13 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
       have heq : i.val = count.val := by scalar_tac
       exact ⟨added, by omega, henv, hbytes, hvalid, hglobals, htypes, hreferences⟩
     · rename_i hmore
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_global_type.allowed_spec data pos profile)
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data pos profile)
       rw [hr]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok pair =>
         obtain ⟨gt, middle⟩ := pair
-        obtain ⟨hp, hallowed⟩ := hp
         have hprogress : pos.val < middle.val := by
           obtain ⟨bytes, rfl, hs⟩ := hp
           have := hs.length
@@ -139,9 +138,9 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
           · exact hbytes.snoc (global_encoded hp hcb)
           · intro g hm
             rcases List.mem_append.mp hm with hm | hm
-            · exact ⟨(hvalid g hm).1.append_globals [gt] v_post rfl rfl, (hvalid g hm).2⟩
+            · exact (hvalid g hm).append_globals [gt] v_post rfl rfl
             · obtain rfl := List.mem_singleton.mp hm
-              exact ⟨hcv.append_globals [gt] v_post rfl rfl, hallowed⟩
+              exact hcv.append_globals [gt] v_post rfl rfl
           · simp only [v1_post, List.length_append, List.length_singleton]; omega
           · simp only [v_post, List.length_append, List.length_singleton]; omega
           · have hlen : (ModuleReferences.initializer init).length ≤ 1 := by
@@ -154,7 +153,7 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
       ⟨[], .nil, Wasm1.BytesAt.nil data start hstart⟩, by simp, hglobals, htypes, hreferences⟩
 
 /-- `metadata.decode_global_section` adds the globals of a `VecEncoding GlobalEncoding` span, with
-valid initializers and allowed value types. -/
+valid initializers. -/
 @[step]
 theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
     (hglobals : env.globals.val.length ≤ pos.val)
@@ -164,7 +163,7 @@ theorem metadata.decode_global_section.spec (data : Slice U8) (pos : Usize) (env
     metadata.decode_global_section data pos env profile ⦃ r => match r.1 with
       | .Ok next => ∃ added, GlobalsAdded env r.2 added ∧
           At (VecEncoding GlobalEncoding) data pos added next ∧
-          (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype ∧ ValueTypeAllowed profile g.gtype.valtype) ∧
+          (∀ g ∈ added, ModuleConstants.Valid r.2 g.init g.gtype.valtype) ∧
           r.2.globals.val.length ≤ next.val ∧ r.2.global_types.val.length ≤ next.val ∧
           r.2.declared_funcs.val.length ≤ next.val
       | .Err _ => True ⦄ := by

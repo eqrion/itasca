@@ -105,7 +105,6 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
     (htyped : Wasm2.TypedPrefix C inputs ops (Control.polymorphic st.core) segment) :
     code.call st data env profile true ⦃ r => r.1 = .Ok () →
       ∃ idx table middle, Leb128.Decoded data st.core.pos idx middle ∧
-      (profile = .Wasm1 → ∃ h : middle.val < data.length, data.val[middle.val] = 0#u8) ∧
       Leb128.Decoded data middle table r.2.core.pos ∧
       r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
       ∃ rest, r.2.core.vals.val = outer ++ rest ∧
@@ -125,7 +124,6 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok u =>
     cases u
-    have hz := hz rfl
     obtain ⟨rtable, hreadtable, hdtable⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data middle)
     cases rtable with
     | Err e => simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable,
@@ -200,7 +198,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
                     wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq, hsmall, hcond, hft, hs,
                     core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                · exact ⟨idx, table, middle, hd, hz, by simpa [Leb128.Post, hp, hpc] using hdtable,
+                · exact ⟨idx, table, middle, hd, by simpa [Leb128.Post, hp, hpc] using hdtable,
                     hc.trans hcc, code.BodyState.blocks_eq_of_ctrls (hc.trans hcc), _, hv, htyping⟩
           · have hlarge := Nat.le_of_not_gt hi
             simp [code.call, code.call_indirect_info, code.take_index, hr, hbyte, hreadtable, lift,
@@ -218,7 +216,6 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
 theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
     (env : metadata.Env) (profile : ValidationProfile) (idx table : U32) (middle next : Usize)
     (ft : wasm_types.FuncType) (hd : Leb128.Decoded data st.core.pos idx middle)
-    (hzero : profile = .Wasm1 → ∃ h : middle.val < data.length, data.val[middle.val] = 0#u8)
     (hdtable : Leb128.Decoded data middle table next)
     (htable : table.val < env.table_types.val.length)
     (hfun : env.table_types.val[table.val].elem = .FuncRef)
@@ -237,12 +234,7 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
           (before ++ ft.results.val.map Translate.valueType) ⦄ := by
   have hread := reader.read_u32_leb.complete data st.core.pos idx middle hd
   have hreadtable := reader.read_u32_leb.complete data middle table next hdtable
-  have hbyte : code.check_table_byte profile data middle = .ok (.Ok ()) := by
-    cases profile with
-    | Wasm2 => rfl
-    | Wasm1 =>
-      obtain ⟨hlt, hz⟩ := hzero rfl
-      exact code.check_table_byte.complete _ data middle hlt hz
+  have hbyte := code.check_table_byte.complete profile data middle
   have htix : (UScalar.cast .Usize table).val < env.table_types.val.length := by simpa using htable
   obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize table) htix)

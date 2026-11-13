@@ -18,9 +18,9 @@ Itasca.Runtime.runtime.interp.invoke_with.no_spurious_errors: standard axioms on
 no handwritten declaration uses sorry or an unproved specification theorem
 
 # Statement cone totals (declarations, lines)
-handwritten: 1720 declarations, 9705 lines
+handwritten: 1683 declarations, 9505 lines
 spectec: 2616 declarations, 25640 lines
-extracted: 2734 declarations, 62901 lines
+extracted: 2731 declarations, 62647 lines
 
 # Handwritten statement cone (module, declaration, lines)
 Itasca.Binary.FloatBits	Itasca.FloatBits.payload	4
@@ -84,8 +84,6 @@ Itasca.Binary.Module	Itasca.ModuleBinary.Utf8.cons	1
 Itasca.Binary.Module	Itasca.ModuleBinary.NameEncoding	2
 Itasca.Binary.Module	Itasca.ModuleBinary.valueByte	4
 Itasca.Binary.Module	Itasca.ModuleBinary.elemByte	3
-Itasca.Binary.Module	Itasca.ModuleBinary.ValueTypeAllowed	5
-Itasca.Binary.Module	Itasca.ModuleBinary.ElemTypeAllowed	5
 Itasca.Binary.Module	Itasca.ModuleBinary.ValueTypeEncoding	3
 Itasca.Binary.Module	Itasca.ModuleBinary.FuncTypeEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.LimitsEncoding	6
@@ -104,7 +102,6 @@ Itasca.Binary.Module	Itasca.ModuleBinary.ConstEncoding.globalGet	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ConstEncoding.refNull	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ConstEncoding.refFunc	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ConstEncoding.v128	4
-Itasca.Binary.Module	Itasca.ModuleBinary.ConstAllowed	6
 Itasca.Binary.Module	Itasca.ModuleBinary.ImportDescEncoding	10
 Itasca.Binary.Module	Itasca.ModuleBinary.ImportDescEncoding.func	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ImportDescEncoding.table	2
@@ -118,7 +115,6 @@ Itasca.Binary.Module	Itasca.ModuleBinary.ExportDescEncoding.memory	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ExportDescEncoding.global	2
 Itasca.Binary.Module	Itasca.ModuleBinary.ExportEncoding	4
 Itasca.Binary.Module	Itasca.ModuleBinary.GlobalEncoding	4
-Itasca.Binary.Module	Itasca.ModuleBinary.ElementEncoding	7
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2ElementEncoding	39
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2ElementEncoding.activeIndices	5
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2ElementEncoding.passiveIndices	4
@@ -131,14 +127,12 @@ Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2ElementEncoding.declarativeExpress
 Itasca.Binary.Module	Itasca.ModuleBinary.ActiveIndexEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.ActiveIndexEncoding.implicit	1
 Itasca.Binary.Module	Itasca.ModuleBinary.ActiveIndexEncoding.explicit	2
-Itasca.Binary.Module	Itasca.ModuleBinary.ElementEncodingFor	6
+Itasca.Binary.Module	Itasca.ModuleBinary.ElementEncodingFor	5
 Itasca.Binary.Module	Itasca.ModuleBinary.LocalEncoding	3
-Itasca.Binary.Module	Itasca.ModuleBinary.BodyEncoding	4
-Itasca.Binary.Module	Itasca.ModuleBinary.DataEncoding	6
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2DataEncoding	9
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2DataEncoding.active	4
 Itasca.Binary.Module	Itasca.ModuleBinary.Wasm2DataEncoding.passive	3
-Itasca.Binary.Module	Itasca.ModuleBinary.DataEncodingFor	5
+Itasca.Binary.Module	Itasca.ModuleBinary.DataEncodingFor	4
 Itasca.Binary.Module	Itasca.ModuleBinary.SectionEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.CustomEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.CustomsEncoding	5
@@ -150,10 +144,9 @@ Itasca.Binary.Module	Itasca.ModuleBinary.OptionalSectionEncoding.present	2
 Itasca.Binary.Module	Itasca.ModuleBinary.PaddedEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.StartEncoding	3
 Itasca.Binary.Module	Itasca.ModuleBinary.magicVersion	2
-Itasca.Binary.Module	Itasca.ModuleBinary.ModuleTypesAllowed	18
 Itasca.Binary.Module	Itasca.ModuleBinary.instructionsUseData	4
 Itasca.Binary.Module	Itasca.ModuleBinary.DataCountValid	6
-Itasca.Binary.Module	Itasca.ModuleBinary.DataCountSectionEncoding	6
+Itasca.Binary.Module	Itasca.ModuleBinary.DataCountSectionEncoding	5
 Itasca.Binary.Module	Itasca.ModuleBinary.ModuleEncodingWith	21
 Itasca.Binary.SignedLeb	Itasca.SignedLeb.Format	7
 Itasca.Binary.SignedLeb	Itasca.SignedLeb.Format.mk	1
@@ -210,12 +203,6 @@ Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Immediate.i64Const	2
 Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Immediate.f32Const	2
 Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Immediate.f64Const	2
 Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Immediate.numeric	3
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.TokenEncoding	3
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.At	3
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Consumed	5
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Consumed.nil	1
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.Consumed.snoc	2
-Itasca.Binary.Wasm1.Encoding	Itasca.Wasm1.BodyEncoding	4
 Itasca.Binary.Wasm1.MemoryMeaning	Itasca.MemoryMeaning.memArg	3
 Itasca.Binary.Wasm1.MemoryMeaning	Itasca.MemoryMeaning.Operation	7
 Itasca.Binary.Wasm1.MemoryMeaning	Itasca.MemoryMeaning.Operation.mk	1
@@ -235,7 +222,6 @@ Itasca.Binary.Wasm1.NumericMeaning	Itasca.Numeric.test	10
 Itasca.Binary.Wasm1.NumericMeaning	Itasca.Numeric.relation	10
 Itasca.Binary.Wasm1.NumericMeaning	Itasca.Numeric.conversion	13
 Itasca.Binary.Wasm1.NumericMeaning	Itasca.Numeric.opcodeMeaning	127
-Itasca.Binary.Wasm1.Subset	Itasca.Wasm1.extensionOpcodes	3
 Itasca.Binary.Wasm2.BlockType	Itasca.Wasm2.valueByte	9
 Itasca.Binary.Wasm2.Bulk	Itasca.Wasm2.BulkBinary.Immediate	25
 Itasca.Binary.Wasm2.Bulk	Itasca.Wasm2.BulkBinary.Immediate.memoryInit	2
@@ -613,7 +599,7 @@ Itasca.Contracts	Itasca.StreamScheduler.CallbacksTotal	14
 Itasca.Contracts	Itasca.StreamScheduler.CallbacksTotal.mk	1
 Itasca.Contracts	Itasca.StreamScheduler.Provenance	29
 Itasca.Contracts	Itasca.StreamScheduler.Provenance.mk	1
-Itasca.Contracts	Itasca.StreamAcceptingScheduler.Valid	11
+Itasca.Contracts	Itasca.StreamAcceptingScheduler.Valid	10
 Itasca.Contracts	Itasca.StreamAcceptingScheduler.Valid.mk	1
 Itasca.Contracts	Itasca.StreamAcceptingScheduler.ValidQueue	4
 Itasca.Contracts	Itasca.StreamAcceptingScheduler.Accepts	30
@@ -622,11 +608,11 @@ Itasca.Handler.Sequence	Itasca.Sequence.Accepts	4
 Itasca.Handler.Sequence	Itasca.Sequence.Realizes	5
 Itasca.Module.Code.Context	Itasca.CodeEntry.bodyContext	13
 Itasca.Module.Code.Context	Itasca.CodeEntry.instructionType	3
-Itasca.Module.Code.Context	Itasca.CodeEntry.Typed	14
+Itasca.Module.Code.Context	Itasca.CodeEntry.Typed	11
 Itasca.Module.Code.Context	Itasca.CodeEntry.Typed.mk	1
 Itasca.Module.Code.Context	Itasca.CodeEntry.function	3
 Itasca.Module.Code.Locals	Itasca.ModuleLocals.declared	3
-Itasca.Module.Code.ReachedEntry	Itasca.CodeEntry.Prepared	25
+Itasca.Module.Code.ReachedEntry	Itasca.CodeEntry.Prepared	24
 Itasca.Module.Code.ReachedEntry	Itasca.CodeEntry.Prepared.mk	1
 Itasca.Module.Code.ReachedEntry	Itasca.CodeEntry.Prepared.finish	1
 Itasca.Module.Code.ReachedEntry	Itasca.CodeEntry.Prepared.typeIdx	1
@@ -642,7 +628,7 @@ Itasca.Module.Code.Section	Itasca.ModuleCode.EntryAt	7
 Itasca.Module.Code.Section	Itasca.ModuleCode.EntriesTypedFor	5
 Itasca.Module.Code.Section	Itasca.ModuleCode.EntriesTypedFor.nil	1
 Itasca.Module.Code.Section	Itasca.ModuleCode.EntriesTypedFor.cons	2
-Itasca.Module.Code.Section	Itasca.ModuleCode.EntriesTyped	4
+Itasca.Module.Code.Section	Itasca.ModuleCode.EntriesTyped	3
 Itasca.Module.Const.Syntax	Itasca.ModuleConstants.referenceValueType	4
 Itasca.Module.Const.Syntax	Itasca.ModuleConstants.instruction	11
 Itasca.Module.Const.Syntax	Itasca.ModuleConstants.expression	2
@@ -660,14 +646,12 @@ Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.start	2
 Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.moduleOf	9
 Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.Elaborates	7
 Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.Elaborates.mk	1
-Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.ModuleConditions	10
+Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.ModuleConditions	7
 Itasca.Module.Elab.Elaboration	Itasca.ModuleElaboration.ModuleConditions.mk	1
 Itasca.Module.Elab.Metadata	Itasca.ModuleElaboration.contextOf	11
 Itasca.Module.Elab.Metadata	Itasca.ModuleElaboration.AccessorTypes	10
 Itasca.Module.Elab.Metadata	Itasca.ModuleElaboration.Matches	5
-Itasca.Module.Elab.Profile	Itasca.ModuleElaboration.profileContext	5
-Itasca.Module.Elab.Profile	Itasca.ModuleElaboration.FunctionProfile	6
-Itasca.Module.Elab.Profile	Itasca.ModuleElaboration.Profile	6
+Itasca.Module.Elab.Profile	Itasca.ModuleElaboration.Profile	5
 Itasca.Module.Elab.Profile	Itasca.ModuleElaboration.Profile.mk	1
 Itasca.Module.Elab.SegmentSyntax	Itasca.ModuleSegments.elementMode	5
 Itasca.Module.Elab.SegmentSyntax	Itasca.ModuleSegments.dataMode	4
@@ -709,15 +693,12 @@ Itasca.Module.Limits	Itasca.ModuleBinary.ModuleEncodingWithinLimits	7
 Itasca.Module.Limits	Itasca.ModuleBinary.ModuleSignaturesWithinLimits	5
 Itasca.Module.Readers.Basic	Itasca.ModuleBinary.SectionHeader	5
 Itasca.Module.Soundness	Itasca.ModuleSound.Validated	9
-Itasca.Profile.BodySpec	Itasca.Profile.BodyEncoding	6
-Itasca.Profile.BodySpec	Itasca.Profile.Body	9
-Itasca.Profile.CodeEntry	Itasca.Profile.BodyBytes	6
+Itasca.Profile.BodySpec	Itasca.Profile.BodyEncoding	4
+Itasca.Profile.BodySpec	Itasca.Profile.Body	8
+Itasca.Profile.CodeEntry	Itasca.Profile.BodyBytes	4
 Itasca.Profile.CodeEntry	Itasca.Profile.CodeEncoding	7
 Itasca.Profile.CodeEntry	Itasca.Profile.CodeEncodingWithinLimits	9
-Itasca.Profile.Instructions	Itasca.Profile.Instructions	6
-Itasca.Profile.Types	Itasca.Profile.FuncType	6
-Itasca.Profile.Types	Itasca.Profile.FuncTypeWithinLimits	5
-Itasca.Profile.Types	Itasca.Profile.Environment	4
+Itasca.Profile.Types	Itasca.Profile.FuncTypeWithinLimits	4
 Itasca.Profile.Types	Itasca.Profile.EnvironmentWithinLimits	5
 Itasca.Profile.Types	Itasca.Profile.EnvironmentWithinLimits.mk	1
 Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity	Itasca.Runtime.Compiler.ModuleCapacities	9
@@ -1412,7 +1393,7 @@ Itasca.Spec.ScalarConst	Itasca.ScalarConst.i64	3
 Itasca.Spec.ScalarConst	Itasca.ScalarConst.floatValue	11
 Itasca.Spec.ScalarConst	Itasca.ScalarConst.f32	2
 Itasca.Spec.ScalarConst	Itasca.ScalarConst.f64	2
-Itasca.Stream.DriverRegions	Itasca.StreamCompleteRegions.Certificate	21
+Itasca.Stream.DriverRegions	Itasca.StreamCompleteRegions.Certificate	20
 Itasca.Stream.DriverRegions	Itasca.StreamCompleteRegions.Certificate.mk	1
 Itasca.Stream.DriverRun	Itasca.StreamRun.Remaining	38
 Itasca.Stream.DriverRun	Itasca.StreamRun.Remaining.mk	1
@@ -1661,16 +1642,6 @@ Itasca.Visitor.Events	Itasca.VisitorTrace.Observation.mk	1
 Itasca.Visitor.Events	Itasca.VisitorTrace.Observation.event	1
 Itasca.Visitor.Events	Itasca.VisitorTrace.ofHandler	214
 Itasca.Visitor.Recording	Itasca.VisitorTrace.recorder	3
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.SameTargets	6
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Leaf	7
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instruction	14
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instruction.leaf	1
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instruction.block	3
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instruction.loop	3
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instruction.ifElse	4
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instructions	5
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instructions.nil	1
-Itasca.Wasm1.ProfileSyntax	Itasca.Wasm1.Instructions.cons	2
 Itasca.Wasm2.BodySpec	Itasca.Wasm2.bodyContext	5
 Itasca.Wasm2.BodySpec	Itasca.Wasm2.functionContext	4
 Itasca.Wasm2.BodySpec	Itasca.Wasm2.FunctionTyped	6
@@ -1699,18 +1670,17 @@ Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Spine	16
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Spine.root	1
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Spine.push	11
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Open	12
-Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.labels	3
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Form.opening	8
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.Saved.trace	2
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.trace	3
 Itasca.Wasm2.Frames	Itasca.Wasm2.Frames.bodyType	4
 Itasca.Wasm2.Invariant	Itasca.Wasm2.Bounds	5
 Itasca.Wasm2.Invariant	Itasca.Wasm2.Bounds.mk	1
-Itasca.Wasm2.Invariant	Itasca.Wasm2.State	22
-Itasca.Wasm2.Invariant	Itasca.Wasm2.State.running	10
-Itasca.Wasm2.Invariant	Itasca.Wasm2.State.closed	8
+Itasca.Wasm2.Invariant	Itasca.Wasm2.State	18
+Itasca.Wasm2.Invariant	Itasca.Wasm2.State.running	8
+Itasca.Wasm2.Invariant	Itasca.Wasm2.State.closed	6
 Itasca.Wasm2.Invariant	Itasca.Wasm2.initial	4
-Itasca.Wasm2.Invariant	Itasca.Wasm2.Pending	21
+Itasca.Wasm2.Invariant	Itasca.Wasm2.Pending	17
 Itasca.Wasm2.Invariant	Itasca.Wasm2.Pending.mk	1
 Itasca.Wasm2.Invariant	Itasca.Wasm2.Pending.start	1
 Itasca.Wasm2.Invariant	Itasca.Wasm2.Pending.inbounds	1
@@ -1718,13 +1688,6 @@ Itasca.Wasm2.Prefix	Itasca.Wasm2.TypedPrefix	7
 Itasca.Wasm2.Prefix	Itasca.Wasm2.TypedPrefix.mk	1
 Itasca.Wasm2.Prefix	Itasca.Wasm2.ResumePrefix	7
 Itasca.Wasm2.Prefix	Itasca.Wasm2.ResumePrefix.mk	1
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.frameContext	3
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.Saved.Wasm1Ok	5
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.Saved.Wasm1Ok.mk	1
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.Wasm1Frames	5
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.Wasm1Frames.nil	1
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.Wasm1Frames.snoc	2
-Itasca.Wasm2.ProfileFrames	Itasca.Wasm2.Frames.ProfileFrames	3
 Itasca.Wasm2.Signature	Itasca.Wasm2.resolve	8
 Itasca.Wasm2.Typing	Itasca.Wasm2.inputs	4
 Itasca.Wasm2.Typing	Itasca.Wasm2.outputs	5

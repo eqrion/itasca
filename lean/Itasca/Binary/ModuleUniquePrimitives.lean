@@ -4,8 +4,7 @@ import Itasca.Binary.PrefixUnique
 # Prefix uniqueness of module components
 
 Proves `PrefixUnique` for the encodings of value, element, function, table, memory and global
-types, constant expressions, imports, exports, globals, locals, Wasm 1.0 element and data
-segments, and the start section.
+types, constant expressions, imports, exports, globals, locals, and the start section.
 -/
 
 open Aeneas Aeneas.Std
@@ -204,27 +203,6 @@ theorem local_prefix_unique : PrefixUnique LocalEncoding := by
   have ht := valueByte_injective ht
   have hv : x = y := Prod.ext hn ht
   exact ⟨hv, by simp [ht], rfl⟩
-
-/-- Wasm 1.0 element segment encodings are prefix-unique. -/
-theorem element_prefix_unique : PrefixUnique ElementEncoding := by
-  intro x y a b rest tail hx hy he
-  obtain ⟨xti, xof, xin, xt, xo, xi, rfl, ht, ho, hi, rfl⟩ := hx
-  obtain ⟨yti, yof, yin, yt, yo, yi, rfl, ht', ho', hi', rfl⟩ := hy
-  obtain ⟨rfl, rfl, hseq1⟩ := index_prefix_unique ht ht' (by simpa [List.append_assoc] using he)
-  obtain ⟨rfl, rfl, hseq2⟩ := const_prefix_unique ho ho' (by simpa [List.append_assoc] using hseq1)
-  obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique.vec hi hi' hseq2
-  exact ⟨rfl, rfl, rfl⟩
-
-/-- Wasm 1.0 data segment encodings are prefix-unique. -/
-theorem data_prefix_unique : PrefixUnique DataEncoding := by
-  intro x y a b rest tail hx hy he
-  obtain ⟨xti, xof, xt, xo, xi, hxm, ht, ho, hi, rfl⟩ := hx
-  obtain ⟨yti, yof, yt, yo, yi, hym, ht', ho', hi', rfl⟩ := hy
-  obtain ⟨htv, rfl, hseq1⟩ := index_prefix_unique ht ht' (by simpa [List.append_assoc] using he)
-  obtain ⟨hov, rfl, hseq2⟩ := const_prefix_unique ho ho' (by simpa [List.append_assoc] using hseq1)
-  obtain ⟨hiv, rfl, rfl⟩ := byte_prefix_unique.vec hi hi' hseq2
-  have hv : x = y := by cases x; cases y; simp_all
-  exact ⟨hv, rfl, rfl⟩
 
 /-- Start section payload encodings are prefix-unique. -/
 theorem start_prefix_unique : PrefixUnique StartEncoding := by

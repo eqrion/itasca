@@ -40,7 +40,7 @@ theorem Pending.metadata_reader {data env profile locals index st}
         (.mk_list (Simd.outputTypes (output a)))))
     (declared : ∀ a, (∃ state, decode = .ok (.Ok a,state)) → DeclaredReferences.Instruction
       (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a))
-    (size : st.core.vals.val.length < Usize.max) (hwasm2 : profile ≠ .Wasm1) :
+    (size : st.core.vals.val.length < Usize.max) :
     metadataOperands decode pops output metadata ⦃ r => ∀ value, r.1 = .Ok value →
       MetadataReaderPost p decode pops output metadata operation value r.2 ⦄ := by
   obtain ⟨C,outer,spine,header,base,typed,ctrls,blocks,stack⟩ := p.opened
@@ -84,7 +84,7 @@ theorem Pending.metadata_reader {data env profile locals index st}
       · simpa only [poly] using effect rfl
       · exact p.append_reader_context C outer spine header base final (operation a)
           p.current.ctrl.polymorphic_base values (wellFormed a) sourceEncoding finalTyped
-          controlEq newBlocks afterValues (declared a ⟨middle,read⟩) (fun hp => absurd hp hwasm2)
+          controlEq newBlocks afterValues (declared a ⟨middle,read⟩)
 
 theorem Pending.metadata_reader_accepted {data env locals index st}
     (p : Pending data env .Wasm2 locals index st) {A B : Type}
@@ -103,7 +103,7 @@ theorem Pending.metadata_reader_accepted {data env locals index st}
     (size : st.core.vals.val.length < Usize.max) (value : B) (out : code.OpIterState)
     (accepted : metadataOperands decode pops output metadata = .ok (.Ok value,out)) :
     MetadataReaderPost p decode pops output metadata operation value out := by
-  have effect := p.metadata_reader decode pops output metadata operation decoded wellFormed typing declared size (by intro h; cases h)
+  have effect := p.metadata_reader decode pops output metadata operation decoded wellFormed typing declared size
   rw [accepted, WP.spec_ok] at effect
   exact effect value rfl
 

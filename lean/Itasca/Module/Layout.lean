@@ -66,7 +66,7 @@ theorem normalize {profile} (data : Slice U8) (raw : Module)
     (h : ModuleEncodingWithinLimits raw data.val profile) :
     ∃ decls codePos tailPos, Layout data raw decls codePos tailPos profile := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hc, hd, hcustom, hbytes, hallowed, hcountValid⟩ := h.2
+    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hc, hd, hcustom, hbytes, hcountValid⟩ := h.2
   let decls : ModuleEnv.Declarations :=
     ⟨raw.types, raw.imports, raw.functions, raw.tables, raw.memories, raw.globals,
       raw.exports, raw.start, raw.elements, raw.dataCount⟩
@@ -76,10 +76,7 @@ theorem normalize {profile} (data : Slice U8) (raw : Module)
   have hp : ∀ cs, CustomsEncoding cs → ModuleEnv.PrefixEncoding decls (before ++ cs) profile := by
     intro cs hs
     refine ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-      cs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hs, rfl, ?_⟩
-    exact ⟨hallowed.1, hallowed.2.1, hallowed.2.2.1, hallowed.2.2.2.1,
-      by simp [decls, ModuleEnv.Declarations.module], hallowed.2.2.2.2.2.1,
-      by simp [decls, ModuleEnv.Declarations.module]⟩
+      cs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hs, rfl⟩
   obtain ⟨codeCustoms, codeBytes, hcc, hcode, hcodes⟩ := hc
   rcases optional_cases hcode with ⟨hnoCode, hcempty⟩ | hcode
   · obtain ⟨dataCustoms, dataBytes, hdc, hdata, hdatas⟩ := hd
@@ -129,13 +126,12 @@ namespace Itasca.ModuleLayout
 
 open ModuleBinary ModuleElaboration
 
-/-- Generated function typing and the independent profile restrictions give `CodeEntry.Typed`
+/-- Generated function typing and the independent declaration condition give `CodeEntry.Typed`
 for every code entry against the decoded environment. No premise about entry validation is
 used. -/
 theorem CodeAt.typed {profile raw decls env}
     (hr : ModuleEnv.Ready raw 10 decls env)
-    (ht : SectionsTyped raw) (hp : Profile raw profile)
-    (hallowed : ModuleTypesAllowed profile raw) (hdata : DataCountValid raw)
+    (ht : SectionsTyped raw) (hdata : DataCountValid raw)
     (hdeclared : ∀ entry ∈ raw.codes, DeclaredReferences.Instructions
       (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) :
     List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry profile) env.func_type_indices.val raw.codes := by
@@ -143,11 +139,9 @@ theorem CodeAt.typed {profile raw decls env}
   refine List.forall₂_iff_zip.mpr ⟨ht.functions.length_eq, ?_⟩
   intro idx entry hm
   have hfunc := (List.forall₂_iff_zip.mp ht.functions).2 hm
-  have hprofile := (List.forall₂_iff_zip.mp hp.bodies).2 hm
   have hentry : entry ∈ raw.codes := (List.of_mem_zip hm).2
   apply CodeEntry.Typed.of_func_ok (hr.moduleContext (by omega))
-    (hr.elements_context (by omega)) (hr.data_context (by omega) hdata entry hentry) _ hfunc
-    (hallowed.2.2.2.2.1 entry hentry) (hdeclared entry hentry)
-  simpa [hr.types_eq (by omega)] using hprofile
+    (hr.elements_context (by omega)) (hr.data_context (by omega) hdata entry hentry) hfunc
+    (hdeclared entry hentry)
 
 end Itasca.ModuleLayout

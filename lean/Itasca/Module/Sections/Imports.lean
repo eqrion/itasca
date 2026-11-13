@@ -4,7 +4,7 @@ import Itasca.Module.Sections.Import
 # Import section parser
 
 Soundness of `metadata.decode_import_section` and its loop. `ImportsAdded` is the ordered sequence
-of `ImportAdded` updates, and `ImportAllowed` is the profile condition on a descriptor. The
+of `ImportAdded` updates. The
 decoded span is a `VecEncoding ImportEncoding` of the raw imports. Completeness is in
 `Module/Sections/ImportsComplete`.
 -/
@@ -19,34 +19,6 @@ inductive ImportsAdded (initial : metadata.Env) : List metadata.Import → metad
   | nil {profile} : ImportsAdded initial [] initial profile
   | snoc {profile entries before after entry} : ImportsAdded initial entries before profile →
       ImportAdded before after entry profile → ImportsAdded initial (entries ++ [entry]) after profile
-
-/-- The profile allows the descriptor's table element type or global value type. Function and
-memory descriptors are always allowed. -/
-def ImportAllowed (profile : ValidationProfile) (desc : metadata.ImportDesc) : Prop :=
-  match desc with
-  | .Func _ | .Memory _ => True
-  | .Table tt => ModuleBinary.ElemTypeAllowed profile tt.elem
-  | .Global gt => ModuleBinary.ValueTypeAllowed profile gt.valtype
-
-/-- An added import has a descriptor the profile allows. -/
-theorem ImportAdded.allowed {profile env result entry} (h : ImportAdded env result entry profile) :
-    ImportAllowed profile entry.desc := by
-  obtain ⟨_, hd⟩ := h
-  cases he : entry.desc <;> simp only [he, ImportAllowed] at *
-  · exact hd.2.2.2.2
-  · exact hd.2.2.2
-
-/-- Every added import has a descriptor the profile allows. -/
-theorem ImportsAdded.allowed {profile env entries result} (h : ImportsAdded env entries result profile) :
-    ∀ entry ∈ entries, ImportAllowed profile entry.desc := by
-  induction h with
-  | nil => simp
-  | snoc _ ha ih =>
-    intro entry hm
-    rcases List.mem_append.mp hm with hm | hm
-    · exact ih entry hm
-    · obtain rfl := List.mem_singleton.mp hm
-      exact ha.allowed
 
 end Itasca.ModuleSections
 

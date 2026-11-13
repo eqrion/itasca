@@ -110,9 +110,9 @@ theorem prepared_entry_unique {data env index start profile}
     rw [sizeEq,contentEq] at left
     omega)
   obtain ⟨declaredLeft,decodedLeft,valuesLeft⟩ := metadata.decode_locals.complete data first.content profile first.groups
-    first.bodyStart first.locals_bytes first.locals_allowed first.locals_bound
+    first.bodyStart first.locals_bytes first.locals_bound
   obtain ⟨declaredRight,decodedRight,valuesRight⟩ := metadata.decode_locals.complete data second.content profile second.groups
-    second.bodyStart second.locals_bytes second.locals_allowed second.locals_bound
+    second.bodyStart second.locals_bytes second.locals_bound
   rw [contentEq,decodedRight] at decodedLeft
   have localsEq : declaredLeft = declaredRight ∧ first.bodyStart = second.bodyStart := by
     simpa only [Result.ok.injEq,core.result.Result.Ok.injEq,Prod.mk.injEq] using decodedLeft.symm

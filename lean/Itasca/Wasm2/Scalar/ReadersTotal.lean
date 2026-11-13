@@ -169,14 +169,14 @@ theorem store (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ty
 @[local step] private theorem select_type_total (t : code.StackType) :
     code.is_select_type t ⦃ _ => True ⦄ := by simp
 
-theorem select (st : code.OpIterState) 
+theorem select (st : code.OpIterState)
     (hs : Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_select st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_select
   step*
 
-theorem drop (st : code.OpIterState) 
+theorem drop (st : code.OpIterState)
     (hs : Control.Shape st) (_hsize : st.vals.val.length < Usize.max) :
     code.read_drop st  ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by

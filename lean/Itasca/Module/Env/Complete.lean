@@ -7,8 +7,7 @@ import Itasca.Module.Env.DispatchComplete
 
 `metadata.validate_env.profile_complete` shows that an independently encoded declaration prefix
 meeting the declarative requirements makes `metadata.validate_env` succeed at the greedy boundary
-and reach a ready state. `Chain.profile_complete` is the loop induction behind it. The Wasm 1.0
-specializations are `Chain.complete` and `metadata.validate_env.complete`.
+and reach a ready state. `Chain.profile_complete` is the loop induction behind it.
 -/
 
 open Aeneas Aeneas.Std
@@ -23,8 +22,7 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
     (data : Slice U8) (env : metadata.Env) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Wasm1.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
-    (hlast : last.val ≤ n) (hreq : Requirements raw profile)
-    (hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []}) :
+    (hlast : last.val ≤ n) (hreq : Requirements raw profile) :
     ∃ result finalDecls, parseLoop data env pos last profile = .ok (.Ok (result, next), ()) ∧
       Ready raw 10 finalDecls result := by
   induction h generalizing env decls pos last with
@@ -46,13 +44,13 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
     · have hend := hsection.empty
       subst middle
       have hr : Ready raw (n + 1) decls env := by simpa only [hid] using hready'.absent hlo hhi hempty
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' (by omega) hreq hallowed
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' (by omega) hreq
       exact ⟨result, finalDecls, hcustomeq.trans hrun, hr⟩
     · obtain ⟨payloadStart, hh, hencoding⟩ := At.section_split
         (show At (SectionEncoding id (fun u bs => Payload raw (sectionRank id).val u bs profile)) data afterCustoms () middle from ⟨_, hpresent, hsection⟩)
       have hboundPayload := hbound'.mono (Nat.le_of_lt hh.span.1)
       obtain ⟨updated, hread, heffect⟩ := metadata.decode_env_section.profile_complete data payloadStart id env decls raw middle profile
-        hlo hhi hencoding (hreq (sectionRank id).val decls env hlo hhi hready') hready' hboundPayload hallowed
+        hlo hhi hencoding (hreq (sectionRank id).val decls env hlo hhi hready') hready' hboundPayload
       have hrep := heffect.represents hready'.represents hready'.phase (by omega)
       have hr : Ready raw (n + 1) (update raw (sectionRank id).val decls) updated := by
         simpa only [hid] using hready'.updated hlo hhi hrep
@@ -60,7 +58,7 @@ theorem Chain.profile_complete {profile raw n bytes} (h : Chain raw n bytes prof
         have hs := metadata.decode_env_section.profile_spec data payloadStart id env decls profile hboundPayload
         simp only [hread, WP.spec_ok] at hs
         exact hs.choose_spec.2
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw (sectionRank id).val decls) middle (sectionRank id) hremaining hr hupdated (by omega) hreq hallowed
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw (sectionRank id).val decls) middle (sectionRank id) hremaining hr hupdated (by omega) hreq
       refine ⟨result, finalDecls, hcustomeq.trans ?_, hr⟩
       exact (metadata.validate_env_with_loop.complete_section data env updated afterCustoms payloadStart middle last id
         hh hlo (by omega) (by omega) hread).trans hrun
@@ -89,12 +87,8 @@ theorem metadata.validate_env.profile_complete (data : Slice U8) (raw : ModuleBi
   obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.Env.new.profile_declarations profile)
   have hready : Ready raw 0 {} initial := by
     refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
-  have hallowed : ModuleTypesAllowed profile {raw with codes := [], data := []} := by
-    have he := congrArg (fun (value : ModuleBinary.Module) => {value with codes := [], data := []}) hraw
-    rw [he]
-    exact hp.allowed
   obtain ⟨env, finalDecls, hrun, hready⟩ := hchain'.profile_complete data initial {} start next 0#u8
-    hsections hstop hready (hbound.mono (Nat.zero_le _)) (by simp) hrequirements hallowed
+    hsections hstop hready (hbound.mono (Nat.zero_le _)) (by simp) hrequirements
   refine ⟨env, finalDecls, ?_, hready⟩
   simp [metadata.validate_env, metadata.validate_env_with, hnew, hread,
     core.result.Result.Insts.CoreOpsTry.branch, hrun]

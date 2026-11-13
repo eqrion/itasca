@@ -44,7 +44,7 @@ theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
     (h : PrefixEncoding decls bytes profile) (codes : List ModuleBinary.Code) (datas : List ModuleBinary.Data) :
     ∃ suffix, Chain (decls.module codes datas) 0 suffix profile ∧ bytes = magicVersion ++ suffix := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    customs, ht, hi, hf, hta, hm, hg, he, hs, hel, hdc, hc, rfl, hallowed⟩ := h
+    customs, ht, hi, hf, hta, hm, hg, he, hs, hel, hdc, hc, rfl⟩ := h
   have ht' := padded_slot (profile := profile) (raw := decls.module codes datas) ht (fun h => h) (fun _ h => h)
   have hi' := padded_slot (profile := profile) (raw := decls.module codes datas) hi (fun h => h) (fun _ h => h)
   have hf' := padded_slot (profile := profile) (raw := decls.module codes datas) hf (fun h => h) (fun _ h => h)
@@ -55,12 +55,7 @@ theorem PrefixEncoding.chain {profile} {decls : Declarations} {bytes : List U8}
   have hs' := padded_slot (profile := profile) (raw := decls.module codes datas) hs (fun h => h) (fun _ h => h)
   have hel' := padded_slot (profile := profile) (raw := decls.module codes datas) hel (fun h => h) (fun _ h => h)
   have hdc' : SlotEncoding (decls.module codes datas) 12#u8 dataCount profile := by
-    cases profile with
-    | Wasm1 =>
-      obtain ⟨hvalue, rfl⟩ := hdc
-      exact ⟨[], [], .nil, .inl ⟨hvalue, rfl⟩, rfl⟩
-    | Wasm2 =>
-      exact padded_slot hdc (fun h => h) (fun _ h => ⟨rfl, h⟩)
+    exact padded_slot hdc (fun h => h) (fun _ h => h)
   refine ⟨types ++ imports ++ functions ++ tables ++ memories ++ globals ++ exports ++ start ++ elements ++ dataCount ++ customs,
     ?_, by simp [List.append_assoc]⟩
   simpa only [List.append_assoc] using

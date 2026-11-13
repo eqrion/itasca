@@ -36,8 +36,7 @@ theorem independentBodyLog.unique (data : Slice U8)
 
 /-- Independent source typing, encoding, profile, and validator limits
 construct the actual successful reference run. No accepted compiler trace or
-completed code certificate is a premise. Both complete profiles are covered: a valid Wasm 1.0 body
-has the same run under both profiles. -/
+completed code certificate is a premise. -/
 theorem independentBodyLog.of_valid (profile : ValidationProfile) (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32)
     (limits : Profile.EnvironmentWithinLimits env)
@@ -49,7 +48,6 @@ theorem independentBodyLog.of_valid (profile : ValidationProfile) (data : Slice 
     limits size body.to_wasm2
   rw [independentBodyLog.unique data env ctx index log called]
   cases profile with
-  | Wasm1 => exact code.validate_body_with.wasm1_of_body recorder data env ctx index [] _ limits size body called
   | Wasm2 => exact called
 
 end Itasca.Runtime.Compiler

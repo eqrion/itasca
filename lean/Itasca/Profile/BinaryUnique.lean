@@ -6,7 +6,7 @@ import Itasca.Binary.ModuleUnique
 /-!
 # Profile binary uniqueness
 
-Lifts the uniqueness of the binary grammars to both profiles: `BodyBytes.unique` for body bytes
+Lifts the uniqueness of the binary grammars to the body and entry contracts: `BodyBytes.unique` for body bytes
 and `code_prefix_unique` for code entries. `Itasca/Results/Unique` gives the complete-module
 result.
 -/
@@ -21,14 +21,12 @@ open ModuleBinary
 implementation bounds. -/
 theorem BodyBytes.unique (profile : ValidationProfile) : Unique (BodyBytes profile) := by
   cases profile with
-  | Wasm1 => exact ModuleBinary.BodyEncoding.unique
   | Wasm2 =>
     rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
     obtain rfl := Wasm2.tokens_unique hx hy
     exact hxs.unique hys
 
-/-- Code entries, with their size prefix and local declarations, are prefix-unique under either
-profile. -/
+/-- Code entries, with their size prefix and local declarations, are prefix-unique under Wasm 2.0. -/
 theorem code_prefix_unique (profile : ValidationProfile) : PrefixUnique (CodeEncoding profile) := by
   intro x y a b rest tail hx hy he
   obtain ⟨xn, xl, xb, hn, hl, hb, rfl⟩ := hx

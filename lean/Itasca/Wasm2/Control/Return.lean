@@ -94,7 +94,7 @@ theorem Pending.return_reader {data env profile locals index st} (p : Pending da
   refine ⟨by simpa [vals,base] using hv, ?_⟩
   exact p.append_reader_context C outer spine header base r.2.core .RETURN true [] .instr_case_12
     (.plain encoded) ht hc (by simpa [hb] using blocks) (by simpa using hv)
-    (encoded.declared _) (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+    (encoded.declared _)
 
 /-- Forward preservation projects the shared return-reader certificate. -/
 theorem Pending.return_ {data env profile locals index st} (p : Pending data env profile locals index st)

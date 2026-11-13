@@ -35,10 +35,10 @@ theorem Early.valid {profile} {env} (h : Early env)
     (ht : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft)
     (htt : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1))
     (hmt : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16))
-    (htc : profile = .Wasm1 → env.table_types.val.length ≤ 1) (hmc : env.mem_types.val.length ≤ 1)
+    (hmc : env.mem_types.val.length ≤ 1)
     (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val)
     (href : ModuleReferences.Coherent env) : Valid env profile := by
-  refine ⟨ht, htt, hmt, htc, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_, href⟩
+  refine ⟨ht, htt, hmt, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_, href⟩
   all_goals simp [h.globals, h.exports, h.start, h.elements]
 
 end Itasca.ModuleEnv
@@ -70,9 +70,9 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
   · obtain ⟨ft, hft, heq, hfs, hnum⟩ := ha
     apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
       (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount) |
+      (rw [heq]; exact hv.memoryCount) |
       (rw [heq]; exact hv.references)
-  · obtain ⟨heq, hts, hcount, hlim, _⟩ := ha
+  · obtain ⟨heq, hts, hlim⟩ := ha
     apply her.valid
     · (rw [heq]; exact hv.types)
     · intro tt hm
@@ -81,7 +81,6 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
       · exact hv.tables _ hm
       · simpa using (List.mem_singleton.mp hm ▸ hlim)
     · (rw [heq]; exact hv.memories)
-    · exact hcount
     · (rw [heq]; exact hv.memoryCount)
     · exact hnames
     · rw [heq]; exact hv.references
@@ -94,14 +93,13 @@ theorem ImportAdded.valid {profile} {env result entry} (h : ImportAdded env resu
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.memories _ hm
       · simpa using (List.mem_singleton.mp hm ▸ hlim)
-    · (rw [heq]; exact hv.tableCount)
     · exact hcount
     · exact hnames
     · rw [heq]; exact hv.references
-  · obtain ⟨heq, hgs, hnum, _⟩ := ha
+  · obtain ⟨heq, hgs, hnum⟩ := ha
     apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
       (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.tableCount) | (rw [heq]; exact hv.memoryCount) |
+      (rw [heq]; exact hv.memoryCount) |
       (rw [heq]; exact hv.references)
 
 theorem ImportsAdded.early {profile} {env entries result} (h : ImportsAdded env entries result profile)
@@ -178,11 +176,10 @@ theorem ExportAdded.valid {profile} {env result entry} (h : ExportAdded env resu
     (hv : Valid env profile) (helements : env.elements.val = []) (hn : Utf8 entry.name.val) : Valid result profile := by
   obtain ⟨he, hexports, hnew, hresolve, href⟩ := h
   have hc : SameCore env result := by constructor <;> rw [he]
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
   · rw [he]; exact hv.types
   · rw [he]; exact hv.tables
   · rw [he]; exact hv.memories
-  · rw [he]; exact hv.tableCount
   · rw [he]; exact hv.memoryCount
   · intro g hg
     have hg' : g ∈ env.globals.val := by simpa only [congrArg metadata.Env.globals he] using hg
@@ -247,10 +244,9 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rw [hts] at hm
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.types _ hm
-      · exact (ht _ hm).1
+      · exact ht _ hm
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
-    · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.references
@@ -267,10 +263,10 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
     apply her.valid <;> first | (rw [he]; exact hv.types) |
       (rw [he]; exact hv.tables) | (rw [he]; exact hv.memories) |
-      (rw [he]; exact hv.tableCount) | (rw [he]; exact hv.memoryCount) |
+      (rw [he]; exact hv.memoryCount) |
       (rw [he]; exact hv.imports) |
       (rw [he]; exact hv.references)
-  | tables ha hb ht hcount =>
+  | tables ha hb ht =>
     have hearly := Early.of_phase hr hp (by change last < 4 at ho; omega)
     obtain ⟨he, hts⟩ := ha
     have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
@@ -280,10 +276,8 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rw [hts] at hm
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.tables _ hm
-      · exact (ht _ hm).1
+      · exact ht _ hm
     · rw [he]; exact hv.memories
-    · intro hprofile
-      simpa [max_eq_right (hv.tableCount hprofile)] using hcount hprofile
     · rw [he]; exact hv.memoryCount
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.references
@@ -299,21 +293,19 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rcases List.mem_append.mp hm with hm | hm
       · exact hv.memories _ hm
       · exact ht _ hm
-    · rw [he]; exact hv.tableCount
     · simpa [max_eq_right hv.memoryCount] using hcount
     · rw [he]; exact hv.imports
     · rw [he]; exact hv.references
   | globals ha hb hg =>
     have hearly := Early.of_phase hr hp (by change last < 6 at ho; exact ho)
     obtain ⟨he, hgs, htypes, href⟩ := ha
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
-    · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hm
-      exact (hg _ (by simpa [hgs, hearly.globals] using hm)).1
+      exact hg _ (by simpa [hgs, hearly.globals] using hm)
     · rw [he]; exact hv.imports
     all_goals try (rw [he]; simp [hearly.exports, hearly.start, hearly.elements]; done)
     · unfold ModuleReferences.Coherent ModuleReferences.collected
@@ -335,11 +327,10 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
     exact hn.2
   | start he hb hstart =>
     have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
-    · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
       exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
@@ -359,11 +350,10 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
   | elements ha hb ht =>
     obtain ⟨he, hes, href⟩ := ha
     have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
-    · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
       exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
@@ -386,13 +376,12 @@ theorem Effect.valid {profile} {data pos env before id next result after last}
       rw [he]
       dsimp only
       simp only [hes, List.flatMap_append, List.append_assoc]
-  | dataCount hprofile he hbytes =>
+  | dataCount he hbytes =>
     have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
     · rw [he]; exact hv.types
     · rw [he]; exact hv.tables
     · rw [he]; exact hv.memories
-    · rw [he]; exact hv.tableCount
     · rw [he]; exact hv.memoryCount
     · intro g hg
       exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))

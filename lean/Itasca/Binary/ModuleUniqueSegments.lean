@@ -5,7 +5,7 @@ import Itasca.Binary.ModuleUniquePrimitives
 
 Proves `PrefixUnique` for the Wasm 2.0 element and data segment encodings by splitting off the
 flag and treating each flag's payload grammar separately. `elementFor_prefix_unique` and
-`dataFor_prefix_unique` cover both profiles.
+`dataFor_prefix_unique` cover the Wasm 2.0 profile.
 -/
 
 open Aeneas Aeneas.Std
@@ -148,16 +148,14 @@ theorem wasm2Data_prefix_unique : PrefixUnique Wasm2DataEncoding := by
   obtain ⟨rfl, rfl, rfl⟩ := dataPayload_prefix_unique _ hxp hyp hs
   exact ⟨rfl, rfl, rfl⟩
 
-/-- Element segment encodings of either profile are prefix-unique. -/
+/-- Element segment encodings of the Wasm 2.0 profile are prefix-unique. -/
 theorem elementFor_prefix_unique (profile : ValidationProfile) : PrefixUnique (ElementEncodingFor profile) := by
   cases profile with
-  | Wasm1 => exact element_prefix_unique
   | Wasm2 => exact wasm2Element_prefix_unique
 
-/-- Data segment encodings of either profile are prefix-unique. -/
+/-- Data segment encodings of the Wasm 2.0 profile are prefix-unique. -/
 theorem dataFor_prefix_unique (profile : ValidationProfile) : PrefixUnique (DataEncodingFor profile) := by
   cases profile with
-  | Wasm1 => exact data_prefix_unique
   | Wasm2 => exact wasm2Data_prefix_unique
 
 end Itasca.ModuleBinary

@@ -12,8 +12,7 @@ import Itasca.Stream.DriverSound
 `metadata.validate_module` is this function. `profile_total` shows it returns on arbitrary bytes and
 `profile_sound` shows that acceptance gives `ModuleSound.Validated`. Source and scheduler
 obligations are discharged by `stream.SliceSource.coherent` and `StreamSync.provenance`, so no
-embedding premise remains. `profile_spec` combines both. The `wasm_` theorems are the Wasm 1.0
-instances.
+embedding premise remains. `profile_spec` combines both.
 -/
 
 open Aeneas Aeneas.Std

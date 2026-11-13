@@ -5,10 +5,9 @@ import Itasca.Runtime.Compiler.Module.CompileProfileTotal
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
-/-- Actual prepared function bodies return normally for either supported
-profile, without a body-acceptance or callback-correctness premise. The initial
-source and allocation invariants come from actual entry setup, and a Wasm 1.0
-body returns whenever the Wasm 2.0 reader does. -/
+/-- Actual prepared function bodies return normally for the supported profile,
+without a body-acceptance or callback-correctness premise. The initial source
+and allocation invariants come from actual entry setup. -/
 theorem profile_prepared_bodies_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (profile : ValidationProfile) :
     ProfilePreparedBodiesTotal ops profile := by
@@ -29,9 +28,6 @@ theorem profile_prepared_bodies_total {A} (ops : runtime.platform.Alloc A)
     rw [← contextEq] at body
     obtain ⟨result,run,_⟩ := WP.spec_imp_exists body
     cases profile with
-    | Wasm1 =>
-      obtain ⟨result',returned⟩ := code.validate_body_with.wasm1_returns _ _ _ _ _ _ _ run
-      simp [returned]
     | Wasm2 => simp [run]
   · rw [reader_body_too_large _ profile prepared.body env prepared.ctx prepared.typeIdx started (by omega)]
     simp

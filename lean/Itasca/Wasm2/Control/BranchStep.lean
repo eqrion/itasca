@@ -64,7 +64,7 @@ theorem Pending.call_reader {data env profile locals index st} (p : Pending data
   apply p.append_reader_context C outer spine header base r.2.core (.CALL (.mk_uN idx.val))
     p.current.ctrl.polymorphic_base rest (.instr_case_10 _ (EnvTranslation.index_wf idx))
     (.plain encoded) (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
-    (encoded.declared _) (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+    (encoded.declared _)
   simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
 theorem Pending.call {data env profile locals index st} (p : Pending data env profile locals index st)
@@ -90,13 +90,7 @@ theorem Pending.call_indirect_reader {data env profile locals index st} (p : Pen
     p.current.vals vals (by simp [Control.base, ctrls, base]) _ hC _ p.current.ops
     (by simpa [hpoly, Frames.enter] using typed))
   intro r hr hok
-  obtain ⟨idx, table, middle, hd, hzero, hdtable, hc, hb, rest, hv, ht⟩ := hr hok
-  have hwasm1 : profile = .Wasm1 → Wasm1.At data p.start
-      (.plain (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))) r.2.core.pos := by
-    intro hp
-    obtain ⟨hm, hz⟩ := hzero hp
-    obtain ⟨rfl, hat⟩ := Wasm1.At.call_indirect idx table p.inbounds hbyte p.pos hd hm hz hdtable
-    exact hat
+  obtain ⟨idx, table, middle, hd, hdtable, hc, hb, rest, hv, ht⟩ := hr hok
   obtain ⟨typeBytes, hts, htl, htb, hte⟩ := hd
   obtain ⟨tableBytes, hss, hsl, hsb, hse⟩ := hdtable
   have hbytes := (Wasm1.BytesAt.mk hts htl htb).append (Wasm1.BytesAt.mk hss hsl hsb)
@@ -108,7 +102,7 @@ theorem Pending.call_indirect_reader {data env profile locals index st} (p : Pen
       (.instr_case_11 _ _ (EnvTranslation.index_wf table) (EnvTranslation.index_wf idx))
       (.of_immediate p.inbounds hbyte p.pos (.reference (.callIndirect idx table hte hse)) hbytes)
       (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
-      (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices]) (fun hp => ⟨hwasm1 hp, .leaf _ _ trivial⟩)
+      (by simp [DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
     simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
 theorem Pending.call_indirect {data env profile locals index st} (p : Pending data env profile locals index st)
@@ -138,7 +132,7 @@ theorem Pending.branch_reader {data env profile locals index st} (p : Pending da
   refine ⟨depth, hd, ?_⟩
   exact p.append_reader_context C outer spine header base r.2.core (.BR (.mk_uN depth.val)) true []
     (.instr_case_7 _ (Spec.label_wf depth)) (.plain encoded) ht hc
-    (by simpa [hb] using blocks) (by simpa using hv) (encoded.declared _) (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+    (by simpa [hb] using blocks) (by simpa using hv) (encoded.declared _)
 /-- Forward preservation projects the shared exact reader certificate. -/
 theorem Pending.branch {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0C#u8) :
@@ -170,7 +164,7 @@ theorem Pending.branch_if_reader {data env profile locals index st} (p : Pending
   apply p.append_reader_context C outer spine header base r.2.core (.BR_IF (.mk_uN depth.val))
     p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Spec.label_wf depth))
     (.plain encoded) (by simpa [hpoly, Frames.enter] using ht) _ (by simpa [hb] using blocks) hv
-    (encoded.declared _) (fun _ => ⟨encoded, .leaf _ _ trivial⟩)
+    (encoded.declared _)
   simpa [hc] using ctrls
 /-- Forward preservation projects the shared exact reader certificate. -/
 theorem Pending.branch_if {data env profile locals index st} (p : Pending data env profile locals index st)
@@ -200,14 +194,13 @@ theorem Pending.branch_table_reader {data env profile locals index st} (p : Pend
     p.current.ctrl outer p.current.vals ctrls vals base p.opened.shape.core
     _ hC _ p.current.ops typed hl)
   intro r hr hok
-  obtain ⟨depths, default, hd, hv, hb, hc, ht, hsame⟩ := hr hok
+  obtain ⟨depths, default, hd, hv, hb, hc, ht⟩ := hr hok
   have encoded : Wasm1.At data p.start (.plain (BrTable.instruction depths default)) r.2.core.pos :=
     .of_table_decoded depths default p.inbounds hbyte p.pos hd
   refine ⟨depths, default, hd, ?_⟩
   exact p.append_reader_context C outer spine header base r.2.core (BrTable.instruction depths default) true []
     (BrTable.instruction_wf depths default) (.plain encoded) ht hc
     (by simpa [hb] using blocks) (by simpa using hv) (by simp [BrTable.instruction, DeclaredReferences.Instruction, DeclaredReferences.instructionIndices])
-    (fun hp => ⟨encoded, hsame hp⟩)
 /-- Forward preservation projects the shared exact reader certificate. -/
 theorem Pending.branch_table {data env profile locals index st} (p : Pending data env profile locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 0x0E#u8) :

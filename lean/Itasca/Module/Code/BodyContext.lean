@@ -1,5 +1,5 @@
 import Itasca.Spec.TypingInversion
-import Itasca.Wasm1.ProfileSyntax
+import Itasca.Support.ControlTranslation
 
 /-!
 # Body typing under extended segment spaces
@@ -7,7 +7,7 @@ import Itasca.Wasm1.ProfileSyntax
 A body typed in a context with short element and data spaces stays typed when those spaces are
 extended. `instrs_extend` shows `Instrs_ok` is preserved by prefix extension of the segment spaces,
 and `instrs_transport` and `expr_transport` move a body typing between contexts that agree on every
-other field. These results apply to the generated typing rules, so they hold for both profiles.
+other field. These results apply to the generated typing rules, including Wasm 2.0 instructions.
 -/
 
 open Aeneas Aeneas.Std

@@ -324,7 +324,6 @@ private theorem body_sound {S V : Type} (source : stream.Source S) (visitor : st
     (pos func batchId : Usize) (history : List StreamBatch.Issued)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
-    (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : SoundInvariant (profile := profile) code env start moduleId config.max_batches history pending pos func batchId)
     (hv : Tracks moduleId history v)
@@ -350,11 +349,10 @@ private theorem body_sound {S V : Type} (source : stream.Source S) (visitor : st
         trivial
       | Ok u =>
         cases u
-        have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env ∧
-            ∀ ft ∈ issued.env.types.val, Profile.FuncType profile ft := by
+        have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env := by
           intro issued hm
           have he := (hinv.issued issued hm).2.1
-          simpa [he] using And.intro henv hresults
+          simpa [he] using henv
         obtain ⟨hv', retiredId, hperm, hcomplete⟩ := StreamScheduler.retire_sound
           visitor Tracks hp moduleId history v v' pending remaining hv hentry hinv.profiles hretire
         have hinv' := hinv.retire remaining retiredId hperm hcomplete
@@ -405,7 +403,6 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     (pos func batchId : Usize) (history : List StreamBatch.Issued)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
-    (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : StreamSubmission.SoundInvariant (profile := profile) code env start moduleId config.max_batches history pending pos func batchId)
     (hv : Tracks moduleId history v)
@@ -424,7 +421,7 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     rw [loop] at h
     obtain ⟨out, hbody, hrest⟩ := ResultFacts.bind_ok_inv _ _ _ h
     have hs := StreamSubmission.body_sound source visitor Tracks hp state moduleId env code start
-      config v pending pos func batchId history environment tail hsource henv hresults hcap hinv hv out hbody
+      config v pending pos func batchId history environment tail hsource henv hcap hinv hv out hbody
     cases out with
     | done result =>
       have he : result = (.Ok finalPending, finalV) := by simpa using hrest
@@ -456,14 +453,13 @@ theorem stream.submit_code_batches.sound {S V : Type}
     (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize) (v' : V)
     (environment tail : List U8) (hsource : StreamSource.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
-    (hresults : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val) (hstart : start.val ≤ code.length)
     (hv : Tracks moduleId [] v)
     (h : stream.submit_code_batches source visitor moduleId profile state env (Slice.len code) start config v =
       .ok (.Ok pending, v')) :
     StreamSubmission.SoundPost (profile := profile) Tracks code env start moduleId config.max_batches (.Ok pending, v') := by
   exact stream.submit_code_batches_loop.sound source visitor Tracks hp state moduleId env code start
-    config v (alloc.vec.Vec.new _) start 0#usize 0#usize [] environment tail hsource henv hresults hcap
+    config v (alloc.vec.Vec.new _) start 0#usize 0#usize [] environment tail hsource henv hcap
     (StreamSubmission.SoundInvariant.initial code env start moduleId config.max_batches hstart) hv pending v' h
 
 end Itasca

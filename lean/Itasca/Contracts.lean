@@ -227,7 +227,6 @@ structure Valid (issued : StreamBatch.Issued)
   validation_profile : issued.profile = validationProfile
   bounded : issued.Bounded
   entry_bounds : CodeEntry.Bounds issued.env
-  profile : Profile.Environment validationProfile issued.env
   limits : Profile.EnvironmentWithinLimits issued.env
   entries : ∃ entries, entries.length = issued.num_funcs.val ∧
     ModuleCode.EntriesTyped (profile := validationProfile) issued.env issued.first_func.val entries ∧

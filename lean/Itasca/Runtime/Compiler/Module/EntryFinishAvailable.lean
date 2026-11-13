@@ -189,11 +189,6 @@ theorem prepared_body_checked_available {A : Type} (ops : runtime.platform.Alloc
     simpa [finished,Slice.len] using reached.1.1.2
   cases profile with
   | Wasm2 => exact checked
-  | Wasm1 =>
-    obtain ⟨result,run,post⟩ := WP.spec_imp_exists checked
-    rw [code.validate_body_with.wasm1_of_body _ _ _ _ _ _ result limits room.size body run, WP.spec_ok]
-    exact post
-
 end Itasca.Runtime.Compiler
 
 end
@@ -291,7 +286,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
     (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
-    (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
+    (bounds : CodeEntry.Bounds env)
     (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
@@ -308,7 +303,7 @@ theorem compiler_entry_checked_available {A : Type} (ops : runtime.platform.Allo
         ∃ w : CodeEntry.Prepared data env index start profile, w.finish = finish ∧
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ⦄ := by
   obtain ⟨w,ending,body⟩ := source_entry_prepared data env index start finish profile entry indexBound typed bounds
-    environment limits encoded
+    limits encoded
   obtain ⟨started,begun,bodyAvailable⟩ := prepared_function_checked_available ops law bound allocation w limits body
     signaturesMatch slotsMatch batchBound created (demand w)
   obtain ⟨⟨reply,after⟩,bodyCalled,accepted,effect,ranges,instructions⟩ := WP.spec_imp_exists bodyAvailable
@@ -338,7 +333,7 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
     (data : Slice U8) (env : metadata.Env) (index start finish : Usize) (profile : ValidationProfile)
     (entry : ModuleBinary.Code) (indexBound : index.val < env.func_type_indices.val.length)
     (typed : Profile.EntryTyped profile env env.func_type_indices.val[index.val] entry)
-    (bounds : CodeEntry.Bounds env) (environment : Profile.Environment profile env)
+    (bounds : CodeEntry.Bounds env)
     (limits : Profile.EnvironmentWithinLimits env)
     (encoded : ModuleBinary.At (Profile.CodeEncodingWithinLimits profile) data start entry finish)
     (signatures : Slice runtime.compiler.Signature) (functionSlots : Slice U32)
@@ -358,15 +353,15 @@ theorem compiler_entry_finish_available {A : Type} (ops : runtime.platform.Alloc
           CompilationBudgetEffect budget result.2.budget (preparedFunctionAllowance w.ctx w.body.length) ⦄ := by
   obtain ⟨⟨reply,after⟩,called,accepted,ranges,instructions,effect⟩ := WP.spec_imp_exists
     (compiler_entry_checked_available ops law bound allocation data env index start finish profile entry indexBound typed
-      bounds environment limits encoded signatures functionSlots budget batchStart initial signaturesMatch slotsMatch batchBound created demand)
+      bounds limits encoded signatures functionSlots budget batchStart initial signaturesMatch slotsMatch batchBound created demand)
   dsimp only at accepted ranges instructions effect
   subst reply
   obtain ⟨w⟩ := metadata.validate_code_entry_with.witness_profile _ data start env index finish initial after bounds profile called
   have signature : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt,w.function_type]
-  have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.ft w.startedState after signature
-    (environment.1 w.ft (by rw [← w.function_type]; exact List.getElem_mem _)) w.body_accepted
-  obtain ⟨_,source,_,_,bodyEncoding,_⟩ := valid
+  have valid := code.validate_body_with.profile_sound _ w.body env w.ctx w.typeIdx profile w.startedState after
+    w.body_accepted
+  obtain ⟨_,source,_,bodyEncoding,_,_⟩ := valid
   have endFits : batchStart.val+finish.val ≤ Usize.max := by
     have last := w.body_bytes.bound
     omega

@@ -6,7 +6,7 @@ import Itasca.Module.Readers.Names
 # Single import parser
 
 Soundness of `metadata.decode_import`. `ImportAdded` says that the environment gains the import
-and updates only the index space of its kind, with the limits, table count and profile guards of
+and updates only the index space of its kind, with the limits and memory count checks of
 that kind. The decoded bytes are an `ImportEncoding` span and the environment stays `Bounded`.
 Completeness is in `Module/Sections/ImportsComplete`.
 -/
@@ -18,8 +18,8 @@ open Aeneas Aeneas.Std
 namespace Itasca.ModuleSections
 
 /-- `result` is `env` with `entry` appended to the imports and to the index space of its kind.
-Functions must resolve their type, tables and memories satisfy their limits and count caps,
-and tables and globals use types the profile allows. -/
+Functions must resolve their type, tables and memories satisfy their limits, and memories
+respect the count cap. -/
 def ImportAdded (env result : metadata.Env) (entry : metadata.Import)
     (profile : ValidationProfile) : Prop :=
   result.imports.val = env.imports.val ++ [entry] ∧
@@ -31,13 +31,11 @@ def ImportAdded (env result : metadata.Env) (entry : metadata.Import)
   | .Global gt =>
       result = { env with imports := result.imports, global_types := result.global_types, num_imported_globals := result.num_imported_globals } ∧
       result.global_types.val = env.global_types.val ++ [gt] ∧
-      result.num_imported_globals.val = env.num_imported_globals.val + 1 ∧
-      ModuleBinary.ValueTypeAllowed profile gt.valtype
+      result.num_imported_globals.val = env.num_imported_globals.val + 1
   | .Table tt =>
       result = { env with imports := result.imports, table_types := result.table_types } ∧
-      result.table_types.val = env.table_types.val ++ [tt] ∧ (profile = .Wasm1 → result.table_types.val.length ≤ 1) ∧
-      ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1) ∧
-      ModuleBinary.ElemTypeAllowed profile tt.elem
+      result.table_types.val = env.table_types.val ++ [tt] ∧
+      ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   | .Memory mt =>
       result = { env with imports := result.imports, mem_types := result.mem_types } ∧
       result.mem_types.val = env.mem_types.val ++ [mt] ∧ result.mem_types.val.length ≤ 1 ∧
@@ -125,38 +123,30 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
                 intro bytes hbytes
                 exact .func value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.allowed_spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨value, next⟩ := pair
-            obtain ⟨⟨hdesc, hlimits⟩, hallowed⟩ := hdesc
+            obtain ⟨hdesc, hlimits⟩ := hdesc
             have hspanD := hdesc.span
             have hcapacity : env.table_types.val.length < Usize.max := by scalar_tac
             have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
             simp [hd]
             step
-            obtain ⟨checked, hchecked, hcount⟩ := WP.spec_imp_exists
-              (metadata.check_table_count.spec { env with table_types := v } profile)
-            rw [hchecked]
-            cases checked with
-            | Err e => simp [
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok u =>
-              cases u
-              simp only [bind_ok]
-              step
-              let entry : metadata.Import := ⟨modname, nm, .Table value⟩
-              refine ⟨entry, ?_, ?_, ?_⟩
-              · refine ⟨v1_post, rfl, v_post, ?_, ?_, hallowed⟩
-                · exact hcount
-                · simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
-              · apply import_encoded hm hname
-                apply At.prepend (by with_unfolding_all exact hkind) hdesc
-                intro bytes hbytes
-                exact .table value hbytes
-              · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
+            rw [metadata.check_table_count.complete]
+            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+            step
+            let entry : metadata.Import := ⟨modname, nm, .Table value⟩
+            refine ⟨entry, ?_, ?_, ?_⟩
+            · refine ⟨v1_post, rfl, v_post, ?_⟩
+              simpa [ModuleTranslation.LimitsValid, ModuleBinary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hlimits
+            · apply import_encoded hm hname
+              apply At.prepend (by with_unfolding_all exact hkind) hdesc
+              intro bytes hbytes
+              exact .table value hbytes
+            · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
         · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_mem_type.spec data p3)
           cases r with
           | Err e => simp [hd,
@@ -183,13 +173,12 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
                 intro bytes hbytes
                 exact .memory value hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
-        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.allowed_spec data p3 profile)
+        · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data p3 profile)
           cases r with
           | Err e => simp [hd,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
           | Ok pair =>
             obtain ⟨value, next⟩ := pair
-            obtain ⟨hdesc, hallowed⟩ := hdesc
             have hspanD := hdesc.span
             have hcapacity : env.global_types.val.length < Usize.max := by scalar_tac
             have hcapacityI : env.imports.val.length < Usize.max := by scalar_tac
@@ -200,7 +189,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
             step
             let entry : metadata.Import := ⟨modname, nm, .Global value⟩
             refine ⟨entry, ?_, ?_, ?_⟩
-            · exact ⟨v1_post, rfl, v_post, i_post, hallowed⟩
+            · exact ⟨v1_post, rfl, v_post, i_post⟩
             · apply import_encoded hm hname
               apply At.prepend (by with_unfolding_all exact hkind) hdesc
               intro bytes hbytes

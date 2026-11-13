@@ -6,8 +6,7 @@ import Itasca.Binary.Wasm1.Encoding
 # Prefix uniqueness of Wasm 1.0 tokens
 
 `Immediate.prefix_unique` and `token_prefix_unique` show that a Wasm 1.0 token and its encoding
-are determined by the leading bytes, and `tokens_unique` extends this to token sequences.
-`ModuleBinary.BodyEncoding.unique` shows that a raw body encodes at most one instruction tree,
+are determined by the leading bytes, and `tokens_unique` extends this to token sequences,
 independent of typing and implementation limits.
 -/
 
@@ -116,13 +115,3 @@ theorem tokens_unique : Unique (Rep TokenEncoding) :=
   token_prefix_unique.rep_unique (by rintro _ _ ⟨op, immediate, rfl, _⟩; simp)
 
 end Itasca.Wasm1
-
-namespace Itasca.ModuleBinary
-
-/-- A byte string encodes at most one function body, with no typing or size premise. -/
-theorem BodyEncoding.unique : Unique BodyEncoding := by
-  rintro xs ys bytes ⟨xt, hx, hxs⟩ ⟨yt, hy, hys⟩
-  obtain rfl := Wasm1.tokens_unique hx hy
-  exact hxs.unique hys
-
-end Itasca.ModuleBinary

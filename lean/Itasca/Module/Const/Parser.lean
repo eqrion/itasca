@@ -5,8 +5,7 @@ import Itasca.Module.Readers.Basic
 # Constant expression parser
 
 `metadata.decode_const_expr.spec` states that an accepted initializer is an exact `ConstEncoding`
-span of the independent grammar and is `Valid` at the expected type. `allowed_spec` adds the
-profile's `ConstAllowed` guard. The helpers `metadata.expect_const_type`, `metadata.const_global` and
+span of the independent grammar and is `Valid` at the expected type. The helpers `metadata.expect_const_type`, `metadata.const_global` and
 `metadata.read_expr_end` have their own specs. Completeness is in `Module/Const/ParserComplete`.
 -/
 
@@ -268,7 +267,6 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
             core.convert.FromSame, bind_assoc] using ht
     · rename_i hop
       cases profile with
-      | Wasm1 => simp [ModuleConstants.Post]
       | Wasm2 =>
         obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (metadata.decode_elem_type.spec data next .Wasm2)
         cases r with
@@ -277,7 +275,7 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
             ModuleConstants.Post]
         | Ok pair =>
           obtain ⟨ty, mid⟩ := pair
-          obtain ⟨bytes, ⟨rfl, _⟩, himm⟩ := hdecode
+          obtain ⟨bytes, rfl, himm⟩ := hdecode
           have hop' : data.val[pos.val] = 0xD0#u8 := by with_unfolding_all exact hop
           have hs := (Wasm1.BytesAt.byte data pos next _ hb hop' hp).append himm
           have hv : wasm_types.ElemType.value_type ty = .ok (ModuleConstants.referenceValueType ty) := by
@@ -294,7 +292,6 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
               core.convert.FromSame, bind_assoc] using ht
     · rename_i hop
       cases profile with
-      | Wasm1 => simp [ModuleConstants.Post]
       | Wasm2 =>
         obtain ⟨r, hd, hdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
         cases r with
@@ -324,7 +321,6 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
                 core.convert.FromSame, bind_assoc] using ht
     · rename_i hop
       cases profile with
-      | Wasm1 => simp [ModuleConstants.Post]
       | Wasm2 =>
         obtain ⟨r, hsub, hsubdecode⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data next)
         cases r with

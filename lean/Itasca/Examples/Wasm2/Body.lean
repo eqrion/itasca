@@ -361,25 +361,25 @@ combines the decoding and typing derivations, without evaluating any handler. -/
 theorem block_accepted : code.bodyCore blockBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
   code.bodyCore.complete blockBytes env locals _ 0#u32 .Wasm2
     environment_limits (by simp [blockBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    ⟨pairResult, blockOps, rfl, block_encoded, block_typed, (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, Spec.i32Const, ScalarConst.i64]), nofun⟩
+    ⟨pairResult, blockOps, rfl, block_encoded, block_typed, (by simp [blockOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityBlock, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `ifBytes` as a function of type 0. -/
 theorem if_accepted : code.bodyCore ifBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
   code.bodyCore.complete ifBytes env locals _ 0#u32 .Wasm2
     environment_limits (by simp [ifBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    ⟨pairResult, ifOps, rfl, if_encoded, if_typed, (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityIf, Spec.i32Const, ScalarConst.i64]), nofun⟩
+    ⟨pairResult, ifOps, rfl, if_encoded, if_typed, (by simp [ifOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, identityIf, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `loopBytes` as a function of type 3. -/
 theorem loop_accepted : code.bodyCore loopBytes env locals (alloc.vec.Vec.new _) 3#u32 .Wasm2 = .ok (.Ok ()) :=
   code.bodyCore.complete loopBytes env locals _ 3#u32 .Wasm2
     environment_limits (by simp [loopBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    ⟨emptyResult, loopOps, rfl, loop_encoded, loop_typed, (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, loopInstr, Spec.i32Const, ScalarConst.i64]), nofun⟩
+    ⟨emptyResult, loopOps, rfl, loop_encoded, loop_typed, (by simp [loopOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, pairOps, loopInstr, Spec.i32Const, ScalarConst.i64])⟩
 
 /-- `code.bodyCore` accepts `tableBytes` as a function of type 0. -/
 theorem table_accepted : code.bodyCore tableBytes env locals (alloc.vec.Vec.new _) 0#u32 .Wasm2 = .ok (.Ok ()) :=
   code.bodyCore.complete tableBytes env locals _ 0#u32 .Wasm2
     environment_limits (by simp [tableBytes, bytes, alloc.vec.Vec.deref, limits.MAX_FUNCTION_BYTES])
-    ⟨pairResult, tableOps, rfl, table_encoded, table_typed, (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, tableBlock, tableInner, heterogeneousTable, BrTable.instruction]), nofun⟩
+    ⟨pairResult, tableOps, rfl, table_encoded, table_typed, (by simp [tableOps, DeclaredReferences.Instructions, DeclaredReferences.instructionsIndices, DeclaredReferences.instructionIndices, tableBlock, tableInner, heterogeneousTable, BrTable.instruction])⟩
 
 /-- The accepted run on `blockBytes` yields a `Validated` soundness certificate. -/
 theorem block_validated : Validated .Wasm2 blockBytes env locals 0#u32 :=

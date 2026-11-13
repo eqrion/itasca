@@ -20,17 +20,14 @@ namespace Itasca.Wasm2.CallbackTrace
 open VisitorTrace
 
 /-- The accepted callbacks spell the same independently encoded and SpecTec-typed body, with
-indexed block signatures and declared references. For Wasm 1.0 the same tokens follow the Wasm 1.0
-grammar and the body meets `Wasm1.Instructions`. -/
+indexed block signatures and declared references. -/
 def AcceptedBody (profile : ValidationProfile) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (observations : List Observation) : Prop :=
   AllAccepted observations ∧ ∃ ft tokens ops next,
     env.types.val[index.val]? = some ft ∧
     Completed data 0#usize observations tokens next ∧ next.val = data.length ∧
     BodyTokens tokens ops ∧ FunctionTyped env ctx.locals ft ops ∧
-    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops ∧
-    (profile = .Wasm1 → Wasm1.Consumed data 0#usize tokens next ∧
-      Wasm1.Instructions (functionContext env ctx.locals ft) ops)
+    DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops
 
 end Itasca.Wasm2.CallbackTrace
 
@@ -64,20 +61,14 @@ theorem Wasm2.CallbackTrace.body_trace_sound {V : Type} (visitor : code.OpVisito
   obtain ⟨observations, log, trace⟩ := Wasm2.CallbackTrace.body_trace
     visitor observe records data env ctx index profile v v' (.Ok ()) run
   obtain ⟨accepted, tokens, next, chunks, endpos⟩ := trace.accepted
-  obtain ⟨ft, ops, entry, ⟨tokens', next', bytes, endpos', hsyntax⟩, typed, declared, hwasm1⟩ :=
+  obtain ⟨ft, ops, entry, ⟨tokens', next', bytes, endpos', hsyntax⟩, typed, declared⟩ :=
     code.validate_body_with.sound visitor data env ctx index profile v v' run
   have equal_pos : next' = next := UScalar.eq_of_val_eq (endpos'.trans endpos.symm)
   subst next'
   have equal_tokens := chunks.encoded.unique bytes
   subst tokens'
-  refine ⟨observations, log, accepted, ft, tokens, ops, next, entry, chunks,
-    endpos, hsyntax, typed, declared, fun hp => ?_⟩
-  obtain ⟨⟨tokens1, next1, bytes1, endpos1, hsyntax1⟩, hinstr⟩ := hwasm1 hp
-  have equal_pos1 : next1 = next := UScalar.eq_of_val_eq (endpos1.trans endpos.symm)
-  subst next1
-  have equal_tokens1 := chunks.encoded.unique bytes1.to_wasm2
-  subst tokens1
-  exact ⟨bytes1, hinstr⟩
+  exact ⟨observations, log, accepted, ft, tokens, ops, next, entry, chunks,
+    endpos, hsyntax, typed, declared⟩
 
 /-- Independently encoded and typed bodies force a complete callback trace for accepting
 recording visitors within the documented resource bounds. -/

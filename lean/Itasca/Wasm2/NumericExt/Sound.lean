@@ -23,12 +23,11 @@ theorem Pending.extended_numeric {data env profile locals index st}
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)
     (hook : V → code.OpIterState → Unit → Result (core.result.Result Unit error.VisitError × V))
     (hhook : ∀ s a, ∃ reply v', hook v s a = .ok (reply, v'))
-    (hencoded : At data p.start (.plain operation.instruction) pos)
-    (hwasm2 : profile ≠ .Wasm1) :
+    (hencoded : At data p.start (.plain operation.instruction) pos) :
     CoreVisitor.run (code.read_conversion {st.core with pos := pos} operation.input operation.output)
       hook v ⦃ r => r.1 = .Ok () → p.After {st with core := r.2.1} ⦄ := by
   have effect := p.numeric_reader operation pos hsize hencoded hdecl
-    (fun hp => absurd hp hwasm2)
+
   simp only [Numeric.read, hunary, Bool.false_eq_true, ↓reduceIte] at effect
   apply WP.spec_mono (CoreVisitor.run.spec _ hook v (fun _ => True)
     (fun _ s => p.After {st with core := s}) ?_ hhook)
@@ -53,7 +52,7 @@ theorem Pending.extended_scalar {data env profile locals index st} (p : Pending 
   cases hm : NumericExtensions.signMeaning opcode with
   | some operation =>
     rw [code.step_extended.sign visitor st.core data env ctx opcode operation v hm]
-    apply p.extended_numeric (hwasm2 := p.not_wasm1 hbyte (Wasm1.signMeaning_extension hm)) v
+    apply p.extended_numeric v
       operation (NumericExtensions.sign_properties hm).1 (NumericExtensions.sign_declared hm _) st.core.pos hsize
       _ (fun s _ => hv.visit_sign_extension v s opcode)
     exact At.of_immediate p.inbounds hbyte p.pos (.signExtension opcode operation hm)
@@ -75,7 +74,7 @@ theorem Pending.extended_scalar {data env profile locals index st} (p : Pending 
         | none => simp [hm]
         | some operation =>
           simp only [hm]
-          apply p.extended_numeric (hwasm2 := p.not_wasm1 hbyte (by decide)) v
+          apply p.extended_numeric v
             operation (NumericExtensions.saturating_unary hm) (NumericExtensions.saturating_declared hm _) next hsize
             _ (fun s _ => hv.visit_saturating v s subopcode)
           obtain ⟨bytes, hs, hn, hb, he⟩ := hd

@@ -4,9 +4,9 @@ import Itasca.Wasm2.NumericExt.Dispatch
 import Itasca.Handler.NumericDispatch
 
 /-!
-An unrecognized base-profile opcode rejects before visiting the compiler.
+An unrecognized base opcode rejects before visiting the compiler.
 
-Main declarations: `reader_opcode_wasm1` and `reader_accepted_opcode_wasm2`. A direct consumer is `Compiler.Body.Reader.Replay.OrdinaryLedger`.
+Main declarations: `reader_opcode_base` and `reader_accepted_opcode_wasm2`. A direct consumer is `Compiler.Body.Reader.Replay.OrdinaryLedger`.
 -/
 
 namespace Itasca.Runtime.Compiler
@@ -16,21 +16,21 @@ set_option maxRecDepth 16384
 set_option synthInstance.maxHeartbeats 8000000
 set_option linter.unusedSimpArgs false
 
-/-- An unrecognized base-profile opcode rejects before visiting the compiler. -/
-theorem reader_opcode_wasm1 {V : Type} (visitor : code.OpVisitor V)
+/-- An unrecognized base opcode rejects before visiting the compiler. -/
+theorem reader_opcode_base {V : Type} (visitor : code.OpVisitor V)
     (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (value : V) :
-    ReaderOpcode .Wasm1 opcode ∨
+    BaseOpcode opcode ∨
     code.step visitor st data env ctx opcode value =
       .ok (.Err error.OpError.UnrecognizedOpcode,st,value) := by
-  by_cases supported : ReaderOpcode .Wasm1 opcode
+  by_cases supported : BaseOpcode opcode
   · exact .inl supported
   right
   by_cases high : 69 ≤ opcode.val
   · rw [code.step.numeric_dispatch visitor st data env ctx opcode value high]
     cases meaning : Numeric.opcodeMeaning opcode with
     | none => exact code.step_numeric.unrecognized visitor st opcode value meaning
-    | some operation => exact False.elim (supported (numeric_reader_opcode meaning))
+    | some operation => exact False.elim (supported (numeric_base_opcode meaning))
   · apply code.step.reserved
     rcases opcode with ⟨⟨index,bound⟩⟩
     change ¬ 69 ≤ index at high
@@ -62,8 +62,8 @@ theorem reader_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)
   have misc : opcode ≠ code.OP_MISC_PREFIX := fun equal => supported (.misc (by simpa [code.OP_MISC_PREFIX] using equal))
   rw [code.step_wasm2.base visitor st data env ctx opcode value base,
     code.step_extended.base visitor st data env ctx opcode value sign misc]
-  rcases reader_opcode_wasm1 visitor st data env ctx opcode value with known | rejected
-  · exact False.elim (supported known.wasm2)
+  rcases reader_opcode_base visitor st data env ctx opcode value with known | rejected
+  · exact False.elim (supported known.reader)
   · exact rejected
 
 theorem reader_accepted_opcode_wasm2 {V : Type} (visitor : code.OpVisitor V)

@@ -90,7 +90,6 @@ structure Certificate (data : Slice U8) (raw : ModuleBinary.Module)
   environment : metadata.validate_env source.env validationProfile = .ok (.Ok (env, Slice.len source.env))
   ready : ∃ decls, ModuleEnv.Ready raw 10 decls env
   entry_bounds : CodeEntry.Bounds env
-  profile : Itasca.Profile.Environment validationProfile env
   signature_limits : Itasca.Profile.EnvironmentWithinLimits env
   code : ∃ entries, StreamFraming.HeaderAt source.code env entries ∧
     At (Rep (Itasca.Profile.CodeEncodingWithinLimits validationProfile)) source.code entries raw.codes (Slice.len source.code)
@@ -136,7 +135,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
     have := hl.environment.span.2
     simp only [Slice.length] at *
     omega
-  obtain ⟨hbounds, hprofile, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
+  obtain ⟨hbounds, hlimits⟩ := ModuleEnv.profile_accepted_entry_conditions
     environment env (Slice.len environment) profile henvSize henv
   have htailEnc := hl.tail.on_region htailSpan
   obtain ⟨segments, hsegments, hvalid⟩ := ModuleTail.materialize
@@ -168,10 +167,10 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
   have hdataCount : ∀ count, env.data_count = some count → count.val = segments.val.length := by
     intro count hc
     have he : raw.dataCount = some count := (hready.dataCount_eq (by decide)).symm.trans hc
-    have hv := hguards.2
+    have hv := hguards
     simpa [DataCountValid, he, ← hsegments] using hv
   have htail := metadata.validate_tail.complete tail (by simpa [tail, hsegments] using htailEnc) hvalid hdataCount
-  have htypes := ModuleLayout.CodeAt.typed hready hs hp hguards.1 hguards.2 hdeclared
+  have htypes := ModuleLayout.CodeAt.typed (profile := profile) hready hs hguards hdeclared
   have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
   have hcode : ∃ entries, StreamFraming.HeaderAt code env entries ∧
       At (Rep (Itasca.Profile.CodeEncodingWithinLimits profile)) code entries raw.codes (Slice.len code) := by
@@ -206,7 +205,7 @@ theorem prepare (data : Slice U8) (raw : ModuleBinary.Module) (profile : Validat
   refine ⟨⟨environment, code, tailBytes⟩, env, tail, ?_⟩
   exact ⟨⟨codePos, tailPos, hsplit, henvSlice, hcodeSlice, htailSlice⟩,
     by simpa using ((henvSpan.append hcodeSpan).append htailSpan).suffix,
-    hb.1, henv, ⟨finalDecls, hready⟩, hbounds, hprofile, hlimits, hcode, htyped, hcount,
+    hb.1, henv, ⟨finalDecls, hready⟩, hbounds, hlimits, hcode, htyped, hcount,
     htail, hmatches, hmeta⟩
 
 end Itasca.StreamCompleteRegions
