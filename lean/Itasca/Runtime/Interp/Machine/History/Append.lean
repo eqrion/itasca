@@ -35,7 +35,7 @@ import Itasca.Runtime.Interp.Relations.StackRelation
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Relations.Epilogue
 import Itasca.Runtime.Interp.Relations.HeadCoverage
-import Itasca.Runtime.Interp.Machine.Simulation.Measure
+import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Relations.ExecutionLoop
 
 /-!

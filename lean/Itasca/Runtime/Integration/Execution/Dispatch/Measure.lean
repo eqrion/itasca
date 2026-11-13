@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
-import Itasca.Runtime.Interp.Machine.Simulation.Measure
+import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 theorem Machine.Advance.widen {M : Type} {view : M → Slice U8} {code : Store.CodeInterpretation} {store : runtime.store.Store M} {exec : runtime.interp.Execution}

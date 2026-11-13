@@ -89,7 +89,6 @@ import Itasca.Runtime.Interp.Relations.Epilogue
 import Itasca.Runtime.Interp.Relations.Normalization
 import Itasca.Runtime.Interp.Control.LabelCompletion
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
-import Itasca.Runtime.Interp.Machine.Simulation.Measure
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Interp.Memory.MemoryMutation
