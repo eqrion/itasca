@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.BulkMemory
 import Itasca.Runtime.Interp.Memory.MemoryMutation
-import Itasca.Runtime.Spec.MemoryFill
+import Itasca.Runtime.Spec.MemoryGrowth
 import Itasca.Runtime.Store.Api.MemoryInit
 
 /-!

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Simd.Memory.Encoding
-import Itasca.Runtime.Spec.SegmentCopySlice
+import Itasca.Runtime.Spec.FloatTrunc
 
 /-!
 Byte encoding of vector-store payloads.

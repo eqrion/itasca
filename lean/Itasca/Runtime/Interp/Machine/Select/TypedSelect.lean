@@ -9,7 +9,7 @@ import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.SourceMachine.TypedSelect.Step
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Typed select machine fetch, step and execution. The resulting argument is consumed by complete machine advance while preserving its source grammar and store premises.

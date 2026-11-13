@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Sim.Typing
-import Itasca.Runtime.Spec.Counted
+import Itasca.Runtime.Spec.SegmentInitCases
 
 namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec

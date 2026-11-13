@@ -44,7 +44,7 @@ import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StepSafety
 import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
 import Itasca.Runtime.Interp.Machine.Emission.Local
 import Itasca.Runtime.Interp.Relations.LocalCodePoint
@@ -99,7 +99,6 @@ import Itasca.Runtime.Interp.Control.NormalizeCompose
 import Itasca.Runtime.Interp.Machine.Simulation.Measure
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Spec.Mutation
 import Itasca.Runtime.Interp.Memory.MemoryMutation
 import Itasca.Runtime.Integration.Execution.Ownership.Contents
 import Itasca.Runtime.Representation.Collection
@@ -112,6 +111,7 @@ import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 

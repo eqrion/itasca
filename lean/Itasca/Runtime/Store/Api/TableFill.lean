@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Api.TableFillLoop
 import Itasca.Runtime.Store.Initialization.BulkTable
-import Itasca.Runtime.Spec.TableFill
+import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Interp.State.TableMutation
 import Itasca.Runtime.Store.Api.TableInit
 

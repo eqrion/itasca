@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.MemoryLoad
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.Simd.Bitwise
 
 /-!

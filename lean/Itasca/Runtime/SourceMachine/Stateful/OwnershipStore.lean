@@ -1,10 +1,11 @@
 import Itasca.Runtime.SourceMachine.Ownership.Core
-import Itasca.Runtime.Spec.SegmentDrops
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Stateful.PayloadTyping
 import Itasca.Runtime.SourceMachine.Stateful.CopyStore
 import Itasca.Runtime.SourceMachine.Stateful.InitStore
 import Itasca.Runtime.SourceMachine.Stateful.MemoryGrow
 import Itasca.Runtime.SourceMachine.Stateful.TableGrow
+
 namespace Itasca.Runtime.SourceMachine.Ownership
 open SpecExt Itasca.Runtime.Spec Stateful
 

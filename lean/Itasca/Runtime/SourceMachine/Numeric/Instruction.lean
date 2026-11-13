@@ -1,12 +1,8 @@
 import Itasca.Runtime.SourceMachine.Numeric.OperandsCore
 import Itasca.Runtime.SourceMachine.Sim.Int
-import Itasca.Runtime.Spec.IntegerExtend
+import Itasca.Runtime.Spec.SegmentInitCases
 import SpecExt.Builtins.Examples
-import Itasca.Runtime.Spec.IntegerBits
-import Itasca.Runtime.Spec.IntegerRotate
-import Itasca.Runtime.Spec.IntegerShift
 import Itasca.Runtime.SourceMachine.Sim.Trap
-import Itasca.Runtime.Spec.IntegerCompareSigned
 import Itasca.Runtime.SourceMachine.Preservation
 
 /-!

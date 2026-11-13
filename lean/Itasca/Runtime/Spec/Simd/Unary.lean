@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Shape
-import Itasca.Runtime.Spec.IntegerSigned
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.Shift
 
 /-!

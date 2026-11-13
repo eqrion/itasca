@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Memory.MemoryDispatch
 import Itasca.Runtime.Interp.Memory.MemoryDecode
-import Itasca.Runtime.Spec.PackedMemory
+import Itasca.Runtime.Spec.FloatPromote
 
 /-!
 Packed memory descriptors and source decoding. Width, stored-byte and signed-word facts establish the decoded load value used by packed-memory correspondence.

@@ -1,6 +1,6 @@
 import SpecExt.Builtins.Examples
 import Itasca.Runtime.Spec.Simd.Shift
-import Itasca.Runtime.Spec.IntegerSigned
+import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!
 SIMD lane bitmasks and their bit-level characterization, connecting source operations with the interpreter bit representation.

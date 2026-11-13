@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Indirect.Definition
 import Itasca.Runtime.SourceMachine.Indirect.Operands
-import Itasca.Runtime.Spec.IndirectCallSource
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Core.Trap
 

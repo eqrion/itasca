@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.State.TableAccess
-import Itasca.Runtime.Spec.TableAccess
+import Itasca.Runtime.Spec.FloatPromote
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store
 

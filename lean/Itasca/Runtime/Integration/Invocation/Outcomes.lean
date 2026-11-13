@@ -1,6 +1,6 @@
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-import Itasca.Runtime.Spec.Invocation
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Interp.Relations.FrameStorePrefix
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 

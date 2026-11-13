@@ -5,7 +5,7 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
 
 /-!
 Public host invocation outcomes while retaining the evolving source-code interpretation.

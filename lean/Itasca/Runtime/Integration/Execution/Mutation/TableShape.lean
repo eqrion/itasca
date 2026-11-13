@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.State.TableMutation
-import Itasca.Runtime.Spec.TableWriteBounds
+import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
 import Itasca.Runtime.Interp.Calls.CallRefinement
@@ -19,7 +19,7 @@ import Itasca.Runtime.Interp.Machine.Resources.CallErrors
 import Itasca.Runtime.Interp.Invocation.Divergence
 import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Interp.Relations.TypedArguments
-import Itasca.Runtime.Spec.Invocation
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Invariant.FunctionTables
 import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
@@ -32,6 +32,7 @@ import Itasca.Runtime.Store.Invariant.CoreTypingExtension
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Store.Invariant.ObjectExtension
 import Itasca.Runtime.Store.Invariant.SemanticApi
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 

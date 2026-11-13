@@ -1,6 +1,6 @@
 import Itasca.Runtime.Equations
 import Itasca.Runtime.Platform.Float
-import Itasca.Runtime.Spec.Float
+import Itasca.Runtime.Spec.Integer
 import SpecExt.Builtins.Float.Sign
 
 /-! Refinement of the extracted NaN-canonicalizing wrappers. These lemmas use

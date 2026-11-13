@@ -1,7 +1,7 @@
-import Itasca.Runtime.Spec.Instantiation
-import Itasca.Runtime.Spec.SegmentPrograms
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Module.SegmentPayloadBounds
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

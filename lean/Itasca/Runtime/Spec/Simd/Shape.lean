@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Bitwise
-import Itasca.Runtime.Spec.Float
+import Itasca.Runtime.Spec.Integer
 import SpecExt.Builtins.Float.Sign
 
 /-!

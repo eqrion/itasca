@@ -1,6 +1,6 @@
 import Itasca.Runtime.SourceMachine.Memory.Descriptor
 import Itasca.Runtime.SourceMachine.Typing
-import Itasca.Runtime.Spec.PackedMemory
+import Itasca.Runtime.Spec.FloatPromote
 
 namespace Itasca.Runtime.SourceMachine.Memory
 open SpecExt

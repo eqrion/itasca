@@ -1,11 +1,11 @@
 import Itasca.Runtime.Interp.Control.StructuredPoint
 import Itasca.Runtime.Interp.Host.HostPreparationCauses
 import Itasca.Runtime.Store.Invariant.CheckedValues
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Interp.Host.HostResume
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Generated.Types
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp

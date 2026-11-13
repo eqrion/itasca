@@ -9,7 +9,7 @@ import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StepSafety
 import Itasca.Runtime.Interp.Machine.Control.ForwardJump
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Global get/set execution with retained ownership.

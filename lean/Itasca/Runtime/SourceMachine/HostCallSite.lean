@@ -1,7 +1,8 @@
 import Itasca.Runtime.SourceMachine.HostTyping
 import Itasca.Runtime.SourceMachine.Sim.Call
 import Itasca.Runtime.SourceMachine.Sim.Host
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
+
 namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec
 

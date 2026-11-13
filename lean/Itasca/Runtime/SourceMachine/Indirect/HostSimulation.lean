@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Sim.Call
-import Itasca.Runtime.Spec.IndirectCallSource
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.SourceMachine.Sim.Trap
+
 namespace Itasca.Runtime.SourceMachine.Indirect
 open SpecExt Itasca.Runtime.Spec
 

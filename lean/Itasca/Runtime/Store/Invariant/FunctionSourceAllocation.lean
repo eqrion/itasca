@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Invariant.FunctionPayload
-import Itasca.Runtime.Spec.Allocation
+import Itasca.Runtime.Spec.ModuleMembership
 
 /-!
 Decoded function allocation and source payload lists. The per-function allocation witness establishes the ordered source function-instance list.

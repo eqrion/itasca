@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Spec.MemoryInit
-import Itasca.Runtime.Spec.SegmentCopySlice
+import Itasca.Runtime.Spec.FloatPromote
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Store.Api.TableInit
 
 /-!

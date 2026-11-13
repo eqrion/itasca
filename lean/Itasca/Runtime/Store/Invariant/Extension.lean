@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.Staging
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

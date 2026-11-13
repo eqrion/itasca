@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Integer.Signed
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
-import Itasca.Runtime.Spec.IntegerShift
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.ExtractSigned
 
 /-!

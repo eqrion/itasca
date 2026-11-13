@@ -23,7 +23,7 @@ import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StepSafety
 import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Exclusion of unreachable from ordinary scalar emission.

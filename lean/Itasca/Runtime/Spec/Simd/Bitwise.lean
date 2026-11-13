@@ -1,5 +1,5 @@
 import SpecExt.Builtins.Examples
-import Itasca.Runtime.Spec.IntegerBits
+import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!
 Source reduction for whole-vector bitwise operations.

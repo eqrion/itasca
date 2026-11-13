@@ -1,7 +1,8 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableMutation
 import Itasca.Runtime.SourceMachine.Core.MemoryMutation
-import Itasca.Runtime.Spec.TableFill
-import Itasca.Runtime.Spec.MemoryFill
+import Itasca.Runtime.Spec.FloatPromote
+import Itasca.Runtime.Spec.MemoryGrowth
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

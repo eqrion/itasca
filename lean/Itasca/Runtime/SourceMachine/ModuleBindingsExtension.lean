@@ -1,5 +1,6 @@
-import Itasca.Runtime.Spec.ExtensionTyping
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Typing
+
 namespace Itasca.Runtime.SourceMachine
 
 /-- Module bindings survive specification store extension, including growth,

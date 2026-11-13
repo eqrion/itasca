@@ -1,8 +1,8 @@
 import Itasca.Runtime.SourceMachine.Stateful.PayloadTyping
 import Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
-import Itasca.Runtime.Spec.MemoryCopy
-import Itasca.Runtime.Spec.TableCopy
+import Itasca.Runtime.Spec.MemoryGrowth
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

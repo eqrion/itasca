@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Initialization.BulkTable
 import Itasca.Runtime.Spec.SegmentInitCases
-import Itasca.Runtime.Spec.Context
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Store.Initialization.SegmentInstruction
 import Itasca.Runtime.Store.Api.TableInit
 import Itasca.Runtime.Store.Invariant.Syntax

@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatSigns
-import Itasca.Runtime.Spec.FloatSigns
-import Itasca.Runtime.Spec.FloatPure
+import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform

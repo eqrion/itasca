@@ -1,12 +1,8 @@
 import Itasca.Runtime.SourceMachine.Float.Descriptor
 import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Typing
-import Itasca.Runtime.Spec.FloatSigns
-import Itasca.Runtime.Spec.FloatMinMax
 import Itasca.Runtime.Spec.FloatPromote
-import Itasca.Runtime.Spec.FloatComparison
 import SpecExt.Builtins.Float.Sign
-import Itasca.Runtime.Spec.FloatReinterpret
 
 /-!
 Typed scalar floating-point instruction results and progress. These source-only rules retain nondeterministic permitted outcomes.

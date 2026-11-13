@@ -17,7 +17,7 @@ import Itasca.Runtime.Interp.Machine.Resources.CallErrors
 import Itasca.Runtime.Interp.Invocation.Divergence
 import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Interp.Relations.TypedArguments
-import Itasca.Runtime.Spec.Invocation
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Instantiation.PreparedRunCertificates
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
@@ -33,6 +33,7 @@ import Itasca.Runtime.Store.Invariant.InstantiationCode
 import Itasca.Runtime.Compiler.Module.CompileSlice
 import Itasca.Runtime.Store.Instantiation.PreparedSourceInstantiation
 import Itasca.Runtime.Store.Instantiation.Linked
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca Store
 

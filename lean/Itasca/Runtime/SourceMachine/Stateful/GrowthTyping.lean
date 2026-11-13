@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
-import Itasca.Runtime.Spec.TableGrowth
 import Itasca.Runtime.Spec.MemoryGrowth
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

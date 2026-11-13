@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Simd.Relations.ValueSlots
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
-import Itasca.Runtime.Spec.PureWf
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape
 
 /-!

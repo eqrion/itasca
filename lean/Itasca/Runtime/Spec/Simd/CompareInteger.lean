@@ -1,7 +1,6 @@
-import Itasca.Runtime.Spec.IntegerSigned
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.Shape
 import SpecExt.Builtins.Examples
-import Itasca.Runtime.Spec.IntegerExtend
 
 /-!
 Integer SIMD comparison: scalar predicates, lane masks and source reduction. Floating-point comparisons reuse the lane-mask lemmas; runtime proofs consume the source-step result.

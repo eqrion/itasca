@@ -1,8 +1,9 @@
 import Itasca.Runtime.SourceMachine.Stateful.PayloadTyping
 import Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement
 import Itasca.Runtime.SourceMachine.Stateful.MemorySize
-import Itasca.Runtime.Spec.MemoryInit
-import Itasca.Runtime.Spec.TableInit
+import Itasca.Runtime.Spec.FloatPromote
+import Itasca.Runtime.Spec.FloatTrunc
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

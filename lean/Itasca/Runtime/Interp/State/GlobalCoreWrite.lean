@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.Collection
 import Itasca.Runtime.Interp.State.Globals
-import Itasca.Runtime.Spec.Globals
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Interp.Relations.WordEncoding
 import Itasca.Runtime.Interp.Relations.PrefixEffect
 import Itasca.Runtime.SourceMachine.Core.Globals

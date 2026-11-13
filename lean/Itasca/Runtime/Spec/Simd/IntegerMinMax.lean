@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import Itasca.Runtime.Spec.IntegerSigned
+import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!
 Source-rule algebra for signed and unsigned integer minima and maxima. Lane/list calculations establish the generated source operation and its reduction step, consumed by source-machine and interpreter correspondence proofs.

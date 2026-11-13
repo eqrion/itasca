@@ -4,7 +4,7 @@ import Itasca.Runtime.Integration.Api.InvocationEntryResources
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.RecordedPrefix
 import Itasca.Runtime.Integration.Api.ReadbackIssued
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
 
 /-!
 A public failure is explained at its original signature/entry boundary or at an actual source-reachable dispatch in the then-current code world.

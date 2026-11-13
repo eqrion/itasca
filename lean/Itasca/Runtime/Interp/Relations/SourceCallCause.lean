@@ -1,6 +1,7 @@
 import Itasca.Runtime.Interp.Calls.DirectCallCause
 import Itasca.Runtime.Interp.Relations.StackRelation
-import Itasca.Runtime.Spec.Counted
+import Itasca.Runtime.Spec.SegmentInitCases
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

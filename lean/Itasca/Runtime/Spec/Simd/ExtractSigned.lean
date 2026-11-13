@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Extract
-import Itasca.Runtime.Spec.IntegerExtend
+import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!
 Well-formed signed lanes and their extraction step.

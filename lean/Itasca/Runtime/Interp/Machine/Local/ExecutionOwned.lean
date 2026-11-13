@@ -21,7 +21,7 @@ import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Local-variable structured execution and ownership. Fetch, capacity and get/write frame effects assemble the complete execution relation without changing surrounding frame slots.

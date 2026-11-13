@@ -11,7 +11,7 @@ import Itasca.Runtime.Store.Api.TableCopy
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Spec.Mutation
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Mutation.Core
 import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.SourceMachine.Core
@@ -27,6 +27,7 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Initialization.SegmentExtension
 import Itasca.Runtime.Store.Invariant.SourceSyntax
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}

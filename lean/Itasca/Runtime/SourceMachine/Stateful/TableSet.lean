@@ -1,7 +1,8 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableMutation
 import Itasca.Runtime.SourceMachine.Stateful.ReferenceOperands
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Spec.TableWriteBounds
+import Itasca.Runtime.Spec.FloatPromote
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

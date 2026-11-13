@@ -2,8 +2,8 @@ import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 import Itasca.Runtime.Interp.Simd.Lanes.Extract
 import Itasca.Runtime.Interp.Simd.Integer.ExtractSigned
 import Itasca.Runtime.Interp.Simd.Lanes.Replace
-import Itasca.Runtime.Spec.PureWf
-import Itasca.Runtime.Spec.ByteEncoding
+import Itasca.Runtime.Spec.ModuleMembership
+import Itasca.Runtime.Spec.FloatTrunc
 
 /-!
 Source effects and result values of SIMD lane instructions.

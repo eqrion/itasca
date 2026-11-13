@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Decode
-import Itasca.Runtime.Spec.Depth
+import Itasca.Runtime.Spec.ModuleMembership
 
 namespace Itasca.Runtime.SourceMachine
 

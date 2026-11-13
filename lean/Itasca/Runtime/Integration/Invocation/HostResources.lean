@@ -8,7 +8,7 @@ import Itasca.Runtime.Integration.Execution.Ownership.Entry
 import Itasca.Runtime.Store.Invariant.CheckedValues
 import Itasca.Runtime.Integration.Execution.Dispatch.Arguments
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
 
 /-!
 Recorded host invocation outcomes and their source resource evidence.

@@ -7,7 +7,7 @@ import Itasca.Runtime.Interp.Invocation.RecordedChecks
 import Itasca.Runtime.Interp.Invocation.RecordingErasure
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Store.Invariant.CheckedValues
-import Itasca.Runtime.Spec.Invocation
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Invocation.Outcomes
 
 /-!

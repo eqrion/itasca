@@ -13,7 +13,7 @@ import Itasca.Runtime.Interp.Machine.Control.If
 import Itasca.Runtime.Interp.Machine.Control.Loop
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Structured control fetch and whole-execution preservation. Fetch inversion for if, loop and branches supplies the execution lemmas with their explicit uniform or concrete emission premises.

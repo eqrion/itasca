@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Api.ApiMetadata
 import Itasca.Runtime.Store.Invariant.TypeEquality
-import Itasca.Runtime.Spec.ExtensionTyping
+import Itasca.Runtime.Spec.Integer
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

@@ -1,7 +1,8 @@
 import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Interp.Host.HostPreparationCauses
-import Itasca.Runtime.Spec.Counted
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Integration.Host.HostCallContext
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

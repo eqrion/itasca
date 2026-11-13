@@ -16,7 +16,7 @@ import Itasca.Runtime.Store.Invariant.SourceFunctionAllocation
 import Itasca.Runtime.Store.Invariant.SourceBindings
 import Itasca.Runtime.Store.Invariant.CodeAgreement
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
-import Itasca.Runtime.Spec.AllocationModule
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.SourceExports
 import Itasca.Runtime.Compiler.Module.SourceInstantiation
 

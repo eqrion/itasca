@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.IntegerArithmetic
-import Itasca.Runtime.Spec.IntegerExtend
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.CompareFloat
 
 /-!

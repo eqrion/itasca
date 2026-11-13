@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float.FloatComparisonScalar
-import Itasca.Runtime.Spec.FloatComparison
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Interp.Numeric.Float.FloatInstructionOutcome
 
 /-!

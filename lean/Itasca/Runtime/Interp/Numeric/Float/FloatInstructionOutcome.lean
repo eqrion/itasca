@@ -3,11 +3,12 @@ import Itasca.Runtime.Interp.Numeric.Float.FloatBounded
 import Itasca.Runtime.Interp.Numeric.Float.FloatSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatMinMaxSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatComparisonScalar
-import Itasca.Runtime.Spec.FloatComparison
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Interp.Numeric.Float.FloatConvertSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatPromoteSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatReinterpretSource
 import Itasca.Runtime.Interp.Numeric.Float.FloatTruncSource
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float Platform
 

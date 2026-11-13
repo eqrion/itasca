@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.FloatUnary
-import Itasca.Runtime.Spec.FloatMinMax
+import Itasca.Runtime.Spec.FloatTrunc
 
 /-!
 Source-rule algebra for binary floating-point lanes. Lane/list calculations establish the generated source operation and its reduction step, consumed by source-machine and interpreter correspondence proofs.

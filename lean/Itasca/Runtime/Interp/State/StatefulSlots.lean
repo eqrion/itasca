@@ -3,7 +3,7 @@ import Itasca.Runtime.Interp.Memory.MemorySize
 import Itasca.Runtime.SourceMachine.Stateful.Transition
 import Itasca.Runtime.Interp.Relations.InitializerExecute
 import Itasca.Runtime.Interp.Relations.ReferenceSource
-import Itasca.Runtime.Spec.ReferenceFunction
+import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Interp.Relations.Regions
 
 /-!

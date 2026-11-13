@@ -1,6 +1,5 @@
 import Itasca.Runtime.SourceMachine.Core.ContentExtension
-import Itasca.Runtime.Spec.SegmentDrops
-import Itasca.Runtime.Spec.TableInit
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
 import Itasca.Runtime.SourceMachine.Core.Simulation
 

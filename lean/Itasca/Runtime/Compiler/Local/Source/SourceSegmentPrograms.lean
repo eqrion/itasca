@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
-import Itasca.Runtime.Spec.SegmentPrograms
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Module.Elab.SectionInversion
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 

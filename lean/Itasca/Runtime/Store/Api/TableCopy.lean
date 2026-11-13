@@ -3,7 +3,7 @@ import Itasca.Runtime.Store.Api.TableCopyDistinct
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.BulkPreservation
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
-import Itasca.Runtime.Spec.TableCopy
+import Itasca.Runtime.Spec.MemoryGrowth
 import Itasca.Runtime.Store.Api.TableInit
 
 /-!

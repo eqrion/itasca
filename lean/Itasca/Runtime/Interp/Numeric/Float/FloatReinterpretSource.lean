@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Float
-import Itasca.Runtime.Spec.FloatReinterpret
+import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std SpecExt SpecExt.Builtins SpecExt.Builtins.Float

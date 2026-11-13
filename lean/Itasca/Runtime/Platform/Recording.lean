@@ -1,5 +1,5 @@
 import Itasca.Generated.Types
-import Itasca.Runtime.Spec.Steps
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Exact host-event instrumentation. Erasure, bind composition, partial correctness and loop transport preserve the actual recorded event sequence used by invocation constructions.

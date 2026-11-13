@@ -1,7 +1,8 @@
 import Itasca.Runtime.Store.Initialization.SegmentObjectMetadata
 import Itasca.Runtime.Store.Invariant.FunctionTypingExtension
 import Itasca.Runtime.Store.Invariant.Typing
-import Itasca.Runtime.Spec.Mutation
+import Itasca.Runtime.Spec.Integer
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

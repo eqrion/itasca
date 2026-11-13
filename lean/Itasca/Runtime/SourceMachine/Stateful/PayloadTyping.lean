@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.MemoryMutation
-import Itasca.Runtime.Spec.SegmentCopy
+import Itasca.Runtime.Spec.SegmentInitCases
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

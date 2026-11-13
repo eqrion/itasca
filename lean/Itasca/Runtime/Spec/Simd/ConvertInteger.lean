@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.CompareFloat
-import Itasca.Runtime.Spec.FloatConvert
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Spec.Simd.Choices
 import Itasca.Runtime.Spec.Simd.FloatUnary
 

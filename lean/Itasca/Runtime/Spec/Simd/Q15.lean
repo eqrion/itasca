@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.Saturation
-import Itasca.Runtime.Spec.IntegerShift
+import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Spec.Simd.CompareFloat
 
 /-!

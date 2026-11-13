@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.Trap
-import Itasca.Runtime.Spec.TableAccess
+import Itasca.Runtime.Spec.FloatPromote
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

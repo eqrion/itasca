@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
-import Itasca.Runtime.Spec.IntegerExtend
+import Itasca.Runtime.Spec.SegmentInitCases
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

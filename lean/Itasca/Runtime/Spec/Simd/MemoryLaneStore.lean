@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.MemoryLane
-import Itasca.Runtime.Spec.MemoryStore
+import Itasca.Runtime.Spec.FloatPromote
 
 /-!
 Source reduction for bounded vector lane stores.

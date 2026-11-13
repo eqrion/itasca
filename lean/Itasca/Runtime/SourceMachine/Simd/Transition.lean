@@ -1,7 +1,7 @@
 import Itasca.Runtime.SourceMachine.Simd.Signature
 import Itasca.Runtime.SourceMachine.Sim.Typed
 import Itasca.Runtime.SourceMachine.Preservation
-import Itasca.Runtime.Spec.PureWf
+import Itasca.Runtime.Spec.ModuleMembership
 
 namespace Itasca.Runtime.SourceMachine.Simd
 open SpecExt Itasca.Runtime.Spec

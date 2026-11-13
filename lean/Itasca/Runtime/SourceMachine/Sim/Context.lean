@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Step
-import Itasca.Runtime.Spec.Context
+import Itasca.Runtime.Spec.Integer
 
 namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec

@@ -1,5 +1,6 @@
-import Itasca.Runtime.Spec.Depth
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Generated.Types
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 /-- Call-stack exhaustion is bounded by decoded frame nesting; termination

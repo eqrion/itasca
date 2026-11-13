@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Sim.Basic
-import Itasca.Runtime.Spec.Globals
+import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.SourceMachine
 open SpecExt Itasca.Runtime.Spec

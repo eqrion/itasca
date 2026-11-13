@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.MemoryStore
+import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Spec.Simd.Bitwise
 
 /-!

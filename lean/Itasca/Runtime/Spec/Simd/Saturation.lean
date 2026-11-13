@@ -1,5 +1,5 @@
 import Itasca.Runtime.Spec.Simd.CompareInteger
-import Itasca.Runtime.Spec.IntegerSigned
+import Itasca.Runtime.Spec.SegmentInitCases
 
 /-!
 The source lane-clamping operation.

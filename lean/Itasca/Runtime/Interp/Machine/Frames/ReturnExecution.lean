@@ -4,7 +4,7 @@ import Itasca.Runtime.Interp.Machine.Frames.ReturnCompletion
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Machine.Control.JumpExecution
 import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Return-instruction execution in the structured machine.

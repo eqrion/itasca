@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.BulkTableLoop
-import Itasca.Runtime.Spec.SegmentCopy
+import Itasca.Runtime.Spec.SegmentInitCases
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

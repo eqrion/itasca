@@ -1,5 +1,5 @@
 import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Spec.TableInit
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Invariant.Syntax
 import Itasca.Runtime.Store.Invariant.Typing

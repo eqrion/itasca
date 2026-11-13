@@ -1,5 +1,6 @@
 import Itasca.Runtime.Store.Initialization.BulkMemory
-import Itasca.Runtime.Spec.CopyInterval
+import Itasca.Runtime.Spec.FloatPromote
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

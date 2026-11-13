@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntSigned
-import Itasca.Runtime.Spec.IntegerShift
+import Itasca.Runtime.Spec.SegmentInitCases
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

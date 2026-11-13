@@ -2,8 +2,9 @@ import Itasca.Runtime.Integration.Execution.World.NonhostStep
 import Itasca.Runtime.Integration.Host.HostSiteWorld
 import Itasca.Runtime.Integration.Execution.World.ExecutionCode
 import Itasca.Generated.Types
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Contracts
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 

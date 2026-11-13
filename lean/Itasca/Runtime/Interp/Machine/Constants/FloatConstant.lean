@@ -17,7 +17,7 @@ import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.SourceMachine.Core.Bound
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Floating-point constants through structured machine execution.

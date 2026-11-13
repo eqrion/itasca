@@ -5,7 +5,7 @@ import Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Interp.Machine.Calls.CallPoint
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Relations.SourceCallCause
 import Itasca.Runtime.Interp.Machine.Calls.PrepareCallStack
 import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Spec.Simd.FloatUnary
 import Itasca.Runtime.Spec.FloatPromote
-import Itasca.Runtime.Spec.FloatConvert
+import Itasca.Runtime.Spec.FloatTrunc
 
 /-!
 Source-rule algebra for floating-point lane promotion and demotion. Lane/list calculations establish the generated source operation and its reduction step, consumed by source-machine and interpreter correspondence proofs.

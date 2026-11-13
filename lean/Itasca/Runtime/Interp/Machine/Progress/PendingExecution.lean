@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
 import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Machine progress with a pending control continuation.

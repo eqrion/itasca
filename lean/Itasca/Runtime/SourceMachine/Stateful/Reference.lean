@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.Continuation
 import Itasca.Runtime.SourceMachine.Core.Simulation
-import Itasca.Runtime.Spec.ReferenceFunction
+import Itasca.Runtime.Spec.FloatPromote
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 

@@ -19,7 +19,7 @@ import Itasca.Runtime.Interp.Machine.Resources.CallErrors
 import Itasca.Runtime.Interp.Invocation.Divergence
 import Itasca.Runtime.Interp.Machine.Progress.ActiveLoop
 import Itasca.Runtime.Interp.Relations.TypedArguments
-import Itasca.Runtime.Spec.Invocation
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Integration.Instantiation.StartAmbient
 import Itasca.Runtime.SourceMachine.Sim.Call

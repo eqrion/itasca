@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.Spec.Globals
+import Itasca.Runtime.Spec.FloatTrunc
 import Itasca.Runtime.SourceMachine.Core.ContentExtension
 
 /-!

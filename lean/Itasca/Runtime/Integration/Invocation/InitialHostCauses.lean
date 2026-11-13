@@ -22,7 +22,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Interp.Invocation.ResourceCauses
 import Itasca.Runtime.Interp.Invocation.PrefixCauses
 import Itasca.Runtime.Integration.Api.ReadbackIssued
-import Itasca.Runtime.Spec.HostCall
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.Integration.Api.ExecutableInv
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Store.Invariant.CheckedValues

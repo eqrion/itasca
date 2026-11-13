@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntRotate
 import Itasca.Runtime.Interp.Numeric.Integer.IntSigned
 import Itasca.Runtime.SourceMachine.Numeric.Instruction
-import Itasca.Runtime.Spec.IntegerDeterminism
+import Itasca.Runtime.Spec.FloatTrunc
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

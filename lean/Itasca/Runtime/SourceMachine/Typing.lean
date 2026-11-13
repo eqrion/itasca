@@ -1,5 +1,5 @@
 import Itasca.Runtime.SourceMachine.Step
-import Itasca.Runtime.Spec.Wf
+import Itasca.Runtime.Spec.Integer
 import Itasca.Spec.TypingInversion
 
 /-! Local typing facts for the integer abstract machine. These lemmas use the

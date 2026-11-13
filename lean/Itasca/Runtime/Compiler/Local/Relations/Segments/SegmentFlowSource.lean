@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
-import Itasca.Runtime.Spec.SegmentPrograms
+import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Module.Elab.SegmentSyntax
 import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
 

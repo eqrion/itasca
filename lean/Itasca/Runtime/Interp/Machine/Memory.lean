@@ -13,7 +13,7 @@ import Itasca.Runtime.Interp.Memory.MemoryCoreStep
 import Itasca.Runtime.Interp.Memory.MemoryCoreResult
 import Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint
 import Itasca.Runtime.Interp.Machine.Control.ForwardJump
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.SourceMachine.Core.MemoryPositive
 import Itasca.Runtime.Interp.Machine.Control.UniformSource
 import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics

@@ -1,5 +1,6 @@
 import Itasca.Runtime.Interp.Numeric.Integer.IntExtend
-import Itasca.Runtime.Spec.IntegerCompareSigned
+import Itasca.Runtime.Spec.SegmentInitCases
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 

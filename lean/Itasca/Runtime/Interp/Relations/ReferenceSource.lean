@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Relations.InitializerExecute
 import Itasca.Runtime.Interp.Relations.WordEncoding
-import Itasca.Runtime.Spec.References
+import Itasca.Runtime.Spec.FloatPromote
 
 /-!
 Reference-null execution and source encoding. The null-test result and encode/decode facts connect concrete reference words to source reference values.

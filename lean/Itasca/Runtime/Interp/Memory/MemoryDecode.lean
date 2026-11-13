@@ -1,7 +1,6 @@
 import Itasca.Runtime.Interp.Memory.MemoryEncoding
-import Itasca.Runtime.Spec.MemoryLoad
-import Itasca.Runtime.Spec.SegmentCopySlice
-import Itasca.Runtime.Spec.MemoryStore
+import Itasca.Runtime.Spec.FloatTrunc
+import Itasca.Runtime.Spec.FloatPromote
 import Itasca.Runtime.Representation.Collection
 
 /-!

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Api.TableFillLoop
-import Itasca.Runtime.Spec.CopyInterval
-import Itasca.Runtime.Spec.SegmentCopySlice
+import Itasca.Runtime.Spec.FloatPromote
+import Itasca.Runtime.Spec.FloatTrunc
 
 /-!
 Table-copy loop effects for overlapping and distinct tables. Direction-specific copies establish the same source-snapshot semantics while retaining table metadata.

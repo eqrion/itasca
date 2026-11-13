@@ -1,6 +1,7 @@
 import Itasca.Runtime.SourceMachine.Stateful.TableTyping
 import Itasca.Runtime.SourceMachine.Core.ContentExtension
-import Itasca.Runtime.Spec.TableInit
+import Itasca.Runtime.Spec.FloatTrunc
+
 namespace Itasca.Runtime.SourceMachine.Stateful
 open SpecExt Itasca.Runtime.Spec
 
