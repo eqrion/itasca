@@ -36,7 +36,7 @@ interpretation and chooses the next one, agreeing on previously issued keys. `Ho
 | Contract | Obligation |
 | --- | --- |
 | `HostWorldSound` | Each call that returns preserves the invariant, extends the decoded source store and leaves it typed (`Store_ok`). |
-| frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/FrameStorePrefix.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
+| frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/StackPreservation.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
 | extern retention | A call never shrinks `store.externs`. |
 | issued results, [`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) | Every value a call returns is issued by the post-call store. |
 | limit retention | A call keeps `store.limits`. `no_spurious_errors` only. |
@@ -59,7 +59,7 @@ extension.
 | Contract | Obligation |
 | --- | --- |
 | [`SourceResourcesFit`](Integration/Invocation/SourceDemand.lean) | Every source run of the invocation, over all typed host replies, fits the value and frame limits. |
-| [`Interp.SourceCanonicalFunctionCapacity`](Interp/Relations/SourceCanonicalCapacity.lean) | The canonical slot demand of a source function, used by `SourceResourcesFit`. |
+| [`Interp.SourceCanonicalFunctionCapacity`](Interp/Relations/ArgumentRejectionKind.lean) | The canonical slot demand of a source function, used by `SourceResourcesFit`. |
 
 ## Store state
 
