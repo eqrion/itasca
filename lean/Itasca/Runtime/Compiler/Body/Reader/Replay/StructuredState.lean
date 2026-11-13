@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps

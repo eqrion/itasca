@@ -3,7 +3,7 @@ import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

@@ -1,10 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredLinearEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata

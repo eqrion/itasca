@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Control.Simd.StructuredSimdEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation

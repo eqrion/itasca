@@ -1,10 +1,9 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
 
 /-!
 Source-typed stateful metadata readers check every newly emitted word and retain both pending instruction checks and the slots of recorded exits.

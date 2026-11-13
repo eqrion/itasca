@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation
 import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!

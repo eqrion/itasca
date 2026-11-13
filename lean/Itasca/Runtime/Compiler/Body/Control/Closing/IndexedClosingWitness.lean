@@ -6,7 +6,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedFold
-import Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointIndirectCall
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Float.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation

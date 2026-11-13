@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSafetyWasm2
 import Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Runtime.Compiler.Body.Relations.Replay.ReachedCompilerLedger
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability

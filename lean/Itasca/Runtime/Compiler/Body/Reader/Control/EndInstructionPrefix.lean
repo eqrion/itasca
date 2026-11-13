@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 

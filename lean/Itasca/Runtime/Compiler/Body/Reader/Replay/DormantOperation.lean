@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixObserve
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement

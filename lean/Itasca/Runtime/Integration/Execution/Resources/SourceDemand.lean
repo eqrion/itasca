@@ -75,7 +75,7 @@ import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.Integration.Execution.Dispatch.Scalar

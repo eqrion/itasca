@@ -12,7 +12,7 @@ import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands

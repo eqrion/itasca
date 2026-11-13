@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 
 /-!

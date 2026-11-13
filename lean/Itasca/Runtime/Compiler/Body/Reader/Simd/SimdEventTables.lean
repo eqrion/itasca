@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Prefix
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent
 
 /-!

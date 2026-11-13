@@ -7,7 +7,7 @@ import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
-import Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion

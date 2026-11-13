@@ -1,7 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndDormantPrefix
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseLoop
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseIf
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseElse
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack

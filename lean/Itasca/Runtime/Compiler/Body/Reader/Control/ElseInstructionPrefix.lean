@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.ElseExitSlotBounds
 import Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper

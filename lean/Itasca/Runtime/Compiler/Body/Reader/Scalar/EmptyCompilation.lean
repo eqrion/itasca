@@ -1,7 +1,7 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixAdvance
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredLinearEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.DeadBasicPrefix
 

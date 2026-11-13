@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse
 

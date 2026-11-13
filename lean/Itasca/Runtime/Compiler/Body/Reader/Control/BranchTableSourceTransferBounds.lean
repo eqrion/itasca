@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 
 /-!

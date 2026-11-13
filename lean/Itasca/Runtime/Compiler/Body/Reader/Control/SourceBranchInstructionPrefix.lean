@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix

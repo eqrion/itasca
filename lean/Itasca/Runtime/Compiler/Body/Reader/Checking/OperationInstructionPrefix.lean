@@ -26,7 +26,7 @@ import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Checking.CoreInstructionPrefix
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 
 /-!
 Checked instruction prefixes for integer, float and memory reader operations. Live emission and dormant-source cases establish the common reader checking result.

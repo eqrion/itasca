@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
 import Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 

@@ -1,7 +1,7 @@
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Visitor.ReaderAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

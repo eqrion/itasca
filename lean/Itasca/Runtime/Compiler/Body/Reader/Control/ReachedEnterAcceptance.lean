@@ -2,7 +2,7 @@ import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterSafety
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace

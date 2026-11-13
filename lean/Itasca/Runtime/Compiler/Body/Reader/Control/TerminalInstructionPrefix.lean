@@ -9,7 +9,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 
 /-!
