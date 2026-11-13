@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
-import Itasca.Wasm2.Bulk.Dispatch
+import Itasca.Wasm2.Bulk.Total
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
 
 /-!

@@ -3,7 +3,7 @@ import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.Events
 import Itasca.Wasm2.Step.Dispatch
 import Itasca.Runtime.Compiler.Local.Control.Syntax.BulkAndSaturating
-import Itasca.Wasm2.Bulk.Dispatch
+import Itasca.Wasm2.Bulk.Total
 
 /-!
 Sections, each formerly its own module: ProfileAgreement, BulkAndSaturatingAcceptance.

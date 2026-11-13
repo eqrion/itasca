@@ -1,6 +1,6 @@
 import Itasca.Wasm2.Simd.Sound
 import Itasca.Wasm2.Bulk.Step
-import Itasca.Wasm2.Bulk.Dispatch
+import Itasca.Wasm2.Bulk.Total
 import Itasca.Wasm2.NumericExt.Sound
 
 /-!

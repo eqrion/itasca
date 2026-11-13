@@ -2,7 +2,7 @@ import Itasca.Wasm2.References.ReadersComplete
 import Itasca.Wasm2.Complete.Frame
 import Itasca.Wasm2.Step.Context
 import Itasca.Wasm2.Step.Dispatch
-import Itasca.Wasm2.Bulk.Dispatch
+import Itasca.Wasm2.Bulk.Total
 
 /-!
 # Completeness of reference and table instructions
