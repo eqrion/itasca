@@ -11,7 +11,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState

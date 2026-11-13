@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntrySignatures
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterSafety

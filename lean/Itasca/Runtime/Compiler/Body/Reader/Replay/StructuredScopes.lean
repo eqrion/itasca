@@ -15,7 +15,7 @@ import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot

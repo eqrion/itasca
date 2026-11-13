@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixObserv
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 
 /-!
 Dormant structured prefixes for omitted source operations.

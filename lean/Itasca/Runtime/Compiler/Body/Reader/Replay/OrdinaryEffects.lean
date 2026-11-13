@@ -27,7 +27,7 @@ import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
@@ -35,7 +35,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts

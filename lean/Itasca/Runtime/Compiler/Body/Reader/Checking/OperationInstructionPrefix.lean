@@ -5,7 +5,6 @@ import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels

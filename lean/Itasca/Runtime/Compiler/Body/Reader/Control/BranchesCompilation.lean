@@ -15,7 +15,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
 import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
 
 /-!
