@@ -1,5 +1,4 @@
 import Itasca.Runtime.Spec.Simd.Pairwise
-import Itasca.Runtime.Interp.Numeric.Float.FloatTrunc32
 import Itasca.Runtime.Interp.Numeric.Float.FloatTrunc64
 import Itasca.Runtime.Interp.Simd.Float.CompareLanes
 import Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes

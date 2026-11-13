@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Numeric.Float.FloatCompare
+import Itasca.Runtime.Interp.Numeric.Float.FloatPromote
 import Itasca.Runtime.Spec.Simd.ExtendLanes
 
 /-!
