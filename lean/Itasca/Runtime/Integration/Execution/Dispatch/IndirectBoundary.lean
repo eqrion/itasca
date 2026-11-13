@@ -13,7 +13,7 @@ import Itasca.Runtime.Interp.State.StatefulSegmentLookup
 import Itasca.Runtime.Interp.State.TableSource
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Machine.Frames.SourceBase
-import Itasca.Runtime.Integration.Execution.Resources.Failure
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
 import Itasca.Runtime.SourceMachine.Cumulative.Step
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered

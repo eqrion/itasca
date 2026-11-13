@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.World.RecordedStep
-import Itasca.Runtime.Integration.Execution.Resources.FailureNormalization
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Interp.Relations.StepActive
 
 namespace Itasca.Runtime.Integration

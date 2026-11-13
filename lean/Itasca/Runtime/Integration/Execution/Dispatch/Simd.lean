@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
-import Itasca.Runtime.Integration.Execution.Resources.Failure
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution

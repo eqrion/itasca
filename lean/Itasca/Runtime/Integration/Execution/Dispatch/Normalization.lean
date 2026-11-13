@@ -5,7 +5,7 @@ import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
-import Itasca.Runtime.Integration.Execution.Resources.FailureNormalization
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 
 /-!
 Sections, each formerly its own module: BranchTable, IndirectExecution, Measure, Normalization.

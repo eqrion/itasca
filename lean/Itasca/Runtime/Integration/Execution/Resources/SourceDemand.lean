@@ -1,3 +1,5 @@
+import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
@@ -60,7 +62,6 @@ import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Interp.Machine.Frames.FrameDepth
 import Itasca.Runtime.Interp.Machine.History.Append
 import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
@@ -81,10 +82,67 @@ import Itasca.Runtime.Integration.Execution.Dispatch.Simd
 import Itasca.Runtime.Integration.Execution.Dispatch.Host
 import Itasca.Runtime.Integration.Execution.Dispatch.TypedSelect
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
-import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
-import Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses
 import Itasca.Runtime.Interp.Relations.ArgumentRejectionKind
 import Itasca.Runtime.Store.Invariant.FunctionCapacities
+
+/-!
+Sections, each formerly its own module: BoundaryCauses, SourceDemand.
+-/
+
+/-! ## BoundaryCauses -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
+
+/-- Both direct and selected indirect calls explain exhaustion by decoded
+source FRAME_ nesting at the actual failure site. -/
+theorem CumulativeFailure.frame_depth
+    {M P A : Type} {allocator : runtime.platform.Alloc A}
+    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {sourceStore : _root_.store}
+    (stack : Machine.FrameStackRel store sourceStore exec source.frames)
+    (failure : CumulativeFailure allocator hooks exec store platform source (.Exhausted .CallStack)) :
+    store.limits.max_frames.val ≤ Spec.frameDepth (SourceMachine.decode source) := by
+  rcases failure with ⟨⟨trap,kind,_⟩,_⟩ | ⟨kind,_⟩ | rejected
+  · cases kind
+  · cases kind
+  · obtain ⟨index,raw,inst,compiled,_,_,_,_,cause⟩ := rejected
+    rcases cause with direct | ⟨code,indirect⟩
+    · obtain ⟨target,offset,pc,address,base,function,ii,fi,callee,calleeCode,
+        fetch,resolved,found,defined,hi,hc,baseEq,pcEq,cause⟩ := direct.concrete
+      change store.limits.max_frames.val ≤ (exec.frames.set index {raw with pc:=pc}).length at cause
+      simpa only [alloc.vec.Vec.set_length, stack.depth] using cause
+    · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,
+        fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
+      change store.limits.max_frames.val ≤ (exec.frames.set index {raw with pc:=pc}).length at cause
+      simpa only [alloc.vec.Vec.set_length, stack.depth] using cause
+
+/-- A termination result retains the exact interrupt decision, including calls. -/
+theorem CumulativeFailure.interrupted {M P A : Type} {allocator : runtime.platform.Alloc A}
+    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState}
+    (failure : CumulativeFailure allocator hooks exec store platform source .Terminated) :
+    ∃ after, hooks.interrupt platform = .ok (.Terminate,after) := by
+  rcases failure with ⟨⟨trap,kind,_⟩,_⟩ | ⟨kind,decision⟩ | rejected
+  · cases kind
+  · exact decision
+  · obtain ⟨index,raw,inst,compiled,_,_,_,_,cause⟩ := rejected
+    rcases cause with direct | ⟨code,indirect⟩
+    · obtain ⟨target,offset,pc,address,base,function,ii,fi,callee,calleeCode,
+        fetch,resolved,found,defined,hi,hc,baseEq,pcEq,cause⟩ := direct.concrete
+      exact cause
+    · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,
+        fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
+      exact cause
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## SourceDemand -/
+
+section
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
@@ -130,3 +188,5 @@ theorem CumulativeFailure.source_allocation {M P A : Type} {allocator : runtime.
     · exact indirect.source_allocation view code decoded capacities typed
 
 end Itasca.Runtime.Integration
+
+end

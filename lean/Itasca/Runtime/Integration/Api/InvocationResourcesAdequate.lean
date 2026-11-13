@@ -1,7 +1,7 @@
 import Itasca.Runtime.Integration.Api.InitialHostInvocationCauses
 import Itasca.Runtime.Integration.Execution.Resources.DispatchCauses
 import Itasca.Runtime.Integration.Api.InvocationEntryResources
-import Itasca.Runtime.Integration.Execution.Resources.Failure
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
@@ -33,7 +33,6 @@ import Itasca.Runtime.SourceMachine.Supported.PureCoverage
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
-import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
 import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Interp.Calls.IndirectResolve
 

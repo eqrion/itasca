@@ -1,7 +1,156 @@
-import Itasca.Runtime.Integration.Execution.Resources.FailureErrors
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Execution
+import Itasca.Runtime.SourceMachine.Cumulative.Step
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
+import Itasca.Runtime.Interp.Relations.StepActive
+import Itasca.Runtime.Interp.Machine.Outcomes.ScalarTraps
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
+import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Interp.Relations.SuspendedPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Interp.Machine.Frames.Reposition
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.SourceMachine.Ownership.Extension
+import Itasca.Runtime.Interp.Machine.Mutation.Core
+import Itasca.Runtime.Interp.Relations.SourceCallCause
+import Itasca.Runtime.Interp.Control.NormalizeCompose
+import Itasca.Runtime.Interp.Machine.Retention.StatefulOwnership
+import Itasca.Runtime.Interp.Machine.Resources.CallErrors
 import Itasca.Runtime.Interp.Host.HostReturnFrames
 import Itasca.Runtime.Spec.SegmentInitCases
 import Itasca.Runtime.Integration.Host.HostCallContext
+
+/-!
+Sections, each formerly its own module: Failure, FailureNormalization, FailureErrors, InvocationErrors.
+-/
+
+/-! ## Failure -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
+
+def CumulativeTrap (trap : runtime.Trap) : Prop := FloatCoreTrap trap ∨ trap = .TableOutOfBounds ∨ trap = .UninitializedElement ∨ trap = .IndirectCallTypeMismatch
+
+def CumulativeFailure {M P A : Type} (allocator : runtime.platform.Alloc A)
+    (hooks : runtime.platform.Platform P M) (exec : runtime.interp.Execution)
+    (store : runtime.store.Store M) (platform : P) (source : SourceMachine.AState)
+    (error : runtime.ExecError) : Prop :=
+  ((∃ trap,error=.Trap trap ∧ CumulativeTrap trap) ∧ ∃ n,0<n ∧ Spec.StepsHN n (SourceMachine.decode source) []
+    ⟨⟨source.store,source.ambient⟩,[.TRAP]⟩) ∨
+  (error=.Terminated ∧ ∃ after,hooks.interrupt platform=.ok (.Terminate,after)) ∨
+  ∃ index raw inst compiled,
+    index.val+1=exec.frames.length ∧ exec.frames.val[index.val]?=some raw ∧
+    store.instances.val[raw.instance.val]?=some inst ∧ inst.module.functions.val[raw.function.val]?=some compiled ∧
+    (SourceDirectCallCause allocator hooks exec store platform index raw inst compiled source error ∨
+      ∃ code, SourceIndirectCallCause allocator hooks code exec store platform index raw compiled source error)
+
+variable {M P A : Type} {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
+  {view : M → Slice U8} {code : Store.CodeInterpretation} {exec : runtime.interp.Execution}
+  {store : runtime.store.Store M} {platform : P} {expected : List valtype}
+  {codeLength pc : Nat} {pending : Bool} {source : SourceMachine.AState}
+  {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
+
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## FailureNormalization -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
+
+theorem CumulativeFailure.prepend_normalization {M P A : Type} {allocator : runtime.platform.Alloc A}
+    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {platform : P} {error : runtime.ExecError}
+    {count : Nat} {before middle : SourceMachine.AFrame} {s : _root_.store} {ambient : frame} {rest : List SourceMachine.AFrame}
+    (chain : ErasedSteps count before middle)
+    (typed : SourceMachine.ATyped ⟨s, ambient, before :: rest, []⟩)
+    (failure : CumulativeFailure allocator hooks exec store platform ⟨s, ambient, middle :: rest, []⟩ error) :
+    CumulativeFailure allocator hooks exec store platform ⟨s, ambient, before :: rest, []⟩ error := by
+  rcases failure with ⟨kind, n, positive, steps⟩ | interrupted | rejected
+  · refine Or.inl ⟨kind, ?_⟩
+    rcases (chain.sound s ambient rest typed).2 with ⟨_, same⟩ | simulation
+    · exact ⟨n, positive, by simpa only [same] using steps⟩
+    · rcases simulation with ⟨same, _⟩ | ⟨m, hm, reductions⟩
+      · exact ⟨n, positive, by simpa only [same] using steps⟩
+      · exact ⟨m + n, by omega, by simpa using reductions.trans steps⟩
+  · exact Or.inr (Or.inl interrupted)
+  · obtain ⟨index, raw, inst, compiled, last, frameFound, instanceFound, codeFound, cause⟩ := rejected
+    refine Or.inr (Or.inr ⟨index, raw, inst, compiled, last, frameFound, instanceFound, codeFound, ?_⟩)
+    have counted : ∃ n, Spec.StepsHN n (SourceMachine.decode ⟨s, ambient, before :: rest, []⟩) []
+        (SourceMachine.decode ⟨s, ambient, middle :: rest, []⟩) := by
+      rcases (chain.sound s ambient rest typed).2 with ⟨_, same⟩ | simulation
+      · subst middle
+        exact ⟨0, .refl typed.decode_wf⟩
+      · rcases simulation with ⟨same, _⟩ | ⟨n, positive, reductions⟩
+        · exact ⟨0, by rw [← same]; exact .refl typed.decode_wf⟩
+        · exact ⟨n, reductions⟩
+    obtain ⟨n, steps⟩ := counted
+    rcases cause with direct | ⟨code,indirect⟩
+    · exact Or.inl (direct.prepend steps rfl rfl)
+    · exact Or.inr ⟨code,indirect.prepend steps rfl rfl⟩
+
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## FailureErrors -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std Itasca.Runtime.Interp
+
+/-- Every Core integer, control, global, and memory trap has a positive checked source execution to
+`TRAP`; boundary and resource failures cannot masquerade as traps. -/
+theorem CumulativeFailure.trap {M P A : Type} {allocator : runtime.platform.Alloc A}
+    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {trap : runtime.Trap}
+    (failure : CumulativeFailure allocator hooks exec store platform source (.Trap trap)) :
+    CumulativeTrap trap ∧ ∃ count, 0 < count ∧
+      Spec.StepsHN count (SourceMachine.decode source) [] ⟨⟨source.store, source.ambient⟩, [.TRAP]⟩ := by
+  rcases failure with ⟨kind, reductions⟩ | ⟨kind, interrupted⟩ | rejected
+  · obtain ⟨actual, same, allowed⟩ := kind
+    cases same
+    exact ⟨allowed, reductions⟩
+  · cases kind
+  · obtain ⟨index, raw, inst, compiled, _, _, _, _, cause⟩ := rejected
+    rcases cause with direct | ⟨code,indirect⟩
+    · simpa using direct.concrete.kind
+    · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
+      simpa using cause.kind
+
+/-- No other runtime error class is reachable in the verified Core machine. -/
+theorem CumulativeFailure.kind {M P A : Type} {allocator : runtime.platform.Alloc A}
+    {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {error : runtime.ExecError}
+    (failure : CumulativeFailure allocator hooks exec store platform source error) :
+    (∃ trap, error = .Trap trap ∧ CumulativeTrap trap) ∨ error = .Terminated ∨ error = .Exhausted .CallStack ∨
+      error = .Exhausted .Values ∨ error = .Exhausted .Allocation := by
+  rcases failure with ⟨kind, _⟩ | ⟨kind, _⟩ | rejected
+  · exact Or.inl kind
+  · exact Or.inr (Or.inl kind)
+  · obtain ⟨index, raw, inst, compiled, _, _, _, _, cause⟩ := rejected
+    rcases cause with direct | ⟨code,indirect⟩
+    · exact Or.inr direct.concrete.kind
+    · obtain ⟨entry,selector,offset,table,type,pc,address,base,function,ii,fi,inst,callee,fetch,pair,found,defined,hi,hc,baseEq,pcEq,cause,site⟩ := indirect
+      exact Or.inr cause.kind
+
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## InvocationErrors -/
+
+section
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
@@ -85,3 +234,5 @@ theorem host_frame_eventful_error {M P : Type} {view : M → Slice U8} {code : S
     simpa only [hostCallFrameResult,failed] using steps
 
 end Itasca.Runtime.Integration
+
+end
