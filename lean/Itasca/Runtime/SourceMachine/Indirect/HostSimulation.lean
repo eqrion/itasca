@@ -1,13 +1,13 @@
 import Itasca.Runtime.Spec.ModuleMembership
 import Itasca.Runtime.SourceMachine.Sim.Structured
-import Itasca.Runtime.SourceMachine.Stateful.TableTyping
+import Itasca.Runtime.SourceMachine.Stateful.TableRead
 import Itasca.Runtime.SourceMachine.Core.Trap
 import Itasca.Runtime.SourceMachine.Ownership.Extension
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Stateful.Descriptor
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
+import Itasca.Runtime.SourceMachine.Stateful.Signature
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.SourceMachine.BrTable
 import Itasca.Runtime.SourceMachine.Sim.Control
 

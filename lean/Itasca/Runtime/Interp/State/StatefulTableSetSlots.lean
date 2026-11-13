@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.State.TableMutation
-import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.Interp.State.StatefulOperandSlots
 
 /-!

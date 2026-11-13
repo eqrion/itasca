@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Progress.Advance
 import Itasca.Runtime.Interp.Machine.Control.UniformSimulation
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
 
 /-!
 The existing mutable advance, with the same endpoint and a uniform silent rank.

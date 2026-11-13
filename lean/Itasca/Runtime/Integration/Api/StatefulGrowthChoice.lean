@@ -1,4 +1,5 @@
-import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.SourceMachine.Stateful.Bound
+
 namespace Itasca.Runtime.Integration
 open SpecExt
 

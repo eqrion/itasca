@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.State.TableAccess
 import Itasca.Runtime.Interp.Memory.MemorySize
-import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.Interp.Relations.InitializerExecute
 import Itasca.Runtime.Interp.Relations.ReferenceSource
 import Itasca.Runtime.Spec.FloatPromote

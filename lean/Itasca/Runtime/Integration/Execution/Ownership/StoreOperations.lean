@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Execution.Ownership.Entry
-import Itasca.Runtime.SourceMachine.Stateful.Ownership
+import Itasca.Runtime.SourceMachine.Stateful.Bound
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

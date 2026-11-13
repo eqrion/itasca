@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.SourceMachine.Stateful.Continuation
-import Itasca.Runtime.SourceMachine.Stateful.SignatureTyping
+import Itasca.Runtime.SourceMachine.Stateful.TableRead
+
 namespace Itasca.Runtime.Interp.Stateful
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
 

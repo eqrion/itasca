@@ -1,5 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.SourceMachine.Stateful.Bound
 import Itasca.Runtime.Compiler.Local.Capacity.OperandBounds
 import Itasca.Runtime.Interp.State.StatefulLookup
 import Itasca.Runtime.Interp.State.StatefulReferenceValue

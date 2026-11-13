@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
-import Itasca.Runtime.SourceMachine.Stateful.SignatureTyping
+import Itasca.Runtime.SourceMachine.Stateful.TableRead
 
 /-!
 A stateful source reader advances the exact supplied zipper in all paths; live concrete operands additionally expose its context-derived signature.

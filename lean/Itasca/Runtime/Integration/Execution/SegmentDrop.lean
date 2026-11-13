@@ -1,6 +1,7 @@
 import Itasca.Runtime.Store.Initialization.SegmentDrop
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
-import Itasca.Runtime.SourceMachine.Stateful.Transition
+import Itasca.Runtime.SourceMachine.Stateful.Bound
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 

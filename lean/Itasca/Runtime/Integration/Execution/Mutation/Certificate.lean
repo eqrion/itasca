@@ -2,7 +2,7 @@ import Itasca.Runtime.Store.Initialization.SegmentCounts
 import Itasca.Runtime.Interp.Machine.Functions.Typing
 import Itasca.Runtime.SourceMachine.Measure
 import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Stateful.Descriptor
+import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.Interp.Relations.CompiledFunctions
 import Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext
 import Itasca.Runtime.Integration.Execution.Ownership.Contents

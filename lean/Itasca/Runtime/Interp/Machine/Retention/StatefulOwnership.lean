@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Machine.Retention.Ownership
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
 import Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound

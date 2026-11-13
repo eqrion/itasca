@@ -1,6 +1,6 @@
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.SourceMachine.Ownership.Extension
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
 
 /-!
 A returned mutable-machine step retains the complete current state, source simulation and reference provenance for every initial issued bound.

@@ -1,4 +1,4 @@
-import Itasca.Runtime.SourceMachine.Stateful.Descriptor
+import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Generated.Types
 
 /-!
