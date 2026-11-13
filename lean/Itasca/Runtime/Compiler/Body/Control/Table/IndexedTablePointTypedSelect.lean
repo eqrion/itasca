@@ -3,7 +3,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectAndSignCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Float.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation
 import Itasca.Runtime.Compiler.Body.Reader.References.StructuredCompilerTypedSelect
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedScratch

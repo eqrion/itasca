@@ -7,7 +7,7 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
+import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Visitor.EventDispatch
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
 import Itasca.Visitor.Erasure
