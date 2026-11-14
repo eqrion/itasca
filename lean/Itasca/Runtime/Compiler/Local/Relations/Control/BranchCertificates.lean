@@ -21,10 +21,14 @@ theorem compiler_enter_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' cursor_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' cursor_step accepted using ops, law
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).2.2 rfl
+  have effect := compiler_observe ops law middle state
+  rw [observed, WP.spec_ok] at effect
+  exact (effect rfl).2.2.2.2.2.2.2.2.1
+
+
 theorem compiler_branch_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (depth skip : U32) (conditional : Bool)
@@ -78,8 +82,23 @@ theorem compiler_enter_sources {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' sources_step accepted using ops, law
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).2.2 rfl
+  have publication := publish law
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  unfold SourceProgress
+  rw [observedFrame]
+  change middle.function.code.val.length + before.function.source_offsets.val.length =
+    before.function.code.val.length + middle.function.source_offsets.val.length
+  have lengths := congrArg List.length publication.sources
+  simp only [List.length_map, List.length_append] at lengths
+  rw [publication.code, List.length_append]
+  omega
+
+
 theorem compiler_branch_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (depth skip : U32) (conditional : Bool)

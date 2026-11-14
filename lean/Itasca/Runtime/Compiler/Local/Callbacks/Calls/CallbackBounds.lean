@@ -151,20 +151,7 @@ theorem ObservedStack.operand_le_height {A} {compiler : runtime.compiler.Functio
   exact ⟨by simpa [locals] using offsets,
     by simpa [locals, observed_height_stack_words] using height⟩
 
-@[step] theorem operand_at_total (before : Slice U32) (depth : Usize) :
-    runtime.compiler.operand_at before depth ⦃ out =>
-      ∀ word, out = .Ok word → word ∈ before.val ⦄ := by
-  by_cases zero : depth = 0#usize
-  · simp [runtime.compiler.operand_at, zero, WP.spec_ok]
-  · by_cases large : depth > Slice.len before
-    · simp [runtime.compiler.operand_at, zero, large, WP.spec_ok]
-    · have positive : 0 < depth.val := by scalar_tac
-      have fits : depth.val ≤ before.val.length := by scalar_tac
-      step with operand_at before depth positive fits as ⟨out, exactValue⟩
-      rename_i word success
-      rw [success] at exactValue
-      cases exactValue
-      exact List.getElem_mem _
+
 
 end Itasca.Runtime.Compiler
 

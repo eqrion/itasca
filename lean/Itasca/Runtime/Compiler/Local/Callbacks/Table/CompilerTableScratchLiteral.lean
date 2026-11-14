@@ -158,10 +158,12 @@ theorem compiler_enter_depths {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' scratch_preservation_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' scratch_preservation_step accepted using ops, law
+  clear law
+  have frame := (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).1
+  change after = _ at frame
+  rw [frame]
+
+
 theorem compiler_end_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)

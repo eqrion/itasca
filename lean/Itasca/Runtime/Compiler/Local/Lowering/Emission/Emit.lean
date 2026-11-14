@@ -60,6 +60,13 @@ def Emitted {A : Type} (before after : runtime.compiler.FunctionCompiler A)
       before.function.source_offsets.val.map (fun word => word.val) ++
         [before.function.body_start.val + before.next_source.val]
 
+@[step] theorem compiler_operand_total {A} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (depth : Usize) :
+    runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ out =>
+      ∀ word, out = .Ok word → word ∈ compiler.before.val ⦄ := by
+  simpa [runtime.compiler.FunctionCompiler.operand, alloc.vec.Vec.deref] using
+    operand_at_total compiler.before.deref depth
+
 /-- A representable bytecode PC excludes the actual instruction-index rejection. -/
 theorem compiler_pc_available {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A)

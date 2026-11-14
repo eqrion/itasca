@@ -1,20 +1,20 @@
 {
-  "all_goals": 1201,
-  "bare_simp": 8798,
-  "extra_unfold_files": 1339,
+  "all_goals": 1183,
+  "bare_simp": 8752,
+  "extra_unfold_files": 1317,
   "extracted_functions_unfolded": 777,
-  "extracted_functions_unfolded_in_3_or_more_files": 256,
-  "handwritten_lines": 286757,
-  "heartbeat_overrides": 265,
+  "extracted_functions_unfolded_in_3_or_more_files": 254,
+  "handwritten_lines": 287705,
+  "heartbeat_overrides": 259,
   "layer_violations": 0,
   "lean_lines_by_area": {
-    "compiler": 96553,
+    "compiler": 97501,
     "interp": 48381,
     "store": 28778,
     "validator": 61179
   },
   "lean_lines_per_rust_line": {
-    "compiler": 46.6,
+    "compiler": 47.1,
     "interp": 19.3,
     "store": 30.8,
     "validator": 11.3
@@ -22,11 +22,11 @@
   "max_import_depth": 64,
   "max_theorem_binders": 56,
   "max_unfold_files": 31,
-  "median_module_lines": 249.0,
-  "modules": 788,
+  "median_module_lines": 250,
+  "modules": 789,
   "modules_over_1500_lines": 1,
   "modules_under_50_lines": 53,
-  "recdepth_overrides": 335,
+  "recdepth_overrides": 331,
   "rust_lines_by_area": {
     "compiler": 2070,
     "interp": 2511,
@@ -34,6 +34,6 @@
     "validator": 5397
   },
   "sorry": 0,
-  "theorems": 8970,
+  "theorems": 8997,
   "theorems_with_15_or_more_binders": 1010
 }

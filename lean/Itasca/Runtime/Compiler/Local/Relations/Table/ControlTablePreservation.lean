@@ -564,10 +564,13 @@ theorem compiler_enter_tables {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     (CompilerTables.ofFunction after.function) = (CompilerTables.ofFunction before.function) := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' table_preservation_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' table_preservation_step accepted using ops, law
+  clear law
+  have frame := (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).1
+  change after = _ at frame
+  rw [frame]
+  rfl
+
+
 theorem compiler_branch_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (depth skip : U32) (conditional : Bool)

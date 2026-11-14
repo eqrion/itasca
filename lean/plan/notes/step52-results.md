@@ -20,6 +20,9 @@ All thirteen pass. The three contracts use only standard axioms. Lint, links,
 and whitespace checks pass. Full consumer integration and the headline audit
 remain batched at step 5.4, under the approved validation schedule.
 
-Cached per-module profiling took 7.54 seconds before and 7.03 seconds after.
+Cached per-module profiling took 7.54 seconds before and 7.03 seconds after step 5.2. The final pilot profile is 7.10 seconds.
 The metrics scanner now reports emit unfolding in only its owner module;
 extra_unfold_files falls from 1357 to 1339 and bare_simp from 8815 to 8798.
+
+Checkpoint validation: cached `just prove` passes all 4,069 jobs; `just lint`
+and `just audit` pass. The headline audit is unchanged.

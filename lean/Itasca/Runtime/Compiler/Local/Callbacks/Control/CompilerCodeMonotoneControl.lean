@@ -807,10 +807,19 @@ theorem compiler_enter_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' code_mono_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' code_mono_step accepted using ops, law
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).2.2 rfl
+  have publication := publish law
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  rw [observedFrame]
+  change before.function.code.val.length ≤ middle.function.code.val.length
+  rw [publication.code, List.length_append]
+  omega
+
+
 theorem compiler_end_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)

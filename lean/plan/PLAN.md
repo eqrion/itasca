@@ -1167,6 +1167,8 @@ after (`just profile Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit`).
 
 ### 5.3 Pilot B: `enter`
 
+Completed 2026-11-13: [contracts and checkpoint measurements](notes/step53-results.md).
+
 `runtime.compiler.control.FunctionCompiler.enter` (Rust
 `src/runtime/compiler/control.rs`) is unfolded by 20 theorems in 18 files
 (section 1.2). It calls `emit`, `pc`, `observe` and pushes a control frame; it

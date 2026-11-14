@@ -24,3 +24,6 @@ During validation, idle MCP language-server sessions retained many large file
 workers. Restarting only those verified project-specific server process groups
 released memory; automatic tool reconnection passed. The active build and all
 compiled caches were preserved.
+
+Checkpoint validation: cached `just prove` passes all 4,069 jobs; `just lint`
+and `just audit` pass. The headline audit is unchanged.

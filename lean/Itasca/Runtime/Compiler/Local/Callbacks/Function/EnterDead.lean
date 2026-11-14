@@ -54,8 +54,6 @@ Main declarations: `enter_dead`. A direct consumer is `Compiler.Local.Callbacks.
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000 in
-set_option maxRecDepth 4096 in
 @[step] theorem enter_dead {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (ctrl : Itasca.code.Ctrl) (prior : List Itasca.code.Ctrl)
@@ -82,69 +80,56 @@ set_option maxRecDepth 4096 in
           out.2.function.controls.val = compiler.function.controls.val ++
             [⟨kind, source, 0#usize, UScalar.cast .Usize pc, 0#usize,
               ctrl.value_stack_base, signature.params, signature.results⟩] ⦄ := by
-  cases kindEq : kind
-  all_goals
-    have nonempty : alloc.vec.Vec.len state.ctrls ≠ 0#usize := by
-      intro eq
-      have := congrArg UScalar.val eq
-      simp [alloc.vec.Vec.len, controls] at this
-    unfold runtime.compiler.control.FunctionCompiler.enter
-    rw [if_neg nonempty]
-    step as ⟨last, hlast⟩
-    have atLast : last.val = prior.length := by simp [alloc.vec.Vec.len, controls] at hlast; omega
-    step as ⟨actual, hactual⟩
-    have actualEq : actual = ctrl := by simpa [atLast, controls] using hactual
-    rw [actualEq]
-    step with block_signature compiler.signatures bt signature selected as ⟨sig, hsig⟩
-    subst sig
-    step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots (by simpa [alloc.vec.Vec.deref] using valuesFit) (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height, hheight⟩
-    step as ⟨source, hsource⟩
-    simp only [kindEq, bind_ok,
-      reachable, Bool.false_eq_true, ite_false, ite_true]
-    rw [compiler_pc_eq ops compiler pc position]
-    simp only [bind_ok, core.result.Result.Insts.CoreOpsTry.branch, reachable,
-      Bool.false_eq_true, ite_false, ite_true]
-    change WP.spec (Aeneas.Std.bind (core.result.Result.Insts.CoreOpsTry.branch (.Ok pc)) _) _
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    try (change WP.spec (if compiler.reachable = true then _ else _) _; rw [if_neg (by simp [reachable])])
-    step with charge_control ops compiler.budget as ⟨charged, budget⟩
-    cases charged with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok value =>
-      cases value
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨start, hstart⟩
-      have pushMap := budget_push ops law budget compiler.function.controls
-        ⟨kind, source, 0#usize, start, 0#usize, ctrl.value_stack_base, signature.params, signature.results⟩ mapsFit
-      simp only [kindEq] at pushMap
-      step with pushMap as ⟨result, budget1, maps, pushed⟩
-      rcases pushed with ⟨rfl, rfl, mapAppend⟩ | ⟨rfl, rfl, rejected⟩
-      · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-        have pushFrame := budget_push ops law budget1 compiler.frames
-          ⟨alloc.vec.Vec.len compiler.function.controls, kind, height, signature.param_slots,
-            signature.result_slots, pc, none, compiler.reachable, false, alloc.vec.Vec.new Usize⟩ framesFit
-        simp only [kindEq] at pushFrame
-        step with pushFrame as ⟨result, budget2, frames, pushed⟩
-        rcases pushed with ⟨rfl, rfl, frameAppend⟩ | ⟨rfl, rfl, rejected⟩
-        · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-          step with compiler_observe ops law
-            { compiler with budget := budget2, function := { compiler.function with controls := maps }, frames }
-            state as ⟨output, observed, accepted⟩
-          obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-          refine ⟨hcode, ?_, height, source, (by simpa [alloc.vec.Vec.deref] using hheight), hsource, ?_, ?_⟩
-          · simpa [reachable] using hr
-          · simpa [hframes, reachable] using frameAppend
-          · rw [hcontrols]
-            rw [mapAppend]
-            have startEq : start = UScalar.cast .Usize pc := by
-              apply UScalar.eq_of_val_eq
-              rw [hstart]
-            rw [startEq]
-        · simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      · simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  have bounds : EnterTotalBounds compiler kind := by
+    refine ⟨?_, ?_, sourceFits, mapsFit, framesFit, ?_⟩
+    · have bounded := pc.hmax
+      scalar_tac
+    · intro live
+      simp only [reachable, Bool.false_eq_true] at live
+    · intro live
+      simp only [reachable, Bool.false_eq_true] at live
+  have total := runtime.compiler.control.FunctionCompiler.enter.total ops compiler state kind bt
+    ⟨prior, ctrl, signature, controls, selected, valuesFit, heightFits⟩ (Or.inl ⟨law, bounds⟩)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists total
+  rw [called, WP.spec_ok]
+  intro success
+  change status = .Ok () at success
+  subst status
+  obtain ⟨priorFound, ctrlFound, sigFound, height, startPc, condition, source, middle,
+    controlsFound, selectedFound, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops compiler after state kind bt (.Ok ()) called).2.2 rfl
+  have controlEq : ctrlFound = ctrl := by
+    have last := congrArg List.getLast? (controlsFound.symm.trans controls)
+    simpa only [List.getLast?_append, List.getLast?_singleton, Option.or, Option.some.injEq] using last
+  subst ctrlFound
+  have signatureEq := block_signature compiler.signatures bt signature selected
+  rw [selectedFound, WP.spec_ok] at signatureEq
+  change sigFound = signature at signatureEq
+  subst sigFound
+  have publication := publish law
+  have heightExact := control_stack_height_success state.vals.deref ctrl.value_stack_base
+    compiler.function.local_slots height (by simpa only [alloc.vec.Vec.deref, Slice.from_val] using valuesFit) heightEq
+  simp only [alloc.vec.Vec.deref, Slice.from_val] at heightExact
+  have pcEq : startPc = pc := by
+    apply UScalar.eq_of_val_eq
+    have start := publication.start
+    simp only [enterPcAdvance, reachable] at start
+    omega
+  subst startPc
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  have middleFrame := publication.frame
+  change middle = _ at middleFrame
+  rw [observedFrame]
+  refine ⟨?_, ?_, height, source, heightExact, sourceEq, ?_, ?_⟩
+  · apply alloc.vec.Vec.ext
+    simpa only [enterPrefix, reachable, List.append_nil] using publication.code
+  · rw [middleFrame]
+    exact reachable
+  · simpa only [enterIfPc, reachable] using publication.frames
+  · exact publication.controls
+
 
 end Itasca.Runtime.Compiler
 

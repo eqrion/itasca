@@ -30,6 +30,21 @@ open Aeneas Aeneas.Std
   congr 1
   simpa [hi] using hv
 
+@[step] theorem operand_at_total (before : Slice U32) (depth : Usize) :
+    runtime.compiler.operand_at before depth ⦃ out =>
+      ∀ word, out = .Ok word → word ∈ before.val ⦄ := by
+  by_cases zero : depth = 0#usize
+  · simp [runtime.compiler.operand_at, zero, WP.spec_ok]
+  · by_cases large : depth > Slice.len before
+    · simp [runtime.compiler.operand_at, zero, large, WP.spec_ok]
+    · have positive : 0 < depth.val := by scalar_tac
+      have fits : depth.val ≤ before.val.length := by scalar_tac
+      step with operand_at before depth positive fits as ⟨out, exactValue⟩
+      rename_i word success
+      rw [success] at exactValue
+      cases exactValue
+      exact List.getElem_mem _
+
 @[step] theorem budget_push {A T : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget : runtime.compiler.Budget A)
     (values : alloc.vec.Vec T) (value : T) (fits : values.val.length < Usize.max) :
@@ -143,5 +158,41 @@ theorem budget_push_available {A T : Type} (ops : runtime.platform.Alloc A)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   · simp [core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- Invert an ordinary result of an extracted monadic bind. -/
+theorem initializer_bind_success {T U : Type} {input : Result T} {next : T → Result U}
+    {out : U} (success : (input >>= next) = .ok out) :
+    ∃ value, input = .ok value ∧ next value = .ok out := by
+  change Aeneas.Std.bind input next = .ok out at success
+  cases input with
+  | ret value => exact ⟨value, rfl, by simpa only [bind_ok] using success⟩
+  | vis event continuation => simp only [bind_vis] at success; exact (vis_not_ok success).elim
+  | div => simp only [bind_div] at success; exact (div_not_ok success).elim
+
+/-- Partial correctness for actual loops with a decreasing successful body.
+This theorem makes no termination claim for a failing or divergent body. -/
+theorem initializer_loop_success {S O : Type} (body : S → Result (ControlFlow S O))
+    (measure : S → Nat) (inv : S → Prop) (post : O → Prop)
+    (sound : ∀ state, inv state → ∀ flow, body state = .ok flow →
+      match flow with
+      | .cont next => inv next ∧ measure next < measure state
+      | .done out => post out)
+    (state : S) (initial : inv state) (out : O) (success : loop body state = .ok out) : post out := by
+  suffices ∀ n state, measure state = n → inv state → loop body state = .ok out → post out by
+    exact this (measure state) state rfl initial success
+  intro n
+  induction n using Nat.strong_induction_on with
+  | h n ih =>
+    intro current hmeasure hcurrent returned
+    rw [loop.eq_def] at returned
+    obtain ⟨flow, step, rest⟩ := initializer_bind_success returned
+    have effect := sound current hcurrent flow step
+    cases flow with
+    | done answer =>
+      have same := Result.ok_injective rest
+      subst answer
+      exact effect
+    | cont next =>
+      exact ih (measure next) (by simpa [hmeasure] using effect.2) next rfl effect.1 rest
 
 end Itasca.Runtime.Compiler

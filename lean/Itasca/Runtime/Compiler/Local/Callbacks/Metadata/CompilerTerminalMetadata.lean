@@ -164,15 +164,11 @@ theorem compiler_observe_ordinary_post {A : Type} (ops : runtime.platform.Alloc 
     (state : Itasca.code.OpIterState) :
     runtime.compiler.FunctionCompiler.observe ops compiler state ⦃ out =>
       CompilerOrdinaryStable compiler out.2 ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.observe
-  split <;> step*
-  all_goals cases r <;> simp_all [core.cmp.impls.OrdU32.max, alloc.vec.Vec.deref]
-  all_goals try exact fun e => ⟨e⟩
-  all_goals constructor
-  all_goals try rfl
-  all_goals try simp [compilerOrdinaryMetadata, compilerMetadata]
-  all_goals split <;> simp_all
-  all_goals scalar_tac
+  apply WP.spec_mono (compiler_observe_inv ops law compiler state)
+  intro out post
+  refine ⟨?_, post.2⟩
+  simpa only [ObserveFrame, compilerOrdinaryMetadata, compilerMetadata] using
+    congrArg compilerOrdinaryMetadata post.1
 
 theorem compiler_observe_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -490,8 +486,13 @@ theorem compiler_enter_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' metadata_step accepted using ops, law
+  obtain ⟨frame, monotone, _⟩ := runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType status accepted
+  refine ⟨?_, monotone law⟩
+  change after = _ at frame
+  rw [frame]
+  rfl
+
+
 end Itasca.Runtime.Compiler
 
 end

@@ -344,153 +344,6 @@ section
 Allocation availability for scope publication and entry without emitted code. The publication reserve is discharged before constructing the entered compiler state.
 -/
 
-/-! ## Scope Publication Available -/
-
-section
-
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
-set_option maxRecDepth 4096
-
-/-- Exact publication suffix of the extracted scope-opening callback. Its
-connection to scope entry is checked by definitional equality in the entry
-acceptance proofs. This helper adds no external execution model. -/
-noncomputable def scopePublication {A : Type} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (kind : Itasca.code.LabelKind) (signature : runtime.compiler.Signature)
-    (height : U32) (sourceStart valueHeight : Usize) (startPc : U32) (ifPc : Option Usize) :
-    Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.FunctionCompiler A) := do
-  let map := alloc.vec.Vec.len compiler.function.controls
-  let (r4, b) ←
-    runtime.compiler.Budget.charge ops
-      compiler.budget runtime.compiler.CompileResource.Controls
-  let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-  match cf4 with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    let i1 ← lift (UScalar.cast .Usize startPc)
-    let (r5, b1, v) ←
-      runtime.compiler.Budget.push ops b
-        compiler.function.controls
-        ({
-           kind,
-           source_start := sourceStart,
-           source_end := 0#usize,
-           start_pc := i1,
-           end_pc := 0#usize,
-           stack_height := valueHeight,
-           parameters := signature.params,
-           results := signature.results
-         } : _root_.Itasca.runtime.compiler.ControlMap)
-    let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-    match cf5 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      let (r6, b2, v1) ←
-        runtime.compiler.Budget.push ops b1
-          compiler.frames
-          ({
-             map,
-             kind,
-             height,
-             params := signature.param_slots,
-             results := signature.result_slots,
-             start_pc := startPc,
-             if_pc := ifPc,
-             entry_reachable := compiler.reachable,
-             end_reachable := false,
-             fixups := (alloc.vec.Vec.new Std.Usize)
-           } : _root_.Itasca.runtime.compiler.Frame)
-      let cf6 ←
-        core.result.Result.Insts.CoreOpsTry.branch r6
-      match cf6 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        runtime.compiler.FunctionCompiler.observe
-          ops
-          {
-            compiler
-              with
-              budget := b2,
-              function :=
-                { compiler.function with controls := v },
-              frames := v1
-          } state
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r7 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame
-            _root_.Itasca.error.VisitError) residual
-        Result.ok (r7,
-          {
-            compiler
-              with
-              budget := b2,
-              function :=
-                { compiler.function with controls := v },
-              frames := v1
-          })
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r6 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame
-          _root_.Itasca.error.VisitError) residual
-      Result.ok (r6,
-        {
-          compiler
-            with
-            budget := b1,
-            function := { compiler.function with controls := v }
-        })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r5 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame
-        _root_.Itasca.error.VisitError) residual
-    Result.ok (r5, { compiler with budget := b })
-
-/-- Publishing a bounded scope succeeds and changes precisely its control
-counter. Instruction and branch/local budgets are retained. -/
-theorem scope_publication_available {A : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : ScopeDemand compiler state bound) (kind : Itasca.code.LabelKind)
-    (signature : runtime.compiler.Signature) (height : U32)
-    (sourceStart valueHeight : Usize) (startPc : U32) (ifPc : Option Usize) :
-    scopePublication ops compiler state kind signature height sourceStart valueHeight startPc ifPc ⦃ out =>
-      out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
-        (fun counter => if counter = .controls then 1 else 0) ⦄ := by
-  unfold scopePublication
-  step with charge_counter_available ops .controls compiler.budget demand.control
-    as ⟨status,budget,accepted,used,same,usedEq⟩
-  rw [accepted,same]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step as ⟨start,hstart⟩
-  step with budget_push_available ops bound available (ChargeCounter.controls.replace compiler.budget used)
-    compiler.function.controls
-    ⟨kind,sourceStart,0#usize,start,0#usize,valueHeight,signature.params,signature.results⟩
-    demand.mapsCapacity demand.mapsReserve as ⟨status,budget,maps,accepted,same,_⟩
-  subst status budget
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available (ChargeCounter.controls.replace compiler.budget used)
-    compiler.frames
-    ⟨alloc.vec.Vec.len compiler.function.controls,kind,height,signature.param_slots,
-      signature.result_slots,startPc,ifPc,compiler.reachable,false,alloc.vec.Vec.new Usize⟩
-    demand.framesCapacity demand.framesReserve as ⟨status,budget,frames,accepted,same,_⟩
-  subst status budget
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  let framed := {compiler with
-    budget := ChargeCounter.controls.replace compiler.budget used
-    function := {compiler.function with controls := maps}
-    frames := frames}
-  apply WP.spec_mono (compiler_observe_available_budget ops bound available framed state demand.operands demand.slots)
-  intro out post
-  rw [post.2]
-  exact ⟨post.1,.of_counter .controls compiler.budget used 1
-    (by simp [ChargeCounter.used] at usedEq ⊢; omega)
-    (by simp [ChargeCounter.used] at usedEq ⊢; omega)⟩
-
-end Itasca.Runtime.Compiler
-
-end
-
 /-! ## Enter Availability -/
 
 section
@@ -498,7 +351,20 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
+
+/-- Exact entry counters imply the independent compilation budget bounds. -/
+theorem EnterBudget.compilation_effect {A : Type} (before after : runtime.compiler.FunctionCompiler A)
+    (kind : code.LabelKind) (effect : EnterBudget before after kind) :
+    CompilationBudgetEffect before.budget after.budget (fun counter =>
+      match counter with
+      | .instructions => enterInstructionCharge before.reachable kind
+      | .controls => 1
+      | _ => 0) := by
+  obtain ⟨instructions, controls, same, instructionsEq, controlsEq⟩ := effect
+  rw [same]
+  refine ⟨rfl, rfl, ?_⟩
+  intro counter
+  cases counter <;> simp only [ChargeCounter.used] <;> constructor <;> omega
 
 /-- Opening an ordinary block or a dead scope accepts without emitting code.
 Its budget effect is exactly one control, with all other counters retained. -/
@@ -518,38 +384,27 @@ theorem compiler_enter_without_emission_available {A : Type} (ops : runtime.plat
     runtime.compiler.control.FunctionCompiler.enter ops compiler state kind bt ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .controls then 1 else 0) ⦄ := by
-  have nonempty : alloc.vec.Vec.len state.ctrls ≠ 0#usize := by
-    intro same
-    have lengthEq := congrArg UScalar.val same
-    simp [alloc.vec.Vec.len,controls] at lengthEq
-  unfold runtime.compiler.control.FunctionCompiler.enter
-  rw [if_neg nonempty]
-  step as ⟨last,hlast⟩
-  have atLast : last.val = prior.length := by simp [alloc.vec.Vec.len,controls] at hlast; omega
-  step as ⟨actual,hactual⟩
-  have actualEq : actual = ctrl := by simpa [atLast,controls] using hactual
-  rw [actualEq]
-  step with block_signature compiler.signatures bt signature selected as ⟨sig,hsig⟩
-  subst sig
-  step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots
-    (by simpa [alloc.vec.Vec.deref] using valuesFit)
-    (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height,hheight⟩
-  have coordinate := demand.coordinate
-  step as ⟨source,hsource⟩
-  cases kind
-  all_goals
-    simp only [bind_ok,Bool.and_eq_true,← ite_and,Bool.false_eq_true,and_false,and_true,
-      ite_false,if_false]
-    try rw [if_neg (show ¬ compiler.reachable = true from fun active => noThen active rfl)]
-    step with compiler_pc_available ops compiler demand.pc as ⟨status,first,same,pc,accepted,_⟩
-    subst first
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Bool.and_eq_true,← ite_and,
-      Bool.false_eq_true,and_false,and_true,ite_false,if_false]
-    try rw [if_neg (show ¬ compiler.reachable = true from fun active => noLoop active rfl)]
-    change scopePublication ops compiler state _ signature height source ctrl.value_stack_base pc none ⦃ out => _ ⦄
-    exact scope_publication_available ops bound available compiler state demand _ signature height source
-      ctrl.value_stack_base pc none
+  clear heightFits -- The scope demand supplies the stronger whole-stack bound.
+  refine WP.spec_mono (runtime.compiler.control.FunctionCompiler.enter.available ops bound available compiler state kind bt
+    ⟨prior, ctrl, signature, controls, selected, valuesFit⟩ ?_ ?_) ?_
+  · refine ⟨demand.pc, ?_, demand.coordinate, demand.mapsCapacity, demand.mapsReserve,
+      demand.framesCapacity, demand.framesReserve, demand.control, demand.operands, demand.slots, ?_⟩
+    · intro live thenKind
+      exact False.elim (noThen live thenKind)
+    · intro live emitted
+      rcases emitted with thenKind | loopKind
+      · exact False.elim (noThen live thenKind)
+      · exact False.elim (noLoop live loopKind)
+  · intro live thenKind
+    exact False.elim (noThen live thenKind)
+  · intro out post
+    refine ⟨post.1, (EnterBudget.compilation_effect compiler out.2 kind post.2).weaken ?_⟩
+    have zero : enterInstructionCharge compiler.reachable kind = 0 := by
+      cases active : compiler.reachable with
+      | false => simp [enterInstructionCharge]
+      | true => cases kind <;> simp_all [enterInstructionCharge]
+    intro counter
+    cases counter <;> simp [zero]
 
 end Itasca.Runtime.Compiler
 
@@ -572,7 +427,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 /-- Live if opening accepts with one instruction and one control charge.
 All control-map and frame storage is independently bounded. -/
@@ -593,60 +447,20 @@ theorem compiler_enter_if_available {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.control.FunctionCompiler.enter ops compiler state .Then bt ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
-  have nonempty : alloc.vec.Vec.len state.ctrls ≠ 0#usize := by
-    intro same
-    have lengthEq := congrArg UScalar.val same
-    simp [alloc.vec.Vec.len,controls] at lengthEq
-  unfold runtime.compiler.control.FunctionCompiler.enter
-  rw [if_neg nonempty]
-  step as ⟨last,hlast⟩
-  have atLast : last.val = prior.length := by simp [alloc.vec.Vec.len,controls] at hlast; omega
-  step as ⟨actual,hactual⟩
-  have actualEq : actual = ctrl := by simpa [atLast,controls] using hactual
-  rw [actualEq]
-  step with block_signature compiler.signatures bt signature selected as ⟨sig,hsig⟩
-  subst sig
-  step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots
-    (by simpa [alloc.vec.Vec.deref] using valuesFit)
-    (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height,hheight⟩
-  have coordinate := scope.coordinate
-  step as ⟨source,hsource⟩
-  simp only [bind_ok,
-    live,Bool.false_eq_true,ite_false,ite_true]
-  obtain ⟨condition,read,_⟩ := last_operand ops compiler front .I32 layout
-  rw [read]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with compiler_emit_available_frame ops bound available compiler (.JumpIfZero condition core.num.U32.MAX)
-    demand.pc demand.codeCapacity demand.sourceCapacity demand.codeReserve demand.sourceReserve
-    demand.coordinate demand.instruction
-    as ⟨status,emitted,accepted,used,code,sources,frame,usedEq,codeAppend,_⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  have emittedPc : emitted.function.code.length ≤ U32.max := by
-    rw [frame]
-    simpa [alloc.vec.Vec.length,codeAppend] using pcRoom
-  step with compiler_pc_available ops emitted emittedPc as ⟨status,first,same,pc,accepted,_⟩
-  subst first
-  rw [accepted]
-  have emittedLive : emitted.reachable = true := by rw [frame]; exact live
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,Bool.false_eq_true,ite_false,ite_self]
-  change scopePublication ops emitted state .Then signature height source ctrl.value_stack_base pc
-    (some (alloc.vec.Vec.len compiler.function.code)) ⦃ out => _ ⦄
-  have emittedScope : ScopeDemand emitted state bound := by
-    rw [frame]
-    refine ⟨?_,scope.coordinate,scope.mapsCapacity,scope.mapsReserve,scope.framesCapacity,
-      scope.framesReserve,scope.control,scope.operands,scope.slots⟩
-    simpa [alloc.vec.Vec.length,codeAppend] using pcRoom
-  have budgetEq : emitted.budget = {compiler.budget with instructions := used} := by rw [frame]
-  have firstEffect : CompilationBudgetEffect compiler.budget emitted.budget
-      (fun counter => if counter = .instructions then 1 else 0) := by
-    rw [budgetEq]
-    exact .of_counter .instructions compiler.budget used 1
-      (by simp [ChargeCounter.used]; omega) (by simp [ChargeCounter.used]; omega)
-  apply WP.spec_mono (scope_publication_available ops bound available emitted state emittedScope .Then
-    signature height source ctrl.value_stack_base pc (some (alloc.vec.Vec.len compiler.function.code)))
-  intro out post
-  exact ⟨post.1,(firstEffect.trans post.2).weaken (by intro counter; cases counter <;> simp)⟩
+  clear heightFits -- The scope demand supplies the stronger whole-stack bound.
+  refine WP.spec_mono (runtime.compiler.control.FunctionCompiler.enter.available ops bound available compiler state .Then bt
+    ⟨prior, ctrl, signature, controls, selected, valuesFit⟩ ?_ ?_) ?_
+  · exact ⟨scope.pc, fun _ _ => pcRoom, scope.coordinate, scope.mapsCapacity, scope.mapsReserve,
+      scope.framesCapacity, scope.framesReserve, scope.control, scope.operands, scope.slots,
+      fun _ _ => ⟨demand.codeCapacity, demand.sourceCapacity, demand.codeReserve,
+        demand.sourceReserve, demand.instruction⟩⟩
+  · intro _ _
+    obtain ⟨condition, called, _⟩ := last_operand ops compiler front .I32 layout
+    exact ⟨condition, called⟩
+  · intro out post
+    refine ⟨post.1, (EnterBudget.compilation_effect compiler out.2 .Then post.2).weaken ?_⟩
+    intro counter
+    cases counter <;> simp [enterInstructionCharge, live]
 
 end Itasca.Runtime.Compiler
 
@@ -659,7 +473,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 /-- Live loop opening accepts with one instruction and one control charge.
 All control-map and frame storage is independently bounded. -/
@@ -679,51 +492,19 @@ theorem compiler_enter_loop_available {A : Type} (ops : runtime.platform.Alloc A
     runtime.compiler.control.FunctionCompiler.enter ops compiler state .Loop bt ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
-  have nonempty : alloc.vec.Vec.len state.ctrls ≠ 0#usize := by
-    intro same
-    have lengthEq := congrArg UScalar.val same
-    simp [alloc.vec.Vec.len,controls] at lengthEq
-  unfold runtime.compiler.control.FunctionCompiler.enter
-  rw [if_neg nonempty]
-  step as ⟨last,hlast⟩
-  have atLast : last.val = prior.length := by simp [alloc.vec.Vec.len,controls] at hlast; omega
-  step as ⟨actual,hactual⟩
-  have actualEq : actual = ctrl := by simpa [atLast,controls] using hactual
-  rw [actualEq]
-  step with block_signature compiler.signatures bt signature selected as ⟨sig,hsig⟩
-  subst sig
-  step with control_stack_height state.vals.deref ctrl.value_stack_base compiler.function.local_slots
-    (by simpa [alloc.vec.Vec.deref] using valuesFit)
-    (by simpa [alloc.vec.Vec.deref] using heightFits) as ⟨height,hheight⟩
-  have coordinate := scope.coordinate
-  step as ⟨source,hsource⟩
-  simp only [bind_ok,
-    live,Bool.false_eq_true,ite_false,ite_true]
-  step with compiler_pc_available ops compiler demand.pc as ⟨status,first,same,pc,accepted,_⟩
-  subst first
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,live,ite_true]
-  step with compiler_emit_available_frame ops bound available compiler .LoopHead demand.pc demand.codeCapacity
-    demand.sourceCapacity demand.codeReserve demand.sourceReserve demand.coordinate demand.instruction
-    as ⟨status,emitted,accepted,used,code,sources,frame,usedEq,codeAppend,_⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  change scopePublication ops emitted state .Loop signature height source ctrl.value_stack_base pc none ⦃ out => _ ⦄
-  have emittedScope : ScopeDemand emitted state bound := by
-    rw [frame]
-    refine ⟨?_,scope.coordinate,scope.mapsCapacity,scope.mapsReserve,scope.framesCapacity,
-      scope.framesReserve,scope.control,scope.operands,scope.slots⟩
-    simpa [alloc.vec.Vec.length,codeAppend] using pcRoom
-  have budgetEq : emitted.budget = {compiler.budget with instructions := used} := by rw [frame]
-  have firstEffect : CompilationBudgetEffect compiler.budget emitted.budget
-      (fun counter => if counter = .instructions then 1 else 0) := by
-    rw [budgetEq]
-    exact .of_counter .instructions compiler.budget used 1
-      (by simp [ChargeCounter.used]; omega) (by simp [ChargeCounter.used]; omega)
-  apply WP.spec_mono (scope_publication_available ops bound available emitted state emittedScope .Loop
-    signature height source ctrl.value_stack_base pc none)
-  intro out post
-  exact ⟨post.1,(firstEffect.trans post.2).weaken (by intro counter; cases counter <;> simp)⟩
+  clear heightFits -- The scope demand supplies the stronger whole-stack bound.
+  refine WP.spec_mono (runtime.compiler.control.FunctionCompiler.enter.available ops bound available compiler state .Loop bt
+    ⟨prior, ctrl, signature, controls, selected, valuesFit⟩ ?_ ?_) ?_
+  · exact ⟨scope.pc, fun _ _ => pcRoom, scope.coordinate, scope.mapsCapacity, scope.mapsReserve,
+      scope.framesCapacity, scope.framesReserve, scope.control, scope.operands, scope.slots,
+      fun _ _ => ⟨demand.codeCapacity, demand.sourceCapacity, demand.codeReserve,
+        demand.sourceReserve, demand.instruction⟩⟩
+  · intro _ impossible
+    cases impossible
+  · intro out post
+    refine ⟨post.1, (EnterBudget.compilation_effect compiler out.2 .Loop post.2).weaken ?_⟩
+    intro counter
+    cases counter <;> simp [enterInstructionCharge, live]
 
 end Itasca.Runtime.Compiler
 
@@ -735,19 +516,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-/-- Every raw observed stack entry occupies at most two compiler words. -/
-theorem stack_words_le_twice_length (values : List Itasca.code.StackType) :
-    stackWords values ≤ 2*values.length := by
-  induction values with
-  | nil => simp [stackWords]
-  | cons value rest ih =>
-    have widthBound : compilerStackWidth value ≤ 2 := by
-      cases value with
-      | Bot => decide
-      | Val ty => cases ty <;> decide
-    simp only [stackWords,List.map_cons,List.sum_cons,List.length_cons] at ih ⊢
-    omega
 
 /-- All scope kinds accept under source control/signature information and
 independent demands. Live if entry alone needs a condition layout; dead code

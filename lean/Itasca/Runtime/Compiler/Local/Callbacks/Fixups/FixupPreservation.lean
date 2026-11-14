@@ -125,14 +125,25 @@ theorem compiler_enter_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
     (budget : FixupBudget before.frames.val before.function.code.val.length)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind bt = .ok (.Ok (), after)) :
     FixupBudget after.frames.val after.function.code.val.length := by
-  have growth := compiler_enter_code_mono ops law before after state kind bt accepted
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' fixup_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' fixup_step accepted using ops, law
-  all_goals try fixup_effect accepted using ops, law
-  all_goals fixup_close
-  all_goals try exact (budget.mono growth).push _ rfl
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind bt (.Ok ()) accepted).2.2 rfl
+  have publication := publish law
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  rw [observedFrame]
+  change FixupBudget middle.frames.val middle.function.code.val.length
+  rw [publication.frames]
+  intro frame member
+  rcases List.mem_append.mp member with old | fresh
+  · have original := budget frame old
+    rw [publication.code, List.length_append]
+    omega
+  · simp only [List.mem_singleton] at fresh
+    subst frame
+    change 0 ≤ middle.function.code.val.length
+    omega
 
 
 theorem compiler_end_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)

@@ -340,35 +340,22 @@ theorem control_entry_coordinates {A : Type} (ops : runtime.platform.Alloc A)
     (success : runtime.compiler.control.FunctionCompiler.enter ops before state kind bt = .ok (.Ok (), after)) :
     before.function.local_slots.val + stackWords (state.vals.val.take ctrl.value_stack_base.val) ≤ U32.max ∧
       before.function.body_start.val + before.next_source.val ≤ Usize.max := by
-  have nonempty : alloc.vec.Vec.len state.ctrls ≠ 0#usize := by
-    intro eq
-    have same := congrArg UScalar.val eq
-    simp [alloc.vec.Vec.len, controls] at same
-  unfold runtime.compiler.control.FunctionCompiler.enter at success
-  rw [if_neg nonempty] at success
-  obtain ⟨index, subtracted, rest⟩ := initializer_bind_success success
-  have subSpec : alloc.vec.Vec.len state.ctrls - 1#usize ⦃ out => out.val = prior.length ⦄ := by
-    step as ⟨out, h⟩
-    simp [alloc.vec.Vec.len, controls] at h
-    omega
-  rw [subtracted, WP.spec_ok] at subSpec
-  obtain ⟨control, read, rest⟩ := initializer_bind_success rest
-  have readSpec : alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.code.Ctrl)
-      state.ctrls index ⦃ out => out = ctrl ⦄ := by
-    have bounded : index.val < state.ctrls.val.length := by simp [controls, subSpec]
-    step as ⟨out, found⟩
-    simpa [controls, subSpec] using found
-  rw [read, WP.spec_ok] at readSpec
-  subst control
-  obtain ⟨signature, selected, rest⟩ := initializer_bind_success rest
-  obtain ⟨height, heightCall, rest⟩ := initializer_bind_success rest
-  have heightEq := control_stack_height_success state.vals.deref ctrl.value_stack_base
-    before.function.local_slots height (by simpa [alloc.vec.Vec.deref] using valuesFit) heightCall
-  obtain ⟨source, sourceCall, rest⟩ := initializer_bind_success rest
-  have sourceEq := control_add_success sourceCall
-  have heightBound : height.val ≤ U32.max := by scalar_tac
-  have sourceBound : source.val ≤ Usize.max := by scalar_tac
-  exact ⟨by simpa [heightEq, alloc.vec.Vec.deref] using heightBound, by omega⟩
+  obtain ⟨priorFound, ctrlFound, signature, height, startPc, condition, source, middle,
+    controlsFound, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind bt (.Ok ()) success).2.2 rfl
+  have controlEq : ctrlFound = ctrl := by
+    have last := congrArg List.getLast? (controlsFound.symm.trans controls)
+    simpa only [List.getLast?_append, List.getLast?_singleton, Option.or, Option.some.injEq] using last
+  subst ctrlFound
+  have exactHeight := control_stack_height_success state.vals.deref ctrl.value_stack_base
+    before.function.local_slots height (by simpa only [alloc.vec.Vec.deref, Slice.from_val] using valuesFit) heightEq
+  constructor
+  · have bounded := height.hmax
+    simp only [alloc.vec.Vec.deref, Slice.from_val] at exactHeight
+    scalar_tac
+  · have bounded := source.hmax
+    scalar_tac
+
 
 end Itasca.Runtime.Compiler
 
@@ -420,11 +407,11 @@ theorem compiler_enter_observation {A : Type} (ops : runtime.platform.Alloc A)
     (kind : Itasca.code.LabelKind) (bt : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind bt = .ok (.Ok (), after)) :
     ∃ middle, runtime.compiler.FunctionCompiler.observe ops middle state = .ok (.Ok (), after) := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' observation_step accepted
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' observation_step accepted
-  all_goals simp_all
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind bt (.Ok ()) accepted).2.2 rfl
+  exact ⟨middle, observed⟩
+
 
 theorem compiler_end_observation {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)

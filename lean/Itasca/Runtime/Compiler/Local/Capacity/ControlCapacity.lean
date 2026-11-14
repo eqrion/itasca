@@ -397,10 +397,29 @@ theorem compiler_enter_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (blockType : Itasca.signature.BlockType)
     (accepted : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at accepted
-  repeat' capacity_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' capacity_step accepted using ops, law
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) accepted).2.2 rfl
+  have publication := publish law
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  have measures := compiler_observe_measures ops law middle state
+  rw [observed, WP.spec_ok] at measures
+  have frame := publication.frame
+  change middle = _ at frame
+  unfold CapacityStep
+  rw [observedFrame]
+  refine ⟨?_, ?_⟩
+  · rw [frame]
+  · have bounded := (measures rfl).2
+    rw [bounded]
+    split
+    · rw [frame]
+    · rw [frame]
+      exact Nat.le_max_left _ _
+
+
 theorem compiler_branch_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (depth skip : U32) (conditional : Bool)

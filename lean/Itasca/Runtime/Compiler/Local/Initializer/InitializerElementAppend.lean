@@ -272,16 +272,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- Invert an ordinary result of an extracted monadic bind. -/
-theorem initializer_bind_success {T U : Type} {input : Result T} {next : T → Result U}
-    {out : U} (success : (input >>= next) = .ok out) :
-    ∃ value, input = .ok value ∧ next value = .ok out := by
-  change Aeneas.Std.bind input next = .ok out at success
-  cases input with
-  | ret value => exact ⟨value, rfl, by simpa only [bind_ok] using success⟩
-  | vis event continuation => simp only [bind_vis] at success; exact (vis_not_ok success).elim
-  | div => simp only [bind_div] at success; exact (div_not_ok success).elim
-
 theorem initializer_slice_index {T : Type} (values : Slice T) (index : Usize) (value : T)
     (found : values.val[index.val]? = some value) : Slice.index_usize values index = .ok value := by
   have bound : index.val < values.length := (List.getElem?_eq_some_iff.mp found).1
@@ -480,32 +470,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-/-- Partial correctness for actual loops with a decreasing successful body.
-This theorem makes no termination claim for a failing or divergent body. -/
-theorem initializer_loop_success {S O : Type} (body : S → Result (ControlFlow S O))
-    (measure : S → Nat) (inv : S → Prop) (post : O → Prop)
-    (sound : ∀ state, inv state → ∀ flow, body state = .ok flow →
-      match flow with
-      | .cont next => inv next ∧ measure next < measure state
-      | .done out => post out)
-    (state : S) (initial : inv state) (out : O) (success : loop body state = .ok out) : post out := by
-  suffices ∀ n state, measure state = n → inv state → loop body state = .ok out → post out by
-    exact this (measure state) state rfl initial success
-  intro n
-  induction n using Nat.strong_induction_on with
-  | h n ih =>
-    intro current hmeasure hcurrent returned
-    rw [loop.eq_def] at returned
-    obtain ⟨flow, step, rest⟩ := initializer_bind_success returned
-    have effect := sound current hcurrent flow step
-    cases flow with
-    | done answer =>
-      have same := Result.ok_injective rest
-      subst answer
-      exact effect
-    | cont next =>
-      exact ih (measure next) (by simpa [hmeasure] using effect.2) next rfl effect.1 rest
 
 /-- Indexed source expressions and their retained synthetic functions. -/
 def InitializerEntries (functions : List runtime.bytecode.CompiledFunction)

@@ -466,8 +466,54 @@ theorem compiler_enter_source_coordinates {A : Type} (ops : runtime.platform.All
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.control.FunctionCompiler.enter ops before state kind blockType = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  unfold runtime.compiler.control.FunctionCompiler.enter at called
-  repeat' coordinates_step called using ops, law
+  obtain ⟨prior, ctrl, signature, height, startPc, condition, source, middle,
+    controls, selected, heightEq, sourceEq, operand, publish, observed⟩ :=
+      (runtime.compiler.control.FunctionCompiler.enter.inv ops before after state kind blockType (.Ok ()) called).2.2 rfl
+  have publication := publish law
+  have observedFrame := compiler_observe_frame ops law middle state
+  rw [observed, WP.spec_ok] at observedFrame
+  change after = _ at observedFrame
+  have frame := publication.frame
+  change middle = _ at frame
+  have sourceLengths := publication.sources
+  have start : middle.function.body_start = before.function.body_start := by rw [frame]
+  have finish : middle.function.body_end = before.function.body_end := by rw [frame]
+  have cursor : middle.next_source = before.next_source := by rw [frame]
+  have middleHeld : SourceCoordinates middle := by
+    unfold SourceCoordinates at held ⊢
+    rw [start, finish, cursor, sourceLengths]
+    cases reach : before.reachable <;> cases kind <;>
+      simp only [enterPrefix, List.map_nil, List.map_cons, List.append_nil] <;>
+      first
+      | exact held
+      | (constructor
+         · intro coordinate member
+           rcases List.mem_append.mp member with old | fresh
+           · exact held.1 coordinate old
+           · simp only [List.mem_singleton] at fresh
+             subst coordinate
+             exact ⟨by omega, inside, Nat.le_refl _⟩
+         · rw [List.pairwise_append]
+           refine ⟨held.2, by simp only [List.pairwise_singleton], ?_⟩
+           intro earlier old later fresh
+           simp only [List.mem_singleton] at fresh
+           subst later
+           exact (held.1 earlier old).2.2)
+  have effect := compiler_observe ops law middle state
+  rw [observed, WP.spec_ok] at effect
+  have position : after.next_source = state.pos := (effect rfl).2.2.2.2.2.2.2.2.1
+  unfold SourceCoordinates at middleHeld ⊢
+  rw [observedFrame]
+  constructor
+  · intro coordinate member
+    obtain ⟨lower, upper, prior⟩ := middleHeld.1 coordinate member
+    refine ⟨lower, upper, ?_⟩
+    change coordinate ≤ middle.function.body_start.val + after.next_source.val
+    rw [position]
+    rw [cursor] at prior
+    omega
+  · exact middleHeld.2
+
 
 /-- Branch stubs, copies, and patching retain source-coordinate order. -/
 theorem compiler_branch_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
