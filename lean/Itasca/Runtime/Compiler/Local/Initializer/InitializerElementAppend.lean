@@ -39,20 +39,6 @@ open Aeneas Aeneas.Std
     · exact hv
     · cases success
 
-@[step] theorem bounded_index (value : Usize) :
-    runtime.compiler.bounded_index value ⦃ result =>
-      ∀ word, result = .Ok word → word.val = value.val ⦄ := by
-  unfold runtime.compiler.bounded_index
-  step
-  split
-  · simp
-  · step as ⟨word, hword⟩
-    intro w equality
-    cases equality
-    simp only [hword, UScalar.cast_val_eq]
-    simp_all [core.num.U32.MAX, U32.rMax]
-    scalar_tac
-
 def ConstantLowered (before after : runtime.bytecode.CompiledFunction)
     (expr : Itasca.wasm_types.ConstExpr) (ty : Itasca.wasm_types.ValueType) (dst : U32) : Prop :=
   ∃ code pool instruction,

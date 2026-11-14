@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Generated.Types
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
@@ -72,17 +75,10 @@ theorem compiler_copy_tables {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
     (CompilerTables.ofFunction after.function) = (CompilerTables.ofFunction before.function) := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-    subst after
-    rfl
-  · split at accepted
-    · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-      subst after
-      rfl
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_tables ops before after instruction status emitted
+  have frame := (runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count status accepted).frame
+  change after = _ at frame
+  rw [frame]
+  rfl
 
 theorem compiler_pc_tables {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A)
@@ -121,21 +117,12 @@ theorem compiler_finish_op_tables {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
     (CompilerTables.ofFunction after.function) = (CompilerTables.ofFunction before.function) := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ accepted
-  have kept := compiler_emit_tables ops before middle instruction result emitted
-  cases result with
-  | Err error =>
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame,bind_ok,bind_tc_ok,Result.ok.injEq,Prod.mk.injEq] at rest
-    obtain ⟨_,same⟩ := rest
-    subst after
-    exact kept
-  | Ok unit =>
-    cases unit
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    exact (compiler_observe_tables ops law middle after state status rest).trans kept
+  cases runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction status accepted with
+  | rejected emitted => exact compiler_emit_tables ops before after instruction _ emitted
+  | @observed middle _ _ emitted observed =>
+    exact (compiler_observe_tables ops law middle after state status observed).trans
+      (compiler_emit_tables ops before middle instruction (.Ok ()) emitted)
+
 theorem compiler_fixups_tables {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
     (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
@@ -322,21 +309,12 @@ theorem compiler_finish_op_depths {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ accepted
-  have kept := compiler_emit_depths ops before middle instruction result emitted
-  cases result with
-  | Err error =>
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame,bind_ok,bind_tc_ok,Result.ok.injEq,Prod.mk.injEq] at rest
-    obtain ⟨_,same⟩ := rest
-    subst after
-    exact kept
-  | Ok unit =>
-    cases unit
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    exact (compiler_observe_depths ops law middle after state status rest).trans kept
+  cases runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction status accepted with
+  | rejected emitted => exact compiler_emit_depths ops before after instruction _ emitted
+  | @observed middle _ _ emitted observed =>
+    exact (compiler_observe_depths ops law middle after state status observed).trans
+      (compiler_emit_depths ops before middle instruction (.Ok ()) emitted)
+
 theorem compiler_fixups_depths {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
     (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
@@ -396,33 +374,9 @@ theorem compiler_pair_depths {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result U32 Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
 
 open Lean Meta Elab Tactic in
 elab "scratch_preservation_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -487,7 +441,6 @@ macro "scratch_preservation_step " h:ident " using " ops:term ", " law:term : ta
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
       core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
   | sources_split $h)
-
 
 
 end Itasca.Runtime.Compiler
@@ -597,33 +550,10 @@ theorem compiler_pair_auxiliary_tables {A : Type} (ops : runtime.platform.Alloc 
     (status : core.result.Result U32 Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
     compilerAuxiliaryTables after.function = compilerAuxiliaryTables before.function := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
+  rfl
 
 open Lean Meta Elab Tactic in
 elab "auxiliary_tables_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
@@ -32,27 +33,10 @@ theorem compiler_pair_success {A : Type} (ops : runtime.platform.Alloc A)
       after = { before with budget, function := {before.function with indirect := pairs} } ∧
       pairs.val = before.function.indirect.val ++ [(a,b)] ∧
       entry.val = before.function.indirect.val.length := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, indexRun, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    have index := bounded_index (alloc.vec.Vec.len before.function.indirect)
-    rw [indexRun, WP.spec_ok] at index
-    have valueEq := index value rfl
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result,budget,pairs⟩, pushed, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unitValue =>
-      cases unitValue
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, Prod.mk.injEq, core.result.Result.Ok.injEq] at rest
-      obtain ⟨rfl,rfl⟩ := rest
-      exact ⟨budget,pairs,rfl,(budget_push_success ops law before.budget budget before.function.indirect pairs (a,b) pushed).2,
-        by simpa using valueEq⟩
+  obtain ⟨pairs, same, appended, indexEq⟩ :=
+    ((runtime.compiler.FunctionCompiler.pair.inv ops before after a b (.Ok entry) accepted).2 law).2 entry rfl
+  exact ⟨before.budget, pairs, same, appended, indexEq⟩
+
 
 end Itasca.Runtime.Compiler
 

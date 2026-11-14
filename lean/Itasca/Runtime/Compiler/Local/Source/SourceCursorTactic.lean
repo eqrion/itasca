@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 
@@ -11,8 +14,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_emit_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (instruction : runtime.bytecode.Instr)
     (status : core.result.Result Unit Itasca.error.VisitError)
@@ -27,17 +28,9 @@ theorem compiler_copy_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
     after.next_source = before.next_source := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-    subst after
-    rfl
-  · split at accepted
-    · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-      subst after
-      rfl
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_cursor ops before after instruction status emitted
+  have frame := (runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count status accepted).frame
+  change after = _ at frame
+  rw [frame]
 
 theorem compiler_pc_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A)
@@ -64,33 +57,9 @@ theorem compiler_pair_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result U32 Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
     after.next_source = before.next_source := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
 
 
 theorem compiler_observe_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -111,15 +80,9 @@ theorem compiler_finish_op_cursor {A : Type} (ops : runtime.platform.Alloc A)
     status = .Ok () → after.next_source = state.pos := by
   intro success
   subst status
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    exact compiler_observe_cursor ops law middle after state (.Ok ()) rest rfl
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) accepted).success
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) rest rfl
 theorem compiler_fixups_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
     (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
@@ -184,8 +147,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
-set_option maxRecDepth 4096
 open Lean Meta Elab Tactic in
 elab "cursor_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
   let hyp ← elabTerm h none

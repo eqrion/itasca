@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
@@ -29,15 +30,18 @@ open Aeneas Aeneas.Std
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state instruction ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op
-  step with compiler_emit ops law compiler instruction codeFits sourceFits coordinateFits as ⟨r, c, emitted⟩
-  cases r with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    cases value
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    exact compiler_observe_stack ops law c state
+  obtain ⟨⟨reply, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.lower.FunctionCompiler.finish_op.total ops law compiler state instruction codeFits sourceFits coordinateFits)
+  rw [called, WP.spec_ok]
+  intro accepted
+  dsimp only at accepted ⊢
+  subst reply
+  obtain ⟨middle, _, observed⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops compiler after state instruction (.Ok ()) called).success
+  have effect := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at effect
+  exact effect rfl
+
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in

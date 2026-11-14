@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
@@ -41,17 +43,11 @@ theorem compiler_copy_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (dst src count : U32) (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-    subst after
-    omega
-  · split at accepted
-    · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-      subst after
-      omega
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_code_mono ops law before after instruction status emitted
+  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count status accepted with
+    ⟨_, _, same⟩ | ⟨_, _, emitted⟩
+  · subst after
+    exact Nat.le_refl _
+  · exact compiler_emit_code_mono ops law before after _ status emitted
 
 theorem compiler_finish_op_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -59,20 +55,10 @@ theorem compiler_finish_op_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact compiler_emit_code_mono ops law before middle instruction (.Err error) emitted
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    rw [compiler_observe_code_result ops law middle after state status rest]
+  cases runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction status accepted with
+  | rejected emitted => exact compiler_emit_code_mono ops law before after instruction _ emitted
+  | @observed middle _ _ emitted observed =>
+    rw [compiler_observe_code_result ops law middle after state status observed]
     exact compiler_emit_code_mono ops law before middle instruction (.Ok ()) emitted
 
 theorem compiler_observe_code_mono {A : Type} (ops : runtime.platform.Alloc A)

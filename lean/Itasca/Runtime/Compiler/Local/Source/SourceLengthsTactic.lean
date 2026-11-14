@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Relations.Emission.EmissionSources
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
 import Mathlib.Tactic.FailIfNoProgress
@@ -59,66 +62,31 @@ theorem compiler_copy_sources {A : Type} (ops : runtime.platform.Alloc A)
     (dst src count : U32)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-    subst after
-    rfl
-  · split at accepted
-    · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-      subst after
-      rfl
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_sources ops law before after instruction emitted
+  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count (.Ok ()) accepted with
+    ⟨_, _, same⟩ | ⟨_, _, emitted⟩
+  · subst after
+    exact rfl
+  · exact compiler_emit_sources ops law before after _ emitted
 
 theorem compiler_finish_op_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    exact (compiler_emit_sources ops law before middle instruction emitted).trans
-      (compiler_observe_sources ops law middle after state (.Ok ()) rest)
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) accepted).success
+  exact (compiler_emit_sources ops law before middle instruction emitted).trans
+    (compiler_observe_sources ops law middle after state (.Ok ()) rest)
 
 theorem compiler_pair_sources {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (a b : U32)
     (status : core.result.Result U32 Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
+  rfl
 
 /-- PC calculation may reject its range but only updates the budget. -/
 theorem compiler_pc_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -263,8 +231,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
-set_option maxRecDepth 4096
 open Lean Meta Elab Tactic in
 elab "sources_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
   let hyp ← elabTerm h none

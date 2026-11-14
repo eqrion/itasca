@@ -31,14 +31,20 @@ theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
         Result.ok (error, changed)) =
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
         (move (Itasca.Translate.valueType ty) dst src) := by
-  cases ty <;> simp [runtime.value.width, runtime.compiler.FunctionCompiler.copy, different,
-    runtime.compiler.lower.FunctionCompiler.finish_op, move, width, Itasca.Translate.valueType] <;>
-    split <;> simp only [bind_ok] <;> first
-    | rfl
-    | (rename_i h; exact False.elim ((by decide : (1#u32) ≠ (2#u32)) h))
-    | (rename_i h; exact False.elim ((by decide : (2#u32) ≠ (1#u32)) h))
-    | (rename_i h _; exact False.elim (h rfl))
-    | (rename_i _ h; exact False.elim (h rfl))
+  have one : runtime.compiler.FunctionCompiler.copy ops compiler dst src 1#u32 =
+      runtime.compiler.FunctionCompiler.emit ops compiler (.Copy dst src) := by
+    rw [runtime.compiler.FunctionCompiler.copy.eq,
+      if_neg (fun choice => choice.elim (by decide : (1#u32) ≠ 0#u32) different)]
+    rfl
+  have two : runtime.compiler.FunctionCompiler.copy ops compiler dst src 2#u32 =
+      runtime.compiler.FunctionCompiler.emit ops compiler (.Copy2 dst src) := by
+    rw [runtime.compiler.FunctionCompiler.copy.eq,
+      if_neg (fun choice => choice.elim (by decide : (2#u32) ≠ 0#u32) different)]
+    rfl
+  rw [runtime.compiler.lower.FunctionCompiler.finish_op.eq]
+  cases ty <;> simp only [runtime.value.width, one, two, bind_ok,
+    move, width, Itasca.Translate.valueType]
+  all_goals rfl
 
 
 set_option maxRecDepth 4096 in

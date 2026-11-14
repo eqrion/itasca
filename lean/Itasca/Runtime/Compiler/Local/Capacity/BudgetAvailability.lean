@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral
@@ -74,17 +75,11 @@ private theorem finish_code_success {A} (ops : runtime.platform.Alloc A)
     (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (),after)) :
     after.function.code.val.length = before.function.code.val.length + 1 := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases status with
-  | Err error => simp [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    rw [compiler_observe_code_result ops law middle after state (.Ok ()) rest,
-      compiler_emit_code_success ops law before middle instruction emitted]
-    simp
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) accepted).success
+  rw [compiler_observe_code_result ops law middle after state (.Ok ()) rest,
+    compiler_emit_code_success ops law before middle instruction emitted]
+  simp
 
 open Lean Meta Elab Tactic in
 elab "auxiliary_growth_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do

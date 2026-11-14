@@ -195,4 +195,33 @@ theorem initializer_loop_success {S O : Type} (body : S → Result (ControlFlow 
     | cont next =>
       exact ih (measure next) (by simpa [hmeasure] using effect.2) next rfl effect.1 rest
 
+@[step] theorem bounded_index (value : Usize) :
+    runtime.compiler.bounded_index value ⦃ result =>
+      ∀ word, result = .Ok word → word.val = value.val ⦄ := by
+  unfold runtime.compiler.bounded_index
+  step
+  split
+  · simp
+  · step as ⟨word, hword⟩
+    intro w equality
+    cases equality
+    simp only [hword, UScalar.cast_val_eq]
+    simp_all [core.num.U32.MAX, U32.rMax]
+    scalar_tac
+
+/-- A source-bounded auxiliary index passes the executable u32 gate. -/
+theorem bounded_index_available (value : Usize) (bounded : value.val ≤ U32.max) :
+    runtime.compiler.bounded_index value ⦃ out =>
+      ∃ index, out = .Ok index ∧ index.val = value.val ⦄ := by
+  unfold runtime.compiler.bounded_index
+  step as ⟨maximum,maximumEq⟩
+  have inside : ¬ value > maximum := by
+    simp_all [core.num.U32.MAX,U32.rMax]
+    scalar_tac
+  simp only [if_neg inside]
+  step as ⟨index,indexEq⟩
+  refine ⟨index,rfl,?_⟩
+  simp only [indexEq,UScalar.cast_val_eq]
+  scalar_tac
+
 end Itasca.Runtime.Compiler

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
@@ -165,19 +166,10 @@ open Aeneas Aeneas.Std
     (a b : U32) (fits : compiler.function.indirect.val.length < Usize.max) :
     runtime.compiler.FunctionCompiler.pair ops compiler a b ⦃ out =>
       ∃ budget pairs, out.2 = { compiler with budget := budget, function := { compiler.function with indirect := pairs } } ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.pair
-  step with bounded_index (alloc.vec.Vec.len compiler.function.indirect) as ⟨indexResult, _⟩
-  cases indexResult with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, WP.spec_ok]
-    exact ⟨compiler.budget, compiler.function.indirect, rfl⟩
-  | Ok index =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with budget_push ops law compiler.budget compiler.function.indirect (a,b) fits
-      as ⟨answer, budget, pairs, effect⟩
-    cases answer <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, WP.spec_ok]
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.pair.total ops law compiler a b fits)
+  rintro ⟨status, after⟩ frame
+  exact ⟨after.budget, after.function.indirect, frame⟩
+
 
 end Itasca.Runtime.Compiler
 

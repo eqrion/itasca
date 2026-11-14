@@ -10,12 +10,7 @@ open Aeneas Aeneas.Std
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     runtime.compiler.FunctionCompiler.copy ops compiler dst src count ⦃ _ => True ⦄ := by
-  by_cases empty : count = 0#u32 ∨ src = dst
-  · rw [compiler_copy_elided ops compiler dst src count empty]
-    simp [WP.spec_ok]
-  · apply WP.spec_mono (compiler_copy ops law compiler dst src count
-      (by tauto) (by tauto) codeFits sourceFits coordinateFits)
-    simp
+  exact runtime.compiler.FunctionCompiler.copy.total ops law compiler dst src count codeFits sourceFits coordinateFits
 
 set_option maxRecDepth 4096 in
 @[step] theorem compiler_local_get_total {A} (ops : runtime.platform.Alloc A)

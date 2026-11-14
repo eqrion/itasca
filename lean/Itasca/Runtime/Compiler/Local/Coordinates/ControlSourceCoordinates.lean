@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceEntry
@@ -170,17 +173,11 @@ theorem compiler_copy_source_coordinates {A : Type} (ops : runtime.platform.Allo
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (called : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.copy at called
-  split at called
-  · have same := (Prod.mk.inj (Result.ok.injEq.mp called)).2
-    subst after
+  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count (.Ok ()) called with
+    ⟨_, _, same⟩ | ⟨_, _, emitted⟩
+  · subst after
     exact held
-  · split at called
-    · have same := (Prod.mk.inj (Result.ok.injEq.mp called)).2
-      subst after
-      exact held
-    · obtain ⟨instruction,_,emitted⟩ := bind_ok_inv _ _ _ called
-      exact compiler_emit_source_coordinates ops law before after instruction held inside emitted
+  · exact compiler_emit_source_coordinates ops law before after _ held inside emitted
 
 /-- Successful observation advances the cursor while preserving the stored
 source vector and body interval. -/
@@ -210,17 +207,11 @@ theorem compiler_finish_op_source_coordinates {A : Type} (ops : runtime.platform
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at called
-  obtain ⟨⟨reply,middle⟩,emitted,rest⟩ := Itasca.ResultFacts.bind_ok_inv _ _ _ called
-  cases reply with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    simp only [Std.uncurry,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    have coordinates := compiler_emit_source_coordinates ops law before middle instruction held inside emitted
-    have cursor := compiler_emit_cursor ops before middle instruction (.Ok ()) emitted
-    exact compiler_observe_source_coordinates ops law middle after state coordinates (by simpa only [cursor] using forward) rest
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) called).success
+  have coordinates := compiler_emit_source_coordinates ops law before middle instruction held inside emitted
+  have cursor := compiler_emit_cursor ops before middle instruction (.Ok ()) emitted
+  exact compiler_observe_source_coordinates ops law middle after state coordinates (by simpa only [cursor] using forward) rest
 
 /-- Metadata-preserving helpers with unchanged coordinates and cursor cannot
 invalidate source publication bounds. -/
@@ -279,33 +270,10 @@ theorem compiler_pair_source_coordinates {A : Type} (ops : runtime.platform.Allo
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after))
     (held : SourceCoordinates before) :
     SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact held
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        exact held
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact held
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
+  exact held
 
 /-- Conditional forms allow composition through extracted result matches. -/
 theorem compiler_emit_source_coordinates_result {A : Type} (ops : runtime.platform.Alloc A)

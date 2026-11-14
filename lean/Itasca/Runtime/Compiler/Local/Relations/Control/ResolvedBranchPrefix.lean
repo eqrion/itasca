@@ -27,18 +27,11 @@ theorem compiler_copy_success {A : Type} (ops : runtime.platform.Alloc A)
     (dst src count : U32) (nonempty : count ≠ 0#u32) (different : src ≠ dst)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (.Ok (), after)) :
     Emitted before after (transferInstruction dst src count) := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  rw [if_neg nonempty, if_neg different] at accepted
-  split at accepted
-  · simp only [bind_ok] at accepted
-    simpa [transferInstruction, UScalar.val] using compiler_emit_success ops law before after (.Copy dst src) accepted
-  · simp only [bind_ok] at accepted
-    simpa [transferInstruction, UScalar.val] using compiler_emit_success ops law before after (.Copy2 dst src) accepted
-  · rename_i notOne notTwo
-    simp only [bind_ok] at accepted
-    have h1 : count.val ≠ 1 := by intro eq; apply notOne; apply UScalar.eq_of_val_eq; exact eq
-    have h2 : count.val ≠ 2 := by intro eq; apply notTwo; apply UScalar.eq_of_val_eq; exact eq
-    simpa [transferInstruction, h1, h2] using compiler_emit_success ops law before after (.CopyN dst src count) accepted
+  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count (.Ok ()) accepted with
+    ⟨elided, _, _⟩ | ⟨_, _, emitted⟩
+  · exact False.elim (elided.elim nonempty different)
+  · exact compiler_emit_success ops law before after _ emitted
+
 end Itasca.Runtime.Compiler
 
 end

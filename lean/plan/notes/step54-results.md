@@ -3,7 +3,7 @@
 Completed 2026-11-13. Production integration, lint, and audit pass. The body-only
 Rust mutation requires repairs in exactly one Lean file; full downstream
 integration then passes. The pilot triggers the line-growth stop condition.
-Step 5.5 has not begun and awaits the user's decision.
+The user subsequently approved continuing with step 5.5 despite that increase.
 
 ## Pilot measurements
 
@@ -64,5 +64,5 @@ resolved it. Just lint and just audit pass, and the headline audit is unchanged.
 
 The only triggered step 5.4 stop condition is: "the pilot increased the total
 lines under Runtime/Compiler". The +656-line result meets that condition.
-Wait for the user's decision before step 5.5; the relaxed general repair-count
-rule does not waive this specific pilot gate.
+The user explicitly approved waiving this line-growth gate and continuing
+with step 5.5. Other proof and trust-boundary requirements remain in force.

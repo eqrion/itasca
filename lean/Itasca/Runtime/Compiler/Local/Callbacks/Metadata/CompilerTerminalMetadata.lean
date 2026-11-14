@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
@@ -193,50 +196,20 @@ theorem compiler_copy_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.copy at accepted
-  split at accepted
-  · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-    subst after
-    exact .refl _
-  · split at accepted
-    · have same : before = after := (Prod.mk.inj (Result.ok.injEq.mp accepted)).2
-      subst after
-      exact .refl _
-    · obtain ⟨instruction, _, emitted⟩ := bind_ok_inv _ _ _ accepted
-      exact compiler_emit_ordinary_result ops before after instruction status emitted
+  have frame := (runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count status accepted).frame
+  change after = _ at frame
+  rw [frame]
+  exact ⟨rfl, Nat.le_refl _⟩
 
 theorem compiler_pair_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (a b : U32)
     (status : core.result.Result U32 Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.pair at accepted
-  obtain ⟨result, _, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact ⟨rfl, Nat.le_refl _⟩
-  | Ok value =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, budget, pairs⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        exact ⟨rfl, Nat.le_refl _⟩
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Result.ok.injEq, core.result.Result.Ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact ⟨rfl, Nat.le_refl _⟩
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
+  exact ⟨rfl, Nat.le_refl _⟩
 
 theorem compiler_finish_op_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -244,21 +217,12 @@ theorem compiler_finish_op_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨result, middle⟩, emitted, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      exact compiler_emit_ordinary_result ops before middle instruction (.Err error) emitted
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
+  cases runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction status accepted with
+  | rejected emitted => exact compiler_emit_ordinary_result ops before after instruction _ emitted
+  | @observed middle _ _ emitted observed =>
     exact (compiler_emit_ordinary_result ops before middle instruction (.Ok ()) emitted).trans
-      (compiler_observe_ordinary_result ops law middle after state status rest)
+      (compiler_observe_ordinary_result ops law middle after state status observed)
+
 end Itasca.Runtime.Compiler
 
 end

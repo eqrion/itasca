@@ -1198,8 +1198,8 @@ Done when: `enter`, `pc` and `observe` are each unfolded in one module.
 
 Completed 2026-11-13: [pilot measurements and mutation experiment](notes/step54-results.md).
 The experiment requires repairs in one Lean file and full integration passes.
-Paused before 5.5: the pilot adds 656 compiler lines, triggering the explicit
-line-growth gate below. Awaiting the user's decision.
+The user approved continuing past the +656 compiler-line gate. Phase 5.5
+rollout is authorized; retain the remaining proof and trust-boundary rules.
 
 Test the claim the refactor exists for: on a scratch branch make a small
 body-only Rust change to `emit` (for example add a redundant check that cannot
@@ -1221,6 +1221,9 @@ stop and wait for the user:
 - a statement outside the contract modules had to change.
 
 ### 5.5 Rollout
+
+In progress: [remaining-helper contracts and targeted checks](notes/step55-helpers.md).
+Copy, patch, pair, and finish_op each have one unfold owner.
 
 Same method, bottom-up, in this order (unfold counts are today's):
 

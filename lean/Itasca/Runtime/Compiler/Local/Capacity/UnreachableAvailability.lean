@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
@@ -11,7 +13,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
 /-!
-Sections, each formerly its own module: ChargeAvailability, BudgetEffects, EmitAvailability, ObserveAvailability, CallbackAvailability, EmissionFrameAvailability, ObserveBudgetAvailability, FinishBudgetAvailability, CopyBudgetAvailability, CallbackCapacity, ScopeDemand, BodyResourceRoom, MemoryAvailability, AuxiliaryAvailability, SelectAvailability, UnreachableAvailability.
+Sections, each formerly its own module: ChargeAvailability, BudgetEffects, EmitAvailability, ObserveAvailability, EmissionFrameAvailability, ObserveBudgetAvailability, FinishBudgetAvailability, CopyBudgetAvailability, CallbackCapacity, ScopeDemand, BodyResourceRoom, MemoryAvailability, AuxiliaryAvailability, SelectAvailability, UnreachableAvailability.
 -/
 
 /-! ## ChargeAvailability -/
@@ -142,31 +144,6 @@ end Itasca.Runtime.Compiler
 
 end
 
-/-! ## CallbackAvailability -/
-
-section
-
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
-
-/-- Numeric demand at a callback boundary. These are independent size,
-coordinate, and budget bounds, not callback acceptance or code certificates. -/
-structure CallbackDemand {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (bound : Nat) : Prop where
-  pc : compiler.function.code.length ≤ U32.max
-  codeCapacity : compiler.function.code.length < Usize.max
-  sourceCapacity : compiler.function.source_offsets.length < Usize.max
-  codeReserve : compiler.function.code.length + 1 ≤ bound
-  sourceReserve : compiler.function.source_offsets.length + 1 ≤ bound
-  coordinate : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max
-  instruction : compiler.budget.instructions.val < compiler.budget.limits.max_instructions.val
-  operands : state.vals.length ≤ bound
-  slots : compiler.function.local_slots.val + 2*state.vals.length ≤ U32.max
-
-end Itasca.Runtime.Compiler
-
-end
-
 /-! ## EmissionFrameAvailability -/
 
 section
@@ -219,19 +196,7 @@ theorem finish_op_available_budget {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state instruction ⦃ out =>
       out.1 = .Ok () ∧ ∃ used, out.2.budget = {compiler.budget with instructions := used} ∧
         used.val = compiler.budget.instructions.val+1 ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op
-  step with compiler_emit_available_frame ops bound available compiler instruction demand.pc demand.codeCapacity
-    demand.sourceCapacity demand.codeReserve demand.sourceReserve demand.coordinate demand.instruction
-    as ⟨status,emitted,accepted,used,code,sources,shape,usedEq,appended,coordinates⟩
-  rw [accepted]
-  subst emitted
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  apply WP.spec_mono (compiler_observe_available_budget ops bound available
-    {compiler with
-      budget := {compiler.budget with instructions := used}
-      function := {compiler.function with code,source_offsets := sources}} state demand.operands demand.slots)
-  intro out post
-  exact ⟨post.1,used,post.2,usedEq⟩
+  exact runtime.compiler.lower.FunctionCompiler.finish_op.available ops bound available compiler state demand instruction
 
 /-- The complete integer numeric family has a source-independent resource
 allowance of one instruction; the dead path observes without charging it. -/
@@ -344,20 +309,20 @@ theorem compiler_copy_available_effect {A : Type} (ops : runtime.platform.Alloc 
       out.1 = .Ok () ∧ (out.2 = compiler ∨ ∃ instruction, Emitted compiler out.2 instruction) ∧
       CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.copy
-  split
-  · exact WP.spec.ret ⟨rfl,Or.inl rfl,(CompilationBudgetEffect.refl compiler.budget).weaken
-      (by intro counter; omega)⟩
-  · split
-    · exact WP.spec.ret ⟨rfl,Or.inl rfl,(CompilationBudgetEffect.refl compiler.budget).weaken
-        (by intro counter; omega)⟩
-    · have emit (instruction : runtime.bytecode.Instr) :=
-        compiler_emit_available_effect ops bound available compiler state demand instruction
-      split <;> simp only [bind_ok]
-      all_goals
-        apply WP.spec_mono (emit _)
-        intro out post
-        exact ⟨post.1,Or.inr ⟨_,post.2.1⟩,post.2.2⟩
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.copy.available ops bound available compiler dst src count
+    (fun _ _ => ⟨demand.pc, demand.codeCapacity, demand.sourceCapacity, demand.codeReserve,
+      demand.sourceReserve, demand.coordinate, demand.instruction⟩))
+  intro output post
+  rcases post.2 with same | emitted
+  · refine ⟨post.1, Or.inl same, ?_⟩
+    rw [same]
+    exact (CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)
+  · refine ⟨post.1, Or.inr ⟨_, emitted.emitted⟩, ?_⟩
+    obtain ⟨used, code, sources, frame, usedEq, appended, recorded⟩ := emitted
+    rw [frame]
+    exact .of_counter .instructions compiler.budget used 1
+      (by simp only [ChargeCounter.used]; omega)
+      (by simpa only [ChargeCounter.used] using Nat.le_of_eq usedEq)
 
 end Itasca.Runtime.Compiler
 
@@ -730,21 +695,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- A source-bounded auxiliary index passes the executable u32 gate. -/
-theorem bounded_index_available (value : Usize) (bounded : value.val ≤ U32.max) :
-    runtime.compiler.bounded_index value ⦃ out =>
-      ∃ index, out = .Ok index ∧ index.val = value.val ⦄ := by
-  unfold runtime.compiler.bounded_index
-  step as ⟨maximum,maximumEq⟩
-  have inside : ¬ value > maximum := by
-    simp_all [core.num.U32.MAX,U32.rMax]
-    scalar_tac
-  simp only [if_neg inside]
-  step as ⟨index,indexEq⟩
-  refine ⟨index,rfl,?_⟩
-  simp only [indexEq,UScalar.cast_val_eq]
-  scalar_tac
-
 /-- Pair-table insertion accepts its independently bounded index and reserve
 request. Its exact append is retained for indirect-call and bulk-table code. -/
 theorem compiler_pair_available {A : Type} (ops : runtime.platform.Alloc A)
@@ -757,16 +707,11 @@ theorem compiler_pair_available {A : Type} (ops : runtime.platform.Alloc A)
       ∃ index pairs, out.1 = .Ok index ∧ index.val = compiler.function.indirect.length ∧
         out.2 = {compiler with function := {compiler.function with indirect := pairs}} ∧
         pairs.val = compiler.function.indirect.val ++ [(first,second)] ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.pair
-  step with bounded_index_available (alloc.vec.Vec.len compiler.function.indirect) indexBound
-    as ⟨status,index,accepted,indexEq⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available compiler.budget compiler.function.indirect
-    (first,second) capacity request as ⟨status,budget,pairs,accepted,same,appended⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  exact ⟨index,pairs,rfl,indexEq,by rw [same],appended⟩
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.pair.available ops bound available compiler first second
+    indexBound capacity request)
+  rintro ⟨status, after⟩ ⟨index, accepted, pairs, same, appended, indexEq⟩
+  exact ⟨index, pairs, accepted, indexEq, same, appended⟩
+
 
 end Itasca.Runtime.Compiler
 
