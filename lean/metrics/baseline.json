@@ -1,16 +1,16 @@
 {
-  "all_goals": 1197,
+  "all_goals": 1198,
   "bare_simp": 8822,
   "extra_unfold_files": 1379,
-  "extracted_functions_unfolded": 754,
+  "extracted_functions_unfolded": 759,
   "extracted_functions_unfolded_in_3_or_more_files": 259,
-  "handwritten_lines": 285277,
+  "handwritten_lines": 285633,
   "heartbeat_overrides": 265,
   "layer_violations": 0,
   "lean_lines_by_area": {
     "compiler": 97027,
     "interp": 48371,
-    "store": 28557,
+    "store": 28567,
     "validator": 61179
   },
   "lean_lines_per_rust_line": {
@@ -22,8 +22,8 @@
   "max_import_depth": 64,
   "max_theorem_binders": 56,
   "max_unfold_files": 52,
-  "median_module_lines": 249.5,
-  "modules": 780,
+  "median_module_lines": 249.0,
+  "modules": 782,
   "modules_over_1500_lines": 1,
   "modules_under_50_lines": 53,
   "recdepth_overrides": 335,
@@ -34,6 +34,6 @@
     "validator": 5397
   },
   "sorry": 0,
-  "theorems": 8905,
+  "theorems": 8906,
   "theorems_with_15_or_more_binders": 1010
 }

@@ -250,6 +250,16 @@ open Aeneas Aeneas.Std
     runtime.Value.value_type value = .ok (Interp.rawType value) := by
   cases value <;> rfl
 
+/-- The store check accepts exactly its own identity, without inspecting handles. -/
+@[step] theorem _root_.Itasca.runtime.store.Store.check.spec {M : Type}
+    (memory : runtime.platform.MemoryBuffer M) (store : runtime.store.Store M) (id : Usize) :
+    runtime.store.Store.check memory store id ⦃ answer =>
+      answer = if id = store.id then .Ok () else .Err .WrongStore ⦄ := by
+  unfold runtime.store.Store.check
+  by_cases same : id = store.id
+  · simp only [if_pos same, WP.spec_ok]
+  · simp only [if_neg same, WP.spec_ok]
+
 theorem check_value_owned {M : Type} (ops : runtime.platform.MemoryBuffer M)
     (s : runtime.store.Store M) (value : runtime.Value)
     (hv : Interp.ValueOwnedFits s.id value) :

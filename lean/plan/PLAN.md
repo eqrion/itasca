@@ -56,6 +56,11 @@ first thing to do with one is to make it typecheck.
 
 ## Additional decision (2026-11-13)
 
+- Routine tactic, syntax, and elaboration repairs may continue beyond three
+  attempts. The user relaxed the general repair-count stop after step 3.4's
+  tuple-reduction issue. Stop for substantive proof blockers and retain the
+  explicit step-specific and trust-boundary stop conditions below.
+
 - Step 3.3 may continue past the three-repair stop for the external-reference
   scalar-bound proof. The user approved continuing after the remaining goal
   was identified as `U32.max < U64.max`; retain the other stop conditions.
@@ -114,7 +119,8 @@ first thing to do with one is to make it typecheck.
    raise a heartbeat limit.
 6. Stop and report to the user, without working around it, when:
    - a step's "Stop if" condition holds;
-   - a proof still fails after three different repair attempts;
+   - a substantive proof blocker prevents progress (routine tactic and
+     elaboration repairs have no fixed attempt limit);
    - a headline theorem statement would have to change in a way the step does
      not describe;
    - a specification patch, `FunsExternal.lean`, or a pinned tool would have to
@@ -905,6 +911,8 @@ transport lemma `ExecutableInv.append_hosts` is still what proves the success
 case.
 
 ### 3.4 Writes and growth
+
+Completed 2026-11-13: [contracts and validation](notes/step34-results.md).
 
 `set_global` (5.7), `set_table` (5.8), `memory_mut` (5.9), `grow_memory_with`
 (5.10), `grow_table_with` (5.11). For `memory_mut` the postcondition quantifies
