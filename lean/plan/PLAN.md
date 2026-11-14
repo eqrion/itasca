@@ -942,6 +942,8 @@ return (`StagedPrefix`, `CumulativeStoreMutation`, and length monotonicity of
 
 ### 3.7 Publish the results
 
+Completed 2026-11-13: [published contracts and audit](notes/step37-results.md).
+
 - New `lean/Itasca/Results/Store.lean` restating the theorems of 3.2 to 3.5 as
   one-line projections, in the style of the other `Results/` files.
 - Import it in `Itasca/Main.lean` and list the theorems in its docstring.

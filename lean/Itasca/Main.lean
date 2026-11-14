@@ -8,6 +8,7 @@ import Itasca.Runtime.Contracts
 import Itasca.Results.Compile
 import Itasca.Results.Instantiate
 import Itasca.Results.Invoke
+import Itasca.Results.Store
 
 /-!
 # Validator results
@@ -59,6 +60,15 @@ operations, host callbacks, compiler eligibility and source resources) are liste
 [Results/Invoke](Results/Invoke.lean), invocation of an issued function:
 - behavior: `runtime.interp.invoke_with.behaves`, `terminates`
 - completeness: `runtime.interp.invoke_with.no_spurious_errors`
+
+[Results/Store](Results/Store.lean), store operations (all names under `runtime.store.Store`):
+- creation: `with_identity.spec`
+- definitions: `define_extern_with.spec`, `define_host_with.spec`, `define_memory_with.spec`,
+  `define_table_with.spec`, `define_global_with.spec`
+- writes and growth: `set_global.spec`, `set_table.spec`, `memory_mut.spec`,
+  `grow_memory_with.spec`, `grow_table_with.spec`
+- reads: `global.spec`, `memory.spec`, `table_size.spec`, `table_get.spec`,
+  `func_type.spec`, `extern_identity.spec`, `export.spec`
 
 [Runtime/Contracts](Runtime/Contracts.lean), embedder obligations:
 - platform: `Platform.AllocCorrect`, `Platform.AllocationAvailable`, `Platform.FloatOpsCorrect`,

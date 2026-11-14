@@ -63,9 +63,25 @@ extension.
 
 ## Store state
 
-The invariant `ExecutableInv` (in `Integration/Api/`) is established by instantiation and preserved
-by every result; it is a certificate, not an embedder obligation.
-Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Store/Linking/LinkedOwners.lean),
+[`Results/Store`](../Results/Store.lean) states the generic store API guarantees.
+`with_identity` establishes `ExecutableInv` (in `Integration/Api/`) when its
+identity is positive. Mutating operations preserve that invariant under their
+individual premises; instantiation and invocation preserve it under their
+existing premises. Read contracts relate results to decoded objects or raw store
+values. Allocation-backed definitions and table growth require
+`Platform.AllocCorrect`. Memory definition, access, writeback and growth require
+`Platform.MemoryLaws`; `memory_mut` additionally requires same-length write-back.
+Operations that take handles or values require the stated issued-handle and
+issued-value premises. Value-type checks reject incompatible inputs without
+changing the store.
+
+These are contracts for the generic extracted operations. They do not prove
+that the native identity counter, allocator, memory buffer or floating-point
+wrapper satisfies its contract. An embedding may establish `HostWorldSound` for
+its callbacks by composing the store API theorems when the callback behavior
+meets their premises. This does not establish `HostWorldSound` for arbitrary
+callbacks, and [`HostRetention`](#host-callbacks) remains a separate obligation.
+The relevant handle and value predicates are [`Store.ExternalIssued`](Store/Linking/LinkedOwners.lean),
 [`Store.IssuedValue`](Store/Invariant/HostSignature.lean) and
 [`Store.ValueInStore`](Store/Invariant/Typing.lean).
 -/

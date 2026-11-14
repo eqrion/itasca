@@ -36,7 +36,25 @@ def headline : List Name := [
   `Itasca.Runtime.runtime.store.instantiate.Store.instantiate_with.spec,
   `Itasca.Runtime.runtime.interp.invoke_with.behaves,
   `Itasca.Runtime.runtime.interp.invoke_with.terminates,
-  `Itasca.Runtime.runtime.interp.invoke_with.no_spurious_errors]
+  `Itasca.Runtime.runtime.interp.invoke_with.no_spurious_errors,
+  `Itasca.Runtime.runtime.store.Store.with_identity.spec,
+  `Itasca.Runtime.runtime.store.Store.define_extern_with.spec,
+  `Itasca.Runtime.runtime.store.Store.define_host_with.spec,
+  `Itasca.Runtime.runtime.store.Store.define_memory_with.spec,
+  `Itasca.Runtime.runtime.store.Store.define_table_with.spec,
+  `Itasca.Runtime.runtime.store.Store.define_global_with.spec,
+  `Itasca.Runtime.runtime.store.Store.set_global.spec,
+  `Itasca.Runtime.runtime.store.Store.set_table.spec,
+  `Itasca.Runtime.runtime.store.Store.memory_mut.spec,
+  `Itasca.Runtime.runtime.store.Store.grow_memory_with.spec,
+  `Itasca.Runtime.runtime.store.Store.grow_table_with.spec,
+  `Itasca.Runtime.runtime.store.Store.global.spec,
+  `Itasca.Runtime.runtime.store.Store.memory.spec,
+  `Itasca.Runtime.runtime.store.Store.table_size.spec,
+  `Itasca.Runtime.runtime.store.Store.table_get.spec,
+  `Itasca.Runtime.runtime.store.Store.func_type.spec,
+  `Itasca.Runtime.runtime.store.Store.extern_identity.spec,
+  `Itasca.Runtime.runtime.store.Store.export.spec]
 
 def allowedAxioms : List Name := [``propext, ``Classical.choice, ``Quot.sound]
 

@@ -15,12 +15,30 @@ Itasca.Runtime.runtime.store.instantiate.Store.instantiate_with.spec: standard a
 Itasca.Runtime.runtime.interp.invoke_with.behaves: standard axioms only
 Itasca.Runtime.runtime.interp.invoke_with.terminates: standard axioms only
 Itasca.Runtime.runtime.interp.invoke_with.no_spurious_errors: standard axioms only
+Itasca.Runtime.runtime.store.Store.with_identity.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.define_extern_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.define_host_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.define_memory_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.define_table_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.define_global_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.set_global.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.set_table.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.memory_mut.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.grow_memory_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.grow_table_with.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.global.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.memory.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.table_size.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.table_get.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.func_type.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.extern_identity.spec: standard axioms only
+Itasca.Runtime.runtime.store.Store.export.spec: standard axioms only
 no handwritten declaration uses sorry or an unproved specification theorem
 
 # Statement cone totals (declarations, lines)
-handwritten: 1682 declarations, 9486 lines
-spectec: 2616 declarations, 25640 lines
-extracted: 2722 declarations, 62349 lines
+handwritten: 1699 declarations, 9603 lines
+spectec: 2617 declarations, 25641 lines
+extracted: 2743 declarations, 62925 lines
 
 # Handwritten statement cone (module, declaration, lines)
 Itasca.Binary.Leb128	Itasca.Leb128.payload	4
@@ -918,6 +936,8 @@ Itasca.Runtime.Integration.Execution.History.State	Itasca.Runtime.Integration.Ev
 Itasca.Runtime.Integration.Execution.History.State	Itasca.Runtime.Integration.EventfulMachine.source	1
 Itasca.Runtime.Integration.Execution.History.State	Itasca.Runtime.Integration.EventfulMachine.pc	1
 Itasca.Runtime.Integration.Execution.History.State	Itasca.Runtime.Integration.EventfulMachine.pending	1
+Itasca.Runtime.Integration.Execution.Mutation.BulkResult	Itasca.Runtime.Integration.CumulativeStoreMutation	11
+Itasca.Runtime.Integration.Execution.Mutation.BulkResult	Itasca.Runtime.Integration.CumulativeStoreMutation.mk	1
 Itasca.Runtime.Integration.Execution.Ownership.Publication	Itasca.Runtime.Store.ownershipBounds	3
 Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape	Itasca.Runtime.Integration.CertifiedSupportedStore	11
 Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape	Itasca.Runtime.Integration.CertifiedSupportedStore.mk	1
@@ -991,6 +1011,7 @@ Itasca.Runtime.Interp.Machine.SuspendedPoint	Itasca.Runtime.Interp.Machine.Suspe
 Itasca.Runtime.Interp.Machine.SuspendedPoint	Itasca.Runtime.Interp.Machine.ControlPoint	10
 Itasca.Runtime.Interp.Machine.SuspendedPoint	Itasca.Runtime.Interp.Machine.ControlPoint.ready	2
 Itasca.Runtime.Interp.Machine.SuspendedPoint	Itasca.Runtime.Interp.Machine.ControlPoint.jump	3
+Itasca.Runtime.Interp.Memory.MemoryCoreStep	Itasca.Runtime.Interp.MemoryMutation	7
 Itasca.Runtime.Interp.Relations.ArgumentRejectionKind	Itasca.Runtime.Interp.SourceCapacityEnvironment	9
 Itasca.Runtime.Interp.Relations.ArgumentRejectionKind	Itasca.Runtime.Interp.SourceCapacityEnvironment.mk	1
 Itasca.Runtime.Interp.Relations.ArgumentRejectionKind	Itasca.Runtime.Interp.sourceCapacityContext	5
@@ -1004,6 +1025,8 @@ Itasca.Runtime.Interp.Relations.Defaults	Itasca.Runtime.Interp.FrameSlots	3
 Itasca.Runtime.Interp.Relations.Defaults	Itasca.Runtime.Interp.FrameBinding	15
 Itasca.Runtime.Interp.Relations.FrameStoreMetadata	Itasca.Runtime.Interp.FrameProgram	12
 Itasca.Runtime.Interp.Relations.FrameStoreMetadata	Itasca.Runtime.Interp.FrameProgram.mk	1
+Itasca.Runtime.Interp.Relations.FrameStoreMetadata	Itasca.Runtime.Interp.FrameStoreMetadata	7
+Itasca.Runtime.Interp.Relations.FrameStoreMetadata	Itasca.Runtime.Interp.FrameStoreMetadata.mk	1
 Itasca.Runtime.Interp.Relations.SourceCallCause	Itasca.Runtime.Interp.suspendedSourceWords	5
 Itasca.Runtime.Interp.Relations.SourceCallCause	Itasca.Runtime.Interp.SourceCallSite	13
 Itasca.Runtime.Interp.Relations.StackPreservation	Itasca.Runtime.Interp.FrameStorePrefix	8
@@ -1016,6 +1039,8 @@ Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses	Itasca.Runtime.Interp
 Itasca.Runtime.Interp.Relations.TypedOperands	Itasca.Runtime.Interp.ExecutionState	2
 Itasca.Runtime.Interp.Relations.TypedOperands	Itasca.Runtime.Interp.ExecutionResult	3
 Itasca.Runtime.Interp.Relations.TypedOperands	Itasca.Runtime.Interp.finishExecution	3
+Itasca.Runtime.Interp.State.GlobalCoreStep	Itasca.Runtime.Interp.GlobalMutation	9
+Itasca.Runtime.Interp.State.StatefulSegmentLookup	Itasca.Runtime.Interp.TableMutation	7
 Itasca.Runtime.Platform.Laws	Itasca.Runtime.Platform.AllocCorrect	5
 Itasca.Runtime.Platform.Laws	Itasca.Runtime.Platform.AllocationAvailable	7
 Itasca.Runtime.Platform.Laws	Itasca.Runtime.Platform.Recording.run	6
@@ -1077,8 +1102,10 @@ Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.valueType	5
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.encodeValue	6
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Compiler.encodeValues	1
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Interp.sourceType	8
+Itasca.Runtime.Representation.Values	Itasca.Runtime.Interp.rawType	8
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Interp.ValueOwnedFits	4
 Itasca.Runtime.Representation.Values	Itasca.Runtime.Interp.sourceValue	10
+Itasca.Runtime.Representation.Values	Itasca.Runtime.Interp.pairWords	2
 Itasca.Runtime.SourceMachine.BrTable	Itasca.Runtime.SourceMachine.FramesReturn	5
 Itasca.Runtime.SourceMachine.BrTable	Itasca.Runtime.SourceMachine.FramesReturn.last	1
 Itasca.Runtime.SourceMachine.BrTable	Itasca.Runtime.SourceMachine.FramesReturn.under	1
@@ -1310,7 +1337,11 @@ Itasca.Runtime.Spec.SegmentInitCases	Itasca.Runtime.Spec.StepsHN.cons	3
 Itasca.Runtime.Spec.SegmentInitCases	Itasca.Runtime.Spec.Iterations	7
 Itasca.Runtime.Spec.SegmentInitCases	Itasca.Runtime.Spec.Iterations.refl	1
 Itasca.Runtime.Spec.SegmentInitCases	Itasca.Runtime.Spec.Iterations.cons	3
+Itasca.Runtime.Store.Api.DefineTable	Itasca.Runtime.Store.TableGrowth	12
+Itasca.Runtime.Store.Api.DefineTable	Itasca.Runtime.Store.MemoryGrowth	17
 Itasca.Runtime.Store.Api.DefineTable	Itasca.Runtime.Store.objectCount	3
+Itasca.Runtime.Store.Api.Exports	Itasca.Runtime.Store.resolveExport	7
+Itasca.Runtime.Store.Api.Exports	Itasca.Runtime.Store.exportSearch	5
 Itasca.Runtime.Store.Api.GlobalStagingCauses	Itasca.Runtime.Store.GlobalAllocationCause	5
 Itasca.Runtime.Store.Api.GlobalStagingCauses	Itasca.Runtime.Store.globalStageCall	5
 Itasca.Runtime.Store.Api.GlobalStagingCauses	Itasca.Runtime.Store.GlobalStagingCause	13
@@ -1325,6 +1356,8 @@ Itasca.Runtime.Store.Api.MemoryBindingLoop	Itasca.Runtime.Store.ModuleExportBoun
 Itasca.Runtime.Store.Api.MemoryBindingLoop	Itasca.Runtime.Store.ModuleExportBounds.mk	1
 Itasca.Runtime.Store.Api.MemoryBindingLoop	Itasca.Runtime.Store.ExportBounds	3
 Itasca.Runtime.Store.Initialization.ElementLoop	Itasca.Runtime.Store.SegmentAccounting	3
+Itasca.Runtime.Store.Initialization.ElementLoop	Itasca.Runtime.Store.SegmentCounts	5
+Itasca.Runtime.Store.Initialization.ElementLoop	Itasca.Runtime.Store.SegmentCounts.mk	1
 Itasca.Runtime.Store.Initialization.ElementShapeLoop	Itasca.Runtime.Store.storeParts	7
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.DataAllocationCause	6
 Itasca.Runtime.Store.Initialization.ElementStagingCauses	Itasca.Runtime.Store.dataStageCall	4
@@ -1358,6 +1391,8 @@ Itasca.Runtime.Store.Invariant.FunctionStagingCauses	Itasca.Runtime.Store.functi
 Itasca.Runtime.Store.Invariant.FunctionStagingCauses	Itasca.Runtime.Store.FunctionStagingCause	7
 Itasca.Runtime.Store.Invariant.HostSignature	Itasca.Runtime.Store.IssuedValue	7
 Itasca.Runtime.Store.Invariant.PrecommitError	Itasca.Runtime.Store.PrecommitError	7
+Itasca.Runtime.Store.Invariant.Rollback	Itasca.Runtime.Store.StagedPrefix	16
+Itasca.Runtime.Store.Invariant.Rollback	Itasca.Runtime.Store.StagedPrefix.mk	1
 Itasca.Runtime.Store.Invariant.SourceAllocationLists	Itasca.Runtime.Store.moduleItems	7
 Itasca.Runtime.Store.Invariant.TypeStagingCauses	Itasca.Runtime.Store.typeStageCall	3
 Itasca.Runtime.Store.Invariant.TypeStagingCauses	Itasca.Runtime.Store.TypeStagingCause	10

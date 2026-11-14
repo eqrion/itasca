@@ -365,6 +365,24 @@ raw frame-metadata retention, nondecreasing extern counts, and issued callback
 values. These conditions are explicit parts of the indexed host contract; they are
 not inferred from decoded source-store extension.
 
+The [store API results](Itasca/Results/Store.lean) cover fresh-store creation,
+definitions, writes, growth and reads. `with_identity` establishes
+`ExecutableInv` when its identity is positive; mutating operations preserve the
+invariant under their stated premises. These include `AllocCorrect` for
+allocation-backed definitions and table growth, `MemoryLaws` for memory
+operations, issued handles and values, and same-length writeback for
+`memory_mut`. Value-type checks reject incompatible inputs without changing
+the store. Instantiation and invocation preserve
+the invariant under their existing premises. Read results agree with the
+corresponding decoded objects; `export` describes the decoded module instance,
+while `extern_identity` returns the value in the raw extern identity vector.
+
+The proofs establish generic runtime contracts. They do not prove that the
+native identity counter, allocator, memory buffer or floating-point wrapper
+satisfies those contracts. Host callbacks can establish `HostWorldSound` by
+composing store API results when their behavior meets the premises; this is a
+callback-specific proof obligation. `HostRetention` remains a separate premise.
+
 The retained compiler relation distinguishes normal exits from branch targets
 and records whether each exit is live. Empty source continuations require a
 live normal exit; branches require a live target. Dead scopes therefore need

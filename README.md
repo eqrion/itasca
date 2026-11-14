@@ -113,6 +113,16 @@ Runtime instantiation uses Wasm 2.0 segment semantics: segment traps preserve
 completed writes and allocated objects.
 Rejection before publication leaves the store unchanged and never reports a trap.
 
+The generic store API guarantees are stated in
+[Results/Store](lean/Itasca/Results/Store.lean): `with_identity` establishes the
+store invariant under a positive identity premise. Mutating operations preserve
+it under their stated handle, value and platform premises; reads agree with the
+corresponding decoded objects or raw store values. These are proofs about the
+generic extracted operations; the native counter, allocator, memory and
+floating-point wrappers remain outside the Lean proof. Export lookup describes
+the decoded instance export map, while `extern_identity` returns the opaque
+identity from the store's raw extern identity vector.
+
 ### Trust boundary
 
 The proofs depend on:

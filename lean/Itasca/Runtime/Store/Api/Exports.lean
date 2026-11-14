@@ -1,4 +1,5 @@
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
+import Itasca.Runtime.Store.Linking.LinkLoop
 
 /-! Exact byte-name comparison and export search, without decoding query bytes. -/
 
@@ -176,13 +177,6 @@ theorem resolveExport_issued {M : Type} (store : runtime.store.Store M)
     exact fun _ => (memories _ (List.getElem_mem bound)).2
   · simp only [resolveExport, descriptor, List.getD_eq_getElem _ _ bound, ExternalIssued]
     exact fun _ => (globals _ (List.getElem_mem bound)).2
-
-/-- Source address corresponding to a raw exported handle. -/
-def decodeExternal : runtime.Extern → externaddr
-  | .Func address => .FUNC address.index.val
-  | .Table address => .TABLE address.index.val
-  | .Memory address => .MEM address.index.val
-  | .Global address => .GLOBAL address.index.val
 
 /-- The raw address selected by an export agrees with its decoded source address. -/
 theorem resolveExport_source {M : Type} (store : runtime.store.Store M)
