@@ -956,6 +956,8 @@ Completed 2026-11-13: [published contracts and audit](notes/step37-results.md).
 
 ### 3.8 The in-repo memory satisfies the memory laws
 
+Completed 2026-11-13: [memory witness and checks](notes/step38-results.md).
+
 In `lean/Itasca/Runtime/Platform/VecMemory.lean` define the dictionary that
 `src/runtime/native.rs` builds (`impl MemoryBuffer for VecMemory`):
 
