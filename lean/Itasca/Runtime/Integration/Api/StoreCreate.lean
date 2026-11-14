@@ -5,7 +5,8 @@ import Itasca.Runtime.Store.Invariant.FunctionCapacities
 
 /-! Shared store construction certificates. Allocation facts and retained
 prefixes preserve structural shape; appending host functions preserves the
-executable invariant and extends the decoded source store. -/
+executable invariant and extends the decoded source store. Issued handles and
+owned values persist under retained prefixes and cumulative mutations. -/
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
@@ -30,6 +31,84 @@ theorem Shape.of_allocated {M : Type} {view : M → Slice U8}
   · simpa only [instances, retained.limits] using shape.instanceLimit
   · simpa only [instances, retained.instanceItems] using shape.instanceAccounting
   · simpa only [retained.instanceItems, retained.limits] using shape.instanceItemLimit
+
+/-- Issued external handles remain valid when object vectors grow under the same identity. -/
+theorem ExternalIssued.mono {M : Type} {before after : runtime.store.Store M}
+    (identity : after.id = before.id)
+    (functions : before.funcs.length ≤ after.funcs.length)
+    (tables : before.tables.length ≤ after.tables.length)
+    (memories : before.memories.length ≤ after.memories.length)
+    (globals : before.globals.length ≤ after.globals.length)
+    {external : runtime.Extern} (issued : ExternalIssued before external) :
+    ExternalIssued after external := by
+  cases external with
+  | Func address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) functions
+  | Table address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) tables
+  | Memory address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) memories
+  | Global address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) globals
+
+/-- Issued reference values survive function and external identity vector growth. -/
+theorem IssuedValue.mono {M : Type} {before after : runtime.store.Store M}
+    (identity : after.id = before.id)
+    (functions : before.funcs.length ≤ after.funcs.length)
+    (externs : before.externs.length ≤ after.externs.length)
+    {value : runtime.Value} (issued : IssuedValue before value) : IssuedValue after value := by
+  cases value with
+  | I32 _ | I64 _ | F32 _ | F64 _ | V128 _ => trivial
+  | FuncRef address =>
+    cases address with
+    | none => trivial
+    | some address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) functions
+  | ExternRef address =>
+    cases address with
+    | none => trivial
+    | some address => exact fun owner => Nat.lt_of_lt_of_le (issued (owner.trans identity)) externs
+
+/-- Owned values retain their encoding bounds and ownership as address spaces grow. -/
+theorem ValueInStore.mono {M : Type} {before after : runtime.store.Store M}
+    (identity : after.id = before.id)
+    (functions : before.funcs.length ≤ after.funcs.length)
+    (externs : before.externs.length ≤ after.externs.length)
+    {value : runtime.Value} (owned : ValueInStore before value) : ValueInStore after value := by
+  refine ⟨by simpa only [identity] using owned.1, ?_⟩
+  cases value with
+  | I32 _ | I64 _ | F32 _ | F64 _ | V128 _ => trivial
+  | FuncRef address =>
+    cases address with
+    | none => trivial
+    | some address => exact Nat.lt_of_lt_of_le owned.2 functions
+  | ExternRef address =>
+    cases address with
+    | none => trivial
+    | some address => exact Nat.lt_of_lt_of_le owned.2 externs
+
+private theorem retained_length {α : Type} (before after : alloc.vec.Vec α)
+    (retained : after.val.take before.length = before.val) : before.length ≤ after.length := by
+  have lengths := congrArg List.length retained
+  simp only [List.length_take, alloc.vec.Vec.length] at lengths ⊢
+  omega
+
+/-- Retained prefixes preserve every issued external handle. -/
+theorem StagedPrefix.external_issued {M : Type} {before after : runtime.store.Store M}
+    (retained : StagedPrefix before after) {external : runtime.Extern}
+    (issued : ExternalIssued before external) : ExternalIssued after external :=
+  issued.mono retained.identity (retained_length _ _ retained.funcs)
+    (retained_length _ _ retained.tables) (retained_length _ _ retained.memories)
+    (retained_length _ _ retained.globals)
+
+/-- Retained prefixes preserve issued reference values, including foreign ones. -/
+theorem StagedPrefix.issued_value {M : Type} {before after : runtime.store.Store M}
+    (retained : StagedPrefix before after) {value : runtime.Value}
+    (issued : IssuedValue before value) : IssuedValue after value :=
+  issued.mono retained.identity (retained_length _ _ retained.funcs)
+    (by rw [retained.externs])
+
+/-- Retained prefixes preserve owned and encodable API values. -/
+theorem StagedPrefix.value_in_store {M : Type} {before after : runtime.store.Store M}
+    (retained : StagedPrefix before after) {value : runtime.Value}
+    (owned : ValueInStore before value) : ValueInStore after value :=
+  owned.mono retained.identity (retained_length _ _ retained.funcs)
+    (by rw [retained.externs])
 
 end Itasca.Runtime.Store
 
@@ -122,5 +201,34 @@ and advances with checked addition. That wrapper is outside extraction. -/
       List.length_nil, List.map_nil, List.sum_nil]
   · simp only [FunctionCapacities, alloc.vec.Vec.new, alloc.vec.Vec.from_val,
       List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+
+/-- Cumulative mutations retain all issued object addresses. Source extension
+supplies table, memory, and global length monotonicity. -/
+theorem CumulativeStoreMutation.external_issued {M : Type} {view : M → Slice U8}
+    {code : CodeInterpretation} {before after : runtime.store.Store M}
+    (mutation : CumulativeStoreMutation view code before after) {external : runtime.Extern}
+    (issued : ExternalIssued before external) : ExternalIssued after external := by
+  obtain ⟨globals, memories, tables, functions, _, _⟩ := Spec.extend_store_objects mutation.extension
+  apply issued.mono mutation.metadata.identity
+  · rw [mutation.metadata.functions]
+  · simpa only [decodeStore, List.length_map, alloc.vec.Vec.length] using tables.1
+  · simpa only [decodeStore, List.length_map, alloc.vec.Vec.length] using memories.1
+  · simpa only [decodeStore, List.length_map, alloc.vec.Vec.length] using globals.1
+
+/-- Cumulative mutations retain both owned and foreign issued references. -/
+theorem CumulativeStoreMutation.issued_value {M : Type} {view : M → Slice U8}
+    {code : CodeInterpretation} {before after : runtime.store.Store M}
+    (mutation : CumulativeStoreMutation view code before after) {value : runtime.Value}
+    (issued : IssuedValue before value) : IssuedValue after value :=
+  issued.mono mutation.metadata.identity (by rw [mutation.metadata.functions])
+    (by rw [mutation.externs])
+
+/-- Cumulative mutations preserve owned API values and their encoding bounds. -/
+theorem CumulativeStoreMutation.value_in_store {M : Type} {view : M → Slice U8}
+    {code : CodeInterpretation} {before after : runtime.store.Store M}
+    (mutation : CumulativeStoreMutation view code before after) {value : runtime.Value}
+    (owned : ValueInStore before value) : ValueInStore after value :=
+  owned.mono mutation.metadata.identity (by rw [mutation.metadata.functions])
+    (by rw [mutation.externs])
 
 end Itasca.Runtime.Integration

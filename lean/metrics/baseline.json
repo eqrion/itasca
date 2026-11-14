@@ -4,7 +4,7 @@
   "extra_unfold_files": 1379,
   "extracted_functions_unfolded": 771,
   "extracted_functions_unfolded_in_3_or_more_files": 259,
-  "handwritten_lines": 286161,
+  "handwritten_lines": 286269,
   "heartbeat_overrides": 265,
   "layer_violations": 0,
   "lean_lines_by_area": {
@@ -34,6 +34,6 @@
     "validator": 5397
   },
   "sorry": 0,
-  "theorems": 8911,
+  "theorems": 8921,
   "theorems_with_15_or_more_binders": 1010
 }

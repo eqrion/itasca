@@ -933,6 +933,8 @@ existing read-side lemma. `export` needs
 
 ### 3.6 Handle persistence
 
+Completed 2026-11-13: [transport lemmas and validation](notes/step36-results.md).
+
 One lemma per handle kind: `ExternalIssued`, `IssuedValue` and `ValueInStore`
 survive every operation above. State them over the relations the operations
 return (`StagedPrefix`, `CumulativeStoreMutation`, and length monotonicity of
