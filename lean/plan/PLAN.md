@@ -165,6 +165,16 @@ Findings that drive the plan:
    theorems, the runtime carries a second instantiation rule for it, and it
    adds a handwritten specification extension to the trusted base.
 
+## Completion status (2026-11-14)
+
+Phases 0–5 are complete. The user accepted the phase-wide compiler line increase
+on 2026-11-14: 97,039 to 101,428 lines (+4.5%), with the Lean/Rust ratio changing
+from 46.9 to 49.0. This waives only Phase 5's line-ratio reduction criterion.
+Zero duplicate compiler unfold owners, three remaining compiler heartbeat
+overrides, and passing integration, lint, and audit satisfy its other gates.
+Phase 6 has not started. The runtime argument map remains available for the
+user's human review as specified in step 4.2.
+
 ## Phase order and why
 
 | Phase | What | Why here |
@@ -1222,14 +1232,13 @@ stop and wait for the user:
 
 ### 5.5 Rollout
 
-In progress: [remaining-helper contracts and targeted checks](notes/step55-helpers.md).
-Copy, patch, pair, finish_op, and on_unreachable each have one unfold owner.
-Accessor equations consolidate env/tail/reject. The ongoing control, opcode,
-SIMD, environment, and submission migrations have reduced compiler heartbeat
-overrides to three. Compiler-generated functions now have zero duplicate unfold
-owners. Full integration (4,097 jobs), lint, and the headline audit pass. The
-phase-wide line-ratio gate remains unmet: 49.0 versus the phase-start 46.9
-(101,428 versus 97,039 compiler lines, +4.5%). Phase 5 is not marked complete.
+Completed 2026-11-14: [rollout results and validation](notes/step55-helpers.md).
+Helpers, control callbacks, opcode classes, SIMD, environment capture, submission,
+and initialization now share canonical contracts. Compiler-generated functions
+have zero duplicate unfold owners, and compiler heartbeat overrides fell from
+191 to three. Full integration (4,097 jobs), lint, and the headline audit pass.
+The user accepted the phase-wide line increase: 101,428 versus 97,039 lines
+(+4.5%), and a Lean/Rust ratio of 49.0 versus 46.9.
 
 Same method, bottom-up, in this order (unfold counts are today's):
 
@@ -1259,6 +1268,8 @@ and the completeness proofs (about 29,000 lines that only
 Done when (phase): `extra_unfold_files` for `runtime.compiler.*` functions is
 0, `heartbeat_overrides` under `Runtime/Compiler` is below 40 (from 191), and
 the ratio `lean_lines_per_rust_line.compiler` has gone down.
+The user waived this final line-ratio criterion on 2026-11-14 after reviewing
+the validated +4.5% result; the ownership and heartbeat criteria are met.
 
 The same method applies to `Runtime/Interp` (`interp.dispatch` is unfolded in
 31 files, `simd.simd` in 29) and `Runtime/Store`. Do those after the compiler
