@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterStacks
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 
 /-!
@@ -22,7 +22,7 @@ theorem stack_words_types (values : List code.StackType) :
 /-- A reader's child frame base identifies exactly the physical source prefix
 below its parameters. This comes from the canonical control zipper. -/
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.front {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) :
     out.core.ctrls.val = (p.parents ++ [{p.current with vals := remaining}]).map Wasm2.Frames.Saved.ctrl ++
@@ -46,7 +46,7 @@ theorem _root_.Itasca.Wasm2.ReaderEnterPost.front {data env locals index st out 
 front is a prefix of the already observed operand stack. -/
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.layout {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val)

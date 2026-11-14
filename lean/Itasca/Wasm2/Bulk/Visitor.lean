@@ -1,4 +1,4 @@
-import Itasca.Wasm2.Bulk.Dispatch
+import Itasca.Wasm2.Bulk.Total
 import Itasca.Wasm2.NumericExt.Visitor
 
 /-!

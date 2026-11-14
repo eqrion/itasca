@@ -1,8 +1,8 @@
 import Itasca.Runtime.Platform.Laws
-import Itasca.Runtime.Store.Api.Grow
-import Itasca.Runtime.Store.Invariant.CheckedValues
-import Itasca.Runtime.Interp.Relations.FrameStorePrefix
-import Itasca.Runtime.Integration.Api.ExecutableInv
+import Itasca.Runtime.Store.Api.DefineTable
+import Itasca.Runtime.Store.Invariant.HostSignature
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
 
 /-!
 # Embedding contracts
@@ -21,10 +21,10 @@ compiler and source-resource contracts stay with their constructions. All are li
 
 | Contract | Obligation |
 | --- | --- |
-| [`Platform.AllocCorrect`](Platform/Alloc.lean) | `reserve` returns normally and preserves vector contents; it may refuse. |
-| [`Platform.AllocationAvailable`](Platform/Alloc.lean) | `reserve` succeeds for every request within a fixed bound. `no_spurious_errors` only. |
-| [`Platform.FloatOpsCorrect`](Platform/Float.lean) | The 27 rounding operations return a value the source semantics permits, NaN sets included. |
-| [`Platform.MemoryLaws`](Platform/Memory.lean) | The memory buffer reads, writes, allocates and grows exactly the bytes `view` decodes. |
+| [`Platform.AllocCorrect`](Platform/Laws.lean) | `reserve` returns normally and preserves vector contents; it may refuse. |
+| [`Platform.AllocationAvailable`](Platform/Laws.lean) | `reserve` succeeds for every request within a fixed bound. `no_spurious_errors` only. |
+| [`Platform.FloatOpsCorrect`](Platform/Laws.lean) | The 27 rounding operations return a value the source semantics permits, NaN sets included. |
+| [`Platform.MemoryLaws`](Platform/Laws.lean) | The memory buffer reads, writes, allocates and grows exactly the bytes `view` decodes. |
 | interrupts, `∀ p, hooks.interrupt p ⦃ _ => True ⦄` | The interrupt hook returns normally. `no_spurious_errors` also requires it never to answer `.Terminate`. |
 
 ## Host callbacks
@@ -36,9 +36,9 @@ interpretation and chooses the next one, agreeing on previously issued keys. `Ho
 | Contract | Obligation |
 | --- | --- |
 | `HostWorldSound` | Each call that returns preserves the invariant, extends the decoded source store and leaves it typed (`Store_ok`). |
-| frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/FrameStorePrefix.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
+| frame retention, [`Interp.FrameStorePrefix`](Interp/Relations/StackPreservation.lean) | A call keeps the raw store identity and the existing function, type and instance entries. |
 | extern retention | A call never shrinks `store.externs`. |
-| issued results, [`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) | Every value a call returns is issued by the post-call store. |
+| issued results, [`Store.IssuedValue`](Store/Invariant/HostSignature.lean) | Every value a call returns is issued by the post-call store. |
 | limit retention | A call keeps `store.limits`. `no_spurious_errors` only. |
 | `NoHostStackOverflow` | No call reports stack exhaustion. `no_spurious_errors` only. |
 
@@ -59,15 +59,31 @@ extension.
 | Contract | Obligation |
 | --- | --- |
 | [`SourceResourcesFit`](Integration/Invocation/SourceDemand.lean) | Every source run of the invocation, over all typed host replies, fits the value and frame limits. |
-| [`Interp.SourceCanonicalFunctionCapacity`](Interp/Relations/SourceCanonicalCapacity.lean) | The canonical slot demand of a source function, used by `SourceResourcesFit`. |
+| [`Interp.SourceCanonicalFunctionCapacity`](Interp/Relations/ArgumentRejectionKind.lean) | The canonical slot demand of a source function, used by `SourceResourcesFit`. |
 
 ## Store state
 
-The invariant `ExecutableInv` (in `Integration/Api/`) is established by instantiation and preserved
-by every result; it is a certificate, not an embedder obligation.
-Handles and arguments must be issued by the store: [`Store.ExternalIssued`](Store/Linking/LinkEffects.lean),
-[`Store.IssuedValue`](Store/Invariant/IssuedValues.lean) and
-[`Store.ValueInStore`](Store/Invariant/ValueShape.lean).
+[`Results/Store`](../Results/Store.lean) states the generic store API guarantees.
+`with_identity` establishes `ExecutableInv` (in `Integration/Api/`) when its
+identity is positive. Mutating operations preserve that invariant under their
+individual premises; instantiation and invocation preserve it under their
+existing premises. Read contracts relate results to decoded objects or raw store
+values. Allocation-backed definitions and table growth require
+`Platform.AllocCorrect`. Memory definition, access, writeback and growth require
+`Platform.MemoryLaws`; `memory_mut` additionally requires same-length write-back.
+Operations that take handles or values require the stated issued-handle and
+issued-value premises. Value-type checks reject incompatible inputs without
+changing the store.
+
+These are contracts for the generic extracted operations. They do not prove
+that the native identity counter, allocator, memory buffer or floating-point
+wrapper satisfies its contract. An embedding may establish `HostWorldSound` for
+its callbacks by composing the store API theorems when the callback behavior
+meets their premises. This does not establish `HostWorldSound` for arbitrary
+callbacks, and [`HostRetention`](#host-callbacks) remains a separate obligation.
+The relevant handle and value predicates are [`Store.ExternalIssued`](Store/Linking/LinkedOwners.lean),
+[`Store.IssuedValue`](Store/Invariant/HostSignature.lean) and
+[`Store.ValueInStore`](Store/Invariant/Typing.lean).
 -/
 
 namespace Itasca.Runtime.Integration
@@ -79,10 +95,10 @@ chosen by publication. Raw metadata retention remains a separate hypothesis. -/
 def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
     (view : M → Slice U8) (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
   ∀ code store, Inv code store → ∀ platform host args results,
-    hooks.call_host platform store host args results ⦃ answer => ∃ afterCode,
-      Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div
+    hooks.call_host platform store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+      Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div
 
 /-- Some callback diverges when called on `store`. -/
 def HostDiverges {M P : Type} (hooks : runtime.platform.Platform P M) (store : runtime.store.Store M) : Prop :=
@@ -92,13 +108,13 @@ def HostDiverges {M P : Type} (hooks : runtime.platform.Platform P M) (store : r
 source-store extension. -/
 structure HostRetention {M P : Type} (hooks : runtime.platform.Platform P M)
     (store : runtime.store.Store M) (host : U64) : Prop where
-  framePrefix : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer → Interp.FrameStorePrefix store answer.2.2.1
-  externs : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length
-  issued : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value
+  framePrefix : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) → Interp.FrameStorePrefix store after
+  externs : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) → store.externs.length ≤ after.externs.length
+  issued : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) →
+      ∀ value ∈ returned.val, Store.IssuedValue after value
 
 /-- The callback laws over stores satisfying `Inv`. -/
 structure HostLaws {M P : Type} (hooks : runtime.platform.Platform P M) (view : M → Slice U8)

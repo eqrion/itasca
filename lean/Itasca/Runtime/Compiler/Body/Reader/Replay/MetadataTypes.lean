@@ -1,7 +1,82 @@
+import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
+import Itasca.Binary.Wasm2.EncodingUnique
+import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Wasm2.References.Reader
 import Itasca.Wasm2.References.Step
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Relations.Stacks.KnownFixedStack
+
+/-!
+Sections, each formerly its own module: PostDeclared, Span, MetadataTypes.
+-/
+
+/-! ## PostDeclared -/
+
+section
+
+/-!
+Exact byte provenance identifies the retained instruction with the canonical accepted trace, so declared-reference evidence is recovered from the reader.
+
+Main declarations: `Wasm2.ReaderPost.declared`. A direct consumer is `Compiler.Body.Reader.Replay.IndexedStateful`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Exact byte provenance identifies the retained instruction with the canonical
+accepted trace, so declared-reference evidence is recovered from the reader. -/
+theorem _root_.Itasca.Wasm2.ReaderPost.declared {data env locals index st out instruction poly values}
+    {p : Wasm2.Pending data env locals index st}
+    (post : Wasm2.ReaderPost p out instruction poly values) :
+    DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction := by
+  have consumed := Wasm2.Consumed.snoc p.consumed post.encoded
+  have all : Wasm2.TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
+      (Wasm2.Frames.trace p.parents p.current ++ [.plain instruction]) := by
+    cases post.after.1 with
+    | running ft parents current signature bounds opened bodyType canonical declared =>
+      rw [consumed.unique canonical]
+      exact declared
+    | closed ft ops tokens signature bounds controls blocks body typed canonical declared =>
+      rw [consumed.unique canonical]
+      exact declared
+  simpa only [Wasm2.tokensDeclared_singleton,Wasm2.Token.Declared] using
+    ((Wasm2.tokensDeclared_append _ _ _).mp all).2
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## Span -/
+
+section
+
+/-!
+Byte-coordinate spans consumed by accepted reader steps.
+
+Main declarations: `reader_span_wasm2` and `Wasm2.ReaderPost.span`. A direct consumer is `Compiler.Body.Reader.Calls.Compilation`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+theorem reader_span_wasm2 {data env locals index st token next}
+    (p : Wasm2.Pending data env locals index st) (encoded : Wasm2.At data p.start token next) :
+    st.core.pos.val ≤ next.val ∧ next.val ≤ data.length := by
+  have span := encoded.span
+  have pos := p.pos
+  exact ⟨by omega, span.2⟩
+
+theorem _root_.Itasca.Wasm2.ReaderPost.span {data env locals index st out instruction poly values}
+    {p : Wasm2.Pending data env locals index st}
+    (post : Wasm2.ReaderPost p out instruction poly values) :
+    st.core.pos.val ≤ out.pos.val ∧ out.pos.val ≤ data.length := reader_span_wasm2 p post.encoded
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## MetadataTypes -/
+
+section
 
 /-!
 Live metadata readers retain the precise full operand suffix used by the slot compiler, including values saved outside the current source scope.
@@ -15,7 +90,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 /-- Live metadata readers retain the precise full operand suffix used by the
 slot compiler, including values saved outside the current source scope. -/
 theorem _root_.Itasca.Wasm2.MetadataReaderPost.types {data env locals index st}
-    {p : Pending data env .Wasm2 locals index st} {A B : Type}
+    {p : Pending data env locals index st} {A B : Type}
     {decode : Result (core.result.Result A error.OpError × code.OpIterState)}
     {pops : A → List wasm_types.ValueType} {output : A → Option wasm_types.ValueType}
     {metadata : A → B} {operation : A → instr} {value : B} {out : code.OpIterState}
@@ -54,3 +129,5 @@ theorem _root_.Itasca.Wasm2.MetadataReaderPost.types {data env locals index st}
     rfl
 
 end Itasca.Runtime.Compiler
+
+end

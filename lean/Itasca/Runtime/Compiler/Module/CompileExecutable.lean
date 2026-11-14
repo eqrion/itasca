@@ -1,18 +1,133 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerExecutable
-import Itasca.Runtime.Compiler.Module.CompileEntry
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete
-import Itasca.Runtime.Compiler.Module.ExecutableCollectedFunctions
-import Itasca.Runtime.Compiler.Module.CompileAssembly
-import Itasca.Runtime.Compiler.Module.CompileSourceCertificate
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
+import Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission
+import Itasca.Runtime.Compiler.Module.CodeRegionComplete
+import Itasca.Runtime.Compiler.Module.CompileSubmit
+import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
+import Itasca.Runtime.Compiler.Module.InitializerTotal
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
-import Itasca.Runtime.Compiler.Module.ExecutableSchedulerFunctions
-import Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly
-import Itasca.Runtime.Compiler.Module.SchedulerSubmission
-import Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup
-import Itasca.Runtime.Compiler.Local.Source.SourceExecutable
-import Itasca.Runtime.Compiler.Local.Source.SourceSubmission
-import Itasca.Runtime.Compiler.Module.CompileSourceSetup
-import Itasca.Runtime.Compiler.Module.CompileSlice
+import Itasca.Runtime.Compiler.Module.SchedulerCapacities
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
+
+/-!
+Sections, each formerly its own module: ExecutableCollectedFunctions, ExecutableSchedulerFunctions, CompileExecutable.
+-/
+
+/-! ## ExecutableCollectedFunctions -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+structure PendingExecutableModuleFunctions (env : Itasca.metadata.Env)
+    (pending : List (Option runtime.bytecode.CompiledFunction)) (sources : List funccode) : Prop where
+  count : sources.length = env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (typeIndex : U32), env.func_type_indices.val[index]? = some typeIndex →
+    ∃ compiled source, pending[index]? = some (some compiled) ∧ sources[index]? = some source ∧
+      DefinedExecutableFunctionCode env typeIndex source compiled
+
+/-- Source-indexed compiler certificates survive actual dense collection. -/
+theorem PendingExecutableModuleFunctions.collected {env pending sources}
+    (certificate : PendingExecutableModuleFunctions env pending sources)
+    (module : runtime.compiler.ExecutableModule) (sameEnv : module.module.env = env)
+    (collected : pending = module.functions.val.map some) : ExecutableModuleFunctions module sources := by
+  refine ⟨by simpa only [sameEnv] using certificate.count, ?_⟩
+  intro index typeIndex found
+  obtain ⟨compiled, source, codeFound, sourceFound, code⟩ := certificate.entry index typeIndex
+    (by simpa only [sameEnv] using found)
+  refine ⟨compiled, source, ?_, sourceFound, by simpa only [sameEnv] using code⟩
+  rw [collected, List.getElem?_map] at codeFound
+  cases actual : module.functions.val[index]? <;> simp_all
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## ExecutableSchedulerFunctions -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Every occupied scheduler slot carries the corresponding declared function
+certificate. Empty slots are permitted until actual collection succeeds. -/
+structure PartialExecutableModuleFunctions (env : metadata.Env) (sources : List funccode)
+    (pending : List (Option runtime.bytecode.CompiledFunction)) : Prop where
+  count : pending.length = env.func_type_indices.val.length
+  sourceCount : sources.length = env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (compiled : runtime.bytecode.CompiledFunction),
+    pending[index]? = some (some compiled) →
+    ∃ typeIndex source, env.func_type_indices.val[index]? = some typeIndex ∧
+      sources[index]? = some source ∧ DefinedExecutableFunctionCode env typeIndex source compiled
+
+theorem PartialExecutableModuleFunctions.empty (env : metadata.Env) (sources : List funccode)
+    (count : sources.length = env.func_type_indices.val.length) :
+    PartialExecutableModuleFunctions env sources (List.replicate env.func_type_indices.val.length none) := by
+  refine ⟨by simp, count, ?_⟩
+  intro index compiled found
+  have member := List.mem_of_getElem? found
+  simp at member
+
+theorem PartialExecutableModuleFunctions.set {env sources pending}
+    (certificate : PartialExecutableModuleFunctions env sources pending)
+    (index : Nat) (typeIndex : U32) (compiled : runtime.bytecode.CompiledFunction) (source : funccode)
+    (lookup : env.func_type_indices.val[index]? = some typeIndex)
+    (sourceLookup : sources[index]? = some source)
+    (code : DefinedExecutableFunctionCode env typeIndex source compiled) :
+    PartialExecutableModuleFunctions env sources (pending.set index (some compiled)) := by
+  refine ⟨by simpa using certificate.count, certificate.sourceCount, ?_⟩
+  intro other value found
+  by_cases equal : other = index
+  · subst other
+    have bound : index < pending.length := by
+      rw [certificate.count]
+      exact (List.getElem?_eq_some_iff.mp lookup).1
+    have same : compiled = value := by simpa [List.getElem?_set, bound] using found
+    subst value
+    exact ⟨typeIndex, source, lookup, sourceLookup, code⟩
+  · apply certificate.entry other value
+    simpa [List.getElem?_set, equal] using found
+
+/-- The accepted entry's actual source-indexed write preserves all earlier
+certificates and installs precisely its newly checked function. -/
+theorem CompileEntryWitness.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    (w : CompileEntryWitness allocator before after batch finalBatch)
+    {env : metadata.Env} {sources : List funccode}
+    (certificate : PartialExecutableModuleFunctions env sources before.functions.val)
+    (typeIndex : U32) (source : funccode)
+    (lookup : env.func_type_indices.val[w.entry.index.val]? = some typeIndex)
+    (sourceLookup : sources[w.entry.index.val]? = some source)
+    (code : DefinedExecutableFunctionCode env typeIndex source w.final.function) :
+    PartialExecutableModuleFunctions env sources after.functions.val := by
+  rw [w.published]
+  simpa only [alloc.vec.Vec.set_val_eq] using certificate.set w.entry.index.val typeIndex w.final.function source lookup sourceLookup code
+
+/-- Successful dense collection fills every slot, allowing the retained
+per-index source witnesses to be assembled into the complete module list. -/
+theorem PartialExecutableModuleFunctions.complete {env sources pending}
+    (certificate : PartialExecutableModuleFunctions env sources pending)
+    (functions : List runtime.bytecode.CompiledFunction)
+    (collected : pending = functions.map some) :
+    PendingExecutableModuleFunctions env pending sources := by
+  have length : functions.length = env.func_type_indices.val.length := by
+    simpa only [collected, List.length_map] using certificate.count
+  refine ⟨certificate.sourceCount, ?_⟩
+  intro index typeIndex lookup
+  have bound : index < functions.length := by
+    rw [length]
+    exact (List.getElem?_eq_some_iff.mp lookup).1
+  have found : pending[index]? = some (some functions[index]) := by simp [collected, bound]
+  obtain ⟨actualType, source, actualLookup, sourceLookup, code⟩ := certificate.entry index functions[index] found
+  have same : actualType = typeIndex := by simpa [lookup] using actualLookup.symm
+  subst actualType
+  exact ⟨functions[index], source, found, sourceLookup, code⟩
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## CompileExecutable -/
+
+section
 
 /-!
 Executable-function certificates through entry compilation, scheduler submission and whole-module assembly. The final result retains source function ordering and each compiled body certificate.
@@ -40,8 +155,8 @@ theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platfor
     {finish : Usize}
     (entry : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       w.dispatched.code w.dispatched.env w.entry.index w.dispatched.validated_end finish
-      w.initial w.final w.dispatched.profile)
-    {source : List instr} (encoded : Profile.BodyEncoding w.dispatched.profile entry.body source) :
+      w.initial w.final)
+    {source : List instr} (encoded : Profile.BodyEncoding entry.body source) :
     DefinedExecutableFunctionCode batch.env entry.typeIdx
       (.FUNC (.mk_uN entry.typeIdx.val)
         ((ModuleLocals.declared entry.groups).map Translate.valueType |>.map local.LOCAL) source) w.final.function := by
@@ -63,13 +178,13 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileWitness.defined_executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
-    {bytes profile limits executable} (w : CompileWitness allocator bytes profile limits executable)
+    {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
     (law : Platform.AllocCorrect allocator) {sources}
     (pending : PendingExecutableModuleFunctions w.env w.scheduler.functions.val sources) :
     ExecutableModuleFunctions executable sources ∧ InitializerMappings executable := by
-  have initialCode := pending.collected (uninitializedModule w.env w.tail profile w.functions) rfl
+  have initialCode := pending.collected (uninitializedModule w.env w.tail w.functions) rfl
     (w.function_order law)
-  obtain ⟨source, _, prefixCode, initializers⟩ := w.initializers law
+  obtain ⟨source, prefixCode, initializers⟩ := w.initializers law
   exact ⟨initialCode.extend source prefixCode, initializers⟩
 end Itasca.Runtime.Compiler
 
@@ -82,7 +197,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.initial_executable_functions {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops) :
     PartialExecutableModuleFunctions w.env (sourceFunctions c.raw) c.run.remaining.configured.functions.val := by
   have prepared := compiler_driver_configured ops law c.run
@@ -97,7 +212,7 @@ theorem CompileSourceCertificate.initial_executable_functions {A : Type} {ops : 
 driver phases, collection and initializer lowering establish module coverage.
 No further compiler relation or callback premise is required. -/
 theorem CompileSourceCertificate.executable_functions_of_submission {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops)
     (ledger : PartialExecutableModuleFunctions w.env (sourceFunctions c.raw) c.run.remaining.submitted.functions.val) :
     ExecutableModuleFunctions executable (sourceFunctions c.raw) ∧ InitializerMappings executable := by
@@ -187,7 +302,6 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
     {issued : StreamBatch.Issued} (reachable : StreamBatch.Reachable issued batch)
     (bounded : issued.Bounded) (origin : before.code_start.val ≤ limits.MAX_MODULE_BYTES.val)
     (bounds : CodeEntry.Bounds batch.env)
-    (types : ∀ ft ∈ batch.env.types.val, Profile.FuncType batch.profile ft)
     (signatureTable : SignatureSequence before.signatures.val batch.env.types.val)
     (functionTable : before.func_param_slots.val.map (fun word => word.val) =
       batch.env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
@@ -197,7 +311,7 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
     (split : raw.codes = prior ++ taken ++ remaining)
     (first : issued.first_func.val = prior.length)
     (count : issued.num_funcs.val = taken.length)
-    (encoded : ModuleBinary.Rep (Profile.CodeEncoding issued.profile) taken issued.code.val) :
+    (encoded : ModuleBinary.Rep (Profile.CodeEncoding) taken issued.code.val) :
     ∃ typeIndex source,
       batch.env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
       (sourceFunctions raw)[w.entry.index.val]? = some source ∧
@@ -205,7 +319,7 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
   obtain ⟨finish, indexEq, entry, typed⟩ := w.typed bounds
   have dispatched := StreamBatch.Reachable.dispatch reachable w.dispatch
   have identity := dispatched.validation.1
-  obtain ⟨_, _, envEq, codeEq, _, firstEq, countEq, profileEq⟩ := identity
+  obtain ⟨_, _, envEq, codeEq, _, firstEq, countEq⟩ := identity
   have countBound : w.dispatched.num_validated.val < taken.length := by
     have cases := stream.CodeBatch.validate_func.cases
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
@@ -217,13 +331,11 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
     · have size := (stream.CodeBatch.validate_next.accepted _ _ _ _ _ _ next).1
       simpa only [countEq, count] using size
   have entryBounds : CodeEntry.Bounds w.dispatched.env := by simpa only [w.metadata.1] using bounds
-  have entryTypes : ∀ ft ∈ w.dispatched.env.types.val, Profile.FuncType w.dispatched.profile ft := by
-    simpa only [w.metadata.1, w.metadata.2.1] using types
-  obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds entryTypes encoded countBound
+  obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds encoded countBound
   have position : w.entry.index.val = prior.length + w.dispatched.num_validated.val := by
     have batchIdentity := reachable.validation.1
     have batchFirst := batchIdentity.2.2.2.2.2.1
-    rw [indexEq, batchFirst, first, w.metadata.2.2.1]
+    rw [indexEq, batchFirst, first, w.metadata.2.1]
   have rawFound : raw.codes[w.entry.index.val]? = some rawEntry := by
     rw [split, position]
     exact source_entry_offset found
@@ -273,16 +385,15 @@ theorem SchedulerExecutable.transport {A : Type} {env sources}
 independently decoded source slice. The entry and opcode theorems discharge
 every compiler-correctness obligation internally. -/
 theorem scheduler_batch_executable {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
-    (env : metadata.Env) (profile : ValidationProfile) (raw : ModuleBinary.Module)
+    (env : metadata.Env) (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env)
-    (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
     (before after : runtime.compiler.CompileScheduler A) (issued : StreamBatch.Issued)
     (prior taken remaining : List ModuleBinary.Code)
     (split : raw.codes = prior ++ taken ++ remaining)
-    (sameEnv : issued.env = env) (selected : issued.profile = profile)
+    (sameEnv : issued.env = env)
     (first : issued.first_func.val = prior.length) (count : issued.num_funcs.val = taken.length)
-    (encoded : ModuleBinary.Rep (Profile.CodeEncoding profile) taken issued.code.val)
+    (encoded : ModuleBinary.Rep (Profile.CodeEncoding) taken issued.code.val)
     (bounded : issued.Bounded) (initial : SchedulerExecutable env (sourceFunctions raw) before)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
       ops before issued.seed = .ok (.Ok (), after)) :
@@ -296,17 +407,15 @@ theorem scheduler_batch_executable {A : Type} (ops : runtime.platform.Alloc A) (
     intro current next worker nextWorker static reachable w
     have fields : current.signatures = before.signatures ∧ current.func_param_slots = before.func_param_slots ∧
         current.code_start = before.code_start := by simpa [schedulerStatic] using static
-    obtain ⟨_, _, workerEnv, _, _, _, _, workerProfile⟩ := reachable.validation.1
+    obtain ⟨_, _, workerEnv, _, _, _, _⟩ := reachable.validation.1
     have envEq : worker.env = env := workerEnv.trans sameEnv
-    have profileEq : worker.profile = profile := workerProfile.trans selected
     have certificate := w.compile_source_executable law reachable bounded
       (by simpa only [fields.2.2] using initial.origin)
       (by simpa only [envEq] using bounds)
-      (by simpa only [envEq, profileEq] using types)
       (by simpa only [fields.1, envEq] using initial.signatures)
       (by simpa only [fields.2.1, envEq] using initial.functionSlots)
       raw (by simpa only [envEq] using declarations) prior taken remaining split first count
-      (by simpa only [selected] using encoded)
+      encoded
     simpa only [envEq] using certificate
   obtain ⟨functions, same⟩ := compiler_submit_executable_functions ops law before after issued env (sourceFunctions raw)
     initial.functions entries accepted
@@ -317,27 +426,27 @@ populated slot of the original module source list. No callback, body relation,
 or independently supplied compiler certificate is a premise. -/
 theorem compiler_submit_source_executable_functions {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (source : stream.Source S) (state : S) (moduleId : U64)
-    (env : metadata.Env) (code : Slice U8) (profile : ValidationProfile) (config : stream.Config)
+    (env : metadata.Env) (code : Slice U8) (config : stream.Config)
     (raw : ModuleBinary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
-    (bounds : CodeEntry.Bounds env) (types : ∀ ft ∈ env.types.val, Profile.FuncType profile ft)
+    (bounds : CodeEntry.Bounds env)
     (environment tail : List U8) (available : StreamSource.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (start : Usize)
-    (encoded : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding profile)) code start raw.codes (Slice.len code))
+    (encoded : ModuleBinary.At (ModuleBinary.Rep (Profile.CodeEncoding)) code start raw.codes (Slice.len code))
     (count : raw.codes.length = env.func_type_indices.val.length)
     (before after : runtime.compiler.CompileScheduler A) (pending : alloc.vec.Vec Usize)
     (initial : SchedulerExecutable env (sourceFunctions raw) before)
     (accepted : stream.submit_code_batches source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      moduleId profile state env (Slice.len code) start config before = .ok (.Ok pending, after)) :
+      moduleId state env (Slice.len code) start config before = .ok (.Ok pending, after)) :
     SchedulerExecutable env (sourceFunctions raw) after := by
   apply SourceSubmission.submit source (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-    state moduleId env code profile config raw.codes (SchedulerExecutable env (sourceFunctions raw))
+    state moduleId env code config raw.codes (SchedulerExecutable env (sourceFunctions raw))
     environment tail available capacity start encoded count ?_ ?_ before after pending initial accepted
-  · intro current next issued prior taken remaining split moduleEq selected sameEnv first counted encoded bounded ready accepted
-    exact scheduler_batch_executable ops law env profile raw declarations bounds types current next issued
-      prior taken remaining split sameEnv selected first counted encoded bounded ready accepted
+  · intro current next issued prior taken remaining split moduleEq sameEnv first counted encoded bounded ready accepted
+    exact scheduler_batch_executable ops law env raw declarations bounds current next issued
+      prior taken remaining split sameEnv first counted encoded bounded ready accepted
   · intro current next worker ready accepted
     obtain ⟨functions, same⟩ := compiler_poll_executable_functions ops current next worker ready.functions accepted
     exact ready.transport same functions
@@ -354,7 +463,7 @@ Shared setup fixes reader coordinates; this module discharges its own submission
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.platform.Alloc A}
-    {bytes profile limits executable} {w : CompileWitness ops bytes profile limits executable}
+    {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) (law : Platform.AllocCorrect ops) :
     ExecutableModuleFunctions executable (sourceFunctions c.raw) ∧ InitializerMappings executable := by
   obtain ⟨signatures,slots,origin⟩ := c.scheduler_setup law
@@ -365,8 +474,8 @@ theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.
   have certified := compiler_submit_source_executable_functions ops law
     runtime.compiler.CompileSource.Insts.ItascaStreamSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64
-    w.env c.code profile c.run.remaining.config c.raw c.functions c.entryBounds
-    c.environmentProfile.1 c.environment.val c.tail.val c.available c.codeBound
+    w.env c.code c.run.remaining.config c.raw c.functions c.entryBounds
+    c.environment.val c.tail.val c.available c.codeBound
     c.run.remaining.entries c.entries c.codeCount c.run.remaining.configured c.run.remaining.submitted
     c.run.remaining.pending initial submitted
   exact c.executable_functions_of_submission law certified.functions
@@ -374,24 +483,25 @@ theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.
 /-- Public successful compilation produces
 source-ordered certificates for the exact canonical module syntax. -/
 theorem compile_executable_functions {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bytes : Slice U8) (profile : ValidationProfile)
+    (law : Platform.AllocCorrect ops) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits) (executable : runtime.compiler.ExecutableModule)
-    (accepted : runtime.compiler.compile_with ops bytes profile limits = .ok (.Ok executable)) :
-    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile ∧
+    (accepted : runtime.compiler.compile_with ops bytes limits = .ok (.Ok executable)) :
+    ∃ raw, ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes.val ∧
       ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw) ∧
       ModuleElaboration.Matches executable.module.env executable.module.tail raw ∧
-      Module_ok (ModuleElaboration.moduleOf raw) ∧ ModuleElaboration.Profile raw profile ∧
+      Module_ok (ModuleElaboration.moduleOf raw) ∧ ModuleElaboration.Restrictions raw ∧
       ModuleElaboration.AccessorTypes executable.module.env raw ∧
-      ExecutableModuleFunctions executable (sourceFunctions raw) ∧ InitializerMappings executable ∧
-      executable.profile = profile := by
-  obtain ⟨w⟩ := compile_accepted ops bytes profile limits executable accepted
+      ExecutableModuleFunctions executable (sourceFunctions raw) ∧ InitializerMappings executable := by
+  obtain ⟨w⟩ := compile_accepted ops bytes limits executable accepted
   obtain ⟨c⟩ := w.source_certificate law
   have certificates := c.executable_functions law
   obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors⟩ := (w.source_validated law).1
-  have same := Profile.module_unique encoded c.encoded
+  have same := ModuleBinary.ModuleEncodingWith.unique Profile.code_prefix_unique encoded c.encoded
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
-    certificates.1, certificates.2, (w.initializers law).2.1⟩
+    certificates.1, certificates.2⟩
 end Itasca.Runtime.Compiler
+
+end
 
 end

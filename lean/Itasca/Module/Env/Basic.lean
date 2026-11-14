@@ -1,6 +1,5 @@
-import Itasca.Module.Const.Typing
-import Itasca.Module.Elab.SegmentSyntax
-import Itasca.Module.Env.References
+import Itasca.Module.Const.Parser
+import Itasca.Module.Elab.SegmentTyping
 import Itasca.Module.Env.Externals
 import Itasca.Profile.Types
 
@@ -49,13 +48,12 @@ structure Cache (env : metadata.Env) (tables : List wasm_types.TableType) (memor
   tables : env.table_types.val = importedTables env.imports.val ++ tables
   memories : env.mem_types.val = importedMems env.imports.val ++ memories
 
-/-- The semantic checks that are stored in, or derivable from, the environment under `profile`.
+/-- The semantic checks that are stored in, or derivable from, the environment in the module.
 Byte-format evidence is tracked separately. -/
-structure Valid (env : metadata.Env) (profile : ValidationProfile := .Wasm1) : Prop where
-  types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible profile ft
+structure Valid (env : metadata.Env) : Prop where
+  types : ∀ ft ∈ env.types.val, Profile.FuncTypeAdmissible ft
   tables : ∀ tt ∈ env.table_types.val, ModuleTranslation.LimitsValid tt.limits (2 ^ 32 - 1)
   memories : ∀ mt ∈ env.mem_types.val, ModuleTranslation.LimitsValid mt.limits (2 ^ 16)
-  tableCount : profile = .Wasm1 → env.table_types.val.length ≤ 1
   memoryCount : env.mem_types.val.length ≤ 1
   globals : ∀ g ∈ env.globals.val, ModuleConstants.Valid env g.init g.gtype.valtype
   imports : ∀ entry ∈ env.imports.val,
@@ -109,22 +107,13 @@ theorem Cache.func_arity {env tables memories} (h : Cache env tables memories)
     (ht : ∀ ft ∈ env.types.val, ft.results.val.length ≤ 1) :
     ∀ ft ∈ env.func_types.val, ft.results.val.length ≤ 1 := h.func_property ht
 
-/-- In a valid cached environment, the stored and cached function signatures are admitted by the
-profile. -/
-theorem Valid.environment {profile env tables memories} (hv : Valid env profile)
-    (hc : Cache env tables memories) : Profile.Environment profile env := by
-  have ht : ∀ ft ∈ env.types.val, Profile.FuncType profile ft := by
-    intro ft hm
-    exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).1
-  exact ⟨ht, hc.func_property ht⟩
-
 /-- In a valid cached environment, the stored and cached signatures also respect the completeness
 limits. -/
-theorem Valid.environmentWithinLimits {profile env tables memories} (hv : Valid env profile)
+theorem Valid.environmentWithinLimits {env tables memories} (hv : Valid env)
     (hc : Cache env tables memories) : Profile.EnvironmentWithinLimits env := by
   have ht : ∀ ft ∈ env.types.val, Profile.FuncTypeWithinLimits ft := by
     intro ft hm
-    exact ((Profile.funcTypeAdmissible_iff profile ft).mp (hv.types ft hm)).2
+    exact (Profile.funcTypeAdmissible_iff ft).mp (hv.types ft hm)
   exact ⟨ht, hc.func_property ht⟩
 
 theorem Cache.import_indices {env tables memories} (h : Cache env tables memories) :
@@ -159,7 +148,7 @@ theorem Cache.imports_resolve {env tables memories} (h : Cache env tables memori
     | Memory mt => exact ⟨.Memory mt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
     | Global gt => exact ⟨.Global gt :: rest, .cons (by simp [ModuleExternals.ImportResolves, hd]) hr⟩
 
-theorem Valid.exports_resolve {profile env} (h : Valid env profile) :
+theorem Valid.exports_resolve {env} (h : Valid env) :
     ∃ xts, List.Forall₂ (ModuleExternals.ExportResolves env) env.exports.val xts := by
   have he := h.exports
   generalize env.exports.val = entries at he ⊢

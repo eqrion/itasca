@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
-import Itasca.Support.TypeTranslation
+import Itasca.Support.Result
 
 /-!
 The actual epilogue determines whether the implicit root exit carries its declared results. Dead nonvoid bodies may retain a zero-width epilogue.

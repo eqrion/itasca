@@ -7,7 +7,6 @@
 //! exact bit-selection operations receive arbitrary float bits, including NaNs,
 //! infinities and subnormals. Integer lanes retain all input bits.
 #![allow(dead_code)]
-use itasca::ValidationProfile;
 
 const I32: u8 = 0x7f;
 const I64: u8 = 0x7e;
@@ -231,14 +230,9 @@ fn section(id: u8, payload: &[u8], module: &mut Vec<u8>) {
     module.extend_from_slice(payload);
 }
 
-/// Builds a one-operation module. Bytes 0/1 choose profile/opcode, remaining
+/// Builds a one-operation module. Bytes 0/1 choose the scalar/SIMD family and opcode, remaining
 /// bytes seed constants and lane/shuffle immediates. There are no filtering exits.
-pub fn module(data: &[u8]) -> (Vec<u8>, ValidationProfile) {
-    let profile = if byte(data, 0) % 3 == 0 {
-        ValidationProfile::Wasm1
-    } else {
-        ValidationProfile::Wasm2
-    };
+pub fn module(data: &[u8]) -> Vec<u8> {
     let is_simd = byte(data, 0) % 3 == 2;
     let mut op = byte(data, 1) as u16;
     let (params, result) = if is_simd {
@@ -249,11 +243,7 @@ pub fn module(data: &[u8]) -> (Vec<u8>, ValidationProfile) {
             op = (op + 1) % 256;
         }
     } else {
-        let count = if matches!(profile, ValidationProfile::Wasm1) {
-            123
-        } else {
-            136
-        };
+        let count = 136;
         op %= count;
         op = if op < 128 {
             op + 0x45
@@ -321,5 +311,5 @@ pub fn module(data: &[u8]) -> (Vec<u8>, ValidationProfile) {
     leb(body.len() as u32, &mut code);
     code.extend_from_slice(&body);
     section(10, &code, &mut module);
-    (module, profile)
+    module
 }

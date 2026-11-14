@@ -7,7 +7,7 @@ open Aeneas.Std Itasca
 premises consumed by all live BLOCK, LOOP, and IF callback wrappers. -/
 theorem _root_.Itasca.Wasm2.ReaderEnterPost.callback_inputs {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     {data env locals index st out form bt ins outs remaining base}
-    {p : Wasm2.Pending data env .Wasm2 locals index st}
+    {p : Wasm2.Pending data env locals index st}
     (post : Wasm2.ReaderEnterPost p out form bt ins outs remaining base)
     (initial : form.Initial) (live : p.current.ctrl.polymorphic_base = false)
     (known : ConcreteStack st.core.vals.val)

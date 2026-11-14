@@ -1,6 +1,5 @@
 import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Store.Api.DefineTable
-import Itasca.Runtime.Store.Invariant.InternTypes
 
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std

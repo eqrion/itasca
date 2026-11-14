@@ -5,7 +5,7 @@ import Itasca.Examples.Module.Support
 /-!
 # Rejected modules
 
-Wasm 1.0 modules that `metadata.validate_module` rejects, each with the exact error: a duplicate
+Wasm 2.0 modules that `metadata.validate_module` rejects, each with the exact error: a duplicate
 export name written in four-byte UTF-8, an unknown start function or type index, a bad function
 type form byte, truncated counts and section payloads, a repeated section, and a section whose
 declared size exceeds its contents. Each case is a short byte string, so the examples show that
@@ -34,7 +34,7 @@ private theorem section_header (data : Slice U8) (pos middle first last : Usize)
 private theorem env_from_loop (data : Slice U8)
     (hbytes : Wasm1.BytesAt data 0#usize magicVersion 8#usize) (e : error.Error)
     (hloop : parseLoop data Examples.ModuleBasic.emptyEnv 8#usize 0#u8 = .ok (.Err e, ())) :
-    metadata.validate_env data .Wasm1 = .ok (.Err e) := by
+    metadata.validate_env data = .ok (.Err e) := by
   have hh := metadata.read_header.complete data 8#usize hbytes
   simp only [parseLoop, Examples.ModuleBasic.emptyEnv] at hloop
   simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new,
@@ -102,7 +102,7 @@ private theorem duplicate_exports_decode (env : metadata.Env)
     core.result.Result.Insts.CoreOpsTry.branch, data]⟩
 
 /-- `duplicateUnicodeExports` is rejected with `DuplicateExportName`. -/
-theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateUnicodeExports .Wasm1 =
+theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateUnicodeExports =
     .ok (.Err .DuplicateExportName) := by
   let data := duplicateUnicodeExports
   let mt : wasm_types.MemType := ⟨⟨0#u32, none⟩⟩
@@ -129,7 +129,7 @@ theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateU
     all_goals first | rfl | (apply Wasm1.BytesAt.mk <;> simp [data, duplicateUnicodeExports,
       Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]) |
       simp [data, duplicateUnicodeExports, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
-  have hstep := metadata.validate_env_with_loop.complete_section (profile := .Wasm1) data Examples.ModuleBasic.emptyEnv
+  have hstep := metadata.validate_env_with_loop.complete_section data Examples.ModuleBasic.emptyEnv
     env 8#usize 10#usize 13#usize 0#u8 5#u8 hhmem (by decide) (by decide) (by decide)
     (by simpa [metadata.decode_env_section, global_simps] using hread)
   have hhexport : SectionHeader data 13#usize 7#u8 15#usize 30#usize := by
@@ -164,9 +164,9 @@ private theorem first_section_error (data : Slice U8)
     (hlo : 0 < id.val) (hhi : id.val < 10)
     (hsection : SectionHeader data 8#usize id first last)
     (hfinish : last = Slice.len data)
-    (hread : metadata.decode_env_section data first id Examples.ModuleBasic.emptyEnv .Wasm1 = .ok (.Err e, updated))
+    (hread : metadata.decode_env_section data first id Examples.ModuleBasic.emptyEnv = .ok (.Err e, updated))
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val) :
-    metadata.validate_module data .Wasm1 = .ok (.Err e) := by
+    metadata.validate_module data = .ok (.Err e) := by
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     unfold stream.find_code_region
     rw [split_skip_section data 8#usize first last id hsection (.inl hhi), hfinish, split_loop_eof]
@@ -209,7 +209,7 @@ private theorem empty_section_header (id : U8) :
 
 /-- A start section naming function 0 in a module with no functions is rejected with
 `UnknownFunc 0`. -/
-theorem invalid_start_index_rejected : metadata.validate_module (shortSection 8#u8 1#u8 0#u8) .Wasm1 =
+theorem invalid_start_index_rejected : metadata.validate_module (shortSection 8#u8 1#u8 0#u8) =
     .ok (.Err (.UnknownFunc 0#u32)) := by
   let data := shortSection 8#u8 1#u8 0#u8
   have hh : SectionHeader data 8#usize 8#u8 10#usize 11#usize := by
@@ -229,7 +229,7 @@ theorem invalid_start_index_rejected : metadata.validate_module (shortSection 8#
       limits.MAX_MODULE_BYTES]
 
 /-- `invalidType` is rejected with `InvalidType 0`, carrying the bad form byte. -/
-theorem invalid_function_type_rejected : metadata.validate_module invalidType .Wasm1 =
+theorem invalid_function_type_rejected : metadata.validate_module invalidType =
     .ok (.Err (.InvalidType 0#u8)) := by
   let data := invalidType
   have hh : SectionHeader data 8#usize 1#u8 10#usize 12#usize := by
@@ -242,7 +242,7 @@ theorem invalid_function_type_rejected : metadata.validate_module invalidType .W
   have ht := (show At ByteEncoding data 11#usize 0#u8 12#usize from
     ⟨[0#u8], rfl, by constructor <;> simp [data, invalidType,
       Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
-  have hd : metadata.decode_type_section data 10#usize Examples.ModuleBasic.emptyEnv .Wasm1 =
+  have hd : metadata.decode_type_section data 10#usize Examples.ModuleBasic.emptyEnv =
       .ok (.Err (.InvalidType 0#u8), Examples.ModuleBasic.emptyEnv) := by
     simp [metadata.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_type_section_loop
@@ -260,7 +260,7 @@ theorem invalid_function_type_rejected : metadata.validate_module invalidType .W
 
 /-- A type section of size 0 has no room for its count, so the module is rejected with
 `Read UnexpectedEof`. -/
-theorem truncated_type_count_rejected : metadata.validate_module (emptySection 1#u8) .Wasm1 =
+theorem truncated_type_count_rejected : metadata.validate_module (emptySection 1#u8) =
     .ok (.Err (.Read .UnexpectedEof)) := by
   let data := emptySection 1#u8
   have heof := reader.read_u32_leb.reject_complete data 10#usize .UnexpectedEof
@@ -279,7 +279,7 @@ theorem truncated_type_count_rejected : metadata.validate_module (emptySection 1
       limits.MAX_MODULE_BYTES]
 
 /-- A type section declaring size 2 with one payload byte is rejected with `UnexpectedEof`. -/
-theorem truncated_section_payload_rejected : metadata.validate_module (shortSection 1#u8 2#u8 0#u8) .Wasm1 =
+theorem truncated_section_payload_rejected : metadata.validate_module (shortSection 1#u8 2#u8 0#u8) =
     .ok (.Err .UnexpectedEof) := by
   let data := shortSection 1#u8 2#u8 0#u8
   have hid := (show At ByteEncoding data 8#usize 1#u8 9#usize from
@@ -350,7 +350,7 @@ def repeatedTypeSection : Slice U8 :=
     (by simp [magicVersion]; scalar_tac)
 
 /-- A repeated type section is rejected with `SectionOutOfOrder`. -/
-theorem repeated_type_section_rejected : metadata.validate_module repeatedTypeSection .Wasm1 =
+theorem repeated_type_section_rejected : metadata.validate_module repeatedTypeSection =
     .ok (.Err .SectionOutOfOrder) := by
   let data := repeatedTypeSection
   have hfirst : SectionHeader data 8#usize 1#u8 10#usize 11#usize := by
@@ -368,14 +368,14 @@ theorem repeated_type_section_rejected : metadata.validate_module repeatedTypeSe
   have hcount := (show At IndexEncoding data 10#usize 0#u32 11#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, repeatedTypeSection,
       Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hread : metadata.decode_env_section data 10#usize 1#u8 Examples.ModuleBasic.emptyEnv .Wasm1 =
+  have hread : metadata.decode_env_section data 10#usize 1#u8 Examples.ModuleBasic.emptyEnv =
       .ok (.Ok 11#usize, Examples.ModuleBasic.emptyEnv) := by
     simp [metadata.decode_env_section, metadata.decode_type_section, global_simps, hcount,
       core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_type_section_loop
     rw [loop]
     simp [metadata.decode_type_section_loop.body]
-  have hstep := metadata.validate_env_with_loop.complete_section (profile := .Wasm1) data Examples.ModuleBasic.emptyEnv
+  have hstep := metadata.validate_env_with_loop.complete_section data Examples.ModuleBasic.emptyEnv
     Examples.ModuleBasic.emptyEnv 8#usize 10#usize 11#usize 0#u8 1#u8 hfirst
     (by decide) (by decide) (by decide) hread
   have hheader := metadata.read_section_header.complete data 11#usize 1#u8 13#usize 14#usize hsecond
@@ -399,7 +399,7 @@ theorem repeated_type_section_rejected : metadata.validate_module repeatedTypeSe
 
 /-- A code section of size 0 has no room for its count, so the module is rejected with
 `UnexpectedEof`, reported by the code framing of the streaming driver. -/
-theorem truncated_code_count_rejected : metadata.validate_module (emptySection 10#u8) .Wasm1 =
+theorem truncated_code_count_rejected : metadata.validate_module (emptySection 10#u8) =
     .ok (.Err .UnexpectedEof) := by
   let data := emptySection 10#u8
   let code := Examples.ModuleSupport.bytes [10#u8,0#u8]
@@ -463,7 +463,7 @@ def invalidTypeIndex : Slice U8 :=
     (by simp [magicVersion]; scalar_tac)
 
 /-- `invalidTypeIndex` is rejected with `UnknownType 0`. -/
-theorem invalid_type_index_rejected : metadata.validate_module invalidTypeIndex .Wasm1 =
+theorem invalid_type_index_rejected : metadata.validate_module invalidTypeIndex =
     .ok (.Err (.UnknownType 0#u32)) := by
   let data := invalidTypeIndex
   have hh : SectionHeader data 8#usize 3#u8 10#usize 12#usize := by
@@ -500,7 +500,7 @@ def longEmptyTypeSection : Slice U8 :=
 /-- The declared payload is available, but the empty type vector consumes one byte less than the
 section size, so the module is rejected with `SectionSizeMismatch` rather than skipping the
 extra byte. -/
-theorem section_size_mismatch_rejected : metadata.validate_module longEmptyTypeSection .Wasm1 =
+theorem section_size_mismatch_rejected : metadata.validate_module longEmptyTypeSection =
     .ok (.Err .SectionSizeMismatch) := by
   let data := longEmptyTypeSection
   have hh : SectionHeader data 8#usize 1#u8 10#usize 12#usize := by
@@ -511,7 +511,7 @@ theorem section_size_mismatch_rejected : metadata.validate_module longEmptyTypeS
   have hc := (show At IndexEncoding data 10#usize 0#u32 11#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, longEmptyTypeSection,
       Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hd : metadata.decode_type_section data 10#usize Examples.ModuleBasic.emptyEnv .Wasm1 =
+  have hd : metadata.decode_type_section data 10#usize Examples.ModuleBasic.emptyEnv =
       .ok (.Ok 11#usize, Examples.ModuleBasic.emptyEnv) := by
     simp [metadata.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_type_section_loop

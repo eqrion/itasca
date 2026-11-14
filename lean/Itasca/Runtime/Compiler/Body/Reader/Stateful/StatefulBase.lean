@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulMetadataPosts
-import Itasca.Runtime.Compiler.Body.Reader.References.StatefulReferences
+import Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 
 /-!
 Composition of base stateful reader cases.
@@ -14,11 +14,11 @@ open Aeneas Aeneas.Std Itasca Itasca.Wasm2
 set_option maxRecDepth 2048
 
 theorem reader_stateful_base_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile visitor st data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     ∃ op a b, StatefulArguments op a b ∧
       statefulCallback visitor before out.core op a b = .ok (.Ok (),after) ∧ StatefulReaderPost p out.core op := by
   simp only [List.mem_cons,List.not_mem_nil,or_false] at member

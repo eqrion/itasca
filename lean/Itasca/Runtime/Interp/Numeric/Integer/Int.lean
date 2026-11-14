@@ -1,7 +1,6 @@
 import Itasca.Runtime.Equations
-import Itasca.Runtime.SourceMachine.Sim.Int
-import Itasca.Runtime.Spec.IntegerDiv
-import Itasca.Runtime.Spec.IntegerBits
+import Itasca.Runtime.SourceMachine.Sim.Control
+import Itasca.Runtime.Spec.SegmentInitCases
 
 set_option maxHeartbeats 1000000
 set_option maxRecDepth 4096

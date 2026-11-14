@@ -1,6 +1,7 @@
-import Itasca.Runtime.SourceMachine.Simd.Exclusion
+import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects
+
 namespace Itasca.Runtime.Compiler
 
 theorem LinearEmission.simd_tag {locals before source emitted after}

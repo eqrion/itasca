@@ -1,5 +1,6 @@
-import Itasca.Runtime.Integration.Execution.Dispatch.HostResult
+import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
 

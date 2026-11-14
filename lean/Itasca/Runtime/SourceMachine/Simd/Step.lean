@@ -1,8 +1,7 @@
-import Itasca.Runtime.SourceMachine.Simd.Transition
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
-import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.Stateful.TableSet
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.SourceMachine.BrTable
 
 /-!
 SIMD step invariant preservation, combining constants and memory operations with support coverage. Primitive transition contracts remain below this composition.

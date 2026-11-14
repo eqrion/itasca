@@ -1,4 +1,4 @@
-import Itasca.Wasm2.References.Operands
+import Itasca.Wasm2.References.Reader
 
 /-!
 # Operand factorization of bulk readers
@@ -79,7 +79,7 @@ theorem code.read_bulk_operands.fixed (st : code.OpIterState) :
 theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
     code.read_memory_fill st data env = Wasm2.metadataOperands (code.read_bulk_memory st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
-  simp only [code.read_memory_fill, Wasm2.metadataOperands, 
+  simp only [code.read_memory_fill, Wasm2.metadataOperands,
     code.read_bulk_operands.fixed]
   repeat' first
     | rfl

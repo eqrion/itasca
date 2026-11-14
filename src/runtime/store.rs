@@ -6,7 +6,7 @@ use super::platform::Alloc;
 use super::*;
 use crate::{
     DataMode, ElemType, ElementMode, ExportDesc, FuncType, GlobalType, ImportDesc, Limits, MemType,
-    Mut, TableType, ValidationProfile,
+    Mut, TableType,
 };
 use alloc::vec::Vec;
 
@@ -142,18 +142,22 @@ impl<M: MemoryBuffer> Store<M> {
             Err(ExecError::WrongStore)
         }
     }
-    fn room(&self) -> Result<(), ExecError> {
+    /// Fails unless `count` more objects fit under the object limit.
+    fn room_for(&self, count: usize) -> Result<(), ExecError> {
         let n = self.funcs.len()
             + self.tables.len()
             + self.memories.len()
             + self.globals.len()
             + self.externs.len()
             + self.types.len();
-        if n >= self.limits.max_objects {
+        if n >= self.limits.max_objects || count > self.limits.max_objects - n {
             Err(ExecError::Exhausted(ResourceLimit::Objects))
         } else {
             Ok(())
         }
+    }
+    fn room(&self) -> Result<(), ExecError> {
+        self.room_for(1)
     }
     pub(super) fn check_value(&self, v: Value) -> Result<(), ExecError> {
         match v {
@@ -168,9 +172,10 @@ impl<M: MemoryBuffer> Store<M> {
         ty: FuncType,
         host_id: u64,
     ) -> Result<FuncAddr, ExecError> {
-        let signature = self.intern_type::<A>(&ty)?;
-        self.room()?;
+        let fresh = self.find_type(&ty) == self.types.len();
+        self.room_for(if fresh { 2 } else { 1 })?;
         reserve::<A, _>(&mut self.funcs, 1)?;
+        let signature = self.intern_type::<A>(&ty)?;
         let a = FuncAddr {
             store: self.id,
             index: self.funcs.len(),
@@ -291,11 +296,16 @@ impl<M: MemoryBuffer> Store<M> {
         Ok(&self.types[self.funcs[a.index].signature])
     }
 
-    fn intern_type<A: Alloc>(&mut self, ty: &FuncType) -> Result<usize, ExecError> {
+    /// Finds the matching signature index, or the type count when none matches.
+    fn find_type(&self, ty: &FuncType) -> usize {
         let mut i = 0;
         while i < self.types.len() && !same_func_type(&self.types[i], ty) {
             i += 1;
         }
+        i
+    }
+    fn intern_type<A: Alloc>(&mut self, ty: &FuncType) -> Result<usize, ExecError> {
+        let i = self.find_type(ty);
         if i < self.types.len() {
             return Ok(i);
         }
@@ -490,12 +500,6 @@ fn instantiation_failed(result: &Result<Instantiated, ExecError>) -> bool {
     match result {
         Ok(_) => false,
         Err(_) => true,
-    }
-}
-fn wasm1(profile: ValidationProfile) -> bool {
-    match profile {
-        ValidationProfile::Wasm1 => true,
-        ValidationProfile::Wasm2 => false,
     }
 }
 fn check_limits(l: Limits, max: u32) -> Result<(), ExecError> {

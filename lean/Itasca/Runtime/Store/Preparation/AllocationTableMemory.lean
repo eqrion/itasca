@@ -1,7 +1,7 @@
-import Itasca.Runtime.Store.Api.TableStaging
-import Itasca.Runtime.Store.Api.MemoryStaging
-import Itasca.Runtime.Store.Invariant.BindingTyping
-import Itasca.Runtime.Spec.Allocation
+import Itasca.Runtime.Store.Api.MemoryBindingLoop
+import Itasca.Runtime.Store.Invariant.SemanticApi
+import Itasca.Runtime.Spec.ModuleMembership
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std Itasca
 

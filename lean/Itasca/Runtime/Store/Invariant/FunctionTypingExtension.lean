@@ -1,6 +1,7 @@
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Store.Invariant.Extension
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Initialization.SegmentReady
+
 namespace Itasca.Runtime.Store
 open Aeneas Aeneas.Std
 

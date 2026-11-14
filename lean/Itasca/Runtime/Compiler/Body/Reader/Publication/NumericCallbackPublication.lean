@@ -1,8 +1,8 @@
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
+import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeDescriptors
-import Itasca.Runtime.Compiler.Local.Coordinates.NumericSourceCoordinates
-import Itasca.Runtime.Compiler.Local.Publication.LoweringMapPublication
+import Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace

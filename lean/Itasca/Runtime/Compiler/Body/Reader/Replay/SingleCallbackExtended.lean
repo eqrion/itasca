@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Publication.NonScopeCallbackPublication
-import Itasca.Wasm2.Trace.Refinement
+import Itasca.Wasm2.Trace.BytesReferences
 
 /-!
 Single-callback replay through scalar and extended operations. SIMD replay remains separate because it consumes this construction.
@@ -36,7 +36,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Every accepted bulk-reader step invokes one bounded non-scope event. -/
 theorem reader_single_callback_bulk {V : Type} (visitor : code.OpVisitor V)

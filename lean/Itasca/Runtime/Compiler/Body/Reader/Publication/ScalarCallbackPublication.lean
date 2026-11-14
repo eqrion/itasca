@@ -1,15 +1,15 @@
-import Itasca.Runtime.Compiler.Local.Publication.ScalarMapPublication
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
+import Itasca.Runtime.Compiler.Local.Publication.TableMapPublication
 import Itasca.Visitor.Events
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- Ordinary scalar visitor forms; numeric, memory, SIMD and control events
 have their own argument-indexed publication adapters. -/
 inductive ScalarPublicationAction : Action → Prop where
-  | nop  : ScalarPublicationAction (.nop )
+  | nop : ScalarPublicationAction (.nop )
   | call (index : U32) : ScalarPublicationAction (.call index)
   | call_indirect (ty table : U32) : ScalarPublicationAction (.call_indirect ty table)
   | drop (ty : code.StackType) : ScalarPublicationAction (.drop ty)
@@ -29,11 +29,11 @@ inductive ScalarPublicationAction : Action → Prop where
   | table_grow (index : U32) : ScalarPublicationAction (.table_grow index)
   | table_size (index : U32) : ScalarPublicationAction (.table_size index)
   | table_fill (index : U32) : ScalarPublicationAction (.table_fill index)
-  | memory_size  : ScalarPublicationAction (.memory_size )
-  | memory_grow  : ScalarPublicationAction (.memory_grow )
-  | ref_is_null  : ScalarPublicationAction (.ref_is_null )
-  | memory_copy  : ScalarPublicationAction (.memory_copy )
-  | memory_fill  : ScalarPublicationAction (.memory_fill )
+  | memory_size : ScalarPublicationAction (.memory_size )
+  | memory_grow : ScalarPublicationAction (.memory_grow )
+  | ref_is_null : ScalarPublicationAction (.ref_is_null )
+  | memory_copy : ScalarPublicationAction (.memory_copy )
+  | memory_fill : ScalarPublicationAction (.memory_fill )
   | i32_const (value : I32) : ScalarPublicationAction (.i32_const value)
   | i64_const (value : I64) : ScalarPublicationAction (.i64_const value)
   | f32_const (value : U32) : ScalarPublicationAction (.f32_const value)
@@ -51,7 +51,7 @@ theorem scalar_hook_publication_dispatch {A : Type} (ops : runtime.platform.Allo
       invoke (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) compiler (.op state action) =
         runtime.compiler.lower.FunctionCompiler.op ops compiler state opcode a b bits := by
   cases supported with
-  | nop  =>
+  | nop =>
     exact ⟨1#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
   | call index =>
     exact ⟨16#u16,index,0#u32,0#u128,by decide,rfl⟩
@@ -91,38 +91,38 @@ theorem scalar_hook_publication_dispatch {A : Type} (ops : runtime.platform.Allo
     exact ⟨272#u16,index,0#u32,0#u128,by decide,rfl⟩
   | table_fill index =>
     exact ⟨273#u16,index,0#u32,0#u128,by decide,rfl⟩
-  | memory_size  =>
+  | memory_size =>
     exact ⟨63#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
-  | memory_grow  =>
+  | memory_grow =>
     exact ⟨64#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
-  | ref_is_null  =>
+  | ref_is_null =>
     exact ⟨209#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
-  | memory_copy  =>
+  | memory_copy =>
     exact ⟨266#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
-  | memory_fill  =>
+  | memory_fill =>
     exact ⟨267#u16,0#u32,0#u32,0#u128,by decide,rfl⟩
   | i32_const value =>
-    exact ⟨65#u16,0#u32,0#u32,UScalar.cast .U128 (IScalar.hcast .U32 value),by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const,lift,bind_ok]⟩
+    exact ⟨65#u16,0#u32,0#u32,UScalar.cast .U128 (IScalar.hcast .U32 value),by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i32_const.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const.eq,lift,bind_ok]⟩
   | i64_const value =>
-    exact ⟨66#u16,0#u32,0#u32,UScalar.cast .U128 (IScalar.hcast .U64 value),by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const,lift,bind_ok]⟩
+    exact ⟨66#u16,0#u32,0#u32,UScalar.cast .U128 (IScalar.hcast .U64 value),by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i64_const.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const.eq,lift,bind_ok]⟩
   | f32_const value =>
-    exact ⟨67#u16,0#u32,0#u32,UScalar.cast .U128 value,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const,lift,bind_ok]⟩
+    exact ⟨67#u16,0#u32,0#u32,UScalar.cast .U128 value,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f32_const.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const.eq,lift,bind_ok]⟩
   | f64_const value =>
-    exact ⟨68#u16,0#u32,0#u32,UScalar.cast .U128 value,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const,lift,bind_ok]⟩
+    exact ⟨68#u16,0#u32,0#u32,UScalar.cast .U128 value,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f64_const.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const.eq,lift,bind_ok]⟩
   | table_init first second =>
     exact ⟨268#u16,first,second,0#u128,by decide,rfl⟩
   | table_copy first second =>
     exact ⟨270#u16,first,second,0#u128,by decide,rfl⟩
   | ref_null ty =>
     cases ty
-    · exact ⟨208#u16,0#u32,0#u32,0#u128,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,ite_true]⟩
-    · exact ⟨208#u16,1#u32,0#u32,0#u128,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,Bool.false_eq_true,ite_false]⟩
+    · exact ⟨208#u16,0#u32,0#u32,0#u128,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_ref_null.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null.eq,bind_ok,ite_true]⟩
+    · exact ⟨208#u16,1#u32,0#u32,0#u128,by decide,by simp only [invoke,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_ref_null.eq,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null.eq,bind_ok,Bool.false_eq_true,ite_false]⟩
 
 /-- Every actual ordinary scalar event retains both publication invariants. -/
 theorem compiler_scalar_hook_publication {A : Type} (ops : runtime.platform.Alloc A)

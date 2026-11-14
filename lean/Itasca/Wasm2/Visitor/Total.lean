@@ -1,5 +1,5 @@
 import Itasca.Wasm2.EmptyVisitorLoop
-import Itasca.Wasm2.Control.EndTotal
+import Itasca.Wasm2.Control.EnterSound
 import Itasca.Wasm2.Step.Total
 import Itasca.Visitor.Accepts
 
@@ -93,19 +93,19 @@ attribute [local step] code.pop_with_type.total code.check_suffix.spec
 rejections and the default target at the maximal encoded count. -/
 theorem code.branch_table_with_loop.total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (v : V) (count : U32) (arity : Option Usize)
-    (first : signature.ResultType) (i : U32)
+    (env : metadata.Env) (v : V) (count : U32) (arity : Option Usize)
+    (i : U32)
     (hs : Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hi : i.val ≤ count.val) :
-    code.branch_table_with_loop visitor st.core data env profile v count arity first i ⦃ r =>
+    code.branch_table_with_loop visitor st.core data env v count arity i ⦃ r =>
       Control.Shape r.2.1.core ∧ r.2.1.blocks.val.length = r.2.1.core.ctrls.val.length ∧
       r.2.1.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.1.core.pos.val ⦄ := by
   unfold code.branch_table_with_loop
-  apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.2.val)
+  apply loop.spec_decr_nat (fun p => count.val - p.2.2.2.val)
     (fun p => Control.Shape p.1 ∧ (code.BodyState.mk p.1).blocks.val.length = p.1.ctrls.val.length ∧
-      (code.BodyState.mk p.1).blocks = st.blocks ∧ p.2.2.2.2.val ≤ count.val ∧
+      (code.BodyState.mk p.1).blocks = st.blocks ∧ p.2.2.2.val ≤ count.val ∧
       st.core.pos.val ≤ p.1.pos.val)
-  · rintro ⟨stateCore, v, arity, first, j⟩ ⟨hs', ha', hb', hj, hpos⟩
+  · rintro ⟨stateCore, v, arity, j⟩ ⟨hs', ha', hb', hj, hpos⟩
     dsimp only at hs' ha' hb' hj hpos
     dsimp only
     unfold code.branch_table_with_loop.body
@@ -128,10 +128,6 @@ theorem code.branch_table_with_loop.total {V : Type} (visitor : code.OpVisitor V
           (.Ok (depth, ts) : core.result.Result (U32 × signature.ResultType) error.OpError) =
           .ok (.Continue (depth, ts)) := rfl
       simp only [Std.uncurry, hbranch, bind_ok]
-      have hfirst : (if j = 0#u32 then Result.ok ts else Result.ok first) =
-          Result.ok (if j = 0#u32 then ts else first) := by split <;> rfl
-      rw [hfirst]
-      simp only [bind_ok]
       cases arity <;> step* by simp_all
       all_goals scalar_tac
   · exact ⟨hs, ha, rfl, hi, le_refl _⟩
@@ -139,9 +135,9 @@ theorem code.branch_table_with_loop.total {V : Type} (visitor : code.OpVisitor V
 @[step]
 theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (profile : ValidationProfile) (v : V) (hs : Control.Shape st.core)
+    (env : metadata.Env) (v : V) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
-    code.branch_table_with visitor st data env profile v ⦃ r =>
+    code.branch_table_with visitor st data env v ⦃ r =>
       Control.Shape r.2.1.core ∧ r.2.1.blocks.val.length = r.2.1.core.ctrls.val.length ∧
       r.2.1.blocks = st.blocks ∧ st.core.pos.val ≤ r.2.1.core.pos.val ⦄ := by
   unfold code.branch_table_with
@@ -159,7 +155,7 @@ theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
     step
     split
     · apply WP.spec_mono (code.branch_table_with_loop.total visitor hv
-        ⟨s⟩ data env profile v count none .Empty 0#u32 hs' (by simp_all) (by simp))
+        ⟨s⟩ data env v count none 0#u32 hs' (by simp_all) (by simp))
       intro result hout
       exact ⟨hout.1, hout.2.1, by simpa [hc] using hout.2.2.1, hpnext.trans (by simpa [hp] using hout.2.2.2)⟩
     · step*
@@ -209,7 +205,7 @@ theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
   simp [h]
 
 @[local step] private theorem return_hook_total {V : Type} (visitor : code.OpVisitor V)
-    (hv : FullVisitor.Total visitor) (v : V) (st : code.OpIterState)  :
+    (hv : FullVisitor.Total visitor) (v : V) (st : code.OpIterState) :
     visitor.on_return v st ⦃ _ => True ⦄ := by
   obtain ⟨r, w, h⟩ := hv.on_return v st
   simp [h]
@@ -234,11 +230,11 @@ continuing iteration advances the byte cursor. Returning hooks may reject. -/
 theorem code.body_loop_loop.body.total {V : Type}
     (visitor : code.OpVisitor V) (hv : FullVisitor.Total visitor)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (type_index : U32)
-    (profile : ValidationProfile) (s : code.BodyState) (v : V)
+     (s : code.BodyState) (v : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape s.core)
     (ha : s.blocks.val.length = s.core.ctrls.val.length)
     (hb : s.blocks.val.length ≤ s.core.pos.val + 1) :
-    code.body_loop_loop.body visitor data env ctx type_index profile v s ⦃ r =>
+    code.body_loop_loop.body visitor data env ctx type_index v s ⦃ r =>
       match r with
       | .done _ => True
       | .cont p => (Control.Shape p.2.core ∧
@@ -267,18 +263,6 @@ theorem code.body_loop_loop.body.total {V : Type}
       have hpos : s.core.pos.val < Usize.max := by
         have := limits.MAX_FUNCTION_BYTES.room
         omega
-      obtain ⟨rc, hrc, _⟩ := WP.spec_imp_exists (code.check_opcode.spec profile data.val[s.core.pos.val])
-      rw [hrc]
-      cases rc with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok u =>
-      cases u
-      have hok : core.result.Result.Insts.CoreOpsTry.branch
-          (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
-      simp only [bind_ok]
-      rw [hok]
-      simp only [bind_ok]
       split
       all_goals try simp only [Std.bind_assoc, Std.uncurry]
       case h_12 =>
@@ -320,18 +304,18 @@ set_option maxHeartbeats 2000000 in
 Every continuing iteration consumes an opcode; rejecting hooks terminate early. -/
 theorem code.body_loop_loop.total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (type_index : U32) (profile : ValidationProfile) (st : code.BodyState)
+    (ctx : code.Context) (type_index : U32) (st : code.BodyState)
     (v : V) (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hb : st.blocks.val.length ≤ st.core.pos.val + 1) :
-    code.body_loop_loop visitor data env ctx type_index profile v st ⦃ _ => True ⦄ := by
+    code.body_loop_loop visitor data env ctx type_index v st ⦃ _ => True ⦄ := by
   unfold code.body_loop_loop
   apply loop.spec_decr_nat (fun p => Usize.max - p.2.core.pos.val)
     (fun p => Control.Shape p.2.core ∧ p.2.blocks.val.length = p.2.core.ctrls.val.length ∧
       p.2.blocks.val.length ≤ p.2.core.pos.val + 1)
   · rintro ⟨v, s⟩ ⟨hs, ha, hb⟩
     dsimp only
-    apply WP.spec_mono (code.body_loop_loop.body.total visitor hv data env ctx type_index profile
+    apply WP.spec_mono (code.body_loop_loop.body.total visitor hv data env ctx type_index
       s v hdata hs ha hb)
     intro r hr
     cases r <;> exact hr
@@ -357,9 +341,9 @@ attribute [local step] code.body_loop_loop.total
 validity, signature, or environment hypothesis is required. -/
 theorem code.validate_body_with.total {V : Type} (visitor : code.OpVisitor V)
     (hv : FullVisitor.Total visitor) (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (type_index : U32) (profile : ValidationProfile) (v : V) :
-    ∃ r, code.validate_body_with visitor data env ctx type_index profile v = .ok r := by
-  have ht : code.validate_body_with visitor data env ctx type_index profile v ⦃ _ => True ⦄ := by
+    (ctx : code.Context) (type_index : U32) (v : V) :
+    ∃ r, code.validate_body_with visitor data env ctx type_index v = .ok r := by
+  have ht : code.validate_body_with visitor data env ctx type_index v ⦃ _ => True ⦄ := by
     unfold code.validate_body_with
     simp only [Slice.len]
     split
@@ -371,7 +355,7 @@ theorem code.validate_body_with.total {V : Type} (visitor : code.OpVisitor V)
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
       | Ok st =>
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop]
-        exact code.body_loop_loop.total visitor hv data env ctx type_index profile st v
+        exact code.body_loop_loop.total visitor hv data env ctx type_index st v
           hdata hr.1 hr.2.1 hr.2.2
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists ht
   exact ⟨r, hr⟩

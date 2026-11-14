@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
 /-!
 Resolution schedules can be divided at a selected IF guard.

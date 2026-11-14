@@ -1,6 +1,61 @@
-import Itasca.Runtime.Interp.Calls.DirectCallCause
-import Itasca.Runtime.Interp.Relations.StackRelation
-import Itasca.Runtime.Spec.Counted
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+import Itasca.Runtime.SourceMachine.Float.Results
+import Itasca.Runtime.SourceMachine.Memory.Decode
+import Itasca.Runtime.SourceMachine.Stateful.Signature
+import Itasca.Runtime.SourceMachine.Simd.Source
+import Itasca.Runtime.Interp.Machine.Emission.Local
+import Itasca.Runtime.Interp.Control.NormalizeCompose
+import Itasca.Runtime.Interp.Calls.IndirectResolve
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Spec.SegmentInitCases
+
+/-!
+Sections, each formerly its own module: HeadCoverage, SourceCallCause.
+-/
+
+/-! ## HeadCoverage -/
+
+section
+
+namespace Itasca.Runtime.Interp
+open Aeneas.Std
+
+/-- Source forms remaining after zero-byte normalization. -/
+def ReadyInstruction : instr → Prop
+  | .NOP | .DROP | .BLOCK _ _ => False
+  | _ => True
+
+/-- Ready source heads the interpreter dispatches, as recovered from the compiler certificate.
+Indices and constant words come from emitted syntax, not assumptions. -/
+inductive DispatchHead : instr → Prop where
+  | numeric (op : SourceMachine.Numeric.Instruction) : DispatchHead op.source
+  | ordinary (op : OrdinaryOpcode) : DispatchHead op.source
+  | loop (bt : blocktype) (body : List instr) : DispatchHead (.LOOP bt body)
+  | call (index : U32) : DispatchHead (.CALL (.mk_uN index.val))
+  | return_ : DispatchHead .RETURN
+  | unreachable : DispatchHead .UNREACHABLE
+  | float32 (bits : U32) : DispatchHead (.CONST .F32 (.mk_num__1 .F32 (SpecExt.Builtins.floatOfBits 32 bits.val)))
+  | float64 (bits : U64) : DispatchHead (.CONST .F64 (.mk_num__1 .F64 (SpecExt.Builtins.floatOfBits 64 bits.val)))
+  | select : DispatchHead (.SELECT none)
+  | globalGet (index : U32) : DispatchHead (.GLOBAL_GET (.mk_uN index.val))
+  | globalSet (index : U32) : DispatchHead (.GLOBAL_SET (.mk_uN index.val))
+  | load (op : SourceMachine.Memory.Load) (argument : memarg) : DispatchHead (op.source argument)
+  | store (op : SourceMachine.Memory.Store) (argument : memarg) : DispatchHead (op.source argument)
+  | float (op : SourceMachine.Float.Instruction) : DispatchHead op.source
+  | stateful (op : SourceMachine.Stateful.Instruction) : DispatchHead op.source
+  | indirect (table type : U32) : DispatchHead (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val))
+  | simd {op} : SourceMachine.SimdInstr op → DispatchHead op
+  | typedSelect (ty : valtype) : DispatchHead (.SELECT (some [ty]))
+  | branchTable (depths : List labelidx) (fallback : labelidx) : DispatchHead (.BR_TABLE depths fallback)
+
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## SourceCallCause -/
+
+section
+
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std
 
@@ -83,3 +138,5 @@ theorem SourceDirectCallCause.prepend {A M P : Type} {allocator : runtime.platfo
   exact ⟨target, offset, pc, address, base, function, instanceIndex, functionIndex,
     inst, code, fetch, resolved, lookup, wasm, instanceLookup, codeLookup, baseEq, pcEq, rejection, site.prepend steps sameStore sameAmbient⟩
 end Itasca.Runtime.Interp
+
+end

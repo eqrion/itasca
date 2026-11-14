@@ -1,10 +1,11 @@
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 /-!
 Discriminates actual scalar mutable callbacks and their binary immediates.
@@ -15,7 +16,6 @@ Main declarations: `CoreOperation` and `CoreOperation.opcode`. A direct consumer
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Discriminates actual scalar mutable callbacks and their binary immediates. -/
 inductive CoreOperation where
@@ -57,9 +57,10 @@ theorem lower_core_dispatch {A : Type} (ops : runtime.platform.Alloc A)
       coreLowering ops compiler state op := by
   cases op with
   | select typed =>
-    cases typed <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | globalGet index => unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl
-  | globalSet index => unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl
+    exact runtime.compiler.lower.FunctionCompiler.op.select ops compiler state (if typed then 28#u16 else 27#u16)
+      0#u32 0#u32 0#u128 reachable (by cases typed <;> decide)
+  | globalGet index => exact runtime.compiler.lower.FunctionCompiler.op.global_get ops compiler state index 0#u32 0#u128 reachable
+  | globalSet index => exact runtime.compiler.lower.FunctionCompiler.op.global_set ops compiler state index 0#u32 0#u128 reachable
   | load op offset alignment => exact lower_memory_load_dispatch ops compiler state op offset alignment reachable
   | store op offset alignment => exact lower_memory_store_dispatch ops compiler state op offset alignment reachable
 
@@ -75,8 +76,7 @@ theorem compiler_core_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_core_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -90,8 +90,7 @@ theorem compiler_core_sources {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_core_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -105,8 +104,7 @@ theorem compiler_core_cursor {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
@@ -120,8 +118,7 @@ theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 end Itasca.Runtime.Compiler

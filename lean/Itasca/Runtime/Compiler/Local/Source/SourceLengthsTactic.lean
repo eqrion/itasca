@@ -1,10 +1,202 @@
-import Itasca.Runtime.Compiler.Local.Source.SourceLengths
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
+import Itasca.Runtime.Compiler.Local.Relations.Emission.EmissionSources
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
+
+/-!
+Sections, each formerly its own module: SourceLengths, SourceLengthsTactic.
+-/
+
+/-! ## SourceLengths -/
+
+section
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
-set_option maxRecDepth 4096
+
+/-- Code and source coordinates grow by the same number of entries. -/
+def SourceProgress {A : Type} (before after : runtime.compiler.FunctionCompiler A) : Prop :=
+  after.function.code.val.length + before.function.source_offsets.val.length =
+    before.function.code.val.length + after.function.source_offsets.val.length
+
+/-- Every retained instruction has a source coordinate. -/
+def SourceAligned {A : Type} (compiler : runtime.compiler.FunctionCompiler A) : Prop :=
+  compiler.function.source_offsets.val.length = compiler.function.code.val.length
+
+theorem SourceProgress.refl {A : Type} (compiler : runtime.compiler.FunctionCompiler A) :
+    SourceProgress compiler compiler := rfl
+
+theorem SourceProgress.trans {A : Type} {first middle last : runtime.compiler.FunctionCompiler A}
+    (left : SourceProgress first middle) (right : SourceProgress middle last) :
+    SourceProgress first last := by unfold SourceProgress at *; omega
+
+theorem SourceProgress.aligned {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    (progress : SourceProgress before after) (aligned : SourceAligned before) :
+    SourceAligned after := by unfold SourceProgress SourceAligned at *; omega
+
+theorem compiler_emit_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (instruction : runtime.bytecode.Instr)
+    (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (.Ok (), after)) :
+    SourceProgress before after := by
+  have code := compiler_emit_code_success ops law before after instruction accepted
+  have sources := compiler_emit_source_length_success ops law before after instruction accepted
+  simp [SourceProgress, code, sources, Nat.add_assoc, Nat.add_comm, Nat.add_left_comm]
+
+theorem compiler_observe_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (status, after)) :
+    SourceProgress before after := by
+  have frame := compiler_observe_frame ops law before state
+  rw [accepted, WP.spec_ok] at frame
+  change ObserveFrame before after at frame
+  rw [frame]
+  rfl
+
+theorem compiler_copy_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (dst src count : U32)
+    (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (.Ok (), after)) :
+    SourceProgress before after := by
+  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count (.Ok ()) accepted with
+    ⟨_, _, same⟩ | ⟨_, _, emitted⟩
+  · subst after
+    exact rfl
+  · exact compiler_emit_sources ops law before after _ emitted
+
+theorem compiler_finish_op_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
+    (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (), after)) :
+    SourceProgress before after := by
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) accepted).success
+  exact (compiler_emit_sources ops law before middle instruction emitted).trans
+    (compiler_observe_sources ops law middle after state (.Ok ()) rest)
+
+theorem compiler_pair_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (before after : runtime.compiler.FunctionCompiler A) (a b : U32)
+    (status : core.result.Result U32 Itasca.error.VisitError)
+    (accepted : runtime.compiler.FunctionCompiler.pair ops before a b = .ok (status, after)) :
+    SourceProgress before after := by
+  have frame := (runtime.compiler.FunctionCompiler.pair.inv ops before after a b status accepted).1
+  change after = _ at frame
+  rw [frame]
+  rfl
+
+/-- PC calculation may reject its range but only updates the budget. -/
+theorem compiler_pc_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (before after : runtime.compiler.FunctionCompiler A)
+    (status : core.result.Result U32 Itasca.error.VisitError)
+    (accepted : runtime.compiler.FunctionCompiler.pc ops before = .ok (status, after)) :
+    SourceProgress before after := by
+  have result := compiler_pc ops before
+  rw [accepted, WP.spec_ok] at result
+  obtain ⟨_, _, budget, same⟩ := result
+  change after = {before with budget} at same
+  subst after
+  rfl
+
+theorem compiler_emit_sources_result {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (instruction : runtime.bytecode.Instr) (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (status, after)) :
+    status = .Ok () → SourceProgress before after := by
+  intro success
+  subst status
+  exact compiler_emit_sources ops law before after instruction accepted
+
+theorem compiler_copy_sources_result {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (dst src count : U32) (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
+    status = .Ok () → SourceProgress before after := by
+  intro success
+  subst status
+  exact compiler_copy_sources ops law before after dst src count accepted
+
+theorem compiler_finish_op_sources_result {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr) (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (status, after)) :
+    status = .Ok () → SourceProgress before after := by
+  intro success
+  subst status
+  exact compiler_finish_op_sources ops law before after state instruction accepted
+/-- Patching only replaces an instruction; all function and control metadata
+survive every normal return, including a rejected patch site. -/
+theorem compiler_patch_sources_unchanged {A : Type} (ops : runtime.platform.Alloc A)
+    (before after : runtime.compiler.FunctionCompiler A) (pc : Usize) (target : U32)
+    (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.control.FunctionCompiler.patch ops before pc target = .ok (status, after)) :
+    after.function.source_offsets = before.function.source_offsets := by
+  rcases compiler_patch_cases ops before after pc target status accepted with rfl | ⟨_, _, rfl, _⟩ <;>
+    rfl
+
+
+theorem compiler_patch_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (before after : runtime.compiler.FunctionCompiler A) (pc : Usize) (target : U32)
+    (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.control.FunctionCompiler.patch ops before pc target = .ok (status, after)) :
+    SourceProgress before after := by
+  have code := compiler_patch_code_length ops before after pc target status accepted
+  have sources := compiler_patch_sources_unchanged ops before after pc target status accepted
+  simp [SourceProgress, code, sources]
+theorem compiler_fixups_sources_unchanged {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+      ops before sites target index status = .ok output) :
+    (snapshotCompiler output).function.source_offsets = before.function.source_offsets := by
+  obtain ⟨code, same⟩ := (compiler_fixups_effect ops before sites target index status output accepted).1
+  rw [same]
+
+theorem compiler_fixups_after_if_sources_unchanged {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1
+      ops before sites target index status = .ok output) :
+    (snapshotCompiler output).function.source_offsets = before.function.source_offsets :=
+  compiler_fixups_sources_unchanged ops before sites target index status output accepted
+
+theorem compiler_fixups_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+      ops before sites target index status = .ok output) :
+    SourceProgress before (snapshotCompiler output) := by
+  have code := compiler_fixups_code_length ops before sites target index status output accepted
+  have sources := compiler_fixups_sources_unchanged ops before sites target index status output accepted
+  simp [SourceProgress, code, sources]
+
+theorem compiler_fixups_after_if_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1
+      ops before sites target index status = .ok output) :
+    SourceProgress before (snapshotCompiler output) := by
+  have code := compiler_fixups_after_if_code_length ops before sites target index status output accepted
+  have sources := compiler_fixups_after_if_sources_unchanged ops before sites target index status output accepted
+  simp [SourceProgress, code, sources]
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## SourceLengthsTactic -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.ResultFacts
 open Lean Meta Elab Tactic in
 elab "sources_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
   let hyp ← elabTerm h none
@@ -95,3 +287,5 @@ macro "sources_step " h:ident " using " ops:term ", " law:term : tactic => `(tac
   | sources_split $h)
 
 end Itasca.Runtime.Compiler
+
+end

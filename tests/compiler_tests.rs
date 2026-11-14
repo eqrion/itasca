@@ -1,4 +1,4 @@
-use itasca::{runtime::compile, ValidationProfile};
+use itasca::runtime::compile;
 
 fn bytes(source: &str) -> Vec<u8> {
     let buffer = wast::parser::ParseBuffer::new(source).unwrap();
@@ -14,16 +14,14 @@ fn compilation_owns_metadata_and_checks_the_entire_tail() {
         "(module (memory 1) (func (result i32) i32.const 5)
         (data (i32.const 0) \"hello\"))",
     );
-    let module = compile(&input, ValidationProfile::Wasm1).unwrap();
+    let module = compile(&input).unwrap();
     input.fill(0);
     assert_eq!(module.tail().data[0].init, b"hello");
     assert_eq!(module.function_count(), 1);
-    assert_eq!(module.profile(), ValidationProfile::Wasm1);
 
     let mut invalid = bytes("(module (func))");
     invalid.extend_from_slice(&[11, 2, 1, 0]);
-    assert!(compile(&invalid, ValidationProfile::Wasm1).is_err());
-    assert!(compile(&invalid, ValidationProfile::Wasm2).is_err());
+    assert!(compile(&invalid).is_err());
 }
 
 #[test]
@@ -32,7 +30,7 @@ fn source_coordinates_identify_original_opcodes_in_complete_module() {
         "(module (func (param i32) (result i32) (local i64)
         local.get 0 if (result i32) i32.const 100 else i32.const 200 end))",
     );
-    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let module = compile(&input).unwrap();
     let stats = module.function_stats(0).unwrap();
     assert_eq!(stats.local_count, 2);
     assert_eq!(stats.max_stack, 1);
@@ -50,7 +48,7 @@ fn source_coordinates_identify_original_opcodes_in_complete_module() {
 #[test]
 fn frame_payload_counts_both_vector_words() {
     let input = bytes("(module (func (param v128) (result v128) local.get 0))");
-    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let module = compile(&input).unwrap();
     let stats = module.function_stats(0).unwrap();
     assert_eq!(stats.local_count, 1);
     assert_eq!(stats.max_stack, 1);
@@ -69,7 +67,7 @@ fn function_identity_survives_multiple_batches_and_reverse_retirement() {
     }
     text.push(')');
     let input = bytes(&text);
-    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let module = compile(&input).unwrap();
     assert_eq!(module.function_count(), 6);
     assert_eq!(module.env().num_imported_funcs(), 1);
     for index in 0..6 {
@@ -83,14 +81,13 @@ fn function_identity_survives_multiple_batches_and_reverse_retirement() {
 }
 
 #[test]
-fn profiles_and_unreachable_multivalue_branches_remain_distinct() {
+fn unreachable_multivalue_branches_preserve_stack_behavior() {
     let input = bytes(
         "(module (func (result i32 i64)
         unreachable (block (result f32 f64)
             unreachable br_table 0 1) drop drop))",
     );
-    assert!(compile(&input, ValidationProfile::Wasm1).is_err());
-    let module = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let module = compile(&input).unwrap();
     assert_eq!(module.function_stats(0).unwrap().max_stack, 0);
 }
 
@@ -101,7 +98,7 @@ fn compiler_budgets_reject_partial_artifacts_with_explicit_resource_errors() {
         "(module (func (param i32) (result i32)
         (block (result i32) i32.const 9 local.get 0 br_table 0 0)))",
     );
-    let compiled = compile(&input, ValidationProfile::Wasm2).unwrap();
+    let compiled = compile(&input).unwrap();
     // Branch copy/jump stubs count as emitted bytecode. Instantiation also
     // retains one synthetic return even when there are no active segments.
     let instruction_budget = compiled.function_stats(0).unwrap().instruction_count + 1;
@@ -114,7 +111,7 @@ fn compiler_budgets_reject_partial_artifacts_with_explicit_resource_errors() {
         max_controls: 2,
         max_locals: 1,
     };
-    assert!(compile_with_limits(&input, ValidationProfile::Wasm2, enough).is_ok());
+    assert!(compile_with_limits(&input, enough).is_ok());
     for (limits, resource) in [
         (
             CompileLimits {
@@ -167,13 +164,13 @@ fn compiler_budgets_reject_partial_artifacts_with_explicit_resource_errors() {
         ),
     ] {
         assert_eq!(
-            compile_with_limits(&input, ValidationProfile::Wasm2, limits).unwrap_err(),
+            compile_with_limits(&input, limits).unwrap_err(),
             CompileError::Resource(resource)
         );
     }
     let invalid = bytes("(module (func (result i32)))");
     assert!(matches!(
-        compile_with_limits(&invalid, ValidationProfile::Wasm2, CompileLimits::default()),
+        compile_with_limits(&invalid, CompileLimits::default()),
         Err(CompileError::Validation(_))
     ));
 }
@@ -187,7 +184,7 @@ fn compiler_budgets_are_shared_across_defined_functions() {
         ..CompileLimits::default()
     };
     assert_eq!(
-        compile_with_limits(&input, ValidationProfile::Wasm2, limits).unwrap_err(),
+        compile_with_limits(&input, limits).unwrap_err(),
         CompileError::Resource(CompileResource::Instructions)
     );
     let limits = CompileLimits {
@@ -195,7 +192,7 @@ fn compiler_budgets_are_shared_across_defined_functions() {
         ..CompileLimits::default()
     };
     assert_eq!(
-        compile_with_limits(&input, ValidationProfile::Wasm2, limits).unwrap_err(),
+        compile_with_limits(&input, limits).unwrap_err(),
         CompileError::Resource(CompileResource::Controls)
     );
 }

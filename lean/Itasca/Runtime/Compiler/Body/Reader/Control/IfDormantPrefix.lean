@@ -1,11 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackDead
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor
-import Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
+import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 import Itasca.Runtime.Compiler.Body.Callbacks.Calls.ScopeCallbackInputs
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
@@ -57,7 +56,7 @@ theorem structured_callback_if_dead_prefix {jumpTables : List U32} {emit : List 
   have sources := compiler_enter_sources ops law before after state .Then bt accepted
   have cursor := compiler_enter_cursor ops law before after state .Then bt accepted
   exact invariant.open_dormant dead deadAfter child frame stable aligned codeEq framesEq
-    (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl  rfl rfl sources consumed (by rw [cursor])
+    (by simp [mapsEq]) rfl rfl (DormantFrame.fresh rfl rfl) rfl rfl rfl sources consumed (by rw [cursor])
 
 end Itasca.Runtime.Compiler
 
@@ -71,7 +70,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
 theorem structured_reader_prefix_if_dead_wasm2 {jumpTables : List U32} {emit : List valtype → instr → List Bytecode → List valtype → Prop} {data env localTypes index st}
-    (p : Wasm2.Pending data env .Wasm2 localTypes index st) {A : Type}
+    (p : Wasm2.Pending data env localTypes index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (types functions : List functype) (returns locals : List valtype)
@@ -84,7 +83,7 @@ theorem structured_reader_prefix_if_dead_wasm2 {jumpTables : List U32} {emit : L
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_IF)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 code.OP_IF before = .ok (.Ok (), out, after)) :
+      st data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterIf (Wasm2.blockType bt) 0#u32 front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length false
       Wasm2.ReaderEnterPost p out .then_ bt ins outs remaining base ∧

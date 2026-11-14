@@ -1,4 +1,4 @@
-import Itasca.Runtime.Interp.Machine.Calls.StructuredCall
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 
 /-!
 The source-stack base retained by a frame-stack relation.

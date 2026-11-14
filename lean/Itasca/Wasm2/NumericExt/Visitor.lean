@@ -1,5 +1,5 @@
 import Itasca.Wasm2.NumericExt.Total
-import Itasca.Visitor.StepLift
+import Itasca.Visitor.RunTrace
 
 /-!
 # Numeric extension visitor transfer

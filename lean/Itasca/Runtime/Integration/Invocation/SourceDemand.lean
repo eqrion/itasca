@@ -1,5 +1,5 @@
 import Itasca.Runtime.Integration.Invocation.DefinedResources
-import Itasca.Runtime.Integration.Invocation.InitialHostCauses
+import Itasca.Runtime.Integration.Invocation.Outcomes
 import Itasca.Runtime.Integration.Api.InitialHostResourcesAdequate
 import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
 

@@ -1,9 +1,7 @@
-import Itasca.Visitor.ReaderAcceptance
-import Itasca.Runtime.Compiler.Local.Capacity.MemoryAvailability
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
-import Itasca.Visitor.EventDispatch
-import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryTypes
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance
+import Itasca.Visitor.BodyReplay
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
+import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 
 /-!
 Memory callback acceptance and successful replay from reached source prefixes and available resources.
@@ -92,7 +90,7 @@ set_option maxRecDepth 4096
 /-- Independent Wasm 2 memory-reader acceptance determines the live
 address/value layout, before any compiler callback is run. -/
 theorem reached_reader_memory_load_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -131,7 +129,7 @@ theorem reached_reader_memory_load_available_wasm2 {data env locals index st}
 /-- Independent Wasm 2 memory-reader acceptance determines the live
 address/value layout, before any compiler callback is run. -/
 theorem reached_reader_memory_store_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.OpIterState)
@@ -171,7 +169,7 @@ theorem reached_reader_memory_store_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 dispatcher accepts a reached scalar or packed
 load; the source run supplies its real capacity check. -/
 theorem reached_profile_memory_load_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
@@ -181,10 +179,10 @@ theorem reached_profile_memory_load_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
-    (reference : code.step_profile source st data env ctx index .Wasm2
+    (reference : code.step_profile source st data env ctx index
       (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) compiler ⦃ result =>
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨_,_,_,_,_,ordinary,plain,sign,misc⟩ := memory_load_reader_facts ops compiler out.core op ⟨0#u32,0#u32⟩
@@ -201,7 +199,7 @@ theorem reached_profile_memory_load_available_wasm2 {data env locals index st}
 /-- The complete Wasm 2 dispatcher accepts a reached scalar or packed
 store; the source run supplies its real capacity check. -/
 theorem reached_profile_memory_store_available_wasm2 {data env locals index st}
-    (p : Wasm2.Pending data env .Wasm2 locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
+    (p : Wasm2.Pending data env locals index st) {A V : Type} (ops : runtime.platform.Alloc A)
     (bound : Nat) (available : Platform.AllocationAvailable ops bound)
     (source : code.OpVisitor V) (before after : V)
     (compiler : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
@@ -211,10 +209,10 @@ theorem reached_profile_memory_store_available_wasm2 {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Sequence.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
-    (reference : code.step_profile source st data env ctx index .Wasm2
+    (reference : code.step_profile source st data env ctx index
       (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) compiler ⦃ result =>
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   obtain ⟨_,_,_,_,_,ordinary,plain,sign,misc⟩ := memory_store_reader_facts ops compiler out.core op ⟨0#u32,0#u32⟩

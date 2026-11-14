@@ -1,5 +1,6 @@
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
-import Itasca.Runtime.SourceMachine.Core.Pure
+import Itasca.Runtime.SourceMachine.Core.Trap
+
 namespace Itasca.Runtime.SourceMachine.Numeric
 open SpecExt Itasca.Runtime.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)

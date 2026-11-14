@@ -1,14 +1,181 @@
-import Itasca.Runtime.Integration.Instantiation.InstantiateExecutableEventfulOrigin
-import Itasca.Runtime.Integration.Instantiation.InstantiateSourceOrigin
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
+import Itasca.Runtime.Integration.Api.InvocationEntryResources
+import Itasca.Runtime.Compiler.Module.CompileExecutableCapacities
+import Itasca.Runtime.Store.Invariant.FunctionCapacities
+import Itasca.Runtime.Compiler.Module.CompileExecutable
 import Itasca.Runtime.Integration.Instantiation.StartResolution
-import Itasca.Runtime.Integration.Instantiation.StartAmbient
-import Itasca.Runtime.Integration.Api.ExecutableInv
-import Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds
-import Itasca.Runtime.Store.Initialization.SegmentInitializeSource
-import Itasca.Runtime.Store.Initialization.SegmentCodeMetadata
+import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Interp.Relations.SuspendedPoint
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Interp.Machine.Frames.Reposition
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.SourceMachine.Ownership.Extension
+import Itasca.Runtime.Interp.Machine.Mutation.Core
+import Itasca.Runtime.Interp.Relations.SourceCallCause
+import Itasca.Runtime.Interp.State.StatefulSegmentLookup
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
+import Itasca.Runtime.Interp.Relations.ValueLookup
+import Itasca.Runtime.Interp.Relations.SourceClosure
+import Itasca.Runtime.Interp.Machine.Emission.Local
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
+import Itasca.Runtime.Interp.Numeric.Integer.NumericFetch
+import Itasca.Runtime.Interp.Numeric.Integer.IntCounts
+import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
+import Itasca.Runtime.Interp.Machine.Execution
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
+import Itasca.Runtime.Interp.Control.BrTableSource
+import Itasca.Runtime.SourceMachine.Numeric.Transition
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.Spec.Integer
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
+import Itasca.Runtime.Interp.Relations.Defaults
+import Itasca.Runtime.Interp.Relations.TypedOperands
+import Itasca.Runtime.Interp.Machine.Local.ExecutionOwned
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+import Itasca.Runtime.Interp.Control.NormalizeCompose
+import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
+import Itasca.Runtime.Interp.State.GlobalCoreStep
+import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
+import Itasca.Runtime.Interp.Machine.Select.Operands
+import Itasca.Runtime.Interp.Memory.MemorySize
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
+import Itasca.Runtime.Interp.Memory.MemoryGrow
+import Itasca.Runtime.SourceMachine.BrTable
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
+import Itasca.Runtime.SourceMachine.CallSafety
+import Itasca.Runtime.Interp.Calls.IndirectResolve
+import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
+import Itasca.Runtime.Interp.Calls.ReturnRefinement
+import Itasca.Runtime.Interp.Machine.Emission.Unreachable
+import Itasca.Runtime.Interp.Control.LabelCompletion
+import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
+import Itasca.Runtime.Store.Invariant.SemanticApi
+import Itasca.Runtime.Store.Invariant.Typing
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Store.Invariant.CodeAgreement
+import Itasca.Runtime.Store.Invariant.ErrorPost
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
+import Itasca.Runtime.Store.Invariant.PrecommitError
+import Itasca.Runtime.Store.Initialization.SegmentExtension
+import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Store.Instantiation.Precommit
 import Itasca.Runtime.Store.Invariant.Rollback
-import Itasca.Runtime.Store.Instantiation.PrecommitSource
+import Itasca.Runtime.Compiler.Local.Initializer
+
+/-!
+Sections, each formerly its own module: InstantiateExecutableEventfulOrigin, InstantiateSource.
+-/
+
+/-! ## InstantiateExecutableEventfulOrigin -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std Itasca Store
+
+/-- Actual accepted compilation and instantiation either retain a rollback
+prefix or reach a certified store that is exactly the generated source
+instantiation result. No allocation, initializer, or compiler correctness
+certificate is supplied by the caller. -/
+theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
+    (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
+    (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
+    (law : Platform.AllocCorrect allocator)
+    (before : runtime.store.Store M) (module : runtime.compiler.ExecutableModule)
+    (imports : Slice runtime.Extern) (platform : P)
+    (code : CodeInterpretation) (certified : CertifiedExecutableApiStore view code before)
+    (accounted : SegmentAccounting before)
+    (handles : ∀ external ∈ imports.val, ExternalIssued before external)
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module)) :
+    ∃ raw, ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes.val ∧
+      ModuleElaboration.Elaborates raw (ModuleElaboration.moduleOf raw) ∧
+      ModuleElaboration.Matches module.module.env module.module.tail raw ∧
+      Module_ok (ModuleElaboration.moduleOf raw) ∧
+      ((∃ error staged,
+        runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false =
+          .ok (.Err error, staged, platform, false) ∧ StagedPrefix before staged) ∨
+       ∃ ready inst,
+        ready.instances.val[before.instances.len.val]? = some inst ∧ inst.module = module ∧
+        CertifiedExecutableApiStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready ∧
+        (FunctionCapacities code before → FunctionCapacities
+          (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) ∧
+        SegmentAccounting ready ∧ InitializerImports ready inst ∧ SegmentTypeBindings ready inst ∧
+        Interp.FunctionTable ready inst (inst.module.module.env.func_types.val.map decodeFuncType) ∧
+        fun_instantiate (decodeStore view code before) (ModuleElaboration.moduleOf raw) (imports.val.map decodeExternal)
+          (sourceInstantiationConfiguration view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready inst raw) ∧
+        Extend_store (decodeStore view code before)
+          (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) ∧
+        Interp.FrameStorePrefix before ready ∧
+        runtime.store.instantiate.Store.commit_instance memory hooks floats allocator ready platform ⟨before.id, before.instances.len⟩ false =
+          runtime.store.instantiate.Store.instantiate_inner memory hooks floats allocator before module imports platform false) := by
+  obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors, functions, initializers⟩ :=
+    Compiler.compile_executable_functions allocator law bytes limits module accepted
+  obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities⟩ :=
+    Compiler.compile_executable_capacities allocator law bytes limits module accepted
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique Profile.code_prefix_unique encoded capacityEncoded
+  subst capacityRaw
+  refine ⟨raw, encoded, elaborated, matched, typed, ?_⟩
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
+  have valid : ModuleEnv.Valid module.module.env := by
+    exact (witness.semantic law).1
+  have decomposition := instantiate_compiled_linked_bounded_decomposition memory hooks floats allocator law view laws
+    before module imports platform certified.shape accounted certified.segmentBounds bytes limits accepted handles
+  rcases decomposition with rejected | ⟨ready, inst, shape, found, source, initializersReady, types, counts, metadata, bounded, ⟨trace⟩, continued⟩
+  · exact Or.inl rejected
+  · obtain ⟨certifiedInst, certifiedFound, certifiedSource, readyCertified, readyAccounting, bindings⟩ :=
+      prepared_certified_executable_api trace.toPreparedRun laws law code certified accounted matched.2 valid initializers
+        raw elaborated typed matched encoded functions (witness.data_count law) bounded
+    have same : certifiedInst = inst := Option.some.inj (certifiedFound.symm.trans found)
+    subst certifiedInst
+    obtain ⟨sourceInst, sourceFound, sourceModule, instantiated⟩ := trace.source_instantiation laws law
+      certified.shape accounted raw matched.2 matched elaborated typed encoded valid initializers code certified.storeSyntax handles
+    have sameSource : sourceInst = inst := Option.some.inj (sourceFound.symm.trans found)
+    subst sourceInst
+    obtain ⟨_,_,_,_,_,retained,_,_⟩ := trace.toPreparedRun.shape_data laws law certified.shape accounted matched.2 valid initializers
+    obtain ⟨hfuncs,hglobals,htables,hmems,helems,hdatas⟩ := decode_store_prefix view
+      (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before trace.toPreparedRun.dataStore certified.shape retained
+    have decodedReady : decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready =
+        decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) trace.toPreparedRun.dataStore := by
+      refine (congrArg (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw))) trace.toPreparedRun.committed).trans ?_
+      unfold decodeStore
+      congr 1
+    have agrees : decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before = decodeStore view code before := by
+      simpa only [alloc.vec.Vec.len_val] using decode_store_code_agrees view (install_code_agrees before code (Compiler.sourceFunctions raw))
+    have extension : Extend_store (decodeStore view code before)
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready) := by
+      have result := store_prefix_extends
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) before)
+        (decodeStore view (installCode code before.instances.len.val (Compiler.sourceFunctions raw)) ready)
+        (by rw [agrees]; exact decode_store_wf view code before certified.shape certified.storeSyntax)
+        (decode_store_wf view _ ready readyCertified.shape readyCertified.storeSyntax)
+        (by simpa only [decodedReady] using hfuncs) (by simpa only [decodedReady] using hglobals)
+        (by simpa only [decodedReady] using htables) (by simpa only [decodedReady] using hmems)
+        (by simpa only [decodedReady] using helems) (by simpa only [decodedReady] using hdatas)
+      simpa only [agrees] using result
+    refine Or.inr ⟨ready, inst, found, source, readyCertified, ?_, readyAccounting, initializersReady,
+      types, metadata.function_table, instantiated, extension, ?_, continued⟩
+    · intro oldCapacities
+      exact metadata.capacities code oldCapacities found (Compiler.sourceFunctions raw)
+        (by simpa only [source] using capacities) (by simpa only [source] using matched.2)
+    · rw [trace.toPreparedRun.committed]
+      exact ⟨retained.identity,retained.funcs,retained.types,retained.instances⟩
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## InstantiateSource -/
+
+section
 
 /-! Public instantiation links, allocates and initializes a module and returns its start
 function without running it. The construction is total and uses no host callback. -/
@@ -32,21 +199,15 @@ def InitializedSource (initial : config) (store : _root_.store) (ambient : frame
   | .Err (.Exhausted _) | .Err .Terminated => ∃ body,StepsH initial [] ⟨⟨store,ambient⟩,body⟩
   | .Err _ => False
 
-/-- A rejection before publication leaves the store unchanged; Wasm 1.0 bounds failures match the
-source rollback. Otherwise the new instance follows the generated source instantiation. -/
+/-- A rejection before publication leaves the store unchanged and never reports a trap.
+Otherwise the new instance follows the generated source instantiation. -/
 def InstantiationSourceOutcome {M P : Type} (view : M → Slice U8)
     (oldCode code : CodeInterpretation) (before : runtime.store.Store M)
     (module : runtime.compiler.ExecutableModule) (imports : Slice runtime.Extern)
     (raw : ModuleBinary.Module) (platform : P)
     (result : core.result.Result runtime.Instantiated runtime.ExecError)
     (after : runtime.store.Store M) (host : P) : Prop :=
-  (∃ error,result=.Err error ∧ PrecommitError module.profile error ∧ after=before ∧ host=platform ∧
-    ∀ trap,error=.Trap trap → module.profile=.Wasm1 ∧
-      ∃ (staged : runtime.store.Store M) (inst : runtime.store.ModuleInst),
-        staged.instances.val[before.instances.length]?=some inst ∧ inst.module=module ∧
-        SpecExt.Wasm1.BoundsRollback (decodeStore view oldCode before) (decodeStore view code staged)
-          (decodeInstance staged inst) (raw.elements.map ModuleElaboration.element)
-          (raw.data.map ModuleData.translate) (decodeStore view oldCode after)) ∨
+  (∃ error,result=.Err error ∧ PrecommitError error ∧ after=before ∧ host=platform) ∨
   ∃ inst initial,
     after.instances.val[before.instances.len.val]?=some inst ∧ inst.module=module ∧ host=platform ∧
     fun_instantiate (decodeStore view oldCode before) (ModuleElaboration.moduleOf raw)
@@ -86,9 +247,9 @@ theorem commit_instance_source {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (identity : runtime.InstanceAddr)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits=.ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits=.ok (.Ok inst.module))
     (found : store.instances.val[identity.index.val]?=some inst)
     (code : CodeInterpretation) (certified : ExecutableInv view code store)
     (imports : InitializerImports store inst) (types : SegmentTypeBindings store inst)
@@ -107,9 +268,8 @@ theorem commit_instance_source {M P F A : Type}
         ∀ error,out.1=.Err error → (error=.Trap .MemoryOutOfBounds ∨ error=.Trap .TableOutOfBounds) ∨
           (out.2.1=store ∧ SegmentSetupCause allocator store inst.module error) ⦄ := by
   have bindings := certified.shape.initializer_bindings (List.mem_of_getElem? found)
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
-  have valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile := by
-    rw [(witness.initializers law).2.1]
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits inst.module accepted
+  have valid : Itasca.ModuleEnv.Valid inst.module.module.env := by
     exact (witness.semantic law).1
   let continuation := (inst.module.module.env.start.map (fun index => admininstr.CALL (.mk_uN index.val))).toList
   have continuationWf : Forall wf_admininstr continuation := by
@@ -120,12 +280,12 @@ theorem commit_instance_source {M P F A : Type}
       simpa [continuation,hs,Forall] using wf_admininstr.admininstr_case_10 (.mk_uN index.val) indexWf
   have startEq : raw.start = inst.module.module.env.start := congrArg ModuleBinary.Module.start matched.1
   have initSource := initialize_segments_raw_source_causes memory hooks floats allocator view laws law store platform identity.index
-    inst bytes profile limits accepted found code certified.shape certified.storeSyntax certified.segmentBounds
+    inst bytes limits accepted found code certified.shape certified.storeSyntax certified.segmentBounds
     imports bindings types (moduleStartFrame store inst)
     (module_start_frame_wf code store identity.index inst certified.storeSyntax found) rfl raw matched continuation continuationWf
   obtain ⟨⟨status,initialized,host⟩,initRun,fresh,extension,metadata,hostEq⟩ :=
     WP.spec_imp_exists (initialize_segments_certified_supported memory hooks floats allocator view laws law
-      store platform identity.index inst bytes profile limits accepted found code certified.toCertifiedSupportedStore
+      store platform identity.index inst bytes limits accepted found code certified.toCertifiedSupportedStore
       imports bindings types)
   dsimp only at fresh extension metadata hostEq
   subst host
@@ -181,7 +341,7 @@ theorem commit_instance_source {M P F A : Type}
       have run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (.Ok ⟨identity,none⟩,initialized,platform,true) := by
         simp [runtime.store.instantiate.Store.commit_instance,initRun,core.result.Result.Insts.CoreOpsTry.branch,
-          alloc.vec.Vec.index_slice_index,read,runtime.compiler.ExecutableModule.env,
+          alloc.vec.Vec.index_slice_index,read,runtime.compiler.ExecutableModule.env.eq,
           Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.start,start]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩
@@ -200,7 +360,7 @@ theorem commit_instance_source {M P F A : Type}
       have run : runtime.store.instantiate.Store.commit_instance memory hooks floats allocator store platform identity false =
           .ok (.Ok ⟨identity,some address⟩,initialized,platform,true) := by
         simp only [runtime.store.instantiate.Store.commit_instance,initRun,lift,bind_ok,uncurry_apply_pair,
-          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.start,
+          core.result.Result.Insts.CoreOpsTry.branch,runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.start,
           alloc.vec.Vec.index_slice_index,read,start,addressRun]
       rw [run,WP.spec_ok]
       refine ⟨rfl,rfl,initializedInv,extension,frameMetadata.prefix,?_,?_,(by intro _ impossible; cases impossible)⟩
@@ -226,64 +386,51 @@ theorem instantiate_compiled_source {M P F A : Type}
     (imports : Slice runtime.Extern) (platform : P)
     (oldCode : CodeInterpretation) (old : ExecutableInv view oldCode before)
     (handles : ∀ external ∈ imports.val, ExternalIssued before external)
-    (bytes : Slice U8) (profile : ValidationProfile) (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok module))
+    (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (raw : ModuleBinary.Module)
-    (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding profile) raw bytes.val profile) :
+    (encoded : ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes.val ) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
-        ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
-          Interp.FrameStorePrefix before out.2.1 ∧
+        ⦃ (result, after, nextPlatform) => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧
+          Interp.FrameStorePrefix before after ∧
           Extend_store (decodeStore view oldCode before)
-            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) ∧
+            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after) ∧
           InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
-            before module imports raw platform out.1 out.2.1 out.2.2 ∧
-          ∀ error,out.1=.Err error → InstantiationResourceCause memory hooks floats allocator
-            view oldCode before module imports platform raw out.2.1 error ⦄ := by
+            before module imports raw platform result after nextPlatform ∧
+          ∀ error,result=.Err error → InstantiationResourceCause memory hooks floats allocator
+            view oldCode before module imports platform raw after error ⦄ := by
   obtain ⟨actualRaw,actualEncoded,elaborated,matched,typed,origin⟩ :=
     instantiate_compiled_executable_eventful_origin memory hooks floats allocator view laws law before module imports platform
-      oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes profile limits accepted
-  have sameRaw := Profile.module_unique encoded actualEncoded
+      oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes limits accepted
+  have sameRaw := ModuleBinary.ModuleEncodingWith.unique Profile.code_prefix_unique encoded actualEncoded
   subst actualRaw
   refine ⟨typed,?_⟩
   rcases origin with ⟨error,staged,returned,retained⟩ |
     ⟨ready,inst,found,source,readyCertified,readyCapacities,readyAccounting,initializers,types,table,allocated,
       preparedExtension,preparedPrefix,continued⟩
-  · obtain ⟨cause,_,_,origins⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
-      before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles
+  · obtain ⟨cause,_,_,_⟩ := instantiate_compiled_precommit_origins memory hooks floats allocator law view laws
+      before module imports platform old.shape old.segmentAccounting bytes limits accepted handles
       error staged platform returned
     obtain ⟨_,_,evidence⟩ := instantiate_compiled_precommit_resource_causes memory hooks floats allocator law view laws
-      before module imports platform old.shape old.segmentAccounting bytes profile limits accepted handles error staged platform returned
-    obtain ⟨compiledWitness⟩ := Compiler.compile_accepted allocator bytes profile limits module accepted
-    have profileEq := (compiledWitness.initializers law).2.1
-    obtain ⟨out,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
+      before module imports platform old.shape old.segmentAccounting bytes limits accepted handles error staged platform returned
+    obtain ⟨⟨result,after,nextPlatform⟩,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
       (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained returned)
     rw [run,WP.spec_ok]
     have rollbackInv : ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) before :=
       ⟨old.toCertifiedApiStore.install_code (Compiler.sourceFunctions raw),old.segmentAccounting,
         old.capacities.code_agrees (install_code_agrees before oldCode (Compiler.sourceFunctions raw))⟩
     have rollbackExtension : Extend_store (decodeStore view oldCode before)
-        (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) := by
+        (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after) := by
       rw [storeEq,decode_store_code_agrees view (install_code_agrees before oldCode (Compiler.sourceFunctions raw))]
       exact Spec.extend_store_refl _ old.well_formed
     refine ⟨(by simpa only [storeEq] using rollbackInv),(by simpa only [storeEq] using Interp.FrameStorePrefix.refl before),
-      rollbackExtension,Or.inl ⟨error,resultEq,by simpa only [profileEq] using cause,storeEq,hostEq,?_⟩,?_⟩
-    · intro trap failed
-      subst error
-      have wasm1 : module.profile = .Wasm1 := by
-        rw [profileEq]
-        cases trap <;> simp only [PrecommitError] at cause <;> exact cause
-      obtain ⟨stagedInst,selected,stagedSource,bounds⟩ :=
-        origins.source_bounds retained oldCode old.storeSyntax raw elaborated typed matched
-      refine ⟨wasm1,staged,stagedInst,selected,stagedSource,?_⟩
-      rw [storeEq]
-      exact .reject bounds
+      rollbackExtension,Or.inl ⟨error,resultEq,cause,storeEq,hostEq⟩,?_⟩
     · intro failed rejected
       have same : error = failed := core.result.Result.Err.inj (resultEq.symm.trans rejected)
       subst failed
       cases error <;> try trivial
-      · rename_i limit
-        exact Or.inl ⟨storeEq,limit,rfl,staged,returned,evidence⟩
+      · exact Or.inl ⟨storeEq,_,rfl,staged,returned,evidence⟩
   · have initialWf : wf_config (sourceInstantiationConfiguration view
         (installCode oldCode before.instances.len.val (Compiler.sourceFunctions raw)) ready inst raw) := by
       have wf : ∀ s m xs c, fun_instantiate s m xs c → wf_config c := by
@@ -291,12 +438,12 @@ theorem instantiate_compiled_source {M P F A : Type}
         cases h
         assumption
       exact wf _ _ _ _ allocated
-    have acceptedInst : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module) := by
+    have acceptedInst : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module) := by
       simpa only [source] using accepted
     have matchedInst : ModuleElaboration.Matches inst.module.module.env inst.module.module.tail raw := by
       simpa only [source] using matched
     have tail := commit_instance_source memory hooks floats allocator view laws law ready platform
-      ⟨before.id,before.instances.len⟩ inst bytes profile limits acceptedInst found
+      ⟨before.id,before.instances.len⟩ inst bytes limits acceptedInst found
       (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
       ⟨readyCertified,readyAccounting,readyCapacities old.capacities⟩ initializers types table raw matchedInst initialWf
     unfold runtime.store.instantiate.Store.instantiate_with
@@ -325,3 +472,5 @@ theorem instantiate_compiled_source {M P F A : Type}
         · exact Or.inr ⟨ready,inst,found,source,allocated,continued,unchanged,setup⟩
 
 end Itasca.Runtime.Integration
+
+end

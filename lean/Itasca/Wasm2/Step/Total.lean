@@ -1,5 +1,5 @@
 import Itasca.Wasm2.Bulk.Total
-import Itasca.Wasm2.Simd.DispatchTotal
+import Itasca.Wasm2.Simd.LaneReaders
 
 /-!
 # Totality of `step_wasm2`
@@ -54,7 +54,7 @@ theorem wasm2_total {V : Type} (visitor : code.OpVisitor V)
   by_cases h209 : opcode = 209#u8
   · rw [h209, code.step_wasm2.ref_is_null]
     apply run_reader_total st _ _ v
-    · apply WP.spec_mono (code.read_ref_is_null.total st  hs hsize)
+    · apply WP.spec_mono (code.read_ref_is_null.total st hs hsize)
       exact fun _ h => ⟨h.1, h.2.1, h.2.2.1⟩
     · exact fun s a => hv.on_ref_is_null v s
   by_cases h210 : opcode = 210#u8

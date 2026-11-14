@@ -1,13 +1,65 @@
+import Itasca.Module.Env.Requirements
+import Itasca.Profile.BinaryUnique
 import Itasca.Module.Code.BodyContextComplete
 import Itasca.Module.Elab.Profile
 import Itasca.Module.Elab.TypingInversion
+
+/-!
+Sections, each formerly its own module: EntryOfEnv, FuncTyping.
+-/
+
+/-! ## EntryOfEnv -/
+
+section
+
+/-!
+# Code entry validation under an accepted environment
+
+Entry validation theorems whose environment premise is an accepted call of `metadata.validate_env`
+on bounded input, instead of a hypothesis on the environment.
+`ModuleEnv.profile_accepted_entry_conditions` extracts the allocation bounds and signature
+admissibility from acceptance. The `_of_env` theorems then give totality, `Profile.Entry`
+soundness and `CodeEntry.Validated` for `metadata.validate_code_entry` and
+`metadata.validate_code_entry_with`. The code bytes may be in a different buffer from the
+environment bytes.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.ModuleEnv
+
+/-- An accepted environment decoded from input within the size limit supplies the entry
+prerequisites for the profile: the allocation bound and signatures within the
+completeness limits. -/
+theorem profile_accepted_entry_conditions (data : Slice U8) (env : metadata.Env) (next : Usize)
+     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
+    (h : metadata.validate_env data = .ok (.Ok (env, next))) :
+    CodeEntry.Bounds env ∧ Profile.EnvironmentWithinLimits env := by
+  have hs := metadata.validate_env.profile_semantic_spec data
+  rw [h] at hs
+  simp only [WP.spec_ok] at hs
+  obtain ⟨decls, hr, hv, hsig, _, hb⟩ := hs
+  exact ⟨CodeEntry.Bounds.of_module_bound env (hsig.mono (by have := hb.span.2; omega)),
+    hv.environmentWithinLimits hr.cache⟩
+
+end Itasca.ModuleEnv
+
+namespace Itasca
+
+end Itasca
+
+end
+
+/-! ## FuncTyping -/
+
+section
 
 /-!
 # Code entry typing from function typing
 
 The converse of `CodeEntry.typed_func_ok`. `function_body` inverts the generated `Func_ok`, and
 `Typed.of_func_ok` builds a `Typed` certificate for a code entry from `Func_ok` in a module
-context, using the profile's function restrictions and declared references. A body that uses no
+context, using declared references. A body that uses no
 data index may have a data space unrelated to the environment's.
 -/
 
@@ -31,16 +83,14 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
 /-- Generated function typing of a code entry in a module context gives a `Typed` certificate.
 The context's element space must be the environment's, and its data space must be the
 environment's unless the body uses no data index. -/
-theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32}
+theorem Typed.of_func_ok {env : metadata.Env} {C : context} {idx : U32}
     {entry : ModuleBinary.Code} {ft : functype}
     (hc : ModuleContext env C)
     (he : C.ELEMS = EnvTranslation.elementTypes env)
     (hd : C.DATAS = EnvTranslation.dataTypes env ∨ ModuleBinary.instructionsUseData entry.body = false)
-    (hp : ModuleElaboration.FunctionProfile env.types.val idx entry profile)
     (hf : Func_ok C (function idx entry) ft)
-    (hallowed : ∀ group ∈ entry.locals, ModuleBinary.ValueTypeAllowed profile group.2)
     (hdeclared : DeclaredReferences.Instructions
-      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) : Typed env idx entry profile := by
+      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) : Typed env idx entry := by
   have hi : idx.val < env.types.val.length := by
     simpa [function, hc.types, proj_uN_0] using ModuleElaboration.func_index_bound hf
   have hft := ModuleElaboration.function_type_of_typing hf hc.types
@@ -73,7 +123,7 @@ theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32
     · rfl
   cases hb with
   | mk_Expr_ok ts hbody hw hws =>
-    refine ⟨hi, ?_, hp.choose_spec.congr_labels _ rfl, hallowed, hdeclared⟩
+    refine ⟨hi, ?_, hdeclared⟩
     rcases hd with hd | hno
     · apply BodyContext.instrs_transport_extend hbody _ _ hcore
       · change C.ELEMS.IsPrefix (EnvTranslation.elementTypes env)
@@ -83,3 +133,5 @@ theorem Typed.of_func_ok {profile} {env : metadata.Env} {C : context} {idx : U32
     · exact BodyContext.instrs_transport_of_no_data hbody hno he hcore
 
 end Itasca.CodeEntry
+
+end

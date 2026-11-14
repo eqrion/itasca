@@ -1,5 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
@@ -30,14 +31,20 @@ theorem copy_observe_eq {A : Type} (ops : runtime.platform.Alloc A)
         Result.ok (error, changed)) =
       runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
         (move (Itasca.Translate.valueType ty) dst src) := by
-  cases ty <;> simp [runtime.value.width, runtime.compiler.FunctionCompiler.copy, different,
-    runtime.compiler.lower.FunctionCompiler.finish_op, move, width, Itasca.Translate.valueType] <;>
-    split <;> simp only [bind_ok] <;> first
-    | rfl
-    | (rename_i h; exact False.elim ((by decide : (1#u32) ≠ (2#u32)) h))
-    | (rename_i h; exact False.elim ((by decide : (2#u32) ≠ (1#u32)) h))
-    | (rename_i h _; exact False.elim (h rfl))
-    | (rename_i _ h; exact False.elim (h rfl))
+  have one : runtime.compiler.FunctionCompiler.copy ops compiler dst src 1#u32 =
+      runtime.compiler.FunctionCompiler.emit ops compiler (.Copy dst src) := by
+    rw [runtime.compiler.FunctionCompiler.copy.eq,
+      if_neg (fun choice => choice.elim (by decide : (1#u32) ≠ 0#u32) different)]
+    rfl
+  have two : runtime.compiler.FunctionCompiler.copy ops compiler dst src 2#u32 =
+      runtime.compiler.FunctionCompiler.emit ops compiler (.Copy2 dst src) := by
+    rw [runtime.compiler.FunctionCompiler.copy.eq,
+      if_neg (fun choice => choice.elim (by decide : (2#u32) ≠ 0#u32) different)]
+    rfl
+  rw [runtime.compiler.lower.FunctionCompiler.finish_op.eq]
+  cases ty <;> simp only [runtime.value.width, one, two, bind_ok,
+    move, width, Itasca.Translate.valueType]
+  all_goals rfl
 
 
 set_option maxRecDepth 4096 in
@@ -65,23 +72,7 @@ set_option maxRecDepth 4096 in
     rw [equal] at slotPosition
     rw [← slotPosition, layout.localSlots, layout.height] at smaller
     omega
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 32#u16 index 0#u32 0#u128 = (do
-      let i ← lift (UScalar.cast .Usize index)
-      let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
-      let j ← lift (UScalar.cast .Usize index)
-      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
-      let count ← runtime.value.width rawType
-      let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
-      let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-      match branch with
-      | .Continue _ => runtime.compiler.FunctionCompiler.observe ops changed state
-      | .Break residual =>
-        let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-          (core.convert.FromSame Itasca.error.VisitError) residual
-        Result.ok (error, changed)) := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.local_get ops compiler state index 0#u32 0#u128 reachable
   rw [run]
   step as ⟨i, hi⟩
   have iVal : i.val = index.val := by scalar_tac
@@ -98,7 +89,7 @@ set_option maxRecDepth 4096 in
   have typeEq : rawType = ty := by
     simp only [jVal] at htype
     exact htype.trans (List.getElem?_eq_some_iff.mp found).2
-  rw [typeEq, copy_observe_eq ops compiler state ty compiler.height localSlot different]
+  erw [typeEq, copy_observe_eq ops compiler state ty compiler.height localSlot different]
   apply WP.spec_mono (finish_op ops law compiler state types _ before layout concrete codeFits sourceFits coordinateFits)
   intro out result success
   exact ⟨localSlot, slotPosition, result success⟩
@@ -141,29 +132,7 @@ set_option maxRecDepth 4096 in
     rw [← equal] at slotPosition
     rw [← slotPosition, layout.localSlots, operandPosition] at smaller
     omega
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state (if tee then 34#u16 else 33#u16) index 0#u32 0#u128 = (do
-      let i ← lift (UScalar.cast .Usize index)
-      let dst ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
-      let result ← runtime.compiler.FunctionCompiler.operand ops compiler 1#usize
-      let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-      match branch with
-      | .Continue src =>
-        let j ← lift (UScalar.cast .Usize index)
-        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
-        let count ← runtime.value.width rawType
-        let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
-        let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-        match branch with
-        | .Continue _ => runtime.compiler.FunctionCompiler.observe ops changed state
-        | .Break residual =>
-          let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-            (core.convert.FromSame Itasca.error.VisitError) residual
-          Result.ok (error, changed)
-      | .Break residual =>
-        let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-          (core.convert.FromSame Itasca.error.VisitError) residual
-        Result.ok (error, compiler)) := by
-    cases tee <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.local_set_or_tee ops compiler state tee index 0#u32 0#u128 reachable
   rw [run]
   step as ⟨i, hi⟩
   have iVal : i.val = index.val := by scalar_tac
@@ -184,7 +153,7 @@ set_option maxRecDepth 4096 in
   rw [typeEq]
   have copyEq := copy_observe_eq ops compiler state ty localSlot operand different
   simp only [core.result.Result.Insts.CoreOpsTry.branch] at copyEq
-  rw [copyEq]
+  erw [copyEq]
   apply WP.spec_mono (finish_op ops law compiler state types _ _ layout concrete codeFits sourceFits coordinateFits)
   intro out result success
   exact ⟨localSlot, operand, slotPosition, operandPosition, result success⟩

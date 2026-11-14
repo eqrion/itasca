@@ -1,5 +1,5 @@
-import Itasca.Visitor.ReaderAcceptance
-import Itasca.Wasm2.Trace.ControlRefinement
+import Itasca.Visitor.BodyReplay
+import Itasca.Wasm2.Trace.BytesReferences
 
 /-!
 Successful table iterations either continue or finish with acceptance.
@@ -13,7 +13,7 @@ set_option maxRecDepth 4096
 
 /-- Successful table iterations either continue or finish with acceptance. -/
 def TableFlowAccepted {V : Type} :
-    ControlFlow (code.OpIterState × V × Option Usize × signature.ResultType × U32)
+    ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V) → Prop
   | .cont _ => True
   | .done (reply,_,_) => reply = .Ok ()
@@ -22,13 +22,13 @@ def TableFlowAccepted {V : Type} :
 with separate relations at continuation and final callback boundaries. -/
 def TableFlowRelated {V W : Type}
     (related : Nat → code.OpIterState → V → W → Prop) (post : code.BodyState → V → W → Prop)
-    (source : ControlFlow (code.OpIterState × V × Option Usize × signature.ResultType × U32)
+    (source : ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V))
-    (target : ControlFlow (code.OpIterState × W × Option Usize × signature.ResultType × U32)
+    (target : ControlFlow (code.OpIterState × W × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × W)) : Prop :=
   tableObserve target = tableObserve source ∧
     match source with
-    | .cont (st,before,_,_,index) => related index.val st before (tableVisitor target)
+    | .cont (st,before,_,index) => related index.val st before (tableVisitor target)
     | .done (_,st,before) => post st before (tableVisitor target)
 
 /-- Replays only the final hook actually reached by an independently accepted
@@ -46,12 +46,12 @@ theorem table_rest_accepted_replay {V W : Type}
         post {st with core := marked} after result.2 ⦄)
     (st : code.BodyState) (env : metadata.Env) (index depth : U32) (ts : signature.ResultType)
     (bounded : index.val ≤ count.val)
-    (arity : Option Usize) (first : signature.ResultType) (before : V) (compiler : W)
+    (arity : Option Usize) (before : V) (compiler : W)
     (held : if index = count then readRelated index.val st.core depth ts before compiler
       else related (index.val+1) st.core before compiler)
     (flow) (accepted : TableFlowAccepted flow)
-    (reference : tableRest source st env count index depth ts arity first before = .ok flow) :
-    ∃ out, tableRest target st env count index depth ts arity first compiler = .ok out ∧
+    (reference : tableRest source st env count index depth ts arity before = .ok flow) :
+    ∃ out, tableRest target st env count index depth ts arity compiler = .ok out ∧
       TableFlowRelated related post flow out := by
   unfold tableRest at reference ⊢
   obtain ⟨check,checked,reference⟩ := ResultFacts.bind_ok_inv _ _ _ reference
@@ -97,7 +97,7 @@ theorem table_rest_accepted_replay {V W : Type}
         have checked := addition (by scalar_tac)
         rw [increment,WP.spec_ok] at checked
         simpa using checked
-      exact ⟨.cont (st.core,compiler,nextArity,first,next),by simp [increment],rfl,
+      exact ⟨.cont (st.core,compiler,nextArity,next),by simp [increment],rfl,
         by simpa only [nextEq,last,↓reduceIte,tableVisitor] using held⟩
 
 /-- Replays the actual label read and optional label hook of one accepted
@@ -107,7 +107,7 @@ theorem table_body_accepted_replay {V W : Type}
     (related : Nat → code.OpIterState → V → W → Prop)
     (readRelated : Nat → code.OpIterState → U32 → signature.ResultType → V → W → Prop)
     (post : code.BodyState → V → W → Prop)
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32)
     (readMoves : ∀ (index : U32) (st : code.BodyState) before compiler depth ts out,
       index.val ≤ count.val → related index.val st.core before compiler → code.read_label_info st data = .ok (.Ok (depth,ts),out) →
       readRelated index.val out.core depth ts before compiler)
@@ -120,12 +120,12 @@ theorem table_body_accepted_replay {V W : Type}
       target.on_br_table compiler marked depth ts ⦃ result => result.1 = .Ok () ∧
         post {st with core := marked} after result.2 ⦄)
     (st : code.BodyState) (before : V) (compiler : W)
-    (arity : Option Usize) (first : signature.ResultType) (index : U32)
+    (arity : Option Usize) (index : U32)
     (bounded : index.val ≤ count.val)
     (held : related index.val st.core before compiler)
     (flow) (accepted : TableFlowAccepted flow)
-    (reference : tableBody source data env profile count st before arity first index = .ok flow) :
-    ∃ out, tableBody target data env profile count st compiler arity first index = .ok out ∧
+    (reference : tableBody source data env count st before arity index = .ok flow) :
+    ∃ out, tableBody target data env count st compiler arity index = .ok out ∧
       TableFlowRelated related post flow out := by
   unfold tableBody at reference ⊢
   obtain ⟨⟨read,out⟩,readCalled,reference⟩ := ResultFacts.bind_ok_inv _ _ _ reference
@@ -139,18 +139,9 @@ theorem table_body_accepted_replay {V W : Type}
     obtain ⟨depth,ts⟩ := pair
     have readHeld := readMoves index st before compiler depth ts out bounded held readCalled
     simp only [bind_ok,Std.uncurry] at reference ⊢
-    obtain ⟨check,checked,reference⟩ := ResultFacts.bind_ok_inv _ _ _ reference
-    rw [checked]
-    cases check with
-    | Err error =>
-      simp at reference
-      subst flow
-      simp [TableFlowAccepted] at accepted
-    | Ok _ =>
-    simp only [bind_ok] at reference ⊢
     by_cases last : index = count
     · simp only [last,bne_self_eq_false,Bool.false_eq_true,if_false] at reference ⊢
-      exact table_rest_accepted_replay source target related readRelated post count finish out env count depth ts (by omega) arity _
+      exact table_rest_accepted_replay source target related readRelated post count finish out env count depth ts (by omega) arity
         before compiler (by simpa [last] using readHeld) flow accepted reference
     · simp only [bne_iff_ne,if_pos last] at reference ⊢
       obtain ⟨⟨reply,after⟩,called,reference⟩ := ResultFacts.bind_ok_inv _ _ _ reference
@@ -170,10 +161,10 @@ theorem table_body_accepted_replay {V W : Type}
         subst reply
         rw [targetCalled]
         simp only [code.visit,bind_ok,Std.uncurry]
-        exact table_rest_accepted_replay source target related readRelated post count finish out env index depth ts bounded arity _
+        exact table_rest_accepted_replay source target related readRelated post count finish out env index depth ts bounded arity
           after targetAfter (by simpa only [last,↓reduceIte] using retained) flow accepted reference
 
-/-- Replay the entire profile-selected label loop from an independently accepted run.
+/-- Replay the entire label loop from an independently accepted run.
 Only reached successful label and final callbacks need available target
 implementations. It does not require universal compiler visitor acceptance. -/
 theorem table_loop_reader_accepted_replay {V W : Type}
@@ -181,7 +172,7 @@ theorem table_loop_reader_accepted_replay {V W : Type}
     (related : Nat → code.OpIterState → V → W → Prop)
     (readRelated : Nat → code.OpIterState → U32 → signature.ResultType → V → W → Prop)
     (post : code.BodyState → V → W → Prop)
-    (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile) (count : U32)
+    (data : Slice U8) (env : metadata.Env) (count : U32)
     (readMoves : ∀ (index : U32) (st : code.BodyState) before compiler depth ts out,
       index.val ≤ count.val → related index.val st.core before compiler → code.read_label_info st data = .ok (.Ok (depth,ts),out) →
       readRelated index.val out.core depth ts before compiler)
@@ -194,20 +185,18 @@ theorem table_loop_reader_accepted_replay {V W : Type}
       target.on_br_table compiler marked depth ts ⦃ result => result.1 = .Ok () ∧
         post {st with core := marked} after result.2 ⦄)
     (index : U32) (bounded : index.val ≤ count.val) (arity : Option Usize)
-    (first : signature.ResultType) (st : code.OpIterState) (out : code.BodyState) (before after : V) (compiler : W)
+    (st : code.OpIterState) (out : code.BodyState) (before after : V) (compiler : W)
     (held : related index.val st before compiler)
-    (reference : code.branch_table_with_loop source st data env profile before count arity first
-      index = .ok (.Ok (),out,after)) :
-    ∃ targetAfter, code.branch_table_with_loop target st data env profile compiler count arity first
-      index =
+    (reference : code.branch_table_with_loop source st data env before count arity index = .ok (.Ok (),out,after)) :
+    ∃ targetAfter, code.branch_table_with_loop target st data env compiler count arity index =
       .ok (.Ok (),out,targetAfter) ∧ post out after targetAfter := by
   generalize measure : count.val-index.val = remaining
-  induction remaining using Nat.strong_induction_on generalizing st before compiler index arity first with
+  induction remaining using Nat.strong_induction_on generalizing st before compiler index arity with
   | h remaining ih =>
     unfold code.branch_table_with_loop at reference ⊢
     rw [loop] at reference ⊢
-    simp only [tableBody_eq source data env profile count ⟨st⟩ before arity first index] at reference
-    simp only [tableBody_eq target data env profile count ⟨st⟩ compiler arity first index]
+    simp only [tableBody_eq source data env count ⟨st⟩ before arity index] at reference
+    simp only [tableBody_eq target data env count ⟨st⟩ compiler arity index]
     obtain ⟨flow,called,tail⟩ := ResultFacts.bind_ok_inv _ _ _ reference
     have accepted : TableFlowAccepted flow := by
       cases flow with
@@ -217,7 +206,7 @@ theorem table_loop_reader_accepted_replay {V W : Type}
         simp only [Result.ok.injEq,Prod.mk.injEq] at tail
         exact tail.1
     obtain ⟨targetFlow,targetCalled,agreement,retained⟩ := table_body_accepted_replay source target
-      related readRelated post data env profile count readMoves label finish ⟨st⟩ before compiler arity first index
+      related readRelated post data env count readMoves label finish ⟨st⟩ before compiler arity index
       bounded held flow accepted called
     rw [targetCalled]
     cases flow with
@@ -233,17 +222,16 @@ theorem table_loop_reader_accepted_replay {V W : Type}
         obtain ⟨rfl,rfl⟩ := agreement
         exact ⟨targetAfter,by simp,retained⟩
     | cont following =>
-      obtain ⟨next,before',arity',first',index'⟩ := following
-      have progress := tableBody.cont_progress source data env profile count ⟨st⟩ before arity first
-        index next before' arity' first' index' bounded called
+      obtain ⟨next,before',arity',index'⟩ := following
+      have progress := tableBody.cont_progress source data env count ⟨st⟩ before arity index next before' arity' index' bounded called
       cases targetFlow with
       | done result => simp [tableObserve] at agreement
       | cont following =>
-        obtain ⟨next',compiler',arity'',first'',index''⟩ := following
+        obtain ⟨next',compiler',arity'',index''⟩ := following
         simp only [tableObserve,ControlFlow.cont.injEq,Prod.mk.injEq] at agreement
-        obtain ⟨rfl,rfl,rfl,rfl⟩ := agreement
+        obtain ⟨rfl,rfl,rfl⟩ := agreement
         obtain ⟨targetAfter,targetTail,retained'⟩ := ih (count.val-index''.val) (by omega)
-          index'' progress.2 arity'' first'' next' before' compiler' retained tail rfl
+          index'' progress.2 arity'' next' before' compiler' retained tail rfl
         exact ⟨targetAfter,by simpa only [bind_ok,code.branch_table_with_loop] using targetTail,retained'⟩
 
 end Itasca.Wasm2.Visitor

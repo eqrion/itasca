@@ -1,16 +1,14 @@
 use arbitrary::Unstructured;
-use itasca::ValidationProfile;
 use wasm_smith::{Config, Module};
 
-pub fn run(data: &[u8], profile: ValidationProfile) -> crate::differential::Coverage {
-    let wasm2 = profile == ValidationProfile::Wasm2;
+pub fn run(data: &[u8]) -> crate::differential::Coverage {
     let config = Config {
-        bulk_memory_enabled: wasm2,
-        reference_types_enabled: wasm2,
-        simd_enabled: wasm2,
-        multi_value_enabled: wasm2,
-        saturating_float_to_int_enabled: wasm2,
-        sign_extension_ops_enabled: wasm2,
+        bulk_memory_enabled: true,
+        reference_types_enabled: true,
+        simd_enabled: true,
+        multi_value_enabled: true,
+        saturating_float_to_int_enabled: true,
+        sign_extension_ops_enabled: true,
         relaxed_simd_enabled: false,
         exceptions_enabled: false,
         memory64_enabled: false,
@@ -32,7 +30,7 @@ pub fn run(data: &[u8], profile: ValidationProfile) -> crate::differential::Cove
         max_globals: 8,
         max_imports: 8,
         max_exports: 16,
-        max_tables: if wasm2 { 4 } else { 1 },
+        max_tables: if true { 4 } else { 1 },
         max_memories: 1,
         max_memory32_bytes: 16 * 65536,
         memory_max_size_required: true,
@@ -52,11 +50,11 @@ pub fn run(data: &[u8], profile: ValidationProfile) -> crate::differential::Cove
     // interpreter interrupt limit is an infrastructure backstop. Wasmi runs without fuel.
     module.ensure_termination(100).unwrap();
     let bytes = module.to_bytes();
-    let status = crate::differential::compare(&bytes, profile, data);
+    let status = crate::differential::compare(&bytes, data);
     assert_ne!(
         status,
         crate::differential::Coverage::Invalid,
-        "generated module was rejected: profile={profile:?}, bytes={bytes:?}"
+        "generated module was rejected: bytes={bytes:?}"
     );
     crate::differential::record(status);
     status

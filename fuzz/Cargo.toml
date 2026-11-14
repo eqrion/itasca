@@ -19,13 +19,6 @@ wasmi = { version = "=2.0.0", default-features = false, features = ["std", "vali
 wast = "=252.0.0"
 
 [[bin]]
-name = "wasm1_execute"
-path = "fuzz_targets/wasm1_execute.rs"
-test = false
-doc = false
-bench = false
-
-[[bin]]
 name = "wasm2_execute"
 path = "fuzz_targets/wasm2_execute.rs"
 test = false
@@ -56,20 +49,6 @@ bench = false
 [[bin]]
 name = "runtime_linking"
 path = "fuzz_targets/runtime_linking.rs"
-test = false
-doc = false
-bench = false
-
-[[bin]]
-name = "raw_bytes"
-path = "fuzz_targets/raw_bytes.rs"
-test = false
-doc = false
-bench = false
-
-[[bin]]
-name = "wasm1_smith"
-path = "fuzz_targets/wasm1_smith.rs"
 test = false
 doc = false
 bench = false

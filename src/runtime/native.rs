@@ -75,8 +75,8 @@ impl<M: MemoryBuffer> Store<M> {
     /// Links and initializes segments, returning the start function for the
     /// caller to invoke.
     ///
-    /// Link errors and Wasm 1.0 segment bounds errors leave the store unchanged.
-    /// Wasm 2.0 traps preserve completed segment writes and allocated objects.
+    /// Link errors leave the store unchanged. Segment traps preserve completed
+    /// writes and allocated objects.
     pub fn instantiate<P: Platform<M>>(
         &mut self,
         module: ExecutableModule,
@@ -119,17 +119,14 @@ impl Execution {
     }
 }
 
-/// Validates and rewrites a complete module under the selected profile.
+/// Validates and rewrites a complete WebAssembly Core 2.0 module.
 ///
 /// The returned code owns all initialization bytes and has no dependency on the
 /// input slice. The default `CompileLimits` apply. Resource failures are reported
 /// as `Error::Visitor(VisitError::OutOfMemory)`; use `compile_with_limits` to
 /// distinguish the exhausted compiler budget from validation failures.
-pub fn compile(
-    bytes: &[u8],
-    profile: crate::ValidationProfile,
-) -> Result<ExecutableModule, crate::Error> {
-    compiler::compile_default_with::<StdAlloc>(bytes, profile)
+pub fn compile(bytes: &[u8]) -> Result<ExecutableModule, crate::Error> {
+    compiler::compile_default_with::<StdAlloc>(bytes)
 }
 /// Validates and rewrites a complete module with explicit compiler budgets.
 ///
@@ -139,8 +136,7 @@ pub fn compile(
 /// partial executable module.
 pub fn compile_with_limits(
     bytes: &[u8],
-    profile: crate::ValidationProfile,
     limits: CompileLimits,
 ) -> Result<ExecutableModule, CompileError> {
-    compiler::compile_with::<StdAlloc>(bytes, profile, limits)
+    compiler::compile_with::<StdAlloc>(bytes, limits)
 }

@@ -5,12 +5,12 @@
 A streaming WebAssembly validator and interpreter written in Rust and verified
 in Lean.
 
-Validation supports the WebAssembly 1.0 and 2.0 core profiles, including
-streaming and parallel function validation. Both profiles have whole-module
-termination, soundness, and completeness proofs.
+Validation supports WebAssembly Core 2.0, including streaming and parallel
+function validation. Whole-module termination, soundness, and completeness are
+proved.
 
 The execution runtime has checked compilation, invocation, instantiation, API
-invariant, resource-cause, and progress theorems for both profiles. These are
+invariant, resource-cause, and progress theorems for Wasm 2.0. These are
 conditional guarantees under [explicit contracts that the embedder must uphold.](lean/README.md#execution-boundary)
 
 This is an experiment in AI-assisted formal verification, built extensively
@@ -21,17 +21,14 @@ more details.
 
 ```rust
 let bytes = b"\x00asm\x01\x00\x00\x00";
-let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm1)?;
+let module = itasca::validate_module(bytes)?;
 let imports = itasca::import_types(module.env())?;
 let exports = itasca::export_types(module.env())?;
 ```
 
-The two profiles:
-
-| Profile | Extensions |
-| --- | --- |
-| `Wasm1` | None |
-| `Wasm2` | multi-value, sign extension, saturating conversions, reference types, multiple tables, bulk memory, passive and declarative segments, SIMD instructions. |
+The validator supports multi-value, sign extension, saturating conversions,
+reference types, multiple tables, bulk memory, passive and declarative
+segments, and SIMD instructions.
 
 `validate_module` is internally implemented using the more powerful and complex
 `validate_streaming` API. This API supports streaming reads, discontiguous
@@ -40,7 +37,6 @@ buffers, and parallel compilation of function bodies.
 ```rust
 use itasca::{
     CodeBatch, Config, Env, Error, Region, Result, Source, StreamingVisitor, Tail,
-    ValidationProfile,
 };
 use std::vec::Vec;
 
@@ -87,7 +83,7 @@ impl<'a> StreamingVisitor<'a> for Visitor<'a> {
 let source = Input(b"\x00asm\x01\x00\x00\x00");
 let mut visitor = Visitor::default();
 let mut env = Env::new();
-itasca::validate_streaming(0, ValidationProfile::Wasm1, &source, &mut visitor, &mut env)?;
+itasca::validate_streaming(0, &source, &mut visitor, &mut env)?;
 ```
 
 ## Formal verification
@@ -97,7 +93,7 @@ The pipeline is:
 ```text
 Rust --Charon--> LLBC --Aeneas--> Lean program model
 SpecTec Wasm 2.0 source ----------> Lean declarative judgments
-Independent binary grammar ------> exact bytes and selected profile
+Independent binary grammar ------> exact bytes and Wasm 2.0 instructions
 Handwritten Lean proofs ----------> validator guarantees
 ```
 
@@ -113,6 +109,20 @@ Handwritten Lean proofs ----------> validator guarantees
 | `validate_module` | Total, sound, and complete. |
 | `validate_streaming` | Total, if callbacks are total. Sound, if source views are coherent and if Rust field-privacy of `CodeBatch` is respected. Complete, if source views spans are correct and `poll_code_batch` eventually receives all dispatched `CodeBatch`. |
 
+Runtime instantiation uses Wasm 2.0 segment semantics: segment traps preserve
+completed writes and allocated objects.
+Rejection before publication leaves the store unchanged and never reports a trap.
+
+The generic store API guarantees are stated in
+[Results/Store](lean/Itasca/Results/Store.lean): `with_identity` establishes the
+store invariant under a positive identity premise. Mutating operations preserve
+it under their stated handle, value and platform premises; reads agree with the
+corresponding decoded objects or raw store values. These are proofs about the
+generic extracted operations; the native counter, allocator, memory and
+floating-point wrappers remain outside the Lean proof. Export lookup describes
+the decoded instance export map, while `extern_identity` returns the opaque
+identity from the store's raw extern identity vector.
+
 ### Trust boundary
 
 The proofs depend on:
@@ -123,3 +133,16 @@ The proofs depend on:
   4. Hand-written binary grammar.
   5. The rustc compiler.
   6. Lean's kernel and standard logical foundations.
+  7. The native runtime wrappers in [`src/runtime/native.rs`](src/runtime/native.rs):
+     `StdAlloc` uses `Vec::try_reserve`, `NativeFloat` uses native arithmetic
+     and `libm`, and store identity issuance uses checked atomic increments.
+     Their behavior is not proved by the Lean kernel.
+  8. Twelve versioned specification patches under [`patches/`](patches/).
+     The largest, [spectec-wasm2-builtins.patch](patches/spectec-wasm2-builtins.patch),
+     supplies handwritten definitions for all 64 pinned builtin signatures.
+  9. The host-call execution extension in the Host section of
+     [`lean/SpecExt/Builtins.lean`](lean/SpecExt/Builtins.lean), which adds
+     atomic host steps to the generated Wasm reduction relation.
+  10. The Lean execution model is sequential. Parallel use of the Rust API relies
+      on Rust ownership and the documented worker-provenance contracts; Lean
+      does not prove concurrent execution.

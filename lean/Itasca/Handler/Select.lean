@@ -1,5 +1,575 @@
 import Itasca.Handler.SimplePrefix
 import Itasca.Visitor.Total
+import Itasca.Binary.Wasm1.EncodingComplete
+import Mathlib.Tactic.IntervalCases
+import Itasca.Handler.EnvReaders
+import Itasca.Binary.SignedLeb32
+import Itasca.Spec.TypingInversion
+import Itasca.Binary.SignedLeb64
+
+/-!
+Sections, each formerly its own module: NumericDispatch, EnvCalls, SignedConst, ScalarConst, Select.
+-/
+
+/-! ## NumericDispatch -/
+
+section
+
+/-!
+# Numeric dispatch
+
+Connects the extracted scalar numeric dispatch to the Wasm 1.0 opcode meaning
+(`Numeric.opcodeMeaning`). `Numeric.tables` shows `code.convert_types` and `code.binary_types`
+agree with it, `Numeric.read.segment` and `read.total` describe the operand handler, and
+`code.step_numeric.total` gives termination.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Numeric
+
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
+/-- `code.convert_types` and `code.binary_types` agree with `opcodeMeaning` on every byte,
+including rejection. -/
+theorem tables (opcode : U8) :
+    code.convert_types opcode = .ok ((opcodeMeaning opcode).bind fun op =>
+      if op.binary then none else some (op.input, op.output)) ∧
+    code.binary_types opcode = .ok ((opcodeMeaning opcode).bind fun op =>
+      if op.binary then some (op.input, op.output) else none) := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change n < 256 at hn
+  interval_cases n <;> constructor <;> (with_unfolding_all rfl)
+
+/-- The extracted operand handler for a scalar operation: `code.read_binary` for binary operations
+and `code.read_conversion` otherwise. -/
+def read (op : Operation) (st : code.OpIterState) :
+    Result (core.result.Result Unit error.OpError × code.OpIterState) :=
+  if op.binary then code.read_binary st op.input op.output
+  else code.read_conversion st op.input op.output
+
+/-- `read` on the current frame's operand segment has a `StackSemantics.NumericEffect` outcome, or
+rejects with `EmptyStack` or `TypeMismatch`. -/
+theorem read.segment (op : Operation) (st : code.OpIterState)
+    (outer segment : List code.StackType)
+    (hvals : st.vals.val = outer ++ segment)
+    (hbase : (Control.base st).val = outer.length)
+    (hsize : st.vals.val.length < Usize.max) :
+    read op st ⦃ r =>
+      r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
+      ∃ after, r.2.vals.val = outer ++ after ∧ after.length ≤ segment.length + 1 ∧
+        match r.1 with
+        | .Ok _ => StackSemantics.NumericEffect (Control.polymorphic st) segment op.inputs op.output after
+        | .Err e => e = .EmptyStack ∨ e = .TypeMismatch ⦄ := by
+  cases hb : op.binary with
+  | false =>
+    obtain ⟨⟨res, out⟩, hr, hc, hp, after, hv, hlen, hout⟩ := WP.spec_imp_exists
+      (code.read_conversion.segment st outer segment op.input op.output hvals hbase hsize)
+    dsimp only at hc hp hv hlen hout
+    rw [WP.spec_equiv_exists]
+    refine ⟨(res, out), by simpa [read, hb] using hr, hc, hp, after, hv, hlen, ?_⟩
+    cases res <;> simpa [Operation.inputs, hb] using hout
+  | true =>
+    obtain ⟨⟨res, out⟩, hr, hc, hp, after, hv, hlen, hout⟩ := WP.spec_imp_exists
+      (code.read_binary.segment st outer segment op.input op.output hvals hbase hsize)
+    dsimp only at hc hp hv hlen hout
+    rw [WP.spec_equiv_exists]
+    refine ⟨(res, out), by simpa [read, hb] using hr, hc, hp, after, hv, hlen, ?_⟩
+    cases res <;> simpa [Operation.inputs, hb] using hout
+
+/-- `read` terminates and preserves `Control.Shape`, under shape and capacity bounds. -/
+theorem read.total (op : Operation) (st : code.OpIterState) (hshape : Control.Shape st)
+    (hsize : st.vals.val.length < Usize.max) :
+    read op st ⦃ r => Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
+      r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
+  let n := (Control.base st).val
+  have hn : n ≤ st.vals.val.length := hshape.base_le
+  obtain ⟨⟨res, s⟩, hr, hc, hp, after, hv, hlen, _⟩ :=
+    WP.spec_imp_exists (read.segment op st (st.vals.val.take n) (st.vals.val.drop n)
+      (List.take_append_drop ..).symm (by simp [n, Nat.min_eq_left hn]) hsize)
+  dsimp only at hc hp hv hlen
+  have hb : (Control.base st).val ≤ s.vals.val.length := by simp [hv, n, Nat.min_eq_left hn]
+  rw [hr, WP.spec_ok]
+  refine ⟨hshape.replace_operands hc hb, hc, hp, ?_⟩
+  simp only [hv, List.length_append, List.length_take, List.length_drop] at *
+  omega
+
+end Itasca.Numeric
+
+namespace Itasca
+
+/-- `code.step_numeric` on a mapped scalar opcode runs `Numeric.read` and then the visitor's numeric
+hook. -/
+theorem code.step_numeric.dispatch {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (opcode : U8) (op : Numeric.Operation) (v : V)
+    (hmap : Numeric.NumericOp opcode op) :
+    code.step_numeric visitor st opcode v =
+      CoreVisitor.run (Numeric.read op st) (fun v st (_ : Unit) => code.visit_numeric visitor v st opcode) v := by
+  obtain ⟨hc, hb⟩ := Numeric.tables opcode
+  rw [hmap] at hc hb
+  cases hbinary : op.binary <;>
+    simp [hbinary] at hc hb <;>
+    simp [code.step_numeric, hc, hb, Numeric.read, hbinary, CoreVisitor.run,
+      core.result.Result.Insts.CoreOpsTry.branch, code.visit,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] <;>
+    congr 1 <;>
+    funext x <;>
+    obtain ⟨res, s⟩ := x <;>
+    cases res <;> simp <;>
+    congr 1
+
+/-- `code.step_numeric` rejects an opcode outside the scalar numeric map with
+`UnrecognizedOpcode`, without calling the visitor. -/
+theorem code.step_numeric.unrecognized {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (opcode : U8) (v : V)
+    (hmap : Numeric.opcodeMeaning opcode = none) :
+    code.step_numeric visitor st opcode v = .ok (.Err .UnrecognizedOpcode, st, v) := by
+  obtain ⟨hc, hb⟩ := Numeric.tables opcode
+  simp [hmap] at hc hb
+  simp [code.step_numeric, hc, hb]
+
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
+/-- `code.step` sends every opcode from `0x45` up to `code.step_numeric`. -/
+theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (opcode : U8) (v : V) (hlow : 0x45 ≤ opcode.val) :
+    code.step visitor st data env ctx opcode v = code.step_numeric visitor st opcode v := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change n < 256 at hn
+  change 0x45 ≤ n at hlow
+  interval_cases n <;> with_unfolding_all rfl
+
+/-- `code.step_numeric` terminates on every byte, including unknown opcodes and visitor
+rejections, and preserves `Control.Shape`. -/
+theorem code.step_numeric.total {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (opcode : U8) (v : V)
+    (hshape : Control.Shape st) (hsize : st.vals.val.length < Usize.max)
+    (hvisit : FullVisitor.Total visitor) :
+    code.step_numeric visitor st opcode v ⦃ r =>
+      Control.Shape r.2.1 ∧ r.2.1.ctrls = st.ctrls ∧ r.2.1.pos = st.pos ∧
+        r.2.1.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
+  cases hm : Numeric.opcodeMeaning opcode with
+  | none => rw [code.step_numeric.unrecognized visitor st opcode v hm]; simp [hshape]
+  | some op =>
+    rw [code.step_numeric.dispatch visitor st opcode op v hm]
+    let Q := fun s : code.OpIterState => Control.Shape s ∧ s.ctrls = st.ctrls ∧ s.pos = st.pos ∧
+      s.vals.val.length ≤ st.vals.val.length + 1
+    have hr : Numeric.read op st ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → True ⦄ := by
+      apply WP.spec_mono (Numeric.read.total op st hshape hsize)
+      intro r h
+      exact ⟨h, by simp⟩
+    have lifted := CoreVisitor.run.spec (Numeric.read op st)
+      (fun v st (_ : Unit) => code.visit_numeric visitor v st opcode) v Q (fun _ _ => True)
+      hr (fun s _ => hvisit.visit_numeric v s opcode)
+    apply WP.spec_mono lifted
+    intro r h
+    exact h.1
+
+end Itasca
+
+namespace Itasca
+
+set_option maxRecDepth 4096 in
+set_option maxHeartbeats 1000000 in
+/-- Reserved opcode bytes below the numeric range are rejected before any reader or visitor hook
+runs. -/
+theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (opcode : U8) (v : V)
+    (hreserved : (0x06 ≤ opcode.val ∧ opcode.val ≤ 0x0A) ∨
+      (0x12 ≤ opcode.val ∧ opcode.val ≤ 0x19) ∨
+      (0x1C ≤ opcode.val ∧ opcode.val ≤ 0x1F) ∨
+      (0x25 ≤ opcode.val ∧ opcode.val ≤ 0x27)) :
+    code.step visitor st data env ctx opcode v = .ok (.Err .UnrecognizedOpcode, st, v) := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change (6 ≤ n ∧ n ≤ 10) ∨ (18 ≤ n ∧ n ≤ 25) ∨
+    (28 ≤ n ∧ n ≤ 31) ∨ (37 ≤ n ∧ n ≤ 39) at hreserved
+  rcases hreserved with ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ | ⟨hl, hu⟩ <;>
+    interval_cases n <;>
+      simp [code.step_numeric, global_simps]
+
+end Itasca
+
+end
+
+/-! ## EnvCalls -/
+
+section
+
+/-!
+# Call prefixes
+
+Extends a `Sequence.TypedPrefix` across `code.read_call` and `code.read_call_indirect`, using the
+generated `call` and `call_indirect` rules through `EnvTranslation.Matches.call` and
+`Matches.call_indirect`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca
+
+end Itasca
+
+end
+
+/-! ## SignedConst -/
+
+section
+
+/-!
+# `i32.const` handler
+
+Lemmas about `code.read_i32_const` (decoding the signed LEB128 immediate and pushing an `i32`
+operand) and `code.step` on `i32.const`: `code.step_i32_const`, `.failed_read`, `.visitor_rejected`
+and `.total`. `Sequence.TypedPrefix.i32Const` extends a typed prefix by the constant.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca
+
+/-- If the LEB128 read succeeds, `code.read_i32_const` advances the cursor and appends one `i32`
+operand. -/
+@[step]
+theorem code.read_i32_const.from_read (st : code.OpIterState) (data : Slice U8)
+    (value : I32) (next : Usize)
+    (hread : reader.read_s32_leb data st.pos = .ok (.Ok (value, next)))
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_i32_const st data ⦃ r => r.1 = .Ok value ∧
+      r.2.vals.val = st.vals.val ++ [.Val .I32] ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = next ⦄ := by
+  rw [code.read_i32_const, hread]
+  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  step*
+
+/-- A malformed immediate makes `code.read_i32_const` fail and leave the validator state
+unchanged. -/
+theorem code.read_i32_const.failed_read (st : code.OpIterState) (data : Slice U8)
+    (e : error.OpError) (hread : reader.read_s32_leb data st.pos = .ok (.Err e)) :
+    code.read_i32_const st data = .ok (.Err e, st) := by
+  simp [code.read_i32_const, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- `code.read_i32_const` terminates, with exact byte provenance for the decoded value or the
+rejection, when the push fits. -/
+@[step]
+theorem code.read_i32_const.spec (st : code.OpIterState) (data : Slice U8)
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_i32_const st data ⦃ r => r.2.ctrls = st.ctrls ∧
+      match r.1 with
+      | .Ok value => SignedLeb32.Decoded data st.pos value.val r.2.pos ∧
+          r.2.vals.val = st.vals.val ++ [.Val .I32]
+      | .Err e => SignedLeb32.Rejected data st.pos e ∧ r.2 = st ⦄ := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_s32_leb.spec data st.pos)
+  cases r with
+  | Err e =>
+    rw [code.read_i32_const.failed_read st data e hr]
+    simp only [WP.spec_ok]
+    exact ⟨trivial, hp, trivial⟩
+  | Ok r =>
+    rcases r with ⟨value, next⟩
+    obtain ⟨r, hresult, hok, hv, hc, hpos⟩ := WP.spec_imp_exists
+      (code.read_i32_const.from_read st data value next hr hsize)
+    rw [hresult]
+    simp only [WP.spec_ok, hok, hpos]
+    exact ⟨hc, hp, hv⟩
+
+end Itasca
+
+namespace Itasca.Sequence
+
+private theorem forall₂_snoc {vals : List code.StackType} {t : code.StackType}
+    {out : List valtype} (h : List.Forall₂ Accepts (vals ++ [t]) out) :
+    ∃ before u, out = before ++ [u] ∧ List.Forall₂ Accepts vals before ∧ Accepts t u := by
+  induction vals generalizing out with
+  | nil =>
+    cases h with
+    | cons ht hs =>
+      cases hs
+      exact ⟨[], _, rfl, .nil, ht⟩
+  | cons x xs ih =>
+    cases h with
+    | cons hx hs =>
+      obtain ⟨before, u, rfl, hb, hu⟩ := ih hs
+      exact ⟨_ :: before, u, rfl, .cons hx hb, hu⟩
+
+/-- If a stack with a concrete operand appended is realized, the last type is that operand's type
+and the rest realizes the remainder. -/
+theorem Realizes.snoc_val {poly : Bool} {vals : List code.StackType} {ts : List valtype}
+    (valueType : wasm_types.ValueType) (h : Realizes poly (vals ++ [.Val valueType]) ts) :
+    ∃ before, ts = before ++ [Translate.valueType valueType] ∧ Realizes poly vals before := by
+  rcases h with ⟨front, suffix, hf, hs, rfl⟩
+  obtain ⟨before, u, rfl, hb, hu⟩ := forall₂_snoc hs
+  change u = Translate.valueType valueType at hu
+  subst u
+  exact ⟨front ++ before, (List.append_assoc ..).symm, front, before, hf, hb, rfl⟩
+
+/-- Pushing an `i32` operand extends a typed prefix by `i32.const`. -/
+theorem TypedPrefix.i32Const {C : context} {ops : List instr} {poly : Bool}
+    {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
+    (hC : wf_context C) (value : I32) :
+    TypedPrefix C (ops ++ [Spec.i32Const value]) poly (vals ++ [.Val .I32]) := by
+  apply h.append hC _ (Spec.i32Const_wf value)
+  intro out hout
+  obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .I32 hout
+  exact ⟨before, hb, Spec.i32Const_framed C hC value before⟩
+
+end Itasca.Sequence
+
+namespace Itasca
+
+end Itasca
+
+end
+
+/-! ## ScalarConst -/
+
+section
+
+/-!
+# `i64`, `f32` and `f64` constant handlers
+
+Lemmas about `code.read_i64_const`, `code.read_f32_const` and `code.read_f64_const`: the effect
+on the operand stack, the exact byte provenance of the decoded immediate or its rejection, and
+`code.step_*_const.of_read`, which lifts these facts through `code.step` and the visitor hook.
+`Sequence.TypedPrefix.i64Const` extends a typed prefix by an `i64` constant.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca
+
+/-- If the immediate read succeeds, `code.read_i64_const advances the cursor and appends one `i64`
+operand. -/
+@[step]
+theorem code.read_i64_const.from_read (st : code.OpIterState) (data : Slice U8)
+    (value : I64) (next : Usize)
+    (hread : reader.read_s64_leb data st.pos = .ok (.Ok (value, next)))
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_i64_const st data ⦃ r => r.1 = .Ok value ∧
+      r.2.vals.val = st.vals.val ++ [.Val .I64] ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = next ⦄ := by
+  rw [code.read_i64_const, hread]
+  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  step*
+
+/-- A malformed immediate makes `code.read_i64_const` fail and leave the validator state
+unchanged. -/
+theorem code.read_i64_const.failed_read (st : code.OpIterState) (data : Slice U8)
+    (e : error.OpError) (hread : reader.read_s64_leb data st.pos = .ok (.Err e)) :
+    code.read_i64_const st data = .ok (.Err e, st) := by
+  simp [code.read_i64_const, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- `code.read_i64_const` terminates, with exact byte provenance for the decoded value or the
+rejection, when the push fits. -/
+@[step]
+theorem code.read_i64_const.spec (st : code.OpIterState) (data : Slice U8)
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_i64_const st data ⦃ r => r.2.ctrls = st.ctrls ∧
+      match r.1 with
+      | .Ok value => SignedLeb64.Decoded data st.pos value.val r.2.pos ∧
+          r.2.vals.val = st.vals.val ++ [.Val .I64]
+      | .Err e => SignedLeb64.Rejected data st.pos e ∧ r.2 = st ⦄ := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_s64_leb.spec data st.pos)
+  cases r with
+  | Err e =>
+    rw [code.read_i64_const.failed_read st data e hr]
+    simp only [WP.spec_ok]
+    exact ⟨trivial, hp, trivial⟩
+  | Ok r =>
+    rcases r with ⟨value, next⟩
+    obtain ⟨r, hresult, hok, hv, hc, hpos⟩ := WP.spec_imp_exists
+      (code.read_i64_const.from_read st data value next hr hsize)
+    rw [hresult]
+    simp only [WP.spec_ok, hok, hpos]
+    exact ⟨hc, hp, hv⟩
+
+/-- If the immediate read succeeds, `code.read_f32_const` advances the cursor and appends one `f32`
+operand. -/
+@[step]
+theorem code.read_f32_const.from_read (st : code.OpIterState) (data : Slice U8)
+    (value : U32) (next : Usize)
+    (hread : reader.read_f32_bits data st.pos = .ok (.Ok (value, next)))
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_f32_const st data ⦃ r => r.1 = .Ok value ∧
+      r.2.vals.val = st.vals.val ++ [.Val .F32] ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = next ⦄ := by
+  rw [code.read_f32_const, hread]
+  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  step*
+
+/-- A malformed immediate makes `code.read_f32_const` fail and leave the validator state
+unchanged. -/
+theorem code.read_f32_const.failed_read (st : code.OpIterState) (data : Slice U8)
+    (e : error.OpError) (hread : reader.read_f32_bits data st.pos = .ok (.Err e)) :
+    code.read_f32_const st data = .ok (.Err e, st) := by
+  simp [code.read_f32_const, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- `code.read_f32_const` terminates, with exact byte provenance for the decoded value or the
+rejection, when the push fits. -/
+@[step]
+theorem code.read_f32_const.spec (st : code.OpIterState) (data : Slice U8)
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_f32_const st data ⦃ r => r.2.ctrls = st.ctrls ∧
+      match r.1 with
+      | .Ok value => FloatBits.Decoded 4 data st.pos value.val r.2.pos ∧
+          r.2.vals.val = st.vals.val ++ [.Val .F32]
+      | .Err e => FloatBits.Rejected 4 data st.pos e ∧ r.2 = st ⦄ := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_f32_bits.spec data st.pos)
+  cases r with
+  | Err e =>
+    rw [code.read_f32_const.failed_read st data e hr]
+    simp only [WP.spec_ok]
+    exact ⟨trivial, hp, trivial⟩
+  | Ok r =>
+    rcases r with ⟨value, next⟩
+    obtain ⟨r, hresult, hok, hv, hc, hpos⟩ := WP.spec_imp_exists
+      (code.read_f32_const.from_read st data value next hr hsize)
+    rw [hresult]
+    simp only [WP.spec_ok, hok, hpos]
+    exact ⟨hc, hp, hv⟩
+
+/-- If the immediate read succeeds, `code.read_f64_const` advances the cursor and appends one `f64`
+operand. -/
+@[step]
+theorem code.read_f64_const.from_read (st : code.OpIterState) (data : Slice U8)
+    (value : U64) (next : Usize)
+    (hread : reader.read_f64_bits data st.pos = .ok (.Ok (value, next)))
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_f64_const st data ⦃ r => r.1 = .Ok value ∧
+      r.2.vals.val = st.vals.val ++ [.Val .F64] ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = next ⦄ := by
+  rw [code.read_f64_const, hread]
+  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  step*
+
+/-- A malformed immediate makes `code.read_f64_const` fail and leave the validator state
+unchanged. -/
+theorem code.read_f64_const.failed_read (st : code.OpIterState) (data : Slice U8)
+    (e : error.OpError) (hread : reader.read_f64_bits data st.pos = .ok (.Err e)) :
+    code.read_f64_const st data = .ok (.Err e, st) := by
+  simp [code.read_f64_const, hread, core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+/-- `code.read_f64_const` terminates, with exact byte provenance for the decoded value or the
+rejection, when the push fits. -/
+@[step]
+theorem code.read_f64_const.spec (st : code.OpIterState) (data : Slice U8)
+    (hsize : st.vals.val.length < Usize.max) :
+    code.read_f64_const st data ⦃ r => r.2.ctrls = st.ctrls ∧
+      match r.1 with
+      | .Ok value => FloatBits.Decoded 8 data st.pos value.val r.2.pos ∧
+          r.2.vals.val = st.vals.val ++ [.Val .F64]
+      | .Err e => FloatBits.Rejected 8 data st.pos e ∧ r.2 = st ⦄ := by
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_f64_bits.spec data st.pos)
+  cases r with
+  | Err e =>
+    rw [code.read_f64_const.failed_read st data e hr]
+    simp only [WP.spec_ok]
+    exact ⟨trivial, hp, trivial⟩
+  | Ok r =>
+    rcases r with ⟨value, next⟩
+    obtain ⟨r, hresult, hok, hv, hc, hpos⟩ := WP.spec_imp_exists
+      (code.read_f64_const.from_read st data value next hr hsize)
+    rw [hresult]
+    simp only [WP.spec_ok, hok, hpos]
+    exact ⟨hc, hp, hv⟩
+
+end Itasca
+
+namespace Itasca.Sequence
+
+/-- Pushing a `i64` operand extends a typed prefix by `i64.const`. -/
+theorem TypedPrefix.i64Const {C : context} {ops : List instr} {poly : Bool}
+    {vals : List code.StackType} (h : TypedPrefix C ops poly vals)
+    (hC : wf_context C) (value : I64) :
+    TypedPrefix C (ops ++ [ScalarConst.i64 value]) poly (vals ++ [.Val .I64]) := by
+  apply h.append hC _ (ScalarConst.i64_wf value)
+  intro out hout
+  obtain ⟨before, rfl, hb⟩ := Realizes.snoc_val .I64 hout
+  exact ⟨before, hb, ScalarConst.i64_framed C hC value before⟩
+
+end Itasca.Sequence
+
+namespace Itasca
+private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    code.step visitor st data env ctx code.OP_I64_CONST v =
+      CoreVisitor.run (code.read_i64_const st data) visitor.on_i64_const v := by
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  congr 1
+  funext x
+  obtain ⟨res, s⟩ := x
+  cases res <;> simp
+  congr 1
+
+/-- A property of `code.read_i64_const` that holds on every outcome lifts through `code.step` on
+`i64.const` and the visitor hook, given that the hook terminates. -/
+theorem code.step_i64_const.of_read {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (Q : code.OpIterState → Prop) (P : I64 → code.OpIterState → Prop)
+    (hread : code.read_i64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
+    (hvisitor : ∀ s a, ∃ result v', visitor.on_i64_const v s a = .ok (result, v')) :
+    code.step visitor st data env ctx code.OP_I64_CONST v ⦃ r =>
+      Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
+  rw [i64_const_dispatch]
+  exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
+
+private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    code.step visitor st data env ctx code.OP_F32_CONST v =
+      CoreVisitor.run (code.read_f32_const st data) visitor.on_f32_const v := by
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  congr 1
+  funext x
+  obtain ⟨res, s⟩ := x
+  cases res <;> simp
+  congr 1
+
+/-- A property of `code.read_f32_const` that holds on every outcome lifts through `code.step` on
+`f32.const` and the visitor hook, given that the hook terminates. -/
+theorem code.step_f32_const.of_read {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (Q : code.OpIterState → Prop) (P : U32 → code.OpIterState → Prop)
+    (hread : code.read_f32_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
+    (hvisitor : ∀ s a, ∃ result v', visitor.on_f32_const v s a = .ok (result, v')) :
+    code.step visitor st data env ctx code.OP_F32_CONST v ⦃ r =>
+      Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
+  rw [f32_const_dispatch]
+  exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
+
+private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    code.step visitor st data env ctx code.OP_F64_CONST v =
+      CoreVisitor.run (code.read_f64_const st data) visitor.on_f64_const v := by
+  simp [global_simps, CoreVisitor.run, core.result.Result.Insts.CoreOpsTry.branch,
+    code.visit, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  congr 1
+  funext x
+  obtain ⟨res, s⟩ := x
+  cases res <;> simp
+  congr 1
+
+/-- A property of `code.read_f64_const` that holds on every outcome lifts through `code.step` on
+`f64.const` and the visitor hook, given that the hook terminates. -/
+theorem code.step_f64_const.of_read {V : Type} (visitor : code.OpVisitor V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (Q : code.OpIterState → Prop) (P : U64 → code.OpIterState → Prop)
+    (hread : code.read_f64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
+    (hvisitor : ∀ s a, ∃ result v', visitor.on_f64_const v s a = .ok (result, v')) :
+    code.step visitor st data env ctx code.OP_F64_CONST v ⦃ r =>
+      Q r.2.1 ∧ (r.1 = .Ok () → ∃ a, P a r.2.1) ⦄ := by
+  rw [f64_const_dispatch]
+  exact CoreVisitor.run.spec _ _ v Q P hread hvisitor
+
+end Itasca
+
+end
+
+/-! ## Select -/
+
+section
 
 /-!
 # Select handler
@@ -216,3 +786,5 @@ theorem code.step_select.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 end Itasca
+
+end

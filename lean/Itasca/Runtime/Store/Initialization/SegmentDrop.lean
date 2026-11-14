@@ -1,7 +1,7 @@
-import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Spec.SegmentDrops
-import Itasca.Runtime.Store.Initialization.BulkPreservation
-import Itasca.Runtime.Store.Invariant.SourceSyntax
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Spec.FloatTrunc
+import Itasca.Runtime.Store.Initialization.SegmentReady
+import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 
 /-!
 Segment drop execution and decoded source effect. The construction is used before returning the resolved start handle; it does not invoke the start function.

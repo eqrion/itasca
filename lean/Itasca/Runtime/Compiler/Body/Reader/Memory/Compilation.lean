@@ -1,17 +1,15 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SkippedOperation
-import Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions
+import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Live and dormant scalar-memory reader prefixes, composed into compiler-state preservation.
@@ -25,7 +23,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -34,7 +32,7 @@ theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env s
     (dead : before.reachable = false) (op : SourceMachine.Memory.Load)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     ∃ arg values,
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents
@@ -56,7 +54,7 @@ theorem reader_prefix_dead_memory_load_wasm2 {jumpTables : List U32} {data env s
     (memoryLoadOpcode op) arg.offset arg.align 0#u128 callback⟩
 
 theorem reader_prefix_dead_memory_store_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -65,7 +63,7 @@ theorem reader_prefix_dead_memory_store_wasm2 {jumpTables : List U32} {data env 
     (dead : before.reachable = false) (op : SourceMachine.Memory.Store)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     ∃ arg values,
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents
@@ -97,7 +95,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -111,7 +109,7 @@ theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env source
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ arg values,
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (op.source (MemoryMeaning.memArg arg)))
@@ -132,7 +130,7 @@ theorem reader_prefix_memory_load_wasm2 {jumpTables : List U32} {data env source
   · rw [cursor]
 
 theorem reader_prefix_memory_store_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = sourceLocals)
@@ -146,7 +144,7 @@ theorem reader_prefix_memory_store_wasm2 {jumpTables : List U32} {data env sourc
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (), out, after)) :
+      st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ arg values,
       Wasm2.ReaderPost p out.core (op.source (MemoryMeaning.memArg arg)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (op.source (MemoryMeaning.memArg arg)))
@@ -191,7 +189,7 @@ theorem StructuredReaderCompilerStateWasm2.memory_load {jumpTables : List U32} {
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (memoryLoadOpcode op)))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
   cases live : before.reachable with
@@ -218,7 +216,7 @@ theorem StructuredReaderCompilerStateWasm2.memory_store {jumpTables : List U32} 
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (memoryStoreOpcode op)))
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
   cases live : before.reachable with

@@ -10,7 +10,7 @@ fuzz_target!(|data: &[u8]| {
     let reference = Validator::new_with_features(WasmFeatures::WASM2)
         .validate_all(data)
         .is_ok();
-    let actual = itasca::validate_module(data, itasca::ValidationProfile::Wasm2).is_ok();
+    let actual = itasca::validate_module(data).is_ok();
     assert!(
         !actual || reference,
         "itasca accepted invalid Core 2.0 bytes"

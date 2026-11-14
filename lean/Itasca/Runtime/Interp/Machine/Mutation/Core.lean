@@ -1,6 +1,6 @@
-import Itasca.Runtime.Interp.Memory.MemoryMutation
-import Itasca.Runtime.Interp.State.GlobalMutation
-import Itasca.Runtime.SourceMachine.Ownership.Core
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
+import Itasca.Runtime.Interp.State.GlobalCoreStep
+import Itasca.Runtime.SourceMachine.Ownership.Extension
 
 /-!
 A live source value is already present in an operand or local region, or in the invocation's final result vector.

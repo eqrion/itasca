@@ -1,11 +1,11 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
+import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockWasm2Prefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.BlockDormantPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Body.Reader.Control.IfPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Control.IfDormantPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Control.LoopPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.LoopDormantPrefix
 
 /-!
@@ -30,7 +30,7 @@ theorem StructuredReaderCompilerStateWasm2.enter_block {jumpTables : List U32} {
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_BLOCK)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_BLOCK before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_BLOCK before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front, StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterBlock (Wasm2.blockType bt) front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length before.reachable)
       (savedParents ++ [{savedCurrent with vals := remaining}]) (Wasm2.Frames.Saved.fresh base .block bt ins outs) := by
@@ -89,7 +89,7 @@ theorem StructuredReaderCompilerStateWasm2.enter_if {jumpTables : List U32} {A :
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_IF)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_IF before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front condition, StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterIf (Wasm2.blockType bt) condition front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length before.reachable)
       (savedParents ++ [{savedCurrent with vals := remaining}]) (Wasm2.Frames.Saved.fresh base .then_ bt ins outs) := by
@@ -148,7 +148,7 @@ theorem StructuredReaderCompilerStateWasm2.enter_loop {jumpTables : List U32} {A
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_LOOP)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 code.OP_LOOP before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index code.OP_LOOP before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front, StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterLoop (Wasm2.blockType bt) front (ins.map Translate.valueType) (outs.map Translate.valueType) before.function.code.val.length before.reachable)
       (savedParents ++ [{savedCurrent with vals := remaining}]) (Wasm2.Frames.Saved.fresh base .loop bt ins outs) := by

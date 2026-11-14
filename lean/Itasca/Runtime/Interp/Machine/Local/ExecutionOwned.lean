@@ -1,27 +1,77 @@
-import Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear
-import Itasca.Runtime.Interp.Machine.Local.Inversion
-import Itasca.Runtime.Interp.Relations.LocalCapacity
-import Itasca.Runtime.Interp.Relations.Capacity
-import Itasca.Runtime.Interp.Machine.Retention.Ownership
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
-import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation
-import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.Interp.Machine.SuspendedPoint
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.Interp.Relations.LocalCodePoint
-import Itasca.Runtime.Interp.Relations.Fetch
+import Itasca.Runtime.Interp.Machine.Emission.Local
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses
+import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
+import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
+import Itasca.Runtime.Interp.Relations.TypedOperands
+import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Relations.ValueLookup
-import Itasca.Runtime.Interp.Machine.Local.MovePrefix
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.Interp.Machine.Control.UniformSource
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
+import Itasca.Runtime.Interp.Relations.SourceClosure
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
-import Itasca.Runtime.SourceMachine.Core.Step
+import Itasca.Runtime.Interp.Relations.Defaults
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.Spec.Integer
+
+/-!
+Sections, each formerly its own module: MovePrefix, Inversion, ExecutionOwned.
+-/
+
+/-! ## MovePrefix -/
+
+section
+
+/-!
+Slot-prefix preservation for local moves.
+
+Main declarations: `move_prefix`. A direct consumer is `Interp.Machine.Local.ExecutionOwned`.
+-/
+
+namespace Itasca.Runtime.Interp
+open Aeneas Aeneas.Std
+
+theorem move_prefix (ty : valtype) (dst src : U32) : PrefixInstruction (Compiler.move ty dst src) := by
+  unfold Compiler.move
+  split
+  · exact .copy2 ..
+  · exact .copy ..
+
+end Itasca.Runtime.Interp
+
+end
+
+/-! ## Inversion -/
+
+section
+
+/-!
+Inversion of local get/write emission.
+
+Main declarations: `emission_local_get_pure` and `emission_local_write_pure`. A direct consumer is `Interp.Machine.Local.ExecutionOwned`.
+-/
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std
+theorem emission_local_get_pure {compiled C before after emitted} (index : Nat)
+    (head : Interp.emission compiled C before (.LOCAL_GET (.mk_uN index)) emitted after) :
+    Compiler.LinearEmission C.LOCALS before (.LOCAL_GET (.mk_uN index)) emitted after :=
+  scalar_emission_local_get_pure index (FloatHeads.project (.core (.pure (.local_get _))) head)
+theorem emission_local_write_pure {compiled C before after emitted} (index : Nat) (keep : Bool)
+    (head : Interp.emission compiled C before (if keep then .LOCAL_TEE (.mk_uN index) else .LOCAL_SET (.mk_uN index)) emitted after) :
+    Compiler.LinearEmission C.LOCALS before (if keep then .LOCAL_TEE (.mk_uN index) else .LOCAL_SET (.mk_uN index)) emitted after :=
+  scalar_emission_local_write_pure index keep (FloatHeads.project (by cases keep;exact .core (.pure (.local_set _));exact .core (.pure (.local_tee _))) head)
+end Itasca.Runtime.Interp.Machine
+
+end
+
+/-! ## ExecutionOwned -/
+
+section
 
 /-!
 Local-variable structured execution and ownership. Fetch, capacity and get/write frame effects assemble the complete execution relation without changing surrounding frame slots.
@@ -465,5 +515,7 @@ theorem step_local_write_execution_owned_uniform (platform : P) (frameIndex : Us
     represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ unchanged preserved typed covered
 
 end Itasca.Runtime.Interp.Machine
+
+end
 
 end

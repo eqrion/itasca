@@ -1,6 +1,6 @@
 //! Regressions for embedding resource failures outside specification corpora.
 use itasca::runtime::*;
-use itasca::{FuncType, ValidationProfile, ValueType};
+use itasca::{FuncType, ValueType};
 
 struct Hooks;
 impl Platform<VecMemory> for Hooks {
@@ -21,7 +21,7 @@ impl Platform<VecMemory> for Hooks {
 fn module(text: &str) -> ExecutableModule {
     let buffer = wast::parser::ParseBuffer::new(text).unwrap();
     let mut ast = wast::parser::parse::<wast::Wat>(&buffer).unwrap();
-    compile(&ast.encode().unwrap(), ValidationProfile::Wasm2).unwrap()
+    compile(&ast.encode().unwrap()).unwrap()
 }
 fn finish(store: &mut Store, code: ExecutableModule) -> InstanceAddr {
     store.instantiate(code, &[], &mut Hooks).unwrap().instance

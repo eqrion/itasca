@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
+
 namespace Itasca.Runtime.Compiler
 open Aeneas.Std
 
