@@ -1063,6 +1063,8 @@ definitions named above.
 
 ### 4.2 A map of the runtime argument
 
+Completed 2026-11-13: [argument map and documentation checks](notes/step42-results.md).
+
 Add a section "The argument in ten definitions" to
 `lean/Itasca/Runtime/README.md`. For each of these, give its file, a two
 sentence description taken from its docstring, and what uses it:

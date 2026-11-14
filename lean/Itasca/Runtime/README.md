@@ -24,6 +24,30 @@ source run or a reachable diverging host callback. Instantiation runs no host
 callback or start function: it links, allocates, initializes, and returns the
 resolved start function for a separate invocation.
 
+## The argument in ten definitions
+
+1. [**`SpecExt.StepH` and `StepsH`**](../../SpecExt/Builtins.lean). `StepH` is generated reduction extended with host calls and the same evaluation contexts. `StepsH` is its reflexive-transitive closure, concatenating direct host events in order; runtime invocation correspondence uses this event-bearing source relation.
+
+2. [**`Store.decodeStore`**](Representation/StoreCapacity.lean). The concrete store decoder maps retained runtime objects into a SpecTec store. Functions use the explicit code interpretation, while other objects decode from retained data; execution and source-store certificates use this bridge.
+
+3. [**`Store.CodeInterpretation`**](Representation/StoreCapacity.lean). A code interpretation supplies the source function body absent from the compiled Rust module. It has no execution-correctness assumption; compilation constructs it together with the code relation used by `decodeStore`.
+
+4. [**`SourceMachine.AState`, `Cumulative.Step`, and `SourceMachine.decode`**](SourceMachine/Decode.lean) ([step relation](SourceMachine/Cumulative/Step.lean)). `AState` is a flat abstract execution state over specification values and instructions, with innermost frames and labels first. The executable transition relation combines the deterministic mutable core with the complete float result relation, and `decode` reconstructs nested SpecTec evaluation contexts; the simulation relates these transitions to `StepsH`.
+
+5. [**`Interp.Machine.Execution`**](Interp/Machine/Execution.lean). This relation ties the current concrete store, complete source state and active or suspended compiled frames together. Its fields retain the decoded-store equality, source typing and support, invocation result, stack relation and execution cursor; machine simulation uses it to track an interpreter step against the source machine.
+
+6. [**`Compiler.ExecutableModuleFunctions`**](Compiler/Body/Relations/Executable/RecordingEmission.lean). This certificate matches each defined source function to its compiled function and preserves the expected count. Module compilation assembles it into `ModuleCodeRel`.
+
+7. [**`Integration.ModuleCodeRel`**](Integration/Compilation/Complete.lean). This relation records the source module's metadata and accessors together with function, initializer and capacity certificates. It is one component of the complete compilation certificate.
+
+8. [**`Integration.CompilationCertificate`**](Integration/Compilation/Complete.lean). The certificate connects accepted bytes to one source module under Wasm 2.0 encoding, elaboration, typing and restrictions, plus its `ModuleCodeRel`. The compile-completeness result constructs it for successful compilation.
+
+9. [**`Integration.ExecutableInv`**](Integration/Api/InvocationEntryResources.lean). The public execution invariant extends the certified API store with segment-accounting and function-capacity ledgers. Invocation and store API proofs use it as the retained premise and preserve it across certified mutations.
+
+10. [**`Integration.CumulativeStoreMutation`**](Integration/Execution/Mutation/BulkResult.lean). This witness records the metadata, object shape, segment bounds, source-store extension and accounting facts for a store mutation. Store API preservation and interpreter dispatch use it to carry the invariant and interpretation through an operation.
+
+The argument proceeds from the extracted interpreter, related by `Interp.Machine.Execution` to the flat source machine. `SourceMachine.decode` maps that machine to SpecTec configurations, where `StepsH` describes execution with ordered host events; `Store.decodeStore` and the compilation certificates establish the representations connecting these layers.
+
 ## Dependency layers
 
 The extracted program and the source machine are independent foundations;
