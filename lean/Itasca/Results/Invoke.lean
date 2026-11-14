@@ -65,11 +65,11 @@ theorem runtime.interp.invoke_with.terminates {M P F A : Type}
     (finite : ¬ Spec.InfiniteSourceWithEvents initial)
     (callbacksReturn : ¬ HostCallDiverged hooks view initial) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out => ∃ events,
-        recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok (out, events) ∧
-        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-        ∀ error, out.1 = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
-          (ExecutableInv view) code store address args out.2.2.1 error ⦄ :=
+      ⦃ (result, execution, after, nextPlatform, returned) => ∃ events,
+        recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok ((result, execution, after, nextPlatform, returned), events) ∧
+        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+        ∀ error, result = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
+          (ExecutableInv view) code store address args after error ⦄ :=
   (runtime.interp.invoke_with.behaves memory hooks floats allocator view laws code callbacks exec store platform
     valid address args results issued argumentIssued initial invoked).returns finite callbacksReturn
 
@@ -82,8 +82,8 @@ theorem runtime.interp.invoke_with.no_spurious_errors {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (callbacks : HostLaws hooks view (ExecutableInv view))
-    (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → answer.2.2.1.limits=store.limits)
+    (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results result nextPlatform after returned,
+      hooks.call_host p store host args results=.ok (result,nextPlatform,after,returned) → after.limits=store.limits)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
@@ -98,7 +98,7 @@ theorem runtime.interp.invoke_with.no_spurious_errors {M P F A : Type}
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after))
     (noOverflow : NoHostStackOverflow hooks (ExecutableInv view)) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div :=
+      ⦃ (result, execution, after, nextPlatform, returned) => ∀error,result=.Err error → ∃trap,error=.Trap trap ⦄div :=
   invoke_executable_world_no_spurious_errors memory hooks floats allocator view laws code callbacks limitsKept exec store platform valid address args
     results owner issued owned initial invoked typedArguments fits available continuing noOverflow
 

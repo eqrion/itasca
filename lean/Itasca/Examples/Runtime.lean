@@ -32,7 +32,8 @@ theorem trapHost_no_spurious_errors {M F : Type}
       ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div :=
   runtime.interp.invoke_with.no_spurious_errors memory (trapHost memory) floats grantAll view
     ⟨correct,grantAll_correct,fun _ => by rw [trapHost,WP.spec_ok]; trivial,laws⟩ code (trapHost_laws memory view)
-    (fun _ _ _ _ _ _ _ _ called => by rw [trapHost_answer called])
+    (fun _ _ _ _ _ _ _ result nextPlatform after returned called =>
+      congrArg (fun (_, _, store, _) => store.limits) (trapHost_answer called))
     exec store () valid address args results owner issued owned initial invoked typedArguments fits
     (grantAll_available _) (fun _ _ refused => by simp [trapHost] at refused)
     (fun _ _ _ _ _ _ _ _ _ _ refused => by have same := trapHost_answer refused; simp at same)

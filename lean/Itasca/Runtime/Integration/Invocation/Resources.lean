@@ -67,14 +67,14 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial) :
     recordedInvokeWith memory hooks floats allocator exec store platform address args results []
-      ⦃ (out,events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view Inv code store address args out.2.2.1 error) ⦄div := by
+      ⦃ ((result, execution, after, nextPlatform, returned), events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+        ∀error,result=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view Inv code store address args after error) ⦄div := by
   have executableValid := executable code store valid
   have initialWf : wf_config initial := by cases invoked; assumption
   have ambientWf := Spec.invocation_frame_wf invoked
   have sourceEq := Spec.invocation_config invoked
   have early : ∀error,InvocationRejected memory store address args error →
-      (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial (.Err error,exec,store,platform,results) [] ∧
+      (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial (.Err error) exec store platform results [] ∧
         ∀reported,(.Err error : core.result.Result Unit runtime.ExecError)=.Err reported →
           ExecutableWorldInvocationSourceCause memory hooks floats allocator view Inv code store address args store reported) := by
     intro error rejected
@@ -93,8 +93,8 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
   · obtain ⟨function,signature,hf,hs,signatureBound⟩ := executableValid.call_entry address issued owner
     apply WP.dspec_mono (recorded_invoke_with_checked_outcome memory hooks floats allocator exec store platform
       address function signature args results [] owner hf hs
-      (fun (out,events)=>(ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view Inv code store address args out.2.2.1 error)) ?_)
+      (fun ((result, execution, after, nextPlatform, returned),events)=>(ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+        ∀error,result=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view Inv code store address args after error)) ?_)
     · intro out post
       rcases post with ⟨error,rejected,rfl⟩ | ⟨checked,done⟩
       · exact early error (Or.inr ⟨function,signature,hf,hs,rejected⟩)
@@ -108,7 +108,7 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
           Inv (fun c s held=>(executable c s held).toCertifiedApiStore.toCertifiedSupportedStore)
           update (fun c s held=>(executable c s held).capacities) callbacks exec store platform valid Spec.invocationFrame ambientWf address function signature
           ii fi args results owner owned hf hs kind checked)
-        rintro ⟨out,events⟩ post
+        rintro ⟨⟨result, execution, after, nextPlatform, returned⟩,events⟩ post
         obtain ⟨afterCode,fresh,kept,agrees,extension,success,failure⟩ := post
         refine ⟨ExecutableWorldRecordedOutcome.of_executed agrees ⟨executable _ _ fresh,kept,extension⟩ ?_ ?_,?_⟩
         · intro ok
@@ -125,7 +125,7 @@ theorem invoke_executable_world_recorded_resources_with {M P F A : Type}
           (fun p=>callbacks.sound code store valid p identity)
           (callbacks.retains code store valid identity)
         apply WP.dspec_mono total.dspec
-        rintro ⟨out,events⟩ post
+        rintro ⟨⟨result, execution, after, nextPlatform, returned⟩,events⟩ post
         obtain ⟨afterCode,⟨fresh,agrees,kept,extension,count⟩,success,failure⟩ := post
         refine ⟨ExecutableWorldRecordedOutcome.of_executed agrees ⟨executable _ _ fresh,kept,extension⟩ ?_ ?_,?_⟩
         · intro ok
@@ -151,8 +151,8 @@ theorem invoke_executable_world_recorded_resources {M P F A : Type}
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial) :
     recordedInvokeWith memory hooks floats allocator exec store platform address args results []
-      ⦃ (out,events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error) ⦄div := by
+      ⦃ ((result, execution, after, nextPlatform, returned), events) => (ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+        ∀error,result=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args after error) ⦄div := by
   exact invoke_executable_world_recorded_resources_with memory hooks floats allocator view laws (ExecutableInv view) (fun _ _ held=>held) (fun _ _ _ held mutation=>held.update mutation)
     callbacks code exec store platform valid address args results issued
     argumentIssued initial invoked
@@ -170,10 +170,10 @@ theorem invoke_executable_world_source_resources {M P F A : Type}
     (initial : config)
     (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map sourceValue) initial) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out => ∃events,
-        recordedInvokeWith memory hooks floats allocator exec store platform address args results []=.ok (out,events) ∧
-        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-        ∀error,out.1=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args out.2.2.1 error ⦄div :=
+      ⦃ (result, execution, after, nextPlatform, returned) => ∃events,
+        recordedInvokeWith memory hooks floats allocator exec store platform address args results []=.ok ((result, execution, after, nextPlatform, returned),events) ∧
+        ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+        ∀error,result=.Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view (ExecutableInv view) code store address args after error ⦄div :=
   Platform.Recording.erase_dspec _ _ _
     (recorded_invoke_with_erase memory hooks floats allocator exec store platform address args results [])
     (invoke_executable_world_recorded_resources memory hooks floats allocator view laws code

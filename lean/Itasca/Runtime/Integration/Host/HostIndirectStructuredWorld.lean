@@ -44,10 +44,10 @@ theorem call_host_source_retained_world {M P F A : Type}
     (represented : ValuesAt exec.slots.val base.val values)
     (sourceWf : wf_store (Store.decodeStore view code store))
     (callback : ∀ p args results,
-      hooks.call_host p store identity args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store identity args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ invariant afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store identity) :
     DivSpec (HostDiverges hooks store) (runtime.interp.call memory hooks floats allocator exec store platform address base) fun out =>
       ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ invariant afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
@@ -95,7 +95,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         (signature.params.val.map sourceType) values := by simpa only [same] using arguments
     obtain ⟨nextFunction,nextFound,nextSignature⟩ := Store.host_signature_extension view afterCode store nextStore
       address function signature functionAt signatureAt (shape afterCode nextStore fresh) extension
-    have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := retains.issued _ _ _ _ called
+    have returnedIssued : ∀ value ∈ returned.val, Store.IssuedValue nextStore value := retains.issued _ _ _ _ _ _ _ called
     step with host_resume_source_owned memory view afterCode store nextStore ambient {ready with host_args := args}
       address base nextFunction signature identity.val (signature.params.val.map sourceType) values
       ⟨returned⟩ status hostSource arguments extension sourceTyped wfAmbient nextFound nextSignature returnedIssued capacity
@@ -108,7 +108,7 @@ theorem call_host_source_retained_world {M P F A : Type}
         · simp only [HostCallCauses,trapped]
         · simp only [HostCallCauses,exhausted]
           exact ⟨p,args.slice,defaults.slice,returned,by simpa only [reply] using called⟩
-    refine .ret ⟨afterCode,agrees,fresh,retains.framePrefix _ _ _ _ called,crossExtension,retains.externs _ _ _ _ called,?_,?_,causes⟩
+    refine .ret ⟨afterCode,agrees,fresh,retains.framePrefix _ _ _ _ _ _ _ called,crossExtension,retains.externs _ _ _ _ _ _ _ called,?_,?_,causes⟩
     ·
       obtain ⟨padding,slotsEq,metadata⟩ := preparation
       have readyIdentity : ready.store = exec.store := by
@@ -188,10 +188,10 @@ theorem step_host_call_structured_world_provenance {M P F A : Type}
     (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code := .CALL (.mk_uN index.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store host) :
     DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       ∃ afterCode, Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
@@ -382,10 +382,10 @@ theorem call_indirect_host_structured_world {M P F A : Type}
     (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after}::rest,[]⟩)
     (callback : ∀ p args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store host) :
     DivSpec (HostDiverges hooks store) (runtime.interp.call memory hooks floats allocator {exec with frames:=exec.frames.set frameIndex {raw with pc:=pc}} store platform address base) fun out =>
       ∃afterCode,Store.CodeAgreesOn store code afterCode ∧ Inv afterCode out.2.2.1 ∧ CertifiedSupportedStore view afterCode out.2.2.1 ∧ FrameStorePrefix store out.2.2.1 ∧
@@ -532,10 +532,10 @@ theorem step_indirect_host_structured_world {M P F A : Type}
     (owned : SourceMachine.Ownership.StateOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store host) :
     DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       (hostStepAddress exec store=none ∧ (∃ target, compiled.code.val[raw.pc.val]?=some (.Jump target)) ∧ out.1=.Ok () ∧ out.2.2.1=store ∧ out.2.2.2=platform ∧

@@ -95,10 +95,10 @@ chosen by publication. Raw metadata retention remains a separate hypothesis. -/
 def HostWorldSound {M P : Type} (hooks : runtime.platform.Platform P M)
     (view : M → Slice U8) (Inv : Store.CodeInterpretation → runtime.store.Store M → Prop) : Prop :=
   ∀ code store, Inv code store → ∀ platform host args results,
-    hooks.call_host platform store host args results ⦃ answer => ∃ afterCode,
-      Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div
+    hooks.call_host platform store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+      Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+      Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div
 
 /-- Some callback diverges when called on `store`. -/
 def HostDiverges {M P : Type} (hooks : runtime.platform.Platform P M) (store : runtime.store.Store M) : Prop :=
@@ -108,13 +108,13 @@ def HostDiverges {M P : Type} (hooks : runtime.platform.Platform P M) (store : r
 source-store extension. -/
 structure HostRetention {M P : Type} (hooks : runtime.platform.Platform P M)
     (store : runtime.store.Store M) (host : U64) : Prop where
-  framePrefix : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer → Interp.FrameStorePrefix store answer.2.2.1
-  externs : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer → store.externs.length ≤ answer.2.2.1.externs.length
-  issued : ∀ p args results answer,
-    hooks.call_host p store host args results = .ok answer →
-      ∀ value ∈ answer.2.2.2.val, Store.IssuedValue answer.2.2.1 value
+  framePrefix : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) → Interp.FrameStorePrefix store after
+  externs : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) → store.externs.length ≤ after.externs.length
+  issued : ∀ p args results result nextPlatform after returned,
+    hooks.call_host p store host args results = .ok (result, nextPlatform, after, returned) →
+      ∀ value ∈ returned.val, Store.IssuedValue after value
 
 /-- The callback laws over stores satisfying `Inv`. -/
 structure HostLaws {M P : Type} (hooks : runtime.platform.Platform P M) (view : M → Slice U8)

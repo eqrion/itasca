@@ -37,10 +37,10 @@ theorem host_ready_world_outcomes {M P F A : Type}
       ∃table type : U32,op=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val) ∧
         SourceIndirectHostBoundary store ⟨Store.decodeStore view code store,ambient,{f with code:=op::after}::rest,[]⟩)
     (callback : ∀ p host args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : ∀ host, HostRetention hooks store host) :
     DivSpec (HostDiverges hooks store) (runtime.interp.step memory hooks floats allocator exec store platform) fun out =>
       WorldSourceStepResult (view:=view)
@@ -103,10 +103,10 @@ theorem StructuredHostSite.world_outcomes {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : Inv code store)
     (callback : ∀ host p args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : ∀ host, HostRetention hooks store host)
     {expected : List valtype} {pc : Nat} {pending : Bool} {source : SourceMachine.AState}
     (site : StructuredHostSite view code exec store expected pc pending source)

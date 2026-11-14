@@ -391,14 +391,14 @@ theorem instantiate_compiled_source {M P F A : Type}
     (encoded : ModuleBinary.ModuleEncodingWith Profile.CodeEncoding raw bytes.val ) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
-        ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
-          Interp.FrameStorePrefix before out.2.1 ∧
+        ⦃ (result, after, nextPlatform) => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧
+          Interp.FrameStorePrefix before after ∧
           Extend_store (decodeStore view oldCode before)
-            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) ∧
+            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after) ∧
           InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
-            before module imports raw platform out.1 out.2.1 out.2.2 ∧
-          ∀ error,out.1=.Err error → InstantiationResourceCause memory hooks floats allocator
-            view oldCode before module imports platform raw out.2.1 error ⦄ := by
+            before module imports raw platform result after nextPlatform ∧
+          ∀ error,result=.Err error → InstantiationResourceCause memory hooks floats allocator
+            view oldCode before module imports platform raw after error ⦄ := by
   obtain ⟨actualRaw,actualEncoded,elaborated,matched,typed,origin⟩ :=
     instantiate_compiled_executable_eventful_origin memory hooks floats allocator view laws law before module imports platform
       oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes limits accepted
@@ -413,14 +413,14 @@ theorem instantiate_compiled_source {M P F A : Type}
       error staged platform returned
     obtain ⟨_,_,evidence⟩ := instantiate_compiled_precommit_resource_causes memory hooks floats allocator law view laws
       before module imports platform old.shape old.segmentAccounting bytes limits accepted handles error staged platform returned
-    obtain ⟨out,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
+    obtain ⟨⟨result,after,nextPlatform⟩,run,resultEq,storeEq,hostEq⟩ := WP.spec_imp_exists
       (instantiate_rollback memory hooks floats allocator before staged module imports platform platform error retained returned)
     rw [run,WP.spec_ok]
     have rollbackInv : ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) before :=
       ⟨old.toCertifiedApiStore.install_code (Compiler.sourceFunctions raw),old.segmentAccounting,
         old.capacities.code_agrees (install_code_agrees before oldCode (Compiler.sourceFunctions raw))⟩
     have rollbackExtension : Extend_store (decodeStore view oldCode before)
-        (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) := by
+        (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after) := by
       rw [storeEq,decode_store_code_agrees view (install_code_agrees before oldCode (Compiler.sourceFunctions raw))]
       exact Spec.extend_store_refl _ old.well_formed
     refine ⟨(by simpa only [storeEq] using rollbackInv),(by simpa only [storeEq] using Interp.FrameStorePrefix.refl before),

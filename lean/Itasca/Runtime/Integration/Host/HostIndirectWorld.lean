@@ -36,10 +36,10 @@ theorem step_indirect_host_world_outcomes {M P F A : Type}
     (owned : SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store)
       ⟨Store.decodeStore view code store,ambient,{f with code:=.CALL_INDIRECT (.mk_uN table.val) (.mk_uN type.val)::after}::rest,[]⟩)
     (callback : ∀ p args results,
-      hooks.call_host p store host args results ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store host args results ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ Inv afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store host) :
     let before : EventfulWorld M P view expected :=
       ⟨code,⟨store,exec,platform,

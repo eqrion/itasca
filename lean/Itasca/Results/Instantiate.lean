@@ -37,14 +37,14 @@ theorem runtime.store.instantiate.Store.instantiate_with.spec {M P F A : Type}
     (encoded : ModuleBinary.ModuleEncodingWith (Profile.CodeEncoding) raw bytes.val) :
     Module_ok (ModuleElaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
-        ⦃ out => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1 ∧
-          Interp.FrameStorePrefix before out.2.1 ∧
+        ⦃ (result, after, nextPlatform) => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧
+          Interp.FrameStorePrefix before after ∧
           Extend_store (decodeStore view oldCode before)
-            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) out.2.1) ∧
+            (decodeStore view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after) ∧
           InstantiationSourceOutcome view oldCode (installCode oldCode before.instances.length (Compiler.sourceFunctions raw))
-            before module imports raw platform out.1 out.2.1 out.2.2 ∧
-          ∀ error, out.1 = .Err error → InstantiationResourceCause memory hooks floats allocator
-            view oldCode before module imports platform raw out.2.1 error ⦄ :=
+            before module imports raw platform result after nextPlatform ∧
+          ∀ error, result = .Err error → InstantiationResourceCause memory hooks floats allocator
+            view oldCode before module imports platform raw after error ⦄ :=
   instantiate_compiled_source memory hooks floats allocator view laws law before module imports platform
     oldCode old handles bytes limits accepted raw encoded
 

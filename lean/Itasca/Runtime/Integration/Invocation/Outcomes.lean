@@ -298,35 +298,38 @@ def ExecutableWorldRecordedOutcome {M P : Type} (memory : runtime.platform.Memor
     (exec : runtime.interp.Execution) (platform : P) (address : runtime.FuncAddr)
     (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
     (initial : config)
-    (out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
-      runtime.store.Store M × P × alloc.vec.Vec runtime.Value) (events : List HostEvent) : Prop :=
+    (result : core.result.Result Unit runtime.ExecError) (execution : runtime.interp.Execution)
+    (after : runtime.store.Store M) (nextPlatform : P) (returned : alloc.vec.Vec runtime.Value)
+    (events : List HostEvent) : Prop :=
   ∃ afterCode, Store.CodeAgreesOn before code afterCode ∧
-  ExecutableInv view afterCode out.2.2.1 ∧ FrameStorePrefix before out.2.2.1 ∧
-  Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode out.2.2.1) ∧
-  (∃body,StepsH initial events ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,body⟩) ∧
-  (out.1=.Ok () → (StepsH initial events
-    ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
-    (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value)) ∧
-  (∀error,out.1=.Err error →
-    (InvocationRejected memory before address args error ∧ out=(.Err error,exec,before,platform,results) ∧ events=[]) ∨
-    EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error)
+  ExecutableInv view afterCode after ∧ FrameStorePrefix before after ∧
+  Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode after) ∧
+  (∃body,StepsH initial events ⟨⟨Store.decodeStore view afterCode after,Spec.invocationFrame⟩,body⟩) ∧
+  (result=.Ok () → (StepsH initial events
+    ⟨⟨Store.decodeStore view afterCode after,Spec.invocationFrame⟩,vals (returned.val.map sourceValue)⟩) ∧
+    (∀value∈returned.val,Store.ValueInStore after value)) ∧
+  (∀error,result=.Err error →
+    (InvocationRejected memory before address args error ∧ (result,execution,after,nextPlatform,returned)=(.Err error,exec,before,platform,results) ∧ events=[]) ∨
+    EventfulInvocationError initial events (Store.decodeStore view afterCode after) Spec.invocationFrame error)
 
 theorem ExecutableWorldRecordedOutcome.of_executed {M P : Type}
     {memory : runtime.platform.MemoryBuffer M} {address : runtime.FuncAddr} {args : Slice runtime.Value}
     {view : M → Slice U8} {code afterCode : Store.CodeInterpretation} {before : runtime.store.Store M}
     {exec : runtime.interp.Execution} {platform : P} {results : alloc.vec.Vec runtime.Value}
-    {initial : config} {out} {events : List HostEvent}
+    {initial : config} {result : core.result.Result Unit runtime.ExecError}
+    {execution : runtime.interp.Execution} {after : runtime.store.Store M}
+    {nextPlatform : P} {returned : alloc.vec.Vec runtime.Value} {events : List HostEvent}
     (agrees : Store.CodeAgreesOn before code afterCode)
-    (retained : ExecutableInv view afterCode out.2.2.1 ∧ FrameStorePrefix before out.2.2.1 ∧
-      Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode out.2.2.1))
-    (success : out.1=.Ok () → (StepsH initial events
-      ⟨⟨Store.decodeStore view afterCode out.2.2.1,Spec.invocationFrame⟩,vals (out.2.2.2.2.val.map sourceValue)⟩) ∧
-      (∀value∈out.2.2.2.2.val,Store.ValueInStore out.2.2.1 value))
-    (failure : ∀error,out.1=.Err error →
-      EventfulInvocationError initial events (Store.decodeStore view afterCode out.2.2.1) Spec.invocationFrame error) :
-    ExecutableWorldRecordedOutcome memory view code before exec platform address args results initial out events := by
+    (retained : ExecutableInv view afterCode after ∧ FrameStorePrefix before after ∧
+      Extend_store (Store.decodeStore view code before) (Store.decodeStore view afterCode after))
+    (success : result=.Ok () → (StepsH initial events
+      ⟨⟨Store.decodeStore view afterCode after,Spec.invocationFrame⟩,vals (returned.val.map sourceValue)⟩) ∧
+      (∀value∈returned.val,Store.ValueInStore after value))
+    (failure : ∀error,result=.Err error →
+      EventfulInvocationError initial events (Store.decodeStore view afterCode after) Spec.invocationFrame error) :
+    ExecutableWorldRecordedOutcome memory view code before exec platform address args results initial result execution after nextPlatform returned events := by
   refine ⟨afterCode,agrees,retained.1,retained.2.1,retained.2.2,?_,success,fun error failed=>Or.inr (failure error failed)⟩
-  cases status : out.1 with
+  cases status : result with
   | Ok value =>
     cases value
     exact ⟨_,(success status).1⟩

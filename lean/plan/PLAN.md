@@ -1036,6 +1036,8 @@ Done when (phase): `just prove`, `just lint`, `just audit` pass;
 
 ### 4.1 Name the parts of results
 
+Completed 2026-11-13: [named statements and validation](notes/step41-results.md).
+
 The headline runtime statements address results as `out.2.2.1`. Projections of
 this kind occur 1,361 times in 268 files; this step changes only the statement
 layer:

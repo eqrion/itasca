@@ -86,11 +86,11 @@ def InvocationBehaves {M P F A : Type}
     (initial : config)
     (outcome : Result (core.result.Result Unit runtime.ExecError × runtime.interp.Execution ×
       runtime.store.Store M × P × alloc.vec.Vec runtime.Value)) : Prop :=
-  outcome ⦃ out => ∃ events,
-    recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok (out,events) ∧
-    ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-    ∀ error, out.1 = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
-      (ExecutableInv view) code store address args out.2.2.1 error ⦄div ∧
+  outcome ⦃ (result, execution, after, nextPlatform, returned) => ∃ events,
+    recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok ((result, execution, after, nextPlatform, returned),events) ∧
+    ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+    ∀ error, result = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
+      (ExecutableInv view) code store address args after error ⦄div ∧
   (outcome = .div → Spec.InfiniteSourceWithEvents initial ∨ HostCallDiverged hooks view initial)
 
 theorem invoke_executable_world_behaves {M P F A : Type}
@@ -125,11 +125,11 @@ theorem InvocationBehaves.returns {M P F A : Type}
       initial outcome)
     (finite : ¬ Spec.InfiniteSourceWithEvents initial)
     (callbacksReturn : ¬ HostCallDiverged hooks view initial) :
-    outcome ⦃ out => ∃ events,
-      recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok (out,events) ∧
-      ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial out events ∧
-      ∀ error, out.1 = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
-        (ExecutableInv view) code store address args out.2.2.1 error ⦄ := by
+    outcome ⦃ (result, execution, after, nextPlatform, returned) => ∃ events,
+      recordedInvokeWith memory hooks floats allocator exec store platform address args results [] = .ok ((result, execution, after, nextPlatform, returned),events) ∧
+      ExecutableWorldRecordedOutcome memory view code store exec platform address args results initial result execution after nextPlatform returned events ∧
+      ∀ error, result = .Err error → ExecutableWorldInvocationSourceCause memory hooks floats allocator view
+        (ExecutableInv view) code store address args after error ⦄ := by
   obtain ⟨returned,diverged⟩ := behaves
   cases returned with
   | ret post => exact .ret post
@@ -204,8 +204,8 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (view : M → Slice U8) (laws : Platform.Laws memory hooks floats allocator view) (code : Store.CodeInterpretation)
     (callbacks : HostLaws hooks view (ExecutableInv view))
-    (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results answer,
-      hooks.call_host p store host args results=.ok answer → answer.2.2.1.limits=store.limits)
+    (limitsKept : ∀c store,ExecutableInv view c store → ∀host p args results result nextPlatform after returned,
+      hooks.call_host p store host args results=.ok (result,nextPlatform,after,returned) → after.limits=store.limits)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (valid : ExecutableInv view code store)
     (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
@@ -220,7 +220,7 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     (continuing : ∀ before after,hooks.interrupt before≠.ok (.Terminate,after))
     (noOverflow : NoHostStackOverflow hooks (ExecutableInv view)) :
     runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results
-      ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div := by
+      ⦃ (result, execution, after, nextPlatform, returned) => ∀error,result=.Err error → ∃trap,error=.Trap trap ⦄div := by
   let Inv := fun c s=>ExecutableInv view c s ∧ s.limits=store.limits
   have initialWf : wf_config initial := by cases invoked; assumption
   have sourceEq := Spec.invocation_config invoked
@@ -235,7 +235,8 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     swap
     · rw [call]
       exact .div _
-    have same := limitsKept c s held.1 host p arguments defaults answer call
+    rcases answer with ⟨result, nextPlatform, after, returned⟩
+    have same := limitsKept c s held.1 host p arguments defaults result nextPlatform after returned call
     obtain ⟨afterCode,agrees,fresh,extension,typed⟩ := post
     rw [call,WP.dspec_ok]
     exact ⟨afterCode,agrees,⟨fresh,same.trans held.2⟩,extension,typed⟩
@@ -244,7 +245,8 @@ theorem invoke_executable_world_no_spurious_errors {M P F A : Type}
     (invoke_executable_world_recorded_resources_with memory hooks floats allocator view laws Inv (fun _ _ held=>held.1) (fun _ _ _ held mutation=>⟨held.1.update mutation,by simpa only [mutation.limits] using held.2⟩)
       resourceLaws code exec store platform ⟨valid,rfl⟩
       address args results issued argumentIssued _ invoked))
-  rintro out ⟨events,_,⟨afterCode,_,_,_,_,_,_,failure⟩,causes⟩ error failed
+  rintro ⟨result, execution, after, nextPlatform, returned⟩
+    ⟨events,_,⟨afterCode,_,_,_,_,_,_,failure⟩,causes⟩ error failed
   rcases failure error failed with ⟨rejected,_,_⟩ | executed
   · exfalso
     rcases rejected with ⟨foreign,_⟩ | ⟨function,signature,hf,hs,checked⟩

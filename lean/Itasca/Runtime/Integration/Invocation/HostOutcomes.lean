@@ -143,10 +143,10 @@ theorem invoke_host_world_outcomes {M P F A : Type}
     (owned : ∀ value ∈ args.val, Store.ValueInStore store value)
     (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref signature.params) = .ok (.Ok ()))
     (callback : ∀ p arguments defaults,
-      hooks.call_host p store identity arguments defaults ⦃ answer => ∃ afterCode,
-        Store.CodeAgreesOn store code afterCode ∧ invariant afterCode answer.2.2.1 ∧
-        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode answer.2.2.1) ∧
-        Store_ok (Store.decodeStore view afterCode answer.2.2.1) ⦄div)
+      hooks.call_host p store identity arguments defaults ⦃ (result, nextPlatform, after, returned) => ∃ afterCode,
+        Store.CodeAgreesOn store code afterCode ∧ invariant afterCode after ∧
+        Extend_store (Store.decodeStore view code store) (Store.decodeStore view afterCode after) ∧
+        Store_ok (Store.decodeStore view afterCode after) ⦄div)
     (retains : HostRetention hooks store identity) :
     DivSpec (HostDiverges hooks store) (runtime.interp.invoke_with memory hooks floats allocator exec store platform address args results) fun out => ∃ afterCode,
       (invariant afterCode out.2.2.1 ∧ Store.CodeAgreesOn store code afterCode ∧ FrameStorePrefix store out.2.2.1 ∧

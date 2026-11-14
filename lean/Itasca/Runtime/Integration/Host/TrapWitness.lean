@@ -32,9 +32,9 @@ theorem trapHost_laws {M : Type} (memory : runtime.platform.MemoryBuffer M) (vie
     rw [trapHost,WP.dspec_ok]
     exact ⟨code,(by intro index inst found fn; rfl),held,Spec.extend_store_refl _ held.well_formed,held.source_typed⟩
   all_goals
-    intro p args results answer called
-    simp only [trapHost,Result.ok.injEq] at called
-    subst answer
+    intro p args results result nextPlatform after returned called
+    simp only [trapHost,Result.ok.injEq,Prod.mk.injEq] at called
+    rcases called with ⟨rfl, _, rfl, rfl⟩
   · exact .refl store
   · exact Nat.le_refl _
   · intro value member; cases member

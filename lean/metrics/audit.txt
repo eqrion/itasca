@@ -36,7 +36,7 @@ Itasca.Runtime.runtime.store.Store.export.spec: standard axioms only
 no handwritten declaration uses sorry or an unproved specification theorem
 
 # Statement cone totals (declarations, lines)
-handwritten: 1699 declarations, 9603 lines
+handwritten: 1699 declarations, 9604 lines
 spectec: 2617 declarations, 25641 lines
 extracted: 2743 declarations, 62925 lines
 
@@ -964,7 +964,7 @@ Itasca.Runtime.Integration.Invocation.DefinedResources	Itasca.Runtime.Integratio
 Itasca.Runtime.Integration.Invocation.HostOutcomes	Itasca.Runtime.Integration.HostCallDiverged	6
 Itasca.Runtime.Integration.Invocation.Outcomes	Itasca.Runtime.Integration.InitialHostSourceResourceCause	10
 Itasca.Runtime.Integration.Invocation.Outcomes	Itasca.Runtime.Integration.InvocationRejected	9
-Itasca.Runtime.Integration.Invocation.Outcomes	Itasca.Runtime.Integration.ExecutableWorldRecordedOutcome	19
+Itasca.Runtime.Integration.Invocation.Outcomes	Itasca.Runtime.Integration.ExecutableWorldRecordedOutcome	20
 Itasca.Runtime.Integration.Invocation.Resources	Itasca.Runtime.Integration.ExecutableWorldInvocationSourceCause	15
 Itasca.Runtime.Integration.Invocation.SourceDemand	Itasca.Runtime.Integration.SourceWorldResources	8
 Itasca.Runtime.Integration.Invocation.SourceDemand	Itasca.Runtime.Integration.SourceWorldResources.mk	1
