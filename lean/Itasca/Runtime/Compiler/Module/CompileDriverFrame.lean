@@ -26,6 +26,13 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
+/-- The executable module exposes its retained validated environment. -/
+@[step] theorem _root_.Itasca.runtime.compiler.ExecutableModule.env.spec
+    (module : runtime.compiler.ExecutableModule) :
+    runtime.compiler.ExecutableModule.env module ⦃ env => env = module.module.env ⦄ := by
+  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env,
+    WP.spec_ok]
+
 /-- Active offsets compile from independent constant-expression typing;
 passive data needs only its mapping append. Both paths accept from conservative
 source-independent reserve and two-instruction headroom bounds. -/

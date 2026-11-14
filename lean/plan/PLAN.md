@@ -920,6 +920,8 @@ over the bytes written back and requires the same length.
 
 ### 3.5 Reads
 
+Completed 2026-11-13: [contracts and validation](notes/step35-results.md).
+
 `global`, `memory`, `table_size`, `table_get`, `func_type`, `extern_identity`,
 `export`. Each theorem: under the issued-handle premise the function returns
 normally, and a successful result equals the corresponding component of

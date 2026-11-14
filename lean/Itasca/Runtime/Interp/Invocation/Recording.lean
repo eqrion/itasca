@@ -37,6 +37,16 @@ open Aeneas Aeneas.Std
   subst found
   rfl
 
+/-- A foreign function address rejects before either function or type indexing. -/
+theorem func_type_wrong_store {M : Type} (memory : runtime.platform.MemoryBuffer M)
+    (store : runtime.store.Store M) (func : runtime.FuncAddr)
+    (foreign : func.store ≠ store.id) :
+    runtime.store.Store.func_type memory store func = .ok (.Err .WrongStore) := by
+  simp only [runtime.store.Store.func_type, runtime.store.Store.check, if_neg foreign,
+    bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
+    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
+    core.convert.FromSame.from, bind_tc_ok]
+
 variable {M P F A : Type}
   (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
   (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
