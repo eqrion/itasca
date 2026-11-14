@@ -1106,6 +1106,8 @@ The findings that shape the work:
 
 ### 5.1 Quick win: the dead branch of `op`
 
+Completed 2026-11-13: [shared dead equation and checks](notes/step51-results.md).
+
 Add (in the module that will own `op`, start with
 `Compiler/Local/Lowering/Emission/Lowering.lean`):
 

@@ -56,8 +56,7 @@ theorem compiler_lower_simd_code_mono {A : Type} (ops : runtime.platform.Alloc A
   by_cases reachable : before.reachable = true
   · rw [lower_simd_dispatch ops before state opcode a b bits reachable lower upper] at accepted
     exact compiler_simd_code_mono ops law before after state opcode a bits accepted
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     exact compiler_observe_code_mono ops law before after state (.Ok ()) accepted
 end Itasca.Runtime.Compiler
 
@@ -89,8 +88,7 @@ theorem compiler_lower_simd_depths {A : Type} (ops : runtime.platform.Alloc A)
   by_cases reachable : before.reachable = true
   · rw [lower_simd_dispatch ops before state opcode a b bits reachable lower upper] at accepted
     exact compiler_simd_depths ops law before after state opcode a bits accepted
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 end Itasca.Runtime.Compiler
 

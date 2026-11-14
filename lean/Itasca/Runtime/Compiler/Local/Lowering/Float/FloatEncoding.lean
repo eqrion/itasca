@@ -28,8 +28,7 @@ theorem compiler_float_ordinary_result {A : Type} (ops : runtime.platform.Alloc 
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_float_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -41,8 +40,7 @@ theorem compiler_float_sources {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_float_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -54,8 +52,7 @@ theorem compiler_float_cursor {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_float_capacity {A : Type} (ops : runtime.platform.Alloc A)
@@ -67,8 +64,7 @@ theorem compiler_float_capacity {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 

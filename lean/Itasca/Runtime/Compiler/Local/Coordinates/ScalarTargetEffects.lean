@@ -383,8 +383,7 @@ private theorem scalar_target_effects_0 {A : Type} (ops : runtime.platform.Alloc
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -399,8 +398,7 @@ private theorem scalar_target_effects_1 {A : Type} (ops : runtime.platform.Alloc
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -415,8 +413,7 @@ private theorem scalar_target_effects_16 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -431,8 +428,7 @@ private theorem scalar_target_effects_17 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -447,8 +443,7 @@ private theorem scalar_target_effects_26 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -463,8 +458,7 @@ private theorem scalar_target_effects_27 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -479,8 +473,7 @@ private theorem scalar_target_effects_28 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -495,8 +488,7 @@ private theorem scalar_target_effects_32 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -511,8 +503,7 @@ private theorem scalar_target_effects_33 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -527,8 +518,7 @@ private theorem scalar_target_effects_34 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -543,8 +533,7 @@ private theorem scalar_target_effects_35 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -559,8 +548,7 @@ private theorem scalar_target_effects_36 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -575,8 +563,7 @@ private theorem scalar_target_effects_37 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -591,8 +578,7 @@ private theorem scalar_target_effects_38 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -607,8 +593,7 @@ private theorem scalar_target_effects_63 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -623,8 +608,7 @@ private theorem scalar_target_effects_64 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -639,8 +623,7 @@ private theorem scalar_target_effects_65 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -655,8 +638,7 @@ private theorem scalar_target_effects_66 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -671,8 +653,7 @@ private theorem scalar_target_effects_67 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -687,8 +668,7 @@ private theorem scalar_target_effects_68 {A : Type} (ops : runtime.platform.Allo
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -703,8 +683,7 @@ private theorem scalar_target_effects_208 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -719,8 +698,7 @@ private theorem scalar_target_effects_209 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -735,8 +713,7 @@ private theorem scalar_target_effects_210 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -751,8 +728,7 @@ private theorem scalar_target_effects_264 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -767,8 +743,7 @@ private theorem scalar_target_effects_265 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -783,8 +758,7 @@ private theorem scalar_target_effects_266 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -799,8 +773,7 @@ private theorem scalar_target_effects_267 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -815,8 +788,7 @@ private theorem scalar_target_effects_268 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -831,8 +803,7 @@ private theorem scalar_target_effects_269 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -847,8 +818,7 @@ private theorem scalar_target_effects_270 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -863,8 +833,7 @@ private theorem scalar_target_effects_271 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -879,8 +848,7 @@ private theorem scalar_target_effects_272 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
@@ -895,8 +863,7 @@ private theorem scalar_target_effects_273 {A : Type} (ops : runtime.platform.All
     · unfold runtime.compiler.lower.FunctionCompiler.op at called
       rw [if_pos live] at called
       repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
       compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 

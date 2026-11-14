@@ -597,8 +597,7 @@ theorem compiler_dead_op_frame {A : Type} (ops : runtime.platform.Alloc A)
     (dead : compiler.reachable = false) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state opcode a b bits ⦃ out =>
       ObserveFrame compiler out.2 ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  rw [if_neg (by simp only [dead, Bool.false_eq_true, not_false_eq_true])]
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)]
   exact compiler_observe_frame ops law compiler state
 
 theorem compiler_dead_op_fields {A : Type} (ops : runtime.platform.Alloc A)
@@ -647,8 +646,7 @@ theorem compiler_op65_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op66_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -667,8 +665,7 @@ theorem compiler_op66_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op32_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -706,8 +703,7 @@ theorem compiler_op32_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op33_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -757,8 +753,7 @@ theorem compiler_op33_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op34_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -808,8 +803,7 @@ theorem compiler_op34_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op16_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -841,8 +835,7 @@ theorem compiler_op16_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op1_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -859,8 +852,7 @@ theorem compiler_op1_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_op26_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -877,8 +869,7 @@ theorem compiler_op26_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
       rfl
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/

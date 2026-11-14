@@ -72,8 +72,7 @@ set_option maxHeartbeats 1000000 in
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state
         (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 =
         runtime.compiler.FunctionCompiler.observe ops compiler state := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+      rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 

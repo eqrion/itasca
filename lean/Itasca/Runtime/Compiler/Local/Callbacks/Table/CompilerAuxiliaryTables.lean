@@ -551,8 +551,7 @@ theorem compiler_numeric_depths {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_numeric_dispatch ops before state op reach] at accepted
     unfold numericLowering at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_float_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -564,8 +563,7 @@ theorem compiler_float_depths {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_core_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -579,8 +577,7 @@ theorem compiler_core_depths {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 end Itasca.Runtime.Compiler
@@ -605,8 +602,7 @@ theorem compiler_stateful_depths {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
     cases op <;> simp only [statefulLowering] at accepted
     all_goals repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state status accepted
 theorem compiler_indirect_call_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -618,8 +614,7 @@ theorem compiler_indirect_call_depths {A : Type} (ops : runtime.platform.Alloc A
   · rw [lower_indirect_call_dispatch ops before state a b reach] at accepted
     unfold indirectCallLowering at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state status accepted
 end Itasca.Runtime.Compiler
 

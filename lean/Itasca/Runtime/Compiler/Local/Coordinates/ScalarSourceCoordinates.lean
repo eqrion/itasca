@@ -21,8 +21,7 @@ theorem compiler_dead_source_coordinates {A : Type} (ops : runtime.platform.Allo
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  unfold runtime.compiler.lower.FunctionCompiler.op at called
-  rw [if_neg (by simp [dead])] at called
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)] at called
   exact compiler_observe_source_coordinates ops law before after state held forward called
 
 end Itasca.Runtime.Compiler

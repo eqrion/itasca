@@ -52,8 +52,7 @@ theorem _root_.Itasca.Wasm2.ReaderPost.simd_dead_prefix {jumpTables : List U32} 
       CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function := by
   obtain ⟨ordinary,sources,cursor,capacity⟩ := compiler_lower_simd_effects ops law before after out opcode a b bits lower upper accepted
   obtain ⟨prefixProof,deadAfter⟩ := post.structured_skip ops law invariant dead ordinary sources cursor opcode a b bits accepted
-  unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-  rw [if_neg (by simp [dead])] at accepted
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)] at accepted
   exact ⟨prefixProof,deadAfter,compiler_observe_tables ops law before after out (.Ok ()) accepted⟩
 end Itasca.Runtime.Compiler
 

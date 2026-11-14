@@ -75,8 +75,7 @@ theorem compiler_core_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' metadata_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_ordinary_result ops law before after state status accepted
 
 theorem compiler_core_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -90,8 +89,7 @@ theorem compiler_core_sources {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_core_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -105,8 +103,7 @@ theorem compiler_core_cursor {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
@@ -120,8 +117,7 @@ theorem compiler_core_capacity {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 end Itasca.Runtime.Compiler

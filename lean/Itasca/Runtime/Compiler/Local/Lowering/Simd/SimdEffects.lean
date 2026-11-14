@@ -221,8 +221,7 @@ theorem compiler_lower_simd_effects {A : Type} (ops : runtime.platform.Alloc A)
       compiler_simd_sources ops law before after state opcode a bits accepted,
       compiler_simd_cursor ops law before after state opcode a bits accepted,
       compiler_simd_capacity ops law before after state opcode a bits accepted⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     have capacity := compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted
     exact ⟨compiler_observe_ordinary_result ops law before after state (.Ok ()) accepted,
       compiler_observe_sources ops law before after state (.Ok ()) accepted,

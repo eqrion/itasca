@@ -907,8 +907,7 @@ theorem StructuredCompilerPrefix.dead_op {jumpTables : List Aeneas.Std.U32} {A :
     (consumed : position < state.pos.val)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits = .ok (.Ok (), after)) :
     StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance instruction) state.vals.val state.pos.val := by
-  unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-  rw [if_neg (by simp only [dead, Bool.false_eq_true, not_false_eq_true])] at accepted
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)] at accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame
   change ObserveFrame before after at frame

@@ -147,8 +147,7 @@ theorem compiler_indirect_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
   · rw [lower_indirect_call_dispatch ops before state a b live] at accepted
     unfold indirectCallLowering at accepted
     repeat' auxiliary_growth_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg live] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at accepted
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
 
@@ -174,8 +173,7 @@ theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
   · rw [lower_stateful_dispatch ops before state op a b live] at accepted
     cases op <;> simp only [statefulLowering] at accepted
     all_goals repeat' auxiliary_growth_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg live] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at accepted
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
 end Itasca.Runtime.Compiler

@@ -30,8 +30,7 @@ theorem compiler_op65_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op66_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -49,8 +48,7 @@ theorem compiler_op66_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op32_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -87,8 +85,7 @@ theorem compiler_op32_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op33_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -137,8 +134,7 @@ theorem compiler_op33_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op34_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -187,8 +183,7 @@ theorem compiler_op34_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op16_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -219,8 +214,7 @@ theorem compiler_op16_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op1_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -236,8 +230,7 @@ theorem compiler_op1_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_op26_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -253,8 +246,7 @@ theorem compiler_op26_tables {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
@@ -349,8 +341,7 @@ theorem compiler_numeric_tables {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_numeric_dispatch ops before state op reach] at accepted
     unfold numericLowering at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_float_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -362,8 +353,7 @@ theorem compiler_float_tables {A : Type} (ops : runtime.platform.Alloc A)
   · rw [lower_float_dispatch ops before state op reach] at accepted
     unfold floatLowering at accepted
     repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 theorem compiler_core_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -377,8 +367,7 @@ theorem compiler_core_tables {A : Type} (ops : runtime.platform.Alloc A)
     all_goals simp only [selectLowering, globalGetLowering, globalSetLowering,
       memoryLoadLowering, memoryStoreLowering] at accepted
     all_goals repeat' table_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_tables ops law before after state (.Ok ()) accepted
 
 end Itasca.Runtime.Compiler

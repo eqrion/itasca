@@ -61,8 +61,7 @@ set_option maxRecDepth 4096 in
       cases unit
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
       exact compiler_observe_stack ops law nextCompiler state
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 set_option maxRecDepth 4096 in
@@ -122,8 +121,7 @@ set_option maxRecDepth 4096 in
         cases unit
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
         exact compiler_observe_stack ops law nextCompiler state
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 end Itasca.Runtime.Compiler

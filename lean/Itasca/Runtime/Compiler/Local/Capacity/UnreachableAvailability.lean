@@ -443,8 +443,7 @@ theorem compiler_numeric_available_effect {A : Type} (ops : runtime.platform.All
     rw [same]
     exact ⟨post.1,.of_counter .instructions compiler.budget used 1 (by simp [ChargeCounter.used]; omega)
       (by simpa [ChargeCounter.used] using (show used.val ≤ compiler.budget.instructions.val+1 by omega))⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -470,8 +469,7 @@ theorem compiler_float_available_effect {A : Type} (ops : runtime.platform.Alloc
     rw [same]
     exact ⟨post.1,.of_counter .instructions compiler.budget used 1 (by simp [ChargeCounter.used]; omega)
       (by simpa [ChargeCounter.used] using (show used.val ≤ compiler.budget.instructions.val+1 by omega))⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -883,8 +881,7 @@ theorem compiler_memory_load_available {A : Type} (ops : runtime.platform.Alloc 
   · obtain ⟨address,read,_⟩ := memory_load_operand ops compiler front (layout live)
     rw [lower_memory_load_eq ops compiler state op offset alignment address live read]
     exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -906,8 +903,7 @@ theorem compiler_memory_store_available {A : Type} (ops : runtime.platform.Alloc
   · obtain ⟨address,value,addressRead,valueRead,_,_⟩ := memory_store_operands ops compiler front op.type (layout live)
     rw [lower_memory_store_eq ops compiler state op offset alignment address value live addressRead valueRead]
     exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -990,8 +986,7 @@ theorem compiler_select_available {A : Type} (ops : runtime.platform.Alloc A)
       (UScalar.sub_spec (x := right) (y := left) (by omega))
     rw [lower_select_eq ops compiler state left right condition difference typed live hl hr hc subtract]
     exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]

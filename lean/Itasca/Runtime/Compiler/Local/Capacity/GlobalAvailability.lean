@@ -245,8 +245,7 @@ theorem compiler_literal_available_effect {A : Type} (ops : runtime.platform.All
       exact ⟨post.1,.of_counter .instructions compiler.budget used 1
         (by simp [ChargeCounter.used]; omega) (by simpa [ChargeCounter.used] using
           (show used.val ≤ compiler.budget.instructions.val+1 by omega))⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -310,8 +309,7 @@ theorem compiler_global_get_available {A : Type} (ops : runtime.platform.Alloc A
   · obtain ⟨wide,top,_⟩ := WP.spec_imp_exists (top_is_v128_total state.vals.deref)
     rw [lower_global_get_eq ops compiler state index wide live top]
     exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -336,8 +334,7 @@ theorem compiler_global_set_available {A : Type} (ops : runtime.platform.Alloc A
       (UScalar.sub_spec (x := compiler.height) (y := source) (by omega))
     rw [lower_global_set_eq ops compiler state index source difference live read subtract]
     exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]

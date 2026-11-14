@@ -42,8 +42,7 @@ private theorem scalar_maps_0 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_1 {A : Type} (ops : runtime.platform.Alloc A)
@@ -65,8 +64,7 @@ private theorem scalar_maps_1 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_16 {A : Type} (ops : runtime.platform.Alloc A)
@@ -88,8 +86,7 @@ private theorem scalar_maps_16 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_17 {A : Type} (ops : runtime.platform.Alloc A)
@@ -111,8 +108,7 @@ private theorem scalar_maps_17 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_26 {A : Type} (ops : runtime.platform.Alloc A)
@@ -134,8 +130,7 @@ private theorem scalar_maps_26 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_27 {A : Type} (ops : runtime.platform.Alloc A)
@@ -157,8 +152,7 @@ private theorem scalar_maps_27 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_28 {A : Type} (ops : runtime.platform.Alloc A)
@@ -180,8 +174,7 @@ private theorem scalar_maps_28 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_32 {A : Type} (ops : runtime.platform.Alloc A)
@@ -203,8 +196,7 @@ private theorem scalar_maps_32 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_33 {A : Type} (ops : runtime.platform.Alloc A)
@@ -226,8 +218,7 @@ private theorem scalar_maps_33 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_34 {A : Type} (ops : runtime.platform.Alloc A)
@@ -249,8 +240,7 @@ private theorem scalar_maps_34 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_35 {A : Type} (ops : runtime.platform.Alloc A)
@@ -272,8 +262,7 @@ private theorem scalar_maps_35 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_36 {A : Type} (ops : runtime.platform.Alloc A)
@@ -295,8 +284,7 @@ private theorem scalar_maps_36 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_37 {A : Type} (ops : runtime.platform.Alloc A)
@@ -318,8 +306,7 @@ private theorem scalar_maps_37 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_38 {A : Type} (ops : runtime.platform.Alloc A)
@@ -341,8 +328,7 @@ private theorem scalar_maps_38 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_63 {A : Type} (ops : runtime.platform.Alloc A)
@@ -364,8 +350,7 @@ private theorem scalar_maps_63 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_64 {A : Type} (ops : runtime.platform.Alloc A)
@@ -387,8 +372,7 @@ private theorem scalar_maps_64 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_65 {A : Type} (ops : runtime.platform.Alloc A)
@@ -410,8 +394,7 @@ private theorem scalar_maps_65 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_66 {A : Type} (ops : runtime.platform.Alloc A)
@@ -433,8 +416,7 @@ private theorem scalar_maps_66 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_67 {A : Type} (ops : runtime.platform.Alloc A)
@@ -456,8 +438,7 @@ private theorem scalar_maps_67 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_68 {A : Type} (ops : runtime.platform.Alloc A)
@@ -479,8 +460,7 @@ private theorem scalar_maps_68 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_208 {A : Type} (ops : runtime.platform.Alloc A)
@@ -502,8 +482,7 @@ private theorem scalar_maps_208 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_209 {A : Type} (ops : runtime.platform.Alloc A)
@@ -525,8 +504,7 @@ private theorem scalar_maps_209 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_210 {A : Type} (ops : runtime.platform.Alloc A)
@@ -548,8 +526,7 @@ private theorem scalar_maps_210 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_264 {A : Type} (ops : runtime.platform.Alloc A)
@@ -571,8 +548,7 @@ private theorem scalar_maps_264 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_265 {A : Type} (ops : runtime.platform.Alloc A)
@@ -594,8 +570,7 @@ private theorem scalar_maps_265 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_266 {A : Type} (ops : runtime.platform.Alloc A)
@@ -617,8 +592,7 @@ private theorem scalar_maps_266 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_267 {A : Type} (ops : runtime.platform.Alloc A)
@@ -640,8 +614,7 @@ private theorem scalar_maps_267 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_268 {A : Type} (ops : runtime.platform.Alloc A)
@@ -663,8 +636,7 @@ private theorem scalar_maps_268 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_269 {A : Type} (ops : runtime.platform.Alloc A)
@@ -686,8 +658,7 @@ private theorem scalar_maps_269 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_270 {A : Type} (ops : runtime.platform.Alloc A)
@@ -709,8 +680,7 @@ private theorem scalar_maps_270 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_271 {A : Type} (ops : runtime.platform.Alloc A)
@@ -732,8 +702,7 @@ private theorem scalar_maps_271 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_272 {A : Type} (ops : runtime.platform.Alloc A)
@@ -755,8 +724,7 @@ private theorem scalar_maps_272 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 private theorem scalar_maps_273 {A : Type} (ops : runtime.platform.Alloc A)
@@ -778,8 +746,7 @@ private theorem scalar_maps_273 {A : Type} (ops : runtime.platform.Alloc A)
     apply held.ordinary stable growth
     rw [cursor]
     exact forward
-  · unfold runtime.compiler.lower.FunctionCompiler.op at called
-    rw [if_neg live] at called
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
     exact compiler_observe_map_publication ops law before after state held forward called
 
 /-- Every finite nonnumeric ordinary opcode preserves control-map bounds,

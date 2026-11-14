@@ -425,8 +425,7 @@ theorem compiler_dead_op_open_instructions {A : Type} (ops : runtime.platform.Al
     (dead : before.reachable = false) (held : CompilerInstructionPrefix before)
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits = .ok (.Ok (),after)) :
     CompilerInstructionPrefix after := by
-  unfold runtime.compiler.lower.FunctionCompiler.op at called
-  rw [if_neg (by simp [dead])] at called
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)] at called
   exact compiler_observe_open_instructions ops law before after state held called
 
 end Itasca.Runtime.Compiler
@@ -449,8 +448,7 @@ theorem compiler_dead_op_checked_prefix {A : Type} (ops : runtime.platform.Alloc
     (called : runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits = .ok (.Ok (),after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   have checked := compiler_dead_op_open_instructions ops law before after state opcode a b bits dead held called
-  unfold runtime.compiler.lower.FunctionCompiler.op at called
-  rw [if_neg (by simp [dead])] at called
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)] at called
   exact ⟨checked,compiler_observe_exit_slots ops law before after state exits called⟩
 
 end Itasca.Runtime.Compiler

@@ -17,6 +17,16 @@ post-callback operand layout. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
+/-- Dead instructions only observe the validator state; opcode dispatch is skipped. -/
+theorem _root_.Itasca.runtime.compiler.lower.FunctionCompiler.op.dead {A : Type}
+    (ops : runtime.platform.Alloc A) (before : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (opcode : U16) (a b : U32) (bits : U128)
+    (dead : before.reachable = false) :
+    runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits =
+      runtime.compiler.FunctionCompiler.observe ops before state := by
+  unfold runtime.compiler.lower.FunctionCompiler.op
+  exact if_neg (by simp only [dead, Bool.false_eq_true, not_false_eq_true])
+
 def Lowered {A : Type} (before after : runtime.compiler.FunctionCompiler A)
     (instruction : runtime.bytecode.Instr) (stack : List valtype) : Prop :=
   after.function.code.val = before.function.code.val ++ [instruction] ∧

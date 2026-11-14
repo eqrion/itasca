@@ -34,8 +34,7 @@ theorem compiler_lower_simd_preserved_tables {A : Type} (ops : runtime.platform.
   by_cases reachable : before.reachable = true
   · rw [lower_simd_dispatch ops before state opcode a b bits reachable lower upper] at accepted
     exact compiler_simd_preserved_tables ops law before after state opcode a bits accepted
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     have tables := compiler_observe_tables ops law before after state (.Ok ()) accepted
     exact ⟨congrArg CompilerTables.indirect tables,congrArg CompilerTables.jumpTables tables⟩
 end Itasca.Runtime.Compiler

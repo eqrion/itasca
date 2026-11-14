@@ -34,8 +34,7 @@ theorem compiler_op65_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op66_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -53,8 +52,7 @@ theorem compiler_op66_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op32_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -91,8 +89,7 @@ theorem compiler_op32_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op33_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -141,8 +138,7 @@ theorem compiler_op33_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op34_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -191,8 +187,7 @@ theorem compiler_op34_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op16_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -223,8 +218,7 @@ theorem compiler_op16_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op1_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -240,8 +234,7 @@ theorem compiler_op1_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 theorem compiler_op26_cursor {A : Type} (ops : runtime.platform.Alloc A)
@@ -257,8 +250,7 @@ theorem compiler_op26_cursor {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' cursor_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
@@ -315,8 +307,7 @@ theorem compiler_op65_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op66_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -334,8 +325,7 @@ theorem compiler_op66_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op32_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -372,8 +362,7 @@ theorem compiler_op32_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op33_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -422,8 +411,7 @@ theorem compiler_op33_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op34_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -472,8 +460,7 @@ theorem compiler_op34_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op16_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -504,8 +491,7 @@ theorem compiler_op16_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op1_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -521,8 +507,7 @@ theorem compiler_op1_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 theorem compiler_op26_sources {A : Type} (ops : runtime.platform.Alloc A)
@@ -538,8 +523,7 @@ theorem compiler_op26_sources {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' sources_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_sources ops law before after state (.Ok ()) accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/

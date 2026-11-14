@@ -341,8 +341,7 @@ theorem StatefulReaderPost.instruction_prefix {jumpTables : List U32} {data env 
   | false =>
     have checked := compiler_dead_op_open_instructions ops law before after out (statefulOpcode op) a b 0#u128
       reachable held callback
-    unfold runtime.compiler.lower.FunctionCompiler.op at callback
-    rw [if_neg (by simp [reachable])] at callback
+    rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (reachable)] at callback
     exact ⟨checked,compiler_observe_exit_slots ops law before after out exits callback⟩
   | true =>
     obtain ⟨entered,retained⟩ := invariant.live reachable

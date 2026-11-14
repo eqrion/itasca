@@ -134,8 +134,7 @@ Successful callbacks retain the raw polymorphic stack observation. -/
         codeFits sourceFits coordinateFits tableFits
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state opcode a b bits =
         runtime.compiler.FunctionCompiler.observe ops compiler state := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+      rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 

@@ -304,8 +304,7 @@ set_option maxRecDepth 4096
     | some base =>
       simp only [difference,core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,lift,bind_ok]
       exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg reachable]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_indirect_call_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -349,8 +348,7 @@ set_option maxRecDepth 4096
           | Ok selector =>
             simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
             exact finish_op_observed ops law _ state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg reachable]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_on_call_total {A : Type} (ops : runtime.platform.Alloc A)

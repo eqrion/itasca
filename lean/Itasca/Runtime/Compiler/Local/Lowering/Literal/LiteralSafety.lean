@@ -30,8 +30,7 @@ set_option maxRecDepth 4096
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_on_i32_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -66,8 +65,7 @@ set_option maxRecDepth 4096
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_on_i64_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -102,8 +100,7 @@ set_option maxRecDepth 4096
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_on_f32_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -138,8 +135,7 @@ set_option maxRecDepth 4096
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_on_f64_const_total {A : Type} (ops : runtime.platform.Alloc A)

@@ -211,8 +211,7 @@ theorem compiler_op65_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -231,8 +230,7 @@ theorem compiler_op66_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -270,8 +268,7 @@ theorem compiler_op32_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -321,8 +318,7 @@ theorem compiler_op33_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -372,8 +368,7 @@ theorem compiler_op34_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -405,8 +400,7 @@ theorem compiler_op16_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -423,8 +417,7 @@ theorem compiler_op1_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 
@@ -441,8 +434,7 @@ theorem compiler_op26_capacity {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' capacity_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
       (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
 

@@ -48,8 +48,7 @@ open Aeneas Aeneas.Std
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state
         (integerOpcode op) 0#u32 0#u32 0#u128 =
         runtime.compiler.FunctionCompiler.observe ops compiler state := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+      rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 

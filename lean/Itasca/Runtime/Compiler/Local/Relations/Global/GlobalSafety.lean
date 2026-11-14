@@ -40,8 +40,7 @@ set_option maxRecDepth 4096 in
   · obtain ⟨wide, top, _⟩ := WP.spec_imp_exists (top_is_v128_total state.vals.deref)
     rw [lower_global_get_eq ops compiler state index wide live top]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 set_option maxRecDepth 4096 in
@@ -72,8 +71,7 @@ set_option maxRecDepth 4096 in
       step as ⟨difference, differenceEq⟩
       split <;> simp only [bind_ok] <;>
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 end Itasca.Runtime.Compiler

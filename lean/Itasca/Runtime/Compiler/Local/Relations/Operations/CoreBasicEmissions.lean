@@ -86,8 +86,7 @@ validator state, preserving code, labels, immutable metadata and deadness. -/
     (dead : compiler.reachable = false) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state opcode a b bits ⦃ out =>
       ObserveFrame compiler out.2 ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  rw [if_neg (by simp [dead])]
+  rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (dead)]
   exact compiler_observe_frame ops law compiler state
 
 @[step] theorem callback_return_dead {A : Type} (ops : runtime.platform.Alloc A)

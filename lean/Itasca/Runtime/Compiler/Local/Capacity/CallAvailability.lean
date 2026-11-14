@@ -195,8 +195,7 @@ theorem compiler_local_variable_available {A : Type} (ops : runtime.platform.All
         (layout live) live (found live)
     · exact lower_local_write_live_available ops bound available compiler state demand before index ty tee
         (layout live) live (found live)
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -252,8 +251,7 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
     · have single : statefulUsesPair op = false := Bool.eq_false_iff.mpr paired
       rw [lower_stateful_eq ops compiler state op first second a b 0#u32 live single reads]
       exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -387,8 +385,7 @@ theorem compiler_call_available {A : Type} (ops : runtime.platform.Alloc A)
     | some base =>
       simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
       exact finish_op_available_effect ops bound available compiler state demand _
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]
@@ -454,8 +451,7 @@ theorem compiler_indirect_call_available {A : Type} (ops : runtime.platform.Allo
         have budget : paired.budget = compiler.budget := by rw [frame]
         simpa only [budget] using finish_op_available_effect ops bound available paired state afterDemand
           (.CallIndirect index operand base)
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots)
     intro out post
     rw [post.2]

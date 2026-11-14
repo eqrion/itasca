@@ -123,8 +123,7 @@ theorem compiler_stateful_auxiliary_tables {A : Type} (ops : runtime.platform.Al
   · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
     cases op <;> simp only [statefulLowering] at accepted
     all_goals repeat' auxiliary_tables_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     have tables := compiler_observe_tables ops law before after state status accepted
     simpa only [CompilerTables.ofFunction, CompilerTables.mk.injEq, compilerAuxiliaryTables] using
       congrArg (fun t : CompilerTables => (t.simd,t.constants,t.jumpTables)) tables
@@ -138,8 +137,7 @@ theorem compiler_indirect_call_auxiliary_tables {A : Type} (ops : runtime.platfo
   · rw [lower_indirect_call_dispatch ops before state a b reach] at accepted
     unfold indirectCallLowering at accepted
     repeat' auxiliary_tables_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     have tables := compiler_observe_tables ops law before after state status accepted
     simpa only [CompilerTables.ofFunction, CompilerTables.mk.injEq, compilerAuxiliaryTables] using
       congrArg (fun t : CompilerTables => (t.simd,t.constants,t.jumpTables)) tables

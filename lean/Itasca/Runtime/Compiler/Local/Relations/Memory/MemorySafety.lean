@@ -23,8 +23,7 @@ open Aeneas Aeneas.Std
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
         memory_load_instruction_make, core.option.Option.ok_or]
       exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_memory_store_total {A} (ops : runtime.platform.Alloc A)
@@ -53,7 +52,6 @@ open Aeneas Aeneas.Std
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
           memory_store_instruction_make, core.option.Option.ok_or]
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 end Itasca.Runtime.Compiler

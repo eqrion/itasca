@@ -1,27 +1,27 @@
 {
   "all_goals": 1201,
-  "bare_simp": 8822,
-  "extra_unfold_files": 1379,
+  "bare_simp": 8815,
+  "extra_unfold_files": 1357,
   "extracted_functions_unfolded": 777,
   "extracted_functions_unfolded_in_3_or_more_files": 259,
-  "handwritten_lines": 287243,
+  "handwritten_lines": 287049,
   "heartbeat_overrides": 265,
   "layer_violations": 0,
   "lean_lines_by_area": {
-    "compiler": 97039,
+    "compiler": 96845,
     "interp": 48381,
     "store": 28778,
     "validator": 61179
   },
   "lean_lines_per_rust_line": {
-    "compiler": 46.9,
+    "compiler": 46.8,
     "interp": 19.3,
     "store": 30.8,
     "validator": 11.3
   },
   "max_import_depth": 64,
   "max_theorem_binders": 56,
-  "max_unfold_files": 52,
+  "max_unfold_files": 31,
   "median_module_lines": 249.0,
   "modules": 788,
   "modules_over_1500_lines": 1,
@@ -34,6 +34,6 @@
     "validator": 5397
   },
   "sorry": 0,
-  "theorems": 8963,
+  "theorems": 8964,
   "theorems_with_15_or_more_binders": 1010
 }

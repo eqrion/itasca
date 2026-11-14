@@ -65,7 +65,6 @@ theorem compiler_select_raw_total {A} (ops : runtime.platform.Alloc A)
       rw [lower]
       simp [selectLowering,missing,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    · unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
       exact compiler_observe_stack ops law compiler state
 end Itasca.Runtime.Compiler

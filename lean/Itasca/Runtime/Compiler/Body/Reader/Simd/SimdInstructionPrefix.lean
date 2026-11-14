@@ -607,8 +607,7 @@ theorem SimdReaderEvent.instruction_prefix {jumpTables : List U32} {A : Type} {o
     have checked := compiler_dead_op_open_instructions ops law before after out event.opcode event.a event.b event.bits
       reachable held event.callback
     have observed := event.callback
-    unfold runtime.compiler.lower.FunctionCompiler.op at observed
-    rw [if_neg (by simp [reachable])] at observed
+    rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (reachable)] at observed
     exact ⟨checked,compiler_observe_exit_slots ops law before after out exits observed⟩
   | true =>
     obtain ⟨entered,retained⟩ := invariant.live reachable

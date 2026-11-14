@@ -159,8 +159,7 @@ theorem compiler_lower_simd_auxiliary_growth {A : Type} (ops : runtime.platform.
     obtain ⟨code, simd, pool, indirect, poolEq⟩ :=
       compiler_simd_auxiliary_success ops law before after state opcode a bits accepted
     exact ⟨by omega, by omega, by omega, indirect, poolEq⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     obtain ⟨simd, pool, indirect, code⟩ :=
       observe_auxiliary_result ops law before after state (.Ok ()) accepted
     simp [simd, pool, indirect, code]

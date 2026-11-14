@@ -286,8 +286,7 @@ theorem compiler_op65_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op66_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -305,8 +304,7 @@ theorem compiler_op66_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op32_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -343,8 +341,7 @@ theorem compiler_op32_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op33_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -393,8 +390,7 @@ theorem compiler_op33_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op34_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -443,8 +439,7 @@ theorem compiler_op34_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op16_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -475,8 +470,7 @@ theorem compiler_op16_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op1_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -492,8 +486,7 @@ theorem compiler_op1_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 theorem compiler_op26_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -509,8 +502,7 @@ theorem compiler_op26_depths {A : Type} (ops : runtime.platform.Alloc A)
       rfl
     rw [run] at accepted
     repeat' scratch_preservation_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reach] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
     exact compiler_observe_depths ops law before after state (.Ok ()) accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
