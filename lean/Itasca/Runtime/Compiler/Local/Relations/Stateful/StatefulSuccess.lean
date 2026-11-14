@@ -102,7 +102,6 @@ Main declarations: `StatefulReads` and `lower_stateful_eq`. A direct consumer is
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 def statefulDepth (op : SourceMachine.Stateful.Instruction) : Usize :=
   match op.arity with

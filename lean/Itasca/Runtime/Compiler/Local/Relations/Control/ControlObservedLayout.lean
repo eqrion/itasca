@@ -18,7 +18,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
+
 theorem compiler_emit_reachable {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (instruction : runtime.bytecode.Instr)
     (status : core.result.Result Unit Itasca.error.VisitError)
@@ -183,7 +183,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 
 private theorem vector_restore {T : Type} (vector : alloc.vec.Vec T) (index : Usize)
@@ -250,7 +250,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
+
 /-- Branch emission only changes instructions, frame fixups and operand metadata;
 it never changes the structural control map, including on a normal rejection. -/
 theorem compiler_branch_controls_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -360,7 +360,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 
 open Lean Meta Elab Tactic in

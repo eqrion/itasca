@@ -285,7 +285,7 @@ theorem initializer_lower_global {A : Type} (ops : runtime.platform.Alloc A)
       after.functions.val = module.functions.val ++ [function] ∧
       after.global_initializers.val = module.global_initializers.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_global at success
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at success
   rw [initializer_slice_index _ _ global (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
@@ -347,7 +347,7 @@ theorem initializer_lower_element_value {A : Type} (ops : runtime.platform.Alloc
       after.functions.val = module.functions.val ++ [function] ∧
       outIndices.val = indices.val ++ [fnIndex] := by
   unfold runtime.compiler.initialize.lower_element_value at success
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok,
     initializer_vec_index _ _ expr valueFound, bind_ok] at success
@@ -393,7 +393,7 @@ theorem initializer_lower_data_active {A : Type} (ops : runtime.platform.Alloc A
       after.functions.val = module.functions.val ++ [function] ∧
       after.data_offsets.val = module.data_offsets.val ++ [some fnIndex] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, active] at success
   obtain ⟨⟨result, middle, b1⟩, expression, rest⟩ := initializer_bind_success success
@@ -432,7 +432,7 @@ theorem initializer_lower_data_passive {A : Type} (ops : runtime.platform.Alloc 
     after = { module with data_offsets := after.data_offsets } ∧
       after.data_offsets.val = module.data_offsets.val ++ [none] := by
   unfold runtime.compiler.initialize.lower_data_offset at success
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok, passive] at success
   obtain ⟨⟨result, b1, indices⟩, pushed, rest⟩ := initializer_bind_success success
@@ -556,7 +556,7 @@ theorem initializer_global_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop0.body at body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at body
     cases status with
     | Err error =>
@@ -708,7 +708,7 @@ theorem initializer_element_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, values, k, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_element_loop.body at body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
@@ -844,7 +844,7 @@ theorem initializer_lower_element {A : Type} (ops : runtime.platform.Alloc A)
       have oldOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets changed
       dsimp only at source oldRows oldOffsets
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env,
+        runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env,
         uncurry_apply_pair, source] at rest
       rw [element_offset_found _ _ segment found, bind_ok] at rest
       cases offsetEq : sourceElementOffset segment with

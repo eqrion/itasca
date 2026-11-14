@@ -11,6 +11,7 @@ import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: AllocatedTableLoop, AllocatedTypeLoop, AllocatedFunctionLoop, FunctionAllocatedPreparation, FunctionPreparation, InstanceItems, ShapeAssembly, ItemErrors, SourceAllocationLists.
@@ -64,7 +65,7 @@ theorem table_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffe
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.table_types.val.length := by
@@ -158,7 +159,7 @@ theorem type_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.types.val.length := by
@@ -268,7 +269,7 @@ theorem function_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBu
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by
@@ -464,7 +465,7 @@ theorem function_signature_loop {M A : Type} (memory : runtime.platform.MemoryBu
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by
@@ -633,7 +634,7 @@ theorem element_items_error (module : runtime.compiler.ExecutableModule) (items 
   unfold runtime.store.instantiate.Store.prepare_instance_loop1
   rw [loop.eq_def]
   simp only [runtime.store.instantiate.Store.prepare_instance_loop1.body,
-    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
+    runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   split <;> simp [core.result.Result.is_ok]
 
 /-- Passing the actual item limit supplies the store and fresh-instance vector
@@ -860,7 +861,7 @@ theorem element_items_loop_errors (module : runtime.compiler.ExecutableModule) (
   · rintro ⟨current, status, index⟩ ⟨errors, bound, total⟩
     dsimp only at errors bound total ⊢
     unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more

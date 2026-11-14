@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
@@ -73,8 +74,8 @@ theorem compiler_unreachable_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' control_cursor_step accepted using ops, law
+  obtain ⟨middle, _, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted).observation
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) observed rfl
 
 theorem compiler_return_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -170,8 +171,11 @@ theorem compiler_unreachable_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' control_sources_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_sources ops law before after state (.Ok ()) observed
+  | @emitted middle _ _ live emitted observed =>
+    exact (compiler_emit_sources ops law before middle .Unreachable emitted).trans
+      (compiler_observe_sources ops law {middle with reachable := false} after state (.Ok ()) observed)
 
 theorem compiler_return_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -250,8 +254,7 @@ theorem compiler_unreachable_stable_result {A : Type} (ops : runtime.platform.Al
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' metadata_control_step accepted using ops, law
+  exact (compiler_unreachable_ordinary_result ops law before after state status accepted).stable
 
 theorem compiler_return_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -763,8 +766,17 @@ theorem compiler_unreachable_capacity {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' control_capacity_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted with
+  | dead dead observed =>
+    have ⟨locals, bound⟩ := compiler_observe_capacity_bound ops law before after state (.Ok ()) observed
+    exact ⟨locals, bound rfl⟩
+  | @emitted middle _ _ live emitted observed =>
+    have preserve := compiler_emit_capacity_metadata ops before middle .Unreachable (.Ok ()) emitted
+    have fields : middle.function.local_slots = before.function.local_slots ∧
+        middle.function.slot_count = before.function.slot_count := by
+      simpa only [capacityMetadata, Prod.mk.injEq] using preserve
+    have ⟨locals, bound⟩ := compiler_observe_capacity_bound ops law {middle with reachable := false} after state (.Ok ()) observed
+    exact ⟨locals.trans fields.1, by simpa only [fields.1, fields.2] using bound rfl⟩
 
 theorem compiler_return_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -835,8 +847,11 @@ theorem compiler_unreachable_code_mono {A : Type} (ops : runtime.platform.Alloc 
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' code_mono_step accepted using ops, law
+  have code := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted).code law
+  rcases code with same | appended
+  · rw [same]
+  · rw [appended, List.length_append, List.length_singleton]
+    omega
 
 theorem compiler_return_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

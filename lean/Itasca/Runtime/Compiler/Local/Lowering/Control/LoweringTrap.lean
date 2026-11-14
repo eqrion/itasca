@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
@@ -964,24 +965,20 @@ open Aeneas Aeneas.Std
       out.1 = .Ok () → out.2.reachable = false ∧
         out.2.function.code.val = compiler.function.code.val ++ [.Unreachable] ∧
         out.2.frames = compiler.frames ∧ out.2.function.locals = compiler.function.locals ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-  rw [if_pos reachable]
-  step with compiler_emit ops law compiler .Unreachable codeFits sourceFits coordinateFits
-    as ⟨result, changed, emitted⟩
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    cases value
-    obtain ⟨budget, code, sources, exactState, appended, sourceAppended⟩ := emitted rfl
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with compiler_observe ops law { changed with reachable := false } state
-      as ⟨out, observed, accepted⟩
-    obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-    refine ⟨hr, ?_, ?_, ?_⟩
-    · simpa [exactState, hcode] using appended
-    · simpa [exactState] using hframes
-    · simpa [exactState] using hl
+  obtain ⟨⟨reply, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.total ops law compiler state codeFits sourceFits coordinateFits)
+  rw [called, WP.spec_ok]
+  intro accepted
+  dsimp only at accepted ⊢
+  subst reply
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops compiler after state (.Ok ()) called with
+  | dead dead observed => simp only [reachable, Bool.true_eq_false] at dead
+  | @emitted middle _ _ live emitted observed =>
+    have frame := compiler_observe_frame_raw ops {middle with reachable := false} state (.Ok ()) after observed
+    have exactEmission := ((runtime.compiler.FunctionCompiler.emit.inv ops compiler middle .Unreachable (.Ok ()) emitted).2 law).2 rfl
+    obtain ⟨used, code, sources, shape, _, appended, _⟩ := exactEmission
+    rw [frame, shape]
+    exact ⟨rfl, appended, rfl, rfl⟩
 
 end Itasca.Runtime.Compiler
 

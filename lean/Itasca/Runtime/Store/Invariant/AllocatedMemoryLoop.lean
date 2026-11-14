@@ -5,6 +5,7 @@ import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Preparation.PreparationResults
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: AddressOrder, AllocatedMemoryLoop.
@@ -149,7 +150,7 @@ theorem memory_allocated_loop {M A : Type} (memory : runtime.platform.MemoryBuff
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by

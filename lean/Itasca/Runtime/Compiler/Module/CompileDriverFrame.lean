@@ -6,6 +6,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
 import Itasca.Stream.Header
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: InitializerDataAvailable, InitializerElementsAvailable, InitializerOffsetAvailable, CompileDriverFrame.
@@ -26,13 +27,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- The executable module exposes its retained validated environment. -/
-@[step] theorem _root_.Itasca.runtime.compiler.ExecutableModule.env.spec
-    (module : runtime.compiler.ExecutableModule) :
-    runtime.compiler.ExecutableModule.env module ⦃ env => env = module.module.env ⦄ := by
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env,
-    WP.spec_ok]
-
 /-- Active offsets compile from independent constant-expression typing;
 passive data needs only its mapping append. Both paths accept from conservative
 source-independent reserve and two-instruction headroom bounds. -/
@@ -50,7 +44,7 @@ theorem initializer_data_offset_available {A : Type} (ops : runtime.platform.All
       out.2.2.limits = budget.limits ∧ out.2.1.module = module.module ∧
       initializerSize out.2.1 ≤ initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail,bind_ok]
   step as ⟨segment,found⟩
   have member : segment ∈ module.module.tail.data.val := by rw [found]; exact List.getElem_mem inside
@@ -134,7 +128,7 @@ theorem initializer_data_offsets_available {A : Type} (ops : runtime.platform.Al
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop2.body
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail,bind_ok]
     split
     · rename_i more
@@ -205,7 +199,7 @@ theorem initializer_element_value_available {A : Type} (ops : runtime.platform.A
       initializerSize out.2.1 = initializerSize module + 1 ∧ out.2.2.2.length = indices.length + 1 ⦄ := by
   have segmentBound := (List.getElem?_eq_some_iff.mp lookup).1
   unfold runtime.compiler.initialize.lower_element_value
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
   step as ⟨first,found⟩
   · simpa [alloc.vec.Vec.deref] using segmentBound
   have sameFirst : first = segment := by
@@ -287,7 +281,7 @@ theorem initializer_element_values_available {A : Type} (ops : runtime.platform.
     have currentLookup : current.module.env.elements.val[index.val]? = some segment := by simpa [same] using lookup
     have segmentBound := (List.getElem?_eq_some_iff.mp currentLookup).1
     unfold runtime.compiler.initialize.lower_element_loop.body
-    simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     step as ⟨selected,found⟩
     · simpa [alloc.vec.Vec.deref] using segmentBound
     have sameSegment : selected = segment := by
@@ -369,7 +363,7 @@ theorem initializer_element_available {A : Type} (ops : runtime.platform.Alloc A
     as ⟨status,rowBudget,rows,accepted,sameBudget,appended⟩
   subst status rowBudget
   simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-    runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env]
+    runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env]
   rw [same,element_offset_found module.module.env index segment lookup,bind_ok]
   have rowSize : initializerSize {middle with module := module.module, element_initializers := rows} = initializerSize middle + 1 := by
     simp only [initializerSize,appended,List.length_append,List.length_singleton]
@@ -470,7 +464,7 @@ theorem initializer_elements_available {A : Type} (ops : runtime.platform.Alloc 
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     split
     · rename_i more
       have currentBound : next.val < current.module.env.elements.val.length := by

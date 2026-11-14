@@ -1,11 +1,31 @@
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
+import Itasca.Generated.FunsCompiler
 
-/-! Syntactic certificates for synthetic constant-expression functions. The
-certificate records emitted instructions and embedded vector bits; source
-constant-expression typing and runtime reference resolution are separate facts. -/
+/-! Executable-module view equations and syntactic certificates for synthetic
+constant-expression functions. The certificate records emitted instructions
+and embedded vector bits; source constant-expression typing and runtime
+reference resolution are separate facts. -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
+
+/-- The executable module exposes its retained validated environment. -/
+theorem _root_.Itasca.runtime.compiler.ExecutableModule.env.eq
+    (module : runtime.compiler.ExecutableModule) :
+    runtime.compiler.ExecutableModule.env module = .ok module.module.env := by
+  rfl
+
+/-- The executable module exposes its retained validated tail. -/
+theorem _root_.Itasca.runtime.compiler.ExecutableModule.tail.eq
+    (module : runtime.compiler.ExecutableModule) :
+    runtime.compiler.ExecutableModule.tail module = .ok module.module.tail := by
+  rfl
+
+@[step] theorem _root_.Itasca.runtime.compiler.ExecutableModule.env.spec
+    (module : runtime.compiler.ExecutableModule) :
+    runtime.compiler.ExecutableModule.env module ⦃ env => env = module.module.env ⦄ := by
+  rw [runtime.compiler.ExecutableModule.env.eq]
+  simp only [WP.spec_ok]
 
 def initializerBits (lo hi : U64) : U128 :=
   ⟨(UScalar.cast .U128 lo).bv ||| ((UScalar.cast .U128 hi).bv <<< 64)⟩

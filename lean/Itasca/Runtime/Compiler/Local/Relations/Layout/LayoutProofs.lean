@@ -14,6 +14,14 @@ Main declarations: `compiler_width` and `observe_value`. A direct consumer is `C
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
+/-- Budget rejection records the requested resource and returns out of memory. -/
+theorem _root_.Itasca.runtime.compiler.Budget.reject.eq {A : Type}
+    (ops : runtime.platform.Alloc A) (budget : runtime.compiler.Budget A)
+    (resource : runtime.compiler.CompileResource) :
+    runtime.compiler.Budget.reject ops budget resource =
+      .ok (.OutOfMemory, { budget with error := some resource }) := by
+  rfl
+
 @[step] theorem compiler_width (ty : Itasca.wasm_types.ValueType) :
     runtime.value.width ty ⦃ word => word.val = width (Itasca.Translate.valueType ty) ⦄ := by
   cases ty <;> simp [runtime.value.width, Itasca.Translate.valueType, width, WP.spec_ok]
@@ -56,7 +64,7 @@ open Aeneas Aeneas.Std
   unfold runtime.compiler.Budget.push
   rw [reserve, bind_ok]
   cases answer with
-  | false => simp [runtime.compiler.Budget.reject, WP.spec_ok]
+  | false => simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
   | true =>
     change (do
       let after ← alloc.vec.Vec.push values value
@@ -79,7 +87,7 @@ theorem budget_push_success {A T : Type} (ops : runtime.platform.Alloc A)
   unfold runtime.compiler.Budget.push at success
   rw [reserve, bind_ok] at success
   cases answer with
-  | false => simp [runtime.compiler.Budget.reject] at success
+  | false => simp [runtime.compiler.Budget.reject.eq] at success
   | true =>
     simp only [uncurry_apply_pair, ↓reduceIte, alloc.vec.Vec.push] at success
     split at success
@@ -110,7 +118,7 @@ theorem budget_push_code_result {A T : Type} (ops : runtime.platform.Alloc A)
   rw [reserve, bind_ok] at accepted
   cases answer with
   | false =>
-    simp only [uncurry_apply_pair, Bool.false_eq_true, ↓reduceIte, runtime.compiler.Budget.reject,
+    simp only [uncurry_apply_pair, Bool.false_eq_true, ↓reduceIte, runtime.compiler.Budget.reject.eq,
       bind_ok, Result.ok.injEq, Prod.mk.injEq] at accepted
     exact Or.inl (congrArg (fun v : alloc.vec.Vec T => v.val) accepted.2.2).symm
   | true =>
@@ -223,5 +231,32 @@ theorem bounded_index_available (value : Usize) (bounded : value.val ≤ U32.max
   refine ⟨index,rfl,?_⟩
   simp only [indexEq,UScalar.cast_val_eq]
   scalar_tac
+
+/-- Normalize generated tuple continuations to the same projection form as the
+shared publication statement. -/
+theorem entry_uncurry_apply {X Y Z : Type} (next : X → Y → Z) (pair : X × Y) :
+    Std.uncurry next pair = next pair.1 pair.2 := by
+  cases pair
+  rfl
+
+theorem entry_uncurry_eq {X Y Z : Type} (next : X → Y → Z) :
+    Std.uncurry next = fun pair => next pair.1 pair.2 := by
+  funext pair
+  cases pair
+  rfl
+
+theorem entry_pair_match {X Y Z : Type} (pair : X × Y) (next : X → Y → Z) :
+    (match pair with | (x, y) => next x y) = next pair.1 pair.2 := by
+  cases pair
+  rfl
+
+/-- Normalize Rust's try-branch continuation without copying its caller. -/
+theorem entry_branch_bind {T E R : Type} (answer : core.result.Result T E)
+    (next : core.ops.control_flow.ControlFlow (core.result.Result Never E) T → Result R) :
+    Aeneas.Std.bind (core.result.Result.Insts.CoreOpsTry.branch answer) next =
+      match answer with
+      | .Ok value => next (.Continue value)
+      | .Err error => next (.Break (.Err error)) := by
+  cases answer <;> simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
 
 end Itasca.Runtime.Compiler

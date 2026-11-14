@@ -16,6 +16,7 @@ import Itasca.Runtime.Interp.Machine.Calls.CallStackEntry
 import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
 import Itasca.Runtime.Store.Invariant.Rollback
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: SourceExports, FunctionPayload, FunctionSourceAllocation, SourceFunctionAllocation, FunctionOrderLoop, ExecutableInstantiationCode, OwnedInitializerCauses, InternTypeCauses, FunctionTypeCauses, FunctionStagingCauses.
@@ -256,7 +257,7 @@ theorem function_payload_loop {M A : Type} (memory : runtime.platform.MemoryBuff
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by
@@ -505,7 +506,7 @@ theorem function_order_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by
@@ -811,7 +812,7 @@ theorem add_function_resource_cause {M A : Type} (memory : runtime.platform.Memo
       obtain ⟨rfl,rfl,rfl⟩ := run
       exact ⟨rfl,rfl,refusal⟩
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
-        runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.func_type_indices] at run
+        runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.func_type_indices] at run
       obtain ⟨sourceType,read,run⟩ := normal_bind_exists _ _ _ run
       simp only [lift,bind_ok] at run
       obtain ⟨signature,read,run⟩ := normal_bind_exists _ _ _ run
@@ -834,7 +835,7 @@ theorem add_type_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     ∃ ty, inst.module.module.env.types.val[index.val]? = some ty ∧
       after = store ∧ next = inst ∧ ty ∉ store.types.val ∧ TypeInternResourceCause allocator store ty error := by
   unfold runtime.store.instantiate.Store.add_instance_type at run
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.types,bind_ok] at run
   obtain ⟨ty,read,run⟩ := normal_bind_exists _ _ _ run
   have found : inst.module.module.env.types.val[index.val]? = some ty := by
     unfold Slice.index_usize at read
@@ -923,7 +924,7 @@ theorem function_staging_resource_loop {M A : Type} (memory : runtime.platform.M
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by

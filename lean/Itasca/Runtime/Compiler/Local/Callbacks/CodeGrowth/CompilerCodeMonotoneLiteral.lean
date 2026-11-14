@@ -123,7 +123,6 @@ Main declarations: `code_mono_effect` and `code_mono_close`. A direct consumer i
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 open Lean Meta Elab Tactic in
 elab "code_mono_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -209,7 +208,6 @@ Main declarations: `compiler_numeric_code_mono` and `compiler_core_code_mono`. A
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_numeric_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
@@ -265,7 +263,6 @@ Main declarations: `compiler_stateful_code_mono` and `compiler_indirect_call_cod
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_stateful_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
@@ -306,7 +303,6 @@ Main declarations: `compiler_op65_code_mono` and `compiler_drop_code_mono`. A di
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_op65_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

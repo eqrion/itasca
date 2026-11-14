@@ -4,6 +4,7 @@ import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Generated.Types
 import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: SegmentEffects, InitializerMetadata, StoreParts, ElementShapeLoop.
@@ -275,7 +276,7 @@ theorem element_initializers_shape_loop {M P F A : Type}
         subst found
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
-        simp only [runtime.compiler.ExecutableModule.env,
+        simp only [runtime.compiler.ExecutableModule.env.eq,
           Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩

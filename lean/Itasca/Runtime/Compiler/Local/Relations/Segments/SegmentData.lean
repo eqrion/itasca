@@ -1,4 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: SegmentProgram, SegmentEmit, SegmentData.
@@ -165,7 +166,7 @@ theorem emit_data_program {A : Type} (ops : runtime.platform.Alloc A)
       (instructions = [] ∧ after.slot_count = before.slot_count ∨
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_data at success
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok] at success
   rw [initializer_vec_index _ _ segment found, bind_ok] at success
   cases mode : segment.mode with

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
@@ -240,7 +241,6 @@ Main declarations: `compiler_patch_ordinary_result` and `compiler_pc_ordinary_re
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Patching only replaces an instruction; all function and control metadata
 survive every normal return, including a rejected patch site. -/
@@ -362,7 +362,6 @@ Main declarations: `metadata_effect` and `metadata_close`. A direct consumer is 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 open Lean Meta Elab Tactic in
 elab "metadata_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -441,7 +440,6 @@ Main declarations: `compiler_enter_stable_result`. A direct consumer is `Compile
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 theorem compiler_enter_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -474,7 +472,6 @@ Main declarations: `compiler_end_stable_result` and `compiler_else_stable_result
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 theorem compiler_end_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -552,7 +549,6 @@ Main declarations: `compiler_op65_ordinary_result` and `compiler_drop_ordinary_r
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_op65_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -889,7 +885,6 @@ Main declarations: `compiler_unreachable_ordinary_result` and `compiler_return_o
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_unreachable_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -897,8 +892,11 @@ theorem compiler_unreachable_ordinary_result {A : Type} (ops : runtime.platform.
     (state : Itasca.code.OpIterState) (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops before state = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' metadata_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state status accepted
+  have frame := effect.frame
+  refine ⟨?_, effect.capacity law⟩
+  rw [frame]
+  rfl
 
 theorem compiler_return_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

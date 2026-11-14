@@ -116,17 +116,16 @@ theorem _root_.Itasca.runtime.compiler.FunctionCompiler.copy.available {A : Type
     (before : runtime.compiler.FunctionCompiler A) (dst src count : U32)
     (demand : count ≠ 0#u32 → src ≠ dst → CopyDemand before bound) :
     runtime.compiler.FunctionCompiler.copy ops before dst src count ⦃ (status, after) =>
-      status = .Ok () ∧ (after = before ∨ EmittedExact before after (transferInstruction dst src count)) ⦄ := by
+      status = .Ok () ∧ (if count = 0#u32 ∨ src = dst then after = before
+        else EmittedExact before after (transferInstruction dst src count)) ⦄ := by
   rw [runtime.compiler.FunctionCompiler.copy.eq]
   by_cases elided : count = 0#u32 ∨ src = dst
-  · rw [if_pos elided]
-    exact WP.spec.ret ⟨rfl, Or.inl rfl⟩
-  · rw [if_neg elided]
+  · simp only [if_pos elided]
+    exact WP.spec.ret ⟨rfl, rfl⟩
+  · simp only [if_neg elided]
     have room := demand (fun zero => elided (Or.inl zero)) (fun same => elided (Or.inr same))
-    apply WP.spec_mono (runtime.compiler.FunctionCompiler.emit.available ops bound available before _
-      room.pc room.codeCapacity room.sourceCapacity room.codeReserve room.sourceReserve room.coordinate room.instruction)
-    intro output effect
-    exact ⟨effect.1, Or.inr effect.2⟩
+    exact runtime.compiler.FunctionCompiler.emit.available ops bound available before _
+      room.pc room.codeCapacity room.sourceCapacity room.codeReserve room.sourceReserve room.coordinate room.instruction
 
 /-- The compiler's copy helper elides an empty or identity transfer. -/
 theorem compiler_copy_elided {A : Type} (ops : runtime.platform.Alloc A)

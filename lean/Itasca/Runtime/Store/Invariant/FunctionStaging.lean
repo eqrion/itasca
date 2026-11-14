@@ -5,6 +5,7 @@ import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Relations.Defaults
 import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Representation.StoreCapacity
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: Extension, ValueDecode, ValueRead, InvalidWrite, TypeStaging, FunctionStaging.
@@ -303,7 +304,7 @@ theorem add_instance_type_effect {M A : Type} (memory : runtime.platform.MemoryB
     runtime.store.instantiate.Store.add_instance_type memory allocator store inst index
       ⦃ out => TypeStageEffect store inst inst.module.module.env.types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_type
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -442,7 +443,7 @@ theorem type_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer M
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.types.val.length := by
@@ -545,7 +546,7 @@ theorem add_instance_function_effect {M A : Type} (memory : runtime.platform.Mem
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, FunctionStageEffect]
     · simp [core.result.Result.Insts.CoreOpsTry.branch,
-        runtime.compiler.ExecutableModule.env,
+        runtime.compiler.ExecutableModule.env.eq,
         Itasca.metadata.Module.impl.env,
         Itasca.metadata.Env.impl.func_type_indices]
       have sourceBound : index.val < inst.module.module.env.func_type_indices.deref.length := by
@@ -659,7 +660,7 @@ theorem function_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuff
       have eq := congrArg runtime.store.ModuleInst.types mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop4.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.func_type_indices, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.func_type_indices.val.length := by

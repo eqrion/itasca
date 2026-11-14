@@ -14,6 +14,7 @@ import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: DataErrorLoop, ElementErrors, ElementErrorLoop, DataGlobalTypes, ElementGlobalTypes, ElementBoundsLoop, InitializerTableMemoryBindings, ElementOrderLoop.
@@ -43,7 +44,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
     obtain ⟨inst, found, rest⟩ := normal_bind_exists _ _ _ run
     clear run
     rename' rest => run
-    simp only [runtime.compiler.ExecutableModule.tail, Itasca.metadata.Module.impl.tail, bind_ok] at run
+    simp only [runtime.compiler.ExecutableModule.tail.eq, Itasca.metadata.Module.impl.tail, bind_ok] at run
     split at run
     · cases status with
       | Err error =>
@@ -65,7 +66,7 @@ theorem data_staging_errors {M A : Type} (memory : runtime.platform.MemoryBuffer
         have nextRun : runtime.store.instantiate.Store.prepare_instance_loop9 memory allocator nextStore nextStatus nextIndex instanceIndex =
             .ok (storeStateParts after result) := by
           simpa only [uncurry_apply_pair, bind_ok, runtime.store.instantiate.Store.prepare_instance_loop9,
-            runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail, Itasca.metadata.Module.impl.tail, core.result.Result.is_ok] using tail
+            runtime.store.instantiate.Store.prepare_instance_loop9.body, runtime.compiler.ExecutableModule.tail.eq, Itasca.metadata.Module.impl.tail, core.result.Result.is_ok] using tail
         exact ih _ smaller nextStore nextIndex nextStatus nextAllowed nextRun rfl
     · simp only [bind_ok, Result.ok.injEq] at run
       have statuses := ((store_state_parts_inj _ _ _ _).mp run).2
@@ -155,7 +156,7 @@ theorem element_initializers_loop_errors {M P F A : Type}
         subst found
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
-        simp only [runtime.compiler.ExecutableModule.env,
+        simp only [runtime.compiler.ExecutableModule.env.eq,
           Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -216,7 +217,7 @@ theorem add_element_errors {M P F A : Type}
     ErrorAllowed ResourceError out.1 := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun⟩ := reserve_wrapper_eq allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -291,7 +292,7 @@ theorem element_staging_loop_errors {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
@@ -397,7 +398,7 @@ theorem data_global_type_staging_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -496,7 +497,7 @@ theorem element_global_type_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
@@ -624,7 +625,7 @@ theorem add_instance_element_bounded_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -738,7 +739,7 @@ theorem element_bounds_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
@@ -884,7 +885,7 @@ theorem element_order_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more

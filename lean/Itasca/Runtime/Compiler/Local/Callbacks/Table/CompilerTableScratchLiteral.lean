@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
@@ -86,8 +87,9 @@ theorem compiler_unreachable_tables {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     CompilerTables.ofFunction after.function = CompilerTables.ofFunction before.function := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' control_tables_step accepted using ops, law
+  have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted).frame
+  rw [frame]
+  rfl
 
 theorem compiler_return_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -207,8 +209,8 @@ theorem compiler_unreachable_depths {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (), after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  repeat' scratch_preservation_step accepted using ops, law
+  have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted).frame
+  rw [frame]
 
 theorem compiler_return_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

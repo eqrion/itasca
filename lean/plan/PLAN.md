@@ -1223,7 +1223,9 @@ stop and wait for the user:
 ### 5.5 Rollout
 
 In progress: [remaining-helper contracts and targeted checks](notes/step55-helpers.md).
-Copy, patch, pair, and finish_op each have one unfold owner.
+Copy, patch, pair, finish_op, and on_unreachable each have one unfold owner.
+Accessor equations consolidate env/tail/reject; compiler heartbeat overrides are
+down to 150. Control-callback rollout continues.
 
 Same method, bottom-up, in this order (unfold counts are today's):
 

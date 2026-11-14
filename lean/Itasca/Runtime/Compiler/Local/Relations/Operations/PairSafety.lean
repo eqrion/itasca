@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
@@ -98,19 +99,16 @@ set_option maxRecDepth 4096
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_unreachable compiler state ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops compiler state ⦃ _ ⦄
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-  by_cases live : compiler.reachable = true
-  · rw [if_pos live]
-    step with compiler_emit ops law compiler .Unreachable codeFits sourceFits coordinateFits
-      as ⟨answer,emitted,_⟩
-    cases answer with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok value =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      exact compiler_observe_stack ops law _ state
-  · rw [if_neg live]
-    exact compiler_observe_stack ops law compiler state
+  obtain ⟨⟨reply, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.total ops law compiler state codeFits sourceFits coordinateFits)
+  rw [called, WP.spec_ok]
+  intro accepted
+  dsimp only at accepted ⊢
+  subst reply
+  obtain ⟨middle, _, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops compiler after state (.Ok ()) called).observation
+  have post := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at post
+  exact post rfl
 
 @[step] theorem compiler_on_return_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)

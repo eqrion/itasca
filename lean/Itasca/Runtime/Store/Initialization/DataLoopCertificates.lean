@@ -6,6 +6,7 @@ import Itasca.Runtime.Store.Initialization.ElementSourceStaging
 import Itasca.Runtime.Store.Initialization.InitializerErrors
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: DataStagingLoop, DataLoopCertificates.
@@ -58,7 +59,7 @@ theorem data_staging_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -150,7 +151,7 @@ theorem data_bounds_staging_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -259,7 +260,7 @@ theorem data_order_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -352,7 +353,7 @@ theorem data_payload_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more

@@ -5,6 +5,7 @@ import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Store.Api.DefineTable
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Module.Env.Basic
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: LinkEffects, LinkMaps, LinkedOwners.
@@ -69,7 +70,7 @@ theorem link_function {M : Type} (ops : runtime.platform.MemoryBuffer M)
        s.types.val[(s.funcs.val[address.index.val]).signature.val]'((hs.functions _ (by simp)).1) =
          inst.module.module.env.types.val[typeIndex.val]) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
@@ -114,7 +115,7 @@ theorem link_memory {M : Type} (ops : runtime.platform.MemoryBuffer M)
        LimitsMatch ((view (s.memories.val[address.index.val]).buf).length / 65536)
          (s.memories.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
@@ -171,7 +172,7 @@ theorem link_table {M : Type} (ops : runtime.platform.MemoryBuffer M)
        LimitsMatch (s.tables.val[address.index.val]).elements.length
          (s.tables.val[address.index.val]).maximum required.limits) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
@@ -215,7 +216,7 @@ theorem link_global {M : Type} (ops : runtime.platform.MemoryBuffer M)
        result.types = inst.types ∧ result.elems = inst.elems ∧ result.datas = inst.datas ∧
        (s.globals.val[address.index.val]).ty = required) ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
@@ -253,7 +254,7 @@ theorem link_wrong_kind {M : Type} (ops : runtime.platform.MemoryBuffer M)
     runtime.store.instantiate.Store.link_import ops s inst i external ⦃ answer after result =>
       answer = .Err (.Link .IncompatibleImportType) ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩
@@ -275,7 +276,7 @@ theorem link_foreign {M : Type} (ops : runtime.platform.MemoryBuffer M)
     runtime.store.instantiate.Store.link_import ops s inst i external ⦃ answer after result =>
       ∃ error, answer = .Err error ∧ after = s ∧ result = inst ⦄ := by
   unfold runtime.store.instantiate.Store.link_import
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok]
   have hb : i.val < inst.module.module.env.imports.deref.length := by simpa [alloc.vec.Vec.deref] using hi
   step as ⟨entry, hentry⟩

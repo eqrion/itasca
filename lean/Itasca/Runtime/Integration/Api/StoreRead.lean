@@ -1,6 +1,7 @@
 import Itasca.Runtime.Integration.Api.StoreCreate
 import Itasca.Runtime.Store.Api.Exports
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-! Public store reads agree with the retained objects and their decoded source
 components. Issued handles justify the unchecked index after ownership checks. -/

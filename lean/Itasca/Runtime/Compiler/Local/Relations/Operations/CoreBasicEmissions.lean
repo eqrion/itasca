@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
@@ -87,9 +88,9 @@ validator state, preserving code, labels, immutable metadata and deadness. -/
     (state : Itasca.code.OpIterState) (dead : compiler.reachable = false) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops compiler state ⦃ out =>
       ObserveFrame compiler out.2 ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
-  simp only [dead, Bool.false_eq_true, ite_false]
+  rw [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.dead ops compiler state dead]
   exact compiler_observe_frame ops law compiler state
+
 end Itasca.Runtime.Compiler
 
 end

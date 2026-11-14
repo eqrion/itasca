@@ -7,6 +7,7 @@ import Itasca.Module.Env.Basic
 import Itasca.Module.Elab.TypingInversion
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.ElementLoop
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: MemoryStaging, TableStaging, TableMemoryBindings, ExportBounds, GlobalStaging, MemoryBindingLoop.
@@ -48,7 +49,7 @@ theorem add_instance_memory_effect {M A : Type} (memory : runtime.platform.Memor
     runtime.store.instantiate.Store.add_instance_memory memory allocator store inst index
       ⦃ out => MemoryStageEffect view store inst inst.module.module.env.mem_types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_memory
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.mem_types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -174,7 +175,7 @@ theorem memory_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by
@@ -262,7 +263,7 @@ theorem add_instance_table_effect {M A : Type} (memory : runtime.platform.Memory
     runtime.store.instantiate.Store.add_instance_table memory allocator store inst index
       ⦃ out => TableStageEffect store inst inst.module.module.env.table_types.val[index.val] out ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_table
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, bind_ok]
+  simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, bind_ok]
   have sliceBound : index.val < inst.module.module.env.table_types.deref.length := by
     simpa [alloc.vec.Vec.deref] using bound
   step as ⟨ty, read⟩
@@ -363,7 +364,7 @@ theorem table_staging_loop {M A : Type} (memory : runtime.platform.MemoryBuffer 
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.table_types.val.length := by
@@ -638,7 +639,7 @@ theorem memory_binding_staging_loop {M A : Type} (memory : runtime.platform.Memo
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by

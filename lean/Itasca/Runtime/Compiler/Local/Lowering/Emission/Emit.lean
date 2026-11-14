@@ -16,7 +16,7 @@ open Aeneas Aeneas.Std Itasca.ResultFacts
       (∃ budget, out.2 = { compiler with budget }) ⦄ := by
   unfold runtime.compiler.FunctionCompiler.pc
   step*
-  all_goals simp [runtime.compiler.Budget.reject]
+  all_goals simp [runtime.compiler.Budget.reject.eq]
   refine ⟨?_, ⟨compiler.budget, rfl⟩⟩
   simp_all [core.num.U32.MAX, U32.rMax]
   scalar_tac
@@ -28,7 +28,7 @@ open Aeneas Aeneas.Std Itasca.ResultFacts
       (out.1 = .Ok () → out.2.instructions.val = budget.instructions.val + 1) ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp [runtime.compiler.Budget.reject, WP.spec_ok]
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
   · step
     simp_all
 
@@ -110,7 +110,7 @@ theorem charge_instruction_exact {A : Type} (ops : runtime.platform.Alloc A)
         used.val = budget.instructions.val + 1 ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp only [runtime.compiler.Budget.reject, bind_ok, WP.spec_ok, uncurry_apply_pair,
+  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
       reduceCtorEq, false_implies]
   · step as ⟨used, added⟩
     intro _

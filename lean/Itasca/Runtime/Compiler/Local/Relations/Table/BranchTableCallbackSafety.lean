@@ -57,7 +57,7 @@ private theorem charge_branch_total {A} (ops : runtime.platform.Alloc A)
     runtime.compiler.Budget.charge ops budget .BranchTableEntries ⦃ _ => True ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp [runtime.compiler.Budget.reject]
+  · simp [runtime.compiler.Budget.reject.eq]
   · step
 
 @[step] theorem compiler_table_label_total {A} (ops : runtime.platform.Alloc A)

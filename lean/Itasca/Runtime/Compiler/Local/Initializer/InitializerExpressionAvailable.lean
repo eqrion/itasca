@@ -1,6 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: InitializerElementLoop, InitializerComplete, InitializerAcceptance, InitializerExpressionAvailable.
@@ -111,7 +112,7 @@ theorem initializer_elements_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop1.body at body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
@@ -292,7 +293,7 @@ theorem initializer_data_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨module, b, i, status⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop2.body at body
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>

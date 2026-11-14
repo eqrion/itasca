@@ -11,6 +11,7 @@ import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Preparation.AllocationTableMemory
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.PreparationResults
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: GlobalErrors, GlobalLoop, GlobalErrorLoop, TableTypes, GlobalLoopCertificates, GlobalMapPreservation, TableMemoryOrder, MemoryAllocationLoop.
@@ -54,7 +55,7 @@ theorem add_global_errors {M P F A : Type}
   simp only [WP.spec_ok] at errors
   unfold runtime.store.instantiate.Store.add_instance_global at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst hi,
-    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at run
+    runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg)] at run
   simp only [bind_ok,
     Compiler.initializer_vec_index inst.module.global_initializers index function hmapping,
@@ -142,7 +143,7 @@ theorem global_staging_loop_errors {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
@@ -321,7 +322,7 @@ theorem global_content_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
@@ -438,7 +439,7 @@ theorem global_order_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
@@ -554,7 +555,7 @@ theorem global_source_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
@@ -674,7 +675,7 @@ theorem global_type_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more
@@ -865,7 +866,7 @@ theorem memory_allocation_staging_loop {M A : Type} (memory : runtime.platform.M
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by

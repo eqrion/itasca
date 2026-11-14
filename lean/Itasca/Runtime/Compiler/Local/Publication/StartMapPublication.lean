@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 import Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
@@ -605,20 +606,13 @@ theorem compiler_unreachable_map_publication {A : Type} (ops : runtime.platform.
     (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable ops before state = .ok (.Ok (),after)) :
     ControlMapPublication after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at called
-  split at called
-  · obtain ⟨⟨result,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      have bounds := compiler_emit_map_publication ops law before middle .Unreachable held emitted
-      have cursor := compiler_emit_cursor ops before middle .Unreachable (.Ok ()) emitted
-      exact compiler_observe_map_publication ops law {middle with reachable := false} after state
-        (bounds.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) rest
-  · exact compiler_observe_map_publication ops law before after state held forward called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_map_publication ops law before after state held forward observed
+  | @emitted middle _ _ live emitted observed =>
+    have bounds := compiler_emit_map_publication ops law before middle .Unreachable held emitted
+    have cursor := compiler_emit_cursor ops before middle .Unreachable (.Ok ()) emitted
+    exact compiler_observe_map_publication ops law {middle with reachable := false} after state
+      (bounds.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) observed
 
 /-- Actual RETURN preserves maps and owners while emitting its return instruction. -/
 theorem compiler_return_map_publication {A : Type} (ops : runtime.platform.Alloc A)

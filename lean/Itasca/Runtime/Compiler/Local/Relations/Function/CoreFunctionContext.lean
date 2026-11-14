@@ -203,10 +203,10 @@ open Aeneas Aeneas.Std
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
   simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok]
   split
-  · simp [runtime.compiler.Budget.reject]
+  · simp [runtime.compiler.Budget.reject.eq]
   · simp only [Itasca.metadata.Env.impl.types, bind_ok]
     split
-    · simp [runtime.compiler.Budget.reject]
+    · simp [runtime.compiler.Budget.reject.eq]
     · step with capture_signatures_loop_frame ops law scheduler env 0#usize (.Ok ())
         (by simp) (by intro _; simp [emptyTypes, SignatureSequence])
         as ⟨signatures, words, completed, functions, tail, codeStart, budget, status, effect⟩

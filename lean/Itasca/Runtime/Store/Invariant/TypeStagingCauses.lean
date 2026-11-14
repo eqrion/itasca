@@ -3,6 +3,7 @@ import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
 import Itasca.Runtime.Store.Preparation.PreparationCalls
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: InstanceItemCauses, TypeStagingCauses.
@@ -82,7 +83,7 @@ theorem element_items_resource_causes (module : runtime.compiler.ExecutableModul
   · rintro ⟨current,status,index⟩ ⟨bound,invariant⟩
     dsimp only at bound invariant ⊢
     unfold runtime.store.instantiate.Store.prepare_instance_loop1.body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
     split
     · rename_i more
@@ -176,7 +177,7 @@ theorem type_staging_resource_loop {M A : Type} (memory : runtime.platform.Memor
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.types.val.length := by

@@ -18,7 +18,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 theorem compiler_table_branch_growth {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -39,7 +38,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Each auxiliary entry is charged to a newly emitted instruction. -/
 def AuxiliaryGrowth {A} (before after : runtime.compiler.FunctionCompiler A) : Prop :=
@@ -157,7 +155,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

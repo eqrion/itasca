@@ -59,7 +59,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_emit_tables {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (instruction : runtime.bytecode.Instr)
     (status : core.result.Result Unit Itasca.error.VisitError)
@@ -217,7 +216,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 open Lean Meta Elab Tactic in
 elab "table_preservation_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -290,7 +288,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_observe_depths {A : Type} (ops : runtime.platform.Alloc A)
@@ -454,7 +451,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_numeric_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (op : SourceMachine.Numeric.Instruction)
@@ -504,7 +500,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_stateful_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
@@ -540,7 +535,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 def compilerAuxiliaryTables (function : runtime.bytecode.CompiledFunction) :=
   (function.simd.val,function.v128_pool.val,function.jump_tables.val)

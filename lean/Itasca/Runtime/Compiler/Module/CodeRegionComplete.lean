@@ -162,10 +162,10 @@ theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Allo
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready at accepted
   simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok] at accepted
   split at accepted
-  · simp [runtime.compiler.Budget.reject] at accepted
+  · simp [runtime.compiler.Budget.reject.eq] at accepted
   · simp only [Itasca.metadata.Env.impl.types, bind_ok] at accepted
     split at accepted
-    · simp [runtime.compiler.Budget.reject] at accepted
+    · simp [runtime.compiler.Budget.reject.eq] at accepted
     · obtain ⟨⟨signatures, slots, completed, functions, tail, start, budget, status⟩, loop0, rest⟩ :=
         bind_ok_inv _ _ _ accepted
       have frame0 := environment_loop0_frame allocator before env 0#usize (.Ok ()) _ loop0

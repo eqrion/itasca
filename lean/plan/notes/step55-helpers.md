@@ -34,3 +34,31 @@ contracts report only propext, Classical.choice, and Quot.sound.
 Full integration and the headline audit remain deferred to the next broad
 rollout checkpoint, under the user's approved validation schedule. Phase 5.5
 continues with branch and control callbacks; this note does not mark it complete.
+
+## Unreachable and accessor checkpoint
+
+The next batch gives on_unreachable a single unfold owner and canonical
+inversion, totality, and exact-budget availability contracts. Fifteen consumer
+proofs now use those contracts; their focused combined check passes. The
+operational effect retains failed emission state and final observation calls,
+so allocator-independent frame claims and partial-error behavior are preserved.
+
+ExecutableModule.env and tail now have owner equations in Initializer. Existing
+consumers use those equations, and env.spec moves there with its header unchanged.
+Budget.reject has one reflexive equation in LayoutProofs. Copy availability is
+strengthened to distinguish an elided unchanged state from an exact emission;
+its existing consumer statement is unchanged. Four entry normalization lemmas
+move unchanged from EnterContracts into LayoutProofs for lower-level reuse.
+
+Twenty-six additional compiler heartbeat overrides are removed after full-module
+checks at default limits. Two attempted removals still time out and are retained.
+Compiler heartbeat overrides are now 150. Compared with the preceding helper
+checkpoint, global extra_unfold_files falls from 1,280 to 1,221; compiler duplicate
+unfold-owner files fall from 341 to 282. Compiler lines rise from 97,463 to 97,670
+(+207); the phase-wide line-ratio goal remains outstanding. There are 791
+handwritten modules and no new layering violations. The targeted consumer batch passes all 3,947 jobs. The exact checkpoint source
+snapshot passes lint. Existing consumer headers remain unchanged; the intentional
+Copy.available strengthening is the only changed shared theorem header.
+
+Full integration and headline audit remain deferred. Branch, else, end and return
+contracts are ongoing work, excluded from this checkpoint's metrics and claims.

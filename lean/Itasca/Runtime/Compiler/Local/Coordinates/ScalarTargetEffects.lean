@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates
@@ -314,8 +315,13 @@ theorem compiler_unreachable_source_coordinates {A : Type} (ops : runtime.platfo
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable
       ops before state = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at called
-  repeat' control_coordinates_step called using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_source_coordinates ops law before after state held forward observed
+  | @emitted middle _ _ live emitted observed =>
+    have coordinates := compiler_emit_source_coordinates ops law before middle .Unreachable held inside emitted
+    have cursor := compiler_emit_cursor ops before middle .Unreachable (.Ok ()) emitted
+    exact compiler_observe_source_coordinates ops law {middle with reachable := false} after state coordinates
+      (by simpa only [cursor] using forward) observed
 
 /-- The actual return callback retains source-coordinate publication bounds. -/
 theorem compiler_return_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)

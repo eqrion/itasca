@@ -9,6 +9,7 @@ import Itasca.Runtime.Store.Initialization.SegmentReady
 import Itasca.Runtime.Store.Initialization.ElementTypes
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Compiler.Local.Relations.Function.Function
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: ElementContentEffect, SegmentGlobalMetadata, DataValueMetadata, SegmentBoundsEffects, ElementCompleteLoop, InitializerMetadataCertificates, ElementSourceLoop, ElementValues, ElementSourceStaging.
@@ -73,7 +74,7 @@ theorem add_instance_element_content_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -310,7 +311,7 @@ theorem element_complete_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
@@ -567,7 +568,7 @@ theorem element_initializers_source_loop {M P F A : Type}
         subst found
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
-        simp only [runtime.compiler.ExecutableModule.env,
+        simp only [runtime.compiler.ExecutableModule.env.eq,
           Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -677,7 +678,7 @@ theorem add_instance_element_value_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -854,7 +855,7 @@ theorem element_source_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more

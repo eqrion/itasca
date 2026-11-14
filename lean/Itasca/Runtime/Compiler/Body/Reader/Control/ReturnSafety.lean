@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
@@ -124,32 +125,23 @@ theorem StructuredCompilerPrefix.unreachable {jumpTables : List Aeneas.Std.U32} 
       state.vals.val state.pos.val ∧ after.reachable = false := by
   have sources := compiler_unreachable_sources ops law before after state accepted
   have cursor := compiler_unreachable_cursor ops law before after state accepted
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable at accepted
-  split at accepted
-  · rename_i reachable
-    obtain ⟨⟨result, middle⟩, emitted, observed⟩ := bind_ok_inv _ _ _ accepted
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at observed
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at observed
-      have emittedMetadata := compiler_emit_ordinary_result ops before middle .Unreachable (.Ok ()) emitted
-      have observedMetadata := compiler_observe_ordinary_result ops law {middle with reachable := false} after state (.Ok ()) observed
-      have ordinary : CompilerOrdinaryStable before after := emittedMetadata.trans (by
-        exact ⟨observedMetadata.metadata, observedMetadata.capacity⟩)
-      have frame := compiler_observe_frame ops law {middle with reachable := false} state
-      rw [observed, WP.spec_ok] at frame
-      change ObserveFrame {middle with reachable := false} after at frame
-      have code := compiler_emit_code_success ops law before middle .Unreachable emitted
-      have codeFinal : after.function.code.val = before.function.code.val ++ [.Unreachable] := by rw [frame]; exact code
-      have dead : after.reachable = false := by rw [frame]
-      exact ⟨invariant.terminate reachable dead ordinary (.unreachable _) codeFinal sources consumed (by rw [cursor]), dead⟩
-  · rename_i notReachable
-    have dead : before.reachable = false := Bool.eq_false_iff.mpr notReachable
-    have ordinary := compiler_observe_ordinary_result ops law before after state (.Ok ()) accepted
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_unreachable.inv ops before after state (.Ok ()) accepted with
+  | @emitted middle _ _ reachable emitted observed =>
+    have emittedMetadata := compiler_emit_ordinary_result ops before middle .Unreachable (.Ok ()) emitted
+    have observedMetadata := compiler_observe_ordinary_result ops law {middle with reachable := false} after state (.Ok ()) observed
+    have ordinary : CompilerOrdinaryStable before after := emittedMetadata.trans (by
+      exact ⟨observedMetadata.metadata, observedMetadata.capacity⟩)
+    have frame := compiler_observe_frame ops law {middle with reachable := false} state
+    rw [observed, WP.spec_ok] at frame
+    change ObserveFrame {middle with reachable := false} after at frame
+    have code := compiler_emit_code_success ops law before middle .Unreachable emitted
+    have codeFinal : after.function.code.val = before.function.code.val ++ [.Unreachable] := by rw [frame]; exact code
+    have dead : after.reachable = false := by rw [frame]
+    exact ⟨invariant.terminate reachable dead ordinary (.unreachable _) codeFinal sources consumed (by rw [cursor]), dead⟩
+  | dead dead observed =>
+    have ordinary := compiler_observe_ordinary_result ops law before after state (.Ok ()) observed
     have frame := compiler_observe_frame ops law before state
-    rw [accepted, WP.spec_ok] at frame
+    rw [observed, WP.spec_ok] at frame
     change ObserveFrame before after at frame
     have deadAfter : after.reachable = false := by rw [frame]; exact dead
     have unchanged : after.function.code = before.function.code := by rw [frame]

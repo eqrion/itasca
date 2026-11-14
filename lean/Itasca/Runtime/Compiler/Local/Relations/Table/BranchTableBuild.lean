@@ -19,7 +19,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
+
 theorem compiler_emit_branch_height {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (instruction : runtime.bytecode.Instr)
     (status : core.result.Result Unit Itasca.error.VisitError)

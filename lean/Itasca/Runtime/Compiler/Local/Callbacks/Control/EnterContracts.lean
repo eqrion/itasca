@@ -42,7 +42,7 @@ inductive SignatureAt (signatures : Slice runtime.compiler.Signature) :
     runtime.compiler.Budget.charge ops budget .Controls ⦃ out => True ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp [runtime.compiler.Budget.reject, WP.spec_ok]
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
   · step
 
 /-- Instructions emitted before publishing a control frame. -/
@@ -259,7 +259,7 @@ theorem charge_control_exact {A : Type} (ops : runtime.platform.Alloc A)
         used.val = budget.controls.val + 1 ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp only [runtime.compiler.Budget.reject, bind_ok, WP.spec_ok, uncurry_apply_pair,
+  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
       reduceCtorEq, false_implies]
   · step as ⟨used, added⟩
     intro _
@@ -364,33 +364,6 @@ theorem enter_pc_success {A : Type} (ops : runtime.platform.Alloc A)
   have available := compiler_pc_available ops before bounded
   rw [called, WP.spec_ok] at available
   exact ⟨available.1, position⟩
-
-/-- Normalize generated tuple continuations to the same projection form as the
-shared publication statement. -/
-theorem entry_uncurry_apply {X Y Z : Type} (next : X → Y → Z) (pair : X × Y) :
-    Std.uncurry next pair = next pair.1 pair.2 := by
-  cases pair
-  rfl
-
-theorem entry_uncurry_eq {X Y Z : Type} (next : X → Y → Z) :
-    Std.uncurry next = fun pair => next pair.1 pair.2 := by
-  funext pair
-  cases pair
-  rfl
-
-theorem entry_pair_match {X Y Z : Type} (pair : X × Y) (next : X → Y → Z) :
-    (match pair with | (x, y) => next x y) = next pair.1 pair.2 := by
-  cases pair
-  rfl
-
-/-- Normalize Rust's try-branch continuation without copying its caller. -/
-theorem entry_branch_bind {T E R : Type} (answer : core.result.Result T E)
-    (next : core.ops.control_flow.ControlFlow (core.result.Result Never E) T → Result R) :
-    Aeneas.Std.bind (core.result.Result.Insts.CoreOpsTry.branch answer) next =
-      match answer with
-      | .Ok value => next (.Continue value)
-      | .Err error => next (.Break (.Err error)) := by
-  cases answer <;> simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
 
 /-- The shared suffix preserves the entry frame on every normal return and
 records actual publication calls on success. -/

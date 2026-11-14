@@ -20,6 +20,7 @@ import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Equations
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: PreparationResourcePath, ResourceDecomposition, TailCommitExecution, TailCommit.
@@ -236,7 +237,7 @@ theorem prepare_instance_resource_decomposition {M P F A : Type}
     | none => trivial
     | some high => simpa [maximum] using canonical.2 high (by simp [maximum])
   unfold runtime.store.instantiate.Store.prepare_instance at run
-  simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok, ] at run
+  simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.imports, bind_ok, ] at run
   split at run
   · rename_i mismatch
     exact Or.inl ⟨_, _, run.symm, .refl _, by simp [PrecommitResourceEvidence]⟩
@@ -247,7 +248,7 @@ theorem prepare_instance_resource_decomposition {M P F A : Type}
       exact Or.inl ⟨rfl,Or.inl (by scalar_tac)⟩⟩
     · rename_i instanceSpace
       simp only [Itasca.metadata.Env.impl.types, Itasca.metadata.Env.impl.func_types, Itasca.metadata.Env.impl.table_types, Itasca.metadata.Env.impl.mem_types, Itasca.metadata.Env.impl.global_types, Itasca.metadata.Env.impl.elements,
-        runtime.compiler.ExecutableModule.tail, Itasca.metadata.Module.impl.tail,
+        runtime.compiler.ExecutableModule.tail.eq, Itasca.metadata.Module.impl.tail,
         bind_ok, deref_len] at run
       obtain ⟨counted, countsRun, countsErrors, countsPost⟩ := WP.spec_imp_exists
         (item_counts_loop_errors (moduleItemCounts module) 0#usize 0#usize (by simp))
@@ -867,7 +868,7 @@ theorem instantiate_tail_committed {M P F A : Type}
   | Ok value =>
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at run
     obtain ⟨inst, instRun, run⟩ := normal_bind_exists _ _ _ run
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.start, bind_ok] at run
     split at run
     · exact (congrArg (fun out => out.2.2.2) (Result.ok_injective run)).symm

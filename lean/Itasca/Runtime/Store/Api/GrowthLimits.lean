@@ -13,6 +13,7 @@ import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Representation.StoreCapacity
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: TableInit, MemoryInit, MemoryAllocationCauses, NewMemoryCauses, MemoryStagingCauses, TableAllocationCauses, NewTableCauses, TableStagingCauses, GrowthEffects, GrowthLimits.
@@ -427,7 +428,7 @@ theorem add_memory_resource_cause {M A : Type} (memory : runtime.platform.Memory
     scalar_tac
   obtain ⟨size,sizeRun,sizeValue⟩ := WP.spec_imp_exists multiply
   unfold runtime.store.instantiate.Store.add_instance_memory at run
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.mem_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.mem_types,bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.mem_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found)] at run
   simp only [bind_ok,lift,sizeRun] at run
@@ -542,7 +543,7 @@ theorem memory_staging_resource_loop {M A : Type} (memory : runtime.platform.Mem
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop6.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.mem_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.mem_types.val.length := by
@@ -691,7 +692,7 @@ theorem add_table_resource_cause {M A : Type} (memory : runtime.platform.MemoryB
     (run : runtime.store.instantiate.Store.add_instance_table memory allocator store inst index = .ok (.Err (.Exhausted limit),after,next)) :
     after = store ∧ next = inst ∧ TableAllocationCause allocator store ty limit := by
   unfold runtime.store.instantiate.Store.add_instance_table at run
-  simp only [runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.table_types,bind_ok] at run
+  simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.table_types,bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.table_types.deref index ty
     (by simpa [alloc.vec.Vec.deref] using found),bind_ok] at run
   obtain ⟨⟨status,staged⟩,defined,run⟩ := normal_bind_exists _ _ _ run
@@ -769,7 +770,7 @@ theorem table_staging_resource_loop {M A : Type} (memory : runtime.platform.Memo
       have eq := congrArg runtime.store.ModuleInst.module mapChanged
       exact eq
     unfold runtime.store.instantiate.Store.prepare_instance_loop5.body
-    simp only [runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
+    simp only [runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.table_types, source, bind_ok]
     split
     · rename_i more
       have within : index.val < seed.module.module.env.table_types.val.length := by

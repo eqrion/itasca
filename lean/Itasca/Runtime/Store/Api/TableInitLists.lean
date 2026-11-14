@@ -7,6 +7,7 @@ import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Initialization.Data
 import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Spec.SegmentInitCases
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: GlobalEffects, GlobalTypeMap, TableInitLists.
@@ -62,7 +63,7 @@ theorem add_instance_global_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_global
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
@@ -213,7 +214,7 @@ theorem add_instance_global_result_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_global
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
@@ -346,7 +347,7 @@ theorem add_instance_global_typed_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_global
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found
@@ -454,7 +455,7 @@ theorem add_instance_global_value_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_global
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.globals.deref index global (by simpa [alloc.vec.Vec.deref] using hg) as ⟨found, hfound⟩
   subst found

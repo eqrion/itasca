@@ -3,6 +3,7 @@ import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Stream.SplitTotal
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: CompileSourceCertificate, CompileStreamSource, CompilerLargeEnvironment, InitializerTotalBasic, InitializerTotalMappings, InitializerTotal.
@@ -263,7 +264,7 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     runtime.compiler.initialize.lower_global ops m budget index ⦃ out =>
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
   step as ⟨g, found⟩
   · simpa [alloc.vec.Vec.deref] using bound
@@ -289,7 +290,7 @@ The bytecode checker is total even when it rejects the synthetic function. -/
     runtime.compiler.initialize.lower_data_offset ops m budget index ⦃ out =>
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_data_offset
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok]
   step as ⟨segment, found⟩
   cases mode : segment.mode with
@@ -348,7 +349,7 @@ set_option maxHeartbeats 1800000
       out.2.1.module = m.module ∧ initializerSize out.2.1 ≤ initializerSize m + 1 ∧
       out.2.2.2.val.length ≤ indices.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.lower_element_value
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok]
   step as ⟨expr, read⟩
@@ -387,7 +388,7 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, ix, position, result⟩ ⟨same, size, ixBound, positionBound⟩
     unfold runtime.compiler.initialize.lower_element_loop.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
     split
@@ -434,7 +435,7 @@ set_option maxHeartbeats 1800000
       exact ⟨same, by unfold initializerSize at *; dsimp at *; omega⟩
     | Ok value =>
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        runtime.compiler.ExecutableModule.env,
+        runtime.compiler.ExecutableModule.env.eq,
         Itasca.metadata.Module.impl.env, runtime.compiler.initialize.element_offset, Itasca.metadata.Env.impl.elements]
       try simp only [bind_ok]
       rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref, same] using found), bind_ok]
@@ -491,7 +492,7 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop0.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok]
     split
     · rename_i more
@@ -526,7 +527,7 @@ set_option maxHeartbeats 1800000
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop2.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more
@@ -573,7 +574,7 @@ theorem initializer_element_cost_step (elements : List Itasca.metadata.Element)
   · rintro ⟨current, b, index, result⟩ ⟨same, size⟩
     unfold runtime.compiler.initialize.lower_loop1.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
@@ -676,7 +677,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.v128_pool.val.length ≤ function.v128_pool.val.length + 1 ∧
       out.2.2.indirect.val.length ≤ function.indirect.val.length + 1 ⦄ := by
   unfold runtime.compiler.initialize.emit_element
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step
   · simpa [alloc.vec.Vec.deref] using bound
@@ -705,7 +706,7 @@ and one table-index pair. The bounds include rejected partial emissions. -/
       out.2.2.v128_pool.val.length ≤ function.v128_pool.val.length + 1 ∧
       out.2.2.indirect = function.indirect ⦄ := by
   unfold runtime.compiler.initialize.emit_data
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok]
   step
   repeat' first
@@ -754,7 +755,7 @@ set_option maxHeartbeats 2000000
   · rintro ⟨b, index, result, current⟩ ⟨code, pool, pairs⟩
     unfold runtime.compiler.initialize.lower_loop3.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
     split
     · rename_i more
@@ -799,7 +800,7 @@ set_option maxHeartbeats 2000000
   · rintro ⟨b, index, result, current⟩ ⟨code, pool, pairs⟩
     unfold runtime.compiler.initialize.lower_loop4.body
     dsimp only at *
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok]
     split
     · rename_i more

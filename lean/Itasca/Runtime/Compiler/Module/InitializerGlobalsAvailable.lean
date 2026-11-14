@@ -11,6 +11,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Compiler.Module.InitializerTotal
 import Itasca.Module.Const.Parser
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: PreparedFunctionAvailable, SourceEntryPrepared, EntryAvailable, SourceQueuePolicy, EnvironmentReadyAvailable, InitializerGlobalsAvailable.
@@ -649,7 +650,7 @@ theorem initializer_global_available {A : Type} (ops : runtime.platform.Alloc A)
       out.2.2.limits = budget.limits ∧ out.2.1.module = module.module ∧
       initializerSize out.2.1 = initializerSize module + 2 ⦄ := by
   unfold runtime.compiler.initialize.lower_global
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.globals,bind_ok]
   step as ⟨global,found⟩
   · simpa [alloc.vec.Vec.deref] using inside
@@ -718,7 +719,7 @@ theorem initializer_globals_available {A : Type} (ops : runtime.platform.Alloc A
     dsimp only at same limits accepted position size used
     subst status
     unfold runtime.compiler.initialize.lower_loop0.body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.globals,bind_ok]
     split
     · rename_i more

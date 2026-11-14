@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.Budget.charge ops budget .Locals ⦃ out => True ⦄ := by
   simp only [runtime.compiler.Budget.charge]
   split
-  · simp [runtime.compiler.Budget.reject, WP.spec_ok]
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
   · step
 
 @[step] theorem compiler_add_local {A : Type} (ops : runtime.platform.Alloc A)

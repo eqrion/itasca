@@ -2,6 +2,7 @@ import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
 import Itasca.Runtime.Spec.SegmentInitCases
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: SegmentAcceptance, SegmentFinish, SegmentComplete, SegmentTranslation.
@@ -204,7 +205,7 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
       (instructions.length ≤ 1 ∧ after.slot_count = before.slot_count ∨
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
   unfold runtime.compiler.initialize.emit_element at success
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at success
   rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
   cases mode : segment.mode with
@@ -533,7 +534,7 @@ theorem element_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨b, i, status, function⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop3.body at body
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
     cases status with
     | Err error =>
@@ -619,7 +620,7 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     rintro ⟨b, i, status, function⟩ hinv flow body
     dsimp only [inv] at hinv
     unfold runtime.compiler.initialize.lower_loop4.body at body
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok] at body
     cases status with
     | Err error =>

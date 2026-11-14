@@ -8,6 +8,7 @@ import Itasca.Runtime.Store.Initialization.DataLoopCertificates
 import Itasca.Runtime.Store.Initialization.DataEffects
 import Itasca.Runtime.Store.Api.MemoryAllocationLoop
 import Itasca.Runtime.Store.Api.TableInitLists
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: InstanceMapShape, OwnedDataLoop, OwnedGlobalLoop.
@@ -138,7 +139,7 @@ theorem data_owned_staging_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -245,7 +246,7 @@ theorem global_owned_staging_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop7.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.globals, bind_ok, hsource]
     split
     · rename_i more

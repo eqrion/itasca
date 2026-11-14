@@ -4,6 +4,7 @@ import Itasca.Runtime.Store.Initialization.ElementLoop
 import Itasca.Runtime.Store.Api.MemoryBindingLoop
 import Itasca.Runtime.Store.Api.TableInitLists
 import Itasca.Runtime.Store.Initialization.SegmentExtension
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: ElementEffects, ElementTypedEffect.
@@ -42,7 +43,7 @@ theorem add_instance_element_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -188,7 +189,7 @@ theorem add_instance_element_typed_effect {M P F A : Type}
   unfold runtime.store.instantiate.Store.add_instance_element
   step with Interp.vec_index_given store.instances instIndex inst hi as ⟨found, hfound⟩
   subst found
-  simp only [runtime.compiler.ExecutableModule.env,
+  simp only [runtime.compiler.ExecutableModule.env.eq,
     Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
   step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩

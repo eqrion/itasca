@@ -4,6 +4,7 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Module.Const.Parser
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.Staging
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: InitializerSource, InitializerSourceContext, Data.
@@ -319,7 +320,7 @@ theorem add_instance_data_effect {M A : Type} (ops : runtime.platform.MemoryBuff
         result = (.Ok (), {s with datas := datas, instances := s.instances.set instanceIndex {(s.instances.val[instanceIndex.val]) with datas := addresses}}) ⦄ := by
   unfold runtime.store.instantiate.Store.add_instance_data
   step as ⟨inst, hinst⟩
-  simp only [runtime.compiler.ExecutableModule.tail,
+  simp only [runtime.compiler.ExecutableModule.tail.eq,
     Itasca.metadata.Module.impl.tail, bind_ok]
   have hd : i.val < inst.module.module.tail.data.length := by simpa [hinst] using hi
   step as ⟨data, hdata⟩

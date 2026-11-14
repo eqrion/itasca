@@ -12,6 +12,7 @@ import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 import Itasca.Runtime.Store.Initialization.ElementTypedEffect
 import Itasca.Runtime.Store.Initialization.ElementOrderLoop
 import Itasca.Runtime.Store.Invariant.ErrorPost
+import Itasca.Runtime.Compiler.Local.Initializer
 
 /-!
 Sections, each formerly its own module: DataStagingCauses, ElementStagingCauses.
@@ -79,7 +80,7 @@ theorem add_data_resource_cause {M A : Type} (memory : runtime.platform.MemoryBu
     after = store ∧ DataAllocationCause allocator store data error := by
   unfold runtime.store.instantiate.Store.add_instance_data at run
   simp only [Compiler.initializer_vec_index store.instances instanceIndex inst found,
-    runtime.compiler.ExecutableModule.tail,Itasca.metadata.Module.impl.tail,bind_ok,
+    runtime.compiler.ExecutableModule.tail.eq,Itasca.metadata.Module.impl.tail,bind_ok,
     Compiler.initializer_vec_index inst.module.module.tail.data index data selected] at run
   obtain ⟨copied,copiedRun,effect⟩ := WP.spec_imp_exists (copy_bytes_resource_causes allocator law data.init.deref)
   rw [copiedRun,bind_ok] at run
@@ -167,7 +168,7 @@ theorem data_staging_resource_loop {M A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop9.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.tail,
+    simp only [runtime.compiler.ExecutableModule.tail.eq,
       Itasca.metadata.Module.impl.tail, bind_ok, hsource]
     split
     · rename_i more
@@ -319,7 +320,7 @@ theorem element_initializers_loop_causes {M P F A : Type}
         subst found
         step with Interp.vec_index_given functions k function hfunction as ⟨found, hfound⟩
         subst found
-        simp only [runtime.compiler.ExecutableModule.env,
+        simp only [runtime.compiler.ExecutableModule.env.eq,
           Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok]
         step with Itasca.Runtime.Representation.slice_index_given inst.module.module.env.elements.deref index segment
           (by simpa [alloc.vec.Vec.deref] using helem) as ⟨found, hfound⟩
@@ -390,7 +391,7 @@ theorem add_element_resource_cause {M P F A : Type}
     after = store ∧ host = platform ∧ ElementAllocationCause allocator store inst index segment error := by
   unfold runtime.store.instantiate.Store.add_instance_element at run
   simp only [Compiler.initializer_vec_index store.instances instIndex inst found,
-    runtime.compiler.ExecutableModule.env, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
+    runtime.compiler.ExecutableModule.env.eq, Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at run
   rw [Compiler.initializer_slice_index inst.module.module.env.elements.deref index segment
     (by simpa [alloc.vec.Vec.deref] using element)] at run
   obtain ⟨reserved, reserveRun,refusal⟩ := reserve_with_cause allocator law (alloc.vec.Vec.new U64) segment.init.len
@@ -428,7 +429,7 @@ theorem add_element_resource_cause {M P F A : Type}
         obtain ⟨rfl,rfl,rfl⟩ := run
         exact ⟨rfl,rfl,Or.inl ⟨rfl,Or.inr refused⟩⟩
       · simp [core.result.Result.Insts.CoreOpsTry.branch,
-          runtime.compiler.ExecutableModule.env,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements] at run
+          runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements] at run
         obtain ⟨current,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨declared,read,run⟩ := normal_bind_exists _ _ _ run
         obtain ⟨elements,pushed,run⟩ := normal_bind_exists _ _ _ run
@@ -511,7 +512,7 @@ theorem element_staging_resource_loop {M P F A : Type}
     unfold runtime.store.instantiate.Store.prepare_instance_loop8.body
     step with Interp.vec_index_given current.instances instIndex currentInst hfound as ⟨actual, hactual⟩
     subst actual
-    simp only [runtime.compiler.ExecutableModule.env,
+    simp only [runtime.compiler.ExecutableModule.env.eq,
       Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok, hsource]
     split
     · rename_i more
