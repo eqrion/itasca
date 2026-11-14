@@ -979,6 +979,8 @@ this definition and the Rust `impl` is by inspection; say so in the docstring.
 
 ### 3.9 The float contract is satisfiable
 
+Completed 2026-11-13: [float witness and checks](notes/step39-results.md).
+
 In `lean/Itasca/Runtime/Platform/FloatWitness.lean` construct one
 `runtime.platform.FloatOps Unit` whose every operation returns the bits of the
 first element of the specification's result list, and prove
