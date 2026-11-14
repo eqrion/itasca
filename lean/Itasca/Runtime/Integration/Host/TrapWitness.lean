@@ -1,13 +1,8 @@
-import Itasca.Main
+import Itasca.Runtime.Contracts
+import Itasca.Runtime.Integration.Invocation.HostOutcomes
 
-/-!
-# A platform satisfying every host and allocator contract
-
-Callbacks trap without touching the store, interrupts always continue and the allocator grants
-every request. Together they discharge every host, interrupt and allocator premise of
-`runtime.interp.invoke_with.no_spurious_errors` and the callback premise of `terminates`; floats,
-memory and the source program remain parameters.
--/
+/-! Concrete host and allocator witnesses for closed runtime examples.
+The callbacks trap without changing the store; every reservation succeeds. -/
 
 namespace Itasca.Runtime.Examples
 open Aeneas Aeneas.Std SpecExt Integration
@@ -57,29 +52,5 @@ theorem trapHost_returns {M : Type} (memory : runtime.platform.MemoryBuffer M) (
     (initial : config) : ¬ HostCallDiverged (trapHost memory) view initial := by
   rintro ⟨_,_,_,_,_,_,_,_,_,_,diverged⟩
   simp [trapHost] at diverged
-
-theorem trapHost_no_spurious_errors {M F : Type}
-    (memory : runtime.platform.MemoryBuffer M) (floats : runtime.platform.FloatOps F)
-    (correct : Platform.FloatOpsCorrect floats)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
-    (exec : runtime.interp.Execution) (store : runtime.store.Store M)
-    (valid : ExecutableInv view code store)
-    (address : runtime.FuncAddr) (args : Slice runtime.Value) (results : alloc.vec.Vec runtime.Value)
-    (owner : address.store=store.id) (issued : Store.ExternalIssued store (.Func address))
-    (owned : ∀value∈args.val,Store.ValueInStore store value)
-    (initial : config)
-    (invoked : fun_invoke (Store.decodeStore view code store) address.index.val (args.val.map Interp.sourceValue) initial)
-    (typedArguments : InvocationArgumentsTyped (Store.decodeStore view code store) address.index.val
-      (args.val.map Interp.sourceValue))
-    (fits : SourceResourcesFit (Store.decodeStore view code store) address.index.val initial
-      store.limits.max_values.val store.limits.max_frames.val) :
-    runtime.interp.invoke_with memory (trapHost memory) floats grantAll exec store () address args results
-      ⦃ out => ∀error,out.1=.Err error → ∃trap,error=.Trap trap ⦄div :=
-  runtime.interp.invoke_with.no_spurious_errors memory (trapHost memory) floats grantAll view
-    ⟨correct,grantAll_correct,fun _ => by rw [trapHost,WP.spec_ok]; trivial,laws⟩ code (trapHost_laws memory view)
-    (fun _ _ _ _ _ _ _ _ called => by rw [trapHost_answer called])
-    exec store () valid address args results owner issued owned initial invoked typedArguments fits
-    (grantAll_available _) (fun _ _ refused => by simp [trapHost] at refused)
-    (fun _ _ _ _ _ _ _ _ _ _ refused => by have same := trapHost_answer refused; simp at same)
 
 end Itasca.Runtime.Examples

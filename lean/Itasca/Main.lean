@@ -9,6 +9,9 @@ import Itasca.Results.Compile
 import Itasca.Results.Instantiate
 import Itasca.Results.Invoke
 import Itasca.Results.Store
+import Itasca.Runtime.Platform.VecMemory
+import Itasca.Runtime.Platform.FloatWitness
+import Itasca.Runtime.Integration.Host.TrapWitness
 
 /-!
 # Validator results

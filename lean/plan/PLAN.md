@@ -1006,6 +1006,8 @@ the operation and input.
 
 ### 3.10 Closed examples
 
+Completed 2026-11-13: [closed examples and phase validation](notes/step310-results.md).
+
 In `lean/Itasca/Examples/Runtime.lean`, importing only `Itasca.Main`:
 
 1. `fresh_store_valid`: for `vecMemory grantAll`, the store from `with_identity`

@@ -1,4 +1,5 @@
 import Itasca.Runtime.Integration.Api.StoreCreate
+import Itasca.Runtime.Store.Invariant.FunctionStagingCauses
 
 /-! Public store definitions preserve executable certificates and expose the
 exact appended object or unchanged store on failure. -/
@@ -518,5 +519,80 @@ Success appends the exact decoded value; every rejection preserves the store. -/
     subst result after
     exact ⟨held, ⟨.refl _, rfl, held.shape, held.segmentBounds,
       Spec.extend_store_refl _ held.well_formed, ⟨rfl, rfl⟩, rfl⟩, rfl⟩
+
+/-- Sufficient object/signature budgets and granted allocations make host
+definition succeed. The two object slots cover a new signature and the host. -/
+theorem define_host_available {M A : Type} (memory : runtime.platform.MemoryBuffer M)
+    (allocator : runtime.platform.Alloc A) (law : Platform.AllocCorrect allocator)
+    (grants : Platform.AllocationAvailable allocator (2 * Usize.max))
+    (store : runtime.store.Store M) (ty : Itasca.wasm_types.FuncType) (host : U64)
+    (objects : objectCount store + 2 ≤ store.limits.max_objects.val)
+    (signatureSize : ty.params.length + ty.results.length ≤ Usize.max)
+    (signatures : store.signature_values.val + ty.params.length + ty.results.length ≤
+      store.limits.max_signature_values.val) :
+    runtime.store.Store.define_host_with memory allocator store ty host ⦃ (result, _) =>
+      ∃ address, result = .Ok address ⦄ := by
+  have bound : objectCount store ≤ Usize.max := by scalar_tac
+  have typesGranted := grants _ store.types 1#usize (by scalar_tac)
+  have paramsGranted := grants _ (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.params.len (by scalar_tac)
+  have resultsGranted := grants _ (alloc.vec.Vec.new Itasca.wasm_types.ValueType) ty.results.len (by scalar_tac)
+  have noCopyRefusal : ¬TypeCopyRefusal allocator ty := by
+    simp only [TypeCopyRefusal, paramsGranted, resultsGranted, Result.ok.injEq,
+      Prod.mk.injEq, Bool.true_eq_false, false_and, or_self, not_false_eq_true]
+  obtain ⟨internResult, internRun, internEffect⟩ := WP.spec_imp_exists
+    (intern_type_effect memory allocator law store ty bound)
+  have resourceErrors := intern_type_resource_causes memory allocator law store ty bound
+  rw [internRun] at resourceErrors
+  simp only [WP.spec_ok] at resourceErrors
+  have internSuccess : ∃ signature, internResult.1 = .Ok signature := by
+    cases status : internResult.1 with
+    | Ok signature => exact ⟨signature, rfl⟩
+    | Err error =>
+      have cause := (resourceErrors error status).2.2
+      cases error <;> simp only [TypeInternResourceCause] at cause
+      case Exhausted resource =>
+        cases resource <;> simp only [TypeInternResourceCause] at cause
+        case Allocation =>
+          rcases cause with refused | refused
+          · rw [typesGranted] at refused
+            simp only [Result.ok.injEq, Prod.mk.injEq, Bool.true_eq_false, false_and] at refused
+          · exact False.elim (noCopyRefusal refused)
+        case Objects => omega
+  obtain ⟨signature, internSuccess⟩ := internSuccess
+  unfold runtime.store.Store.define_host_with
+  step with runtime.store.Store.find_type.spec memory store ty as ⟨index, valid, prior, found⟩
+  have selected : (if index = store.types.len then Result.ok 2#usize else Result.ok 1#usize) =
+      Result.ok (if index = store.types.len then 2#usize else 1#usize) := by
+    split <;> rfl
+  rw [selected]
+  simp only [bind_ok]
+  step with runtime.store.Store.room_for.spec memory store
+    (if index = store.types.len then 2#usize else 1#usize) bound as ⟨room, roomEq⟩
+  have booked : objectCount store < store.limits.max_objects.val ∧
+      objectCount store + (if index = store.types.len then 2#usize else 1#usize).val ≤ store.limits.max_objects.val := by
+    split <;> scalar_tac
+  rw [roomEq]
+  simp only [if_pos booked, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  obtain ⟨answer, reserve, reserveCall⟩ := reserve_with_cause allocator law store.funcs 1#usize
+  have funcsGranted := grants _ store.funcs 1#usize (by scalar_tac)
+  rw [funcsGranted] at reserveCall
+  have accepted : answer = true := by
+    simpa only [Result.ok.injEq, Prod.mk.injEq, and_true, eq_comm] using reserveCall
+  subst answer
+  simp only [ite_true] at reserve
+  simp only [reserve, internRun, bind_ok, internSuccess, core.result.Result.Insts.CoreOpsTry.branch]
+  have effect : InternEffect store ty (.Ok signature, internResult.2) := by
+    simpa only [←internSuccess] using internEffect
+  have space := host_intern_room ty index signature found booked.1 booked.2 effect
+  have room : internResult.2.funcs.length < Usize.max := by
+    unfold objectCount at space
+    scalar_tac
+  step with WP.exists_imp_spec ⟨internResult, internRun, rfl⟩ as ⟨status, interned, same⟩
+  subst internResult
+  simp only [Prod.fst] at internSuccess
+  subst status
+  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+  step as ⟨functions, appended⟩
+  exact ⟨_, rfl⟩
 
 end Itasca.Runtime.Integration

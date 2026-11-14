@@ -169,7 +169,7 @@ There is **no** existing lemma about adding a host function to a store. `R/Integ
 - `SpecExt.host_funcinst_ok` (`R/Spec/Typing/HostTyping.lean:10`); `decode_store_typed` handles `.Host` (`R/Store/Invariant/SourceStoreTyping.lean:38`).
 - `Functype_ok` holds for every functype. Existing idiom at SourceStoreTyping.lean:67-69: `cases … with | mk_functype params results => cases params; cases results; constructor`.
 - How each field treats `.Host id`: `FunctionShape` needs only `signature < types.length`; `CoreFunctionTyped` needs `Functype_ok` (always true); `FunctionsSupported` is `True`; `FunctionCompiled` and `FunctionCapacity` are vacuous.
-- `R/Runtime/Contracts.lean:79-107` defines `HostWorldSound`, `HostRetention`, `HostLaws`. These are exactly the consumers of the new theorems: a callback must give `Inv afterCode after`, `CodeAgreesOn`, `Extend_store`, `Store_ok`, `FrameStorePrefix`, `externs.length` monotone, and `IssuedValue` for results. `lean/Itasca/Examples/TrapHost.lean:33` shows the proof shape for a trivial callback.
+- `R/Runtime/Contracts.lean:79-107` defines `HostWorldSound`, `HostRetention`, `HostLaws`. These are exactly the consumers of the new theorems: a callback must give `Inv afterCode after`, `CodeAgreesOn`, `Extend_store`, `Store_ok`, `FrameStorePrefix`, `externs.length` monotone, and `IssuedValue` for results. `lean/Itasca/Examples/Runtime.lean:33` shows the proof shape for a trivial callback.
 
 ### 3f. Definitions requested
 

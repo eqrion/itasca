@@ -241,7 +241,7 @@ per-host `HostRetention` laws of [Contracts](Contracts.lean) as premises and
 never model a particular callback; the world layers above take `HostLaws`.
 Callbacks may diverge, so these proofs conclude `DivSpec (HostDiverges hooks
 store)` ([Platform/Laws](Platform/Laws.lean)): each step returns with its
-outcome or diverges in a callback called from the current store. [Examples/TrapHost](../Examples/TrapHost.lean) shows the laws
+outcome or diverges in a callback called from the current store. [Examples/Runtime](../Examples/Runtime.lean) shows the laws
 are satisfiable: a trapping callback, continuing interrupts and a granting
 allocator discharge every host, interrupt and allocator premise of
 `no_spurious_errors`.

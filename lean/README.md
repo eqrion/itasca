@@ -426,10 +426,16 @@ continue, and callbacks keep the store limits and never report stack overflow.
 It covers the complete Wasm 2.0 profile and issued Wasm/host functions; it does not
 assert source-step determinism.
 
-The [trapping host example](Itasca/Examples/TrapHost.lean) discharges every host,
+The [trapping host example](Itasca/Examples/Runtime.lean) discharges every host,
 interrupt and allocator premise of `no_spurious_errors` with a callback that
 traps, continuing interrupts and an allocator that grants every request, so the
 callback contracts are satisfiable.
+
+The same example establishes a fresh executable store and discharges the empty
+module's compiler eligibility before applying instantiation. The extracted
+[vector memory](Itasca/Runtime/Platform/VecMemory.lean) satisfies all memory laws
+under allocator correctness. A [mathematical float dictionary](Itasca/Runtime/Platform/FloatWitness.lean)
+satisfies all 27 float contracts by selecting permitted specification results.
 
 The reviewed [native wrappers](../src/runtime/native.rs) forward compilation,
 invocation, instantiation, definitions and growth to the corresponding generic

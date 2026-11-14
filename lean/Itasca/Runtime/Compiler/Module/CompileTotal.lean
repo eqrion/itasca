@@ -30,6 +30,11 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ModuleBinary
 
+/-- The fixed module header fits the compiler's intrinsic input bound. -/
+theorem module_header_fits : magicVersion.length ≤ Itasca.limits.MAX_MODULE_BYTES.val := by
+  simp only [magicVersion, List.length_cons, List.length_nil, Nat.reduceAdd,
+    Itasca.limits.MAX_MODULE_BYTES, UScalar.ofNatCore_val_eq, Nat.reduceLeDiff]
+
 private theorem leb_nonempty {bytes value} (h : Itasca.Leb128.Encoding bytes value) :
     1 ≤ bytes.length := by
   obtain ⟨before, last, rfl, _⟩ := h
