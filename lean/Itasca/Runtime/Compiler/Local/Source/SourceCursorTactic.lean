@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 
 /-!
@@ -17,51 +18,9 @@ theorem compiler_emit_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (status, after)) :
     after.next_source = before.next_source := by
-  unfold runtime.compiler.FunctionCompiler.emit at accepted
-  obtain ⟨⟨pc, current⟩, called, rest⟩ := bind_ok_inv _ _ _ accepted
-  have effect := compiler_pc ops before
-  rw [called, WP.spec_ok] at effect
-  obtain ⟨_, _, budget, currentEq⟩ := effect
-  change current = {before with budget} at currentEq
-  subst current
-  cases pc with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      rfl
-  | Ok value =>
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨charged, budget1⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases charged with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨⟨pushed, budget2, code⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-      cases pushed with
-      | Err error =>
-          simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-          obtain ⟨_, output⟩ := rest
-          subst after
-          rfl
-      | Ok value =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨coordinate, _, rest⟩ := bind_ok_inv _ _ _ rest
-        obtain ⟨⟨result, budget3, sources⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-        simp only [uncurry_apply_pair, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rfl
+  have frame := (runtime.compiler.FunctionCompiler.emit.inv ops before after instruction status accepted).1
+  change after = _ at frame
+  rw [frame]
 
 theorem compiler_copy_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (dst src count : U32)

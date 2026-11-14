@@ -54,6 +54,77 @@ open Aeneas Aeneas.Std
 
 
 
+/-- A successful checked append determines the vector effect without a capacity premise. -/
+theorem budget_push_success {A T : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
+    (before after : alloc.vec.Vec T) (value : T)
+    (success : runtime.compiler.Budget.push ops budget before value = .ok (.Ok (), afterBudget, after)) :
+    afterBudget = budget ∧ after.val = before.val ++ [value] := by
+  obtain ⟨answer, reserve⟩ := law.reserve_eq before 1#usize
+  unfold runtime.compiler.Budget.push at success
+  rw [reserve, bind_ok] at success
+  cases answer with
+  | false => simp [runtime.compiler.Budget.reject] at success
+  | true =>
+    simp only [uncurry_apply_pair, ↓reduceIte, alloc.vec.Vec.push] at success
+    split at success
+    · simp only [bind_ok] at success
+      have output := Result.ok_injective success
+      have hb := congrArg (fun out => out.2.1) output
+      have hv := congrArg (fun out => out.2.2.val) output
+      exact ⟨hb.symm, by simpa using hv.symm⟩
+    · simp only [bind_fail, fail_not_ok] at success
+
+/-- A normally returning addition determines its mathematical sum, without
+assuming the absence of overflow beforehand. -/
+theorem control_add_success {ty : UScalarTy} {left right out : UScalar ty}
+    (success : (left + right : Result (UScalar ty)) = .ok out) : out.val = left.val + right.val := by
+  have spec := UScalar.add_equiv left right
+  simp only [success] at spec
+  exact spec.2.1
+
+/-- Every normal checked append either keeps the vector or appends its value. -/
+theorem budget_push_code_result {A T : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
+    (before after : alloc.vec.Vec T) (value : T)
+    (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.Budget.push ops budget before value = .ok (status, afterBudget, after)) :
+    after.val = before.val ∨ after.val = before.val ++ [value] := by
+  obtain ⟨answer, reserve⟩ := law.reserve_eq before 1#usize
+  unfold runtime.compiler.Budget.push at accepted
+  rw [reserve, bind_ok] at accepted
+  cases answer with
+  | false =>
+    simp only [uncurry_apply_pair, Bool.false_eq_true, ↓reduceIte, runtime.compiler.Budget.reject,
+      bind_ok, Result.ok.injEq, Prod.mk.injEq] at accepted
+    exact Or.inl (congrArg (fun v : alloc.vec.Vec T => v.val) accepted.2.2).symm
+  | true =>
+    simp only [uncurry_apply_pair, ↓reduceIte, alloc.vec.Vec.push] at accepted
+    split at accepted
+    · simp only [bind_ok, Result.ok.injEq, Prod.mk.injEq] at accepted
+      apply Or.inr
+      simpa only [alloc.vec.Vec.from_val, List.concat_eq_append] using
+        (congrArg (fun v : alloc.vec.Vec T => v.val) accepted.2.2).symm
+    · simp only [bind_fail, fail_not_ok] at accepted
+
+/-- An available bounded reserve request makes the actual compiler append
+succeed with the exact appended vector and unchanged budget. -/
+theorem budget_push_available {A T : Type} (ops : runtime.platform.Alloc A)
+    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
+    (budget : runtime.compiler.Budget A) (values : alloc.vec.Vec T) (value : T)
+    (fits : values.val.length < Usize.max) (request : values.val.length + 1 ≤ bound) :
+    runtime.compiler.Budget.push ops budget values value ⦃ out =>
+      out.1 = .Ok () ∧ out.2.1 = budget ∧ out.2.2.val = values.val ++ [value] ⦄ := by
+  have reserve := available T values 1#usize (by simpa using request)
+  unfold runtime.compiler.Budget.push
+  rw [reserve,bind_ok]
+  change (do
+    let after ← alloc.vec.Vec.push values value
+    pure (core.result.Result.Ok (),budget,after)) ⦃ out =>
+      out.1 = .Ok () ∧ out.2.1 = budget ∧ out.2.2.val = values.val ++ [value] ⦄
+  step as ⟨after,appended⟩
+  exact appended
+
 @[step] theorem observe_value {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (budget : runtime.compiler.Budget A)
     (before : alloc.vec.Vec U32) (height : U32) (ty : Itasca.code.StackType)

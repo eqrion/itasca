@@ -1132,6 +1132,8 @@ files (from 69) and the build passes. Update the baseline.
 
 ### 5.2 Pilot A: `emit`
 
+Completed 2026-11-13: [contracts and targeted validation](notes/step52-results.md).
+
 `runtime.compiler.FunctionCompiler.emit` (Rust `src/runtime/compiler/mod.rs`,
 `fn emit`) is unfolded by 14 theorems in 13 files, listed in section 1.1 of the
 research file. Three near-contracts already exist: `Emitted` with

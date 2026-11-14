@@ -153,27 +153,6 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
 
-/-- A successful checked append determines the vector effect without a capacity premise. -/
-theorem budget_push_success {A T : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
-    (before after : alloc.vec.Vec T) (value : T)
-    (success : runtime.compiler.Budget.push ops budget before value = .ok (.Ok (), afterBudget, after)) :
-    afterBudget = budget ∧ after.val = before.val ++ [value] := by
-  obtain ⟨answer, reserve⟩ := law.reserve_eq before 1#usize
-  unfold runtime.compiler.Budget.push at success
-  rw [reserve, bind_ok] at success
-  cases answer with
-  | false => simp [runtime.compiler.Budget.reject] at success
-  | true =>
-    simp only [uncurry_apply_pair, ↓reduceIte, alloc.vec.Vec.push] at success
-    split at success
-    · simp only [bind_ok] at success
-      have output := Result.ok_injective success
-      have hb := congrArg (fun out => out.2.1) output
-      have hv := congrArg (fun out => out.2.2.val) output
-      exact ⟨hb.symm, by simpa using hv.symm⟩
-    · simp only [bind_fail, fail_not_ok] at success
-
 def initializerSeed (ty : Itasca.wasm_types.ValueType) : runtime.bytecode.CompiledFunction :=
   { locals := alloc.vec.Vec.new _, local_slots := 0#u32, param_slots := 0#u32,
     slot_count := initializerWidth ty, max_stack := 0#usize, code := alloc.vec.Vec.new _,

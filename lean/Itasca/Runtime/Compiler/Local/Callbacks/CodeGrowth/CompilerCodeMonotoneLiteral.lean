@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
 import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
@@ -29,52 +30,11 @@ theorem compiler_emit_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (status, after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.emit at accepted
-  obtain ⟨⟨pc, current⟩, called, rest⟩ := bind_ok_inv _ _ _ accepted
-  have effect := compiler_pc ops before
-  rw [called, WP.spec_ok] at effect
-  obtain ⟨_, _, budget, currentEq⟩ := effect
-  change current = {before with budget} at currentEq
-  subst current
-  cases pc with
-  | Err error =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-      obtain ⟨_, output⟩ := rest
-      subst after
-      simp only; omega
-  | Ok value =>
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨charged, budget1⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-    cases charged with
-    | Err error =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        simp only; omega
-    | Ok value =>
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨⟨pushed, budget2, code⟩, pushedEq, rest⟩ := bind_ok_inv _ _ _ rest
-      have growth := budget_push_code_result ops law budget1 budget2 before.function.code code instruction pushed pushedEq
-      cases pushed with
-      | Err error =>
-          simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-            core.convert.FromSame, bind_ok, bind_tc_ok, Result.ok.injEq, Prod.mk.injEq] at rest
-          obtain ⟨_, output⟩ := rest
-          subst after
-          rcases growth with kept | appended <;> simp_all only [List.length_append, List.length_singleton, Nat.le_refl] <;> omega
-      | Ok value =>
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨coordinate, _, rest⟩ := bind_ok_inv _ _ _ rest
-        obtain ⟨⟨result, budget3, sources⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-        simp only [uncurry_apply_pair, Result.ok.injEq, Prod.mk.injEq] at rest
-        obtain ⟨_, output⟩ := rest
-        subst after
-        rcases growth with kept | appended <;> simp_all only [List.length_append, List.length_singleton, Nat.le_refl] <;> omega
+  have code := ((runtime.compiler.FunctionCompiler.emit.inv ops before after instruction status accepted).2 law).1
+  rcases code with unchanged | appended
+  · rw [unchanged]
+  · rw [appended, List.length_append, List.length_singleton]
+    omega
 
 theorem compiler_copy_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

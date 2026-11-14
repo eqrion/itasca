@@ -138,23 +138,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- A representable bytecode PC excludes the actual instruction-index rejection. -/
-theorem compiler_pc_available {A : Type} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A)
-    (bounded : compiler.function.code.length ≤ U32.max) :
-    runtime.compiler.FunctionCompiler.pc ops compiler ⦃ out =>
-      out.2 = compiler ∧ ∃ pc, out.1 = .Ok pc ∧ pc.val = compiler.function.code.length ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.pc
-  step as ⟨maximum,maximumEq⟩
-  have inside : ¬ alloc.vec.Vec.len compiler.function.code > maximum := by
-    simp_all [core.num.U32.MAX,U32.rMax]
-    scalar_tac
-  simp only [if_neg inside]
-  step as ⟨pc,pcEq⟩
-  refine ⟨pc,rfl,?_⟩
-  simp only [pcEq,UScalar.cast_val_eq]
-  scalar_tac
-
 end Itasca.Runtime.Compiler
 
 end
@@ -317,28 +300,8 @@ theorem compiler_emit_available_frame {A : Type} (ops : runtime.platform.Alloc A
         code.val = compiler.function.code.val ++ [instruction] ∧
         sources.val.map (fun value => value.val) = compiler.function.source_offsets.val.map (fun value => value.val) ++
           [compiler.function.body_start.val+compiler.next_source.val] ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.emit
-  step with compiler_pc_available ops compiler pcBound as ⟨status,first,same,pc,accepted,pcEq⟩
-  subst first
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with charge_counter_available ops .instructions compiler.budget room
-    as ⟨status,charged,accepted,used,same,usedEq⟩
-  rw [accepted]
-  subst charged
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available {compiler.budget with instructions := used}
-    compiler.function.code instruction codeFits codeRequest
-    as ⟨status,charged,code,accepted,same,appended⟩
-  subst status charged
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step as ⟨source,sourceEq⟩
-  step with budget_push_available ops bound available {compiler.budget with instructions := used}
-    compiler.function.source_offsets source sourcesFit sourceRequest
-    as ⟨status,charged,sources,accepted,same,recorded⟩
-  refine ⟨accepted,used,code,sources,?_,usedEq,appended,?_⟩
-  · rw [same]
-  · simp [recorded,sourceEq]
+  exact runtime.compiler.FunctionCompiler.emit.available ops bound available compiler instruction
+    pcBound codeFits sourcesFit codeRequest sourceRequest coordinate room
 
 end Itasca.Runtime.Compiler
 
