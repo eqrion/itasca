@@ -113,7 +113,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
  theorem table_label_bytes (before after : code.BodyState) (data : Slice U8)
@@ -223,7 +222,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts Itasca.Wasm2.Visitor
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- The accepted target loop collects exactly its decoded nondefault
@@ -294,7 +292,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- Accepted reader decomposition with exact decoded count/targets and
@@ -488,7 +485,6 @@ Main declarations: `reader_table_targets_wasm2`. A direct consumer is `Compiler.
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- Canonical accepted target checks retain a suffix obligation for every

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
@@ -24,44 +25,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-inductive ChargeCounter where
-  | instructions | branches | controls | locals
-  deriving DecidableEq
-
-abbrev ChargeCounter.resource : ChargeCounter → runtime.compiler.CompileResource
-  | .instructions => .Instructions | .branches => .BranchTableEntries | .controls => .Controls | .locals => .Locals
-
-abbrev ChargeCounter.used {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) : Usize :=
-  match kind with
-  | .instructions => budget.instructions | .branches => budget.branches | .controls => budget.controls | .locals => budget.locals
-
-abbrev ChargeCounter.limit {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) : Usize :=
-  match kind with
-  | .instructions => budget.limits.max_instructions | .branches => budget.limits.max_branch_table_entries
-  | .controls => budget.limits.max_controls | .locals => budget.limits.max_locals
-
-abbrev ChargeCounter.replace {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) (used : Usize) : runtime.compiler.Budget A :=
-  match kind with
-  | .instructions => {budget with instructions := used} | .branches => {budget with branches := used}
-  | .controls => {budget with controls := used} | .locals => {budget with locals := used}
-
-/-- Available charging changes exactly one counter. All other counters,
-allocator marker, error state, and limits are retained by the actual operation. -/
-theorem charge_counter_available {A : Type} (ops : runtime.platform.Alloc A)
-    (kind : ChargeCounter) (budget : runtime.compiler.Budget A)
-    (room : (kind.used budget).val < (kind.limit budget).val) :
-    runtime.compiler.Budget.charge ops budget kind.resource ⦃ out =>
-      out.1 = .Ok () ∧ ∃ used, out.2 = kind.replace budget used ∧
-        used.val = (kind.used budget).val + 1 ⦄ := by
-  cases kind <;>
-    simp only [ChargeCounter.used,ChargeCounter.limit] at room <;>
-    simp only [ChargeCounter.resource,runtime.compiler.Budget.charge]
-  all_goals
-    split
-    · rename_i full
-      scalar_tac
-    · step as ⟨used,advanced⟩
-      exact ⟨used,rfl,advanced⟩
 
 end Itasca.Runtime.Compiler
 
@@ -298,6 +261,17 @@ theorem compiler_emit_available_effect {A : Type} (ops : runtime.platform.Alloc 
   rw [frame]
   exact .of_counter .instructions compiler.budget used 1
     (by simp [ChargeCounter.used]; omega) (by simp [ChargeCounter.used]; omega)
+
+/-- Exact branch instruction charging yields the shared counter-wise budget effect. -/
+theorem BranchBudget.compilation {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    {count : Nat} (effect : BranchBudget before after count) :
+    CompilationBudgetEffect before.budget after.budget
+      (fun counter => if counter = .instructions then count else 0) := by
+  obtain ⟨used, budget, charged⟩ := effect
+  rw [budget]
+  exact .of_counter .instructions before.budget used count
+    (by simp only [ChargeCounter.used]; omega)
+    (by simp only [ChargeCounter.used]; omega)
 
 /-- Every checked transfer accepts, with exact elision or single emission and
 at most one instruction charge. This resource frame also applies to branch
@@ -762,7 +736,7 @@ theorem compiler_nop_drop_available {A : Type} (ops : runtime.platform.Alloc A)
   have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state
       (if drop then 26#u16 else 1#u16) 0#u32 0#u32 0#u128 =
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
-    cases drop <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> split <;> rfl
+    exact lower_empty_eq ops compiler state drop
   rw [dispatch]
   exact compiler_observe_available_budget ops bound available compiler state demand.operands demand.slots
 

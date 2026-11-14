@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
 import Itasca.Runtime.Compiler.Local.Initializer
@@ -13,7 +14,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 theorem compiler_simd_preserved_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -21,8 +21,14 @@ theorem compiler_simd_preserved_tables {A : Type} (ops : runtime.platform.Alloc 
     (accepted : runtime.compiler.simd.FunctionCompiler.simd_op ops before state opcode a bits = .ok (.Ok (),after)) :
     after.function.indirect.val = before.function.indirect.val ∧
       after.function.jump_tables.val = before.function.jump_tables.val := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
-  repeat' table_preservation_step accepted using ops, law
+  obtain ⟨staged, instruction, allocated, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits (.Ok ()) accepted).execution.success
+  have frame := allocated.frame
+  have result := compiler_finish_op_tables ops law staged after state instruction (.Ok ()) finished
+  have indirect := congrArg CompilerTables.indirect result
+  have jumps := congrArg CompilerTables.jumpTables result
+  rw [frame] at indirect jumps
+  exact ⟨indirect, jumps⟩
 
 theorem compiler_lower_simd_preserved_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -68,7 +74,7 @@ include bound number
 theorem compiler_simd_callback :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd before state sub =
       runtime.compiler.lower.FunctionCompiler.op ops before state opcode 0#u32 0#u32 0#u128 := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd,lift,bind_ok,
     simd_opcode_add sub opcode bound number]
 
@@ -76,21 +82,21 @@ theorem compiler_simd_lane_callback (lane : U8) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_lane before state sub lane =
       runtime.compiler.lower.FunctionCompiler.op ops before state opcode
         (UScalar.cast .U32 lane) 0#u32 0#u128 := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd_lane.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_lane,lift,bind_ok,
     simd_opcode_add sub opcode bound number]
 
 theorem compiler_simd_memory_callback (arg : Itasca.code.MemArg) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_memory before state sub arg =
       runtime.compiler.lower.FunctionCompiler.op ops before state opcode arg.offset arg.align 0#u128 := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd_memory.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory,lift,bind_ok,
     simd_opcode_add sub opcode bound number]
 
 theorem compiler_simd_memory_lane_callback (arg : Itasca.code.MemArg) (lane : U8) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_memory_lane before state sub arg lane =
       runtime.compiler.lower.FunctionCompiler.op ops before state opcode arg.offset arg.align (UScalar.cast .U128 lane) := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd_memory_lane.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_memory_lane,lift,bind_ok,
     simd_opcode_add sub opcode bound number]
 
@@ -111,7 +117,7 @@ theorem compiler_simd_constant_callback {A : Type} (ops : runtime.platform.Alloc
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_const before state lo hi =
       runtime.compiler.lower.FunctionCompiler.op ops before state 524#u16 0#u32 0#u32 (initializerBits lo hi) := by
   have shift : (UScalar.cast .U128 hi <<< 64#i32) = .ok (⟨(UScalar.cast .U128 hi).bv <<< 64⟩ : U128) := rfl
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd_const.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_const,lift,bind_ok,shift]
   rfl
 
@@ -121,7 +127,7 @@ theorem compiler_simd_shuffle_callback {A : Type} (ops : runtime.platform.Alloc 
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_simd_shuffle before state lo hi =
       runtime.compiler.lower.FunctionCompiler.op ops before state 525#u16 0#u32 0#u32 (initializerBits lo hi) := by
   have shift : (UScalar.cast .U128 hi <<< 64#i32) = .ok (⟨(UScalar.cast .U128 hi).bv <<< 64⟩ : U128) := rfl
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_simd_shuffle.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_simd_shuffle,lift,bind_ok,shift]
   rfl
 end Itasca.Runtime.Compiler

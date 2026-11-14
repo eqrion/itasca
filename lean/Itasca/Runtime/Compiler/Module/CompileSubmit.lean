@@ -1,3 +1,8 @@
+import Itasca.Runtime.Compiler.Module.CodeRegionContracts
+import Itasca.Stream.Header
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.FinishContracts
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedTotal
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Equations.Bytecode
 import Itasca.Generated.FunsCompiler
 import Itasca.Stream.Source
@@ -36,7 +41,7 @@ def sourceTail (source : CompileSource) := source.bytes.val.drop source.code_end
 @[step] theorem source_environment_spec (source : CompileSource) (h : SourceBounds source) :
     CompileSource.Insts.ItascaStreamSource.environment source ⦃ r =>
       ∃ bytes, r = .Ok bytes ∧ bytes.val = sourceEnvironment source ⦄ := by
-  unfold CompileSource.Insts.ItascaStreamSource.environment
+  unfold runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
   simp only [SourceBounds] at h
   step*
   simp_all [sourceEnvironment]
@@ -44,7 +49,7 @@ def sourceTail (source : CompileSource) := source.bytes.val.drop source.code_end
 @[step] theorem source_tail_spec (source : CompileSource) (h : SourceBounds source) :
     CompileSource.Insts.ItascaStreamSource.tail source ⦃ r =>
       ∃ bytes, r = .Ok bytes ∧ bytes.val = sourceTail source ⦄ := by
-  unfold CompileSource.Insts.ItascaStreamSource.tail
+  unfold runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
   simp only [SourceBounds] at h
   step*
   simp_all [sourceTail]
@@ -52,7 +57,7 @@ def sourceTail (source : CompileSource) := source.bytes.val.drop source.code_end
 @[step] theorem source_code_len_spec (source : CompileSource) (h : SourceBounds source) :
     CompileSource.Insts.ItascaStreamSource.code_len source ⦃ n =>
       n.val = source.code_end.val - source.code_start.val ⦄ := by
-  unfold CompileSource.Insts.ItascaStreamSource.code_len
+  unfold runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len
   simp only [SourceBounds] at h
   step*
 
@@ -68,7 +73,7 @@ def sourceTail (source : CompileSource) := source.bytes.val.drop source.code_end
     have := h.2
     change source.code_end.val ≤ source.bytes.val.length at this
     omega
-  unfold CompileSource.Insts.ItascaStreamSource.code
+  unfold runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
   step*
   refine ⟨by scalar_tac, by scalar_tac, ?_⟩
   have hl : last.val - first.val ≤ (source.code_end.val - source.code_start.val) - first.val := by
@@ -97,23 +102,23 @@ theorem source_coherent (source : CompileSource) (h : SourceBounds source) :
   constructor
   · intro bytes hr
     have hs := source_environment_spec source h
-    change CompileSource.Insts.ItascaStreamSource.environment source = _ at hr
+    change runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment source = _ at hr
     simp only [hr, WP.spec_ok] at hs
     obtain ⟨other, heq, hb⟩ := hs
     cases heq
     exact hb
   · intro len hr
     have hs := source_code_len_spec source h
-    change CompileSource.Insts.ItascaStreamSource.code_len source = _ at hr
+    change runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len source = _ at hr
     simpa only [hr, WP.spec_ok, source_code_length source h] using hs
   · intro first last bytes _ _ hr
     have hs := source_code_spec source h first last
-    change CompileSource.Insts.ItascaStreamSource.code source first last = _ at hr
+    change runtime.compiler.CompileSource.Insts.ItascaStreamSource.code source first last = _ at hr
     simp only [hr, WP.spec_ok] at hs
     exact hs.2.2
   · intro bytes hr
     have hs := source_tail_spec source h
-    change CompileSource.Insts.ItascaStreamSource.tail source = _ at hr
+    change runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail source = _ at hr
     simp only [hr, WP.spec_ok] at hs
     obtain ⟨other, heq, hb⟩ := hs
     cases heq
@@ -161,325 +166,21 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- The execution extraction's LEB reader is definitionally the canonical
-reader, including its loop. This bridge adds no decoding assumption. -/
-theorem compiler_leb_eq (bytes : Slice U8) (pos : Usize) :
-    reader.read_u32_leb bytes pos = Itasca.reader.read_u32_leb bytes pos := by rfl
-
-@[step] theorem compiler_leb_spec (bytes : Slice U8) (pos : Usize) :
-    reader.read_u32_leb bytes pos ⦃ out => match out with
-      | .Err _ => True
-      | .Ok (_, next) => pos.val < next.val ∧ next.val ≤ bytes.length ⦄ := by
-  rw [compiler_leb_eq]
-  step with Itasca.reader.read_u32_leb.spec bytes pos as ⟨out, decoded⟩
-  cases out with
-  | Err error => trivial
-  | Ok pair =>
-    obtain ⟨value, next⟩ := pair
-    have span := Itasca.Leb128.Decoded.span bytes pos value next decoded
-    exact ⟨span.1, span.2.2⟩
-
-def regionMeasure (bytes : Slice U8) (pos : Usize) (found : Bool) : Nat :=
-  (bytes.length - pos.val) * 2 + if found then 0 else 1
-
 @[step] theorem code_region_body_spec (bytes : Slice U8) (pos : Usize) (found : Bool)
     (first last : Usize) (ordered : first.val ≤ last.val) (bounded : last.val ≤ bytes.length) :
     runtime.compiler.code_region_loop.body bytes pos found first last ⦃ out => match out with
       | .done (start, finish) => start.val ≤ finish.val ∧ finish.val ≤ bytes.length
       | .cont (next, seen, start, finish) => start.val ≤ finish.val ∧ finish.val ≤ bytes.length ∧
           regionMeasure bytes next seen < regionMeasure bytes pos found ⦄ := by
-  unfold runtime.compiler.code_region_loop.body
-  dsimp only
-  split
-  · rename_i more
-    split
-    · simp only [WP.spec_ok]
-      exact ⟨ordered, bounded⟩
-    · rename_i unseen
-      have notFound : found = false := by simpa using unseen
-      subst found
-      step as ⟨id, idEq⟩
-      split
-      · split
-        · simp only [WP.spec_ok, regionMeasure]
-          scalar_tac
-        · step as ⟨start, startEq⟩
-          step with compiler_leb_spec bytes start as ⟨result, span⟩
-          cases result with
-          | Err error =>
-            simp only [bind_ok]
-            split <;> simp only [WP.spec_ok, regionMeasure] <;> scalar_tac
-          | Ok pair =>
-            obtain ⟨len, contents⟩ := pair
-            dsimp only at span
-            step as ⟨count, countEq⟩
-            step as ⟨remaining, remainingEq⟩
-            simp only [core.cmp.impls.OrdUsize.min, lift, bind_ok]
-            split <;> step* <;> simp_all [regionMeasure] <;> scalar_tac
-      · step as ⟨start, startEq⟩
-        step with compiler_leb_spec bytes start as ⟨result, span⟩
-        cases result with
-        | Err error =>
-          simp only [bind_ok]
-          split <;> simp only [WP.spec_ok, regionMeasure] <;> scalar_tac
-        | Ok pair =>
-          obtain ⟨len, contents⟩ := pair
-          dsimp only at span
-          step as ⟨count, countEq⟩
-          step as ⟨remaining, remainingEq⟩
-          simp only [core.cmp.impls.OrdUsize.min, lift, bind_ok]
-          split <;> step* <;> simp_all [regionMeasure] <;> scalar_tac
-  · simp only [WP.spec_ok]
-    exact ⟨ordered, bounded⟩
+  exact runtime.compiler.code_region_loop.body.total bytes pos found first last ordered bounded
 
 /-- Code-region scanning always returns ordered in-bounds source views,
 including malformed and truncated modules. -/
 @[step] theorem code_region_spec (bytes : Slice U8) :
     runtime.compiler.code_region bytes ⦃ result => result.1.val ≤ result.2.val ∧ result.2.val ≤ bytes.length ⦄ := by
-  unfold runtime.compiler.code_region runtime.compiler.code_region_loop
-  apply loop.spec_decr_nat (fun state => regionMeasure bytes state.1 state.2.1)
-    (fun state => state.2.2.1.val ≤ state.2.2.2.val ∧ state.2.2.2.val ≤ bytes.length)
-  · rintro ⟨pos, found, first, last⟩ ⟨ordered, bounded⟩
-    apply WP.spec_mono (code_region_body_spec bytes pos found first last ordered bounded)
-    intro result post
-    cases result <;> simpa only [and_assoc] using post
-  · simp
-end Itasca.Runtime.Compiler
-
-end
-
-/-! ## WellFormedTotal -/
-
-section
-
-/-!
-Normal return of per-instruction validity checks and complete function well-formedness checks, including jump/control tables.
--/
-
-/-! ## Instruction Projection Total -/
-
-section
-
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
-set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
-@[step] theorem slots_fit_total (f : runtime.bytecode.CompiledFunction) (start count : U32) :
-    runtime.bytecode.CompiledFunction.slots_fit f start count ⦃ _ => True ⦄ := by
-  unfold runtime.bytecode.CompiledFunction.slots_fit
-  split <;> step*
-
-@[step] theorem instruction_scalar_total (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.Instr.scalar instruction ⦃ _ => True ⦄ := by
-  cases instruction <;> simp [runtime.bytecode.Instr.scalar]
-
-@[step] theorem instruction_load_total (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.Instr.load instruction ⦃ _ => True ⦄ := by
-  cases instruction <;> simp [runtime.bytecode.Instr.load]
-
-@[step] theorem instruction_store_total (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.Instr.store instruction ⦃ _ => True ⦄ := by
-  cases instruction <;> simp [runtime.bytecode.Instr.store]
-
-@[step] theorem instruction_simd_total (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.Instr.simd instruction ⦃ result => match result with
-      | none => True
-      | some (op,_,_,_) => op.val < 256 ⦄ := by
-  cases instruction <;> norm_num [runtime.bytecode.Instr.simd, WP.spec_ok]
-
+  exact runtime.compiler.code_region.total bytes
 
 end Itasca.Runtime.Compiler
-
-end
-
-/-! ## Instruction Validity Total -/
-
-section
-
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
-set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
- @[step] theorem simd_shape_total (op : U32) (bound : op.val < 256) :
-    runtime.bytecode.simd_shape op ⦃ result => match result with
-      | none => True
-      | some (a,b,c,d) => a.val ≤ 2 ∧ b.val ≤ 2 ∧ c.val ≤ 2 ∧ d.val ≤ 2 ⦄ := by
-  rcases op with ⟨⟨n,hn⟩⟩
-  change n < 256 at bound
-  interval_cases n <;> with_unfolding_all
-    (apply (WP.spec_ok _).mpr; first | exact True.intro | exact ⟨by decide, by decide, by decide, by decide⟩)
-
-@[step] theorem other_valid_total (f : runtime.bytecode.CompiledFunction)
-    (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.CompiledFunction.other_valid f instruction ⦃ _ => True ⦄ := by
-  cases instruction <;> simp only [runtime.bytecode.CompiledFunction.other_valid, WP.spec_ok]
-  all_goals step*
-
-theorem instruction_valid_total (f : runtime.bytecode.CompiledFunction)
-    (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.CompiledFunction.instruction_valid f instruction ⦃ _ => True ⦄ := by
-  unfold runtime.bytecode.CompiledFunction.instruction_valid
-  step as ⟨scalar, _⟩
-  cases scalar with
-  | some values =>
-    rcases values with ⟨op, dst, a, b⟩
-    simp only [bind_ok]
-    step*
-  | none =>
-    simp only [bind_ok]
-    step as ⟨load, _⟩
-    cases load with
-    | some values =>
-      rcases values with ⟨op, dst, addr, offset⟩
-      simp only [bind_ok]
-      step*
-    | none =>
-      simp only [bind_ok]
-      step as ⟨store, _⟩
-      cases store with
-      | some values =>
-        rcases values with ⟨op, addr, value, offset⟩
-        simp only [bind_ok]
-        step*
-      | none =>
-        simp only [bind_ok]
-        step as ⟨simd, opcodeBound⟩
-        cases simd with
-        | some values =>
-          rcases values with ⟨op, dst, a, entry⟩
-          simp only [bind_ok]
-          step with simd_shape_total op opcodeBound as ⟨shape, bounded⟩
-          cases shape with
-          | none => simp
-          | some widths =>
-            rcases widths with ⟨x,y,z,out⟩
-            simp only [bind_ok]
-            step*
-        | none =>
-          simp only [bind_ok]
-          step*
-end Itasca.Runtime.Compiler
-
-end
-
-/-! ## Well Formed Total -/
-
-section
-
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
-
-/-- Jump-table validation terminates for arbitrary stored entries. -/
-@[step] theorem check_jump_tables_total
-    (entries : alloc.vec.Vec U32) (length : Usize) (valid : Bool) (index : Usize) :
-    runtime.bytecode.CompiledFunction.well_formed_loop1 entries length valid index ⦃ _ => True ⦄ := by
-  unfold runtime.bytecode.CompiledFunction.well_formed_loop1
-  apply loop.spec_decr_nat (fun state => entries.val.length - state.2.val) (fun _ => True)
-  · rintro ⟨valid, index⟩ _
-    unfold runtime.bytecode.CompiledFunction.well_formed_loop1.body
-    dsimp only
-    split
-    · cases valid with
-      | false => simp
-      | true =>
-        simp only [↓reduceIte]
-        step as ⟨entry, found⟩
-        step as ⟨target, targetEq⟩
-        split <;> step* <;> scalar_tac
-    · simp
-  · trivial
-
-/-- Control-map validation terminates even when a stored range is invalid. -/
-@[step] theorem check_control_maps_total
-    (entries : alloc.vec.Vec runtime.compiler.ControlMap) (first last length : Usize)
-    (valid : Bool) (index : Usize) :
-    runtime.bytecode.CompiledFunction.well_formed_loop2 entries first last length valid index ⦃ _ => True ⦄ := by
-  unfold runtime.bytecode.CompiledFunction.well_formed_loop2
-  apply loop.spec_decr_nat (fun state => entries.val.length - state.2.val) (fun _ => True)
-  · rintro ⟨valid, index⟩ _
-    unfold runtime.bytecode.CompiledFunction.well_formed_loop2.body
-    dsimp only
-    split
-    · cases valid with
-      | false => simp
-      | true =>
-        simp only [↓reduceIte]
-        step as ⟨entry, found⟩
-        repeat' first | split | step | simp only [bind_ok, WP.spec_ok]
-        all_goals scalar_tac
-    · simp
-  · trivial
-
-/-- Instruction validation walks a bounded code vector; source coordinates are
-only read when the function has a matching source-offset vector. -/
-@[step] theorem check_instructions_total (f : runtime.bytecode.CompiledFunction)
-    (length : Usize) (synthetic valid : Bool) (index : Usize)
-    (codeLength : length.val = f.code.val.length)
-    (sourceLength : synthetic = false → f.source_offsets.val.length = f.code.val.length) :
-    checkInstructions f length synthetic valid index ⦃ _ => True ⦄ := by
-  unfold checkInstructions runtime.bytecode.CompiledFunction.well_formed_loop0
-  apply loop.spec_decr_nat (fun state => length.val - state.2.val) (fun _ => True)
-  · rintro ⟨valid, index⟩ _
-    unfold runtime.bytecode.CompiledFunction.well_formed_loop0.body
-    dsimp only
-    split
-    · cases valid with
-      | false => simp
-      | true =>
-        simp only [↓reduceIte]
-        have sourceBound : synthetic = false → index.val < f.source_offsets.val.length := by
-          intro isSource
-          rw [sourceLength isSource]
-          scalar_tac
-        cases synthetic with
-        | true =>
-          simp only [↓reduceIte, bind_ok]
-          step as ⟨instruction, found⟩
-          step with instruction_valid_total f instruction as ⟨checked, _⟩
-          split <;> step* <;> scalar_tac
-        | false =>
-          simp only [Bool.false_eq_true, ↓reduceIte]
-          have bounded := sourceBound rfl
-          step as ⟨source, found⟩
-          repeat' first | split | step | simp only [bind_ok, WP.spec_ok]
-          all_goals first | step with instruction_valid_total f _ | skip
-          all_goals repeat' first | split | step
-          all_goals scalar_tac
-    · simp
-  · trivial
-
-@[step] theorem is_return_total (instruction : runtime.bytecode.Instr) :
-    runtime.bytecode.is_return instruction ⦃ _ => True ⦄ := by
-  cases instruction <;> simp [runtime.bytecode.is_return]
-
-/-- All three checker passes return normally, independently of whether they
-accept the function. -/
-theorem checked_tail_total (f : runtime.bytecode.CompiledFunction) (length : Usize)
-    (synthetic : Bool) (codeLength : length.val = f.code.val.length)
-    (sourceLength : synthetic = false → f.source_offsets.val.length = f.code.val.length) :
-    (do
-      let valid ← checkInstructions f length synthetic true 0#usize
-      let valid' ← runtime.bytecode.CompiledFunction.well_formed_loop1 f.jump_tables length valid 0#usize
-      runtime.bytecode.CompiledFunction.well_formed_loop2 f.controls f.body_start f.body_end length valid' 0#usize)
-      ⦃ _ => True ⦄ := by
-  step with check_instructions_total f length synthetic true 0#usize codeLength sourceLength
-  step*
-
-/-- The actual bytecode publication gate terminates on arbitrary compiled
-records, including invalid instructions, metadata, and coordinates. -/
-theorem well_formed_total (f : runtime.bytecode.CompiledFunction) :
-    runtime.bytecode.CompiledFunction.well_formed f ⦃ _ => True ⦄ := by
-  unfold runtime.bytecode.CompiledFunction.well_formed
-  simp only [alloc.vec.Vec.is_empty, bind_ok]
-  repeat' first
-    | contradiction
-    | apply checked_tail_total f (alloc.vec.Vec.len f.code) _ rfl <;> (intro h; scalar_tac)
-    | (split <;> try simp only [bind_ok, WP.spec_ok])
-    | step
-    | scalar_tac
-end Itasca.Runtime.Compiler
-
-end
 
 end
 
@@ -496,15 +197,7 @@ validation results. Invalid frames or bytecode are rejected by the actual gate. 
     (compiler : runtime.compiler.FunctionCompiler A)
     (validated : core.result.Result Unit Itasca.error.Error) :
     runtime.compiler.FunctionCompiler.finish ops compiler validated ⦃ out => out.2 = compiler.budget ⦄ := by
-  cases validated with
-  | Err error => simp [runtime.compiler.FunctionCompiler.finish]
-  | Ok value =>
-    cases value
-    simp only [runtime.compiler.FunctionCompiler.finish, alloc.vec.Vec.is_empty, bind_ok]
-    split
-    · step with well_formed_total compiler.function as ⟨checked⟩
-      cases checked <;> simp
-    · simp
+  exact runtime.compiler.FunctionCompiler.finish.total ops compiler validated
 end Itasca.Runtime.Compiler
 
 end
@@ -598,6 +291,38 @@ theorem compile_entry_accepted {A : Type} (allocator : runtime.platform.Alloc A)
             validated, finished, bound, ?_, ?_⟩⟩
           · rw [List.getElem?_eq_getElem bound, ← lookupSpec]
           · simpa only [backEq] using schedulerEq.symm
+
+/-- The recorded dispatch, validation, finish and vacant-slot stages replay the
+actual successful scheduler call. -/
+theorem CompileEntryWitness.called {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    (w : CompileEntryWitness ops before after batch finalBatch) :
+    runtime.compiler.CompileScheduler.compile_entry ops before batch = .ok (.Ok (), after, finalBatch) := by
+  rw [w.published]
+  unfold runtime.compiler.CompileScheduler.compile_entry
+  simp only [w.dispatch, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
+    runtime.compiler.Budget.copy_state, Itasca.stream.CodeBatch.impl.code_offset,
+    uncurry_apply_pair, w.coordinates, w.created, w.validated, w.finished]
+  have fits : ¬ w.entry.index ≥ alloc.vec.Vec.len before.functions := by
+    have := w.indexBound
+    scalar_tac
+  simp only [fits, ↓reduceIte]
+  have slotBound := w.indexBound
+  have found := alloc.vec.Vec.index_usize_spec before.functions w.entry.index w.indexBound
+  have missing : before.functions.val[w.entry.index.val] = none := by
+    simpa only [List.getElem?_eq_getElem w.indexBound, Option.some.injEq] using w.vacant
+  simp only [missing] at found
+  obtain ⟨existing, lookup, same⟩ := WP.spec_imp_exists found
+  subst existing
+  simp only [alloc.vec.Vec.index_slice_index]
+  rw [lookup]
+  simp only [bind_ok, core.option.Option.is_some, ↓reduceIte]
+  obtain ⟨⟨old, back⟩, mutable, oldEq, backEq⟩ := WP.spec_imp_exists
+    (alloc.vec.Vec.index_mut_usize_spec before.functions w.entry.index w.indexBound)
+  simp only [alloc.vec.Vec.index_mut_slice_index]
+  rw [mutable]
+  simp only [bind_ok, uncurry_apply_pair, backEq]
+  rfl
 
 theorem CompileEntryWitness.reachable {A : Type} {allocator : runtime.platform.Alloc A}
     {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
@@ -842,11 +567,11 @@ theorem compiler_submit_accepted {A : Type} (allocator : runtime.platform.Alloc 
     simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     obtain ⟨⟨result, finalBudget, queue⟩, pushed, rest⟩ := bind_ok_inv _ _ _ rest
     cases result with
-    | Err error => simp [runtime.compiler.visitor_result, core.result.Result.Insts.CoreOpsTry.branch,
+    | Err error => simp [runtime.compiler.visitor_result.eq, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
     | Ok acceptedUnit =>
       cases acceptedUnit
-      simp only [uncurry_apply_pair, runtime.compiler.visitor_result,
+      simp only [uncurry_apply_pair, runtime.compiler.visitor_result.eq,
         core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Result.ok.injEq, Prod.mk.injEq] at rest
       obtain ⟨_, output⟩ := rest
       subst after
@@ -864,7 +589,7 @@ theorem compiler_poll_accepted {A : Type} (allocator : runtime.platform.Alloc A)
       allocator before = .ok (.Ok batch, after)) :
     before.completed.val = after.completed.val ++ [batch] ∧
       after = {before with completed := after.completed} := by
-  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch at accepted
+  rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch.eq] at accepted
   simp only [alloc.vec.Vec.pop, bind_ok] at accepted
   cases empty : before.completed.val.getLast? with
   | none => simp [empty, core.option.Option.ok_or] at accepted
@@ -877,3 +602,195 @@ theorem compiler_poll_accepted {A : Type} (allocator : runtime.platform.Alloc A)
 end Itasca.Runtime.Compiler
 
 end
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca runtime.compiler
+
+/-- Dispatch, compiler construction, final bytecode checking, and indexed
+publication return normally. The remaining body obligation names only the
+fresh compiler reached by this actual issued entry. -/
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.compile_entry.total {A : Type} (ops : runtime.platform.Alloc A)
+    (before : CompileScheduler A) (issued : StreamBatch.Issued) (batch : stream.CodeBatch)
+    (bounded : issued.Bounded) (reachable : StreamBatch.Reachable issued batch)
+    (origin : before.code_start.val ≤ limits.MAX_MODULE_BYTES.val)
+    (validation : ∀ (entry : stream.CodeEntry) (dispatched : stream.CodeBatch)
+      (batchStart : Usize) (initial : FunctionCompiler A),
+      stream.CodeBatch.next_entry batch = .ok (.Ok entry,dispatched) →
+      (before.code_start + dispatched.code_offset : Result Usize) = .ok batchStart →
+      FunctionCompiler.new ops (alloc.vec.Vec.deref before.signatures)
+        (alloc.vec.Vec.deref before.func_param_slots) {before.budget with marker := ()} batchStart = .ok initial →
+      stream.CodeBatch.validate_func (FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+        dispatched entry.index initial ⦃ _ => True ⦄) :
+    CompileScheduler.compile_entry ops before batch ⦃ _ => True ⦄ := by
+  have identity := reachable.validation.1
+  obtain ⟨_,_,_,_,_,first,count⟩ := identity
+  have fits : batch.first_func.val + batch.num_funcs.val ≤ Usize.max := by
+    rw [first,count]
+    exact bounded.2.1.trans issued.env.func_type_indices.property
+  obtain ⟨⟨result,dispatched⟩,dispatch⟩ := stream.CodeBatch.next_entry.total batch fits
+  unfold runtime.compiler.CompileScheduler.compile_entry
+  rw [dispatch]
+  cases result with
+  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Ok entry =>
+    have reached := StreamBatch.Reachable.dispatch reachable dispatch
+    have identity := reached.validation.1
+    obtain ⟨_,_,_,code,offset,_,_⟩ := identity
+    have cap : limits.MAX_MODULE_BYTES.val + limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
+      simp only [limits.MAX_MODULE_BYTES]
+      scalar_tac
+    have startFits : before.code_start.val + dispatched.code_offset.val ≤ Usize.max := by
+      rw [offset]
+      have := bounded.2.2
+      omega
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
+      uncurry_apply_pair, runtime.compiler.Budget.copy_state,Itasca.stream.CodeBatch.impl.code_offset]
+    obtain ⟨batchStart,startRun,startEq⟩ := WP.spec_imp_exists (Usize.add_spec (x := before.code_start) (y := dispatched.code_offset) startFits)
+    rw [startRun]
+    simp only [bind_ok,uncurry_apply_pair]
+    obtain ⟨initial,created,_⟩ := WP.spec_imp_exists (compiler_new ops
+      (alloc.vec.Vec.deref before.signatures) (alloc.vec.Vec.deref before.func_param_slots)
+      {before.budget with marker := ()} batchStart)
+    rw [created]
+    simp only [bind_ok,uncurry_apply_pair]
+    obtain ⟨⟨status,worker,final⟩,validated,_⟩ := WP.spec_imp_exists
+      (validation entry dispatched batchStart initial dispatch startRun created)
+    rw [validated]
+    simp only [bind_ok,uncurry_apply_pair]
+    obtain ⟨⟨result,budget⟩,finished,_⟩ := WP.spec_imp_exists (compiler_finish_total ops final status)
+    rw [finished]
+    cases result with
+    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Ok function =>
+      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair]
+      split
+      · simp
+      · step as ⟨existing, found⟩
+        cases existing with
+        | some value => simp [core.option.Option.is_some]
+        | none =>
+          simp only [Option.isSome,Bool.false_eq_true,↓reduceIte]
+          step
+
+end Itasca.Runtime.Compiler
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca runtime.compiler
+
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.total {A : Type} (ops : runtime.platform.Alloc A)
+    (safe : CompileScheduler A → stream.CodeBatch → Prop)
+    (entries : ∀ scheduler worker, safe scheduler worker →
+      CompileScheduler.compile_entry ops scheduler worker ⦃ out =>
+        out.1 = .Ok () → safe out.2.1 out.2.2 ⦄)
+    (scheduler : CompileScheduler A) (worker : stream.CodeBatch)
+    (index : Usize) (status : core.result.Result Unit error.Error)
+    (held : status = .Ok () → safe scheduler worker) :
+    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
+      ops scheduler worker index status ⦃ out =>
+        ∃ final batch result, out = submitPack final batch result ∧
+          (result = .Ok () → safe final batch) ⦄ := by
+  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
+  apply loop.spec_decr_nat (fun st => Usize.max - st.2.2.1.val)
+    (fun st => st.2.2.2 = .Ok () → safe st.1 st.2.1)
+  · rintro ⟨scheduler,worker,index,status⟩ held
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok]
+    split
+    · rename_i inbounds
+      cases status with
+      | Err error =>
+        simp only [core.result.Result.is_ok,bind_ok,Bool.false_eq_true,↓reduceIte,WP.spec_ok]
+        exact ⟨scheduler,worker,.Err error,rfl,by intro h; cases h⟩
+      | Ok result =>
+        cases result
+        simp only [core.result.Result.is_ok,bind_ok,↓reduceIte]
+        obtain ⟨⟨result,next,batch⟩,run,preserved⟩ := WP.spec_imp_exists (entries scheduler worker (held rfl))
+        rw [run]
+        simp only [bind_ok]
+        step
+        exact ⟨preserved,by scalar_tac⟩
+    · simp only [WP.spec_ok]
+      exact ⟨scheduler,worker,status,rfl,held⟩
+  · exact held
+
+
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch.total {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops)
+    (safe : CompileScheduler A → stream.CodeBatch → Prop)
+    (entries : ∀ scheduler worker, safe scheduler worker →
+      CompileScheduler.compile_entry ops scheduler worker ⦃ out =>
+        out.1 = .Ok () → safe out.2.1 out.2.2 ⦄)
+    (room : ∀ scheduler worker, safe scheduler worker → scheduler.completed.val.length < Usize.max)
+    (scheduler : CompileScheduler A) (worker : stream.CodeBatch)
+    (held : safe scheduler worker) :
+    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch ops scheduler worker
+      ⦃ _ => True ⦄ := by
+  obtain ⟨out,run,final,batch,result,rfl,preserved⟩ := WP.spec_imp_exists
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.total ops safe entries scheduler worker 0#usize (.Ok ()) (fun _ => held))
+  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
+  rw [run]
+  simp only [submitPack,bind_ok,uncurry_apply_pair]
+  cases result with
+  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  | Ok accepted =>
+    cases accepted
+    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
+    obtain ⟨⟨result,budget,queue⟩,pushed,_⟩ := WP.spec_imp_exists
+      (budget_push ops law final.budget final.completed batch (room final batch (preserved rfl)))
+    rw [pushed]
+    cases result <;> simp [runtime.compiler.visitor_result.eq,core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+
+
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.done
+    {A : Type} (ops : runtime.platform.Alloc A) (before : CompileScheduler A) (batch : stream.CodeBatch)
+    (index : Usize) (ended : ¬ index < batch.num_funcs) :
+    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop ops before batch index (.Ok ()) =
+      .ok (submitPack before batch (.Ok ())) := by
+  rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop, loop]
+  simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
+    stream.CodeBatch.len, ended, ite_false, bind_ok, submitPack]
+
+/-- A live submission step records the exact compiled worker and increment. -/
+structure SubmitStep {A : Type} (ops : runtime.platform.Alloc A)
+    (before : CompileScheduler A) (batch : stream.CodeBatch) (index : Usize) where
+  middle : CompileScheduler A
+  worker : stream.CodeBatch
+  nextIndex : Usize
+  more : index < batch.num_funcs
+  compiled : CompileScheduler.compile_entry ops before batch = .ok (.Ok (), middle, worker)
+  increment : (index + 1#usize : Result Usize) = .ok nextIndex
+
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.available_step
+    {A : Type} {ops : runtime.platform.Alloc A} {before : CompileScheduler A} {batch : stream.CodeBatch} {index : Usize}
+    (step : SubmitStep ops before batch index) (after : CompileScheduler A) (worker : stream.CodeBatch)
+    (continued : CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
+      ops step.middle step.worker step.nextIndex (.Ok ()) = .ok (submitPack after worker (.Ok ()))) :
+    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop ops before batch index (.Ok ()) =
+      .ok (submitPack after worker (.Ok ())) := by
+  rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop, loop]
+  simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
+    stream.CodeBatch.len, bind_ok, step.more, ite_true, core.result.Result.is_ok, step.compiled,
+    uncurry_apply_pair, step.increment]
+  simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,
+    runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,
+    stream.CodeBatch.len, bind_ok, core.result.Result.is_ok] using continued
+
+/-- Submission publishes the actual completed worker and exact allocated queue. -/
+theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch.available
+    {A : Type} (ops : runtime.platform.Alloc A) (before middle : CompileScheduler A)
+    (batch worker : stream.CodeBatch) (budget : Budget A) (queue : alloc.vec.Vec stream.CodeBatch)
+    (compiled : CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
+      ops before batch 0#usize (.Ok ()) = .ok (submitPack middle worker (.Ok ())))
+    (pushed : Budget.push ops middle.budget middle.completed worker = .ok (.Ok (), budget, queue)) :
+    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch ops before batch =
+      .ok (.Ok (), {middle with budget, completed := queue}) := by
+  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
+  rw [compiled]
+  simp only [submitPack, bind_ok, uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
+    pushed, runtime.compiler.visitor_result.eq]
+
+
+end Itasca.Runtime.Compiler

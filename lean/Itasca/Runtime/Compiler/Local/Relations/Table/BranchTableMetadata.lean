@@ -1,5 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.TableBranchContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSuccess
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
@@ -29,51 +30,12 @@ theorem compiler_lower_table_success {A : Type} (ops : runtime.platform.Alloc A)
       runtime.compiler.FunctionCompiler.operand ops before 1#usize = .ok (.Ok selector) ∧
       Emitted before emitted (.JumpTable selector start len) ∧
       TableBranchRun ops emitted 0 after := by
-  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches at accepted
-  obtain ⟨startResult,startCalled,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases startResult with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok start =>
-    have startSpec := bounded_index (alloc.vec.Vec.len before.function.jump_tables)
-    rw [startCalled, WP.spec_ok] at startSpec
-    have startEq := startSpec start rfl
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨lenResult,lenCalled,rest⟩ := bind_ok_inv _ _ _ rest
-    cases lenResult with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok len =>
-      have lenSpec := bounded_index (alloc.vec.Vec.len before.table_depths)
-      rw [lenCalled, WP.spec_ok] at lenSpec
-      have lenEq := lenSpec len rfl
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨operand,operandCalled,rest⟩ := bind_ok_inv _ _ _ rest
-      cases operand with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok selector =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨⟨emittedStatus,emitted⟩,emitCalled,rest⟩ := bind_ok_inv _ _ _ rest
-        cases emittedStatus with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-        | Ok unit =>
-          cases unit
-          simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-          obtain ⟨output,loopCalled,rest⟩ := bind_ok_inv _ _ _ rest
-          have statusEq : snapshotStatus output = .Ok () := by
-            rcases output with ⟨signatures, functionSlots, budget, batchStart, function, frames, reachable,
-              nextSource, operands, height, offsets, depths, status⟩
-            exact (Prod.mk.inj (Result.ok.injEq.mp rest)).1
-          have compilerEq : snapshotCompiler output = after := by
-            rcases output with ⟨signatures, functionSlots, budget, batchStart, function, frames, reachable,
-              nextSource, operands, height, offsets, depths, status⟩
-            exact (Prod.mk.inj (Result.ok.injEq.mp rest)).2
-          have trace := (compiler_table_loop_trace ops law emitted 0#usize (.Ok ()) output loopCalled statusEq).2
-          rw [compilerEq] at trace
-          exact ⟨start,len,selector,emitted,startEq,lenEq,operandCalled,
-            compiler_emit_success ops law before emitted _ emitCalled,trace⟩
+  obtain ⟨start, length, selector, emitted, output, startEq, lengthEq, operand, emission, loopCall, successful, same⟩ :=
+    (runtime.compiler.control.FunctionCompiler.lower_table_branches.inv ops before after (.Ok ()) accepted).success law
+  have trace := (compiler_table_loop_trace ops law emitted 0#usize (.Ok ()) output loopCall successful).2
+  rw [same] at trace
+  exact ⟨start, length, selector, emitted, startEq, lengthEq, operand, emission.emitted, trace⟩
+
 end Itasca.Runtime.Compiler
 
 end
@@ -93,17 +55,8 @@ theorem compiler_table_label_success {A : Type} (ops : runtime.platform.Alloc A)
       ops before state depth = .ok (.Ok (),after)) :
     ∃ budget depths, after = {before with budget, table_depths := depths} ∧
       depths.val = before.table_depths.val ++ [depth] := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label at accepted
-  obtain ⟨⟨result,budget⟩,_,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    obtain ⟨⟨result,finalBudget,depths⟩,pushed,rest⟩ := bind_ok_inv _ _ _ rest
-    simp only [uncurry_apply_pair,Result.ok.injEq,Prod.mk.injEq] at rest
-    obtain ⟨rfl,rfl⟩ := rest
-    exact ⟨finalBudget,depths,rfl,(budget_push_success ops law budget finalBudget before.table_depths depths depth pushed).2⟩
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before after state depth (.Ok ()) accepted
+  exact ⟨after.budget, after.table_depths, effect.frame, effect.appended law⟩
 
 /-- The final callback lowers all previously collected labels plus the default,
 clears its private buffer, and observes the unreachable validator continuation. -/
@@ -120,26 +73,19 @@ theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
       cleared.val = [] ∧
       runtime.compiler.FunctionCompiler.observe ops
         {lowered with reachable := false,table_depths := cleared} state = .ok (.Ok (),after) := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at accepted
-  obtain ⟨⟨result,labeled⟩,labeledCall,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    obtain ⟨budget,depths,rfl,depthEq⟩ := compiler_table_label_success ops law before labeled state default labeledCall
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,live,ite_true] at rest
-    obtain ⟨⟨status,lowered⟩,lowerCalled,rest⟩ := bind_ok_inv _ _ _ rest
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      obtain ⟨cleared,clearCalled,observeCalled⟩ := bind_ok_inv _ _ _ rest
-      have empty := runtime_clear lowered.table_depths
-      rw [clearCalled,WP.spec_ok] at empty
-      exact ⟨budget,depths,lowered,cleared,depthEq,by simpa only [live] using lowerCalled,empty,observeCalled⟩
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state default types (.Ok ()) accepted with
+  | @live labeled lowered cleared _ _ labelCall reachable lowerCall clearCall observed =>
+    have label := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state default (.Ok ()) labelCall
+    have empty := runtime_clear lowered.table_depths
+    rw [clearCall, WP.spec_ok] at empty
+    refine ⟨labeled.budget, labeled.table_depths, lowered, cleared, label.appended law, ?_, empty, observed⟩
+    rw [← label.frame]
+    exact lowerCall
+  | @dead labeled cleared _ _ labelCall dead clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state default (.Ok ()) labelCall).frame
+    rw [frame] at dead
+    simp only [live, Bool.true_eq_false] at dead
+
 end Itasca.Runtime.Compiler
 
 end

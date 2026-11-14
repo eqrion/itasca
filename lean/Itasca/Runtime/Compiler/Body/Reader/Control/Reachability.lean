@@ -120,7 +120,6 @@ Main declarations: `reader_branch_info_label` and `reader_branch_info_selected`.
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2
-set_option maxHeartbeats 2000000
 
 /-- Branch stack processing cannot change the label metadata produced by its actual reader. -/
 theorem reader_branch_info_label (st : code.BodyState) (data : Slice U8)

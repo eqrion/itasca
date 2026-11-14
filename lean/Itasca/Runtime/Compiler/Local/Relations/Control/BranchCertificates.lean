@@ -1,3 +1,7 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
@@ -13,7 +17,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 theorem compiler_enter_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -34,11 +38,9 @@ theorem compiler_branch_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (depth skip : U32) (conditional : Bool)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (.Ok (), after)) :
     after.next_source = before.next_source := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
-    repeat' cursor_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' cursor_step accepted using ops, law
+  have frame := (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional (.Ok ()) accepted).frame
+  rw [frame]
+
 theorem compiler_end_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)
@@ -46,10 +48,8 @@ theorem compiler_end_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' cursor_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' cursor_step accepted using ops, law
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType (.Ok ()) accepted).observation
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) observed rfl
 
 theorem compiler_else_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -57,12 +57,10 @@ theorem compiler_else_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' cursor_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' cursor_step accepted using ops, law
-
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state blockType (.Ok ()) accepted).observation
+  have post := compiler_observe ops law middle state
+  rw [observed, WP.spec_ok] at post
+  exact (post rfl).2.2.2.2.2.2.2.2.1
 
 end Itasca.Runtime.Compiler
 
@@ -74,7 +72,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 theorem compiler_enter_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -104,9 +102,11 @@ theorem compiler_branch_sources {A : Type} (ops : runtime.platform.Alloc A)
     (depth skip : U32) (conditional : Bool)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
-    repeat' sources_step accepted using ops, law
+  unfold SourceProgress
+  obtain ⟨_, count, code, sources⟩ := (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional (.Ok ()) accepted).source_trace law
+  have lengths := congrArg List.length sources
+  simp only [List.length_map, List.length_append, List.length_replicate] at lengths
+  omega
 theorem compiler_end_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)
@@ -114,8 +114,12 @@ theorem compiler_end_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' sources_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType (.Ok ()) accepted
+  obtain ⟨frame, remaining, popped, frames, codeLength, sources⟩ := effect.sources_frames law
+  have sourceLength := congrArg List.length sources
+  simp only [List.length_map, List.length_append] at sourceLength
+  unfold SourceProgress
+  cases label : frame.kind <;> simp only [label, List.length_nil, List.length_singleton] at codeLength sourceLength <;> omega
 
 theorem compiler_else_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -123,9 +127,15 @@ theorem compiler_else_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' sources_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state blockType (.Ok ()) accepted
+  cases effect with
+  | selected nonempty subtracted read progress =>
+    obtain ⟨fixups, appended, frames, reachable, codeLength, sources, cursor⟩ := progress.success_fields law
+    have sourceLength := congrArg List.length sources
+    simp only [List.length_map, List.length_append] at sourceLength
+    unfold SourceProgress
+    cases live : before.reachable <;>
+      simp only [live, Bool.false_eq_true, ite_false, ite_true, List.length_nil, List.length_singleton] at codeLength sourceLength <;> omega
 
 end Itasca.Runtime.Compiler
 

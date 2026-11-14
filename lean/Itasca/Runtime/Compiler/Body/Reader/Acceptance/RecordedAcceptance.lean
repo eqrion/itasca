@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
@@ -36,8 +37,8 @@ theorem compiler_on_i32_const_available_effect {A : Type} (ops : runtime.platfor
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_i32_const compiler state bits
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i32_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const.eq,lift,bind_ok]
   exact compiler_literal_available_effect ops bound available compiler state demand .i32 _
 
 /-- An independently accepted i32 reader is replayed with the same source
@@ -71,8 +72,8 @@ theorem compiler_on_i64_const_available_effect {A : Type} (ops : runtime.platfor
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_i64_const compiler state bits
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i64_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const.eq,lift,bind_ok]
   exact compiler_literal_available_effect ops bound available compiler state demand .i64 _
 
 /-- An independently accepted i64 reader is replayed with the same source
@@ -106,8 +107,8 @@ theorem compiler_on_f32_const_available_effect {A : Type} (ops : runtime.platfor
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_f32_const compiler state bits
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f32_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const.eq,lift,bind_ok]
   exact compiler_literal_available_effect ops bound available compiler state demand .f32 _
 
 /-- An independently accepted f32 reader is replayed with the same source
@@ -141,8 +142,8 @@ theorem compiler_on_f64_const_available_effect {A : Type} (ops : runtime.platfor
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_f64_const compiler state bits
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f64_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const.eq,lift,bind_ok]
   exact compiler_literal_available_effect ops bound available compiler state demand .f64 _
 
 /-- An independently accepted f64 reader is replayed with the same source
@@ -207,7 +208,7 @@ theorem compiler_reader_nop_available {A V : Type} (ops : runtime.platform.Alloc
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   intro value _ _
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_nop.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_nop]
   apply WP.spec_mono (compiler_nop_drop_available ops bound available compiler final demand false)
   intro result held
@@ -233,7 +234,7 @@ theorem compiler_reader_drop_available {A V : Type} (ops : runtime.platform.Allo
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   intro value _ _
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_drop.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_drop]
   apply WP.spec_mono (compiler_nop_drop_available ops bound available compiler final demand true)
   intro result held
@@ -280,7 +281,7 @@ theorem compiler_reader_global_get_available {A V : Type} (ops : runtime.platfor
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   intro value _ _
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_global_get.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_get]
   exact compiler_global_get_available ops bound available compiler final demand value
 
@@ -304,7 +305,7 @@ theorem compiler_reader_global_set_available {A V : Type} (ops : runtime.platfor
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   intro value _ _
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_global_set.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_global_set]
   exact compiler_global_set_available ops bound available compiler final demand value front ty layout
 
@@ -328,7 +329,7 @@ theorem compiler_reader_select_available {A V : Type} (ops : runtime.platform.Al
     (fun after => CompilationBudgetEffect compiler.budget after.budget
       (fun counter => if counter = .instructions then 1 else 0)) reference ?_
   intro value _ _
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_select.eq,
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_select]
   exact compiler_select_available ops bound available compiler final demand front ty false layout
 

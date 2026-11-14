@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Generated.Types
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
@@ -368,7 +369,24 @@ theorem lower_stateful_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (op : SourceMachine.Stateful.Instruction) (a b : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (statefulOpcode op) a b 0#u128 =
       statefulLowering ops compiler state op a b := by
-  cases op <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  cases op with
+  | refNull _ => exact runtime.compiler.lower.FunctionCompiler.op.ref_null ops compiler state a b 0#u128 reachable
+  | refFunc _ => exact runtime.compiler.lower.FunctionCompiler.op.ref_func ops compiler state a b 0#u128 reachable
+  | refIsNull => exact runtime.compiler.lower.FunctionCompiler.op.ref_is_null ops compiler state a b 0#u128 reachable
+  | tableGet _ => exact runtime.compiler.lower.FunctionCompiler.op.table_get ops compiler state a b 0#u128 reachable
+  | tableSet _ => exact runtime.compiler.lower.FunctionCompiler.op.table_set ops compiler state a b 0#u128 reachable
+  | tableSize _ => exact runtime.compiler.lower.FunctionCompiler.op.table_size ops compiler state a b 0#u128 reachable
+  | tableGrow _ => exact runtime.compiler.lower.FunctionCompiler.op.table_grow ops compiler state a b 0#u128 reachable
+  | tableFill _ => exact runtime.compiler.lower.FunctionCompiler.op.table_fill ops compiler state a b 0#u128 reachable
+  | tableCopy _ _ => exact runtime.compiler.lower.FunctionCompiler.op.table_copy ops compiler state a b 0#u128 reachable
+  | tableInit _ _ => exact runtime.compiler.lower.FunctionCompiler.op.table_init ops compiler state a b 0#u128 reachable
+  | elemDrop _ => exact runtime.compiler.lower.FunctionCompiler.op.elem_drop ops compiler state a b 0#u128 reachable
+  | memorySize => exact runtime.compiler.lower.FunctionCompiler.op.memory_size ops compiler state a b 0#u128 reachable
+  | memoryGrow => exact runtime.compiler.lower.FunctionCompiler.op.memory_grow ops compiler state a b 0#u128 reachable
+  | memoryFill => exact runtime.compiler.lower.FunctionCompiler.op.memory_fill ops compiler state a b 0#u128 reachable
+  | memoryCopy => exact runtime.compiler.lower.FunctionCompiler.op.memory_copy ops compiler state a b 0#u128 reachable
+  | memoryInit _ => exact runtime.compiler.lower.FunctionCompiler.op.memory_init ops compiler state a b 0#u128 reachable
+  | dataDrop _ => exact runtime.compiler.lower.FunctionCompiler.op.data_drop ops compiler state a b 0#u128 reachable
 
 /-- Actual non-pair dispatch, with operand reads exposed for layout proofs. -/
 theorem lower_stateful_eq {A : Type} (ops : runtime.platform.Alloc A)

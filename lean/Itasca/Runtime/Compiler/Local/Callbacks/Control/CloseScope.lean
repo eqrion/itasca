@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
@@ -723,70 +724,27 @@ def scopeExitLive (reachable : Bool) (frame : runtime.compiler.Frame) : Bool :=
         ∃ closed, out.2.function.controls.val[frame.map.val]? = some closed ∧
           closed.end_pc.val = target.val ∧
           closed.source_end.val = compiler.function.body_start.val + state.pos.val ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, noIf]
-  step with compiler_fixups ops { compiler with frames := rest } frame.fixups target 0#usize
-    (by simp) branches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  have notBody : (match frame.kind with
-      | .Body => (.ok true : Result Bool)
-      | .Block | .Loop | .Then | .Else => .ok false) = .ok false := by
-    cases kind : frame.kind <;> simp_all
-  change WP.spec (Aeneas.Std.bind (match frame.kind with
-    | .Body => (.ok true : Result Bool)
-    | .Block | .Loop | .Then | .Else => .ok false) _) _
-  rw [notBody, bind_ok]
-  simp only [Bool.false_eq_true, ite_false]
-  step with compiler_observe ops law _ state as ⟨out, hout, success⟩
-  obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := hout success
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · exact hframes
-  · simpa using hr
-  · simpa [hcode] using effect
-  · refine ⟨{ map with source_end := coordinate, end_pc := pcword }, ?_, ?_, hcoordinate⟩
-    · rw [hcontrols, hback]
-      simp [alloc.vec.Vec.set_val_eq, mapFits]
-    · rw [hpcword]
-      scalar_tac
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.total ops law compiler state .Block .Empty
+    ⟨frame, rest, frames, branches, (by intro queried selected; rw [noIf] at selected; cases selected),
+      mapFits, coordinateFits, (by intro body; exact False.elim (nonBody body))⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful ⊢
+  subst status
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops compiler after state .Block .Empty (.Ok ()) called
+  obtain ⟨remaining, reachable, code, original, closed, selected, controls, start, sourceStart, endPc, sourceEnd⟩ :=
+    effect.unguarded_success law frame rest target frames position noIf branches mapFits
+  have exactCode : after.function.code.val = patchCode compiler.function.code.val frame.fixups.val target := by
+    cases kindEq : frame.kind <;> first
+      | exact False.elim (nonBody kindEq)
+      | simpa only [kindEq, List.append_nil] using code
 
+  have closedLookup : after.function.controls.val[frame.map.val]? = some closed := by
+    rw [controls]
+    exact List.getElem?_set_self mapFits
+  refine ⟨remaining, reachable, ?_, closed, closedLookup, endPc, sourceEnd⟩
+  exact exactCode
 
 end Itasca.Runtime.Compiler
 

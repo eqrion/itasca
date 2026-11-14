@@ -1,12 +1,15 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
-import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 
 /-!
 Sections, each formerly its own module: BranchCallbackSafety, CallSafety, IndirectCallInversion, IndirectCallExclusions.
@@ -26,7 +29,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem branch_if_underflow_total {A} (ops : runtime.platform.Alloc A)
@@ -37,34 +39,13 @@ private theorem branch_if_underflow_total {A} (ops : runtime.platform.Alloc A)
     (underflow : compiler.height.val <
       (match frame.kind with | .Loop => frame.params | _ => frame.results).val + 1) :
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth 1#u32 true ⦃ _ => True ⦄ := by
-  cases kindEq : frame.kind
-  all_goals simp only [kindEq] at underflow
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, lastValue⟩
-    step as ⟨d, dValue⟩
-    step as ⟨actualIndex, indexValue⟩
-    have indexEq : actualIndex = index := by
-      apply UScalar.eq_of_val_eq
-      simp [alloc.vec.Vec.len] at lastValue
-      scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, foundValue⟩
-    have foundEq : found = frame := foundValue.trans (List.getElem?_eq_some_iff.mp lookup).2
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-    step as ⟨sum, sumValue⟩
-    cases sum with
-    | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨source, sourceValue⟩
-      cases source with
-      | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | some source => simp at sumValue sourceValue; omega
+  apply runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth 1#u32 true
+    ⟨index, frame, lookup, position⟩
+  intro source sourcePosition
+  change compiler.height.val < (branchWidth frame).val + 1 at underflow
+  dsimp only at sourcePosition
+  simp only [UScalar.ofNatCore_val_eq] at sourcePosition
+  omega
 
 @[step] theorem compiler_branch_if_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -117,7 +98,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 private theorem branch_if_empty_total {A} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (frame : runtime.compiler.Frame)
@@ -126,37 +106,10 @@ private theorem branch_if_empty_total {A} (ops : runtime.platform.Alloc A)
     (position : index.val + depth.val + 1 = compiler.frames.val.length)
     (empty : compiler.before.val = []) :
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth 1#u32 true ⦃ _ => True ⦄ := by
-  cases kindEq : frame.kind
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, lastValue⟩
-    step as ⟨d, dValue⟩
-    step as ⟨actualIndex, indexValue⟩
-    have indexEq : actualIndex = index := by
-      apply UScalar.eq_of_val_eq
-      simp [alloc.vec.Vec.len] at lastValue
-      scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, foundValue⟩
-    have foundEq : found = frame := foundValue.trans (List.getElem?_eq_some_iff.mp lookup).2
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-    step as ⟨sum, sumValue⟩
-    cases sum with
-    | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨source, sourceValue⟩
-      cases source with
-      | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | some source =>
-        simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          runtime.compiler.FunctionCompiler.operand, runtime.compiler.operand_at,
-          alloc.vec.Vec.deref, Slice.len, empty,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  apply runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth 1#u32 true
+    ⟨index, frame, lookup, position⟩
+  intro source sourcePosition
+  exact Or.inl ⟨rfl, empty⟩
 
 @[step] theorem compiler_branch_if_total_raw {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -187,7 +140,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem branch_depth_target (frames : alloc.vec.Vec runtime.compiler.Frame) (depth : U32)
@@ -215,19 +167,31 @@ theorem branch_depth_target (frames : alloc.vec.Vec runtime.compiler.Frame) (dep
     (coordinate : compiler.function.body_start.val+compiler.next_source.val ≤ Usize.max) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth types ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-  split
-  · obtain ⟨index,frame,lookup,position⟩ := branch_depth_target compiler.frames depth depthFits
-    step with compiler_branch_total ops law compiler frame index depth lookup position
-      (fixups.lookup lookup (by omega)) codeFits sourceFits coordinate as ⟨status,after⟩
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok unit =>
-      cases unit
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      exact compiler_observe_stack ops law {after with reachable := false} state
-  · exact compiler_observe_stack ops law compiler state
+  have normal : compiler.reachable = true → BranchCallbackNormal ops compiler depth false := by
+    intro live
+    obtain ⟨index, frame, lookup, position⟩ := branch_depth_target compiler.frames depth depthFits
+    refine ⟨⟨index, frame, lookup, position⟩, ?_⟩
+    intro source sourcePosition
+    have countBound : branchInstructionCount false frame source ≤ 2 := by
+      unfold branchInstructionCount
+      split
+      · omega
+      · simp only [Bool.false_eq_true, ite_false]
+        omega
+    exact Or.inr ⟨law, ⟨by change compiler.function.code.val.length + branchInstructionCount false frame source ≤ _; omega,
+      by change compiler.function.source_offsets.val.length + branchInstructionCount false frame source ≤ _; omega,
+      coordinate, fun _ => fixups.lookup lookup (by omega)⟩⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.total ops law compiler state depth types normal)
+  rw [called, WP.spec_ok]
+  intro accepted
+  change status = .Ok () at accepted
+  subst status
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv
+    ops compiler after state depth types (.Ok ()) called).observation
+  have stack := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at stack
+  exact stack rfl
 
 @[step] theorem compiler_br_if_callback_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -240,19 +204,33 @@ theorem branch_depth_target (frames : alloc.vec.Vec runtime.compiler.Frame) (dep
     (coordinate : compiler.function.body_start.val+compiler.next_source.val ≤ Usize.max) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if ops compiler state depth types ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
-  split
-  · obtain ⟨index,frame,lookup,position⟩ := branch_depth_target compiler.frames depth depthFits
-    step with compiler_branch_if_total_raw ops law compiler frame index depth lookup position
-      (fixups.lookup lookup (by omega)) pcBound codeFits sourceFits coordinate as ⟨status,after⟩
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok unit =>
-      cases unit
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      exact compiler_observe_stack ops law after state
-  · exact compiler_observe_stack ops law compiler state
+  clear pcBound
+  have normal : compiler.reachable = true → BranchCallbackNormal ops compiler depth true := by
+    intro live
+    obtain ⟨index, frame, lookup, position⟩ := branch_depth_target compiler.frames depth depthFits
+    refine ⟨⟨index, frame, lookup, position⟩, ?_⟩
+    intro source sourcePosition
+    have countBound : branchInstructionCount true frame source ≤ 3 := by
+      unfold branchInstructionCount
+      split
+      · omega
+      · simp only [ite_true]
+        omega
+    exact Or.inr ⟨law, ⟨by change compiler.function.code.val.length + branchInstructionCount true frame source ≤ _; omega,
+      by change compiler.function.source_offsets.val.length + branchInstructionCount true frame source ≤ _; omega,
+      coordinate, fun _ => fixups.lookup lookup (by omega)⟩⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.total ops law compiler state depth types normal)
+  rw [called, WP.spec_ok]
+  intro accepted
+  change status = .Ok () at accepted
+  subst status
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv
+    ops compiler after state depth types (.Ok ()) called).observation
+  have stack := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at stack
+  exact stack rfl
+
 end Itasca.Runtime.Compiler
 
 end
@@ -278,22 +256,7 @@ set_option maxRecDepth 4096
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 16#u16 index 0#u32 0#u128 ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   by_cases reachable : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 16#u16 index 0#u32 0#u128 = (do
-        let i ← lift (UScalar.cast .Usize index)
-        let slots ← Slice.index_usize compiler.func_param_slots i
-        let o ← lift (U32.checked_sub compiler.height slots)
-        let r ← core.option.Option.ok_or o Itasca.error.VisitError.OutOfMemory
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Call index val)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame Itasca.error.VisitError) residual
-          Result.ok (r1, compiler)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reachable]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.call ops compiler state index 0#u32 0#u128 reachable
     rw [run]
     step as ⟨i, hi⟩
     have bound : i.val < compiler.func_param_slots.length := by scalar_tac

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
@@ -95,7 +96,7 @@ theorem StructuredCompilerPrefix.return_dead {jumpTables : List Aeneas.Std.U32} 
   have sources := compiler_return_sources ops law before after state accepted
   have cursor := compiler_return_cursor ops law before after state accepted
   have ordinary := compiler_return_ordinary_result ops law before after state (.Ok ()) accepted
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return, dead, Bool.false_eq_true, ↓reduceIte] at accepted
+  rw [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.dead ops before state dead] at accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame
   change ObserveFrame before after at frame
@@ -302,7 +303,6 @@ Main declarations: `TableCollecting`. A direct consumer is `Compiler.Body.Reader
 attribute [local step] Itasca.code.check_suffix.spec
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2.Visitor
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem reader_table_label_wasm2 (st : code.BodyState) (data : Slice U8)
@@ -544,7 +544,6 @@ Main declarations: `compiler_branch_reader_total`. A direct consumer is `Compile
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_branch_reader_total {A} (ops : runtime.platform.Alloc A)
@@ -595,7 +594,6 @@ Main declarations: `StructuredCompilerPrefix.close_reader_total`. A direct consu
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem StructuredCompilerPrefix.close_reader_total {jumpTables : List U32} {A}

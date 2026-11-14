@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
@@ -14,7 +15,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 noncomputable def memoryLoadLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -62,11 +62,12 @@ theorem lower_memory_load_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (op : SourceMachine.Memory.Load) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryLoadOpcode op) offset alignment 0#u128 =
       memoryLoadLowering ops compiler state op offset := by
-  cases op with
-  | full ty => cases ty <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | packed ty width sign =>
-    cases ty <;> cases width <;> cases sign <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have allowed : 40 ≤ (memoryLoadOpcode op).val ∧ (memoryLoadOpcode op).val ≤ 53 := by
+    cases op with
+    | full ty => cases ty <;> decide
+    | packed ty width sign => cases ty <;> cases width <;> cases sign <;> decide
+  exact runtime.compiler.lower.FunctionCompiler.op.memory_load ops compiler state (memoryLoadOpcode op)
+    offset alignment 0#u128 reachable allowed
 
 noncomputable def memoryStoreLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -117,11 +118,12 @@ theorem lower_memory_store_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (op : SourceMachine.Memory.Store) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryStoreOpcode op) offset alignment 0#u128 =
       memoryStoreLowering ops compiler state op offset := by
-  cases op with
-  | full ty => cases ty <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | packed ty width =>
-    cases ty <;> cases width <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have allowed : 54 ≤ (memoryStoreOpcode op).val ∧ (memoryStoreOpcode op).val ≤ 62 := by
+    cases op with
+    | full ty => cases ty <;> decide
+    | packed ty width => cases ty <;> cases width <;> decide
+  exact runtime.compiler.lower.FunctionCompiler.op.memory_store ops compiler state (memoryStoreOpcode op)
+    offset alignment 0#u128 reachable allowed
 
 theorem lower_memory_load_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)

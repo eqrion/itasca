@@ -1,10 +1,22 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Aeneas.Std.Result
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
+
+@[step] theorem top_is_v128_total (values : Slice Itasca.code.StackType) :
+    runtime.compiler.lower.top_is_v128 values ⦃ _ => True ⦄ := by
+  unfold runtime.compiler.lower.top_is_v128
+  simp only [core.slice.Slice.is_empty, Slice.len_val, bind_ok]
+  split
+  · simp [WP.spec_ok]
+  · step as ⟨index, indexEq⟩
+    step as ⟨value, found⟩
+    cases value with
+    | Bot => simp [WP.spec_ok]
+    | Val ty => cases ty <;> simp [WP.spec_ok]
 
 noncomputable def globalGetLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) (index : U32) :
@@ -56,9 +68,7 @@ theorem lower_global_get_eq {A : Type} (ops : runtime.platform.Alloc A)
         (globalGetInstruction wide compiler.height index) := by
   have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state 35#u16 index 0#u32 0#u128 =
       globalGetLowering ops compiler state index := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+    exact runtime.compiler.lower.FunctionCompiler.op.global_get ops compiler state index 0#u32 0#u128 reachable
   rw [dispatch]
   unfold globalGetLowering
   dsimp only
@@ -75,9 +85,7 @@ theorem lower_global_set_eq {A : Type} (ops : runtime.platform.Alloc A)
         (globalSetInstruction (decide (difference = 2#u32)) src index) := by
   have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state 36#u16 index 0#u32 0#u128 =
       globalSetLowering ops compiler state index := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+    exact runtime.compiler.lower.FunctionCompiler.op.global_set ops compiler state index 0#u32 0#u128 reachable
   rw [dispatch]
   unfold globalSetLowering
   simp only [operand, hdifference, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,

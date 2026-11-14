@@ -7,7 +7,6 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
  theorem ScopeFrameShape.body_guard {locals scope frame}

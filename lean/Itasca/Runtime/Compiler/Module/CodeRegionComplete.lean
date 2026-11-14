@@ -1,3 +1,8 @@
+import Itasca.Runtime.Compiler.Local.Relations.Function.EnvironmentContracts
+import Itasca.Runtime.Compiler.Module.CodeRegionContracts
+import Itasca.Runtime.Compiler.Module.CollectionContracts
+import Itasca.Runtime.Compiler.Local.Relations.Function.SignatureCapture
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Itasca.Stream.Header
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
@@ -20,182 +25,14 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Itasca Itasca.ResultFacts
 
-def schedulerFrame {A : Type} (scheduler : runtime.compiler.CompileScheduler A) :=
-  (scheduler.completed, scheduler.tail, scheduler.code_start)
-
-theorem capture_signature_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
-    (result : core.result.Result Unit error.Error)
-    (run : runtime.compiler.CompileScheduler.capture_signature allocator before env index = .ok (result, after)) :
-    schedulerFrame after = schedulerFrame before := by
-  unfold runtime.compiler.CompileScheduler.capture_signature at run
-  obtain ⟨types, _, run⟩ := bind_ok_inv _ _ _ run
-  obtain ⟨signature, _, run⟩ := bind_ok_inv _ _ _ run
-  obtain ⟨params, _, run⟩ := bind_ok_inv _ _ _ run
-  cases params with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
-    exact congrArg schedulerFrame run.2.symm
-  | Ok params =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at run
-    obtain ⟨results, _, run⟩ := bind_ok_inv _ _ _ run
-    cases results with
-    | Err error =>
-      simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
-      exact congrArg schedulerFrame run.2.symm
-    | Ok results =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at run
-      obtain ⟨⟨status, budget, signatures⟩, _, run⟩ := bind_ok_inv _ _ _ run
-      obtain ⟨_, _, run⟩ := bind_ok_inv _ _ _ run
-      have same := congrArg Prod.snd (Result.ok_injective run)
-      simpa [schedulerFrame] using congrArg schedulerFrame same.symm
-
-theorem capture_func_slots_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
-    (result : core.result.Result Unit error.Error)
-    (run : runtime.compiler.CompileScheduler.capture_func_slots allocator before env index = .ok (result, after)) :
-    schedulerFrame after = schedulerFrame before := by
-  unfold runtime.compiler.CompileScheduler.capture_func_slots at run
-  obtain ⟨types, _, run⟩ := bind_ok_inv _ _ _ run
-  obtain ⟨signature, _, run⟩ := bind_ok_inv _ _ _ run
-  obtain ⟨params, _, run⟩ := bind_ok_inv _ _ _ run
-  cases params with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at run
-    exact congrArg schedulerFrame run.2.symm
-  | Ok params =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at run
-    obtain ⟨⟨status, budget, slots⟩, _, run⟩ := bind_ok_inv _ _ _ run
-    obtain ⟨_, _, run⟩ := bind_ok_inv _ _ _ run
-    have same := congrArg Prod.snd (Result.ok_injective run)
-    simpa [schedulerFrame] using congrArg schedulerFrame same.symm
-
-theorem environment_loop0_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
-    (result : core.result.Result Unit error.Error) (output)
-    (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-      allocator before env index result = .ok output) :
-    (output.2.2.1, output.2.2.2.2.1, output.2.2.2.2.2.1) = schedulerFrame before := by
-  generalize measure : Usize.max - index.val = n
-  induction n using Nat.strong_induction_on generalizing before index result with
-  | h n ih =>
-    unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0 at accepted
-    rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.metadata.Env.impl.types, bind_ok] at accepted
-    split at accepted
-    · cases result with
-      | Err error =>
-        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at accepted
-        subst output
-        rfl
-      | Ok acceptedUnit =>
-        cases acceptedUnit
-        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at accepted
-        obtain ⟨⟨nextResult, middle⟩, entry, tail⟩ := bind_ok_inv _ _ _ accepted
-        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
-        obtain ⟨nextIndex, increment, tail⟩ := bind_ok_inv _ _ _ tail
-        have arithmetic := UScalar.add_equiv index 1#usize
-        rw [increment] at arithmetic
-        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
-        have nextMax := nextIndex.hmax
-        have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-            allocator middle env nextIndex nextResult = .ok output := by
-          simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body, Itasca.metadata.Env.impl.types, core.result.Result.is_ok] using tail
-        exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
-          (capture_signature_frame allocator before middle env index nextResult entry)
-    · simp only [bind_ok, Result.ok.injEq] at accepted
-      subst output
-      rfl
-
-theorem environment_loop1_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before : runtime.compiler.CompileScheduler A) (env : metadata.Env) (index : Usize)
-    (result : core.result.Result Unit error.Error) (output)
-    (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1
-      allocator before env index result = .ok output) :
-    (output.2.2.1, output.2.2.2.2.1, output.2.2.2.2.2.1) = schedulerFrame before := by
-  generalize measure : Usize.max - index.val = n
-  induction n using Nat.strong_induction_on generalizing before index result with
-  | h n ih =>
-    unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1 at accepted
-    rw [loop] at accepted
-    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.metadata.Env.impl.func_types, bind_ok] at accepted
-    split at accepted
-    · cases result with
-      | Err error =>
-        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at accepted
-        subst output
-        rfl
-      | Ok acceptedUnit =>
-        cases acceptedUnit
-        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at accepted
-        obtain ⟨⟨nextResult, middle⟩, entry, tail⟩ := bind_ok_inv _ _ _ accepted
-        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
-        obtain ⟨nextIndex, increment, tail⟩ := bind_ok_inv _ _ _ tail
-        have arithmetic := UScalar.add_equiv index 1#usize
-        rw [increment] at arithmetic
-        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
-        have nextMax := nextIndex.hmax
-        have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1
-            allocator middle env nextIndex nextResult = .ok output := by
-          simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1,
-            runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop1.body, Itasca.metadata.Env.impl.func_types, core.result.Result.is_ok] using tail
-        exact (ih _ smaller middle nextIndex nextResult tail' rfl).trans
-          (capture_func_slots_frame allocator before middle env index nextResult entry)
-    · simp only [bind_ok, Result.ok.injEq] at accepted
-      subst output
-      rfl
-
 /-- Environment preparation does not alter queued workers, the source origin,
 or the tail handoff. This statement follows from actual successful callbacks. -/
 theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Alloc A)
     (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.Config)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
       allocator before env = .ok (.Ok config, after)) : schedulerFrame after = schedulerFrame before := by
-  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready at accepted
-  simp only [Itasca.metadata.Env.impl.func_type_indices, bind_ok] at accepted
-  split at accepted
-  · simp [runtime.compiler.Budget.reject.eq] at accepted
-  · simp only [Itasca.metadata.Env.impl.types, bind_ok] at accepted
-    split at accepted
-    · simp [runtime.compiler.Budget.reject.eq] at accepted
-    · obtain ⟨⟨signatures, slots, completed, functions, tail, start, budget, status⟩, loop0, rest⟩ :=
-        bind_ok_inv _ _ _ accepted
-      have frame0 := environment_loop0_frame allocator before env 0#usize (.Ok ()) _ loop0
-      cases status with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unit =>
-        cases unit
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨⟨signatures1, slots1, completed1, functions1, tail1, start1, budget1, status1⟩, loop1, rest⟩ :=
-          bind_ok_inv _ _ _ rest
-        have frame1 := environment_loop1_frame allocator
-          ⟨signatures, slots, completed, functions, tail, start, budget⟩ env 0#usize (.Ok ()) _ loop1
-        cases status1 with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-        | Ok unit =>
-          cases unit
-          simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-          obtain ⟨⟨functions2, budget2, status2⟩, _, rest⟩ := bind_ok_inv _ _ _ rest
-          cases status2 with
-          | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-          | Ok unit =>
-            cases unit
-            simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-              Result.ok.injEq, Prod.mk.injEq] at rest
-            obtain ⟨_, output⟩ := rest
-            subst after
-            exact frame1.trans frame0
+  exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready.inv allocator before after env config accepted
+
 end Itasca.Runtime.Compiler
 
 end
@@ -220,31 +57,7 @@ its source slot and appends precisely that function. -/
         pending.val[index.val]? = some (some function) ∧
         out.2.2.1.val = pending.val.set index.val none ∧
         out.2.2.2.val = functions.val ++ [function]) ⦄ := by
-  unfold runtime.compiler.take_function
-  step as ⟨value, back, lookup, restore⟩
-  cases value with
-  | none =>
-    simp [core.option.Option.ok_or,
-      core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      restore, alloc.vec.Vec.set_val_eq]
-  | some function =>
-    simp only [core.option.Option.ok_or,
-      core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with budget_push allocator law budget functions function capacity
-      as ⟨result, afterBudget, afterFunctions, pushed⟩
-    rcases pushed with ⟨rfl, rfl, appended⟩ | ⟨rfl, rfl, rejected⟩
-    · simp only [WP.spec_ok, restore, alloc.vec.Vec.set_val_eq, List.length_set]
-      refine ⟨True.intro, fun _ => ⟨function, ?_, True.intro, appended⟩⟩
-      rw [List.getElem?_eq_getElem bound, ← lookup]
-    · simp [restore, alloc.vec.Vec.set_val_eq]
-
-/-- The pending suffix retains its source indices; the output is exactly the
-already collected prefix, with no missing, duplicate, or reordered function. -/
-def CollectionPrefix (original : List (Option runtime.bytecode.CompiledFunction))
-    (pending : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction))
-    (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) (index : Nat) : Prop :=
-  original.take index = functions.val.map some ∧ pending.val.drop index = original.drop index
+  exact runtime.compiler.take_function.total allocator law budget pending index functions bound capacity
 
 @[step] theorem collect_functions_loop_spec {A : Type} (allocator : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect allocator) (original : List (Option runtime.bytecode.CompiledFunction))
@@ -256,55 +69,7 @@ def CollectionPrefix (original : List (Option runtime.bytecode.CompiledFunction)
     (invariant : result = .Ok () → CollectionPrefix original pending functions index.val) :
     runtime.compiler.collect_functions_loop allocator budget pending functions index result ⦃ out =>
       out.2.2.2 = .Ok () → original = out.2.2.1.val.map some ⦄ := by
-  unfold runtime.compiler.collect_functions_loop
-  apply loop.spec_decr_nat (fun state => original.length - state.2.2.2.1.val)
-    (fun state => state.2.1.val.length = original.length ∧ state.2.2.2.1.val ≤ original.length ∧
-      (state.2.2.2.2 = .Ok () → CollectionPrefix original state.2.1 state.2.2.1 state.2.2.2.1.val))
-  · rintro ⟨currentBudget, currentPending, currentFunctions, currentIndex, status⟩ ⟨length, bound, prefixInvariant⟩
-    dsimp only at length bound prefixInvariant
-    unfold runtime.compiler.collect_functions_loop.body
-    dsimp only
-    split
-    · rename_i more
-      have inbounds : currentIndex.val < currentPending.val.length := by scalar_tac
-      have originalBound : currentIndex.val < original.length := by omega
-      cases status with
-      | Err error => simp [core.result.Result.is_ok]
-      | Ok acceptedUnit =>
-        cases acceptedUnit
-        obtain ⟨collected, remaining⟩ := prefixInvariant rfl
-        have collectedLength := congrArg List.length collected
-        simp only [List.length_take, List.length_map, Nat.min_eq_left bound] at collectedLength
-        have capacity : currentFunctions.val.length < Usize.max := by
-          have := currentPending.property
-          omega
-        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte]
-        step with take_function_spec allocator law currentBudget currentPending currentIndex currentFunctions
-          inbounds capacity as ⟨nextStatus, nextBudget, nextPending, nextFunctions, sameLength, taken⟩
-        step as ⟨nextIndex, nextEq⟩
-        refine ⟨?_, ?_, ?_, ?_⟩
-        · exact sameLength.trans length
-        · scalar_tac
-        · intro success
-          obtain ⟨function, found, pendingEq, appended⟩ := taken success
-          have lookup := congrArg (fun values => values[0]?) remaining
-          simp only [List.getElem?_drop, Nat.add_zero] at lookup
-          have originalFound : original[currentIndex.val]? = some (some function) := lookup.symm.trans found
-          have element := (List.getElem?_eq_some_iff.mp originalFound).2
-          constructor
-          · rw [nextEq, List.take_succ_eq_append_getElem originalBound, element, collected, appended]
-            simp
-          · rw [nextEq, pendingEq, List.drop_set_of_lt (Nat.lt_succ_self _)]
-            have tail := congrArg (List.drop 1) remaining
-            simpa only [List.drop_drop] using tail
-        · scalar_tac
-    · rename_i finished
-      have indexEnd : currentIndex.val = original.length := by scalar_tac
-      simp only [WP.spec_ok]
-      intro success
-      obtain ⟨collected, _⟩ := prefixInvariant success
-      simpa only [indexEnd, List.take_length] using collected
-  · exact ⟨length, bound, invariant⟩
+  exact runtime.compiler.collect_functions_loop.total allocator law original budget pending functions index result length bound invariant
 
 /-- Actual collection succeeds exactly in source order. The final pending
 vector is internal; callers receive the dense vector with every original slot. -/
@@ -313,16 +78,7 @@ vector is internal; callers receive the dense vector with every original slot. -
     (pending : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)) :
     runtime.compiler.collect_functions allocator budget pending ⦃ out =>
       ∀ functions, out.1 = .Ok functions → pending.val = functions.val.map some ⦄ := by
-  unfold runtime.compiler.collect_functions
-  step with collect_functions_loop_spec allocator law pending.val budget pending
-    (alloc.vec.Vec.new _) 0#usize (.Ok ()) rfl (by simp)
-    (by simp [CollectionPrefix, alloc.vec.Vec.new]) as ⟨afterBudget, afterPending, functions, status, collected⟩
-  cases status with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok acceptedUnit =>
-    cases acceptedUnit
-    simp [core.result.Result.Insts.CoreOpsTry.branch, collected rfl]
+  exact runtime.compiler.collect_functions.total allocator law budget pending
 
 end Itasca.Runtime.Compiler
 
@@ -412,7 +168,7 @@ structure SchedulerInitial {A : Type} (scheduler : CompileScheduler A) : Prop wh
     (ready : SchedulerReady env cursor scheduler) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch ops scheduler ⦃ out =>
       ∀ batch, out.1 = .Ok batch → SchedulerReady env cursor out.2 ⦄ := by
-  unfold CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
+  rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch.eq]
   simp only [alloc.vec.Vec.pop,bind_ok]
   cases present : scheduler.completed.val.getLast? with
   | none => simp [core.option.Option.ok_or]
@@ -448,58 +204,9 @@ theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Al
         (alloc.vec.Vec.deref before.func_param_slots) {before.budget with marker := ()} batchStart = .ok initial →
       stream.CodeBatch.validate_func (FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         dispatched entry.index initial ⦃ _ => True ⦄) :
-    CompileScheduler.compile_entry ops before batch ⦃ _ => True ⦄ := by
-  have identity := reachable.validation.1
-  obtain ⟨_,_,_,_,_,first,count⟩ := identity
-  have fits : batch.first_func.val + batch.num_funcs.val ≤ Usize.max := by
-    rw [first,count]
-    exact bounded.2.1.trans issued.env.func_type_indices.property
-  obtain ⟨⟨result,dispatched⟩,dispatch⟩ := stream.CodeBatch.next_entry.total batch fits
-  unfold CompileScheduler.compile_entry
-  rw [dispatch]
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok entry =>
-    have reached := StreamBatch.Reachable.dispatch reachable dispatch
-    have identity := reached.validation.1
-    obtain ⟨_,_,_,code,offset,_,_⟩ := identity
-    have cap : limits.MAX_MODULE_BYTES.val + limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
-      simp only [limits.MAX_MODULE_BYTES]
-      scalar_tac
-    have startFits : before.code_start.val + dispatched.code_offset.val ≤ Usize.max := by
-      rw [offset]
-      have := bounded.2.2
-      omega
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-      uncurry_apply_pair, Budget.copy_state,Itasca.stream.CodeBatch.impl.code_offset]
-    obtain ⟨batchStart,startRun,startEq⟩ := WP.spec_imp_exists (Usize.add_spec (x := before.code_start) (y := dispatched.code_offset) startFits)
-    rw [startRun]
-    simp only [bind_ok,uncurry_apply_pair]
-    obtain ⟨initial,created,_⟩ := WP.spec_imp_exists (compiler_new ops
-      (alloc.vec.Vec.deref before.signatures) (alloc.vec.Vec.deref before.func_param_slots)
-      {before.budget with marker := ()} batchStart)
-    rw [created]
-    simp only [bind_ok,uncurry_apply_pair]
-    obtain ⟨⟨status,worker,final⟩,validated,_⟩ := WP.spec_imp_exists
-      (validation entry dispatched batchStart initial dispatch startRun created)
-    rw [validated]
-    simp only [bind_ok,uncurry_apply_pair]
-    obtain ⟨⟨result,budget⟩,finished,_⟩ := WP.spec_imp_exists (compiler_finish_total ops final status)
-    rw [finished]
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok function =>
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair]
-      split
-      · simp
-      · step as ⟨existing, found⟩
-        cases existing with
-        | some value => simp [core.option.Option.is_some]
-        | none =>
-          simp only [Option.isSome,Bool.false_eq_true,↓reduceIte]
-          step
+    runtime.compiler.CompileScheduler.compile_entry ops before batch ⦃ _ => True ⦄  := by
+  exact runtime.compiler.CompileScheduler.compile_entry.total ops before issued batch
+    bounded reachable origin validation
 
 end Itasca.Runtime.Compiler
 
@@ -591,6 +298,91 @@ theorem compile_accepted {A : Type} (allocator : runtime.platform.Alloc A)
             exact ⟨⟨codeStart, codeEnd, initialEnv, env, scheduler, tail, functions, pending,
               collectedBudget, finalBudget, region, initialized, validated, tailReady, collected, lowered⟩⟩
 
+section
+open runtime.compiler
+
+theorem _root_.Itasca.runtime.compiler.compile_with.total {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (bytes : Slice U8)
+    (limits : CompileLimits)
+    (streaming : ∀ (codeStart codeEnd : Usize) (storage : metadata.Env),
+      codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
+      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+        (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
+        {bytes,code_start := codeStart,code_end := codeEnd}
+        (initialScheduler A limits codeStart) storage ⦃ out =>
+          True ⦄)
+    (lowering : ∀ (codeStart codeEnd : Usize) (storage env : metadata.Env)
+      (scheduler : CompileScheduler A) (tail : metadata.Tail)
+      (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
+      (budget : Budget A) (pending : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)),
+      codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
+      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+        (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
+        {bytes,code_start := codeStart,code_end := codeEnd}
+        (initialScheduler A limits codeStart) storage = .ok (.Ok (), scheduler, env) →
+      scheduler.tail = some tail →
+      collect_functions ops scheduler.budget scheduler.functions = .ok (.Ok functions, budget, pending) →
+      initialize.lower ops (uninitializedModule env tail functions) budget ⦃ _ => True ⦄) :
+    runtime.compiler.compile_with ops bytes limits ⦃ _ => True ⦄ := by
+  unfold runtime.compiler.compile_with
+  dsimp only
+  split
+  · simp
+  · obtain ⟨⟨codeStart,codeEnd⟩,region,bounds⟩ := WP.spec_imp_exists (code_region_spec bytes)
+    obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists metadata.Env.new.spec
+    simp only [region,initialized,bind_ok,uncurry_apply_pair]
+    obtain ⟨⟨status,scheduler,env⟩,validated,ready⟩ := WP.spec_imp_exists (streaming codeStart codeEnd storage bounds)
+    simp only [initialScheduler] at validated
+    simp only [validated]
+    simp only [bind_ok,uncurry_apply_pair]
+    cases status with
+    | Err error => cases scheduler.budget.error <;> simp
+    | Ok acceptedUnit =>
+      cases acceptedUnit
+      cases tailReady : scheduler.tail with
+      | none => simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | some tail =>
+        simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
+        obtain ⟨⟨collected,budget,pending⟩,collect,order⟩ := WP.spec_imp_exists
+          (collect_functions_spec ops law scheduler.budget scheduler.functions)
+        rw [collect]
+        simp only [bind_ok,uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch]
+        cases collected with
+        | Err error => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+        | Ok functions =>
+          obtain ⟨⟨result,executable,finalBudget⟩,lowered,_⟩ := WP.spec_imp_exists
+            (lowering codeStart codeEnd storage env scheduler tail functions budget pending bounds
+              (by simpa only [initialScheduler] using validated) tailReady collect)
+          simp only [bind_ok]
+          simp only [uninitializedModule] at lowered
+          rw [lowered]
+          cases result <;> cases choice : finalBudget.error <;> simp [choice]
+
+
+/-- A successful sequence of actual compiler stages publishes its executable
+when the independent module-byte limit permits entry. -/
+theorem _root_.Itasca.runtime.compiler.compile_with.available {A : Type}
+    {ops : runtime.platform.Alloc A} {bytes : Slice U8} {limits : CompileLimits}
+    {executable : ExecutableModule} (fits : bytes.length ≤ limits.max_module_bytes.val)
+    (w : CompileWitness ops bytes limits executable) :
+    compile_with ops bytes limits = .ok (.Ok executable) := by
+  have size : ¬ Slice.len bytes > limits.max_module_bytes := by scalar_tac
+  unfold runtime.compiler.compile_with
+  simp only [if_neg size, w.region, bind_ok, uncurry_apply_pair, w.initialized]
+  have validated := w.validated
+  simp only [initialScheduler] at validated
+  simp only [validated, bind_ok, uncurry_apply_pair, w.tailReady, core.option.Option.ok_or,
+    core.result.Result.Insts.CoreOpsTry.branch, w.collected]
+  have lowered := w.lowered
+  simp only [uninitializedModule] at lowered
+  rw [lowered]
+  simp only [bind_ok]
+  rfl
+
+
+end
+
 /-- The actual collection witness fixes the exact order of the defined code. -/
 theorem CompileWitness.function_order {A : Type} {allocator : runtime.platform.Alloc A}
     {bytes limits executable} (w : CompileWitness allocator bytes limits executable)
@@ -651,9 +443,9 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
   constructor
   · intro id history before chunk after accepted tracked
     have same : before = after := by
-      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section,
+      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_metadataModuleVisitorInst.eq,
+        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.project_on_custom_section.eq,
+        runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section.eq,
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked
@@ -698,15 +490,15 @@ theorem compiler_provenance {A : Type} (allocator : runtime.platform.Alloc A)
       exact reachable
   · intro id history before after tracked accepted
     have same : before = after := by
-      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.code_end,
+      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_code_end.eq,
+        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.code_end.eq,
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked
   · intro id history before tail after tracked accepted
     have same : {before with tail := some tail} = after := by
-      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready,
+      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_tail_ready.eq,
+        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready.eq,
         Result.ok.injEq, Prod.mk.injEq, true_and] using accepted
     subst after
     exact tracked.queue rfl
@@ -813,8 +605,8 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env bytes environment code tail
     coherent recombine initial w.validated
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
-    simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready,
+    simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_tail_ready.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready.eq,
       Result.ok.injEq, Prod.mk.injEq, true_and] using run.remaining.ready_call.symm
   have drained := compiler_drain_frame allocator 0#u64 run.remaining.ready w.scheduler
     run.remaining.pending run.remaining.remaining run.remaining.drain_call
@@ -852,98 +644,61 @@ private def compilerScan (data : Slice U8) (pos : Usize) :=
 
 private theorem compiler_found (data : Slice U8) (pos first last : Usize) :
     runtime.compiler.code_region_loop data pos true first last = .ok (first,last) := by
-  rw [runtime.compiler.code_region_loop,loop]
-  simp only [runtime.compiler.code_region_loop.body]
-  split <;> simp
+  exact runtime.compiler.code_region_loop.done data pos true first last first last
+    (runtime.compiler.code_region_loop.body.stopped data pos true first last (Or.inr rfl))
 
 private theorem compiler_split_body_section (data : Slice U8) (pos first last : Usize) (id : U8)
     (h : SectionHeader data pos id first last) (allowed : id.val ≤ 10 ∨ id.val = 12) :
     runtime.compiler.code_region_loop.body data pos false (Slice.len data) (Slice.len data) =
       .ok (if id = 10#u8 then .cont (last,true,pos,last)
         else .cont (last,false,Slice.len data,Slice.len data)) := by
-  obtain ⟨middle,count,header,decoded,lastValue,bounded⟩ := h
-  obtain ⟨position,byte,advance⟩ := header.byte.single
-  have read := Itasca.reader.read_u32_leb.complete data middle count first decoded
-  have post : runtime.compiler.code_region_loop.body data pos false (Slice.len data) (Slice.len data) ⦃ result =>
-      result = if id = 10#u8 then .cont (last,true,pos,last) else .cont (last,false,Slice.len data,Slice.len data) ⦄ := by
-    unfold runtime.compiler.code_region_loop.body
-    have inside : pos < Slice.len data := by scalar_tac
-    simp only [inside,↓reduceIte,Bool.false_eq_true]
-    step as ⟨opcode,lookup⟩
-    have actual : opcode = id := by simpa only [lookup] using byte
-    simp only [actual,byte]
-    by_cases high : id > 10#u8
-    · have countId : id = 12#u8 := UScalar.eq_of_val_eq (by scalar_tac)
-      simp only [high,↓reduceIte,countId,bne_self_eq_false,Bool.false_eq_true]
-      step as ⟨advanced,advancedValue⟩
-      have same : advanced = middle := UScalar.eq_of_val_eq (by omega)
-      subst advanced
-      simp only [compiler_leb_eq,read,bind_ok,lift]
-      step as ⟨remaining,remainingValue⟩
-      step as ⟨finish,finishValue⟩
-      have same : finish = last := UScalar.eq_of_val_eq (by scalar_tac)
-      subst finish
-      split <;> simp_all
-    · simp only [high,↓reduceIte]
-      step as ⟨advanced,advancedValue⟩
-      have same : advanced = middle := UScalar.eq_of_val_eq (by omega)
-      subst advanced
-      simp only [compiler_leb_eq,read,bind_ok,lift]
-      step as ⟨remaining,remainingValue⟩
-      step as ⟨finish,finishValue⟩
-      have same : finish = last := UScalar.eq_of_val_eq (by scalar_tac)
-      subst finish
-      split <;> simp_all
-  obtain ⟨result,called,same⟩ := WP.spec_imp_exists post
-  exact called.trans (congrArg Result.ok same)
+  have noStop : ¬ (id > 10#u8 ∧ id ≠ 12#u8) := by
+    intro stopped
+    rcases allowed with lower | count
+    · scalar_tac
+    · exact stopped.2 (UScalar.eq_of_val_eq count)
+  simpa only [if_neg noStop] using
+    runtime.compiler.code_region_loop.body.available data pos first last id h
 
 private theorem compiler_split_loop_eof (data : Slice U8) :
     compilerScan data (Slice.len data) = .ok (Slice.len data,Slice.len data) := by
-  rw [compilerScan,runtime.compiler.code_region_loop,loop]
-  simp [runtime.compiler.code_region_loop.body]
+  change runtime.compiler.code_region_loop data (Slice.len data) false (Slice.len data) (Slice.len data) = _
+  exact runtime.compiler.code_region_loop.done data (Slice.len data) false (Slice.len data) (Slice.len data)
+    (Slice.len data) (Slice.len data)
+    (runtime.compiler.code_region_loop.body.stopped data (Slice.len data) false (Slice.len data) (Slice.len data)
+      (Or.inl (by simpa only [Slice.len_val] using Nat.le_refl data.length)))
 
 private theorem compiler_split_skip_section (data : Slice U8) (pos first last : Usize) (id : U8)
     (h : SectionHeader data pos id first last) (allowed : id.val < 10 ∨ id.val = 12) :
     compilerScan data pos = compilerScan data last := by
   have body := compiler_split_body_section data pos first last id h (by omega)
   have notCode : id ≠ 10#u8 := by scalar_tac
-  simp only [notCode,↓reduceIte] at body
-  rw [compilerScan,runtime.compiler.code_region_loop,loop]
-  dsimp only
-  rw [body]
-  simp only [bind_ok]
-  unfold compilerScan runtime.compiler.code_region_loop
-  rfl
+  simp only [if_neg notCode] at body
+  exact runtime.compiler.code_region_loop.step data pos false (Slice.len data) (Slice.len data)
+    last false (Slice.len data) (Slice.len data) body
 
 private theorem compiler_split_code_section (data : Slice U8) (pos first last : Usize)
     (h : SectionHeader data pos 10#u8 first last) : compilerScan data pos = .ok (pos,last) := by
-  rw [compilerScan,runtime.compiler.code_region_loop,loop]
-  dsimp only
-  rw [compiler_split_body_section data pos first last 10#u8 h (by decide)]
-  simp only [↓reduceIte,bind_ok]
+  have body := compiler_split_body_section data pos first last 10#u8 h (by decide)
+  simp only [↓reduceIte] at body
+  change runtime.compiler.code_region_loop data pos false (Slice.len data) (Slice.len data) = _
+  rw [runtime.compiler.code_region_loop.step data pos false (Slice.len data) (Slice.len data)
+    last true pos last body]
   exact compiler_found data last pos last
 
 private theorem compiler_split_after_code (data : Slice U8) (pos first last : Usize) (id : U8)
     (h : SectionHeader data pos id first last) (high : 10 < id.val) (notCount : id.val ≠ 12) :
     compilerScan data pos = .ok (pos,pos) := by
-  obtain ⟨_,_,header,_,_,_⟩ := h
-  obtain ⟨position,byte,_⟩ := header.byte.single
-  have post : runtime.compiler.code_region_loop.body data pos false (Slice.len data) (Slice.len data) ⦃ result =>
-      result = .cont (pos,true,pos,pos) ⦄ := by
-    unfold runtime.compiler.code_region_loop.body
-    have inside : pos < Slice.len data := by scalar_tac
-    simp only [inside,↓reduceIte,Bool.false_eq_true]
-    step as ⟨opcode,lookup⟩
-    have actual : opcode = id := by simpa only [lookup] using byte
-    simp only [actual,byte]
-    have above : id > 10#u8 := by scalar_tac
-    have different : id ≠ 12#u8 := by intro same; have value := congrArg UScalar.val same; scalar_tac
-    simp [above,different]
-  obtain ⟨result,called,rfl⟩ := WP.spec_imp_exists post
-  rw [compilerScan,runtime.compiler.code_region_loop,loop]
-  dsimp only
-  rw [called]
-  simp only [bind_ok]
+  have above : id > 10#u8 := by scalar_tac
+  have different : id ≠ 12#u8 := by
+    intro same
+    have value := congrArg UScalar.val same
+    scalar_tac
+  have body := runtime.compiler.code_region_loop.body.available data pos first last id h
+  simp only [if_pos (And.intro above different)] at body
+  change runtime.compiler.code_region_loop data pos false (Slice.len data) (Slice.len data) = _
+  rw [runtime.compiler.code_region_loop.step data pos false (Slice.len data) (Slice.len data)
+    pos true pos pos body]
   exact compiler_found data pos pos pos
 
 private theorem compiler_split_skip_customs {data : Slice U8} {bytes : List U8}

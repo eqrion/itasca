@@ -201,43 +201,6 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
-/-- The eager submission loop requires entry termination only at reached
-scheduler/worker pairs. An ordinary entry error immediately ends the loop. -/
-theorem compiler_submit_loop_total_on {A : Type} (ops : runtime.platform.Alloc A)
-    (safe : CompileScheduler A → stream.CodeBatch → Prop)
-    (entries : ∀ scheduler worker, safe scheduler worker →
-      CompileScheduler.compile_entry ops scheduler worker ⦃ out =>
-        out.1 = .Ok () → safe out.2.1 out.2.2 ⦄)
-    (scheduler : CompileScheduler A) (worker : stream.CodeBatch)
-    (index : Usize) (status : core.result.Result Unit error.Error)
-    (held : status = .Ok () → safe scheduler worker) :
-    CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
-      ops scheduler worker index status ⦃ out =>
-        ∃ final batch result, out = submitPack final batch result ∧
-          (result = .Ok () → safe final batch) ⦄ := by
-  unfold CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
-  apply loop.spec_decr_nat (fun st => Usize.max - st.2.2.1.val)
-    (fun st => st.2.2.2 = .Ok () → safe st.1 st.2.1)
-  · rintro ⟨scheduler,worker,index,status⟩ held
-    simp only [CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok]
-    split
-    · rename_i inbounds
-      cases status with
-      | Err error =>
-        simp only [core.result.Result.is_ok,bind_ok,Bool.false_eq_true,↓reduceIte,WP.spec_ok]
-        exact ⟨scheduler,worker,.Err error,rfl,by intro h; cases h⟩
-      | Ok result =>
-        cases result
-        simp only [core.result.Result.is_ok,bind_ok,↓reduceIte]
-        obtain ⟨⟨result,next,batch⟩,run,preserved⟩ := WP.spec_imp_exists (entries scheduler worker (held rfl))
-        rw [run]
-        simp only [bind_ok]
-        step
-        exact ⟨preserved,by scalar_tac⟩
-    · simp only [WP.spec_ok]
-      exact ⟨scheduler,worker,status,rfl,held⟩
-  · exact held
-
 /-- Queue publication is safe once reached entry states provide bounded queue
 headroom. The successful entry invariant is not required after a rejection. -/
 theorem compiler_submit_total_on {A : Type} (ops : runtime.platform.Alloc A)
@@ -251,22 +214,7 @@ theorem compiler_submit_total_on {A : Type} (ops : runtime.platform.Alloc A)
     (held : safe scheduler worker) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch ops scheduler worker
       ⦃ _ => True ⦄ := by
-  obtain ⟨out,run,final,batch,result,rfl,preserved⟩ := WP.spec_imp_exists
-    (compiler_submit_loop_total_on ops safe entries scheduler worker 0#usize (.Ok ()) (fun _ => held))
-  unfold CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
-  rw [run]
-  simp only [submitPack,bind_ok,uncurry_apply_pair]
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok accepted =>
-    cases accepted
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    obtain ⟨⟨result,budget,queue⟩,pushed,_⟩ := WP.spec_imp_exists
-      (budget_push ops law final.budget final.completed batch (room final batch (preserved rfl)))
-    rw [pushed]
-    cases result <;> simp [visitor_result,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch.total ops law safe entries room scheduler worker held
 
 end Itasca.Runtime.Compiler
 
@@ -371,46 +319,22 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
         (initialScheduler A limits codeStart) storage ⦃ out =>
           out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄) :
     runtime.compiler.compile_with ops bytes limits ⦃ _ => True ⦄ := by
-  unfold runtime.compiler.compile_with
-  dsimp only
-  split
-  · simp
-  · obtain ⟨⟨codeStart,codeEnd⟩,region,bounds⟩ := WP.spec_imp_exists (code_region_spec bytes)
-    obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists metadata.Env.new.spec
-    simp only [region,initialized,bind_ok,uncurry_apply_pair]
-    obtain ⟨⟨status,scheduler,env⟩,validated,ready⟩ := WP.spec_imp_exists (streaming codeStart codeEnd storage bounds)
-    simp only [initialScheduler] at validated
-    simp only [validated]
-    simp only [bind_ok,uncurry_apply_pair]
-    cases status with
-    | Err error => cases scheduler.budget.error <;> simp
-    | Ok acceptedUnit =>
-      cases acceptedUnit
-      have held := ready rfl
-      cases tailReady : scheduler.tail with
-      | none => simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | some tail =>
-        obtain ⟨raw,encoding,matched,_,bounded⟩ := compiler_stream_source ops law bytes limits
-          codeStart codeEnd storage env scheduler tail bounds tailReady validated
-        simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-        obtain ⟨⟨collected,budget,pending⟩,collect,order⟩ := WP.spec_imp_exists
-          (collect_functions_spec ops law scheduler.budget scheduler.functions)
-        rw [collect]
-        simp only [bind_ok,uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch]
-        cases collected with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok functions =>
-          have count : functions.val.length = env.func_type_indices.val.length := by
-            have eq := congrArg List.length (order functions rfl)
-            simp only [List.length_map] at eq
-            exact eq.symm.trans held.functions
-          obtain ⟨⟨result,executable,finalBudget⟩,lowered,_⟩ := WP.spec_imp_exists
-            (initializer_lower_source_total ops law env tail functions budget encoding matched bounded count)
-          simp only [bind_ok]
-          simp only [uninitializedModule] at lowered
-          rw [lowered]
-          cases result <;> cases choice : finalBudget.error <;> simp [choice]
+  apply runtime.compiler.compile_with.total ops law bytes limits
+  · intro codeStart codeEnd storage bounds
+    exact WP.spec_mono (streaming codeStart codeEnd storage bounds) (fun _ _ => trivial)
+  · intro codeStart codeEnd storage env scheduler tail functions budget pending bounds validated tailReady collect
+    have ready := streaming codeStart codeEnd storage bounds
+    rw [validated, WP.spec_ok] at ready
+    have held := ready rfl
+    obtain ⟨raw, encoding, matched, _, bounded⟩ := compiler_stream_source ops law bytes limits
+      codeStart codeEnd storage env scheduler tail bounds tailReady validated
+    have order := collect_functions_spec ops law scheduler.budget scheduler.functions
+    rw [collect, WP.spec_ok] at order
+    have count : functions.val.length = env.func_type_indices.val.length := by
+      have eq := congrArg List.length (order functions rfl)
+      simp only [List.length_map] at eq
+      exact eq.symm.trans held.functions
+    exact initializer_lower_source_total ops law env tail functions budget encoding matched bounded count
 
 end Itasca.Runtime.Compiler
 
@@ -445,21 +369,21 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
   · intro scheduler chunk
     exact ⟨(.Ok (),scheduler),rfl⟩
   · intro before chunk after accepted held
-    have same : before = after := by simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaMetadataModuleVisitor,
-      CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section] using accepted
+    have same : before = after := by simpa [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_metadataModuleVisitorInst.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.project_on_custom_section.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section.eq] using accepted
     simpa only [same] using held
   · intro env cursor before chunk after accepted held
-    have same : before = after := by simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaMetadataModuleVisitor,
-      CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section] using accepted
+    have same : before = after := by simpa [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_metadataModuleVisitorInst.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.project_on_custom_section.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaMetadataModuleVisitor.on_custom_section.eq] using accepted
     simpa only [same] using held
   · intro scheduler region held
-    simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region] using held
+    simpa [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_custom_region.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region.eq] using held
   · intro env cursor scheduler region held
-    simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region] using held
+    simpa [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_custom_region.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region.eq] using held
   · intro scheduler env held admitted bounds
     apply WP.spec_mono (compiler_environment_safety ops law scheduler env held)
     intro out fresh config accepted
@@ -477,11 +401,11 @@ theorem compiler_scheduler_profile_callbacks_on {A : Type} (ops : runtime.platfo
       intro out fresh batch accepted
       exact ⟨fresh batch accepted,held.2⟩
   · intro env scheduler held
-    simpa [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaStreamStreamingVisitor.code_end] using held
+    simpa [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_code_end.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.code_end.eq] using held
   · intro env scheduler tail held
-    simp only [CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready,WP.spec_ok]
+    simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_tail_ready.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready.eq,WP.spec_ok]
     intro _
     exact ⟨⟨held.1.signatures,held.1.functionSlots,held.1.functions,held.1.origin,held.1.queue,held.1.cursorBound⟩,held.2⟩
 
@@ -496,7 +420,7 @@ theorem compiler_stream_spec_of_profile_entries {A : Type} (ops : runtime.platfo
       (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage ⦃ out =>
         out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
   apply WP.spec_mono (stream.validate_streaming.spec_on CompileSource.Insts.ItascaStreamSource
-    (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage
+    (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage
     (source_callbacks_total source sourceBounds) SchedulerInitial
     (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ ProfileEnvironment env)
     (ProfileEnvironment) (compiler_scheduler_profile_callbacks_on ops law entries) initial
@@ -526,7 +450,7 @@ open runtime.compiler
 
 @[step] theorem compiler_default_limits_total :
     CompileLimits.Insts.CoreDefaultDefault.default ⦃ _ => True ⦄ := by
-  unfold CompileLimits.Insts.CoreDefaultDefault.default
+  unfold runtime.compiler.CompileLimits.Insts.CoreDefaultDefault.default
   step
   step
 

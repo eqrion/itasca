@@ -26,15 +26,6 @@ section
 operand and allocation outcomes. Successful lowering records the validator stack. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
-
-theorem make_simd_total (op dst source entry : U32) (bound : op.val < 256) :
-    runtime.bytecode.Instr.make_simd op dst source entry ⦃ _ => True ⦄ := by
-  rcases op with ⟨⟨n,hn⟩⟩
-  change n < 256 at bound
-  interval_cases n <;> with_unfolding_all (exact WP.spec.ret trivial)
-
 @[step] theorem compiler_simd_constant_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (a : U32) (bits : U128)
@@ -44,20 +35,20 @@ theorem make_simd_total (op dst source entry : U32) (bound : op.val < 256) :
     (poolFits : compiler.function.v128_pool.val.length < Usize.max) :
     runtime.compiler.simd.FunctionCompiler.simd_op ops compiler state 524#u16 a bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op
-  split <;> try contradiction
-  step with bounded_index (alloc.vec.Vec.len compiler.function.v128_pool) as ⟨answer,_⟩
-  cases answer with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok entry =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with budget_push ops law compiler.budget compiler.function.v128_pool bits poolFits as ⟨answer,budget,values,post⟩
-    rcases post with ⟨rfl,_,_⟩ | ⟨rfl,_,_⟩
-    · simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      exact finish_op_observed ops law _ state _ codeFits sourceFits coordinateFits
-    · simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.simd.FunctionCompiler.simd_op.total ops law compiler state 524#u16 a bits
+      codeFits sourceFits coordinateFits (fun _ => poolFits) (fun impossible => False.elim (impossible rfl)))
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  obtain ⟨staged, instruction, _, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops compiler after state 524#u16 a bits (.Ok ()) called).execution.success
+  obtain ⟨middle, _, observed⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops staged after state instruction (.Ok ()) finished).success
+  have result := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at result
+  exact result rfl
 
 @[step] theorem compiler_simd_nonconstant_total {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -69,46 +60,19 @@ theorem make_simd_total (op dst source entry : U32) (bound : op.val < 256) :
     (tableFits : compiler.function.simd.val.length < Usize.max) :
     simdLowering ops compiler state opcode a bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold simdLowering
-  step as ⟨reduced,number⟩
-  simp only [lift,bind_ok,simd_stores_eq,simd_outputs_eq]
-  generalize subEq : UScalar.cast .U32 reduced = sub
-  have subBound : sub.val < 256 := by scalar_tac
-  cases added : Usize.checked_add (alloc.vec.Vec.len compiler.before)
-      (if simdStores sub then 0#usize else 1#usize) with
-  | none => simp [added,core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | some total =>
-    simp only [added,core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    cases subtracted : Usize.checked_sub total (alloc.vec.Vec.len state.vals) with
-    | none => simp [subtracted,core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some consumed =>
-      simp only [subtracted,core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      step with compiler_operand_total ops compiler consumed as ⟨answer,_⟩
-      cases answer with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok source =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-        step with bounded_index (alloc.vec.Vec.len compiler.function.simd) as ⟨answer,_⟩
-        cases answer with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok entry =>
-          simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,simd_lane_eq]
-          step with budget_push ops law compiler.budget compiler.function.simd ({offset := a,lane := simdLane sub a bits,bits} : runtime.bytecode.SimdImmediate) tableFits as ⟨answer,budget,values,post⟩
-          rcases post with ⟨rfl,_,_⟩ | ⟨rfl,_,_⟩
-          · simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-            step with make_simd_total sub source source entry subBound as ⟨instruction⟩
-            cases instruction with
-            | none => simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | some instruction =>
-              simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-              exact finish_op_observed ops law _ state _ codeFits sourceFits coordinateFits
-          · simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists
+    (simdLowering.total ops law compiler state opcode a bits lower upper codeFits sourceFits coordinateFits tableFits)
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  obtain ⟨staged, instruction, _, finished⟩ :=
+    (simdLowering.inv ops compiler after state opcode a bits (.Ok ()) called).execution.success
+  obtain ⟨middle, _, observed⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops staged after state instruction (.Ok ()) finished).success
+  have result := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at result
+  exact result rfl
 
 /-- SIMD dispatch is normal even when raw operand bookkeeping rejects the opcode.
 Successful callbacks retain the raw polymorphic stack observation. -/

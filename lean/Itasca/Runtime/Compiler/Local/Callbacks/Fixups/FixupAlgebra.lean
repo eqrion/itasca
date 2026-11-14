@@ -14,7 +14,7 @@ branch conditions, code length, unrelated instructions, and compiler layout are
 preserved. The initial branch-shape premise is a syntactic hole invariant. -/
 
 namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std
+open Aeneas Aeneas.Std Itasca.ResultFacts
 
 def retarget (instruction : runtime.bytecode.Instr) (target : U32) : runtime.bytecode.Instr :=
   match instruction with
@@ -69,6 +69,90 @@ def compilerSnapshot {A : Type} (compiler : runtime.compiler.FunctionCompiler A)
    compiler.batch_start, compiler.function, compiler.frames, compiler.reachable,
    compiler.next_source, compiler.before, compiler.height, compiler.local_offsets,
    compiler.table_depths, result)
+
+abbrev CompilerSnapshot (A : Type) :=
+  Slice runtime.compiler.Signature × Slice U32 × runtime.compiler.Budget A × Usize ×
+  runtime.bytecode.CompiledFunction × alloc.vec.Vec runtime.compiler.Frame × Bool × Usize ×
+  alloc.vec.Vec U32 × U32 × alloc.vec.Vec U32 × alloc.vec.Vec U32 ×
+  core.result.Result Unit Itasca.error.VisitError
+
+def snapshotCompiler {A : Type} (output : CompilerSnapshot A) : runtime.compiler.FunctionCompiler A :=
+  let (signatures, functionSlots, budget, batchStart, function, frames, reachable,
+    nextSource, operands, height, offsets, depths, _) := output
+  ⟨signatures, functionSlots, budget, batchStart, function, frames, reachable,
+    nextSource, operands, height, offsets, depths⟩
+
+theorem compiler_fixups_effect {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+      ops before sites target index status = .ok output) :
+    OnlyCode before (snapshotCompiler output) ∧
+      (snapshotCompiler output).function.code.val.length = before.function.code.val.length := by
+  generalize measure : Usize.max - index.val = n
+  induction n using Nat.strong_induction_on generalizing before index status with
+  | h n ih =>
+    unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 at accepted
+    rw [loop] at accepted
+    simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body] at accepted
+    split at accepted
+    · cases status with
+      | Err error =>
+        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at accepted
+        subst output
+        exact ⟨.refl _, rfl⟩
+      | Ok value =>
+        cases value
+        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at accepted
+        obtain ⟨site, _, rest⟩ := bind_ok_inv _ _ _ accepted
+        obtain ⟨⟨result, middle⟩, patched, tail⟩ := bind_ok_inv _ _ _ rest
+        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
+        obtain ⟨nextIndex, increment, tail⟩ := bind_ok_inv _ _ _ tail
+        have arithmetic := UScalar.add_equiv index 1#usize
+        rw [increment] at arithmetic
+        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
+        have nextMax := nextIndex.hmax
+        have smaller : Usize.max - nextIndex.val < n := by scalar_tac
+        have tail' : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+            ops middle sites target nextIndex result = .ok output := by
+          simpa only [uncurry_apply_pair, bind_ok,
+            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0,
+            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body,
+            core.result.Result.is_ok] using tail
+        have patchFrame : OnlyCode before middle := by
+          rcases compiler_patch_cases ops before middle site target result patched with same | ⟨instruction, effect⟩
+          · rw [same]; exact .refl _
+          · exact effect.only_code
+        have tailEffect := ih _ smaller middle nextIndex result tail' rfl
+        refine ⟨patchFrame.trans tailEffect.1, ?_⟩
+        rw [tailEffect.2]
+        rcases compiler_patch_cases ops before middle site target result patched with same | ⟨instruction, code, same, contents⟩
+        · rw [same]
+        · rw [same]
+          simp only [contents, List.length_set]
+
+    · simp only [bind_ok, Result.ok.injEq] at accepted
+      subst output
+      exact ⟨.refl _, rfl⟩
+
+theorem compiler_fixups_frame {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+      ops before sites target index status = .ok output) :
+    OnlyCode before (snapshotCompiler output) := by
+  exact (compiler_fixups_effect ops before sites target index status output accepted).1
+
+theorem compiler_fixups_code_length {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
+      ops before sites target index status = .ok output) :
+    (snapshotCompiler output).function.code.val.length = before.function.code.val.length := by
+  exact (compiler_fixups_effect ops before sites target index status output accepted).2
 
 @[step] theorem compiler_fixups {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
@@ -230,6 +314,24 @@ theorem patch_code_new_branch (code emitted : List Bytecode) (sites : List Usize
   simp only [List.getElem?_concat_length]
   have changed : retarget (kind.instruction old) target = kind.instruction target := by cases kind <;> rfl
   simp [changed]
+
+theorem compiler_patch_code_length {A : Type} (ops : runtime.platform.Alloc A)
+    (before after : runtime.compiler.FunctionCompiler A) (pc : Usize) (target : U32)
+    (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.control.FunctionCompiler.patch ops before pc target = .ok (status, after)) :
+    after.function.code.val.length = before.function.code.val.length := by
+  rcases compiler_patch_cases ops before after pc target status accepted with rfl | ⟨_, _, rfl, set⟩
+  · rfl
+  · simp [set]
+
+theorem compiler_fixups_after_if_code_length {A : Type} (ops : runtime.platform.Alloc A)
+    (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
+    (target : U32) (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (output : CompilerSnapshot A)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1
+      ops before sites target index status = .ok output) :
+    (snapshotCompiler output).function.code.val.length = before.function.code.val.length :=
+  compiler_fixups_code_length ops before sites target index status output accepted
 
 end Itasca.Runtime.Compiler
 

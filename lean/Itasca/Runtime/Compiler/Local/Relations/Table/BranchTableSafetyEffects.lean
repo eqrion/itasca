@@ -152,7 +152,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 
 theorem TableTargetCode.fixup_budget {A} {before after : runtime.compiler.FunctionCompiler A}
     {depth : U32} (effect : TableTargetCode before after depth)

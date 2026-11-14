@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Control.TableBranchContracts
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
@@ -6,6 +8,7 @@ import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
 
 /-!
 Sections, each formerly its own module: BranchAvailability, BranchTableAvailability.
@@ -26,7 +29,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Nonelided forward branches accept with two instruction units and one
 independently bounded fixup append, for every non-loop label kind. -/
@@ -45,62 +47,29 @@ theorem branch_transfer_forward_available {A : Type} (ops : runtime.platform.All
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth skip false ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
-  cases kindEq : frame.kind
-  all_goals try exact (forward kindEq).elim
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, hlast⟩
-    step as ⟨d, hd⟩
-    step as ⟨actualIndex, hindex⟩
-    have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, hfound⟩
-    have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false]
-    step as ⟨sum, hsum⟩
-    cases sum with
-    | none => simp at hsum; scalar_tac
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨operand, hoperand⟩
-      cases operand with
-      | none => simp at hoperand; scalar_tac
-      | some operand =>
-        have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-        rw [sourceEq]
-        simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          Bool.false_eq_true, ite_false, bne_iff_ne, nonempty, different, ite_true]
-        rw [if_pos nonempty]
-        simp only [bind_ok, bne_iff_ne, if_pos different]
-        step with compiler_transfer_available ops law bound available compiler state (capacity.one (by decide))
-          frame.height source frame.results nonempty different as ⟨status,afterCopy,accepted,emission,copyEffect⟩
-        rw [accepted]
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-        have afterCopyCapacity : CallbackCapacity afterCopy state bound 1 := capacity.after_emission emission copyEffect
-        obtain ⟨copyBudget,copyCode,copyOffsets,rfl,copiedCode,copiedOffsets⟩ := emission
-        step as ⟨current,back,hcurrent,hback⟩
-        have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds,hcurrent] using lookup
-        rw [currentEq]
-        simp only [kindEq,bind_ok,uncurry_apply_pair,Bool.false_eq_true,ite_false]
-        step with budget_push_available ops bound available copyBudget frame.fixups (alloc.vec.Vec.len copyCode)
-          fixupsCapacity fixupsReserve as ⟨status,budget,fixups,accepted,same,_⟩
-        subst status budget
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair,Bool.false_eq_true,ite_false]
-        let copied := {compiler with
-          budget := copyBudget
-          function := {compiler.function with code := copyCode,source_offsets := copyOffsets}}
-        let ready := {copied with frames := back {frame with end_reachable := true,fixups}}
-        have readyCapacity : CallbackCapacity ready state bound 1 :=
-          afterCopyCapacity.with_frames (back {frame with end_reachable := true,fixups})
-        have emit := compiler_emit_available_effect ops bound available ready state (readyCapacity.one (by decide))
-          (.Jump core.num.U32.MAX)
-        simp only [ready,copied,kindEq] at emit
-        step with emit as ⟨status,afterJump,accepted,emission,jumpEffect⟩
-        rw [accepted]
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-        exact ⟨trivial,(copyEffect.trans jumpEffect).weaken (by intro counter; cases counter <;> simp)⟩
+  have width : branchWidth frame = frame.results := by
+    cases kind : frame.kind <;> simp only [branchWidth, kind]
+    exact False.elim (forward kind)
+  have no : ¬ (branchWidth frame = 0#u32 ∨ source = frame.height) := by
+    rw [width]
+    exact fun choice => choice.elim nonempty different
+  have count : branchInstructionCount false frame source = 2 := by
+    simp only [branchInstructionCount, if_neg no, Bool.true_eq, Bool.false_eq_true, ite_true, ite_false]
+  have demand : BranchDemand compiler frame bound 2 := {
+    pc := capacity.pc, code := capacity.codeCapacity, sources := capacity.sourceCapacity
+    codeReserve := capacity.codeReserve, sourceReserve := capacity.sourceReserve
+    coordinate := capacity.coordinate, instructions := capacity.instructions
+    fixups := fun _ => fixupsCapacity, fixupsReserve := fun _ => fixupsReserve }
+  have ready : false = true → ∃ condition,
+      runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok condition) := by
+    intro impossible
+    cases impossible
+  apply WP.spec_mono (runtime.compiler.control.FunctionCompiler.branch.available ops bound available
+    compiler depth skip false ⟨index, frame, lookup, position⟩ source
+    (by simpa only [width] using sourcePosition) ready (by simpa only [count] using demand))
+  intro output effect
+  have budget := effect.2.compilation
+  exact ⟨effect.1, by simpa only [count] using budget⟩
 
 /-- Elided forward transfers still publish a bounded fixup and one jump. -/
 theorem branch_elided_forward_available {A : Type} (ops : runtime.platform.Alloc A)
@@ -117,55 +86,26 @@ theorem branch_elided_forward_available {A : Type} (ops : runtime.platform.Alloc
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth skip false ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  cases kindEq : frame.kind
-  all_goals try exact (forward kindEq).elim
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, hlast⟩
-    step as ⟨d, hd⟩
-    step as ⟨actualIndex, hindex⟩
-    have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, hfound⟩
-    have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false]
-    step as ⟨sum, hsum⟩
-    cases sum with
-    | none => simp at hsum; scalar_tac
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨operand, hoperand⟩
-      cases operand with
-      | none => simp at hoperand; scalar_tac
-      | some operand =>
-        have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-        rw [sourceEq]
-        simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          Bool.false_eq_true, ite_false]
-        have copyFalse : (if frame.results != 0#u32 then (Result.ok (source != frame.height) : Result Bool)
-            else Result.ok false) = Result.ok false := by rcases elided with h | h <;> simp [h]
-        rw [copyFalse]
-        simp only [bind_ok, Bool.false_eq_true, ite_false]
-        step as ⟨current, back, hcurrent, hback⟩
-        have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-        rw [currentEq]
-        simp only [kindEq, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false]
-        step with budget_push_available ops bound available compiler.budget frame.fixups (alloc.vec.Vec.len compiler.function.code)
-          fixupsCapacity fixupsReserve as ⟨status,budget,fixups,accepted,same,_⟩
-        subst status budget
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,uncurry_apply_pair,Bool.false_eq_true,ite_false]
-        let ready := {compiler with frames := back {frame with end_reachable := true,fixups}}
-        have readyCapacity : CallbackCapacity ready state bound 1 :=
-          capacity.with_frames (back {frame with end_reachable := true,fixups})
-        have emit := compiler_emit_available_effect ops bound available ready state (readyCapacity.one (by decide))
-          (.Jump core.num.U32.MAX)
-        simp only [ready,kindEq] at emit
-        step with emit as ⟨status,afterJump,accepted,emission,jumpEffect⟩
-        rw [accepted]
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-        exact ⟨trivial,jumpEffect⟩
+  have width : branchWidth frame = frame.results := by
+    cases kind : frame.kind <;> simp only [branchWidth, kind]
+    exact False.elim (forward kind)
+  have count : branchInstructionCount false frame source = 1 := by
+    simp only [branchInstructionCount, width, if_pos elided]
+  have demand : BranchDemand compiler frame bound 1 := {
+    pc := capacity.pc, code := capacity.codeCapacity, sources := capacity.sourceCapacity
+    codeReserve := capacity.codeReserve, sourceReserve := capacity.sourceReserve
+    coordinate := capacity.coordinate, instructions := capacity.instructions
+    fixups := fun _ => fixupsCapacity, fixupsReserve := fun _ => fixupsReserve }
+  have ready : false = true → ∃ condition,
+      runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok condition) := by
+    intro impossible
+    cases impossible
+  apply WP.spec_mono (runtime.compiler.control.FunctionCompiler.branch.available ops bound available
+    compiler depth skip false ⟨index, frame, lookup, position⟩ source
+    (by simpa only [width] using sourcePosition) ready (by simpa only [count] using demand))
+  intro output effect
+  have budget := effect.2.compilation
+  exact ⟨effect.1, by simpa only [count] using budget⟩
 
 /-- Every unconditional forward branch accepts from its source result width,
 with at most two instructions and no other budget charge. -/
@@ -206,7 +146,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 /-- A nonelided backward branch accepts with independently reserved capacity
 for its transfer and jump. Its source argument coordinates justify arithmetic. -/
@@ -223,53 +162,29 @@ theorem branch_transfer_loop_available {A : Type} (ops : runtime.platform.Alloc 
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth skip false ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.branch
-  step as ⟨last, hlast⟩
-  step as ⟨d, hd⟩
-  step as ⟨actualIndex, hindex⟩
-  have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-  subst actualIndex
-  have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-  step as ⟨found, hfound⟩
-  have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-  rw [foundEq]
-  simp only [kind, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-  step as ⟨sum, hsum⟩
-  cases sum with
-  | none => simp at hsum; scalar_tac
-  | some sum =>
-    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step as ⟨operand, hoperand⟩
-    cases operand with
-    | none => simp at hoperand; scalar_tac
-    | some operand =>
-      have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-      rw [sourceEq]
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Bool.false_eq_true, ite_false, bne_iff_ne, nonempty, different, ite_true]
-      rw [if_pos nonempty]
-      simp only [bind_ok, bne_iff_ne, if_pos different]
-      step with compiler_transfer_available ops law bound available compiler state (capacity.one (by decide))
-        frame.height source frame.params nonempty different as ⟨status,afterCopy,accepted,emission,copyEffect⟩
-      rw [accepted]
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      have afterCopyCapacity : CallbackCapacity afterCopy state bound 1 := capacity.after_emission emission copyEffect
-      obtain ⟨copyBudget,copyCode,copyOffsets,rfl,copiedCode,copiedOffsets⟩ := emission
-      step as ⟨current,back,hcurrent,hback⟩
-      have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds,hcurrent] using lookup
-      rw [currentEq]
-      simp only [kind,bind_ok,uncurry_apply_pair,Bool.false_eq_true,ite_false,ite_true]
-      let copied := {compiler with
-        budget := copyBudget
-        function := {compiler.function with code := copyCode,source_offsets := copyOffsets}}
-      let ready := {copied with frames := back {frame with kind := .Loop}}
-      have readyCapacity : CallbackCapacity ready state bound 1 :=
-        afterCopyCapacity.with_frames (back {frame with kind := .Loop})
-      step with compiler_emit_available_effect ops bound available ready state (readyCapacity.one (by decide))
-        (.Jump frame.start_pc) as ⟨status,afterJump,accepted,emission,jumpEffect⟩
-      rw [accepted]
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-      exact ⟨trivial,(copyEffect.trans jumpEffect).weaken (by intro counter; cases counter <;> simp)⟩
+  have width : branchWidth frame = frame.params := by
+    simp only [branchWidth, kind]
+  have no : ¬ (branchWidth frame = 0#u32 ∨ source = frame.height) := by
+    rw [width]
+    exact fun choice => choice.elim nonempty different
+  have count : branchInstructionCount false frame source = 2 := by
+    simp only [branchInstructionCount, if_neg no, Bool.true_eq, Bool.false_eq_true, ite_true, ite_false]
+  have demand : BranchDemand compiler frame bound 2 := {
+    pc := capacity.pc, code := capacity.codeCapacity, sources := capacity.sourceCapacity
+    codeReserve := capacity.codeReserve, sourceReserve := capacity.sourceReserve
+    coordinate := capacity.coordinate, instructions := capacity.instructions
+    fixups := fun different => False.elim (different kind)
+    fixupsReserve := fun different => False.elim (different kind) }
+  have ready : false = true → ∃ condition,
+      runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok condition) := by
+    intro impossible
+    cases impossible
+  apply WP.spec_mono (runtime.compiler.control.FunctionCompiler.branch.available ops bound available
+    compiler depth skip false ⟨index, frame, lookup, position⟩ source
+    (by simpa only [width] using sourcePosition) ready (by simpa only [count] using demand))
+  intro output effect
+  have budget := effect.2.compilation
+  exact ⟨effect.1, by simpa only [count] using budget⟩
 
 /-- Empty and identity loop transfers elide the copy and need only the jump. -/
 theorem branch_elided_loop_available {A : Type} (ops : runtime.platform.Alloc A)
@@ -284,46 +199,26 @@ theorem branch_elided_loop_available {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth skip false ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.branch
-  step as ⟨last, hlast⟩
-  step as ⟨d, hd⟩
-  step as ⟨actualIndex, hindex⟩
-  have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-  subst actualIndex
-  have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-  step as ⟨found, hfound⟩
-  have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-  rw [foundEq]
-  simp only [kind, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-  step as ⟨sum, hsum⟩
-  cases sum with
-  | none => simp at hsum; scalar_tac
-  | some sum =>
-    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step as ⟨operand, hoperand⟩
-    cases operand with
-    | none => simp at hoperand; scalar_tac
-    | some operand =>
-      have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-      rw [sourceEq]
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Bool.false_eq_true, ite_false]
-      have copyFalse : (if frame.params != 0#u32 then (Result.ok (source != frame.height) : Result Bool)
-          else Result.ok false) = Result.ok false := by rcases elided with h | h <;> simp [h]
-      rw [copyFalse]
-      simp only [bind_ok, Bool.false_eq_true, ite_false]
-      step as ⟨current, back, hcurrent, hback⟩
-      have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-      rw [currentEq]
-      simp only [kind, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false, ite_true]
-      let ready := {compiler with frames := back {frame with kind := .Loop}}
-      have readyCapacity : CallbackCapacity ready state bound 1 :=
-        capacity.with_frames (back {frame with kind := .Loop})
-      step with compiler_emit_available_effect ops bound available ready state (readyCapacity.one (by decide))
-        (.Jump frame.start_pc) as ⟨status,afterJump,accepted,emission,jumpEffect⟩
-      rw [accepted]
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-      exact ⟨trivial,jumpEffect⟩
+  have width : branchWidth frame = frame.params := by
+    simp only [branchWidth, kind]
+  have count : branchInstructionCount false frame source = 1 := by
+    simp only [branchInstructionCount, width, if_pos elided]
+  have demand : BranchDemand compiler frame bound 1 := {
+    pc := capacity.pc, code := capacity.codeCapacity, sources := capacity.sourceCapacity
+    codeReserve := capacity.codeReserve, sourceReserve := capacity.sourceReserve
+    coordinate := capacity.coordinate, instructions := capacity.instructions
+    fixups := fun different => False.elim (different kind)
+    fixupsReserve := fun different => False.elim (different kind) }
+  have ready : false = true → ∃ condition,
+      runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok condition) := by
+    intro impossible
+    cases impossible
+  apply WP.spec_mono (runtime.compiler.control.FunctionCompiler.branch.available ops bound available
+    compiler depth skip false ⟨index, frame, lookup, position⟩ source
+    (by simpa only [width] using sourcePosition) ready (by simpa only [count] using demand))
+  intro output effect
+  have budget := effect.2.compilation
+  exact ⟨effect.1, by simpa only [count] using budget⟩
 
 /-- Every unconditional backward branch accepts from its source parameter
 width, with at most two instructions and no other budget charge. -/
@@ -402,31 +297,45 @@ theorem compiler_on_br_available {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops compiler state depth resultType ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
-  by_cases live : compiler.reachable = true
-  · rw [if_pos live]
-    obtain ⟨⟨status,branched⟩,actual,accepted,effect⟩ := WP.spec_imp_exists
-      (compiler_unconditional_branch_available ops law bound available compiler state capacity frame index depth 0#u32
-        (lookup live) (position live) (widthFits live) fixupsCapacity fixupsReserve)
-    dsimp only at accepted effect
-    subst status
-    rw [actual]
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    change runtime.compiler.FunctionCompiler.observe ops {branched with reachable := false} state ⦃ out => _ ⦄
-    have stable := compiler_branch_stable_result ops law compiler branched depth 0#u32 false (.Ok ()) actual
-    have localsSame := stable.fields.2.2.2.2.2.2.1
-    have slotsFit : branched.function.local_slots.val + 2*state.vals.length ≤ U32.max := by
-      rw [localsSame]; exact capacity.slots
-    apply WP.spec_mono (compiler_observe_available_budget ops bound available {branched with reachable := false}
-      state capacity.operands slotsFit)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,effect⟩
-  · rw [if_neg live]
-    apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler state capacity.operands capacity.slots)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
+  have ready : compiler.reachable = true → BranchCallbackReady ops compiler depth false bound := by
+    intro live
+    let selected : BranchSelection compiler depth := ⟨index, frame, lookup live, position live⟩
+    have width : (branchWidth frame).val ≤ compiler.height.val := by
+      change (match frame.kind with | .Loop => frame.params | _ => frame.results).val ≤ compiler.height.val
+      exact widthFits live
+    let source : U32 := UScalar.ofNatCore (compiler.height.val - (branchWidth frame).val) (by scalar_tac)
+    have sourcePosition : source.val + (branchWidth frame).val = compiler.height.val := by
+      change compiler.height.val - (branchWidth frame).val + (branchWidth frame).val = compiler.height.val
+      omega
+    have countBound : branchInstructionCount false frame source ≤ 2 := by
+      unfold branchInstructionCount
+      split <;> simp
+    have base : BranchCapacity compiler bound (branchInstructionCount false frame source) := by
+      refine ⟨?_, ?_, ?_, ?_, ?_, capacity.coordinate, ?_⟩
+      · have h := capacity.pc; omega
+      · have h := capacity.codeCapacity; omega
+      · have h := capacity.sourceCapacity; omega
+      · have h := capacity.codeReserve; omega
+      · have h := capacity.sourceReserve; omega
+      · have h := capacity.instructions; omega
+    have demand : BranchDemand compiler frame bound (branchInstructionCount false frame source) := {
+      toBranchCapacity := base
+      fixups := fun _ => fixupsCapacity
+      fixupsReserve := fun _ => fixupsReserve }
+    refine ⟨selected, source, ?_, ?_, demand⟩
+    · simpa [branchCallbackSkip] using sourcePosition
+    · intro impossible
+      cases impossible
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.available
+    ops bound available compiler state depth resultType ready capacity.operands capacity.slots)
+  intro out post
+  rcases out with ⟨status, after⟩
+  rcases post with ⟨statusEq, callbackBudget⟩
+  subst status
+  obtain ⟨used, budgetEq, lower, upper⟩ := callbackBudget.bounds
+  refine ⟨rfl, ?_⟩
+  rw [budgetEq]
+  exact CompilationBudgetEffect.of_counter .instructions compiler.budget used 2 lower upper
 
 end Itasca.Runtime.Compiler
 
@@ -501,25 +410,15 @@ theorem compiler_table_branch_available {A : Type} (ops : runtime.platform.Alloc
     runtime.compiler.control.FunctionCompiler.table_branch ops compiler index ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.table_branch
-  step with compiler_pc_available ops compiler (by have room := capacity.pc; omega)
-    as ⟨status,current,same,pc,accepted,_⟩
-  subst current
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available compiler.budget compiler.function.jump_tables pc
-    tableCapacity tableReserve as ⟨status,budget,table,accepted,same,_⟩
-  subst status budget
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  have inside := (List.getElem?_eq_some_iff.mp depthAt).1
-  step as ⟨actual,found⟩
-  have same : actual = depth := found.trans (List.getElem?_eq_some_iff.mp depthAt).2
-  subst actual
-  rw [(List.getElem?_eq_some_iff.mp depthAt).2]
+  apply runtime.compiler.control.FunctionCompiler.table_branch.available ops bound available compiler index depth depthAt
+    (by have room := capacity.pc; simp only [alloc.vec.Vec.length] at room; omega) tableCapacity tableReserve
+    (fun after => CompilationBudgetEffect compiler.budget after.budget
+      (fun counter => if counter = .instructions then 2 else 0))
+  intro table
   let staged := {compiler with function := {compiler.function with jump_tables := table}}
   have stagedCapacity : CallbackCapacity staged state bound 2 :=
-    ⟨capacity.pc,capacity.codeCapacity,capacity.sourceCapacity,capacity.codeReserve,capacity.sourceReserve,
-      capacity.coordinate,capacity.instructions,capacity.operands,capacity.slots⟩
+    ⟨capacity.pc, capacity.codeCapacity, capacity.sourceCapacity, capacity.codeReserve, capacity.sourceReserve,
+      capacity.coordinate, capacity.instructions, capacity.operands, capacity.slots⟩
   exact compiler_unconditional_branch_available ops law bound available staged state stagedCapacity frame frameIndex depth 1#u32
     frameAt position widthFits fixupsCapacity fixupsReserve
 
@@ -589,7 +488,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- The complete table-stub lowering loop accepts from independent source
 widths and demand for the remaining labels. Actual successful intermediate
@@ -604,89 +502,78 @@ theorem compiler_table_loop_available {A : Type} (ops : runtime.platform.Alloc A
       ∃ after, out = compilerSnapshot after (.Ok ()) ∧
         CompilationBudgetEffect compiler.budget after.budget
           (fun counter => if counter = .instructions then 2*(compiler.table_depths.val.length-index.val) else 0) ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop
-  apply loop.spec_decr_nat (fun p => compiler.table_depths.val.length-p.2.1.val)
-    (fun p => index.val ≤ p.2.1.val ∧ p.2.1.val ≤ compiler.table_depths.val.length ∧ p.2.2 = .Ok () ∧
-      p.1.table_depths = compiler.table_depths ∧ TableLoopSafe p.1 p.2.1.val limit ∧ TableWidthsFit p.1 ∧
-      CallbackCapacity p.1 state bound (2*(compiler.table_depths.val.length-p.2.1.val)) ∧
-      CompilationBudgetEffect compiler.budget p.1.budget
-        (fun counter => if counter = .instructions then 2*(p.2.1.val-index.val) else 0))
-  · rintro ⟨current,i,result⟩ ⟨lower,upper,rfl,depths,heldSafe,heldWidths,heldCapacity,effect⟩
-    dsimp only at lower upper depths heldSafe heldWidths heldCapacity effect
-    unfold runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.body
-    simp only
-    split
-    · rename_i more
-      have currentInside : i.val < current.table_depths.val.length := by scalar_tac
-      have originalInside : i.val < compiler.table_depths.val.length := by simpa only [depths] using currentInside
-      simp only [core.result.Result.is_ok,bind_ok,↓reduceIte]
-      let depth := current.table_depths.val[i.val]
-      have depthAt : current.table_depths.val[i.val]? = some depth := List.getElem?_eq_getElem currentInside
-      have depthBound := heldSafe.depths depth (List.mem_of_getElem? depthAt)
-      let frameIndex := Usize.ofNatCore (current.frames.val.length-depth.val-1)
-        (by have maximum := (alloc.vec.Vec.len current.frames).hBounds
-            change current.frames.val.length < 2^UScalarTy.Usize.numBits at maximum; omega)
-      have frameBound : frameIndex.val < current.frames.val.length := by
-        change current.frames.val.length-depth.val-1 < current.frames.val.length
+  apply runtime.compiler.control.FunctionCompiler.lower_table_branches_loop.spec ops
+    (fun current position status => index.val ≤ position ∧ position ≤ compiler.table_depths.val.length ∧ status = .Ok () ∧
+      current.table_depths = compiler.table_depths ∧ TableLoopSafe current position limit ∧ TableWidthsFit current ∧
+      CallbackCapacity current state bound (2*(compiler.table_depths.val.length-position)) ∧
+      CompilationBudgetEffect compiler.budget current.budget
+        (fun counter => if counter = .instructions then 2*(position-index.val) else 0)) _
+    ?_ ?_ compiler index (.Ok ()) ?_
+  · intro current i held currentInside
+    obtain ⟨lower, upper, _, depths, heldSafe, heldWidths, heldCapacity, effect⟩ := held
+    have originalInside : i.val < compiler.table_depths.val.length := by simpa only [depths] using currentInside
+    let depth := current.table_depths.val[i.val]
+    have depthAt : current.table_depths.val[i.val]? = some depth := List.getElem?_eq_getElem currentInside
+    have depthBound := heldSafe.depths depth (List.mem_of_getElem? depthAt)
+    let frameIndex := Usize.ofNatCore (current.frames.val.length-depth.val-1)
+      (by have maximum := (alloc.vec.Vec.len current.frames).hBounds
+          change current.frames.val.length < 2^UScalarTy.Usize.numBits at maximum; omega)
+    have frameBound : frameIndex.val < current.frames.val.length := by
+      change current.frames.val.length-depth.val-1 < current.frames.val.length
+      omega
+    let frame := current.frames.val[frameIndex.val]
+    have frameAt : current.frames.val[frameIndex.val]? = some frame := List.getElem?_eq_getElem frameBound
+    have position : frameIndex.val+depth.val+1 = current.frames.val.length := by
+      change current.frames.val.length-depth.val-1+depth.val+1 = current.frames.val.length
+      omega
+    have widthFits := heldWidths depth (List.mem_of_getElem? depthAt) frameIndex frame frameAt position
+    have primitiveCapacity : CallbackCapacity current state bound 2 := heldCapacity.mono (by omega)
+    have codeCapacity := primitiveCapacity.codeCapacity
+    have codeReserve := primitiveCapacity.codeReserve
+    simp only [alloc.vec.Vec.length] at codeCapacity codeReserve
+    have tables := heldSafe.tables
+    have fixups := heldSafe.fixups frame (List.mem_of_getElem? frameAt)
+    obtain ⟨⟨status,next⟩,called,accepted,stepEffect⟩ := WP.spec_imp_exists
+      (compiler_table_branch_available ops law bound available current state primitiveCapacity i frameIndex depth frame
+        depthAt frameAt position widthFits (by change current.function.jump_tables.val.length < Usize.max; omega)
+        (by change current.function.jump_tables.val.length+1 ≤ bound; omega)
+        (by change frame.fixups.val.length < Usize.max; omega)
+        (by change frame.fixups.val.length+1 ≤ bound; omega))
+    dsimp only at accepted stepEffect
+    subst status
+    have nextSafe := heldSafe.advance ops law currentInside called
+    have nextDepths := compiler_table_branch_depths ops current next i (.Ok ()) called
+    obtain ⟨target,_,_,height,codeEffect⟩ := compiler_table_target_code ops law current next i depth depthAt called
+    have nextWidths := heldWidths.advance codeEffect nextDepths height
+    have fixed := (compiler_table_branch_fixed ops law current next i depth depthAt called).stable.fields
+    have growth := compiler_table_branch_growth ops law current next i (.Ok ()) called
+    have sourceGrowth : next.function.source_offsets.length ≤ current.function.source_offsets.length+2 := by
+      change next.function.source_offsets.val.length ≤ current.function.source_offsets.val.length+2
+      rw [nextSafe.aligned,heldSafe.aligned]
+      exact growth
+    have coordinate : next.function.body_start.val+next.next_source.val ≤ Usize.max := nextSafe.coordinate
+    have countEq : 2*(compiler.table_depths.val.length-i.val) =
+        2*(compiler.table_depths.val.length-(i.val+1))+2 := by omega
+    rw [countEq] at heldCapacity
+    have nextCapacity := heldCapacity.after_growth (by simpa only [alloc.vec.Vec.length] using growth)
+      sourceGrowth fixed.2.2.2.2.2.2.1 coordinate stepEffect
+    apply WP.exists_imp_spec ⟨(.Ok (), next), called, ?_⟩
+    refine ⟨by omega, by omega, rfl, nextDepths.trans depths, nextSafe, nextWidths, nextCapacity, ?_⟩
+    have combined := effect.trans stepEffect
+    exact combined.weaken (by
+      intro counter
+      cases counter <;> simp only [reduceCtorEq, ite_true, ite_false] <;> omega)
+  · intro current position status held finished
+    obtain ⟨lower, upper, rfl, depths, heldSafe, heldWidths, heldCapacity, effect⟩ := held
+    have done : position = compiler.table_depths.val.length := by
+      rcases finished with outside | impossible
+      · rw [depths] at outside
         omega
-      let frame := current.frames.val[frameIndex.val]
-      have frameAt : current.frames.val[frameIndex.val]? = some frame := List.getElem?_eq_getElem frameBound
-      have position : frameIndex.val+depth.val+1 = current.frames.val.length := by
-        change current.frames.val.length-depth.val-1+depth.val+1 = current.frames.val.length
-        omega
-      have widthFits := heldWidths depth (List.mem_of_getElem? depthAt) frameIndex frame frameAt position
-      have primitiveCapacity : CallbackCapacity current state bound 2 := heldCapacity.mono (by omega)
-      have codeCapacity := primitiveCapacity.codeCapacity
-      have codeReserve := primitiveCapacity.codeReserve
-      simp only [alloc.vec.Vec.length] at codeCapacity codeReserve
-      have tables := heldSafe.tables
-      have fixups := heldSafe.fixups frame (List.mem_of_getElem? frameAt)
-      obtain ⟨⟨status,next⟩,called,accepted,stepEffect⟩ := WP.spec_imp_exists
-        (compiler_table_branch_available ops law bound available current state primitiveCapacity i frameIndex depth frame
-          depthAt frameAt position widthFits (by change current.function.jump_tables.val.length < Usize.max; omega)
-          (by change current.function.jump_tables.val.length+1 ≤ bound; omega)
-          (by change frame.fixups.val.length < Usize.max; omega)
-          (by change frame.fixups.val.length+1 ≤ bound; omega))
-      dsimp only at accepted stepEffect
-      subst status
-      rw [called]
-      simp only [uncurry_apply_pair,bind_ok]
-      step as ⟨nextIndex,increment⟩
-      have progress : nextIndex.val = i.val+1 := by scalar_tac
-      have nextSafe := heldSafe.advance ops law currentInside called
-      have nextDepths := compiler_table_branch_depths ops current next i (.Ok ()) called
-      obtain ⟨target,_,_,height,codeEffect⟩ := compiler_table_target_code ops law current next i depth depthAt called
-      have nextWidths := heldWidths.advance codeEffect nextDepths height
-      have fixed := (compiler_table_branch_fixed ops law current next i depth depthAt called).stable.fields
-      have growth := compiler_table_branch_growth ops law current next i (.Ok ()) called
-      have sourceGrowth : next.function.source_offsets.length ≤ current.function.source_offsets.length+2 := by
-        change next.function.source_offsets.val.length ≤ current.function.source_offsets.val.length+2
-        rw [nextSafe.aligned,heldSafe.aligned]
-        exact growth
-      have coordinate : next.function.body_start.val+next.next_source.val ≤ Usize.max := nextSafe.coordinate
-      have countEq : 2*(compiler.table_depths.val.length-i.val) =
-          2*(compiler.table_depths.val.length-(i.val+1))+2 := by omega
-      rw [countEq] at heldCapacity
-      have nextCapacity := heldCapacity.after_growth (by simpa only [alloc.vec.Vec.length] using growth)
-        sourceGrowth fixed.2.2.2.2.2.2.1 coordinate stepEffect
-      refine ⟨?_,?_,nextDepths.trans depths,?_,nextWidths,?_,?_,?_⟩
-      · omega
-      · omega
-      · simpa only [progress] using nextSafe
-      · simpa only [progress] using nextCapacity
-      · have combined := effect.trans stepEffect
-        exact combined.weaken (by intro counter; cases counter <;> simp <;> omega)
-      · omega
-    · rename_i stop
-      have done : i.val = compiler.table_depths.val.length := by
-        have currentDone : current.table_depths.val.length ≤ i.val := by scalar_tac
-        rw [depths] at currentDone
-        omega
-      simp only [WP.spec_ok]
-      refine ⟨current,rfl,?_⟩
-      simpa only [done] using effect
-  · refine ⟨Nat.le_refl _,inside,rfl,rfl,safe,widths,capacity,?_⟩
-    simpa using CompilationBudgetEffect.refl compiler.budget
+      · exact False.elim (impossible rfl)
+    refine ⟨current, rfl, ?_⟩
+    simpa only [done] using effect
+  · refine ⟨Nat.le_refl _, inside, rfl, rfl, safe, widths, capacity, ?_⟩
+    simpa only [Nat.sub_self, Nat.mul_zero, ite_self] using CompilationBudgetEffect.refl compiler.budget
 
 end Itasca.Runtime.Compiler
 
@@ -699,7 +586,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Complete raw branch-table lowering accepts the dispatcher and all stubs.
 The conservative instruction demand is one plus twice the number of labels;
@@ -718,26 +604,31 @@ theorem compiler_lower_table_available {A : Type} (ops : runtime.platform.Alloc 
     runtime.compiler.control.FunctionCompiler.lower_table_branches ops compiler ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 2*compiler.table_depths.val.length+1 else 0) ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.lower_table_branches
-  step with bounded_index_available (alloc.vec.Vec.len compiler.function.jump_tables)
-    (by have room := capacity.pc; simp only [alloc.vec.Vec.length] at room; change compiler.function.jump_tables.val.length ≤ U32.max; omega)
-    as ⟨status,start,accepted,_⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with bounded_index_available (alloc.vec.Vec.len compiler.table_depths) depthCount as ⟨status,length,accepted,_⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with compiler_condition ops compiler selector selectorAt as ⟨status,accepted⟩
-  subst status
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with compiler_emit_available_effect ops bound available compiler state (capacity.one (by omega))
-    (.JumpTable selector start length) as ⟨status,emitted,accepted,emission,emitEffect⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
+  obtain ⟨answer, selectorReady, same⟩ := WP.spec_imp_exists (compiler_condition ops compiler selector selectorAt)
+  rw [same] at selectorReady
+  have one := capacity.one (by omega)
+  have demand : LowerTableDemand compiler bound := by
+    refine ⟨⟨one.pc, one.codeCapacity, one.sourceCapacity, one.codeReserve, one.sourceReserve,
+      one.coordinate, one.instruction⟩, ?_, depthCount⟩
+    have room := capacity.pc
+    change compiler.function.jump_tables.val.length ≤ U32.max
+    simp only [alloc.vec.Vec.length] at room
+    omega
+  apply runtime.compiler.control.FunctionCompiler.lower_table_branches.available ops bound available compiler selector selectorReady demand
+    (fun after => CompilationBudgetEffect compiler.budget after.budget
+      (fun counter => if counter = .instructions then 2*compiler.table_depths.val.length+1 else 0))
+  intro start length emitted exactEmission
+  have emitEffect : CompilationBudgetEffect compiler.budget emitted.budget
+      (fun counter => if counter = .instructions then 1 else 0) := by
+    apply BranchBudget.compilation
+    obtain ⟨used, code, sources, rfl, charged, _, _⟩ := exactEmission
+    exact ⟨used, rfl, charged⟩
+  have emission := exactEmission.emitted
   have remaining : CallbackCapacity emitted state bound (2*compiler.table_depths.val.length) :=
     capacity.after_emission emission emitEffect
   obtain ⟨budget,code,sources,rfl,codeEq,sourcesEq⟩ := emission
-  have size : code.val.length = compiler.function.code.val.length+1 := by simp [codeEq]
+  have size : code.val.length = compiler.function.code.val.length+1 := by
+    simp only [codeEq, List.length_append, List.length_singleton]
   have sourceSize : sources.val.length = compiler.function.source_offsets.val.length+1 := by
     have lengths := congrArg List.length sourcesEq
     simpa only [List.length_map,List.length_append,List.length_singleton] using lengths
@@ -755,14 +646,16 @@ theorem compiler_lower_table_available {A : Type} (ops : runtime.platform.Alloc 
       omega
   have nextWidths : TableWidthsFit next := widths
   have nextCapacity : CallbackCapacity next state bound (2*(next.table_depths.val.length-(0#usize).val)) := by
-    simpa [next] using remaining
-  step with compiler_table_loop_available ops law bound available next state 0#usize (by simp) Usize.max
-    safe nextWidths nextCapacity
-    as ⟨s,params,finalBudget,batch,function,frames,reach,source,before,height,offsets,depths,result,after,same,effect⟩
-  simp only [compilerSnapshot,Prod.mk.injEq] at same
-  rcases same with ⟨rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl,rfl⟩
-  simp only [WP.spec_ok,true_and]
-  exact (emitEffect.trans effect).weaken (by intro counter; cases counter <;> simp [next] <;> omega)
+    simpa only [next, UScalar.ofNatCore_val_eq, Nat.sub_zero] using remaining
+  apply WP.spec_mono (compiler_table_loop_available ops law bound available next state 0#usize
+    (by simp only [UScalar.ofNatCore_val_eq, Nat.zero_le]) Usize.max safe nextWidths nextCapacity)
+  intro output effect
+  obtain ⟨after, same, effect⟩ := effect
+  rw [same]
+  refine ⟨rfl, ?_⟩
+  exact (emitEffect.trans effect).weaken (by
+    intro counter
+    cases counter <;> simp only [next, reduceCtorEq, ite_true, ite_false, UScalar.ofNatCore_val_eq, Nat.sub_zero] <;> omega)
 
 end Itasca.Runtime.Compiler
 
@@ -775,7 +668,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Actual br_table accepts all collected labels plus the fallback. The
 source bounds cover every target; temporary storage and both charged resources
@@ -802,61 +694,70 @@ theorem compiler_on_br_table_available {A : Type} (ops : runtime.platform.Alloc 
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => match counter with
           | .instructions => 2*(compiler.table_depths.val.length+1)+1 | .branches => 1 | _ => 0) ⦄ := by
-  obtain ⟨⟨status,labeled⟩,labelCalled,accepted,labelEffect,_⟩ := WP.spec_imp_exists
+  obtain ⟨⟨status, labeled⟩, labelCalled, accepted, labelEffect, _⟩ := WP.spec_imp_exists
     (compiler_branch_label_available ops bound available compiler state fallback branchRoom scratchCapacity scratchReserve)
   dsimp only at accepted labelEffect
   subst status
-  obtain ⟨budget,depths,frame,depthsEq⟩ := compiler_table_label_success ops law compiler labeled state fallback labelCalled
+  obtain ⟨budget, depths, frame, depthsEq⟩ := compiler_table_label_success ops law compiler labeled state fallback labelCalled
   subst labeled
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
-  rw [labelCalled]
-  simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  have lengthEq : depths.val.length = compiler.table_depths.val.length+1 := by simp [depthsEq]
+  have lengthEq : depths.val.length = compiler.table_depths.val.length + 1 := by
+    rw [depthsEq, List.length_append, List.length_singleton]
   have limitsSame : budget.limits = compiler.budget.limits := labelEffect.limits
   have instructionsSame : budget.instructions = compiler.budget.instructions := labelEffect.uncharged .instructions (by decide)
-  let staged := {compiler with budget,table_depths := depths}
-  by_cases live : compiler.reachable = true
-  · rw [if_pos live]
-    have stagedCapacity : CallbackCapacity staged state bound (2*depths.val.length+1) := by
-      refine ⟨?_,?_,?_,?_,?_,capacity.coordinate,?_,capacity.operands,capacity.slots⟩
-      · simpa only [staged,lengthEq] using capacity.pc
-      · simpa only [staged,lengthEq] using capacity.codeCapacity
-      · simpa only [staged,lengthEq] using capacity.sourceCapacity
-      · simpa only [staged,lengthEq] using capacity.codeReserve
-      · simpa only [staged,lengthEq] using capacity.sourceReserve
-      · change budget.instructions.val+(2*depths.val.length+1) ≤ budget.limits.max_instructions.val
-        rw [instructionsSame,limitsSame,lengthEq]
+  let staged := {compiler with budget, table_depths := depths}
+  let post := fun (labeled lowered : runtime.compiler.FunctionCompiler A) =>
+    CompilationBudgetEffect labeled.budget lowered.budget
+      (fun counter => if counter = .instructions then 2 * (compiler.table_depths.val.length + 1) + 1 else 0)
+  have lowerReady : ∀ labeled,
+      runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label ops compiler state fallback = .ok (.Ok (), labeled) →
+      labeled.reachable = true → runtime.compiler.control.FunctionCompiler.lower_table_branches ops labeled
+        ⦃ (status, after) => status = .Ok () ∧ post labeled after ∧ after.function.local_slots = compiler.function.local_slots ⦄ := by
+    intro labeled actual live
+    have same : labeled = staged := (Prod.mk.inj (Result.ok.injEq.mp (actual.symm.trans labelCalled))).2
+    subst labeled
+    have liveBefore : compiler.reachable = true := live
+    have stagedCapacity : CallbackCapacity staged state bound (2 * depths.val.length + 1) := by
+      refine ⟨?_, ?_, ?_, ?_, ?_, capacity.coordinate, ?_, capacity.operands, capacity.slots⟩
+      · simpa only [staged, lengthEq] using capacity.pc
+      · simpa only [staged, lengthEq] using capacity.codeCapacity
+      · simpa only [staged, lengthEq] using capacity.sourceCapacity
+      · simpa only [staged, lengthEq] using capacity.codeReserve
+      · simpa only [staged, lengthEq] using capacity.sourceReserve
+      · change budget.instructions.val + (2 * depths.val.length + 1) ≤ budget.limits.max_instructions.val
+        rw [instructionsSame, limitsSame, lengthEq]
         exact capacity.instructions
     have stagedDepths : ∀ depth ∈ staged.table_depths.val, depth.val < staged.frames.val.length := by
-      simpa only [staged,depthsEq] using depthsValid live
+      simpa only [staged, depthsEq] using depthsValid liveBefore
     have stagedWidths : TableWidthsFit staged := by
-      simpa only [TableWidthsFit,staged,depthsEq] using widths live
-    obtain ⟨⟨status,lowered⟩,lowerCalled,accepted,lowerEffect⟩ := WP.spec_imp_exists
-      (compiler_lower_table_available ops law bound available staged state stagedCapacity (aligned live)
-        stagedDepths stagedWidths (fixups live) (tables live)
-        (by change depths.val.length ≤ U32.max; omega) selector (selectorAt live))
+      simpa only [TableWidthsFit, staged, depthsEq] using widths liveBefore
+    obtain ⟨⟨status, lowered⟩, lowerCalled, accepted, lowerEffect⟩ := WP.spec_imp_exists
+      (compiler_lower_table_available ops law bound available staged state stagedCapacity (aligned liveBefore)
+        stagedDepths stagedWidths (fixups liveBefore) (tables liveBefore)
+        (by change depths.val.length ≤ U32.max; omega) selector (selectorAt liveBefore))
     dsimp only at accepted lowerEffect
     subst status
-    rw [lowerCalled]
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with runtime_clear lowered.table_depths as ⟨cleared,_⟩
     have fixed := (compiler_lower_table_fixed ops law staged lowered lowerCalled).stable.fields
-    have localsSame := fixed.2.2.2.2.2.2.1
-    have slotsFit : lowered.function.local_slots.val+2*state.vals.length ≤ U32.max := by
-      rw [localsSame]; exact capacity.slots
-    apply WP.spec_mono (compiler_observe_available_budget ops bound available
-      {lowered with reachable := false,table_depths := cleared} state capacity.operands slotsFit)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,(labelEffect.trans lowerEffect).weaken
-      (by intro counter; cases counter <;> simp [staged,lengthEq])⟩
-  · rw [if_neg live]
-    step with runtime_clear depths as ⟨cleared,_⟩
-    let observed := {compiler with budget,table_depths := cleared}
-    apply WP.spec_mono (compiler_observe_available_budget ops bound available observed state capacity.operands capacity.slots)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,labelEffect.weaken (by intro counter; cases counter <;> simp)⟩
+    refine WP.exists_imp_spec ⟨(.Ok (), lowered), lowerCalled, rfl, ?_, fixed.2.2.2.2.2.2.1⟩
+    simpa only [post, staged, lengthEq] using lowerEffect
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.available
+    ops bound available compiler state fallback resultType branchRoom scratchCapacity scratchReserve
+    capacity.operands capacity.slots post lowerReady)
+  rintro ⟨status, after⟩ ⟨accepted, labeled, actual, effect⟩
+  have same : labeled = staged := (Prod.mk.inj (Result.ok.injEq.mp (actual.symm.trans labelCalled))).2
+  subst labeled
+  refine ⟨accepted, ?_⟩
+  by_cases live : compiler.reachable = true
+  · simp only [staged, live, ite_true] at effect
+    obtain ⟨lowered, lowerEffect, budgetEq⟩ := effect
+    rw [budgetEq]
+    exact (labelEffect.trans lowerEffect).weaken (by
+      intro counter
+      cases counter <;> simp only [reduceCtorEq, ite_true, ite_false] <;> omega)
+  · simp only [staged, live, ite_false] at effect
+    rw [effect]
+    exact labelEffect.weaken (by
+      intro counter
+      cases counter <;> simp only [reduceCtorEq, ite_true, ite_false] <;> omega)
 
 end Itasca.Runtime.Compiler
 

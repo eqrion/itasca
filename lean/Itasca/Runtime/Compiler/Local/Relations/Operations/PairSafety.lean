@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
 import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
@@ -120,27 +121,16 @@ set_option maxRecDepth 4096
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_return compiler state ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return ops compiler state ⦃ _ ⦄
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
-  by_cases live : compiler.reachable = true
-  · rw [if_pos live]
-    have bound : 0 < compiler.frames.length := bodyFrame live
-    step as ⟨frame, found⟩
-    step as ⟨difference, value⟩
-    cases difference with
-    | none => simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some source =>
-      simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      step with compiler_emit ops law compiler (.Return source frame.results) codeFits sourceFits coordinateFits
-        as ⟨answer,emitted,_⟩
-      cases answer with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok value =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-        exact compiler_observe_stack ops law _ state
-  · rw [if_neg live]
-    exact compiler_observe_stack ops law compiler state
+  obtain ⟨⟨reply, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.total ops law compiler state bodyFrame codeFits sourceFits coordinateFits)
+  rw [called, WP.spec_ok]
+  intro accepted
+  dsimp only at accepted ⊢
+  subst reply
+  obtain ⟨middle, _, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops compiler after state (.Ok ()) called).observation
+  have post := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at post
+  exact post rfl
 
 end Itasca.Runtime.Compiler
 

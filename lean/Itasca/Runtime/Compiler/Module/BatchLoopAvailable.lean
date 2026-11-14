@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable
 import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 import Itasca.Runtime.Compiler.Module.CompileTotal
@@ -245,7 +246,7 @@ theorem prepared_function_checked_available {A : Type} (ops : runtime.platform.A
   rw [created,WP.spec_ok] at fresh
   obtain ⟨localLayout,locals,operands,controls,frames,code,reachable,sigs,slots,batch⟩ := fresh
   have budgetEq : initial.budget = budget := by
-    simp only [runtime.compiler.FunctionCompiler.new,Result.ok.injEq] at created
+    simp only [runtime.compiler.FunctionCompiler.new.eq,Result.ok.injEq] at created
     subst initial
     rfl
   have endFits : batchStart.val+w.finish.val ≤ Usize.max := by
@@ -505,27 +506,8 @@ theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Al
   let finalBatch := {dispatched with num_validated := count,validated_end := finish}
   let after := {before with functions := before.functions.set frame.index (some final.function),budget := final.budget}
   refine ⟨count,final,countValue,?_,w,ending,?_⟩
-  · unfold runtime.compiler.CompileScheduler.compile_entry
-    simp only [dispatch,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,
-      runtime.compiler.Budget.copy_state,Itasca.stream.CodeBatch.impl.code_offset,
-      uncurry_apply_pair,added,created,validated,finished]
-    have fits : ¬ frame.index ≥ alloc.vec.Vec.len before.functions := by scalar_tac
-    simp only [fits,↓reduceIte]
-    have found := alloc.vec.Vec.index_usize_spec before.functions frame.index slotBound
-    have missing : before.functions.val[frame.index.val] = none := by
-      simpa only [List.getElem?_eq_getElem slotBound,Option.some.injEq] using vacant
-    simp only [missing] at found
-    obtain ⟨existing,lookup,same⟩ := WP.spec_imp_exists found
-    subst existing
-    simp only [alloc.vec.Vec.index_slice_index]
-    rw [lookup]
-    simp only [bind_ok,core.option.Option.is_some,↓reduceIte]
-    obtain ⟨⟨old,back⟩,mutable,oldEq,backEq⟩ := WP.spec_imp_exists
-      (alloc.vec.Vec.index_mut_usize_spec before.functions frame.index slotBound)
-    simp only [alloc.vec.Vec.index_mut_slice_index]
-    rw [mutable]
-    simp only [bind_ok,uncurry_apply_pair,backEq]
-    rfl
+  · exact CompileEntryWitness.called ⟨frame, dispatched, batchStart, initial, final,
+      dispatch, added, created, validated, finished, slotBound, vacant, rfl⟩
   · simpa only [CompilationBudgetEffect] using effect
 
 end Itasca.Runtime.Compiler
@@ -824,7 +806,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1600000
 
 private theorem increment_room (index count : Usize) (remaining : index.val < count.val) :
     index.val+1 ≤ Usize.max := by scalar_tac
@@ -869,8 +850,8 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
     have ended : batch.num_validated = batch.num_funcs := UScalar.eq_of_val_eq (by simpa using count)
     subst loopIndex
     refine ⟨before,batch,?_,ended,rfl,noError,rfl,?_,?_⟩
-    · rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,loop]
-      simp [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,ended,submitPack]
+    · exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.done
+        ops before batch batch.num_validated (by simp [ended])
     · simpa only [ended] using slots
     · simpa only [ended] using paid
   | cons entry entries ih =>
@@ -936,12 +917,9 @@ theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A
         (Usize.add_spec (x := batch.num_validated) (y := 1#usize) (by simpa using increment_room _ _ more))
       have incrementEq : incremented = validatedCount := UScalar.eq_of_val_eq (by simpa only [show (1#usize).val = 1 from rfl] using incrementValue.trans validatedValue.symm)
       subst incremented
-      rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,loop]
-      simp only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok]
       have live : batch.num_validated < batch.num_funcs := by simpa only [UScalar.lt_equiv] using more
-      simp only [live,↓reduceIte,core.result.Result.is_ok,bind_ok,compiled,uncurry_apply_pair,increment]
-      simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop,
-        runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body,Itasca.stream.CodeBatch.len,bind_ok,core.result.Result.is_ok] using continued
+      exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.available_step
+        ⟨nextScheduler, nextBatch, validatedCount, live, compiled, increment⟩ after worker continued
 
 end Itasca.Runtime.Compiler
 

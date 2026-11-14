@@ -1,3 +1,7 @@
+import Itasca.Runtime.Compiler.Local.Initializer
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
@@ -32,6 +36,32 @@ def SourceCoordinates {A : Type} (compiler : runtime.compiler.FunctionCompiler A
     compiler.function.body_start.val ≤ coordinate ∧ coordinate < compiler.function.body_end.val ∧
       coordinate ≤ compiler.function.body_start.val+compiler.next_source.val) ∧
     (compiler.function.source_offsets.val.map UScalar.val).Pairwise (· ≤ ·)
+
+theorem BranchSourceTrace.coordinates {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    (trace : BranchSourceTrace before after) (held : SourceCoordinates before)
+    (inside : before.function.body_start.val + before.next_source.val < before.function.body_end.val) : SourceCoordinates after := by
+  obtain ⟨frame, count, _, sources⟩ := trace
+  have start := congrArg (fun c : runtime.compiler.FunctionCompiler A => c.function.body_start) frame
+  have finish := congrArg (fun c : runtime.compiler.FunctionCompiler A => c.function.body_end) frame
+  have cursor := congrArg (fun c : runtime.compiler.FunctionCompiler A => c.next_source) frame
+  change after.function.body_start = before.function.body_start at start
+  change after.function.body_end = before.function.body_end at finish
+  change after.next_source = before.next_source at cursor
+  unfold SourceCoordinates at held ⊢
+  rw [start, finish, cursor, sources]
+  constructor
+  · intro coordinate member
+    rcases List.mem_append.mp member with old | added
+    · exact held.1 coordinate old
+    · have same := List.eq_of_mem_replicate added
+      subst coordinate
+      exact ⟨by omega, inside, Nat.le_refl _⟩
+  · rw [List.pairwise_append]
+    refine ⟨held.2, List.pairwise_replicate.mpr (Or.inr (Nat.le_refl _)), ?_⟩
+    intro earlier old later added
+    have same := List.eq_of_mem_replicate added
+    subst later
+    exact (held.1 earlier old).2.2
 
 theorem SourceCoordinates.bounds {A : Type} {compiler : runtime.compiler.FunctionCompiler A}
     (held : SourceCoordinates compiler) :
@@ -141,7 +171,7 @@ theorem compiler_start_source_coordinates {A : Type} (ops : runtime.platform.All
   change started.function.source_offsets = initial.function.source_offsets at sources
   apply SourceCoordinates.empty
   rw [sources]
-  simp only [runtime.compiler.FunctionCompiler.new,Result.ok.injEq] at created
+  simp only [runtime.compiler.FunctionCompiler.new.eq,Result.ok.injEq] at created
   subst initial
   rfl
 
@@ -334,7 +364,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 macro "coordinates_close" : tactic => `(tactic|
   (first | assumption | (simp_all [SourceCoordinates,compilerOrdinaryMetadata,compilerMetadata,
@@ -423,7 +452,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Opening a structured frame emits only at the current source origin. -/
 theorem compiler_enter_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
@@ -490,9 +518,8 @@ theorem compiler_branch_source_coordinates {A : Type} (ops : runtime.platform.Al
     (inside : before.function.body_start.val+before.next_source.val < before.function.body_end.val)
     (called : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch,Bool.false_eq_true,ite_false,ite_true] at called <;>
-    repeat' coordinates_step called using ops, law
+  exact (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional
+    (.Ok ()) called).source_trace law |>.coordinates held inside
 
 /-- Closing source scopes patches control targets and emits the root return
 at the same source origin as every other instruction in the callback. -/
@@ -504,8 +531,35 @@ theorem compiler_end_source_coordinates {A : Type} (ops : runtime.platform.Alloc
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at called
-  repeat' coordinates_step called using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType (.Ok ()) called
+  have stable := effect.frame
+  have bodyStart : after.function.body_start = before.function.body_start := by rw [stable]
+  have bodyEnd : after.function.body_end = before.function.body_end := by rw [stable]
+  obtain ⟨middle, observed⟩ := effect.observation
+  have post := compiler_observe ops law middle state
+  rw [observed, WP.spec_ok] at post
+  have cursor := (post rfl).2.2.2.2.2.2.2.2.1
+  dsimp only at cursor
+  obtain ⟨frame, remaining, popped, frames, codeLength, sources⟩ := effect.sources_frames law
+  constructor
+  · intro coordinate member
+    rw [sources] at member
+    rcases List.mem_append.mp member with prior | recent
+    · obtain ⟨lower, upper, bounded⟩ := held.bounds coordinate prior
+      rw [bodyStart, bodyEnd, cursor]
+      exact ⟨lower, upper, by omega⟩
+    · cases label : frame.kind <;> simp only [label, List.mem_nil_iff, List.mem_singleton] at recent
+      subst coordinate
+      rw [bodyStart, bodyEnd, cursor]
+      exact ⟨by omega, inside, by omega⟩
+  · rw [sources]
+    apply List.pairwise_append.mpr
+    refine ⟨held.ordered, ?_, ?_⟩
+    · cases frame.kind <;> first | exact .nil | exact List.pairwise_singleton _ _
+    · intro first prior last recent
+      cases label : frame.kind <;> simp only [label, List.mem_nil_iff, List.mem_singleton] at recent
+      subst last
+      exact (held.bounds first prior).2.2
 
 /-- Else-arm jumps and their patched destinations retain coordinate order. -/
 theorem compiler_else_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
@@ -516,8 +570,36 @@ theorem compiler_else_source_coordinates {A : Type} (ops : runtime.platform.Allo
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at called
-  repeat' coordinates_step called using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state blockType (.Ok ()) called
+  have stable := effect.frame
+  have bodyStart : after.function.body_start = before.function.body_start := by rw [stable]
+  have bodyEnd : after.function.body_end = before.function.body_end := by rw [stable]
+  cases effect with
+  | selected nonempty subtracted read progress =>
+    obtain ⟨fixups, appended, frames, reachable, codeLength, sources, cursor⟩ := progress.success_fields law
+    constructor
+    · intro coordinate member
+      rw [sources] at member
+      rcases List.mem_append.mp member with prior | recent
+      · obtain ⟨lower, upper, bounded⟩ := held.bounds coordinate prior
+        rw [bodyStart, bodyEnd, cursor]
+        exact ⟨lower, upper, by omega⟩
+      · cases live : before.reachable <;>
+          simp only [live, Bool.false_eq_true, ite_false, ite_true, List.mem_nil_iff, List.mem_singleton] at recent
+        subst coordinate
+        rw [bodyStart, bodyEnd, cursor]
+        exact ⟨by omega, inside, by omega⟩
+    · rw [sources]
+      apply List.pairwise_append.mpr
+      refine ⟨held.ordered, ?_, ?_⟩
+      · cases live : before.reachable <;>
+          simp only [live, Bool.false_eq_true, ite_false, ite_true, List.pairwise_singleton]
+        exact .nil
+      · intro first prior last recent
+        cases live : before.reachable <;>
+          simp only [live, Bool.false_eq_true, ite_false, ite_true, List.mem_nil_iff, List.mem_singleton] at recent
+        subst last
+        exact (held.bounds first prior).2.2
 
 end Itasca.Runtime.Compiler
 

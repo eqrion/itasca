@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
@@ -8,6 +11,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 
 /-!
 Sections, each formerly its own module: CompilerMetadata, CompilerOrdinaryMetadata, CompilerOrdinaryResults, CompilerPatchMetadata, CompilerFixupMetadata, CompilerMetadataTactic, CompilerEnterMetadata, CompilerCloseMetadata, CompilerDeadMetadata, CompilerLiteralMetadata, CompilerTerminalMetadata.
@@ -275,23 +279,12 @@ section
 /-!
 Compiler snapshots and metadata effects of branch fixups.
 
-Main declarations: `CompilerSnapshot` and `snapshotCompiler`. A direct consumer is `Compiler.Local.Callbacks.CodeGrowth.PatchGrowth`.
+The shared snapshot type and decoder live in FixupAlgebra. These adapters derive
+ordinary metadata stability from the universal low-level loop effect.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-
-abbrev CompilerSnapshot (A : Type) :=
-  Slice runtime.compiler.Signature × Slice U32 × runtime.compiler.Budget A × Usize ×
-  runtime.bytecode.CompiledFunction × alloc.vec.Vec runtime.compiler.Frame × Bool × Usize ×
-  alloc.vec.Vec U32 × U32 × alloc.vec.Vec U32 × alloc.vec.Vec U32 ×
-  core.result.Result Unit Itasca.error.VisitError
-
-def snapshotCompiler {A : Type} (output : CompilerSnapshot A) : runtime.compiler.FunctionCompiler A :=
-  let (signatures, functionSlots, budget, batchStart, function, frames, reachable,
-    nextSource, operands, height, offsets, depths, _) := output
-  ⟨signatures, functionSlots, budget, batchStart, function, frames, reachable,
-    nextSource, operands, height, offsets, depths⟩
 
 theorem compiler_fixups_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
@@ -300,42 +293,9 @@ theorem compiler_fixups_ordinary_result {A : Type} (ops : runtime.platform.Alloc
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
       ops before sites target index status = .ok output) :
     CompilerOrdinaryStable before (snapshotCompiler output) := by
-  generalize measure : Usize.max - index.val = n
-  induction n using Nat.strong_induction_on generalizing before index status with
-  | h n ih =>
-    unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 at accepted
-    rw [loop] at accepted
-    simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body,
-      bind_ok] at accepted
-    split at accepted
-    · cases status with
-      | Err error =>
-        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at accepted
-        subst output
-        exact .refl _
-      | Ok unit =>
-        cases unit
-        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at accepted
-        obtain ⟨site, _, rest⟩ := bind_ok_inv _ _ _ accepted
-        obtain ⟨⟨result, middle⟩, patched, tail⟩ := bind_ok_inv _ _ _ rest
-        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
-        obtain ⟨nextIndex, increment, tail⟩ := bind_ok_inv _ _ _ tail
-        have arithmetic := UScalar.add_equiv index 1#usize
-        rw [increment] at arithmetic
-        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
-        have nextMax := nextIndex.hmax
-        have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
-            ops middle sites target nextIndex result = .ok output := by
-          simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0,
-            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body,
-            core.result.Result.is_ok] using tail
-        exact (compiler_patch_ordinary_result ops before middle site target result patched).trans
-          (ih _ smaller middle nextIndex result tail' rfl)
-    · simp only [bind_ok, Result.ok.injEq] at accepted
-      subst output
-      exact .refl _
+  obtain ⟨code, same⟩ := compiler_fixups_frame ops before sites target index status output accepted
+  rw [same]
+  exact ⟨rfl, Nat.le_refl _⟩
 
 theorem compiler_fixups_after_if_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
@@ -481,8 +441,11 @@ theorem compiler_end_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' metadata_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType status accepted
+  have frame := effect.frame
+  refine ⟨?_, effect.capacity law⟩
+  unfold compilerMetadata
+  rw [frame]
 
 theorem compiler_else_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -491,9 +454,13 @@ theorem compiler_else_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' metadata_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv
+    ops before after state blockType status accepted
+  refine ⟨?_, effect.capacity law⟩
+  have frame := effect.frame
+  change after = _ at frame
+  unfold compilerMetadata
+  rw [frame]
 end Itasca.Runtime.Compiler
 
 end
@@ -558,13 +525,7 @@ theorem compiler_op65_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 65#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 65#u16 a b bits = (do
-        let i ← lift (UScalar.cast .U32 bits)
-        runtime.compiler.lower.FunctionCompiler.finish_op ops before
-          state (runtime.bytecode.Instr.Const32 before.height i)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.i32_const ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -577,13 +538,7 @@ theorem compiler_op66_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 66#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 66#u16 a b bits = (do
-        let i ← lift (UScalar.cast .U64 bits)
-        runtime.compiler.lower.FunctionCompiler.finish_op ops before
-          state (runtime.bytecode.Instr.Const64 before.height i)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.i64_const ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -596,32 +551,7 @@ theorem compiler_op32_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 32#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 32#u16 a b bits = (do
-        let i ← lift (UScalar.cast .Usize a)
-        let src ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32)
-            before.local_offsets i
-        let i1 ← lift (UScalar.cast .Usize a)
-        let vt ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            _root_.Itasca.wasm_types.ValueType) before.function.locals i1
-        let n ← runtime.value.width vt
-        let (r, self1) ←
-          runtime.compiler.FunctionCompiler.copy ops before
-            before.height src n
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue _ =>
-          runtime.compiler.FunctionCompiler.observe ops self1 state
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-              residual
-          Result.ok (r1, self1)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.local_get ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -634,44 +564,7 @@ theorem compiler_op33_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 33#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 33#u16 a b bits = (do
-        let i ← lift (UScalar.cast .Usize a)
-        let dst ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32)
-            before.local_offsets i
-        let r ←
-          runtime.compiler.FunctionCompiler.operand ops before
-            1#usize
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          let i1 ← lift (UScalar.cast .Usize a)
-          let vt ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.wasm_types.ValueType) before.function.locals i1
-          let n ← runtime.value.width vt
-          let (r1, self1) ←
-            runtime.compiler.FunctionCompiler.copy ops before dst val
-              n
-          let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-          match cf1 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            runtime.compiler.FunctionCompiler.observe ops self1 state
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-                residual
-            Result.ok (r2, self1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-              residual
-          Result.ok (r1, before)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.local_set ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -684,44 +577,7 @@ theorem compiler_op34_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 34#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 34#u16 a b bits = (do
-        let i ← lift (UScalar.cast .Usize a)
-        let dst ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32)
-            before.local_offsets i
-        let r ←
-          runtime.compiler.FunctionCompiler.operand ops before
-            1#usize
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          let i1 ← lift (UScalar.cast .Usize a)
-          let vt ←
-            alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-              _root_.Itasca.wasm_types.ValueType) before.function.locals i1
-          let n ← runtime.value.width vt
-          let (r1, self1) ←
-            runtime.compiler.FunctionCompiler.copy ops before dst val
-              n
-          let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-          match cf1 with
-          | core.ops.control_flow.ControlFlow.Continue _ =>
-            runtime.compiler.FunctionCompiler.observe ops self1 state
-          | core.ops.control_flow.ControlFlow.Break residual =>
-            let r2 ←
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-                residual
-            Result.ok (r2, self1)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-              residual
-          Result.ok (r1, before)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.local_tee ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -734,26 +590,7 @@ theorem compiler_op16_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 16#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 16#u16 a b bits = (do
-        let i ← lift (UScalar.cast .Usize a)
-        let slots ← Slice.index_usize before.func_param_slots i
-        let o ← lift (U32.checked_sub before.height slots)
-        let r ←
-          core.option.Option.ok_or o _root_.Itasca.error.VisitError.OutOfMemory
-        let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-        match cf with
-        | core.ops.control_flow.ControlFlow.Continue val =>
-          runtime.compiler.lower.FunctionCompiler.finish_op ops
-            before state (runtime.bytecode.Instr.Call a val)
-        | core.ops.control_flow.ControlFlow.Break residual =>
-          let r1 ←
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-              residual
-          Result.ok (r1, before)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.call ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -766,11 +603,7 @@ theorem compiler_op1_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 1#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 1#u16 a b bits = (do
-        runtime.compiler.FunctionCompiler.observe ops before state) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.nop ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -783,11 +616,7 @@ theorem compiler_op26_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state 26#u16 a b bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
   by_cases reach : before.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops before state 26#u16 a b bits = (do
-        runtime.compiler.FunctionCompiler.observe ops before state) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos reach]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.drop ops before state a b bits reach
     rw [run] at accepted
     repeat' metadata_step accepted using ops, law
   · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
@@ -800,7 +629,7 @@ theorem compiler_i32_const_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const.eq] at accepted
   simp only [lift, bind_ok] at accepted
   exact compiler_op65_ordinary_result ops law before after state _ _ _ status accepted
 
@@ -811,7 +640,7 @@ theorem compiler_i64_const_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const.eq] at accepted
   simp only [lift, bind_ok] at accepted
   exact compiler_op66_ordinary_result ops law before after state _ _ _ status accepted
 
@@ -822,7 +651,7 @@ theorem compiler_local_get_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_get
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_get at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_get.eq] at accepted
   exact compiler_op32_ordinary_result ops law before after state _ _ _ status accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
@@ -832,7 +661,7 @@ theorem compiler_local_set_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_set
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_set at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_set.eq] at accepted
   exact compiler_op33_ordinary_result ops law before after state _ _ _ status accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
@@ -842,7 +671,7 @@ theorem compiler_local_tee_ordinary_result {A : Type} (ops : runtime.platform.Al
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_tee
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_tee at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_local_tee.eq] at accepted
   exact compiler_op34_ordinary_result ops law before after state _ _ _ status accepted
 
 /-- Exact callback specialization of the checked ordinary field preservation. -/
@@ -852,7 +681,7 @@ theorem compiler_call_ordinary_result {A : Type} (ops : runtime.platform.Alloc A
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call
       ops before state value = .ok (status, after)) : CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call at accepted
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_call.eq] at accepted
   exact compiler_op16_ordinary_result ops law before after state _ _ _ status accepted
 
 theorem compiler_nop_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -903,8 +732,12 @@ theorem compiler_return_ordinary_result {A : Type} (ops : runtime.platform.Alloc
     (state : Itasca.code.OpIterState) (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return ops before state = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' metadata_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state status accepted
+  have frame := effect.frame
+  refine ⟨?_, effect.capacity law⟩
+  rw [frame]
+  rfl
+
 end Itasca.Runtime.Compiler
 
 end

@@ -18,25 +18,6 @@ and preserves reachability. The proof follows the actual extracted callback. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-theorem compiler_pc_eq {A : Type} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A) (target : U32)
-    (position : target.val = compiler.function.code.val.length) :
-    runtime.compiler.FunctionCompiler.pc ops compiler = .ok (.Ok target, compiler) := by
-  have bound : compiler.function.code.length ≤ U32.max := by
-    simp only [alloc.vec.Vec.length, ← position]
-    scalar_tac
-  obtain ⟨output, run, effect⟩ :=
-    WP.spec_imp_exists (compiler_pc_available ops compiler bound)
-  rcases output with ⟨status, after⟩
-  dsimp only at effect
-  obtain ⟨same, pc, success, pcLength⟩ := effect
-  rw [same, success] at run
-  have pcEq : pc = target := by
-    apply UScalar.eq_of_val_eq
-    exact pcLength.trans position.symm
-  subst pc
-  exact run
-
 end Itasca.Runtime.Compiler
 
 end

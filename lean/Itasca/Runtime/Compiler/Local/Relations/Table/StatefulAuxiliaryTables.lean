@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Relations.Function.EnvironmentContracts
 import Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
@@ -15,20 +16,6 @@ section
 from every module type, retaining exact value and word arities. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-def SignatureSequence (signatures : List runtime.compiler.Signature)
-    (types : List Itasca.wasm_types.FuncType) : Prop :=
-  List.Forall₂ (fun signature ty => SignatureMatches signature
-    (ty.params.val.map Itasca.Translate.valueType) (ty.results.val.map Itasca.Translate.valueType)) signatures types
-
-theorem SignatureSequence.append {signatures types signature ty}
-    (before : SignatureSequence signatures types)
-    (last : SignatureMatches signature (ty.params.val.map Itasca.Translate.valueType)
-      (ty.results.val.map Itasca.Translate.valueType)) :
-    SignatureSequence (signatures ++ [signature]) (types ++ [ty]) := by
-  induction before with
-  | nil => exact .cons last .nil
-  | cons head tail ih => exact .cons head ih
 
 theorem SignatureSequence.lookup {signatures types}
     (sequence : SignatureSequence signatures types) {index : Nat} {signature : runtime.compiler.Signature}
@@ -61,46 +48,8 @@ theorem SignatureSequence.table {signatures : Slice runtime.compiler.Signature}
       ops scheduler env index status ⦃ out =>
       out.2.2.2.2.2.2.2 = .Ok () → SignatureSequence out.1.val env.types.val ∧
         out.2.1 = scheduler.func_param_slots ∧ out.2.2.2.1 = scheduler.functions ⦄ := by
-  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0
-  apply loop.spec_decr_nat (fun p => env.types.val.length - p.2.1.val)
-    (fun p => p.2.1.val ≤ env.types.val.length ∧
-      (p.2.2 = .Ok () → SignatureSequence p.1.signatures.val (env.types.val.take p.2.1.val) ∧
-        p.1.func_param_slots = scheduler.func_param_slots ∧ p.1.functions = scheduler.functions))
-  · rintro ⟨current, i, result⟩ ⟨hi, certified⟩
-    dsimp only at hi certified
-    unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.body
-    simp only [Itasca.metadata.Env.impl.types, bind_ok]
-    split
-    · rename_i more
-      have hb : i.val < env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at more; scalar_tac
-      cases result with
-      | Err error => simp [core.result.Result.is_ok]
-      | Ok unit =>
-        cases unit
-        obtain ⟨currentMatches, sameSlots, sameFunctions⟩ := certified rfl
-        have length := List.Forall₂.length_eq currentMatches
-        have capacity := env.types.property
-        have fits : current.signatures.val.length < Usize.max := by simp [List.length_take, Nat.min_eq_left hi] at length; omega
-        simp only [core.result.Result.is_ok, bind_ok, ite_true]
-        step with capture_signature ops law current env i env.types.val[i.val]
-          (List.getElem?_eq_getElem hb) fits as ⟨answer, changed, effect⟩
-        step as ⟨next, hnext⟩
-        refine ⟨by scalar_tac, ?_, by scalar_tac⟩
-        intro accepted
-        obtain ⟨signature, budget, changedEq, appended, exactSignature⟩ := effect accepted
-        refine ⟨?_, ?_, ?_⟩
-        · rw [hnext, ← List.take_concat_get' env.types.val i.val hb, appended]
-          exact currentMatches.append exactSignature
-        · rw [changedEq]
-          exact sameSlots
-        · rw [changedEq]
-          exact sameFunctions
-    · rename_i finished
-      have same : i.val = env.types.val.length := by simp [alloc.vec.Vec.deref, Slice.len] at finished; scalar_tac
-      simp only [WP.spec_ok]
-      intro accepted
-      simpa [same] using certified accepted
-  · exact ⟨bound, fun accepted => ⟨prefixMatches accepted, rfl, rfl⟩⟩
+  exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready_loop0.total ops law scheduler env index status bound prefixMatches
+
 end Itasca.Runtime.Compiler
 
 end
@@ -112,7 +61,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 theorem compiler_stateful_auxiliary_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)

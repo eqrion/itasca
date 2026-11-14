@@ -13,7 +13,6 @@ Main declarations: `reader_publication_wasm2`. A direct consumer is `Compiler.Bo
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Every accepted Wasm 2 reader step preserves both publication invariants
 from its source-typed reached prefix, including unreachable code and every

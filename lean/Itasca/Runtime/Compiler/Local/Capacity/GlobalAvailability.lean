@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdContracts
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Module.Layout
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
@@ -190,7 +192,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 inductive ScalarLiteralKind where
   | i32 | i64 | f32 | f64
@@ -233,8 +234,11 @@ theorem compiler_literal_available_effect {A : Type} (ops : runtime.platform.All
   by_cases live : compiler.reachable = true
   · have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state kind.opcode 0#u32 0#u32 bits =
         kind.lowering ops compiler state bits := by
-      cases kind <;> unfold ScalarLiteralKind.opcode ScalarLiteralKind.lowering runtime.compiler.lower.FunctionCompiler.op <;>
-        rw [if_pos live] <;> rfl
+      cases kind with
+      | i32 => exact runtime.compiler.lower.FunctionCompiler.op.i32_const ops compiler state _ _ bits live
+      | i64 => exact runtime.compiler.lower.FunctionCompiler.op.i64_const ops compiler state _ _ bits live
+      | f32 => exact runtime.compiler.lower.FunctionCompiler.op.f32_const ops compiler state _ _ bits live
+      | f64 => exact runtime.compiler.lower.FunctionCompiler.op.f64_const ops compiler state _ _ bits live
     rw [dispatch]
     cases kind <;> simp only [ScalarLiteralKind.lowering,lift,bind_ok]
     all_goals
@@ -261,27 +265,11 @@ theorem compiler_vector_literal_available_budget {A : Type} (ops : runtime.platf
     runtime.compiler.simd.FunctionCompiler.simd_op ops compiler state 524#u16 0#u32 bits
       ⦃ out => out.1 = .Ok () ∧ ∃ used, out.2.budget = {compiler.budget with instructions := used} ∧
         used.val = compiler.budget.instructions.val+1 ⦄ := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op
-  split <;> try contradiction
-  step with bounded_index_available (alloc.vec.Vec.len compiler.function.v128_pool) (by
-    change compiler.function.v128_pool.length ≤ U32.max
-    have room := demand.pc
-    omega) as ⟨status,index,accepted,indexEq⟩
-  rw [accepted]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available compiler.budget compiler.function.v128_pool bits
-    (by change compiler.function.v128_pool.length < Usize.max; have cap := demand.codeCapacity; omega)
-    (by change compiler.function.v128_pool.length+1 ≤ bound; have room := demand.codeReserve; omega)
-    as ⟨status,budget,pool,accepted,same,appended⟩
-  subst status budget
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  have fresh : CallbackDemand {compiler with function := {compiler.function with v128_pool := pool}} state bound :=
-    ⟨demand.pc,demand.codeCapacity,demand.sourceCapacity,demand.codeReserve,demand.sourceReserve,
-      demand.coordinate,demand.instruction,demand.operands,demand.slots⟩
-  change runtime.compiler.lower.FunctionCompiler.finish_op ops
-    {compiler with function := {compiler.function with v128_pool := pool}} state
-    (.ConstV128 compiler.height index) ⦃ out => _ ⦄
-  exact finish_op_available_budget ops bound available _ state fresh _
+  apply runtime.compiler.simd.FunctionCompiler.simd_op.available ops bound available compiler state 524#u16 0#u32 bits
+  exact .constant demand
+    (by have room := demand.pc; omega)
+    (by have room := demand.codeCapacity; omega)
+    (by have room := demand.codeReserve; omega)
 
 end Itasca.Runtime.Compiler
 

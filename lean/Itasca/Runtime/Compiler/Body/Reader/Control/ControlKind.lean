@@ -186,7 +186,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 
 /-- The newly opened frame begins at an unchanged prefix of the old raw operands. -/
 def EntryPrefix (before after : code.OpIterState) : Prop :=

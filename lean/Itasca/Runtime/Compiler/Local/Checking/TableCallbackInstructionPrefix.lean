@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
 import Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
@@ -289,33 +290,15 @@ theorem compiler_br_table_callback_open_instructions {A : Type} (ops : runtime.p
       CompilerInstructionPrefix lowered)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
       ops before state fallback types = .ok (.Ok (),after)) : CompilerInstructionPrefix after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at called
-  obtain ⟨⟨result,labeled⟩,labelCalled,rest⟩ := bind_ok_inv _ _ _ called
-  cases result with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    have checked := compiler_table_label_open_instructions ops law before labeled state fallback held labelCalled
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    split at rest
-    · rename_i live
-      obtain ⟨⟨result,lowered⟩,lowerCalled,rest⟩ := bind_ok_inv _ _ _ rest
-      cases result with
-      | Err error =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unit =>
-        cases unit
-        have loweredChecked := lower labeled labelCalled live lowered lowerCalled
-        simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-        obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-        exact compiler_observe_open_instructions ops law {lowered with reachable := false,table_depths := cleared}
-          after state (loweredChecked.retained rfl rfl) observed
-    · obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-      exact compiler_observe_open_instructions ops law {labeled with table_depths := cleared}
-        after state (checked.retained rfl rfl) observed
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state fallback types (.Ok ()) called with
+  | @live labeled lowered cleared _ _ labelCall live lowerCall clearCall observed =>
+    have checked := lower labeled labelCall live lowered lowerCall
+    exact compiler_observe_open_instructions ops law {lowered with reachable := false, table_depths := cleared}
+      after state (checked.retained rfl rfl) observed
+  | @dead labeled cleared _ _ labelCall dead clearCall observed =>
+    have checked := compiler_table_label_open_instructions ops law before labeled state fallback held labelCall
+    exact compiler_observe_open_instructions ops law {labeled with table_depths := cleared}
+      after state (checked.retained rfl rfl) observed
 
 end Itasca.Runtime.Compiler
 

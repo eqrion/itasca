@@ -31,7 +31,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 /-- Independent SIMD reader typing supplies all live operand and output-size
 premises. Callback acceptance follows from allocation and source demand for

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
@@ -132,7 +133,12 @@ theorem StructuredCompilerPrefix.br_dead {jumpTables : List Aeneas.Std.U32} {A :
       state.vals.val state.pos.val ∧ after.reachable = false := by
   have sources := compiler_br_sources ops law before after state depth view accepted
   have cursor := compiler_br_cursor ops law before after state depth view accepted
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br, dead, Bool.false_eq_true, ↓reduceIte] at accepted
+  have accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (.Ok (), after) := by
+    have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv
+      ops before after state depth view (.Ok ()) accepted
+    cases effect with
+    | dead _ observed => exact observed
+    | branched live _ _ => simp [dead] at live
   have ordinary := compiler_observe_ordinary_stable ops law before after state accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame
@@ -218,7 +224,12 @@ theorem StructuredCompilerPrefix.br_if_dead {jumpTables : List Aeneas.Std.U32} {
   have sources := compiler_br_if_sources ops law before after state depth view accepted
   have cursor := compiler_br_if_cursor ops law before after state depth view accepted
   have reach := callback_branch_if_reachable_result ops law before after state depth view (.Ok ()) accepted
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if, dead, Bool.false_eq_true, ↓reduceIte] at accepted
+  have accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (.Ok (), after) := by
+    have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv
+      ops before after state depth view (.Ok ()) accepted
+    cases effect with
+    | dead _ observed => exact observed
+    | branched live _ _ => simp [dead] at live
   have ordinary := compiler_observe_ordinary_stable ops law before after state accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame

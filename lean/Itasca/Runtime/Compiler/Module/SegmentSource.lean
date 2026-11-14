@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Module.CodeRegionComplete
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability
@@ -39,8 +40,8 @@ theorem CompileWitness.semantic_input {A : Type} {allocator : runtime.platform.A
   rw [tailDecoded, WP.spec_ok] at tailSemantic
   obtain ⟨_, segments, _⟩ := tailSemantic
   have readyEq : run.remaining.ready = {run.remaining.decodedTail with tail := some run.remaining.tail} := by
-    simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor,
-      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready,
+    simpa only [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.project_tail_ready.eq,
+      runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.tail_ready.eq,
       Result.ok.injEq, Prod.mk.injEq, true_and] using run.remaining.ready_call.symm
   have drained := compiler_drain_frame allocator 0#u64 run.remaining.ready w.scheduler
     run.remaining.pending run.remaining.remaining run.remaining.drain_call

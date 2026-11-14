@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
@@ -12,7 +13,7 @@ Main declarations: `FixupBudget.ordinary` and `compiler_end_fixup_budget`. A dir
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 4000000
+
 set_option maxRecDepth 4096
 
 theorem FixupBudget.ordinary {A : Type} {before after : runtime.compiler.FunctionCompiler A}
@@ -87,36 +88,7 @@ elab "fixup_effect " h:ident " using " ops:term ", " law:term : tactic => withMa
     evalTactic tac
     evalTactic (← `(tactic| try code_mono_effect $h using $ops, $law))
 
-macro "fixup_close" : tactic => `(tactic|
-  (simp_all only [Prod.mk.injEq, Result.ok.injEq, source_unit_eq,
-    snapshotCompiler, alloc.vec.Vec.set_val_eq, core.convert.FromSame,
-    core.result.Result.Err.injEq, reduceCtorEq, false_and, and_false,
-    true_and, and_true, implies_true, true_implies]
-   try contradiction
-   try assumption))
 
-macro "fixup_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; fixup_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (fixup_effect $h using $ops, $law; fixup_close; exact (budget.mono growth).push _ rfl)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try fixup_effect called using $ops, $law
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | sources_split $h)
 
 theorem compiler_enter_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -154,14 +126,11 @@ theorem compiler_end_fixup_budget {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind bt = .ok (.Ok (), after)) :
     FixupBudget after.frames.val after.function.code.val.length := by
-  have growth := compiler_end_code_mono ops law before after state kind bt accepted
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' fixup_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' fixup_step accepted using ops, law
-  all_goals try fixup_effect accepted using ops, law
-  all_goals fixup_close
-  all_goals try exact fun frame member => (budget frame (List.mem_of_mem_dropLast member)).trans growth
-
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind bt (.Ok ()) accepted
+  obtain ⟨frame, remaining, popped, frames, length, sources⟩ := effect.sources_frames law
+  have remainingEq := popped_frames popped
+  intro retained member
+  rw [frames, remainingEq] at member
+  exact (budget retained (List.mem_of_mem_dropLast member)).trans (by omega)
 
 end Itasca.Runtime.Compiler

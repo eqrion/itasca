@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Equations.Bytecode
@@ -77,9 +79,7 @@ theorem lower_indirect_call_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (reachable : before.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops before state 17#u16 a b 0#u128 =
       indirectCallLowering ops before state a b := by
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  rw [if_pos reachable]
-  rfl
+  exact runtime.compiler.lower.FunctionCompiler.op.call_indirect ops before state a b 0#u128 reachable
 
 theorem lower_indirect_call_eq {A : Type} (ops : runtime.platform.Alloc A)
     (before paired : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -217,8 +217,8 @@ theorem stateful_callback_lower {A : Type} (ops : runtime.platform.Alloc A)
   all_goals try (have zero : a = 0#u32 := (UScalar.eq_equiv _ _).mpr ha; subst a)
   all_goals try (have one : a = 1#u32 := (UScalar.eq_equiv _ _).mpr ha; subst a)
   all_goals try rfl
-  all_goals simp only [statefulCallback,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,Bool.false_eq_true,↓reduceIte]
+  all_goals simp only [statefulCallback,runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_ref_null.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null.eq,bind_ok,Bool.false_eq_true,↓reduceIte]
   all_goals rfl
 
 end Itasca.Runtime.Compiler

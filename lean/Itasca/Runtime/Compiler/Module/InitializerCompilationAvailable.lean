@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Initializer.LowerContracts
+import Itasca.Runtime.Compiler.Local.Initializer.SegmentLoopContracts
+import Itasca.Runtime.Compiler.Local.Initializer.SegmentEmissionContracts
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
@@ -40,68 +43,8 @@ theorem initializer_emit_data_available {A : Type} (ops : runtime.platform.Alloc
       out.1 = .Ok () ∧ out.2.1.instructions.val ≤ budget.instructions.val + 5 ∧
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect = function.indirect ⦄ := by
-  unfold runtime.compiler.initialize.emit_data
-  simp only [runtime.compiler.ExecutableModule.tail.eq,Itasca.metadata.Module.impl.tail,bind_ok]
-  rw [initializer_vec_index _ _ segment lookup,bind_ok]
-  cases mode : segment.mode with
-  | Passive =>
-    simp only [mode,WP.spec_ok]
-    exact ⟨trivial,by omega,by trivial,by omega,by trivial,by trivial⟩
-  | Active memory offset =>
-    simp only [mode]
-    step with initializer_offset_available ops bound available budget {function with slot_count := 3#u32}
-      module.module.env offset (typed memory offset mode) (by omega)
-      (by change function.code.length < Usize.max; omega)
-      (by change function.code.length+1 ≤ bound; omega)
-      as ⟨status,b1,first,accepted,used1,limits1,fields,instruction,code1,constant⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have firstLength : first.code.length = function.code.length + 1 := by
-      simp only [alloc.vec.Vec.length,code1,List.length_append,List.length_singleton]
-    step with initializer_emit_available ops bound available b1 first.code (.Const32 1#u32 0#u32)
-      (by rw [limits1]; omega) (by omega) (by omega)
-      as ⟨status,b2,second,accepted,used2,limits2,code2⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with bounded_index_available (alloc.vec.Vec.len segment.init) lengthBound
-      as ⟨status,length,accepted,encodedLength⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have secondLength : second.length = function.code.length + 2 := by
-      simp only [alloc.vec.Vec.length,code2,List.length_append,List.length_singleton] at firstLength ⊢
-      omega
-    step with initializer_emit_available ops bound available b2 second (.Const32 2#u32 length)
-      (by rw [limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b3,third,accepted,used3,limits3,code3⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with bounded_index_available index indexBound as ⟨status,word,accepted,encoded⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have thirdLength : third.length = function.code.length + 3 := by
-      simp only [alloc.vec.Vec.length,code3,List.length_append,List.length_singleton] at secondLength ⊢
-      omega
-    step with initializer_emit_available ops bound available b3 third (.MemoryInit 0#u32 word)
-      (by rw [limits3,limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b4,fourth,accepted,used4,limits4,code4⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have fourthLength : fourth.length = function.code.length + 4 := by
-      simp only [alloc.vec.Vec.length,code4,List.length_append,List.length_singleton] at thirdLength ⊢
-      omega
-    step with initializer_emit_available ops bound available b4 fourth (.DataDrop word)
-      (by rw [limits4,limits3,limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b5,fifth,accepted,used5,limits5,code5⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-    refine ⟨trivial,?_,?_,?_,?_,?_⟩
-    · omega
-    · exact limits5.trans (limits4.trans (limits3.trans (limits2.trans limits1)))
-    · simp only [alloc.vec.Vec.length,code5,List.length_append,List.length_singleton]
-      simp only [alloc.vec.Vec.length] at fourthLength capacity
-      omega
-    · exact congrArg (fun value => value.v128_pool) fields
-    · exact congrArg (fun value => value.indirect) fields
+  exact runtime.compiler.initialize.emit_data.available ops bound available module budget function index segment
+    ⟨lookup, typed, instructions, capacity, request, indexBound, lengthBound⟩
 
 end Itasca.Runtime.Compiler
 
@@ -136,51 +79,41 @@ theorem initializer_emit_datas_available {A : Type} (ops : runtime.platform.Allo
       out.2.2.code.length ≤ function.code.length + 5*(module.module.tail.data.val.length-index.val) ∧
       out.2.2.indirect = function.indirect ∧
       out.2.2.v128_pool = function.v128_pool ⦄ := by
-  unfold runtime.compiler.initialize.lower_loop4
-  apply loop.spec_decr_nat (fun state => module.module.tail.data.val.length-state.2.1.val)
-    (fun state => state.1.limits = budget.limits ∧ state.2.2.1 = .Ok () ∧
-      state.2.1.val ≤ module.module.tail.data.val.length ∧
-      state.1.instructions.val + 5*(module.module.tail.data.val.length-state.2.1.val) ≤
-        budget.instructions.val + 5*(module.module.tail.data.val.length-index.val) ∧
-      state.2.2.2.code.length + 5*(module.module.tail.data.val.length-state.2.1.val) ≤
-        function.code.length + 5*(module.module.tail.data.val.length-index.val) ∧
-      state.2.2.2.indirect = function.indirect ∧
-      state.2.2.2.v128_pool = function.v128_pool)
-  · rintro ⟨charged,next,status,current⟩ ⟨limits,accepted,position,used,code,pairs,pool⟩
-    dsimp only at limits accepted position used code pairs pool
-    subst status
-    unfold runtime.compiler.initialize.lower_loop4.body
-    simp only [runtime.compiler.ExecutableModule.tail.eq,Itasca.metadata.Module.impl.tail,bind_ok]
-    split
-    · rename_i more
-      have sourceBound : next.val < module.module.tail.data.val.length := by
-        simpa [UScalar.lt_equiv,alloc.vec.Vec.len] using more
-      let segment := module.module.tail.data.val[next.val]
-      have lookup : module.module.tail.data.val[next.val]? = some segment := List.getElem?_eq_getElem sourceBound
-      simp only [core.result.Result.is_ok,bind_ok,↓reduceIte]
-      step with initializer_emit_data_available ops bound available module charged current next segment lookup
-        (typed segment (List.getElem_mem sourceBound)) (by rw [limits]; omega) (by omega) (by omega)
-        (by change module.module.tail.data.val.length ≤ U32.max at sourceCount; omega)
-        (sourceLengths segment (List.getElem_mem sourceBound))
-        as ⟨status,afterBudget,after,accepted,usedAgain,limitsAgain,codeAgain,poolAgain,pairsAgain⟩
-      subst status
-      step as ⟨following,followingEq⟩
-      refine ⟨?_,?_,?_,?_,?_,?_,?_⟩
-      · exact limitsAgain.trans limits
-      · scalar_tac
-      · omega
-      · omega
-      · exact pairsAgain.trans pairs
-      · exact poolAgain.trans pool
-      · scalar_tac
-    · rename_i stopped
-      have last : next.val = module.module.tail.data.val.length := by
-        have ended : module.module.tail.data.val.length ≤ next.val := by
-          simpa [UScalar.lt_equiv,alloc.vec.Vec.len] using stopped
-        omega
-      exact WP.spec.ret ⟨rfl,limits,by simpa [last] using used,by simpa [last] using code,
-        pairs,pool⟩
-  · exact ⟨rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _,rfl,rfl⟩
+  let P := fun (charged : runtime.compiler.Budget A) (current : runtime.bytecode.CompiledFunction) (cursor : Usize) =>
+    charged.limits = budget.limits ∧
+    charged.instructions.val + 5*(module.module.tail.data.val.length-cursor.val) ≤
+      budget.instructions.val + 5*(module.module.tail.data.val.length-index.val) ∧
+    current.code.length + 5*(module.module.tail.data.val.length-cursor.val) ≤
+      function.code.length + 5*(module.module.tail.data.val.length-index.val) ∧
+    current.indirect = function.indirect ∧ current.v128_pool = function.v128_pool
+  change WP.spec (loop (initializerEmitDataLoop ops module).body (budget, index, .Ok (), function)) _
+  apply InitializerSegmentLoop.available
+    { rules := initializerEmitDataLoop ops module, budget := budget, function := function, index := index, bounded := inside,
+      P := P, Q := fun charged after => charged.limits = budget.limits ∧
+        charged.instructions.val ≤ budget.instructions.val + 5*(module.module.tail.data.val.length-index.val) ∧
+        after.code.length ≤ function.code.length + 5*(module.module.tail.data.val.length-index.val) ∧
+        after.indirect = function.indirect ∧ after.v128_pool = function.v128_pool,
+      advance := ?_, finish := ?_, initial := ?_ }
+  · intro charged current cursor position prior
+    obtain ⟨limits, used, code, pairs, pool⟩ := prior
+    change cursor.val < module.module.tail.data.val.length at position
+    let segment := module.module.tail.data.val[cursor.val]'position
+    have lookup : module.module.tail.data.val[cursor.val]? = some segment := List.getElem?_eq_getElem position
+    apply WP.spec_mono (initializer_emit_data_available ops bound available module charged current cursor segment lookup
+      (typed segment (List.getElem_mem position)) (by rw [limits]; omega) (by omega) (by omega)
+      (by change module.module.tail.data.val.length ≤ U32.max at sourceCount; omega)
+      (sourceLengths segment (List.getElem_mem position)))
+    rintro ⟨result, nextBudget, next⟩ ⟨accepted, usedAgain, limitsAgain, codeAgain, poolAgain, pairsAgain⟩
+    dsimp only at accepted usedAgain limitsAgain codeAgain poolAgain pairsAgain
+    refine ⟨accepted, ?_⟩
+    intro nextIndex increment
+    exact ⟨limitsAgain.trans limits, by omega, by omega,
+      pairsAgain.trans pairs, poolAgain.trans pool⟩
+  · intro charged current cursor last prior
+    obtain ⟨limits, used, code, pairs, pool⟩ := prior
+    change cursor.val = module.module.tail.data.val.length at last
+    exact ⟨limits, by omega, by omega, pairs, pool⟩
+  · exact ⟨rfl, Nat.le_refl _, Nat.le_refl _, rfl, rfl⟩
 
 end Itasca.Runtime.Compiler
 
@@ -212,91 +145,8 @@ theorem initializer_emit_element_available {A : Type} (ops : runtime.platform.Al
       out.1 = .Ok () ∧ out.2.1.instructions.val ≤ budget.instructions.val + 5 ∧
       out.2.1.limits = budget.limits ∧ out.2.2.code.length ≤ function.code.length + 5 ∧
       out.2.2.v128_pool = function.v128_pool ∧ out.2.2.indirect.length ≤ function.indirect.length + 1 ⦄ := by
-  unfold runtime.compiler.initialize.emit_element
-  simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
-  rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using lookup),bind_ok]
-  cases mode : segment.mode with
-  | Passive =>
-    simp only [mode,WP.spec_ok]
-    exact ⟨trivial,by omega,by trivial,by omega,by trivial,by omega⟩
-  | Declarative =>
-    simp only [mode]
-    step with bounded_index_available index indexBound as ⟨status,word,accepted,encoded⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with initializer_emit_available ops bound available budget function.code (.ElemDrop word)
-      (by omega) (by omega) (by omega)
-      as ⟨status,charged,code,accepted,used,limits,appended⟩
-    refine ⟨accepted,by omega,limits,?_,?_⟩
-    · simp only [alloc.vec.Vec.length,appended,List.length_append,List.length_singleton]
-      omega
-    · omega
-  | Active table offset =>
-    simp only [mode]
-    step with initializer_offset_available ops bound available budget {function with slot_count := 3#u32}
-      module.module.env offset (typed table offset mode) (by omega)
-      (by change function.code.length < Usize.max; omega)
-      (by change function.code.length+1 ≤ bound; omega)
-      as ⟨status,b1,first,accepted,used1,limits1,fields,instruction,code1,constant⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have firstLength : first.code.length = function.code.length + 1 := by
-      simp only [alloc.vec.Vec.length,code1,List.length_append,List.length_singleton]
-    step with initializer_emit_available ops bound available b1 first.code (.Const32 1#u32 0#u32)
-      (by rw [limits1]; omega) (by omega) (by omega)
-      as ⟨status,b2,second,accepted,used2,limits2,code2⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with bounded_index_available (alloc.vec.Vec.len segment.init) lengthBound
-      as ⟨status,length,accepted,encodedLength⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have secondLength : second.length = function.code.length + 2 := by
-      simp only [alloc.vec.Vec.length,code2,List.length_append,List.length_singleton] at firstLength ⊢
-      omega
-    step with initializer_emit_available ops bound available b2 second (.Const32 2#u32 length)
-      (by rw [limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b3,third,accepted,used3,limits3,code3⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have firstPairs : first.indirect = function.indirect := congrArg (fun value => value.indirect) fields
-    step with bounded_index_available (alloc.vec.Vec.len first.indirect) (by simpa [firstPairs] using pairIndex)
-      as ⟨status,entry,accepted,entryEq⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with bounded_index_available index indexBound as ⟨status,word,accepted,encoded⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have thirdLength : third.length = function.code.length + 3 := by
-      simp only [alloc.vec.Vec.length,code3,List.length_append,List.length_singleton] at secondLength ⊢
-      omega
-    step with budget_push_available ops bound available b3 first.indirect (word,table)
-      (by simpa [firstPairs] using pairCapacity) (by simpa [firstPairs] using pairReserve)
-      as ⟨status,pairBudget,pairs,accepted,sameBudget,appendedPairs⟩
-    subst status pairBudget
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    step with initializer_emit_available ops bound available b3 third (.TableInit 0#u32 entry)
-      (by rw [limits3,limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b4,fourth,accepted,used4,limits4,code4⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-    have fourthLength : fourth.length = function.code.length + 4 := by
-      simp only [alloc.vec.Vec.length,code4,List.length_append,List.length_singleton] at thirdLength ⊢
-      omega
-    step with initializer_emit_available ops bound available b4 fourth (.ElemDrop word)
-      (by rw [limits4,limits3,limits2,limits1]; omega) (by omega) (by omega)
-      as ⟨status,b5,fifth,accepted,used5,limits5,code5⟩
-    rw [accepted]
-    simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-    refine ⟨trivial,?_,?_,?_,?_,?_⟩
-    · omega
-    · exact limits5.trans (limits4.trans (limits3.trans (limits2.trans limits1)))
-    · simp only [alloc.vec.Vec.length,code5,List.length_append,List.length_singleton]
-      simp only [alloc.vec.Vec.length] at fourthLength capacity
-      omega
-    · exact congrArg (fun value => value.v128_pool) fields
-    · simp only [alloc.vec.Vec.length,appendedPairs,List.length_append,List.length_singleton]
-      simp [firstPairs]
+  exact runtime.compiler.initialize.emit_element.available ops bound available module budget function index segment
+    ⟨lookup, typed, instructions, capacity, request, indexBound, lengthBound, pairIndex, pairCapacity, pairReserve⟩
 
 end Itasca.Runtime.Compiler
 
@@ -334,52 +184,42 @@ theorem initializer_emit_elements_available {A : Type} (ops : runtime.platform.A
       out.2.2.code.length ≤ function.code.length + 5*(module.module.env.elements.val.length-index.val) ∧
       out.2.2.indirect.length ≤ function.indirect.length + (module.module.env.elements.val.length-index.val) ∧
       out.2.2.v128_pool = function.v128_pool ⦄ := by
-  unfold runtime.compiler.initialize.lower_loop3
-  apply loop.spec_decr_nat (fun state => module.module.env.elements.val.length-state.2.1.val)
-    (fun state => state.1.limits = budget.limits ∧ state.2.2.1 = .Ok () ∧
-      state.2.1.val ≤ module.module.env.elements.val.length ∧
-      state.1.instructions.val + 5*(module.module.env.elements.val.length-state.2.1.val) ≤
-        budget.instructions.val + 5*(module.module.env.elements.val.length-index.val) ∧
-      state.2.2.2.code.length + 5*(module.module.env.elements.val.length-state.2.1.val) ≤
-        function.code.length + 5*(module.module.env.elements.val.length-index.val) ∧
-      state.2.2.2.indirect.length + (module.module.env.elements.val.length-state.2.1.val) ≤
-        function.indirect.length + (module.module.env.elements.val.length-index.val) ∧
-      state.2.2.2.v128_pool = function.v128_pool)
-  · rintro ⟨charged,next,status,current⟩ ⟨limits,accepted,position,used,code,pairs,pool⟩
-    dsimp only at limits accepted position used code pairs pool
-    subst status
-    unfold runtime.compiler.initialize.lower_loop3.body
-    simp only [runtime.compiler.ExecutableModule.env.eq,Itasca.metadata.Module.impl.env,Itasca.metadata.Env.impl.elements,bind_ok]
-    split
-    · rename_i more
-      have sourceBound : next.val < module.module.env.elements.val.length := by
-        simpa [UScalar.lt_equiv,alloc.vec.Vec.deref,Slice.len] using more
-      let segment := module.module.env.elements.val[next.val]
-      have lookup : module.module.env.elements.val[next.val]? = some segment := List.getElem?_eq_getElem sourceBound
-      simp only [core.result.Result.is_ok,bind_ok,↓reduceIte]
-      step with initializer_emit_element_available ops bound available module charged current next segment lookup
-        (typed segment (List.getElem_mem sourceBound)) (by rw [limits]; omega) (by omega) (by omega)
-        (by change module.module.env.elements.val.length ≤ U32.max at sourceCount; omega)
-        (sourceLengths segment (List.getElem_mem sourceBound)) (by omega) (by omega) (by omega)
-        as ⟨status,afterBudget,after,accepted,usedAgain,limitsAgain,codeAgain,poolAgain,pairsAgain⟩
-      subst status
-      step as ⟨following,followingEq⟩
-      refine ⟨?_,?_,?_,?_,?_,?_,?_⟩
-      · exact limitsAgain.trans limits
-      · scalar_tac
-      · omega
-      · omega
-      · omega
-      · exact poolAgain.trans pool
-      · scalar_tac
-    · rename_i stopped
-      have last : next.val = module.module.env.elements.val.length := by
-        have ended : module.module.env.elements.val.length ≤ next.val := by
-          simpa [UScalar.lt_equiv,alloc.vec.Vec.deref,Slice.len] using stopped
-        omega
-      exact WP.spec.ret ⟨rfl,limits,by simpa [last] using used,by simpa [last] using code,
-        by simpa [last] using pairs,pool⟩
-  · exact ⟨rfl,rfl,inside,Nat.le_refl _,Nat.le_refl _,Nat.le_refl _,rfl⟩
+  let P := fun (charged : runtime.compiler.Budget A) (current : runtime.bytecode.CompiledFunction) (cursor : Usize) =>
+    charged.limits = budget.limits ∧
+    charged.instructions.val + 5*(module.module.env.elements.val.length-cursor.val) ≤
+      budget.instructions.val + 5*(module.module.env.elements.val.length-index.val) ∧
+    current.code.length + 5*(module.module.env.elements.val.length-cursor.val) ≤
+      function.code.length + 5*(module.module.env.elements.val.length-index.val) ∧
+    current.indirect.length + (module.module.env.elements.val.length-cursor.val) ≤
+      function.indirect.length + (module.module.env.elements.val.length-index.val) ∧ current.v128_pool = function.v128_pool
+  change WP.spec (loop (initializerEmitElementLoop ops module).body (budget, index, .Ok (), function)) _
+  apply InitializerSegmentLoop.available
+    { rules := initializerEmitElementLoop ops module, budget := budget, function := function, index := index, bounded := inside,
+      P := P, Q := fun charged after => charged.limits = budget.limits ∧
+        charged.instructions.val ≤ budget.instructions.val + 5*(module.module.env.elements.val.length-index.val) ∧
+        after.code.length ≤ function.code.length + 5*(module.module.env.elements.val.length-index.val) ∧
+        after.indirect.length ≤ function.indirect.length + (module.module.env.elements.val.length-index.val) ∧ after.v128_pool = function.v128_pool,
+      advance := ?_, finish := ?_, initial := ?_ }
+  · intro charged current cursor position prior
+    obtain ⟨limits, used, code, pairs, pool⟩ := prior
+    change cursor.val < module.module.env.elements.val.length at position
+    let segment := module.module.env.elements.val[cursor.val]'position
+    have lookup : module.module.env.elements.val[cursor.val]? = some segment := List.getElem?_eq_getElem position
+    apply WP.spec_mono (initializer_emit_element_available ops bound available module charged current cursor segment lookup
+      (typed segment (List.getElem_mem position)) (by rw [limits]; omega) (by omega) (by omega)
+      (by change module.module.env.elements.val.length ≤ U32.max at sourceCount; omega)
+      (sourceLengths segment (List.getElem_mem position)) (by omega) (by omega) (by omega))
+    rintro ⟨result, nextBudget, next⟩ ⟨accepted, usedAgain, limitsAgain, codeAgain, poolAgain, pairsAgain⟩
+    dsimp only at accepted usedAgain limitsAgain codeAgain poolAgain pairsAgain
+    refine ⟨accepted, ?_⟩
+    intro nextIndex increment
+    exact ⟨limitsAgain.trans limits, by omega, by omega,
+      by omega, poolAgain.trans pool⟩
+  · intro charged current cursor last prior
+    obtain ⟨limits, used, code, pairs, pool⟩ := prior
+    change cursor.val = module.module.env.elements.val.length at last
+    exact ⟨limits, by omega, by omega, by omega, pool⟩
+  · exact ⟨rfl, Nat.le_refl _, Nat.le_refl _, Nat.le_refl _, rfl⟩
 
 end Itasca.Runtime.Compiler
 
@@ -392,66 +232,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- The exact extracted suffix after read-only initializer mappings. This is a
-proof-only factorization of `initialize.lower`, retaining its actual error,
-allocator, and publication branches. It adds no runtime API or external model. -/
-def segmentCompilation {A : Type} (ops : runtime.platform.Alloc A)
-    (module : runtime.compiler.ExecutableModule) (budget : runtime.compiler.Budget A) :
-    Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.ExecutableModule ×
-      runtime.compiler.Budget A) := do
-  let function ←
-    runtime.bytecode.CompiledFunction.synthetic (alloc.vec.Vec.new
-      _root_.Itasca.runtime.bytecode.Instr) 0#u32
-  let (budget4, result3, function1) ←
-    runtime.compiler.initialize.lower_loop3 ops module
-      budget 0#usize (core.result.Result.Ok ()) function
-  let cf3 ← core.result.Result.Insts.CoreOpsTry.branch result3
-  match cf3 with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    let (budget5, result4, function2) ←
-      runtime.compiler.initialize.lower_loop4 ops module
-        budget4 0#usize result3 function1
-    let cf4 ← core.result.Result.Insts.CoreOpsTry.branch result4
-    match cf4 with
-    | core.ops.control_flow.ControlFlow.Continue _ =>
-      let (r, budget6, v) ←
-        runtime.compiler.initialize.emit ops budget5
-          function2.code (runtime.bytecode.Instr.Return 0#u32 0#u32)
-      let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf5 with
-      | core.ops.control_flow.ControlFlow.Continue _ =>
-        let b ←
-          runtime.bytecode.CompiledFunction.well_formed
-            { function2 with code := v }
-        if b
-        then
-          let i := alloc.vec.Vec.len module.functions
-          let (r1, budget7, v1) ←
-            runtime.compiler.Budget.push ops budget6
-              module.functions { function2 with code := v }
-          .ok (r1, { module with functions := v1, initialization := i },
-            budget7)
-        else
-          .ok (core.result.Result.Err
-            _root_.Itasca.error.VisitError.OutOfMemory, module, budget6)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-            residual
-        .ok (r1, module, budget6)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-          residual
-      .ok (r, module, budget5)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
-        residual
-    .ok (r, module, budget4)
 
 end Itasca.Runtime.Compiler
 
@@ -671,23 +451,26 @@ theorem initializer_compilation_available {A : Type} (ops : runtime.platform.All
     · simpa [same3] using demand.dataCount
     · simpa [same3] using demand.elementLengths
     · simpa [same3] using demand.dataLengths
-  unfold runtime.compiler.initialize.lower
-  rw [call1]
-  simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  rw [call2]
-  simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  rw [call3]
-  simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  change segmentCompilation ops m3 b3 ⦃ out => _ ⦄
-  apply WP.spec_mono (segment_compilation_available ops law bound available m3 b3 suffixDemand
-    (by simpa [same3] using source.elementOffsets) (by simpa [same3] using source.dataOffsets))
-  intro out post
-  refine ⟨post.1,post.2.1.trans same3,?_,?_⟩
-  · exact post.2.2.1.trans (limits3.trans (limits2.trans limits1))
-  · have suffixUsed := post.2.2.2
-    simp only [segmentCompilationDemand,same3] at suffixUsed ⊢
-    unfold initializerMappingCost
-    omega
+  refine WP.spec_mono (runtime.compiler.initialize.lower.available ops module budget
+    ⟨m1, m2, m3, b1, b2, b3, call1, call2, call3⟩
+    (fun status after afterBudget => status = .Ok () ∧ after.module = module.module ∧ afterBudget.limits = budget.limits ∧
+      afterBudget.instructions.val ≤ budget.instructions.val + 2*initializerMappingCost module.module + segmentCompilationDemand module)
+    ?_) ?_
+  · change segmentCompilation ops m3 b3 ⦃ out => _ ⦄
+    apply WP.spec_mono (segment_compilation_available ops law bound available m3 b3 suffixDemand
+      (by simpa [same3] using source.elementOffsets) (by simpa [same3] using source.dataOffsets))
+    rintro ⟨status, after, afterBudget⟩ post
+    dsimp only at post ⊢
+    refine ⟨post.1,post.2.1.trans same3,?_,?_⟩
+    · exact post.2.2.1.trans (limits3.trans (limits2.trans limits1))
+    · have suffixUsed := post.2.2.2
+      simp only [segmentCompilationDemand,same3] at suffixUsed ⊢
+      unfold initializerMappingCost
+      omega
+
+
+  · rintro ⟨status, after, afterBudget⟩ post
+    exact post
 
 end Itasca.Runtime.Compiler
 

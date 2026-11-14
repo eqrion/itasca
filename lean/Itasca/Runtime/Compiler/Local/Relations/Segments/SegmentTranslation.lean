@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Initializer.LowerContracts
+import Itasca.Runtime.Compiler.Local.Initializer.SegmentLoopContracts
+import Itasca.Runtime.Compiler.Local.Initializer.SegmentEmissionContracts
 import Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData
 import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable
@@ -204,131 +207,7 @@ theorem emit_element_program {A : Type} (ops : runtime.platform.Alloc A)
       after.indirect.val.take before.indirect.length = before.indirect.val ∧
       (instructions.length ≤ 1 ∧ after.slot_count = before.slot_count ∨
         instructions.length = 5 ∧ after.slot_count = 3#u32) := by
-  unfold runtime.compiler.initialize.emit_element at success
-  simp only [runtime.compiler.ExecutableModule.env.eq,
-    Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at success
-  rw [initializer_slice_index _ _ segment (by simpa [alloc.vec.Vec.deref] using found), bind_ok] at success
-  cases mode : segment.mode with
-  | Passive =>
-    simp only [mode] at success
-    have output := Result.ok_injective success
-    have same := congrArg (fun out => out.2.2) output
-    dsimp only at same
-    subst after
-    exact ⟨[], .passive mode, by simp, rfl, by simp, .inl ⟨by simp, rfl⟩⟩
-  | Declarative =>
-    simp only [mode] at success
-    obtain ⟨result, boundedIndex, rest⟩ := initializer_bind_success success
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok word =>
-      have indexSpec := bounded_index index
-      rw [boundedIndex, WP.spec_ok] at indexSpec
-      have encoded := indexSpec word rfl
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨⟨result, b1, instructions⟩, emitted, rest⟩ := initializer_bind_success rest
-      have output := Result.ok_injective rest
-      have resultEq := congrArg Prod.fst output
-      dsimp only at resultEq
-      subst result
-      have fields := congrArg (fun out => out.2.2) output
-      dsimp only at fields
-      subst after
-      have code := initializer_emit_success ops law budget b1 before.code instructions _ emitted
-      exact ⟨[.ElemDrop word], .declarative mode word encoded, code, rfl, by simp, .inl ⟨by simp, rfl⟩⟩
-  | Active table offset =>
-    simp only [mode] at success
-    obtain ⟨⟨result, b1, first⟩, constant, rest⟩ := initializer_bind_success success
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unitValue =>
-      cases unitValue
-      obtain ⟨instruction, firstFields, firstCode, firstInstruction⟩ :=
-        initializer_offset_success ops law budget b1 {before with slot_count := 3#u32} first offset
-          (valid_offset_shape (valid table offset mode)) constant
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      obtain ⟨⟨result, b2, second⟩, emit1, rest⟩ := initializer_bind_success rest
-      cases result with
-      | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unitValue =>
-        cases unitValue
-        have code1 := initializer_emit_success ops law b1 b2 first.code second _ emit1
-        simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-        obtain ⟨result, boundedLen, rest⟩ := initializer_bind_success rest
-        cases result with
-        | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-        | Ok length =>
-          have countSpec := bounded_index (alloc.vec.Vec.len segment.init)
-          rw [boundedLen, WP.spec_ok] at countSpec
-          have count := countSpec length rfl
-          simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-          obtain ⟨⟨result, b3, third⟩, emit2, rest⟩ := initializer_bind_success rest
-          cases result with
-          | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-          | Ok unitValue =>
-            cases unitValue
-            have code2 := initializer_emit_success ops law b2 b3 second third _ emit2
-            simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-            obtain ⟨result, boundedEntry, rest⟩ := initializer_bind_success rest
-            cases result with
-            | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-            | Ok entry =>
-              have entrySpec := bounded_index (alloc.vec.Vec.len first.indirect)
-              rw [boundedEntry, WP.spec_ok] at entrySpec
-              have entryEncoded := entrySpec entry rfl
-              simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-              obtain ⟨result, boundedIndex, rest⟩ := initializer_bind_success rest
-              cases result with
-              | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-              | Ok word =>
-                have indexSpec := bounded_index index
-                rw [boundedIndex, WP.spec_ok] at indexSpec
-                have encoded := indexSpec word rfl
-                simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-                obtain ⟨⟨result, b4, indirect⟩, pushed, rest⟩ := initializer_bind_success rest
-                cases result with
-                | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-                | Ok unitValue =>
-                  cases unitValue
-                  have indirectValues := (budget_push_success ops law b3 b4 first.indirect indirect (word, table) pushed).2
-                  simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-                  obtain ⟨⟨result, b5, fourth⟩, emit3, rest⟩ := initializer_bind_success rest
-                  cases result with
-                  | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-                  | Ok unitValue =>
-                    cases unitValue
-                    have code3 := initializer_emit_success ops law b4 b5 third fourth _ emit3
-                    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-                    obtain ⟨⟨result, b6, fifth⟩, emit4, rest⟩ := initializer_bind_success rest
-                    cases result with
-                    | Err error => simp [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch,
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-                    | Ok unitValue =>
-                      cases unitValue
-                      have code4 := initializer_emit_success ops law b5 b6 fourth fifth _ emit4
-                      have output := Result.ok_injective rest
-                      have fields := congrArg (fun out => out.2.2) output
-                      dsimp only at fields
-                      subst after
-                      refine ⟨[instruction, .Const32 1#u32 0#u32, .Const32 2#u32 length,
-                        .TableInit 0#u32 entry, .ElemDrop word], ?_, ?_, ?_, ?_, ?_⟩
-                      · exact .active table offset mode word length entry encoded count
-                          (by simp [indirectValues, entryEncoded]) instruction (firstInstruction.change_code rfl)
-                      · simp [code4, code3, code2, code1, firstCode, List.append_assoc]
-                      · rw [firstFields]
-                      · have same := congrArg runtime.bytecode.CompiledFunction.indirect firstFields
-                        dsimp only at same
-                        simp [indirectValues, same]
-                      · exact .inr ⟨rfl, by rw [firstFields]⟩
+  exact runtime.compiler.initialize.emit_element.inv ops law module budget afterBudget before after index segment found valid success
 
 end Itasca.Runtime.Compiler
 
@@ -515,77 +394,31 @@ theorem element_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     (success : runtime.compiler.initialize.lower_loop3 ops module budget index (.Ok ()) current =
       .ok (budgetAfter, .Ok (), after)) :
     ∃ finalPrograms, ElementProgramPrefix module seed after module.module.env.elements.length finalPrograms := by
-  classical
-  let measure := fun state : runtime.compiler.Budget A × Usize ×
-      core.result.Result Unit Itasca.error.VisitError × runtime.bytecode.CompiledFunction =>
-    if state.2.2.1 = .Ok () then module.module.env.elements.length - state.2.1.val + 1 else 0
-  let inv := fun state : runtime.compiler.Budget A × Usize ×
-      core.result.Result Unit Itasca.error.VisitError × runtime.bytecode.CompiledFunction =>
-    state.2.2.1 = .Ok () → state.2.1.val ≤ module.module.env.elements.length ∧
-      ∃ programs, ElementProgramPrefix module seed state.2.2.2 state.2.1.val programs
-  let post := fun state : runtime.compiler.Budget A × core.result.Result Unit Itasca.error.VisitError ×
-      runtime.bytecode.CompiledFunction =>
-    state.2.1 = .Ok () → ∃ programs, ElementProgramPrefix module seed state.2.2 module.module.env.elements.length programs
-  have sound : ∀ state, inv state → ∀ flow,
-      runtime.compiler.initialize.lower_loop3.body ops module state.1 state.2.1 state.2.2.1 state.2.2.2 = .ok flow →
-      match flow with
-      | .cont next => inv next ∧ measure next < measure state
-      | .done out => post out := by
-    rintro ⟨b, i, status, function⟩ hinv flow body
-    dsimp only [inv] at hinv
-    unfold runtime.compiler.initialize.lower_loop3.body at body
-    simp only [runtime.compiler.ExecutableModule.env.eq,
-      Itasca.metadata.Module.impl.env, Itasca.metadata.Env.impl.elements, bind_ok] at body
-    cases status with
-    | Err error =>
-      simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
-      split at body <;> (have hf := Result.ok_injective body; subst flow; simp [post])
-    | Ok unitValue =>
-      cases unitValue
-      obtain ⟨hi, programs, prefixInv⟩ := hinv rfl
-      simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte] at body
-      split at body
-      · rename_i more
-        have hmore : i.val < module.module.env.elements.length := by
-          simpa [alloc.vec.Vec.deref] using more
-        obtain ⟨⟨result, nextBudget, nextFunction⟩, lowered, rest⟩ := initializer_bind_success body
-        obtain ⟨nextIndex, added, rest⟩ := initializer_bind_success rest
-        have output := Result.ok_injective rest
-        subst flow
-        have addSpec : i + 1#usize ⦃ next => next.val = i.val + 1 ⦄ := by
-          have size := module.module.env.elements.property
-          step as ⟨next, hnext⟩
-          scalar_tac
-        rw [added, WP.spec_ok] at addSpec
-        cases result with
-        | Err error => simp [inv, measure]
-        | Ok unitValue =>
-          cases unitValue
-          obtain ⟨nextPrograms, nextPrefix⟩ := element_program_append ops law module seed function nextFunction
-            programs b nextBudget i prefixInv hmore valid lowered
-          refine ⟨?_, ?_⟩
-          · dsimp only [inv]
-            intro _
-            exact ⟨by omega, nextPrograms, by simpa only [addSpec] using nextPrefix⟩
-          · simp only [measure, ↓reduceIte]
-            omega
-      · rename_i stopped
-        have stop : i.val = module.module.env.elements.length := by
-          simp [alloc.vec.Vec.deref] at stopped
-          simp only [alloc.vec.Vec.length] at hi ⊢
-          omega
-        have output := Result.ok_injective body
-        subst flow
-        dsimp only [post]
-        intro _
-        exact ⟨programs, by simpa only [stop] using prefixInv⟩
-  have result := initializer_loop_success
-    (fun state => runtime.compiler.initialize.lower_loop3.body ops module state.1 state.2.1 state.2.2.1 state.2.2.2)
-    measure inv post (by
-      intro state hstate flow hflow
-      cases flow <;> exact sound state hstate _ hflow) (budget, index, .Ok (), current)
-    (by exact fun _ => ⟨bound, programs, prefixInv⟩) (budgetAfter, .Ok (), after) success
-  exact result rfl
+  let P := fun (_ : runtime.compiler.Budget A) current (cursor : Usize) (result : core.result.Result Unit Itasca.error.VisitError) =>
+    result = .Ok () → cursor.val ≤ module.module.env.elements.length ∧
+      ∃ programs, ElementProgramPrefix module seed current cursor.val programs
+  let Q := fun (_ : runtime.compiler.Budget A) current (result : core.result.Result Unit Itasca.error.VisitError) =>
+    result = .Ok () → ∃ programs, ElementProgramPrefix module seed current module.module.env.elements.length programs
+  have completed := InitializerSegmentLoop.inv
+    { rules := initializerEmitElementLoop ops module, budget := budget, function := current, index := index, status := .Ok (),
+      P := P, Q := Q,
+      advance := (by
+        intro charged current cursor inside prior result nextBudget nextFunction nextIndex called increment accepted
+        subst result
+        obtain ⟨position, programs, mapped⟩ := prior rfl
+        change cursor.val < module.module.env.elements.length at inside
+        obtain ⟨nextPrograms, appended⟩ := element_program_append ops law module seed current nextFunction
+          programs charged nextBudget cursor mapped inside valid called
+        exact ⟨by omega, nextPrograms, by simpa only [increment] using appended⟩),
+      finish := (by
+        intro charged current cursor result prior stopped accepted
+        obtain ⟨position, programs, mapped⟩ := prior accepted
+        have last := stopped.resolve_right (by intro rejected; exact rejected accepted)
+        change module.module.env.elements.length ≤ cursor.val at last
+        have equal : cursor.val = module.module.env.elements.length := by omega
+        exact ⟨programs, by simpa only [equal] using mapped⟩),
+      initial := fun _ => ⟨bound, programs, prefixInv⟩ } budgetAfter after (.Ok ()) success
+  exact completed rfl
 
 /-- Actual successful segment-emission loop establishes a complete syntactic
 prefix; no loop totality or runtime correctness is a premise. -/
@@ -601,77 +434,31 @@ theorem data_program_loop {A : Type} (ops : runtime.platform.Alloc A)
     (success : runtime.compiler.initialize.lower_loop4 ops module budget index (.Ok ()) current =
       .ok (budgetAfter, .Ok (), after)) :
     ∃ finalPrograms, DataProgramPrefix module seed after module.module.tail.data.length finalPrograms := by
-  classical
-  let measure := fun state : runtime.compiler.Budget A × Usize ×
-      core.result.Result Unit Itasca.error.VisitError × runtime.bytecode.CompiledFunction =>
-    if state.2.2.1 = .Ok () then module.module.tail.data.length - state.2.1.val + 1 else 0
-  let inv := fun state : runtime.compiler.Budget A × Usize ×
-      core.result.Result Unit Itasca.error.VisitError × runtime.bytecode.CompiledFunction =>
-    state.2.2.1 = .Ok () → state.2.1.val ≤ module.module.tail.data.length ∧
-      ∃ programs, DataProgramPrefix module seed state.2.2.2 state.2.1.val programs
-  let post := fun state : runtime.compiler.Budget A × core.result.Result Unit Itasca.error.VisitError ×
-      runtime.bytecode.CompiledFunction =>
-    state.2.1 = .Ok () → ∃ programs, DataProgramPrefix module seed state.2.2 module.module.tail.data.length programs
-  have sound : ∀ state, inv state → ∀ flow,
-      runtime.compiler.initialize.lower_loop4.body ops module state.1 state.2.1 state.2.2.1 state.2.2.2 = .ok flow →
-      match flow with
-      | .cont next => inv next ∧ measure next < measure state
-      | .done out => post out := by
-    rintro ⟨b, i, status, function⟩ hinv flow body
-    dsimp only [inv] at hinv
-    unfold runtime.compiler.initialize.lower_loop4.body at body
-    simp only [runtime.compiler.ExecutableModule.tail.eq,
-      Itasca.metadata.Module.impl.tail, bind_ok] at body
-    cases status with
-    | Err error =>
-      simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte] at body
-      split at body <;> (have hf := Result.ok_injective body; subst flow; simp [post])
-    | Ok unitValue =>
-      cases unitValue
-      obtain ⟨hi, programs, prefixInv⟩ := hinv rfl
-      simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte] at body
-      split at body
-      · rename_i more
-        have hmore : i.val < module.module.tail.data.length := by
-          simpa [alloc.vec.Vec.deref] using more
-        obtain ⟨⟨result, nextBudget, nextFunction⟩, lowered, rest⟩ := initializer_bind_success body
-        obtain ⟨nextIndex, added, rest⟩ := initializer_bind_success rest
-        have output := Result.ok_injective rest
-        subst flow
-        have addSpec : i + 1#usize ⦃ next => next.val = i.val + 1 ⦄ := by
-          have size := module.module.tail.data.property
-          step as ⟨next, hnext⟩
-          scalar_tac
-        rw [added, WP.spec_ok] at addSpec
-        cases result with
-        | Err error => simp [inv, measure]
-        | Ok unitValue =>
-          cases unitValue
-          obtain ⟨nextPrograms, nextPrefix⟩ := data_program_append ops law module seed function nextFunction
-            programs b nextBudget i prefixInv hmore valid lowered
-          refine ⟨?_, ?_⟩
-          · dsimp only [inv]
-            intro _
-            exact ⟨by omega, nextPrograms, by simpa only [addSpec] using nextPrefix⟩
-          · simp only [measure, ↓reduceIte]
-            omega
-      · rename_i stopped
-        have stop : i.val = module.module.tail.data.length := by
-          simp [alloc.vec.Vec.deref] at stopped
-          simp only [alloc.vec.Vec.length] at hi ⊢
-          omega
-        have output := Result.ok_injective body
-        subst flow
-        dsimp only [post]
-        intro _
-        exact ⟨programs, by simpa only [stop] using prefixInv⟩
-  have result := initializer_loop_success
-    (fun state => runtime.compiler.initialize.lower_loop4.body ops module state.1 state.2.1 state.2.2.1 state.2.2.2)
-    measure inv post (by
-      intro state hstate flow hflow
-      cases flow <;> exact sound state hstate _ hflow) (budget, index, .Ok (), current)
-    (by exact fun _ => ⟨bound, programs, prefixInv⟩) (budgetAfter, .Ok (), after) success
-  exact result rfl
+  let P := fun (_ : runtime.compiler.Budget A) current (cursor : Usize) (result : core.result.Result Unit Itasca.error.VisitError) =>
+    result = .Ok () → cursor.val ≤ module.module.tail.data.length ∧
+      ∃ programs, DataProgramPrefix module seed current cursor.val programs
+  let Q := fun (_ : runtime.compiler.Budget A) current (result : core.result.Result Unit Itasca.error.VisitError) =>
+    result = .Ok () → ∃ programs, DataProgramPrefix module seed current module.module.tail.data.length programs
+  have completed := InitializerSegmentLoop.inv
+    { rules := initializerEmitDataLoop ops module, budget := budget, function := current, index := index, status := .Ok (),
+      P := P, Q := Q,
+      advance := (by
+        intro charged current cursor inside prior result nextBudget nextFunction nextIndex called increment accepted
+        subst result
+        obtain ⟨position, programs, mapped⟩ := prior rfl
+        change cursor.val < module.module.tail.data.length at inside
+        obtain ⟨nextPrograms, appended⟩ := data_program_append ops law module seed current nextFunction
+          programs charged nextBudget cursor mapped inside valid called
+        exact ⟨by omega, nextPrograms, by simpa only [increment] using appended⟩),
+      finish := (by
+        intro charged current cursor result prior stopped accepted
+        obtain ⟨position, programs, mapped⟩ := prior accepted
+        have last := stopped.resolve_right (by intro rejected; exact rejected accepted)
+        change module.module.tail.data.length ≤ cursor.val at last
+        have equal : cursor.val = module.module.tail.data.length := by omega
+        exact ⟨programs, by simpa only [equal] using mapped⟩),
+      initial := fun _ => ⟨bound, programs, prefixInv⟩ } budgetAfter after (.Ok ()) success
+  exact completed rfl
 
 end Itasca.Runtime.Compiler
 
@@ -786,142 +573,39 @@ theorem initializer_lower_segments {A : Type} (ops : runtime.platform.Alloc A)
     after.module = module.module ∧
       after.functions.val.take module.functions.length = module.functions.val ∧ InitializerMappings after ∧
       ∃ function, after.functions.val[after.initialization.val]? = some function ∧ SegmentProgram after function := by
-  unfold runtime.compiler.initialize.lower at success
-  obtain ⟨⟨globalsModule, b1, result⟩, globalsCall, rest⟩ := initializer_bind_success success
-  cases result with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unitValue =>
-    cases unitValue
-    have initialGlobals : GlobalMappingPrefix module module 0 := by
-      refine ⟨rfl, by simp, ?_⟩
-      simp only [GlobalInitializerEntries, List.take_zero, emptyGlobals]
-      exact .nil
-    obtain ⟨globalsChanged, globalsPrefix, globalsCert⟩ := initializer_global_loop ops law module module globalsModule
-      budget b1 0#usize initialGlobals (by simp) globalsCall
-    simp only [List.take_length] at globalsCert
-    have globalSource := congrArg runtime.compiler.ExecutableModule.module globalsChanged
-    have globalRows := congrArg runtime.compiler.ExecutableModule.element_initializers globalsChanged
-    have globalOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets globalsChanged
-    have globalData := congrArg runtime.compiler.ExecutableModule.data_offsets globalsChanged
-    dsimp only at globalSource globalRows globalOffsets globalData
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-    obtain ⟨⟨elementsModule, b2, result⟩, elementsCall, rest⟩ := initializer_bind_success rest
-    cases result with
-    | Err error =>
-      simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unitValue =>
-      cases unitValue
-      have initialElements : ElementModulePrefix globalsModule globalsModule 0 := by
-        refine ⟨rfl, by simp, ?_, ?_⟩
-        · simp only [ElementValueMappings, List.take_zero, globalRows, emptyElements]
-          exact .nil
-        · simp only [ElementOffsetMappings, List.take_zero, globalOffsets, emptyElementOffsets]
-          exact .nil
-      obtain ⟨elementsChanged, elementsPrefix, elementsCert, elementOffsetsCert⟩ :=
-        initializer_elements_loop ops law globalsModule globalsModule elementsModule b1 b2 0#usize initialElements (by simp) elementsCall
-      simp only [List.take_length] at elementsCert elementOffsetsCert
-      have elementSource := congrArg runtime.compiler.ExecutableModule.module elementsChanged
-      have elementGlobals := congrArg runtime.compiler.ExecutableModule.global_initializers elementsChanged
-      have elementData := congrArg runtime.compiler.ExecutableModule.data_offsets elementsChanged
-      dsimp only at elementSource elementGlobals elementData
-      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-      obtain ⟨⟨dataModule, b3, result⟩, dataCall, rest⟩ := initializer_bind_success rest
-      cases result with
-      | Err error =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unitValue =>
-        cases unitValue
-        have initialData : DataMappingPrefix elementsModule elementsModule 0 := by
-          refine ⟨rfl, by simp, ?_⟩
-          simp only [DataOffsetMappings, List.take_zero, elementData, globalData, emptyDataOffsets]
-          exact .nil
-        obtain ⟨dataChanged, dataPrefix, dataCert⟩ := initializer_data_loop ops law elementsModule elementsModule dataModule
-          b2 b3 0#usize initialData (by simp) dataCall
-        simp only [List.take_length] at dataCert
-        have dataSource := congrArg runtime.compiler.ExecutableModule.module dataChanged
-        have dataGlobals := congrArg runtime.compiler.ExecutableModule.global_initializers dataChanged
-        have dataRows := congrArg runtime.compiler.ExecutableModule.element_initializers dataChanged
-        have dataOffsets := congrArg runtime.compiler.ExecutableModule.element_offsets dataChanged
-        dsimp only at dataSource dataGlobals dataRows dataOffsets
-        have allPrefix := initializer_prefix_trans (initializer_prefix_trans globalsPrefix elementsPrefix) dataPrefix
-        have allGlobals := globalsCert.extend (initializer_prefix_trans elementsPrefix dataPrefix)
-        have allElements := elementsCert.extend dataPrefix
-        have allOffsets := elementOffsetsCert.extend dataPrefix
-        have mapped : InitializerMappings dataModule := by
-          constructor
-          · simpa only [dataSource, elementSource, globalSource, dataGlobals, elementGlobals] using allGlobals
-          · simpa only [dataSource, elementSource, dataRows] using allElements
-          · simpa only [dataSource, elementSource, dataOffsets] using allOffsets
-          · simpa only [dataSource] using dataCert
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-        obtain ⟨function, seed, rest⟩ := initializer_bind_success rest
-        have sourceAll : dataModule.module = module.module := dataSource.trans (elementSource.trans globalSource)
-        have seedEq : function = {initializerSeed .I32 with slot_count := 0#u32} := by
-          change Result.ok {initializerSeed .I32 with slot_count := 0#u32} = Result.ok function at seed
-          exact (Result.ok_injective seed).symm
-        obtain ⟨⟨b4, result, function1⟩, emitElements, rest⟩ := initializer_bind_success rest
-        cases result with
-        | Err error =>
-          simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-        | Ok unitValue =>
-          cases unitValue
-          obtain ⟨elementPrograms, elementCertificate⟩ := element_program_loop ops law dataModule function function function1
-            b3 b4 0#usize [] (.empty _ _) (by simp) (by simpa only [sourceAll] using validElements) emitElements
-          simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-          obtain ⟨⟨b5, result, function2⟩, emitData, rest⟩ := initializer_bind_success rest
-          cases result with
-          | Err error =>
-            simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-          | Ok unitValue =>
-            cases unitValue
-            obtain ⟨dataPrograms, dataCertificate⟩ := data_program_loop ops law dataModule function1 function1 function2
-              b4 b5 0#usize [] (.empty _ _) (by simp) (by simpa only [sourceAll] using validDatas) emitData
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-            obtain ⟨⟨result, b6, code⟩, emitReturn, rest⟩ := initializer_bind_success rest
-            cases result with
-            | Err error =>
-              simp [core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-            | Ok unitValue =>
-              cases unitValue
-              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair] at rest
-              obtain ⟨checked, check, rest⟩ := initializer_bind_success rest
-              cases checked with
-              | false => simp at rest
-              | true =>
-                simp only [↓reduceIte] at rest
-                obtain ⟨⟨result, b7, functions⟩, pushed, rest⟩ := initializer_bind_success rest
-                have output := Result.ok_injective rest
-                have sameResult := congrArg Prod.fst output
-                dsimp only at sameResult
-                subst result
-                have fields := congrArg (fun out => out.2.1) output
-                dsimp only at fields
-                subst after
-                obtain ⟨_, functionsEq⟩ := budget_push_success ops law b6 b7 dataModule.functions functions
-                  { function2 with code := code } pushed
-                have prefixFinal : functions.val.take dataModule.functions.length = dataModule.functions.val := by
-                  simp [functionsEq]
-                refine ⟨dataSource.trans (elementSource.trans globalSource),
+  obtain ⟨stages, ⟨publication⟩⟩ := runtime.compiler.initialize.lower.success ops module after budget budgetAfter success
+  have mapping := stages.mappings law emptyGlobals emptyElements emptyElementOffsets emptyDataOffsets
+  rcases stages with ⟨globalsModule, elementsModule, dataModule, b1, b2, b3, globalsCall, elementsCall, dataCall⟩
+  rcases publication with ⟨function, function1, function2, b4, b5, b6, code, functions,
+    seed, emitElements, emitData, emitReturn, check, pushed, frame⟩
+  obtain ⟨sourceAll, allPrefix, mapped⟩ := mapping
+  change dataModule.module = module.module at sourceAll
+  have seedEq : function = {initializerSeed .I32 with slot_count := 0#u32} := by
+    change Result.ok {initializerSeed .I32 with slot_count := 0#u32} = Result.ok function at seed
+    exact (Result.ok_injective seed).symm
+  obtain ⟨elementPrograms, elementCertificate⟩ := element_program_loop ops law dataModule function function function1
+    b3 b4 0#usize [] (.empty _ _) (by simp) (by simpa only [sourceAll] using validElements) emitElements
+  obtain ⟨dataPrograms, dataCertificate⟩ := data_program_loop ops law dataModule function1 function1 function2
+    b4 b5 0#usize [] (.empty _ _) (by simp) (by simpa only [sourceAll] using validDatas) emitData
+  subst after
+  obtain ⟨_, functionsEq⟩ := budget_push_success ops law b6 budgetAfter dataModule.functions functions
+    { function2 with code := code } pushed
+  have prefixFinal : functions.val.take dataModule.functions.length = dataModule.functions.val := by
+    simp [functionsEq]
+  refine ⟨sourceAll,
 
-                  initializer_prefix_trans allPrefix prefixFinal, ?_, ?_⟩
-                · exact ⟨mapped.globals.extend prefixFinal, mapped.elementValues.extend prefixFinal,
-                    mapped.elementOffsets.extend prefixFinal, mapped.dataOffsets.extend prefixFinal⟩
-                · refine ⟨{function2 with code := code}, ?_, ?_⟩
-                  · simp [functionsEq]
-                  · have appended := initializer_emit_success ops law b5 b6 function2.code code _ emitReturn
-                    have program := segment_program_finish dataModule function function1 function2 code
-                      elementPrograms dataPrograms elementCertificate dataCertificate appended
-                      (by simp [seedEq, initializerSeed]) (by simp [seedEq, initializerSeed])
-                      (by simp [seedEq, initializerSeed]) (by simp [seedEq, initializerSeed])
-                      (by simp [seedEq, initializerSeed])
-                    exact program.change_module rfl
+    initializer_prefix_trans allPrefix prefixFinal, ?_, ?_⟩
+  · exact ⟨mapped.globals.extend prefixFinal, mapped.elementValues.extend prefixFinal,
+      mapped.elementOffsets.extend prefixFinal, mapped.dataOffsets.extend prefixFinal⟩
+  · refine ⟨{function2 with code := code}, ?_, ?_⟩
+    · simp [functionsEq]
+    · have appended := initializer_emit_success ops law b5 b6 function2.code code _ emitReturn
+      have program := segment_program_finish dataModule function function1 function2 code
+        elementPrograms dataPrograms elementCertificate dataCertificate appended
+        (by simp [seedEq, initializerSeed]) (by simp [seedEq, initializerSeed])
+        (by simp [seedEq, initializerSeed]) (by simp [seedEq, initializerSeed])
+        (by simp [seedEq, initializerSeed])
+      exact program.change_module rfl
 
 end Itasca.Runtime.Compiler
 

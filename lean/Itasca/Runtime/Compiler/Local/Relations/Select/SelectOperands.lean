@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 
@@ -19,7 +20,6 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 open Aeneas.Std.Result
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 noncomputable def selectLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) :
@@ -86,13 +86,14 @@ theorem lower_select_eq {A : Type} (ops : runtime.platform.Alloc A)
   have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state
       (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 =
       selectLowering ops compiler state := by
-    cases typed <;> unfold runtime.compiler.lower.FunctionCompiler.op <;>
-      rw [if_pos reachable] <;> rfl
+    exact runtime.compiler.lower.FunctionCompiler.op.select ops compiler state (if typed then 28#u16 else 27#u16)
+      0#u32 0#u32 0#u128 reachable (by cases typed <;> decide)
   rw [dispatch]
   unfold selectLowering
   simp only [hleft, hright, hcondition, hdifference, bind_ok,
     core.result.Result.Insts.CoreOpsTry.branch, selectInstruction]
   split <;> simp_all
+
 end Itasca.Runtime.Compiler
 
 end

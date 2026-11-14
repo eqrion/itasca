@@ -4,7 +4,6 @@ import Itasca.Wasm2.Trace.BytesReferences
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 private theorem pure_meaning_bound {opcode : Nat} {op : Operation}
     (found : pureMeaning opcode = some op) : opcode < 256 := by

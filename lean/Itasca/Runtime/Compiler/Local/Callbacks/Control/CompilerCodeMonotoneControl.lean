@@ -1,3 +1,7 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 import Itasca.Runtime.Compiler.Local.Source.SourceEntryChain
 import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
@@ -120,7 +124,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 theorem compiler_branch_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -128,9 +131,10 @@ theorem compiler_branch_stable_result {A : Type} (ops : runtime.platform.Alloc A
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status, after)) :
     CompilerStable before after := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
-    repeat' metadata_step accepted using ops, law
+  have frame := (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional status accepted).frame
+  rw [frame]
+  exact ⟨rfl, Nat.le_refl _⟩
+
 end Itasca.Runtime.Compiler
 
 end
@@ -160,76 +164,32 @@ open Aeneas Aeneas.Std
         ∃ closed, out.2.function.controls.val[frame.map.val]? = some closed ∧
           closed.end_pc.val = target.val ∧
           closed.source_end.val = compiler.function.body_start.val + state.pos.val ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, hasIf]
-  step with compiler_patch ops { compiler with frames := rest } guard (.zero condition) old target guardCode as
-    ⟨status, patched, statusEq, patchedEffect⟩
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.total ops law compiler state .Block .Empty
+    ⟨frame, rest, frames, branches,
+      (by
+        intro queried selected
+        have same : queried = guard := Option.some.inj (selected.symm.trans hasIf)
+        subst queried
+        exact ⟨.zero condition, old, guardCode⟩),
+      mapFits, coordinateFits, (by intro body; exact False.elim (nonBody body))⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful ⊢
   subst status
-  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  have patchedBranches := patchedEffect.branch_sites (List.getElem?_eq_some_iff.mp guardCode).1 branches
-  obtain ⟨patchedCode, rfl, codeSet⟩ := patchedEffect
-  step with compiler_fixups_after_if ops _ frame.fixups target 0#usize
-    (by simp) patchedBranches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  have notBody : (match frame.kind with
-      | .Body => (.ok true : Result Bool)
-      | .Block | .Loop | .Then | .Else => .ok false) = .ok false := by
-    cases kind : frame.kind <;> simp_all
-  change WP.spec (Aeneas.Std.bind (match frame.kind with
-    | .Body => (.ok true : Result Bool)
-    | .Block | .Loop | .Then | .Else => .ok false) _) _
-  rw [notBody, bind_ok]
-  simp only [Bool.false_eq_true, ite_false]
-  step with compiler_observe ops law _ state as ⟨out, hout, success⟩
-  obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := hout success
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · exact hframes
-  · simpa using hr
-  · simpa [hcode, codeSet, BranchKind.instruction] using effect
-  · refine ⟨{ map with source_end := coordinate, end_pc := pcword }, ?_, ?_, hcoordinate⟩
-    · rw [hcontrols, hback]
-      simp [alloc.vec.Vec.set_val_eq, mapFits]
-    · rw [hpcword]
-      scalar_tac
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops compiler after state .Block .Empty (.Ok ()) called
+  obtain ⟨remaining, reachable, code, original, closed, selected, controls, start, sourceStart, endPc, sourceEnd⟩ :=
+    effect.guarded_success law ⟨frame, rest, target, frames, position, guard, condition, old, hasIf, guardCode, branches, mapFits⟩
+  have exactCode : after.function.code.val = patchCode (compiler.function.code.val.set guard.val (.JumpIfZero condition target)) frame.fixups.val target := by
+    cases kindEq : frame.kind <;> first
+      | exact False.elim (nonBody kindEq)
+      | simpa only [kindEq, List.append_nil] using code
 
+  have closedLookup : after.function.controls.val[frame.map.val]? = some closed := by
+    rw [controls]
+    exact List.getElem?_set_self mapFits
+  refine ⟨remaining, reachable, ?_, closed, closedLookup, endPc, sourceEnd⟩
+  exact exactCode
 
 end Itasca.Runtime.Compiler
 
@@ -260,29 +220,24 @@ it still retargets the initial conditional guard and restores entry reachability
       out.1 = .Ok () → out.2.reachable = frame.entry_reachable ∧
         out.2.function.code.val = compiler.function.code.val.set guard.val (.JumpIfZero condition target) ∧
         out.2.frames.val = prior ++ [{ frame with kind := .Else, if_pc := none }] ⦄ := by
-  have nonempty : compiler.frames.val.isEmpty = false := by simp [frames]
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
-  simp only [alloc.vec.Vec.is_empty, bind_ok, nonempty, Bool.false_eq_true, ite_false]
-  step as ⟨index, indexEq⟩
-  have atLast : index.val = prior.length := by simp [frames, alloc.vec.Vec.len] at indexEq; omega
-  step as ⟨found, back, foundEq, backEq⟩
-  have same : found = frame := by simpa [atLast, frames] using foundEq
-  rw [same]
-  simp only [core.option.Option.take, guardPc, reachable, Bool.false_eq_true, ite_false, Bool.or_false]
-  let updated := { compiler with frames := back { frame with kind := .Else, if_pc := none }, reachable := frame.entry_reachable }
-  rw [compiler_pc_eq ops updated target position]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  step with compiler_patch ops updated guard (.zero condition) core.num.U32.MAX target guardCode
-    as ⟨status, patched, statusEq, patchedEffect⟩
+  have guardSites : ∀ queried, frame.if_pc = some queried →
+      ∃ branch old, compiler.function.code.val[queried.val]? = some (BranchKind.instruction branch old) := by
+    intro queried selected
+    have same : queried = guard := Option.some.inj (selected.symm.trans guardPc)
+    subst queried
+    exact ⟨.zero condition, core.num.U32.MAX, guardCode⟩
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.total ops law compiler state bt frame prior frames guardSites
+    (by intro live; simp only [reachable, Bool.false_eq_true] at live)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful
   subst status
-  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  obtain ⟨newCode, patchedEq, codeSet⟩ := patchedEffect
-  step with compiler_observe ops law patched state as ⟨out, observed, accepted⟩
-  obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-  refine ⟨?_, ?_, ?_⟩
-  · simpa [patchedEq, updated] using hr
-  · simpa [hcode, patchedEq, updated, BranchKind.instruction] using codeSet
-  · simp [hframes, patchedEq, updated, backEq, alloc.vec.Vec.set_val_eq, atLast, frames]
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops compiler after state bt (.Ok ()) called
+  obtain ⟨reach, published, restore, finished⟩ := effect.dead_success law frame prior frames reachable
+  rw [guardPc] at finished
+  have code := finished.guard_success condition core.num.U32.MAX target guardCode position
+  exact ⟨reach, code, published⟩
 
 @[step] theorem compiler_else_unentered {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -294,19 +249,24 @@ it still retargets the initial conditional guard and restores entry reachability
       out.1 = .Ok () → out.2.reachable = frame.entry_reachable ∧
         out.2.function.code = compiler.function.code ∧
         out.2.frames.val = prior ++ [{ frame with kind := .Else, if_pc := none }] ⦄ := by
-  have nonempty : compiler.frames.val.isEmpty = false := by simp [frames]
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
-  simp only [alloc.vec.Vec.is_empty, bind_ok, nonempty, Bool.false_eq_true, ite_false]
-  step as ⟨index, indexEq⟩
-  have atLast : index.val = prior.length := by simp [frames, alloc.vec.Vec.len] at indexEq; omega
-  step as ⟨found, back, foundEq, backEq⟩
-  have same : found = frame := by simpa [atLast, frames] using foundEq
-  rw [same]
-  simp only [core.option.Option.take, guardPc, reachable, Bool.false_eq_true, ite_false, Bool.or_false]
-  step with compiler_observe ops law _ state as ⟨out, observed, accepted⟩
-  obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed accepted
-  refine ⟨hr, hcode, ?_⟩
-  simp [hframes, backEq, alloc.vec.Vec.set_val_eq, atLast, frames]
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.total ops law compiler state bt frame prior frames
+    (by intro guard selected; rw [guardPc] at selected; cases selected)
+    (by intro live; simp only [reachable, Bool.false_eq_true] at live)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful
+  subst status
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops compiler after state bt (.Ok ()) called
+  obtain ⟨reach, published, restore, finished⟩ := effect.dead_success law frame prior frames reachable
+  rw [guardPc] at finished
+  cases finished with
+  | unguarded observed =>
+    have frame := compiler_observe_frame_raw ops _ state (.Ok ()) after observed
+    refine ⟨reach, ?_, published⟩
+    rw [frame]
+    rfl
+
 end Itasca.Runtime.Compiler
 
 end
@@ -317,7 +277,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 
 /-- Successful ELSE emission records its skip without an external fixup-vector
@@ -337,67 +297,9 @@ theorem compiler_else_live_success {A : Type} (ops : runtime.platform.Alloc A)
       (.JumpIfZero condition target) ∧
     ∃ fixups, fixups.val = frame.fixups.val ++ [alloc.vec.Vec.len compiler.function.code] ∧
       after.frames.val = prior ++ [{ frame with kind := .Else, if_pc := none, end_reachable := true, fixups }] := by
-  have nonempty : compiler.frames.val.isEmpty = false := by simp [frames]
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [alloc.vec.Vec.is_empty, bind_ok, nonempty, Bool.false_eq_true, ite_false] at accepted
-  obtain ⟨index, indexCall, rest⟩ := bind_ok_inv _ _ _ accepted
-  have indexSpec : alloc.vec.Vec.len compiler.frames - 1#usize ⦃ out => out.val = prior.length ⦄ := by
-    step as ⟨index, indexEq⟩
-    simp [frames, alloc.vec.Vec.len] at indexEq
-    omega
-  rw [indexCall, WP.spec_ok] at indexSpec
-  obtain ⟨⟨found, back⟩, foundCall, rest⟩ := bind_ok_inv _ _ _ rest
-  have readSpec : alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice runtime.compiler.Frame)
-      compiler.frames index ⦃ out => out.1 = frame ∧ ∀ replacement, (out.2 replacement).val = prior ++ [replacement] ⦄ := by
-    have inBounds : index.val < compiler.frames.val.length := by simp [frames, indexSpec]
-    step as ⟨out, foundEq, backEq⟩
-    have same : out.1 = frame := by simpa [indexSpec, frames] using foundEq
-    exact ⟨same, by intro replacement; simp [backEq, alloc.vec.Vec.set_val_eq, indexSpec, frames]⟩
-  rw [foundCall, WP.spec_ok] at readSpec
-  dsimp only at readSpec
-  obtain ⟨foundEq, backEq⟩ := readSpec
-  subst found
-  simp only [uncurry_apply_pair, core.option.Option.take, guardPc, reachable, ite_true, Bool.or_true] at rest
-  obtain ⟨⟨result, budget, fixups⟩, pushed, rest⟩ := bind_ok_inv _ _ _ rest
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    obtain ⟨budgetEq, appended⟩ := budget_push_success ops law compiler.budget budget frame.fixups fixups
-      (alloc.vec.Vec.len compiler.function.code) pushed
-    subst budget
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-    obtain ⟨⟨result, emitted⟩, emitCall, rest⟩ := bind_ok_inv _ _ _ rest
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok value =>
-      cases value
-      have effect := compiler_emit_success ops law _ emitted (.Jump core.num.U32.MAX) emitCall
-      obtain ⟨budget, code, offsets, emittedEq, codeAppend, offsetAppend⟩ := effect
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      rw [compiler_pc_eq ops emitted target (by simpa [emittedEq, codeAppend] using position)] at rest
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      have guardBound := (List.getElem?_eq_some_iff.mp guardCode).1
-      have retained : emitted.function.code.val[guard.val]? = some (.JumpIfZero condition core.num.U32.MAX) := by
-        simp only [emittedEq, codeAppend]
-        rw [List.getElem?_append_left guardBound]
-        exact guardCode
-      obtain ⟨⟨status, patched⟩, patchCall, rest⟩ := bind_ok_inv _ _ _ rest
-      have patchedEffect := compiler_patch ops emitted guard (.zero condition) core.num.U32.MAX target retained
-      rw [patchCall, WP.spec_ok] at patchedEffect
-      dsimp only at patchedEffect
-      obtain ⟨rfl, newCode, patchedEq, codeSet⟩ := patchedEffect
-      simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
-      have observed := compiler_observe ops law patched state
-      rw [rest, WP.spec_ok] at observed
-      dsimp only at observed
-      obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed rfl
-      refine ⟨?_, ?_, fixups, appended, ?_⟩
-      · simpa [patchedEq, emittedEq] using hr
-      · simpa [hcode, patchedEq, emittedEq, codeAppend, BranchKind.instruction] using codeSet
-      · simp [hframes, patchedEq, emittedEq, backEq]
+  exact (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops compiler after state bt (.Ok ()) accepted).live_success
+    law ⟨frame, prior, guard, condition, core.num.U32.MAX, target, frames, reachable, guardPc, guardCode, position⟩
+
 end Itasca.Runtime.Compiler
 
 end
@@ -790,7 +692,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
+
 set_option maxRecDepth 4096
 theorem compiler_branch_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -798,9 +700,8 @@ theorem compiler_branch_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status, after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted ⊢ <;>
-    repeat' code_mono_step accepted using ops, law
+  exact ((runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional status accepted).code_bound law).1
+
 theorem compiler_enter_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)
@@ -827,10 +728,9 @@ theorem compiler_end_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' code_mono_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' code_mono_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType (.Ok ()) accepted
+  obtain ⟨frame, remaining, popped, frames, length, sources⟩ := effect.sources_frames law
+  omega
 
 theorem compiler_else_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -838,12 +738,11 @@ theorem compiler_else_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' code_mono_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' code_mono_step accepted using ops, law
-
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state blockType (.Ok ()) accepted
+  cases effect with
+  | selected nonempty subtracted read progress =>
+    obtain ⟨fixups, appended, frames, reachable, length, sources, cursor⟩ := progress.success_fields law
+    omega
 
 end Itasca.Runtime.Compiler
 

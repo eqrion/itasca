@@ -10,7 +10,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Wasm2.Trace.Acceptance
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.CallAvailability

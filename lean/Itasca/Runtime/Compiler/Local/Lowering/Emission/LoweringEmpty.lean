@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 
@@ -16,16 +18,6 @@ post-callback operand layout. -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-/-- Dead instructions only observe the validator state; opcode dispatch is skipped. -/
-theorem _root_.Itasca.runtime.compiler.lower.FunctionCompiler.op.dead {A : Type}
-    (ops : runtime.platform.Alloc A) (before : runtime.compiler.FunctionCompiler A)
-    (state : Itasca.code.OpIterState) (opcode : U16) (a b : U32) (bits : U128)
-    (dead : before.reachable = false) :
-    runtime.compiler.lower.FunctionCompiler.op ops before state opcode a b bits =
-      runtime.compiler.FunctionCompiler.observe ops before state := by
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  exact if_neg (by simp only [dead, Bool.false_eq_true, not_false_eq_true])
 
 /-- Sequencing equation for adapters proving equality of whole compiler tails. -/
 theorem _root_.Itasca.runtime.compiler.lower.FunctionCompiler.finish_op.eq {A : Type}
@@ -209,13 +201,7 @@ set_option maxRecDepth 4096 in
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 65#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → Lowered compiler out.2
         (.Const32 compiler.height (UScalar.cast .U32 bits)) (types.map Itasca.Translate.valueType) ⦄ := by
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 65#u16 0#u32 0#u32 bits =
-      (do
-        let word ← lift (UScalar.cast .U32 bits)
-        runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Const32 compiler.height word)) := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.i32_const ops compiler state 0#u32 0#u32 bits reachable
   rw [run]
   step
   subst_vars
@@ -234,13 +220,7 @@ set_option maxRecDepth 4096 in
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 66#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → Lowered compiler out.2
         (.Const64 compiler.height (UScalar.cast .U64 bits)) (types.map Itasca.Translate.valueType) ⦄ := by
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 66#u16 0#u32 0#u32 bits =
-      (do
-        let word ← lift (UScalar.cast .U64 bits)
-        runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Const64 compiler.height word)) := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.i64_const ops compiler state 0#u32 0#u32 bits reachable
   rw [run]
   step
   subst_vars
@@ -258,7 +238,7 @@ set_option maxRecDepth 4096 in
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const ops compiler state value ⦃ out =>
       out.1 = .Ok () → Lowered compiler out.2
         (.Const32 compiler.height (IScalar.hcast .U32 value)) (types.map Itasca.Translate.valueType) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const.eq]
   simp only [lift, bind_ok]
   have bits : UScalar.cast .U32 (UScalar.cast .U128 (IScalar.hcast .U32 value)) =
       IScalar.hcast .U32 value := by
@@ -281,7 +261,7 @@ set_option maxRecDepth 4096 in
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const ops compiler state value ⦃ out =>
       out.1 = .Ok () → Lowered compiler out.2
         (.Const64 compiler.height (IScalar.hcast .U64 value)) (types.map Itasca.Translate.valueType) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const.eq]
   simp only [lift, bind_ok]
   have bits : UScalar.cast .U64 (UScalar.cast .U128 (IScalar.hcast .U64 value)) =
       IScalar.hcast .U64 value := by
@@ -337,8 +317,56 @@ theorem lower_empty_eq {A : Type} (ops : runtime.platform.Alloc A)
     (drop : Bool) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (if drop then 26#u16 else 1#u16) 0#u32 0#u32 0#u128 =
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
-  cases drop <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> split <;> rfl
+  cases live : compiler.reachable with
+  | false => exact runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ live
+  | true =>
+    cases drop with
+    | false => exact runtime.compiler.lower.FunctionCompiler.op.nop ops compiler state _ _ _ live
+    | true => exact runtime.compiler.lower.FunctionCompiler.op.drop ops compiler state _ _ _ live
 
 end Itasca.Runtime.Compiler
 
 end
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std
+
+set_option maxRecDepth 4096 in
+@[step] theorem lower_call {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (types : List Itasca.wasm_types.ValueType)
+    (before : List valtype) (index paramSlots base : U32)
+    (layout : CompilerLayout compiler before) (reachable : compiler.reachable = true)
+    (signature : compiler.func_param_slots.val[index.val]? = some paramSlots)
+    (arguments : compiler.height.val = base.val + paramSlots.val)
+    (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
+    (codeFits : compiler.function.code.val.length < Usize.max)
+    (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
+    (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
+    runtime.compiler.lower.FunctionCompiler.op ops compiler state 16#u16 index 0#u32 0#u128 ⦃ out =>
+      out.1 = .Ok () → Lowered compiler out.2 (.Call index base) (types.map Itasca.Translate.valueType) ⦄ := by
+  have run := runtime.compiler.lower.FunctionCompiler.op.call ops compiler state index 0#u32 0#u128 reachable
+  rw [run]
+  step as ⟨i, hi⟩
+  have bound : i.val < compiler.func_param_slots.length := by
+    have found := (List.getElem?_eq_some_iff.mp signature).1
+    scalar_tac
+  step as ⟨slots, hslots⟩
+  have same : slots = paramSlots := by
+    have atIndex : i.val = index.val := by scalar_tac
+    simp only [atIndex] at hslots
+    exact hslots.trans ((List.getElem?_eq_some_iff.mp signature).2)
+  rw [same]
+  step as ⟨o, ho⟩
+  cases o with
+  | none => simp only at ho; omega
+  | some word =>
+    have same : word = base := by
+      apply UScalar.eq_of_val_eq
+      simp only at ho
+      omega
+    subst word
+    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+    exact finish_op ops law compiler state types _ before layout concrete codeFits sourceFits coordinateFits
+
+end Itasca.Runtime.Compiler

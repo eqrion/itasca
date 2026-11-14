@@ -22,7 +22,6 @@ Main declarations: `reader_opcode_base` and `reader_accepted_opcode_wasm2`. A di
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
-set_option maxHeartbeats 8000000
 set_option maxRecDepth 16384
 set_option synthInstance.maxHeartbeats 8000000
 set_option linter.unusedSimpArgs false

@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
@@ -20,7 +22,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_branch_cursor_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -31,42 +32,6 @@ theorem compiler_branch_cursor_result {A : Type} (ops : runtime.platform.Alloc A
   intro success
   subst status
   exact compiler_branch_cursor ops law before after depth skip conditional accepted
-
-open Lean Meta Elab Tactic in
-elab "control_cursor_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have effect := compiler_branch_cursor_result $ops $law _ _ _ _ _ _ $h))
-  else
-    evalTactic (← `(tactic| cursor_effect $h using $ops, $law))
-macro "control_cursor_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; cursor_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (control_cursor_effect $h using $ops, $law; cursor_close)
-  | solve | (sources_terminal $h; have output := (Prod.mk.inj (Result.ok.injEq.mp $h)).2; cases output; cursor_close)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try control_cursor_effect called using $ops, $law
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | sources_split $h)
 
 theorem compiler_unreachable_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -83,8 +48,8 @@ theorem compiler_return_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' control_cursor_step accepted using ops, law
+  obtain ⟨middle, _, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state (.Ok ()) accepted).observation
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) observed rfl
 
 theorem compiler_br_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -93,8 +58,8 @@ theorem compiler_br_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth types = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' control_cursor_step accepted using ops, law
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) accepted).observation
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) observed rfl
 
 theorem compiler_br_if_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -103,8 +68,8 @@ theorem compiler_br_if_cursor {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth types = .ok (.Ok (), after)) :
     after.next_source = state.pos := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' control_cursor_step accepted using ops, law
+  obtain ⟨middle, observed⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) accepted).observation
+  exact compiler_observe_cursor ops law middle after state (.Ok ()) observed rfl
 
 end Itasca.Runtime.Compiler
 
@@ -116,7 +81,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_branch_sources_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -127,43 +91,6 @@ theorem compiler_branch_sources_result {A : Type} (ops : runtime.platform.Alloc 
   intro success
   subst status
   exact compiler_branch_sources ops law before after depth skip conditional accepted
-
-open Lean Meta Elab Tactic in
-elab "control_sources_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have effect := compiler_branch_sources_result $ops $law _ _ _ _ _ _ $h))
-  else
-    evalTactic (← `(tactic| sources_effect $h using $ops, $law))
-macro "control_sources_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; sources_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (control_sources_effect $h using $ops, $law; sources_close)
-  | solve | (sources_terminal $h; have output := (Prod.mk.inj (Result.ok.injEq.mp $h)).2; cases output; sources_close)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try control_sources_effect called using $ops, $law
-     try clear called
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | sources_split $h)
 
 theorem compiler_unreachable_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -183,8 +110,11 @@ theorem compiler_return_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' control_sources_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_sources ops law before after state (.Ok ()) observed
+  | @emitted frame source middle _ _ live selected position emitted observed =>
+    exact (compiler_emit_sources ops law before middle (.Return source frame.results) emitted).trans
+      (compiler_observe_sources ops law {middle with reachable := false} after state (.Ok ()) observed)
 
 theorem compiler_br_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -193,8 +123,11 @@ theorem compiler_br_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth types = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' control_sources_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_sources ops law before after state (.Ok ()) observed
+  | @branched middle _ _ live branched observed =>
+    exact (compiler_branch_sources ops law before middle depth 0#u32 false branched).trans
+      (compiler_observe_sources ops law {middle with reachable := false} after state (.Ok ()) observed)
 
 theorem compiler_br_if_sources {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -203,8 +136,11 @@ theorem compiler_br_if_sources {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth types = .ok (.Ok (), after)) :
     SourceProgress before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' control_sources_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_sources ops law before after state (.Ok ()) observed
+  | @branched middle _ _ live branched observed =>
+    exact (compiler_branch_sources ops law before middle depth 1#u32 true branched).trans
+      (compiler_observe_sources ops law middle after state (.Ok ()) observed)
 
 end Itasca.Runtime.Compiler
 
@@ -216,37 +152,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
-open Lean Meta Elab Tactic in
-elab "metadata_control_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have effect := compiler_branch_stable_result $ops $law _ _ _ _ _ _ $h))
-    evalTactic (← `(tactic| have metadataEq := effect.metadata))
-    evalTactic (← `(tactic| have capacity := effect.capacity))
-  else
-    evalTactic (← `(tactic| metadata_effect $h using $ops, $law))
-
-macro "metadata_control_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (metadata_control_effect $h using $ops, $law; metadata_close)
-  | solve | (simp only [Result.ok.injEq, Prod.mk.injEq] at $h:ident; obtain ⟨_, output⟩ := $h; cases output; metadata_close)
-  | (obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try metadata_control_effect called using $ops, $law
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | split at $h:ident)
-
 theorem compiler_unreachable_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState)
@@ -263,8 +169,7 @@ theorem compiler_return_stable_result {A : Type} (ops : runtime.platform.Alloc A
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' metadata_control_step accepted using ops, law
+  exact (compiler_return_ordinary_result ops law before after state status accepted).stable
 
 theorem compiler_br_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -274,8 +179,10 @@ theorem compiler_br_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth types = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' metadata_control_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types status accepted
+  refine ⟨?_, effect.capacity law⟩
+  rw [effect.frame]
+  rfl
 
 theorem compiler_br_if_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -285,8 +192,10 @@ theorem compiler_br_if_stable_result {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth types = .ok (status, after)) :
     CompilerStable before after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' metadata_control_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types status accepted
+  refine ⟨?_, effect.capacity law⟩
+  rw [effect.frame]
+  rfl
 
 end Itasca.Runtime.Compiler
 
@@ -671,36 +580,8 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
-open Lean Meta Elab Tactic in
-elab "growth_control_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have effect := compiler_branch_growth $ops $law _ _ _ _ _ _ $h;
-      simp only [Bool.false_eq_true, ite_false, ite_true] at effect))
 
-  else
-    evalTactic (← `(tactic| growth_effect $h using $ops, $law))
-
-macro "growth_control_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (growth_control_effect $h using $ops, $law; growth_close)
-  | solve | (simp only [Result.ok.injEq, Prod.mk.injEq] at $h:ident; obtain ⟨_, output⟩ := $h; cases output; growth_close)
-  | (obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try growth_control_effect called using $ops, $law
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | split at $h:ident)
 
 end Itasca.Runtime.Compiler
 
@@ -712,7 +593,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 theorem compiler_branch_capacity_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -723,42 +603,6 @@ theorem compiler_branch_capacity_result {A : Type} (ops : runtime.platform.Alloc
   intro success
   subst status
   exact compiler_branch_capacity ops law before after depth skip conditional accepted
-
-open Lean Meta Elab Tactic in
-elab "control_capacity_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have effect := compiler_branch_capacity_result $ops $law _ _ _ _ _ _ $h))
-  else
-    evalTactic (← `(tactic| capacity_effect $h using $ops, $law))
-macro "control_capacity_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; capacity_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (control_capacity_effect $h using $ops, $law; capacity_close)
-  | solve | (sources_terminal $h; have output := (Prod.mk.inj (Result.ok.injEq.mp $h)).2; cases output; capacity_close)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try control_capacity_effect called using $ops, $law
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | sources_split $h)
 
 theorem compiler_unreachable_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -784,8 +628,17 @@ theorem compiler_return_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' control_capacity_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state (.Ok ()) accepted with
+  | dead dead observed =>
+    have ⟨locals, bound⟩ := compiler_observe_capacity_bound ops law before after state (.Ok ()) observed
+    exact ⟨locals, bound rfl⟩
+  | @emitted frame source middle _ _ live selected position emitted observed =>
+    have preserve := compiler_emit_capacity_metadata ops before middle (.Return source frame.results) (.Ok ()) emitted
+    have fields : middle.function.local_slots = before.function.local_slots ∧
+        middle.function.slot_count = before.function.slot_count := by
+      simpa only [capacityMetadata, Prod.mk.injEq] using preserve
+    have ⟨locals, bound⟩ := compiler_observe_capacity_bound ops law {middle with reachable := false} after state (.Ok ()) observed
+    exact ⟨locals.trans fields.1, by simpa only [fields.1, fields.2] using bound rfl⟩
 
 theorem compiler_br_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -794,8 +647,9 @@ theorem compiler_br_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth types = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' control_capacity_step accepted using ops, law
+  obtain ⟨middle, observed, slots, locals⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) accepted).observation_slots
+  have post := compiler_observe_capacity_bound ops law middle after state (.Ok ()) observed
+  exact ⟨post.1.trans locals, by simpa only [slots, locals] using post.2 rfl⟩
 
 theorem compiler_br_if_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -804,9 +658,9 @@ theorem compiler_br_if_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth types = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' control_capacity_step accepted using ops, law
-
+  obtain ⟨middle, observed, slots, locals⟩ := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) accepted).observation_slots
+  have post := compiler_observe_capacity_bound ops law middle after state (.Ok ()) observed
+  exact ⟨post.1.trans locals, by simpa only [slots, locals] using post.2 rfl⟩
 
 theorem compiler_block_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -839,7 +693,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_unreachable_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -859,8 +712,19 @@ theorem compiler_return_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at accepted
-  repeat' code_mono_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state (.Ok ()) accepted with
+  | dead dead observed =>
+    have frame := compiler_observe_frame_raw ops before state (.Ok ()) after observed
+    rw [frame]
+  | @emitted frame source middle _ _ live selected position emitted observed =>
+    have observation := compiler_observe_frame_raw ops {middle with reachable := false} state (.Ok ()) after observed
+    have growth := ((runtime.compiler.FunctionCompiler.emit.inv ops before middle _ (.Ok ()) emitted).2 law).1
+    rw [observation]
+    rcases growth with same | appended
+    · rw [same]
+    · rw [appended, List.length_append, List.length_singleton]
+      omega
+
 
 theorem compiler_br_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -869,8 +733,11 @@ theorem compiler_br_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth types = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  repeat' code_mono_step accepted using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_code_mono ops law before after state (.Ok ()) observed
+  | @branched middle _ _ live branched observed =>
+    exact (compiler_branch_code_mono ops law before middle depth 0#u32 false (.Ok ()) branched).trans
+      (compiler_observe_code_mono ops law {middle with reachable := false} after state (.Ok ()) observed)
 
 theorem compiler_br_if_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -879,9 +746,11 @@ theorem compiler_br_if_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth types = .ok (.Ok (), after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  repeat' code_mono_step accepted using ops, law
-
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) accepted with
+  | dead dead observed => exact compiler_observe_code_mono ops law before after state (.Ok ()) observed
+  | @branched middle _ _ live branched observed =>
+    exact (compiler_branch_code_mono ops law before middle depth 1#u32 true (.Ok ()) branched).trans
+      (compiler_observe_code_mono ops law middle after state (.Ok ()) observed)
 
 theorem compiler_block_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

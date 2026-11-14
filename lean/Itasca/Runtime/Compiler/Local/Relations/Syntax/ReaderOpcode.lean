@@ -97,7 +97,6 @@ point that handles them. The base dispatcher is extended by Wasm 2.0
 families: table access, references, the `0xFC` prefix, SIMD and typed select.
 -/
 
-set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
 open Aeneas Aeneas.Std Itasca
 namespace Itasca.Runtime.Compiler
@@ -253,7 +252,6 @@ macro "reader_opcode_cases " opcode:ident : tactic => `(tactic| all_goals
   subst value
   reader_opcode)
 
-set_option maxHeartbeats 2000000 in
 theorem numeric_base_opcode {opcode operation}
     (meaning : Numeric.opcodeMeaning opcode = some operation) : BaseOpcode opcode := by
   unfold Numeric.opcodeMeaning at meaning
@@ -272,7 +270,6 @@ theorem memory_reader_opcode {opcode operation}
   all_goals subst operation
   reader_opcode_cases opcode
 
-set_option maxHeartbeats 2000000 in
 theorem sign_reader_opcode {opcode operation}
     (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation) :
     ReaderOpcode opcode := by

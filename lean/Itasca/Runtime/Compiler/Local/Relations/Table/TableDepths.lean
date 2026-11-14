@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.TableBranchContracts
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
@@ -158,44 +160,7 @@ theorem compiler_patch_depths {A : Type} (ops : runtime.platform.Alloc A)
     rfl
 
 
-open Lean Meta Elab Tactic in
-elab "depths_effect " h:ident " using " ops:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  let some functionName := lhs.getAppFn.constName? | throwError "not a named helper"
-  let tac ← match functionName with
-    | ``runtime.compiler.FunctionCompiler.emit =>
-      `(tactic| have effect := compiler_emit_depths $ops _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.copy =>
-      `(tactic| have effect := compiler_copy_depths $ops _ _ _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.pc =>
-      `(tactic| have effect := compiler_pc_depths $ops _ _ _ $h)
-    | ``runtime.compiler.control.FunctionCompiler.patch =>
-      `(tactic| have effect := compiler_patch_depths $ops _ _ _ _ _ $h)
-    | ``runtime.compiler.control.FunctionCompiler.branch => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_branch_depths
-      `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
-    | _ => throwError "not a compiler helper"
-  evalTactic tac
 
-macro "depths_close" : tactic => `(tactic| first | rfl | simp_all only [Prod.mk.injEq])
-macro "depths_step " h:ident " using " ops:term : tactic => `(tactic|
-  first
-  | solve | (depths_effect $h using $ops; depths_close)
-  | solve | (simp only [Result.ok.injEq, Prod.mk.injEq] at $h:ident; obtain ⟨_, output⟩ := $h; cases output; depths_close)
-  | (obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try depths_effect called using $ops
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | split at $h:ident)
 
 theorem compiler_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A)
@@ -203,17 +168,17 @@ theorem compiler_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status, after)) :
     after.table_depths = before.table_depths := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
-    repeat' depths_step accepted using ops
+  have frame := (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional status accepted).frame
+  rw [frame]
 
 theorem compiler_table_branch_depths {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (index : Usize)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
-  repeat' depths_step accepted using ops
+  have frame := (runtime.compiler.control.FunctionCompiler.table_branch.inv ops before after index status accepted).frame
+  rw [frame]
+
 end Itasca.Runtime.Compiler
 
 end

@@ -1224,8 +1224,12 @@ stop and wait for the user:
 
 In progress: [remaining-helper contracts and targeted checks](notes/step55-helpers.md).
 Copy, patch, pair, finish_op, and on_unreachable each have one unfold owner.
-Accessor equations consolidate env/tail/reject; compiler heartbeat overrides are
-down to 150. Control-callback rollout continues.
+Accessor equations consolidate env/tail/reject. The ongoing control, opcode,
+SIMD, environment, and submission migrations have reduced compiler heartbeat
+overrides to three. Compiler-generated functions now have zero duplicate unfold
+owners. Full integration (4,097 jobs), lint, and the headline audit pass. The
+phase-wide line-ratio gate remains unmet: 49.0 versus the phase-start 46.9
+(101,428 versus 97,039 compiler lines, +4.5%). Phase 5 is not marked complete.
 
 Same method, bottom-up, in this order (unfold counts are today's):
 

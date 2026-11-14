@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOpcode
 import Itasca.Spec.Checks
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
@@ -202,27 +203,28 @@ noncomputable def numericLowering {A : Type} (ops : runtime.platform.Alloc A)
           residual
       Result.ok (r1, compiler)
 
-set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
 theorem lower_numeric_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
     (op : Instruction) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (integerOpcode op) 0#u32 0#u32 0#u128 =
       numericLowering ops compiler state op := by
-  cases op with
-  | binary ty operator =>
-    cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | compare ty operator =>
-    cases ty <;> cases operator <;> (try (rename_i sign; cases sign)) <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | unary ty operator =>
-    cases ty <;> cases operator <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | eqz ty =>
-    cases ty <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | conversion operator =>
-    cases operator <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have allowed : (69 ≤ (integerOpcode op).val ∧ (integerOpcode op).val ≤ 196) ∨
+      (256 ≤ (integerOpcode op).val ∧ (integerOpcode op).val ≤ 263) := by
+    cases op with
+    | binary ty operator =>
+      cases operator with
+      | DIV sign | REM sign | SHR sign => cases sign <;> cases ty <;> decide
+      | ADD | SUB | MUL | AND | OR | XOR | SHL | ROTL | ROTR => cases ty <;> decide
+    | compare ty operator =>
+      cases operator with
+      | LT sign | GT sign | LE sign | GE sign => cases sign <;> cases ty <;> decide
+      | EQ | NE => cases ty <;> decide
+    | unary ty operator => cases ty <;> cases operator <;> decide
+    | eqz ty => cases ty <;> decide
+    | conversion operator => cases operator <;> decide
+  exact runtime.compiler.lower.FunctionCompiler.op.scalar ops compiler state (integerOpcode op)
+    0#u32 0#u32 0#u128 reachable allowed
 
 def integerDepth (op : Instruction) : Usize := if op.arity = 2 then 2#usize else 1#usize
 

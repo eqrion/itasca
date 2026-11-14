@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableBuild
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
@@ -113,32 +114,28 @@ theorem compiler_br_table_dead_effect {A : Type} (ops : runtime.platform.Alloc A
     after.table_depths.val=[] ∧ after.reachable=false ∧
     SourceProgress before after ∧ after.next_source=state.pos := by
   have sources := compiler_br_table_sources ops law before after state fallback types accepted
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at accepted
-  obtain ⟨⟨result,labeled⟩,labeledCall,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    obtain ⟨budget,depths,rfl,_⟩ := compiler_table_label_success ops law before labeled state fallback labeledCall
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,dead,Bool.false_eq_true,ite_false] at rest
-    obtain ⟨cleared,clearCall,observed⟩ := bind_ok_inv _ _ _ rest
-    have empty := runtime_clear depths
-    rw [clearCall,WP.spec_ok] at empty
-    have kept := compiler_observe_frame ops law {before with budget,table_depths := cleared} state
-    have stable := compiler_observe_stable ops law {before with budget,table_depths := cleared} after state
-      (by simpa only [dead] using observed)
-    simp only [dead] at kept
-    rw [observed,WP.spec_ok] at kept
-    dsimp only [ObserveFrame] at kept
-    refine ⟨?_,?_,?_,?_,?_,?_,sources⟩
-    · refine ⟨⟨stable.metadata,stable.capacity⟩,?_,?_,?_,?_⟩ <;> rw [kept]
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state fallback types (.Ok ()) accepted with
+  | @live labeled lowered cleared _ _ labelCall live lowerCall clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state fallback (.Ok ()) labelCall).frame
+    rw [frame] at live
+    simp only [dead, Bool.false_eq_true] at live
+  | @dead labeled cleared _ _ labelCall dormant clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state fallback (.Ok ()) labelCall).frame
+    have empty := runtime_clear labeled.table_depths
+    rw [clearCall, WP.spec_ok] at empty
+    have kept := compiler_observe_frame_raw ops {labeled with table_depths := cleared} state (.Ok ()) after observed
+    have stable := compiler_observe_stable ops law {labeled with table_depths := cleared} after state observed
+    rw [frame] at kept stable
+    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, sources⟩
+    · refine ⟨⟨stable.metadata, stable.capacity⟩, ?_, ?_, ?_, ?_⟩ <;> rw [kept]
     · rw [kept]
     · rw [kept]
     · rw [kept]
     · rw [kept]
       exact empty
     · rw [kept]
+      exact dead
+
 end Itasca.Runtime.Compiler
 
 end

@@ -6,13 +6,20 @@ import Itasca.Runtime.Platform.Laws
 import Itasca.Support.Result
 
 /-!
-Compiler value widths and observed operand layouts.
+Compiler value widths, observed operand layouts, and resource-budget charging.
 
-Main declarations: `compiler_width` and `observe_value`. A direct consumer is `Compiler.Local.Relations.Function.CoreFunction`.
+Main declarations include `compiler_width`, `observe_value`, and the standalone charge contracts. A direct consumer is `Compiler.Local.Relations.Function.CoreFunction`.
 -/
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
+
+/-- Exact constructor equation for the stack-width query. -/
+theorem _root_.Itasca.runtime.compiler.stack_width.eq (ty : Itasca.code.StackType) :
+    runtime.compiler.stack_width ty =
+      match ty with
+      | .Val valueType => runtime.value.width valueType
+      | .Bot => .ok 1#u32 := rfl
 
 /-- Budget rejection records the requested resource and returns out of memory. -/
 theorem _root_.Itasca.runtime.compiler.Budget.reject.eq {A : Type}
@@ -21,6 +28,135 @@ theorem _root_.Itasca.runtime.compiler.Budget.reject.eq {A : Type}
     runtime.compiler.Budget.reject ops budget resource =
       .ok (.OutOfMemory, { budget with error := some resource }) := by
   rfl
+
+inductive ChargeCounter where
+  | instructions | branches | controls | locals
+  deriving DecidableEq
+
+abbrev ChargeCounter.resource : ChargeCounter → runtime.compiler.CompileResource
+  | .instructions => .Instructions | .branches => .BranchTableEntries | .controls => .Controls | .locals => .Locals
+
+abbrev ChargeCounter.used {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) : Usize :=
+  match kind with
+  | .instructions => budget.instructions | .branches => budget.branches | .controls => budget.controls | .locals => budget.locals
+
+abbrev ChargeCounter.limit {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) : Usize :=
+  match kind with
+  | .instructions => budget.limits.max_instructions | .branches => budget.limits.max_branch_table_entries
+  | .controls => budget.limits.max_controls | .locals => budget.limits.max_locals
+
+abbrev ChargeCounter.replace {A : Type} (kind : ChargeCounter) (budget : runtime.compiler.Budget A) (used : Usize) : runtime.compiler.Budget A :=
+  match kind with
+  | .instructions => {budget with instructions := used} | .branches => {budget with branches := used}
+  | .controls => {budget with controls := used} | .locals => {budget with locals := used}
+
+/-- Available charging changes exactly one counter. All other counters,
+allocator marker, error state, and limits are retained by the actual operation. -/
+theorem charge_counter_available {A : Type} (ops : runtime.platform.Alloc A)
+    (kind : ChargeCounter) (budget : runtime.compiler.Budget A)
+    (room : (kind.used budget).val < (kind.limit budget).val) :
+    runtime.compiler.Budget.charge ops budget kind.resource ⦃ out =>
+      out.1 = .Ok () ∧ ∃ used, out.2 = kind.replace budget used ∧
+        used.val = (kind.used budget).val + 1 ⦄ := by
+  cases kind <;>
+    simp only [ChargeCounter.used,ChargeCounter.limit] at room <;>
+    simp only [ChargeCounter.resource,runtime.compiler.Budget.charge]
+  all_goals
+    split
+    · rename_i full
+      scalar_tac
+    · step as ⟨used,advanced⟩
+      exact ⟨used,rfl,advanced⟩
+
+/-- Standalone contracts for every resource-budget charge operation. The branch-table total helper is public so its callback adapter can consume it. -/
+@[step] theorem charge_instruction {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .Instructions ⦃ out =>
+      out.2.limits = budget.limits ∧
+      (out.1 = .Ok () → out.2.instructions.val = budget.instructions.val + 1) ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
+  · step
+    simp_all
+theorem charge_instruction_exact {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .Instructions ⦃ (status, after) =>
+      status = .Ok () → ∃ used, after = {budget with instructions := used} ∧
+        used.val = budget.instructions.val + 1 ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
+      reduceCtorEq, false_implies]
+  · step as ⟨used, added⟩
+    intro _
+    exact ⟨used, rfl, added⟩
+/-- Accepted instruction charging modifies exactly the instruction counter. -/
+theorem charge_instruction_available_exact {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A)
+    (room : budget.instructions.val < budget.limits.max_instructions.val) :
+    runtime.compiler.Budget.charge ops budget .Instructions ⦃ (status, after) =>
+      status = .Ok () ∧ ∃ used, after = {budget with instructions := used} ∧
+        used.val = budget.instructions.val + 1 ⦄ := by
+  have notFull : ¬budget.instructions ≥ budget.limits.max_instructions := by scalar_tac
+  simp only [runtime.compiler.Budget.charge, if_neg notFull]
+  step as ⟨used, added⟩
+  exact ⟨used, rfl, added⟩
+@[step] theorem charge_control {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .Controls ⦃ out => True ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
+  · step
+theorem charge_control_exact {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .Controls ⦃ (status, after) =>
+      status = .Ok () → ∃ used, after = {budget with controls := used} ∧
+        used.val = budget.controls.val + 1 ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
+      reduceCtorEq, false_implies]
+  · step as ⟨used, added⟩
+    intro _
+    exact ⟨used, rfl, added⟩
+theorem charge_control_available_exact {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A)
+    (room : budget.controls.val < budget.limits.max_controls.val) :
+    runtime.compiler.Budget.charge ops budget .Controls ⦃ (status, after) =>
+      status = .Ok () ∧ ∃ used, after = {budget with controls := used} ∧
+        used.val = budget.controls.val + 1 ⦄ := by
+  have notFull : ¬budget.controls ≥ budget.limits.max_controls := by scalar_tac
+  simp only [runtime.compiler.Budget.charge, if_neg notFull]
+  step as ⟨used, added⟩
+  exact ⟨used, rfl, added⟩
+/-- A remaining instruction budget excludes both resource rejection and checked
+arithmetic failure for the actual charge operation. -/
+theorem charge_instruction_available {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A)
+    (room : budget.instructions.val < budget.limits.max_instructions.val) :
+    runtime.compiler.Budget.charge ops budget .Instructions ⦃ out =>
+      out.1 = .Ok () ∧ out.2.instructions.val = budget.instructions.val + 1 ∧
+      out.2.limits = budget.limits ∧ out.2.error = budget.error ⦄ := by
+  have notFull : ¬ budget.instructions ≥ budget.limits.max_instructions := by scalar_tac
+  simp only [runtime.compiler.Budget.charge,notFull,↓reduceIte]
+  step as ⟨used,increment⟩
+  exact increment
+@[step] theorem charge_local {A : Type} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .Locals ⦃ out => True ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
+  · step
+theorem charge_branch_total {A} (ops : runtime.platform.Alloc A)
+    (budget : runtime.compiler.Budget A) :
+    runtime.compiler.Budget.charge ops budget .BranchTableEntries ⦃ _ => True ⦄ := by
+  simp only [runtime.compiler.Budget.charge]
+  split
+  · simp [runtime.compiler.Budget.reject.eq]
+  · step
 
 @[step] theorem compiler_width (ty : Itasca.wasm_types.ValueType) :
     runtime.value.width ty ⦃ word => word.val = width (Itasca.Translate.valueType ty) ⦄ := by
@@ -37,6 +173,12 @@ theorem _root_.Itasca.runtime.compiler.Budget.reject.eq {A : Type}
   step as ⟨value, hv⟩
   congr 1
   simpa [hi] using hv
+
+/-- An operand beyond the current stack is rejected without indexing it. -/
+theorem operand_at_out_of_bounds (before : Slice U32) (depth : Usize)
+    (large : Slice.len before < depth) :
+    runtime.compiler.operand_at before depth = .ok (.Err Itasca.error.VisitError.OutOfMemory) := by
+  simp [runtime.compiler.operand_at, large]
 
 @[step] theorem operand_at_total (before : Slice U32) (depth : Usize) :
     runtime.compiler.operand_at before depth ⦃ out =>
@@ -258,5 +400,42 @@ theorem entry_branch_bind {T E R : Type} (answer : core.result.Result T E)
       | .Ok value => next (.Continue value)
       | .Err error => next (.Break (.Err error)) := by
   cases answer <;> simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+
+/-- Observation of one scalar, reference, SIMD, or polymorphic-bottom value
+accepts when its independently computed slot width and reserve request fit. -/
+theorem observe_value_available {A : Type} (ops : runtime.platform.Alloc A)
+    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
+    (budget : runtime.compiler.Budget A) (before : alloc.vec.Vec U32)
+    (height : U32) (ty : Itasca.code.StackType)
+    (fits : before.length < Usize.max) (request : before.length + 1 ≤ bound)
+    (slotsFit : height.val + compilerStackWidth ty ≤ U32.max) :
+    runtime.compiler.observe_value ops budget before height ty ⦃ out =>
+      out.1 = .Ok () ∧ out.2.1 = budget ∧ out.2.2.1.val = before.val ++ [height] ∧
+      out.2.2.2.val = height.val + compilerStackWidth ty ⦄ := by
+  unfold runtime.compiler.observe_value
+  step with budget_push_available ops bound available budget before height fits request
+    as ⟨status,charged,values,accepted,same,appended⟩
+  subst status charged
+  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
+  cases ty with
+  | Bot =>
+    simp only [runtime.compiler.stack_width.eq, bind_ok]
+    step as ⟨added,addSpec⟩
+    cases added with
+    | none => simp [compilerStackWidth] at slotsFit; scalar_tac
+    | some next =>
+      simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,compilerStackWidth,appended]
+      scalar_tac
+  | Val type =>
+    simp only [runtime.compiler.stack_width.eq]
+    step with compiler_width type as ⟨width,widthEq⟩
+    step as ⟨added,addSpec⟩
+    cases added with
+    | none =>
+      simp only [compilerStackWidth] at slotsFit
+      scalar_tac
+    | some next =>
+      simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
+      exact ⟨trivial,trivial,appended,by simpa [compilerStackWidth,widthEq] using addSpec.2.1⟩
 
 end Itasca.Runtime.Compiler

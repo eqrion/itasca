@@ -1,4 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
+import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 
 /-! Exact word heights for validator control-stack prefixes, including bottom
 stack entries, using the extracted integer-width and accumulation loops. -/
@@ -24,7 +25,7 @@ theorem stack_words_take_succ (values : List Itasca.code.StackType) (i : Nat) (b
 @[step] theorem control_stack_width (ty : Itasca.code.StackType) :
     runtime.compiler.stack_width ty ⦃ out => out.val = compilerStackWidth ty ⦄ := by
   cases ty with
-  | Bot => simp [runtime.compiler.stack_width, compilerStackWidth, WP.spec_ok]
+  | Bot => simp [runtime.compiler.stack_width.eq, compilerStackWidth, WP.spec_ok]
   | Val ty => exact compiler_width ty
 
 @[step] theorem control_stack_height (values : Slice Itasca.code.StackType) (count : Usize) (initial : U32)

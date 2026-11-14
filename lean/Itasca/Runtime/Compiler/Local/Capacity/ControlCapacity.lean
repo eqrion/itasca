@@ -1,3 +1,7 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Pair
@@ -5,7 +9,7 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.PatchGrowth
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
 import Mathlib.Tactic.FailIfNoProgress
 import Mathlib.Tactic.Rename
 
@@ -82,42 +86,8 @@ theorem compiler_fixups_capacity_metadata {A : Type} (ops : runtime.platform.All
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
       ops before sites target index status = .ok output) :
     capacityMetadata (snapshotCompiler output) = capacityMetadata before := by
-  generalize measure : Usize.max - index.val = n
-  induction n using Nat.strong_induction_on generalizing before index status with
-  | h n ih =>
-    unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 at accepted
-    rw [loop] at accepted
-    simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body,
-      bind_ok] at accepted
-    split at accepted
-    · cases status with
-      | Err error =>
-        simp only [core.result.Result.is_ok, bind_ok, Bool.false_eq_true, ↓reduceIte, Result.ok.injEq] at accepted
-        subst output
-        rfl
-      | Ok unit =>
-        cases unit
-        simp only [core.result.Result.is_ok, bind_ok, ↓reduceIte, Std.bind_assoc] at accepted
-        obtain ⟨site, _, rest⟩ := bind_ok_inv _ _ _ accepted
-        obtain ⟨⟨result, middle⟩, patched, tail⟩ := bind_ok_inv _ _ _ rest
-        simp only [uncurry_apply_pair, Std.bind_assoc, bind_ok] at tail
-        obtain ⟨nextIndex, increment, tail⟩ := bind_ok_inv _ _ _ tail
-        have arithmetic := UScalar.add_equiv index 1#usize
-        rw [increment] at arithmetic
-        have progress : nextIndex.val = index.val + 1 := by simpa using arithmetic.2.1
-        have nextMax := nextIndex.hmax
-        have smaller : Usize.max - nextIndex.val < n := by scalar_tac
-        have tail' : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0
-            ops middle sites target nextIndex result = .ok output := by
-          simpa only [uncurry_apply_pair, bind_ok,
-            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0,
-            runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0.body,
-            core.result.Result.is_ok] using tail
-        exact (ih _ smaller middle nextIndex result tail' rfl).trans
-          (compiler_patch_capacity_metadata ops before middle site target result patched)
-    · simp only [bind_ok, Result.ok.injEq] at accepted
-      subst output
-      rfl
+  obtain ⟨code, same⟩ := (compiler_fixups_effect ops before sites target index status output accepted).1
+  rw [same]; rfl
 
 theorem compiler_fixups_after_if_capacity_metadata {A : Type} (ops : runtime.platform.Alloc A)
     (before : runtime.compiler.FunctionCompiler A) (sites : alloc.vec.Vec Usize)
@@ -260,62 +230,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
-open Lean Meta Elab Tactic in
-elab "growth_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  let some functionName := lhs.getAppFn.constName? | throwError "not a named helper"
-  let tac ← match functionName with
-    | ``runtime.compiler.FunctionCompiler.observe =>
-      `(tactic| have effect := compiler_observe_code_result $ops $law _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.emit =>
-      `(tactic| have effect := compiler_emit_growth $ops $law _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.copy =>
-      `(tactic| have effect := compiler_copy_growth $ops $law _ _ _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.pair =>
-      `(tactic| have effect := compiler_pair_code_result $ops _ _ _ _ _ $h)
-    | ``runtime.compiler.lower.FunctionCompiler.finish_op =>
-      `(tactic| have effect := compiler_finish_op_growth $ops $law _ _ _ _ _ $h)
-    | ``runtime.compiler.simd.FunctionCompiler.simd_op => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_simd_growth
-      `(tactic| have effect := $theoremName $ops $law _ _ _ _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.pc => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_pc_code_result
-      `(tactic| have effect := $theoremName $ops _ _ _ $h)
-    | ``runtime.compiler.control.FunctionCompiler.patch => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_patch_code_length
-      `(tactic| have effect := $theoremName $ops _ _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop0 => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_code_length
-      `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end_loop1 => do
-      let theoremName := mkIdent `Itasca.Runtime.Compiler.compiler_fixups_after_if_code_length
-      `(tactic| have effect := $theoremName $ops _ _ _ _ _ _ $h)
-    | _ => throwError "not a compiler helper"
-  evalTactic tac
 
-
-macro "growth_close" : tactic => `(tactic|
-  (try simp_all only [snapshotCompiler, Prod.mk.injEq]
-   try omega))
-
-macro "growth_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (growth_effect $h using $ops, $law; growth_close)
-  | solve | (simp only [Result.ok.injEq, Prod.mk.injEq] at $h:ident; obtain ⟨_, output⟩ := $h; cases output; growth_close)
-  | (obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try growth_effect called using $ops, $law
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | (fail_if_no_progress simp only [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | split at $h:ident)
 
 end Itasca.Runtime.Compiler
 
@@ -328,15 +243,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 
-theorem compiler_branch_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (depth skip : U32) (conditional : Bool)
-    (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + (if conditional then 3 else 2) := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted ⊢ <;>
-    repeat' growth_step accepted using ops, law
 
 end Itasca.Runtime.Compiler
 
@@ -382,11 +288,10 @@ theorem compiler_branch_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (depth skip : U32) (conditional : Bool)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (.Ok (), after)) :
     capacityMetadata after = capacityMetadata before := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch, Bool.false_eq_true, ite_false, ite_true] at accepted <;>
-    repeat' capacity_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' capacity_step accepted using ops, law
+  have frame := (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional (.Ok ()) accepted).frame
+  rw [frame]
+  rfl
+
 theorem compiler_end_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (kind : Itasca.code.LabelKind)
@@ -394,10 +299,10 @@ theorem compiler_end_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
       ops before state kind blockType = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end at accepted
-  repeat' capacity_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' capacity_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops before after state kind blockType (.Ok ()) accepted
+  obtain ⟨middle, observed, slots, locals⟩ := effect.observation_slots
+  have post := compiler_observe_capacity_bound ops law middle after state (.Ok ()) observed
+  exact ⟨post.1.trans locals, by simpa only [slots, locals] using post.2 rfl⟩
 
 theorem compiler_else_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -405,12 +310,10 @@ theorem compiler_else_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else
       ops before state blockType = .ok (.Ok (), after)) :
     CapacityStep before after state := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' capacity_step accepted using ops, law
-  all_goals try (casesm* core.result.Result Never _ <;> try casesm* Never)
-  all_goals repeat' capacity_step accepted using ops, law
-
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state blockType (.Ok ()) accepted
+  obtain ⟨middle, observed, slots, locals⟩ := effect.observation_slots
+  have post := compiler_observe_capacity_bound ops law middle after state (.Ok ()) observed
+  exact ⟨post.1.trans locals, by simpa only [slots, locals] using post.2 rfl⟩
 
 end Itasca.Runtime.Compiler
 

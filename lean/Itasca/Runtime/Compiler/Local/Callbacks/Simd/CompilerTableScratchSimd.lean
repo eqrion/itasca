@@ -14,17 +14,21 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 theorem compiler_simd_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (opcode : U16) (a : U32) (bits : U128)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.simd.FunctionCompiler.simd_op ops before state opcode a bits = .ok (status, after)) :
     CompilerOrdinaryStable before after := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
-  repeat' metadata_step accepted using ops, law
-
-
+  rcases (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits status accepted).execution with
+    ⟨error, same, frame⟩ | ⟨staged, instruction, allocated, finished⟩
+  · rw [frame]
+    exact ⟨rfl, Nat.le_refl _⟩
+  · have frame := allocated.frame
+    have first : CompilerOrdinaryStable before staged := by
+      rw [frame]
+      exact ⟨rfl, Nat.le_refl _⟩
+    exact first.trans (compiler_finish_op_ordinary_result ops law staged after state instruction status finished)
 
 end Itasca.Runtime.Compiler
 
@@ -37,15 +41,18 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 theorem compiler_simd_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (opcode : U16) (a : U32) (bits : U128)
     (accepted : runtime.compiler.simd.FunctionCompiler.simd_op ops before state opcode a bits = .ok (.Ok (),after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
-  repeat' code_mono_step accepted using ops, law
+  obtain ⟨staged, instruction, allocated, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits (.Ok ()) accepted).execution.success
+  have frame := allocated.frame
+  have result := compiler_finish_op_code_mono ops law staged after state instruction (.Ok ()) finished
+  rw [frame] at result
+  exact result
 
 theorem compiler_lower_simd_code_mono {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -69,15 +76,18 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 theorem compiler_simd_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (opcode : U16) (a : U32) (bits : U128)
     (accepted : runtime.compiler.simd.FunctionCompiler.simd_op ops before state opcode a bits = .ok (.Ok (),after)) :
     after.table_depths = before.table_depths := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
-  repeat' scratch_preservation_step accepted using ops, law
+  obtain ⟨staged, instruction, allocated, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits (.Ok ()) accepted).execution.success
+  have frame := allocated.frame
+  have result := compiler_finish_op_depths ops law staged after state instruction (.Ok ()) finished
+  rw [frame] at result
+  exact result
 
 theorem compiler_lower_simd_depths {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

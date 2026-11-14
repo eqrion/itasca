@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Module.CompileSubmit
 import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Compiler.Module.BatchLoopAvailable
@@ -163,10 +164,9 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
       (by simpa only [queue] using queueCapacity) (by simpa only [queue] using queueReserve))
   dsimp only at status sameBudget appended
   subst reply budget
-  unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
-  rw [compiled]
-  simp only [submitPack,bind_ok,uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,pushed,
-    runtime.compiler.visitor_result,WP.spec_ok]
+  have called := runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch.available
+    ops before middle issued.seed worker middle.budget completed compiled pushed
+  simp only [called, WP.spec_ok]
   refine ⟨True.intro,published,charged,worker,?_,finished⟩
   rw [appended,queue]
 
@@ -181,7 +181,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1600000
 
 /-- Source-only maxima for independently encoded valid prepared entries. These
 bounds concern source bytes, expanded locals, and the independent operand
@@ -274,8 +273,8 @@ theorem compiler_queue_policy {A : Type} (ops : runtime.platform.Alloc A)
     let completed := alloc.vec.Vec.from previous (by have bound := before.completed.property; rw [completedEq] at bound; simp only [List.length_append,List.length_singleton] at bound; omega)
     let after := {before with completed := completed}
     have polled : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch ops before = .ok (.Ok worker,after) := by
-      simp [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch,
-        alloc.vec.Vec.pop,completedEq,core.option.Option.ok_or,after,completed]
+      rw [runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch.eq]
+      simp [alloc.vec.Vec.pop,completedEq,core.option.Option.ok_or,after,completed]
     refine ⟨issued,rest,worker,after,?_,polled,identity,finished,?_,?_⟩
     · rw [queueEq]
       exact (List.perm_append_singleton _ _).symm

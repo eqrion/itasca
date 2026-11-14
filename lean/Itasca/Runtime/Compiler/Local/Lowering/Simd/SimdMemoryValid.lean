@@ -18,7 +18,6 @@ and unsupported cases remain explicit. No shared generated source table is used.
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Check the explicitly named expected constructor, then check its decoder.
 This expands to ordinary kernel-checked tactics; the opcode table stays explicit. -/

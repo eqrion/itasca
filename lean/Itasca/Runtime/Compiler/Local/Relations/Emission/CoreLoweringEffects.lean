@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
@@ -15,7 +16,6 @@ Main declarations: `CoreOperation` and `CoreOperation.opcode`. A direct consumer
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Discriminates actual scalar mutable callbacks and their binary immediates. -/
 inductive CoreOperation where
@@ -57,9 +57,10 @@ theorem lower_core_dispatch {A : Type} (ops : runtime.platform.Alloc A)
       coreLowering ops compiler state op := by
   cases op with
   | select typed =>
-    cases typed <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | globalGet index => unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl
-  | globalSet index => unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl
+    exact runtime.compiler.lower.FunctionCompiler.op.select ops compiler state (if typed then 28#u16 else 27#u16)
+      0#u32 0#u32 0#u128 reachable (by cases typed <;> decide)
+  | globalGet index => exact runtime.compiler.lower.FunctionCompiler.op.global_get ops compiler state index 0#u32 0#u128 reachable
+  | globalSet index => exact runtime.compiler.lower.FunctionCompiler.op.global_set ops compiler state index 0#u32 0#u128 reachable
   | load op offset alignment => exact lower_memory_load_dispatch ops compiler state op offset alignment reachable
   | store op offset alignment => exact lower_memory_store_dispatch ops compiler state op offset alignment reachable
 

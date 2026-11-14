@@ -1,9 +1,11 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix
-import Itasca.Runtime.Compiler.Local.Lowering.Calls.LoweringCall
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 
 /-!
 Sections, each formerly its own module: DeadOpAvailability, LocalVariableAvailability, StatefulAvailability, BranchLabelAvailability, TransferAvailability, CallAvailability.
@@ -70,23 +72,7 @@ theorem lower_local_get_live_available {A : Type} (ops : runtime.platform.Alloc 
     rw [equal] at slotPosition
     rw [← slotPosition, layout.localSlots, layout.height] at smaller
     omega
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 32#u16 index 0#u32 0#u128 = (do
-      let i ← lift (UScalar.cast .Usize index)
-      let src ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
-      let j ← lift (UScalar.cast .Usize index)
-      let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
-      let count ← runtime.value.width rawType
-      let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler compiler.height src count
-      let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-      match branch with
-      | .Continue _ => runtime.compiler.FunctionCompiler.observe ops changed state
-      | .Break residual =>
-        let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-          (core.convert.FromSame Itasca.error.VisitError) residual
-        Result.ok (error, changed)) := by
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_pos reachable]
-    rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.local_get ops compiler state index 0#u32 0#u128 reachable
   rw [run]
   step as ⟨i, hi⟩
   have iVal : i.val = index.val := by scalar_tac
@@ -129,29 +115,7 @@ theorem lower_local_write_live_available {A : Type} (ops : runtime.platform.Allo
     rw [← equal] at slotPosition
     rw [← slotPosition, layout.localSlots, operandPosition] at smaller
     omega
-  have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state (if tee then 34#u16 else 33#u16) index 0#u32 0#u128 = (do
-      let i ← lift (UScalar.cast .Usize index)
-      let dst ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32) compiler.local_offsets i
-      let result ← runtime.compiler.FunctionCompiler.operand ops compiler 1#usize
-      let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-      match branch with
-      | .Continue src =>
-        let j ← lift (UScalar.cast .Usize index)
-        let rawType ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Itasca.wasm_types.ValueType) compiler.function.locals j
-        let count ← runtime.value.width rawType
-        let (result, changed) ← runtime.compiler.FunctionCompiler.copy ops compiler dst src count
-        let branch ← core.result.Result.Insts.CoreOpsTry.branch result
-        match branch with
-        | .Continue _ => runtime.compiler.FunctionCompiler.observe ops changed state
-        | .Break residual =>
-          let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-            (core.convert.FromSame Itasca.error.VisitError) residual
-          Result.ok (error, changed)
-      | .Break residual =>
-        let error ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual Unit
-          (core.convert.FromSame Itasca.error.VisitError) residual
-        Result.ok (error, compiler)) := by
-    cases tee <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have run := runtime.compiler.lower.FunctionCompiler.op.local_set_or_tee ops compiler state tee index 0#u32 0#u128 reachable
   rw [run]
   step as ⟨i, hi⟩
   have iVal : i.val = index.val := by scalar_tac
@@ -239,7 +203,7 @@ theorem compiler_stateful_available {A : Type} (ops : runtime.platform.Alloc A)
       have read : runtime.compiler.FunctionCompiler.operand ops after 3#usize = .ok (.Ok first) := by
         rw [frame]
         have arity : op.arity = 3 := by cases op <;> simp_all [statefulUsesPair,SourceMachine.Stateful.Instruction.arity]
-        simpa [StatefulReads,arity,statefulDepth,runtime.compiler.FunctionCompiler.operand] using reads.1
+        simpa [StatefulReads,arity,statefulDepth,runtime.compiler.FunctionCompiler.operand.eq] using reads.1
       rw [lower_stateful_pair_eq ops compiler after state op first second a b index live paired actual read]
       have afterDemand : CallbackDemand after state bound := by
         rw [frame]
@@ -281,18 +245,14 @@ theorem compiler_branch_label_available {A : Type} (ops : runtime.platform.Alloc
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
           (fun counter => if counter = .branches then 1 else 0) ∧
         out.2.table_depths.val = compiler.table_depths.val ++ [depth] ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label
-  step with charge_counter_available ops .branches compiler.budget room
-    as ⟨status,budget,accepted,used,same,usedEq⟩
-  rw [accepted,same]
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  step with budget_push_available ops bound available (ChargeCounter.branches.replace compiler.budget used)
-    compiler.table_depths depth capacity request as ⟨status,budget,depths,accepted,same,appended⟩
-  refine ⟨accepted,?_,appended⟩
-  rw [same]
-  exact .of_counter .branches compiler.budget used 1
-    (by simp [ChargeCounter.used] at usedEq ⊢; omega)
-    (by simp [ChargeCounter.used] at usedEq ⊢; omega)
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.available
+    ops bound available compiler state depth room capacity request)
+  rintro ⟨status, after⟩ ⟨accepted, used, frame, usedEq, appended⟩
+  refine ⟨accepted, ?_, appended⟩
+  rw [frame]
+  exact CompilationBudgetEffect.of_counter .branches compiler.budget used 1
+    (by change compiler.budget.branches.val ≤ used.val; omega)
+    (by change used.val ≤ compiler.budget.branches.val + 1; omega)
 
 end Itasca.Runtime.Compiler
 
@@ -304,25 +264,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-/-- Available nonelided transfer retains the exact existing transfer
-certificate, with an independent one-instruction budget bound. The accepted
-primitive result is derived inside the proof from allocation availability. -/
-theorem compiler_transfer_available {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
-    (demand : CallbackDemand compiler state bound) (dst src count : U32)
-    (nonempty : count ≠ 0#u32) (different : src ≠ dst) :
-    runtime.compiler.FunctionCompiler.copy ops compiler dst src count ⦃ out =>
-      out.1 = .Ok () ∧ Emitted compiler out.2 (transferInstruction dst src count) ∧
-      CompilationBudgetEffect compiler.budget out.2.budget
-        (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  obtain ⟨⟨status,after⟩,actual,accepted,_,effect⟩ := WP.spec_imp_exists
-    (compiler_copy_available_effect ops bound available compiler state demand dst src count)
-  dsimp only at accepted effect
-  subst status
-  have shape := compiler_copy_success ops law compiler after dst src count nonempty different actual
-  exact WP.exists_imp_spec ⟨(.Ok (),after),actual,rfl,shape,effect⟩
 
 end Itasca.Runtime.Compiler
 
@@ -350,22 +291,7 @@ theorem compiler_call_available {A : Type} (ops : runtime.platform.Alloc A)
       ⦃ out => out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
   by_cases live : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 16#u16 index 0#u32 0#u128 = (do
-      let i ← lift (UScalar.cast .Usize index)
-      let slots ← Slice.index_usize compiler.func_param_slots i
-      let o ← lift (U32.checked_sub compiler.height slots)
-      let r ← core.option.Option.ok_or o Itasca.error.VisitError.OutOfMemory
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state (.Call index val)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame Itasca.error.VisitError) residual
-        Result.ok (r1, compiler)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.call ops compiler state index 0#u32 0#u128 live
     rw [run]
     step as ⟨i,hi⟩
     have atIndex : i.val = index.val := by scalar_tac
@@ -441,7 +367,7 @@ theorem compiler_indirect_call_available {A : Type} (ops : runtime.platform.Allo
         obtain ⟨operand,read,_⟩ := last_operand ops compiler (front ++ params) .I32 (layout live)
         have pairedRead : runtime.compiler.FunctionCompiler.operand ops paired 1#usize = .ok (.Ok operand) := by
           rw [frame]
-          simpa only [runtime.compiler.FunctionCompiler.operand] using read
+          simpa only [runtime.compiler.FunctionCompiler.operand.eq] using read
         rw [pairedRead]
         simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
         have afterDemand : CallbackDemand paired state bound := by

@@ -15,7 +15,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Every accepted Wasm 2.0 noncontrol dispatcher step selects one
 actual callback at its returned state, with source-bounded SIMD arguments. -/
@@ -82,7 +81,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace Itasca.Wasm2
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 
 /-- Wasm 2 profile dispatch outside entry, END and table collection selects one
 actual event at the returned core state, including its control callbacks. -/

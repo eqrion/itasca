@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectSafety
 
 /-!
@@ -19,14 +20,7 @@ set_option maxRecDepth 4096
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 65#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   by_cases live : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 65#u16 0#u32 0#u32 bits =
-        (do
-          let word ← lift (UScalar.cast .U32 bits)
-          runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
-            (.Const32 compiler.height word)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.i32_const ops compiler state 0#u32 0#u32 bits live
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
@@ -41,8 +35,8 @@ set_option maxRecDepth 4096
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_i32_const compiler state bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i32_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i32_const.eq,lift,bind_ok]
   exact compiler_i32_const_total ops law compiler state _ codeFits sourceFits coordinateFits
 
 @[step] theorem compiler_i64_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -54,14 +48,7 @@ set_option maxRecDepth 4096
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 66#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   by_cases live : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 66#u16 0#u32 0#u32 bits =
-        (do
-          let word ← lift (UScalar.cast .U64 bits)
-          runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
-            (.Const64 compiler.height word)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.i64_const ops compiler state 0#u32 0#u32 bits live
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
@@ -76,8 +63,8 @@ set_option maxRecDepth 4096
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_i64_const compiler state bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_i64_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_i64_const.eq,lift,bind_ok]
   exact compiler_i64_const_total ops law compiler state _ codeFits sourceFits coordinateFits
 
 @[step] theorem compiler_f32_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -89,14 +76,7 @@ set_option maxRecDepth 4096
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 67#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   by_cases live : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 67#u16 0#u32 0#u32 bits =
-        (do
-          let word ← lift (UScalar.cast .U32 bits)
-          runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
-            (.Const32 compiler.height word)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.f32_const ops compiler state 0#u32 0#u32 bits live
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
@@ -111,8 +91,8 @@ set_option maxRecDepth 4096
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_f32_const compiler state bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f32_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const.eq,lift,bind_ok]
   exact compiler_f32_const_total ops law compiler state _ codeFits sourceFits coordinateFits
 
 @[step] theorem compiler_f64_const_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -124,14 +104,7 @@ set_option maxRecDepth 4096
     runtime.compiler.lower.FunctionCompiler.op ops compiler state 68#u16 0#u32 0#u32 bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
   by_cases live : compiler.reachable = true
-  · have run : runtime.compiler.lower.FunctionCompiler.op ops compiler state 68#u16 0#u32 0#u32 bits =
-        (do
-          let word ← lift (UScalar.cast .U64 bits)
-          runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
-            (.Const64 compiler.height word)) := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+  · have run := runtime.compiler.lower.FunctionCompiler.op.f64_const ops compiler state 0#u32 0#u32 bits live
     rw [run]
     simp only [lift,bind_ok]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
@@ -146,8 +119,8 @@ set_option maxRecDepth 4096
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_f64_const compiler state bits ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const,lift,bind_ok]
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_f64_const.eq,
+    runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const.eq,lift,bind_ok]
   exact compiler_f64_const_total ops law compiler state _ codeFits sourceFits coordinateFits
 
 @[step] theorem compiler_on_nop_total {A : Type} (ops : runtime.platform.Alloc A)
@@ -158,8 +131,7 @@ set_option maxRecDepth 4096
   have run : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_nop compiler state =
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
     change runtime.compiler.lower.FunctionCompiler.op ops compiler state 1#u16 0#u32 0#u32 0#u128 = _
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    split <;> rfl
+    exact lower_empty_eq ops compiler state false
   rw [run]
   exact compiler_observe_stack ops law compiler state
 
@@ -171,8 +143,7 @@ set_option maxRecDepth 4096
   have run : (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops).on_drop compiler state type =
       runtime.compiler.FunctionCompiler.observe ops compiler state := by
     change runtime.compiler.lower.FunctionCompiler.op ops compiler state 26#u16 0#u32 0#u32 0#u128 = _
-    unfold runtime.compiler.lower.FunctionCompiler.op
-    split <;> rfl
+    exact lower_empty_eq ops compiler state true
   rw [run]
   exact compiler_observe_stack ops law compiler state
 

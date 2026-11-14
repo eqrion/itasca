@@ -155,7 +155,6 @@ Exact sign-extension reading advances the supplied source zipper and retains bot
 Main declarations: `reader_sign_wasm2` and `reader_integer_sign_wasm2`. A direct consumer is `Compiler.Body.Reader.Checking.OperationInstructionPrefix`.
 -/
 
-set_option maxHeartbeats 1000000
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 
@@ -285,7 +284,6 @@ Main declarations: `reader_saturating_wasm2` and `reader_float_saturating_wasm2`
 -/
 
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 theorem reader_saturating_wasm2 {data env locals index st}

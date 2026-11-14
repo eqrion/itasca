@@ -218,7 +218,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
-set_option maxHeartbeats 2000000
 attribute [local step] code.pop_with_type.total code.pop_types.total
   Wasm2.ScalarReaders.reserved_zero
 

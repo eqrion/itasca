@@ -21,16 +21,12 @@ open Aeneas Aeneas.Std Itasca.ResultFacts
   simp_all [core.num.U32.MAX, U32.rMax]
   scalar_tac
 
-@[step] theorem charge_instruction {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A) :
-    runtime.compiler.Budget.charge ops budget .Instructions ⦃ out =>
-      out.2.limits = budget.limits ∧
-      (out.1 = .Ok () → out.2.instructions.val = budget.instructions.val + 1) ⦄ := by
-  simp only [runtime.compiler.Budget.charge]
-  split
-  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
-  · step
-    simp_all
+/-- The compiler operand accessor is exactly the checked lookup in its stack vector. -/
+theorem _root_.Itasca.runtime.compiler.FunctionCompiler.operand.eq {A : Type}
+    (ops : runtime.platform.Alloc A) (compiler : runtime.compiler.FunctionCompiler A)
+    (depth : Usize) :
+    runtime.compiler.FunctionCompiler.operand ops compiler depth =
+      runtime.compiler.operand_at compiler.before.deref depth := rfl
 
 @[step] theorem compiler_operand {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (stack : List valtype)
@@ -39,7 +35,7 @@ open Aeneas Aeneas.Std Itasca.ResultFacts
     runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ result =>
       ∃ word, result = .Ok word ∧ word.val =
         slots (compilerLocals compiler) + offset stack (stack.length - depth.val) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.operand
+  rw [runtime.compiler.FunctionCompiler.operand.eq]
   have length := layout.operands_length
   have cap : depth.val ≤ compiler.before.val.length := by omega
   step with operand_at compiler.before.deref depth positive (by simpa [alloc.vec.Vec.deref] using cap) as ⟨r, hr⟩
@@ -64,7 +60,7 @@ def Emitted {A : Type} (before after : runtime.compiler.FunctionCompiler A)
     (compiler : runtime.compiler.FunctionCompiler A) (depth : Usize) :
     runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ out =>
       ∀ word, out = .Ok word → word ∈ compiler.before.val ⦄ := by
-  simpa [runtime.compiler.FunctionCompiler.operand, alloc.vec.Vec.deref] using
+  simpa [runtime.compiler.FunctionCompiler.operand.eq, alloc.vec.Vec.deref] using
     operand_at_total compiler.before.deref depth
 
 /-- A representable bytecode PC excludes the actual instruction-index rejection. -/
@@ -102,19 +98,6 @@ def EmittedExact {A : Type} (before after : runtime.compiler.FunctionCompiler A)
     code.val = before.function.code.val ++ [instruction] ∧
     sources.val.map (fun word => word.val) = before.function.source_offsets.val.map (fun word => word.val) ++
       [before.function.body_start.val + before.next_source.val]
-
-theorem charge_instruction_exact {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A) :
-    runtime.compiler.Budget.charge ops budget .Instructions ⦃ (status, after) =>
-      status = .Ok () → ∃ used, after = {budget with instructions := used} ∧
-        used.val = budget.instructions.val + 1 ⦄ := by
-  simp only [runtime.compiler.Budget.charge]
-  split
-  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
-      reduceCtorEq, false_implies]
-  · step as ⟨used, added⟩
-    intro _
-    exact ⟨used, rfl, added⟩
 
 /-- Every normal return preserves the frame without allocator assumptions.
 Allocator correctness additionally gives code growth and the exact success effect. -/
@@ -189,18 +172,6 @@ theorem _root_.Itasca.runtime.compiler.FunctionCompiler.emit.inv {A : Type} (ops
         refine ⟨used, code, sources, ?_, usedEq, codeEffect.2, ?_⟩
         · rw [sourcesEffect.1, codeEffect.1, budgetEq]
         · simp only [sourcesEffect.2, List.map_append, List.map_cons, List.map_nil, coordinateEq]
-
-/-- Accepted instruction charging modifies exactly the instruction counter. -/
-theorem charge_instruction_available_exact {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A)
-    (room : budget.instructions.val < budget.limits.max_instructions.val) :
-    runtime.compiler.Budget.charge ops budget .Instructions ⦃ (status, after) =>
-      status = .Ok () ∧ ∃ used, after = {budget with instructions := used} ∧
-        used.val = budget.instructions.val + 1 ⦄ := by
-  have notFull : ¬budget.instructions ≥ budget.limits.max_instructions := by scalar_tac
-  simp only [runtime.compiler.Budget.charge, if_neg notFull]
-  step as ⟨used, added⟩
-  exact ⟨used, rfl, added⟩
 
 /-- Correct allocation and representable vector lengths and coordinates exclude
 extracted failure; ordinary Rust errors remain possible. -/

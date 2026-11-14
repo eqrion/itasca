@@ -26,9 +26,6 @@ structure CompileEligible (A : Type) (bytes : Slice U8)
   demand : ∀ regions env tail, StreamCompleteRegions.Certificate bytes raw regions env tail →
     ∃ bodyBytes localCount peak, SourceCompilationDemand A env tail limits bodyBytes localCount peak bound
 
-private theorem module_fits (bytes : Slice U8) (limit : Usize) (bounded : bytes.length ≤ limit.val) :
-    ¬ Slice.len bytes > limit := by scalar_tac
-
 private theorem certificate_initializer_typing {bytes raw regions env tail}
     (certificate : StreamCompleteRegions.Certificate bytes raw regions env tail)
     (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction) :
@@ -91,14 +88,8 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
   dsimp only at status
   subst reply
   refine ⟨executable,?_⟩
-  unfold runtime.compiler.compile_with
-  simp only [if_neg (module_fits bytes limits.max_module_bytes eligible.moduleBytes),regionCall,bind_ok,uncurry_apply_pair,initialized]
-  simp only [initialScheduler] at streamCall
-  simp only [streamCall,bind_ok,uncurry_apply_pair,tailReady,core.option.Option.ok_or,
-    core.result.Result.Insts.CoreOpsTry.branch,collected]
-  simp only [uninitializedModule] at lowered
-  rw [lowered]
-  simp only [bind_ok]
-  rfl
+  exact runtime.compiler.compile_with.available eligible.moduleBytes
+    ⟨codeStart, codeEnd, storage, env, scheduler, tail, functions, pending, budget, finalBudget,
+      regionCall, initialized, streamCall, tailReady, collected, lowered⟩
 
 end Itasca.Runtime.Compiler

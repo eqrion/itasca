@@ -16,7 +16,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std SourceMachine.Float
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_float_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

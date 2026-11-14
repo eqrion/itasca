@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
@@ -74,24 +75,19 @@ theorem callback_branch_forward_success {A : Type} (ops : runtime.platform.Alloc
         ∃ site, site.val = compiler.function.code.val.length +
           (if frame.results = 0#u32 ∨ source = frame.height then 0 else 1) ∧
           fixups.val = frame.fixups.val ++ [site] := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  rw [if_pos reachable] at accepted
-  obtain ⟨⟨result, changed⟩, branchCall, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops compiler after state depth resultType (.Ok ()) accepted with
+  | dead dead observed => simp only [reachable, Bool.true_eq_false] at dead
+  | @branched changed _ _ live branchCall rest =>
+    simp only [branchCallbackObserved, Bool.false_eq_true, ite_false, ite_true] at rest
     have effect := compiler_branch_forward_success ops law compiler frame index depth source lookup position forward
       sourcePosition changed branchCall
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     have observed := compiler_observe ops law { changed with reachable := false } state
     rw [rest, WP.spec_ok] at observed
     dsimp only at observed
     obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed rfl
     obtain ⟨fixups, frames, hole, code, site⟩ := effect
-    exact ⟨hr, fixups, by simpa [hframes] using frames, by simpa [hcode] using hole,
-      by simpa [hcode] using code, site⟩
+    exact ⟨hr, fixups, by simpa only [hframes] using frames, by simpa only [hcode] using hole,
+      by simpa only [hcode] using code, site⟩
 
 theorem compiler_branch_loop_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -130,23 +126,18 @@ theorem callback_branch_loop_success {A : Type} (ops : runtime.platform.Alloc A)
         after.function.code.val = compiler.function.code.val ++
           branchInstructions frame.height source frame.params frame.start_pc ∧
         after.frames = compiler.frames := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at accepted
-  rw [if_pos reachable] at accepted
-  obtain ⟨⟨result, changed⟩, branchCall, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops compiler after state depth resultType (.Ok ()) accepted with
+  | dead dead observed => simp only [reachable, Bool.true_eq_false] at dead
+  | @branched changed _ _ live branchCall rest =>
+    simp only [branchCallbackObserved, Bool.false_eq_true, ite_false, ite_true] at rest
     have effect := compiler_branch_loop_success ops law compiler frame index depth source lookup position kind
       sourcePosition changed branchCall
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     have observed := compiler_observe ops law { changed with reachable := false } state
     rw [rest, WP.spec_ok] at observed
     dsimp only at observed
     obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed rfl
     obtain ⟨code, frames⟩ := effect
-    exact ⟨hr, by simpa [hcode] using code, by simpa [hframes] using frames⟩
+    exact ⟨hr, by simpa only [hcode] using code, by simpa only [hframes] using frames⟩
 
 end Itasca.Runtime.Compiler
 
@@ -256,24 +247,19 @@ theorem callback_branch_if_forward_success {A : Type} (ops : runtime.platform.Al
         ∃ site, site.val = compiler.function.code.val.length +
           (if frame.results = 0#u32 ∨ source = frame.height then 0 else 2) ∧
           fixups.val = frame.fixups.val ++ [site] := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  rw [if_pos reachable] at accepted
-  obtain ⟨⟨result, changed⟩, branchCall, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops compiler after state depth resultType (.Ok ()) accepted with
+  | dead dead observed => simp only [reachable, Bool.true_eq_false] at dead
+  | @branched changed _ _ live branchCall rest =>
+    simp only [branchCallbackObserved, Bool.false_eq_true, ite_false, ite_true] at rest
     have effect := compiler_branch_if_forward_success ops law compiler frame index depth source condition resume
       lookup position forward sourcePosition conditionAt resumePosition fixupsBefore changed branchCall
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     have observed := compiler_observe ops law changed state
     rw [rest, WP.spec_ok] at observed
     dsimp only at observed
     obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed rfl
     obtain ⟨fixups, frames, hole, code, site⟩ := effect
-    exact ⟨fixups, by simpa [hframes] using frames, by simpa [hcode] using hole,
-      by simpa [hcode] using code, site⟩
+    exact ⟨fixups, by simpa only [hframes] using frames, by simpa only [hcode] using hole,
+      by simpa only [hcode] using code, site⟩
 
 theorem callback_branch_if_loop_success {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -292,23 +278,18 @@ theorem callback_branch_if_loop_success {A : Type} (ops : runtime.platform.Alloc
     after.function.code.val = compiler.function.code.val ++
       branchIfInstructions frame.height source frame.params frame.start_pc condition resume ∧
     after.frames = compiler.frames := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at accepted
-  rw [if_pos reachable] at accepted
-  obtain ⟨⟨result, changed⟩, branchCall, rest⟩ := bind_ok_inv _ _ _ accepted
-  cases result with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops compiler after state depth resultType (.Ok ()) accepted with
+  | dead dead observed => simp only [reachable, Bool.true_eq_false] at dead
+  | @branched changed _ _ live branchCall rest =>
+    simp only [branchCallbackObserved, Bool.false_eq_true, ite_false, ite_true] at rest
     have effect := compiler_branch_if_loop_success ops law compiler frame index depth source condition resume
       lookup position kind sourcePosition conditionAt resumePosition changed branchCall
-    simp only [uncurry_apply_pair, core.result.Result.Insts.CoreOpsTry.branch, bind_ok] at rest
     have observed := compiler_observe ops law changed state
     rw [rest, WP.spec_ok] at observed
     dsimp only at observed
     obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := observed rfl
     obtain ⟨code, frames⟩ := effect
-    exact ⟨by simpa [hcode] using code, by simpa [hframes] using frames⟩
+    exact ⟨by simpa only [hcode] using code, by simpa only [hframes] using frames⟩
 
 end Itasca.Runtime.Compiler
 
@@ -376,7 +357,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_indirect_call_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

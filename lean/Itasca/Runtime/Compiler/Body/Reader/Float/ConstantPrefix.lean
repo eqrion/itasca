@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
@@ -41,7 +42,7 @@ theorem reader_prefix_dead_float32_wasm2 {jumpTables : List U32} {data env sourc
   refine ⟨value, post, ?_⟩
   apply post.structured_dead_op ops law invariant dead 67#u16 0#u32 0#u32 (UScalar.cast .U128 value)
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const ops before out.core value = _ at callback
-  simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const, lift, bind_ok] using callback
+  simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const.eq, lift, bind_ok] using callback
 
 theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
     (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
@@ -68,7 +69,7 @@ theorem reader_prefix_dead_float64_wasm2 {jumpTables : List U32} {data env sourc
   refine ⟨value, post, ?_⟩
   apply post.structured_dead_op ops law invariant dead 68#u16 0#u32 0#u32 (UScalar.cast .U128 value)
   change runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const ops before out.core value = _ at callback
-  simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const, lift, bind_ok] using callback
+  simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const.eq, lift, bind_ok] using callback
 
 end Itasca.Runtime.Compiler
 

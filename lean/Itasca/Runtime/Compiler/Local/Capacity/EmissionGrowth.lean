@@ -37,16 +37,6 @@ theorem compiler_observe_code_result {A : Type} (ops : runtime.platform.Alloc A)
   rw [accepted, WP.spec_ok] at frame
   exact congrArg (fun c => c.function.code) frame
 
-theorem compiler_copy_growth {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (dst src count : U32) (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.copy ops before dst src count = .ok (status, after)) :
-    after.function.code.val.length ≤ before.function.code.val.length + 1 := by
-  rcases runtime.compiler.FunctionCompiler.copy.inv ops before after dst src count status accepted with
-    ⟨_, _, same⟩ | ⟨_, _, emitted⟩
-  · subst after
-    exact by omega
-  · exact compiler_emit_growth ops law before after _ status emitted
 
 theorem compiler_pair_code_result {A : Type} (ops : runtime.platform.Alloc A)
     (before after : runtime.compiler.FunctionCompiler A) (a b : U32)

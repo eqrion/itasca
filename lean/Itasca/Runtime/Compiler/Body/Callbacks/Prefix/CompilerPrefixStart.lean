@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
@@ -135,7 +136,7 @@ theorem compiler_function_start_prefix {A : Type} (ops : runtime.platform.Alloc 
   rw [created, WP.spec_ok] at initialSources
   have newCursor : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart
       ⦃ out => out.next_source = 0#usize ⦄ := by
-    simp [runtime.compiler.FunctionCompiler.new, WP.spec_ok]
+    simp [runtime.compiler.FunctionCompiler.new.eq, WP.spec_ok]
   rw [created, WP.spec_ok] at newCursor
   exact CompilerPrefix.initial started types functions returns _ stack retained arms
     (sourceFrame.sources.aligned initialSources) codeBudget controlBudget

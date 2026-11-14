@@ -9,7 +9,6 @@ import Itasca.Visitor.BodyReplay
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 8192
-set_option maxHeartbeats 2000000
 
 /-- Complete Wasm 2 reached-step acceptance from independent source validation
 and source-derived resource bounds. Every opcode family, including dead code,

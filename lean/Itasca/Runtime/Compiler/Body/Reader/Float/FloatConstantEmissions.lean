@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
 import Itasca.Runtime.Compiler.Body.Reader.Stacks.Values
 import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
@@ -204,17 +206,23 @@ theorem callback_float32_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) (value : U32) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const ops compiler state value =
       runtime.compiler.lower.FunctionCompiler.op ops compiler state 65#u16 0#u32 0#u32 (UScalar.cast .U128 value) := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const,lift,bind_ok]
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  split <;> rfl
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f32_const.eq,lift,bind_ok]
+  by_cases live : compiler.reachable = true
+  · rw [runtime.compiler.lower.FunctionCompiler.op.f32_const _ _ _ _ _ _ live,
+      runtime.compiler.lower.FunctionCompiler.op.i32_const _ _ _ _ _ _ live]
+  · simp only [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _
+      (Bool.eq_false_of_not_eq_true live)]
 
 theorem callback_float64_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) (value : U64) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const ops compiler state value =
       runtime.compiler.lower.FunctionCompiler.op ops compiler state 66#u16 0#u32 0#u32 (UScalar.cast .U128 value) := by
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const,lift,bind_ok]
-  unfold runtime.compiler.lower.FunctionCompiler.op
-  split <;> rfl
+  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_f64_const.eq,lift,bind_ok]
+  by_cases live : compiler.reachable = true
+  · rw [runtime.compiler.lower.FunctionCompiler.op.f64_const _ _ _ _ _ _ live,
+      runtime.compiler.lower.FunctionCompiler.op.i64_const _ _ _ _ _ _ live]
+  · simp only [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _
+      (Bool.eq_false_of_not_eq_true live)]
 
 @[step] theorem callback_float32 {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)

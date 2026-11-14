@@ -39,7 +39,238 @@ IMPORT = re.compile(r"^(?:public )?import (?:all )?([\w.«»]+)", re.M)
 THEOREM = re.compile(r"^(?:private |protected )?(?:theorem|lemma) ([\w.«»']+)(.*?)(?::=|\n\s*\|)", re.M | re.S)
 BINDER = re.compile(r"[({]\s*[\w\s']+:")
 TOKEN = re.compile(r"[\w.«»]+")
-UNFOLD_SITE = re.compile(r"\bunfold ([^\n]*)|\b(?:simp|simp only|simpa|simpa only|rw|rewrite|delta|simp_all|dsimp|dsimp only)\s*\[([^\]]*)\]")
+TACTIC_LIST = re.compile(r"\b(?:simp_all|simpa|simp|rw|rewrite|dsimp)\b")
+HEAD_NAME = re.compile(r"[\w.«»]+(?:\.[\w.«»]+)*")
+
+
+def _mask_comments_and_strings(source):
+    """Blank comments and literals while preserving offsets and newlines."""
+    out = list(source)
+    i = 0
+    block_depth = 0
+    while i < len(source):
+        if block_depth:
+            if source.startswith("/-", i):
+                out[i:i + 2] = "  "
+                block_depth += 1
+                i += 2
+            elif source.startswith("-/", i):
+                out[i:i + 2] = "  "
+                block_depth -= 1
+                i += 2
+            else:
+                if source[i] != "\n":
+                    out[i] = " "
+                i += 1
+            continue
+        if source.startswith("--", i):
+            while i < len(source) and source[i] != "\n":
+                out[i] = " "
+                i += 1
+            continue
+        if source.startswith("/-", i):
+            out[i:i + 2] = "  "
+            block_depth = 1
+            i += 2
+            continue
+        if source[i] == '"':
+            out[i] = " "
+            i += 1
+            while i < len(source):
+                if source[i] == "\\" and i + 1 < len(source):
+                    if source[i + 1] != "\n":
+                        out[i + 1] = " "
+                    out[i] = " "
+                    i += 2
+                elif source[i] == '"':
+                    out[i] = " "
+                    i += 1
+                    break
+                else:
+                    if source[i] != "\n":
+                        out[i] = " "
+                    i += 1
+            continue
+        # Mask Lean character literals but leave primed identifiers (x').
+        if source[i] == "'" and i + 1 < len(source):
+            end = i + 2 if source[i + 1] != "\\" else i + 3
+            if end < len(source) and source[end] == "'":
+                for j in range(i, end + 1):
+                    if source[j] != "\n":
+                        out[j] = " "
+                i = end + 1
+                continue
+        i += 1
+    return "".join(out)
+
+
+def _matching_square(source, start):
+    """Return the closing bracket for a list, respecting nested delimiters."""
+    pairs = {"[": "]", "(": ")", "{": "}"}
+    stack = []
+    for i in range(start, len(source)):
+        char = source[i]
+        if char in pairs:
+            stack.append(pairs[char])
+        elif char in pairs.values():
+            if not stack or stack[-1] != char:
+                return None
+            stack.pop()
+            if not stack:
+                return i
+    return None
+
+
+def _split_top_level(items):
+    """Split comma-separated list items without splitting nested terms."""
+    pairs = {"[": "]", "(": ")", "{": "}"}
+    stack = []
+    start = 0
+    result = []
+    for i, char in enumerate(items):
+        if char in pairs:
+            stack.append(pairs[char])
+        elif char in pairs.values():
+            if stack and stack[-1] == char:
+                stack.pop()
+        elif char == "," and not stack:
+            result.append(items[start:i])
+            start = i + 1
+    result.append(items[start:])
+    return result
+
+
+def _skip_tactic_option(source, pos):
+    """Skip supported parenthesized simp/dsimp configuration arguments."""
+    if pos >= len(source) or source[pos] != "(":
+        return pos
+    close = _matching_square(source, pos)
+    if close is None:
+        return pos
+    contents = source[pos + 1:close].lstrip()
+    if re.match(r"(?:config|discharger)\s*:=", contents):
+        return close + 1
+    return pos
+
+
+def _list_item_head(item):
+    item = item.strip()
+    # A negative simp modifier removes this rule; it is not a use of the def.
+    if item.startswith("-"):
+        return None
+    while item[:1] in ("←", "→", "+"):
+        item = item[1:].lstrip()
+    # Parentheses can group a bare rewrite lemma; unwrap only a whole-item group.
+    while item.startswith("(") and item.endswith(")"):
+        close = _matching_square(item, 0)
+        if close != len(item) - 1:
+            break
+        item = item[1:-1].strip()
+        if item.startswith("-"):
+            return None
+        while item[:1] in ("←", "→", "+"):
+            item = item[1:].lstrip()
+    match = HEAD_NAME.match(item)
+    return match.group(0) if match else None
+
+
+def _is_delta_tactic(source, pos):
+    """Accept delta only at a tactic boundary, not as a term identifier."""
+    line_start = source.rfind("\n", 0, pos) + 1
+    prefix = source[line_start:pos].strip()
+    if not prefix:
+        return True
+    if prefix in ("by", "·", "all_goals", "try", "first |", "focus"):
+        return True
+    if re.fullmatch(r"case\s+[\w.«»]+\s*=>", prefix):
+        return True
+    if prefix.endswith("<;>") or prefix.endswith(";"):
+        return True
+    if prefix.endswith("first |") or prefix.endswith("all_goals") or prefix.endswith("try"):
+        return True
+    return False
+
+
+def explicit_tactic_items(source):
+    """Yield (tactic, heads) for actual explicit simp/rw lists and unfold lists.
+
+    For bracket tactics, only each top-level item's head is a definition target;
+    names in that item's arguments are not. `unfold` takes a whitespace list,
+    so all identifiers before `at` are targets.
+    """
+    code = _mask_comments_and_strings(source)
+    events = []
+    for match in TACTIC_LIST.finditer(code):
+        tactic = match.group(0)
+        pos = match.end()
+        while True:
+            while pos < len(code) and code[pos].isspace():
+                pos += 1
+            after_option = _skip_tactic_option(code, pos)
+            if after_option != pos:
+                pos = after_option
+                continue
+            only = re.match(r"only\b", code[pos:])
+            if only:
+                pos += only.end()
+                continue
+            break
+        if pos >= len(code) or code[pos] != "[":
+            continue
+        end = _matching_square(code, pos)
+        if end is None:
+            continue
+        heads = tuple(head for item in _split_top_level(code[pos + 1:end])
+                      if (head := _list_item_head(item)) is not None)
+        events.append((match.start(), tactic, heads))
+    for match in re.finditer(r"\b(?:unfold|delta)\b", code):
+        line_start = code.rfind("\n", 0, match.start()) + 1
+        keyword_column = match.start() - line_start
+        line_end = code.find("\n", match.end())
+        if line_end < 0:
+            line_end = len(code)
+        parts = [code[match.end():line_end]]
+        cursor = line_end
+        while cursor < len(code):
+            next_start = cursor + 1
+            next_end = code.find("\n", next_start)
+            if next_end < 0:
+                next_end = len(code)
+            line = code[next_start:next_end]
+            stripped = line.lstrip(" \t")
+            indent = len(line) - len(stripped)
+            if not stripped or indent <= keyword_column:
+                break
+            if re.match(r"(?:simp_all|simpa|simp|rw|rewrite|dsimp|unfold|delta|exact|apply|rfl|cases|split|constructor|intro|have|let|rcases|obtain|refine|omega|aesop|assumption|subst|change|try|first|all_goals)\b", stripped):
+                break
+            # Continuation lines may contain only additional names/modifiers;
+            # this prevents an indented following tactic from joining the list.
+            if not re.fullmatch(r"(?:[←→+\-]\s*)?[\w.«»]+(?:\.[\w.«»]+)*(?:\s*,?\s*(?:[←→+\-]\s*)?[\w.«»]+(?:\.[\w.«»]+)*)*\s*", stripped):
+                break
+            parts.append(stripped)
+            cursor = next_end
+        clause = " ".join(parts)
+        clause = re.split(r"\bat\b|<;>|;", clause, maxsplit=1)[0].strip()
+        name_list = re.compile(r"[\w.«»]+(?:\.[\w.«»]+)*(?:(?:\s*,\s*|\s+)[\w.«»]+(?:\.[\w.«»]+)*)*")
+        heads = tuple(HEAD_NAME.findall(clause)) if name_list.fullmatch(clause) else ()
+        if heads:
+            events.append((match.start(), match.group(0), heads))
+    for _, tactic, heads in sorted(events):
+        yield tactic, heads
+
+
+def extracted_definitions(funs):
+    """Collect generated Lean definition names, including wrapped headers."""
+    return set(re.findall(r"^(?:@\[[^\]]*\]\s*)*(?:noncomputable\s+)?def\s+([\w.«»]+)", funs, re.M))
+
+
+def extracted_tactic_definitions(source, extracted):
+    """Yield extracted definitions explicitly used as tactic-list heads."""
+    for _, heads in explicit_tactic_items(source):
+        for name in heads:
+            name = name[len("Itasca."):] if name.startswith("Itasca.") else name
+            if name in extracted:
+                yield name
 
 
 def lean_files():
@@ -139,14 +370,11 @@ def compute():
     funs = "\n".join(text for path, text in generated.items()
                      if re.fullmatch(r"Funs(?:Validator|RuntimeCommon|Compiler|Store|Interp|Instantiate)?\.lean",
                                      os.path.basename(path)))
-    extracted = set(re.findall(r"^(?:@\[[^\]]*\]\s*)*(?:noncomputable )?def ([\w.«»]+)", funs, re.M))
+    extracted = extracted_definitions(funs)
     unfold_files = collections.defaultdict(set)
     for p, s in src.items():
-        for m in UNFOLD_SITE.finditer(s):
-            for t in TOKEN.findall(m.group(1) or m.group(2) or ""):
-                t = t[len("Itasca."):] if t.startswith("Itasca.") else t
-                if t in extracted:
-                    unfold_files[t].add(p)
+        for t in extracted_tactic_definitions(s, extracted):
+            unfold_files[t].add(p)
 
     depth = {}
     sys.setrecursionlimit(100000)

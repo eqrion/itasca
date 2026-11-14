@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
@@ -220,7 +221,7 @@ theorem structured_compiler_function_start_prefix {jumpTables : List Aeneas.Std.
   rw [created, WP.spec_ok] at initialSources
   have newCursor : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart
       ⦃ out => out.next_source = 0#usize ⦄ := by
-    simp [runtime.compiler.FunctionCompiler.new, WP.spec_ok]
+    simp [runtime.compiler.FunctionCompiler.new.eq, WP.spec_ok]
   rw [created, WP.spec_ok] at newCursor
   have codeEmpty : started.function.code.val = [] := by
     have length : started.function.code.val.length = 0 := by

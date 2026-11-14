@@ -178,43 +178,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-/-- Observation of one scalar, reference, SIMD, or polymorphic-bottom value
-accepts when its independently computed slot width and reserve request fit. -/
-theorem observe_value_available {A : Type} (ops : runtime.platform.Alloc A)
-    (bound : Nat) (available : Platform.AllocationAvailable ops bound)
-    (budget : runtime.compiler.Budget A) (before : alloc.vec.Vec U32)
-    (height : U32) (ty : Itasca.code.StackType)
-    (fits : before.length < Usize.max) (request : before.length + 1 ≤ bound)
-    (slotsFit : height.val + compilerStackWidth ty ≤ U32.max) :
-    runtime.compiler.observe_value ops budget before height ty ⦃ out =>
-      out.1 = .Ok () ∧ out.2.1 = budget ∧ out.2.2.1.val = before.val ++ [height] ∧
-      out.2.2.2.val = height.val + compilerStackWidth ty ⦄ := by
-  unfold runtime.compiler.observe_value
-  step with budget_push_available ops bound available budget before height fits request
-    as ⟨status,charged,values,accepted,same,appended⟩
-  subst status charged
-  simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-  cases ty with
-  | Bot =>
-    simp only [runtime.compiler.stack_width, bind_ok]
-    step as ⟨added,addSpec⟩
-    cases added with
-    | none => simp [compilerStackWidth] at slotsFit; scalar_tac
-    | some next =>
-      simp [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,compilerStackWidth,appended]
-      scalar_tac
-  | Val type =>
-    simp only [runtime.compiler.stack_width]
-    step with compiler_width type as ⟨width,widthEq⟩
-    step as ⟨added,addSpec⟩
-    cases added with
-    | none =>
-      simp only [compilerStackWidth] at slotsFit
-      scalar_tac
-    | some next =>
-      simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok,WP.spec_ok]
-      exact ⟨trivial,trivial,appended,by simpa [compilerStackWidth,widthEq] using addSpec.2.1⟩
-
 private theorem stack_width_le_two (ty : Itasca.code.StackType) : compilerStackWidth ty ≤ 2 := by
   cases ty with
   | Bot => decide

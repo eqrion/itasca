@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
@@ -143,7 +144,7 @@ theorem compiler_start_jump_table_bounds {A : Type} (ops : runtime.platform.Allo
   have jumpTables := congrArg CompilerTables.jumpTables tables
   change started.function.jump_tables.val = initial.function.jump_tables.val at jumpTables
   have initialEmpty : initial.function.jump_tables.val = [] := by
-    simp only [runtime.compiler.FunctionCompiler.new,Result.ok.injEq] at created
+    simp only [runtime.compiler.FunctionCompiler.new.eq,Result.ok.injEq] at created
     subst initial
     rfl
   intro target member

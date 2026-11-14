@@ -62,3 +62,102 @@ Copy.available strengthening is the only changed shared theorem header.
 
 Full integration and headline audit remain deferred. Branch, else, end and return
 contracts are ongoing work, excluded from this checkpoint's metrics and claims.
+
+## Ongoing control, opcode, and driver consolidation
+
+The working batch now covers branch and table-branch effects, control callbacks,
+opcode-class equations, SIMD, function entry and finish, signature and environment
+capture, collection and code-region scanning, compile entry, submission, and the
+public compiler driver. Existing consumer theorem headers are preserved; newly
+introduced contracts carry the operational premises that their consumers prove.
+Initializer leaf and loop contracts are still being checked. This is a progress
+record, not a completed integration checkpoint.
+
+Focused checks have reduced compiler heartbeat overrides to nine. The remaining
+three outside InitializerTotal are in two unchanged modules whose default-budget
+checks timed out. The six InitializerTotal overrides will be revisited after its
+loop migration. No proof budget has been raised.
+
+The generated-unfold metrics scanner now recognizes actual tactic-list heads,
+including multiline generated declarations, and excludes negative simp entries
+and names used only as arguments to other lemmas. Thirteen Python regression
+tests pass. Re-parsing the previous committed checkpoint with the corrected
+scanner raises its global extra_unfold_files from 1,221 to 1,259; this measurement
+correction is separate from proof improvements.
+
+A current source snapshot has 25 extra compiler unfold files, all in initializer
+functions, and zero layering violations. Compiler source totals 102,071 lines
+versus 97,670 at the preceding checkpoint: the phase-wide line-ratio goal remains
+unmet. Consolidating 99 private scalar-property wrappers into shared opcode groups
+already saved 1,048 lines, with all three affected full-source checks passing.
+Further shared-loop and unused-helper consolidation is ongoing.
+
+Full integration and the headline axiom/statement audit remain pending. The
+current source has been checked with targeted direct Lean invocations using
+cached imports; these do not substitute for the final integrated build.
+
+The control readiness bundles and all seven consumers pass full-source checks.
+Fifteen initializer-helper and driver modules also pass after coordinated artifact
+refresh, followed by all eleven modules affected by the 511-line obsolete-tactic
+cleanup. The bundled global/data loop engine and six exact-header adapters pass
+their combined checks. Lint now passes, including the original high-arity and
+short-module ratchets. Documentation links and whitespace checks pass.
+
+The element leaf owner, its three consumers, and the global/data/element loop
+adapters pass targeted checks. The compact segment-emission owner now passes at
+default budgets after fixing tactic focus around continuation subgoals. Its six
+consumers and segment-loop instantiations are the next targeted batch.
+
+All twelve modules in the combined initializer owner/donor batch pass direct
+checks. InitializerTotal takes 7.4 seconds in this check, compared with 45.3 seconds
+in an earlier targeted run before its loop consolidation; this is a module-level
+observation, not an integrated build benchmark. Its full source also passes with
+all five remaining heartbeat overrides removed. Compiler overrides are now three,
+all in the two unchanged modules noted above. The only remaining duplicate compiler
+unfold owner is initialize.lower (four files, three extra).
+
+The full top-level initializer owner and all four exact-header consumer adapters
+pass staged checks. End/Else property traversals have been consolidated, removing
+196 lines; both complete owners pass at default budgets. A whole-tree suffix
+audit found no missed compiler-generated unfold owners among unqualified tactic
+heads: the remaining suffix matches refer to local terms and handwritten helpers.
+
+After top-level initializer integration, the compiler duplicate-unfold metric is
+zero and three heartbeat overrides remain. Lint passes. Both compacted control
+owners and all seven direct consumers pass actual-source checks. A pre-integration
+snapshot has 101,813 compiler lines (49.2 Lean lines per Rust line), so the
+phase-wide line-ratio acceptance criterion remains unmet. Full build/audit are
+still pending; phase 5 is not marked complete.
+
+The frozen rollout snapshot contains 101,427 compiler lines and a ratio of 49.0.
+For the phase-wide comparison, the actual pre-phase-5 baseline is commit
+0b6edf2e: 97,039 lines and a ratio of 46.9 (the 96,845-line pilot baseline follows
+step 5.1). The remaining increase is 4,388 lines, about 4.5%. Compiler ownership
+and heartbeat targets are met; the line-ratio target is not.
+
+## Validated rollout checkpoint
+
+Full `just prove` passes all 4,097 jobs; `just lint` and `just audit` pass.
+The final integration repairs restore an accidentally removed theorem opening
+line and normalize a vector length before an arithmetic proof. Existing consumer
+statements remain unchanged. Thirteen metrics-scanner regression tests pass.
+
+All 34 headline theorems retain standard axioms only. The audit diff records
+17 declarations moving to lower modules; declaration identities, statement-cone
+line counts/totals, and the axiom report are otherwise identical. There is no
+trust-boundary change and no Rust/generated/specification change in this rollout.
+
+Final compiler measurements: zero duplicate unfold owners, three heartbeat
+overrides (from 191), and 101,428 lines. The pre-phase baseline is 97,039 lines:
++4,389 (+4.5%), with the Lean/Rust ratio rising from 46.9 to 49.0. This last
+phase-wide acceptance gate remains unmet, so phase 5 is not marked complete.
+The proof-health ratchet baseline records the validated improvements; it does
+not waive the separate phase-wide line-ratio requirement.
+
+Cleanup removes unused tactic support and migration-orphan helper adapters after
+whole-repository reference checks. This includes the old PC/local availability
+adapters as well as the separately inventoried branch, source, environment,
+collection, submission, and initializer wrappers. Canonical contracts and the
+headline results remain available; the checked consumer theorem headers are
+preserved. End/Else shared property traversals save 196 lines, and one shared
+mapping proof replaces duplicated semantic initialization arguments.

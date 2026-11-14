@@ -37,14 +37,6 @@ inductive SignatureAt (signatures : Slice runtime.compiler.Signature) :
     step as ⟨out, hout⟩
     simpa [List.getElem?_eq_getElem bound, hindex, hout] using found
 
-@[step] theorem charge_control {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A) :
-    runtime.compiler.Budget.charge ops budget .Controls ⦃ out => True ⦄ := by
-  simp only [runtime.compiler.Budget.charge]
-  split
-  · simp [runtime.compiler.Budget.reject.eq, WP.spec_ok]
-  · step
-
 /-- Instructions emitted before publishing a control frame. -/
 def enterPrefix (reachable : Bool) (kind : Itasca.code.LabelKind) (condition : U32) :
     List runtime.bytecode.Instr :=
@@ -251,19 +243,6 @@ def PublishedSuffix {A : Type} (before after : runtime.compiler.FunctionCompiler
     used.val = before.budget.controls.val + 1 ∧
     maps.val = before.function.controls.val ++ [map] ∧
     frames.val = before.frames.val ++ [frame]
-
-theorem charge_control_exact {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A) :
-    runtime.compiler.Budget.charge ops budget .Controls ⦃ (status, after) =>
-      status = .Ok () → ∃ used, after = {budget with controls := used} ∧
-        used.val = budget.controls.val + 1 ⦄ := by
-  simp only [runtime.compiler.Budget.charge]
-  split
-  · simp only [runtime.compiler.Budget.reject.eq, bind_ok, WP.spec_ok, uncurry_apply_pair,
-      reduceCtorEq, false_implies]
-  · step as ⟨used, added⟩
-    intro _
-    exact ⟨used, rfl, added⟩
 
 /-- Shared success reasoning for every entry prefix: combine the actual charge
 and push calls once, without unfolding the entry body again. -/
@@ -987,17 +966,6 @@ theorem _root_.Itasca.runtime.compiler.control.FunctionCompiler.enter.total {A :
     | Ok condition =>
       have impossible := member condition rfl
       simp only [empty, List.not_mem_nil] at impossible
-
-theorem charge_control_available_exact {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A)
-    (room : budget.controls.val < budget.limits.max_controls.val) :
-    runtime.compiler.Budget.charge ops budget .Controls ⦃ (status, after) =>
-      status = .Ok () ∧ ∃ used, after = {budget with controls := used} ∧
-        used.val = budget.controls.val + 1 ⦄ := by
-  have notFull : ¬budget.controls ≥ budget.limits.max_controls := by scalar_tac
-  simp only [runtime.compiler.Budget.charge, if_neg notFull]
-  step as ⟨used, added⟩
-  exact ⟨used, rfl, added⟩
 
 /-- Independent resources used by control publication and final observation. -/
 structure PublicationDemand {A : Type} (before : runtime.compiler.FunctionCompiler A)

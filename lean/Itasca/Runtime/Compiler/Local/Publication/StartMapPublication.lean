@@ -1,3 +1,8 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.FinishContracts
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect
 import Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication
@@ -57,73 +62,28 @@ theorem close_guarded_map_effect {A : Type} (ops : runtime.platform.Alloc A)
           closed.start_pc = original.start_pc ∧ closed.source_start = original.source_start ∧
           closed.end_pc.val = target.val ∧
           closed.source_end.val = compiler.function.body_start.val + state.pos.val ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, hasIf]
-  step with compiler_patch ops { compiler with frames := rest } guard (.zero condition) old target guardCode as
-    ⟨status, patched, statusEq, patchedEffect⟩
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.total ops law compiler state .Block .Empty
+    ⟨frame, rest, frames, branches,
+      (by
+        intro queried selected
+        have same : queried = guard := Option.some.inj (selected.symm.trans hasIf)
+        subst queried
+        exact ⟨.zero condition, old, guardCode⟩),
+      mapFits, coordinateFits, (by intro body; exact False.elim (nonBody body))⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful ⊢
   subst status
-  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  have patchedBranches := patchedEffect.branch_sites (List.getElem?_eq_some_iff.mp guardCode).1 branches
-  obtain ⟨patchedCode, rfl, codeSet⟩ := patchedEffect
-  step with compiler_fixups_after_if ops _ frame.fixups target 0#usize
-    (by simp) patchedBranches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  have notBody : (match frame.kind with
-      | .Body => (.ok true : Result Bool)
-      | .Block | .Loop | .Then | .Else => .ok false) = .ok false := by
-    cases kind : frame.kind <;> simp_all
-  change WP.spec (Aeneas.Std.bind (match frame.kind with
-    | .Body => (.ok true : Result Bool)
-    | .Block | .Loop | .Then | .Else => .ok false) _) _
-  rw [notBody, bind_ok]
-  simp only [Bool.false_eq_true, ite_false]
-  step with compiler_observe ops law _ state as ⟨out, hout, success⟩
-  obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := hout success
-  refine ⟨hframes, ?_, map, { map with source_end := coordinate, end_pc := pcword }, ?_, ?_, rfl, rfl, ?_, hcoordinate⟩
-  · simpa [hcode, codeSet, BranchKind.instruction] using effect
-  · simp [List.getElem?_eq_getElem mapFits, hmap]
-  · rw [hcontrols, hback]
-    simp [alloc.vec.Vec.set_val_eq]
-  · rw [hpcword]
-    scalar_tac
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops compiler after state .Block .Empty (.Ok ()) called
+  obtain ⟨remaining, reachable, code, original, closed, selected, controls, start, sourceStart, endPc, sourceEnd⟩ :=
+    effect.guarded_success law ⟨frame, rest, target, frames, position, guard, condition, old, hasIf, guardCode, branches, mapFits⟩
+  have exactCode : after.function.code.val = patchCode (compiler.function.code.val.set guard.val (.JumpIfZero condition target)) frame.fixups.val target := by
+    cases kindEq : frame.kind <;> first
+      | exact False.elim (nonBody kindEq)
+      | simpa only [kindEq, List.append_nil] using code
+
+  exact ⟨remaining, exactCode, original, closed, selected, controls, start, sourceStart, endPc, sourceEnd⟩
 
 end Itasca.Runtime.Compiler
 
@@ -381,7 +341,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 private theorem frame_owner_restore (vector : alloc.vec.Vec runtime.compiler.Frame) (index : Usize)
     (value : runtime.compiler.Frame) (restore : runtime.compiler.Frame → alloc.vec.Vec runtime.compiler.Frame)
@@ -410,31 +369,100 @@ private theorem frame_owner_restore (vector : alloc.vec.Vec runtime.compiler.Fra
     rw [← mapped]
     exact List.set_getElem_self (by simpa using bound)
 
-macro "owners_effect " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | have ownerRestore := frame_owner_restore _ _ _ _ $h
-  | metadata_effect $h using $ops, $law)
-macro "owners_close" : tactic => `(tactic|
-  first | rfl | simp_all only [activeControlMaps, compilerOrdinaryMetadata, compilerMetadata,
-    snapshotCompiler,Prod.mk.injEq])
-macro "owners_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (owners_effect $h using $ops, $law; owners_close)
-  | solve | (sources_terminal $h; simp only [Result.ok.injEq,Prod.mk.injEq] at $h:ident; obtain ⟨_, output⟩ := $h; cases output; owners_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | (fail_if_no_progress simp only [Std.uncurry,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame,bind_ok,bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value,called,rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue,secondValue⟩)
-     | skip
-     try owners_effect called using $ops, $law
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | sources_split $h)
+theorem BranchPatch.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {guard status}
+    (effect : BranchPatch ops before after guard status) : activeControlMaps after = activeControlMaps before := by
+  cases guard with
+  | none => rw [effect.2]
+  | some site =>
+    obtain ⟨answer, middle, called, rest⟩ := effect
+    have pc := compiler_pc ops before
+    rw [called, WP.spec_ok] at pc
+    obtain ⟨budget, same⟩ := pc.2.2
+    change middle = {before with budget} at same
+    cases answer with
+    | Err error => rw [rest.2, same]; rfl
+    | Ok target =>
+      rcases compiler_patch_cases ops middle after site target status rest with unchanged | ⟨instruction, code, frame, contents⟩
+      · rw [unchanged, same]; rfl
+      · rw [frame, same]; rfl
+
+theorem BranchJumpCall.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {instruction guard status}
+    (effect : BranchJumpCall ops before after instruction guard status) : activeControlMaps after = activeControlMaps before := by
+  obtain ⟨answer, middle, called, rest⟩ := effect
+  have frame := (runtime.compiler.FunctionCompiler.emit.inv ops before middle instruction answer called).1
+  have head : activeControlMaps middle = activeControlMaps before := by rw [frame]; rfl
+  cases answer with
+  | Err error => rw [rest.2]; exact head
+  | Ok value => exact rest.map_owners.trans head
+
+theorem BranchPublication.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {index conditional copying condition guard status}
+    (effect : BranchPublication ops before after index conditional copying condition guard status) : activeControlMaps after = activeControlMaps before := by
+  obtain ⟨frame, restore, read, rest⟩ := effect
+  have restored := frame_owner_restore _ _ _ _ read
+  split at rest
+  · exact rest.map_owners.trans (restored frame rfl)
+  · obtain ⟨answer, budget, fixups, _, rest⟩ := rest
+    cases answer with
+    | Err error => rw [rest.2]; exact restored _ rfl
+    | Ok value => exact rest.map_owners.trans (restored _ rfl)
+
+theorem BranchCopy.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {index dst src count conditional copying condition guard status}
+    (effect : BranchCopy ops before after index dst src count conditional copying condition guard status) : activeControlMaps after = activeControlMaps before := by
+  unfold BranchCopy at effect
+  split at effect
+  · obtain ⟨answer, middle, called, rest⟩ := effect
+    have frame := (runtime.compiler.FunctionCompiler.copy.inv ops before middle dst src count answer called).frame
+    have head : activeControlMaps middle = activeControlMaps before := by rw [frame]; rfl
+    cases answer with
+    | Err error => rw [rest.2]; exact head
+    | Ok value => exact rest.map_owners.trans head
+  · exact effect.map_owners
+
+theorem BranchTransfer.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {index dst src count conditional condition status}
+    (effect : BranchTransfer ops before after index dst src count conditional condition status) : activeControlMaps after = activeControlMaps before := by
+  dsimp only [BranchTransfer] at effect
+  split at effect
+  · obtain ⟨answer, middle, called, rest⟩ := effect
+    have frame := (runtime.compiler.FunctionCompiler.emit.inv ops before middle _ answer called).1
+    have head : activeControlMaps middle = activeControlMaps before := by rw [frame]; rfl
+    cases answer with
+    | Err error => rw [rest.2]; exact head
+    | Ok value => exact rest.map_owners.trans head
+  · exact effect.map_owners
+
+theorem BranchCondition.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {index dst src count conditional status}
+    (effect : BranchCondition ops before after index dst src count conditional status) : activeControlMaps after = activeControlMaps before := by
+  unfold BranchCondition at effect
+  split at effect
+  · obtain ⟨answer, _, rest⟩ := effect
+    cases answer with
+    | Err error => rw [rest.2]
+    | Ok value => exact rest.map_owners
+  · exact effect.map_owners
+
+theorem BranchSource.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {index frame skip conditional status}
+    (effect : BranchSource ops before after index frame skip conditional status) : activeControlMaps after = activeControlMaps before := by
+  obtain ⟨sum, _, rest⟩ := effect
+  cases sum with
+  | none => rw [rest.2]
+  | some width =>
+    obtain ⟨source, _, rest⟩ := rest
+    cases source with
+    | none => rw [rest.2]
+    | some src => exact rest.map_owners
+
+theorem BranchEffect.map_owners {A : Type} {ops : runtime.platform.Alloc A}
+    {before after : runtime.compiler.FunctionCompiler A} {depth skip conditional status}
+    (effect : BranchEffect ops before after depth skip conditional status) : activeControlMaps after = activeControlMaps before := by
+  obtain ⟨_, _, _, _, _, _, _, _, rest⟩ := effect
+  exact rest.map_owners
 
 /-- Branches change frame flags and fixups while retaining each map owner. -/
 theorem compiler_branch_map_owners {A : Type} (ops : runtime.platform.Alloc A)
@@ -443,9 +471,7 @@ theorem compiler_branch_map_owners {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.branch ops before depth skip conditional = .ok (status,after)) :
     activeControlMaps after = activeControlMaps before := by
-  cases conditional <;>
-    simp only [runtime.compiler.control.FunctionCompiler.branch,Bool.false_eq_true,ite_false,ite_true] at accepted <;>
-    repeat' owners_step accepted using ops, law
+  exact (runtime.compiler.control.FunctionCompiler.branch.inv ops before after depth skip conditional status accepted).map_owners
 
 end Itasca.Runtime.Compiler
 
@@ -561,20 +587,13 @@ theorem compiler_br_map_publication {A : Type} (ops : runtime.platform.Alloc A)
     (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops before state depth types = .ok (.Ok (),after)) :
     ControlMapPublication after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at called
-  split at called
-  · obtain ⟨⟨result,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      have bounds := compiler_branch_map_publication ops law before middle depth 0#u32 false held emitted
-      have cursor := compiler_branch_cursor ops law before middle depth 0#u32 false emitted
-      exact compiler_observe_map_publication ops law {middle with reachable := false} after state
-        (bounds.retained ⟨rfl,le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) rest
-  · exact compiler_observe_map_publication ops law before after state held forward called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_map_publication ops law before after state held forward observed
+  | @branched middle _ _ live branched observed =>
+    have kept := compiler_branch_map_publication ops law before middle depth 0#u32 false held branched
+    have cursor := compiler_branch_cursor ops law before middle depth 0#u32 false branched
+    exact compiler_observe_map_publication ops law {middle with reachable := false} after state
+      (kept.retained ⟨rfl, le_rfl⟩ rfl rfl le_rfl le_rfl) (by simpa only [cursor] using forward) observed
 
 /-- Actual br_if callback retains all control-map publication bounds. -/
 theorem compiler_br_if_map_publication {A : Type} (ops : runtime.platform.Alloc A)
@@ -584,20 +603,13 @@ theorem compiler_br_if_map_publication {A : Type} (ops : runtime.platform.Alloc 
     (held : ControlMapPublication before) (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if ops before state depth types = .ok (.Ok (),after)) :
     ControlMapPublication after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at called
-  split at called
-  · obtain ⟨⟨result,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases result with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      have bounds := compiler_branch_map_publication ops law before middle depth 1#u32 true held emitted
-      have cursor := compiler_branch_cursor ops law before middle depth 1#u32 true emitted
-      exact compiler_observe_map_publication ops law middle after state
-        bounds (by simpa only [cursor] using forward) rest
-  · exact compiler_observe_map_publication ops law before after state held forward called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_map_publication ops law before after state held forward observed
+  | @branched middle _ _ live branched observed =>
+    have kept := compiler_branch_map_publication ops law before middle depth 1#u32 true held branched
+    have cursor := compiler_branch_cursor ops law before middle depth 1#u32 true branched
+    exact compiler_observe_map_publication ops law middle after state
+      kept (by simpa only [cursor] using forward) observed
 
 /-- Actual unreachable callback retains all control-map publication bounds. -/
 theorem compiler_unreachable_map_publication {A : Type} (ops : runtime.platform.Alloc A)
@@ -637,7 +649,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- ELSE changes the current frame's arm and fixups, preserving its map owner. -/
 theorem compiler_else_map_owners {A : Type} (ops : runtime.platform.Alloc A)
@@ -646,9 +657,17 @@ theorem compiler_else_map_owners {A : Type} (ops : runtime.platform.Alloc A)
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else ops before state bt = .ok (status,after)) :
     activeControlMaps after = activeControlMaps before := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' owners_step accepted using ops, law
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state bt status accepted
+  rcases List.eq_nil_or_concat' before.frames.val with empty | ⟨prior, frame, frames⟩
+  · cases effect with
+    | empty noFrames => rfl
+    | selected nonempty subtracted read progress => simp only [empty, List.isEmpty_nil, Bool.true_eq_false] at nonempty
+  · obtain ⟨index, restore, lastIndex, restoreEq, progress⟩ := effect.last_frame frame prior frames
+    obtain ⟨fixups, published⟩ := progress.frames
+    unfold activeControlMaps
+    rw [published, restoreEq, alloc.vec.Vec.set_val_eq]
+    simp only [frames, lastIndex, Std.le_refl, List.set_append_right, tsub_self, List.set_cons_zero,
+      List.map_append, List.map_cons, List.map_nil]
 
 /-- ELSE leaves the complete control-map vector unchanged. -/
 theorem compiler_else_controls_result {A : Type} (ops : runtime.platform.Alloc A)
@@ -657,9 +676,8 @@ theorem compiler_else_controls_result {A : Type} (ops : runtime.platform.Alloc A
     (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else ops before state bt = .ok (status,after)) :
     after.function.controls = before.function.controls := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else at accepted
-  simp only [core.option.Option.take] at accepted
-  repeat' maps_step accepted using ops, law
+  have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_else.inv ops before after state bt status accepted).frame
+  rw [frame]
 
 /-- The actual ELSE callback retains open and already closed map ranges. -/
 theorem compiler_else_map_publication {A : Type} (ops : runtime.platform.Alloc A)
@@ -944,7 +962,8 @@ theorem compiler_finish_publication {A : Type} (ops : runtime.platform.Alloc A)
     (instructions : ∀ (index : Nat) (bound : index < compiler.function.code.length),
       runtime.bytecode.CompiledFunction.instruction_valid compiler.function compiler.function.code.val[index] = .ok true) :
     runtime.compiler.FunctionCompiler.finish ops compiler (.Ok ()) = .ok (.Ok compiler.function,compiler.budget) := by
-  simp [runtime.compiler.FunctionCompiler.finish,alloc.vec.Vec.is_empty,closed,header.well_formed ranges instructions]
+  exact runtime.compiler.FunctionCompiler.finish.available ops compiler closed
+    (header.well_formed ranges instructions)
 
 end Itasca.Runtime.Compiler
 

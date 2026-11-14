@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.SourceMachine.Float.Results
 import Itasca.Runtime.Equations.Bytecode
 import Itasca.Generated.FunsCompiler
@@ -172,22 +173,25 @@ noncomputable def floatLowering {A : Type} (ops : runtime.platform.Alloc A)
           residual
       Result.ok (r1, compiler)
 
-set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
 theorem lower_float_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
     (op : Instruction) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (floatOpcode op) 0#u32 0#u32 0#u128 =
       floatLowering ops compiler state op := by
-  cases op with
-  | unary ty operator => cases ty <;> cases operator <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | binary ty operator => cases ty <;> cases operator <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | compare ty operator => cases ty <;> cases operator <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | convert source target sign => cases source <;> cases target <;> cases sign <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | truncate source target sign saturating => cases source <;> cases target <;> cases sign <;> cases saturating <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | reinterpretFloat source => cases source <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | reinterpretInt source => cases source <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
-  | promote | demote => skip <;> (unfold runtime.compiler.lower.FunctionCompiler.op; rw [if_pos reachable]; rfl)
+  have allowed : (69 ≤ (floatOpcode op).val ∧ (floatOpcode op).val ≤ 196) ∨
+      (256 ≤ (floatOpcode op).val ∧ (floatOpcode op).val ≤ 263) := by
+    cases op with
+    | unary ty operator => cases ty <;> cases operator <;> decide
+    | binary ty operator => cases ty <;> cases operator <;> decide
+    | compare ty operator => cases ty <;> cases operator <;> decide
+    | convert source target sign => cases source <;> cases target <;> cases sign <;> decide
+    | truncate source target sign saturating => cases source <;> cases target <;> cases sign <;> cases saturating <;> decide
+    | reinterpretFloat source => cases source <;> decide
+    | reinterpretInt source => cases source <;> decide
+    | promote | demote => decide
+  exact runtime.compiler.lower.FunctionCompiler.op.scalar ops compiler state (floatOpcode op)
+    0#u32 0#u32 0#u128 reachable allowed
 
 def floatDepth (op : Instruction) : Usize := if op.arity = 2 then 2#usize else 1#usize
 

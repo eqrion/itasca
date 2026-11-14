@@ -1,8 +1,10 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
 
 /-!
 Sections, each formerly its own module: EndDispatchAvailability, EnterAvailability, ScopeAvailability, ReturnAvailability.
@@ -41,56 +43,36 @@ theorem compiler_close_body_available {A : Type} (ops : runtime.platform.Alloc A
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end ops compiler state .Body .Empty ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, noIf]
-  step with compiler_fixups ops { compiler with frames := rest } frame.fixups target 0#usize
-    (by simp) branches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  simp only [kind,bind_ok,Bool.false_eq_true,ite_false]
-  split <;> try simp only [bind_ok,Bool.false_eq_true,ite_false]
-  all_goals try (split <;> simp only [bind_ok,Bool.false_eq_true,ite_false])
-  all_goals
-    change WP.spec (Aeneas.Std.bind (.ok true) _) _
-    rw [bind_ok]
-    simp only [ite_true,Bool.false_eq_true,ite_false,bind_ok]
-    let closed (live : Bool) := {compiler with
-      function := {compiler.function with
-        code := code
-        controls := back {map with source_end := coordinate,end_pc := pcword}}
-      frames := rest
-      reachable := live}
-    have codeLength : code.length = compiler.function.code.length := by
-      simp only [alloc.vec.Vec.length,effect,List.drop_zero,patch_code_length]
-    have closedDemand (live : Bool) : CallbackDemand (closed live) state bound := by
-      refine ⟨?_,?_,demand.sourceCapacity,?_,demand.sourceReserve,demand.coordinate,
-        demand.instruction,demand.operands,demand.slots⟩
-      · simpa only [closed,codeLength] using demand.pc
-      · simpa only [closed,codeLength] using demand.codeCapacity
-      · simpa only [closed,codeLength] using demand.codeReserve
-    first
-    | exact finish_op_available_effect ops bound available (closed true) state (closedDemand true)
-        (.Return frame.height frame.results)
-    | exact finish_op_available_effect ops bound available (closed false) state (closedDemand false)
-        (.Return frame.height 0#u32)
+  have guardSites : ∀ guard, frame.if_pc = some guard →
+      ∃ branch old, compiler.function.code.val[guard.val]? = some (BranchKind.instruction branch old) := by
+    intro guard h
+    rw [noIf] at h
+    contradiction
+  have pcFits : compiler.function.code.length ≤ U32.max := by
+    scalar_tac
+  have space : frame.kind = .Body → compiler.function.code.length < Usize.max ∧
+      compiler.function.source_offsets.length < Usize.max ∧
+      compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max ∧
+      compiler.function.code.length + 1 ≤ bound ∧ compiler.function.source_offsets.length + 1 ≤ bound ∧
+      compiler.budget.instructions.val < compiler.budget.limits.max_instructions.val := by
+    intro _
+    exact ⟨demand.codeCapacity, demand.sourceCapacity, demand.coordinate, demand.codeReserve,
+      demand.sourceReserve, demand.instruction⟩
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.available
+    ops bound available compiler state .Body .Empty
+    ⟨frame, rest, frames, branches, guardSites, mapFits, coordinateFits, pcFits,
+      demand.operands, demand.slots, space⟩)
+  intro out post
+  rcases out with ⟨status, after⟩
+  rcases post with ⟨statusOk, used, budgetEq, usedEq⟩
+  subst status
+  have usedEqOne : used.val = compiler.budget.instructions.val + 1 := by
+    simpa [kind] using usedEq
+  refine ⟨rfl, ?_⟩
+  rw [budgetEq]
+  exact CompilationBudgetEffect.of_counter .instructions compiler.budget used 1
+    (by simp [ChargeCounter.used] at usedEqOne ⊢; omega)
+    (by simp [ChargeCounter.used] at usedEqOne ⊢; omega)
 
 end Itasca.Runtime.Compiler
 
@@ -123,71 +105,37 @@ theorem compiler_close_guarded_scope_available {A : Type} (ops : runtime.platfor
     (slotsFit : compiler.function.local_slots.val + 2*state.vals.length ≤ U32.max) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end ops compiler state .Block .Empty ⦃ out =>
       out.1 = .Ok () ∧ out.2.budget = compiler.budget ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, hasIf]
-  step with compiler_patch ops { compiler with frames := rest } guard (.zero condition) old target guardCode as
-    ⟨status, patched, statusEq, patchedEffect⟩
+  have guardSites : ∀ guard, frame.if_pc = some guard →
+      ∃ branch old, compiler.function.code.val[guard.val]? = some (BranchKind.instruction branch old) := by
+    intro queried h
+    have same : queried = guard := Option.some.inj (h.symm.trans hasIf)
+    subst queried
+    exact ⟨.zero condition, old, by simpa [BranchKind.instruction] using guardCode⟩
+  have pcFits : compiler.function.code.length ≤ U32.max := by
+    scalar_tac
+  have space : frame.kind = .Body → compiler.function.code.length < Usize.max ∧
+      compiler.function.source_offsets.length < Usize.max ∧
+      compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max ∧
+      compiler.function.code.length + 1 ≤ bound ∧ compiler.function.source_offsets.length + 1 ≤ bound ∧
+      compiler.budget.instructions.val < compiler.budget.limits.max_instructions.val := by
+    intro body
+    exact False.elim (nonBody body)
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.available
+    ops bound available compiler state .Block .Empty
+    ⟨frame, rest, frames, branches, guardSites, mapFits, coordinateFits, pcFits, request, slotsFit, space⟩)
+  intro out post
+  rcases out with ⟨status, after⟩
+  rcases post with ⟨statusOk, used, budgetEq, usedEq⟩
   subst status
-  simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  have patchedBranches := patchedEffect.branch_sites (List.getElem?_eq_some_iff.mp guardCode).1 branches
-  obtain ⟨patchedCode, rfl, codeSet⟩ := patchedEffect
-  step with compiler_fixups_after_if ops _ frame.fixups target 0#usize
-    (by simp) patchedBranches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  have notBody : (match frame.kind with
-      | .Body => (.ok true : Result Bool)
-      | .Block | .Loop | .Then | .Else => .ok false) = .ok false := by
-    cases kind : frame.kind <;> simp_all
-  change WP.spec (Aeneas.Std.bind (match frame.kind with
-    | .Body => (.ok true : Result Bool)
-    | .Block | .Loop | .Then | .Else => .ok false) _) _
-  rw [notBody, bind_ok]
-  simp only [Bool.false_eq_true, ite_false]
-  let closed := {compiler with
-    function := {compiler.function with
-      code := code
-      controls := back {map with source_end := coordinate,end_pc := pcword}}
-    frames := rest
-    reachable := scopeExitLive compiler.reachable frame}
-  exact compiler_observe_available_budget ops bound available closed state request slotsFit
+  have countZero : (match frame.kind with | .Body => 1 | _ => 0) = 0 := by
+    cases kindEq : frame.kind <;> simp_all
+  have usedEqOld : used.val = compiler.budget.instructions.val := by
+    simpa [countZero] using usedEq
+  have usedSame : used = compiler.budget.instructions := by
+    apply UScalar.eq_of_val_eq
+    exact usedEqOld
+  rw [budgetEq, usedSame]
+  exact ⟨rfl, rfl⟩
 
 end Itasca.Runtime.Compiler
 
@@ -218,65 +166,36 @@ theorem compiler_close_scope_available {A : Type} (ops : runtime.platform.Alloc 
     (slotsFit : compiler.function.local_slots.val + 2*state.vals.length ≤ U32.max) :
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end ops compiler state .Block .Empty ⦃ out =>
       out.1 = .Ok () ∧ out.2.budget = compiler.budget ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, noIf]
-  step with compiler_fixups ops { compiler with frames := rest } frame.fixups target 0#usize
-    (by simp) branches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  have notBody : (match frame.kind with
-      | .Body => (.ok true : Result Bool)
-      | .Block | .Loop | .Then | .Else => .ok false) = .ok false := by
-    cases kind : frame.kind <;> simp_all
-  change WP.spec (Aeneas.Std.bind (match frame.kind with
-    | .Body => (.ok true : Result Bool)
-    | .Block | .Loop | .Then | .Else => .ok false) _) _
-  rw [notBody, bind_ok]
-  simp only [Bool.false_eq_true, ite_false]
-  let closed := {compiler with
-    function := {compiler.function with
-      code := code
-      controls := back {map with source_end := coordinate,end_pc := pcword}}
-    frames := rest
-    reachable := scopeExitLive compiler.reachable frame}
-  exact compiler_observe_available_budget ops bound available closed state request slotsFit
+  have guardSites : ∀ guard, frame.if_pc = some guard →
+      ∃ branch old, compiler.function.code.val[guard.val]? = some (BranchKind.instruction branch old) := by
+    intro guard h
+    rw [noIf] at h
+    contradiction
+  have pcFits : compiler.function.code.length ≤ U32.max := by
+    scalar_tac
+  have space : frame.kind = .Body → compiler.function.code.length < Usize.max ∧
+      compiler.function.source_offsets.length < Usize.max ∧
+      compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max ∧
+      compiler.function.code.length + 1 ≤ bound ∧ compiler.function.source_offsets.length + 1 ≤ bound ∧
+      compiler.budget.instructions.val < compiler.budget.limits.max_instructions.val := by
+    intro body
+    exact False.elim (nonBody body)
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.available
+    ops bound available compiler state .Block .Empty
+    ⟨frame, rest, frames, branches, guardSites, mapFits, coordinateFits, pcFits, request, slotsFit, space⟩)
+  intro out post
+  rcases out with ⟨status, after⟩
+  rcases post with ⟨statusOk, used, budgetEq, usedEq⟩
+  subst status
+  have countZero : (match frame.kind with | .Body => 1 | _ => 0) = 0 := by
+    cases kindEq : frame.kind <;> simp_all
+  have usedEqOld : used.val = compiler.budget.instructions.val := by
+    simpa [countZero] using usedEq
+  have usedSame : used = compiler.budget.instructions := by
+    apply UScalar.eq_of_val_eq
+    exact usedEqOld
+  rw [budgetEq, usedSame]
+  exact ⟨rfl, rfl⟩
 
 end Itasca.Runtime.Compiler
 
@@ -585,42 +504,15 @@ theorem compiler_return_available {A : Type} (ops : runtime.platform.Alloc A)
     runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return ops compiler state ⦃ out =>
       out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget out.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
-  by_cases live : compiler.reachable = true
-  · rw [if_pos live]
-    have framesBound : 0 < compiler.frames.length := (List.getElem?_eq_some_iff.mp (bodyFrame live)).1
-    step as ⟨frame,hframe⟩
-    have same : frame = body := hframe.trans (List.getElem?_eq_some_iff.mp (bodyFrame live)).2
-    rw [same]
-    have resultFits := height live
-    step as ⟨value,hvalue⟩
-    cases value with
-    | none => simp only at hvalue; omega
-    | some source =>
-      simp only [core.option.Option.ok_or,core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      step with compiler_emit_available_frame ops bound available compiler (.Return source body.results)
-        demand.pc demand.codeCapacity demand.sourceCapacity demand.codeReserve demand.sourceReserve
-        demand.coordinate demand.instruction
-        as ⟨status,emitted,accepted,used,code,sources,frame,usedEq,_,_⟩
-      rw [accepted]
-      simp only [core.result.Result.Insts.CoreOpsTry.branch,bind_ok]
-      have slotsFit : emitted.function.local_slots.val + 2*state.vals.length ≤ U32.max := by
-        rw [frame]; exact demand.slots
-      apply WP.spec_mono (compiler_observe_available_budget ops bound available {emitted with reachable := false}
-        state demand.operands slotsFit)
-      intro out post
-      rw [post.2]
-      have budgetEq : emitted.budget = {compiler.budget with instructions := used} := by rw [frame]
-      change out.1 = .Ok () ∧ CompilationBudgetEffect compiler.budget emitted.budget _
-      rw [budgetEq]
-      exact ⟨post.1,.of_counter .instructions compiler.budget used 1
-        (by simp [ChargeCounter.used]; omega) (by simp [ChargeCounter.used]; omega)⟩
-  · rw [if_neg live]
-    apply WP.spec_mono (compiler_observe_available_budget ops bound available compiler
-      state demand.operands demand.slots)
-    intro out post
-    rw [post.2]
-    exact ⟨post.1,(CompilationBudgetEffect.refl compiler.budget).weaken (by intro counter; omega)⟩
+  apply WP.spec_mono (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.available ops bound available compiler state demand body bodyFrame height)
+  rintro ⟨status, after⟩ ⟨accepted, used, frame, usedEq⟩
+  dsimp only at frame usedEq ⊢
+  rw [frame]
+  refine ⟨accepted, .of_counter .instructions compiler.budget used 1 ?_ ?_⟩
+  · simp only [ChargeCounter.used]
+    split at usedEq <;> scalar_tac
+  · simp only [ChargeCounter.used]
+    split at usedEq <;> scalar_tac
 
 end Itasca.Runtime.Compiler
 

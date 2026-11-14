@@ -1,3 +1,6 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
+import Itasca.Runtime.Compiler.Local.Lowering.Control.ReturnContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Control.UnreachableContracts
 import Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
@@ -86,38 +89,27 @@ theorem compiler_br_table_source_coordinates {A : Type} (ops : runtime.platform.
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
       ops before state fallback types = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at called
-  obtain ⟨⟨result,labeled⟩,labelCalled,rest⟩ := bind_ok_inv _ _ _ called
-  cases result with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    obtain ⟨budget,depths,frame,_⟩ := compiler_table_label_success ops law before labeled state fallback labelCalled
-    have coordinates : SourceCoordinates labeled := by simpa only [SourceCoordinates,frame] using held
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state fallback types (.Ok ()) called with
+  | @live labeled lowered cleared _ _ labelCall live lowerCall clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state fallback (.Ok ()) labelCall).frame
+    have coordinates : SourceCoordinates labeled := by
+      rw [frame]
+      exact held
     have cursor : labeled.next_source = before.next_source := by rw [frame]
-    have active : labeled.function.body_start.val+labeled.next_source.val < labeled.function.body_end.val := by
-      simpa only [frame] using inside
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    split at rest
-    · obtain ⟨⟨result,lowered⟩,lowerCalled,rest⟩ := bind_ok_inv _ _ _ rest
-      cases result with
-      | Err error =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unit =>
-        cases unit
-        obtain ⟨loweredCoordinates,loweredCursor⟩ :=
-          compiler_lower_table_source_coordinates ops law labeled lowered coordinates active lowerCalled
-        simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-        obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-        exact compiler_observe_source_coordinates ops law {lowered with reachable := false,table_depths := cleared} after state
-          (by simpa only [SourceCoordinates] using loweredCoordinates)
-          (by simpa only [loweredCursor,cursor] using forward) observed
-    · obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-      exact compiler_observe_source_coordinates ops law {labeled with table_depths := cleared} after state
-        (by simpa only [SourceCoordinates] using coordinates) (by simpa only [cursor] using forward) observed
+    have active : labeled.function.body_start.val + labeled.next_source.val < labeled.function.body_end.val := by
+      rw [frame]
+      exact inside
+    obtain ⟨loweredCoordinates, loweredCursor⟩ := compiler_lower_table_source_coordinates ops law labeled lowered coordinates active lowerCall
+    exact compiler_observe_source_coordinates ops law {lowered with reachable := false, table_depths := cleared} after state
+      (by simpa only [SourceCoordinates] using loweredCoordinates) (by simpa only [loweredCursor, cursor] using forward) observed
+  | @dead labeled cleared _ _ labelCall dead clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state fallback (.Ok ()) labelCall).frame
+    have coordinates : SourceCoordinates labeled := by
+      rw [frame]
+      exact held
+    have cursor : labeled.next_source = before.next_source := by rw [frame]
+    exact compiler_observe_source_coordinates ops law {labeled with table_depths := cleared} after state
+      (by simpa only [SourceCoordinates] using coordinates) (by simpa only [cursor] using forward) observed
 
 end Itasca.Runtime.Compiler
 
@@ -130,7 +122,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Actual numeric lowering preserves source coordinates through
 its checked descriptor dispatch, independently of source operand typing. -/
@@ -211,7 +202,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Actual SIMD allocation, construction, emission, and observation retain
 ordered source coordinates, including constants, shuffles, and memory lanes. -/
@@ -223,8 +213,16 @@ theorem compiler_simd_source_coordinates {A : Type} (ops : runtime.platform.Allo
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.simd.FunctionCompiler.simd_op ops before state opcode a bits = .ok (.Ok (),after)) :
     SourceCoordinates after := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at called
-  repeat' coordinates_step called using ops, law
+  obtain ⟨staged, instruction, allocated, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits (.Ok ()) called).execution.success
+  have frame := allocated.frame
+  apply compiler_finish_op_source_coordinates ops law staged after state instruction ?_ ?_ ?_ finished
+  · rw [frame]
+    exact held
+  · rw [frame]
+    exact inside
+  · rw [frame]
+    exact forward
 
 /-- The actual ordinary dispatcher preserves coordinates for the entire SIMD
 interval, including its unreachable path. -/
@@ -254,7 +252,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 theorem compiler_branch_source_coordinates_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -266,45 +263,6 @@ theorem compiler_branch_source_coordinates_result {A : Type} (ops : runtime.plat
   intro accepted
   subst status
   exact compiler_branch_source_coordinates ops law before after depth skip conditional held inside called
-
-open Lean Meta Elab Tactic in
-elab "control_coordinates_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  if lhs.getAppFn.constName? = some ``runtime.compiler.control.FunctionCompiler.branch then
-    evalTactic (← `(tactic| have coordinates := compiler_branch_source_coordinates_result $ops $law _ _ _ _ _ _ $h
-      (by coordinates_close) (by coordinates_close)))
-    evalTactic (← `(tactic| have cursor := compiler_branch_cursor_result $ops $law _ _ _ _ _ _ $h))
-    evalTactic (← `(tactic| have stable := compiler_branch_stable_result $ops $law _ _ _ _ _ _ $h))
-    evalTactic (← `(tactic| have metadataEq := stable.metadata))
-  else
-    evalTactic (← `(tactic| coordinates_effect $h using $ops, $law))
-
-macro "control_coordinates_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; coordinates_close)
-  | coordinates_head $h
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (control_coordinates_effect $h using $ops, $law; coordinates_close)
-  | solve | (sources_terminal $h; have output := (Prod.mk.inj (Result.ok.injEq.mp $h)).2; cases output; coordinates_close)
-  | (fail_if_no_progress simp only [Std.uncurry,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame,bind_ok,bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value,called,rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue,secondValue⟩)
-     | skip
-     try control_coordinates_effect called using $ops, $law
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | sources_split $h)
 
 /-- The actual unreachable callback retains source-coordinate publication bounds. -/
 theorem compiler_unreachable_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
@@ -332,8 +290,13 @@ theorem compiler_return_source_coordinates {A : Type} (ops : runtime.platform.Al
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return
       ops before state = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return at called
-  repeat' control_coordinates_step called using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_return.inv ops before after state (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_source_coordinates ops law before after state held forward observed
+  | @emitted frame source middle _ _ live selected position emitted observed =>
+    have coordinates := compiler_emit_source_coordinates ops law before middle (.Return source frame.results) held inside emitted
+    have cursor := compiler_emit_cursor ops before middle (.Return source frame.results) (.Ok ()) emitted
+    exact compiler_observe_source_coordinates ops law {middle with reachable := false} after state coordinates
+      (by simpa only [cursor] using forward) observed
 
 /-- The actual br callback retains source-coordinate publication bounds. -/
 theorem compiler_br_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
@@ -344,8 +307,13 @@ theorem compiler_br_source_coordinates {A : Type} (ops : runtime.platform.Alloc 
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br
       ops before state depth resultType = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at called
-  repeat' control_coordinates_step called using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth resultType (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_source_coordinates ops law before after state held forward observed
+  | @branched middle _ _ live branched observed =>
+    have kept := compiler_branch_source_coordinates ops law before middle depth 0#u32 false held inside branched
+    have cursor := compiler_branch_cursor ops law before middle depth 0#u32 false branched
+    exact compiler_observe_source_coordinates ops law {middle with reachable := false} after state
+      kept (by simpa only [cursor] using forward) observed
 
 /-- The actual br_if callback retains source-coordinate publication bounds. -/
 theorem compiler_br_if_source_coordinates {A : Type} (ops : runtime.platform.Alloc A)
@@ -356,8 +324,13 @@ theorem compiler_br_if_source_coordinates {A : Type} (ops : runtime.platform.All
     (forward : before.next_source.val ≤ state.pos.val)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if
       ops before state depth resultType = .ok (.Ok (),after)) : SourceCoordinates after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at called
-  repeat' control_coordinates_step called using ops, law
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth resultType (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_source_coordinates ops law before after state held forward observed
+  | @branched middle _ _ live branched observed =>
+    have kept := compiler_branch_source_coordinates ops law before middle depth 1#u32 true held inside branched
+    have cursor := compiler_branch_cursor ops law before middle depth 1#u32 true branched
+    exact compiler_observe_source_coordinates ops law middle after state
+      kept (by simpa only [cursor] using forward) observed
 
 end Itasca.Runtime.Compiler
 
@@ -370,7 +343,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 private def ScalarTargetEffects {A : Type} (ops : runtime.platform.Alloc A) (opcode : U16) : Prop :=
   ∀ (before after : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) (a b : U32) (bits : U128),
@@ -378,500 +350,129 @@ private def ScalarTargetEffects {A : Type} (ops : runtime.platform.Alloc A) (opc
       after.function.jump_tables.val = before.function.jump_tables.val ∧
       before.function.code.val.length ≤ after.function.code.val.length
 
-private theorem scalar_target_effects_0 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 0#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_1 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 1#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_16 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 16#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_17 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 17#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_26 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 26#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_27 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 27#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_28 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 28#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_32 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 32#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_33 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 33#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_34 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 34#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_35 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 35#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_36 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 36#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_37 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 37#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_38 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 38#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_63 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 63#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_64 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 64#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_65 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 65#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_66 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 66#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_67 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 67#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_68 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 68#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_208 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 208#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_209 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 209#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_210 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 210#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_264 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 264#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_265 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 265#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_266 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 266#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_267 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 267#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_268 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 268#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_269 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 269#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_270 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 270#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_271 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 271#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_272 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 272#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
-
-private theorem scalar_target_effects_273 {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) : ScalarTargetEffects ops 273#u16 := by
-  intro before after state a b bits called
-  by_cases live : before.reachable = true
-  · constructor
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
-    · unfold runtime.compiler.lower.FunctionCompiler.op at called
-      rw [if_pos live] at called
-      repeat' first | coordinates_head called | code_mono_step called using ops, law
-  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
-    exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
-      compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_0 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [0#u16, 1#u16, 16#u16, 17#u16, 26#u16, 27#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.unreachable ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.nop ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.call ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.call_indirect ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.drop ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.select ops before state 27#u16 a b bits live (by decide)] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_1 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [28#u16, 32#u16, 33#u16, 34#u16, 35#u16, 36#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.select ops before state 28#u16 a b bits live (by decide)] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.local_get ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.local_set ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.local_tee ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.global_get ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.global_set ops before state a b bits live] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_2 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [37#u16, 38#u16, 63#u16, 64#u16, 65#u16, 66#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_get ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_set ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.memory_size ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.memory_grow ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.i32_const ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.i64_const ops before state a b bits live] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_3 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [67#u16, 68#u16, 208#u16, 209#u16, 210#u16, 264#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.f32_const ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.f64_const ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.ref_null ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.ref_is_null ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.ref_func ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.memory_init ops before state a b bits live] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_4 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [265#u16, 266#u16, 267#u16, 268#u16, 269#u16, 270#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl | rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.data_drop ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.memory_copy ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.memory_fill ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_init ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.elem_drop ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_copy ops before state a b bits live] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
+private theorem scalar_target_group_5 {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (opcode : U16)
+    (supported : opcode ∈ [271#u16, 272#u16, 273#u16]) : ScalarTargetEffects ops opcode := by
+  simp only [List.mem_cons,List.not_mem_nil,or_false] at supported
+  rcases supported with rfl | rfl | rfl
+  all_goals
+    intro before after state a b bits called
+    by_cases live : before.reachable = true
+    · first
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_grow ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_size ops before state a b bits live] at called
+      | rw [runtime.compiler.lower.FunctionCompiler.op.table_fill ops before state a b bits live] at called
+      constructor
+      · repeat' first | coordinates_head called | auxiliary_tables_step called using ops, law
+      · repeat' first | coordinates_head called | code_mono_step called using ops, law
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at called
+      exact ⟨congrArg CompilerTables.jumpTables (compiler_observe_tables ops law before after state (.Ok ()) called),
+        compiler_observe_code_mono ops law before after state (.Ok ()) called⟩
 
 /-- Nonnumeric ordinary lowering preserves the complete jump table and grows
 code monotonically, independently of every immediate and source stack. -/
@@ -884,39 +485,14 @@ theorem compiler_scalar_target_effects {A : Type} (ops : runtime.platform.Alloc 
       before.function.code.val.length ≤ after.function.code.val.length := by
   simp only [sourceCoordinateScalarOpcodes,List.mem_cons,List.not_mem_nil,or_false] at supported
   rcases supported with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-  · exact scalar_target_effects_0 ops law before after state a b bits called
-  · exact scalar_target_effects_1 ops law before after state a b bits called
-  · exact scalar_target_effects_16 ops law before after state a b bits called
-  · exact scalar_target_effects_17 ops law before after state a b bits called
-  · exact scalar_target_effects_26 ops law before after state a b bits called
-  · exact scalar_target_effects_27 ops law before after state a b bits called
-  · exact scalar_target_effects_28 ops law before after state a b bits called
-  · exact scalar_target_effects_32 ops law before after state a b bits called
-  · exact scalar_target_effects_33 ops law before after state a b bits called
-  · exact scalar_target_effects_34 ops law before after state a b bits called
-  · exact scalar_target_effects_35 ops law before after state a b bits called
-  · exact scalar_target_effects_36 ops law before after state a b bits called
-  · exact scalar_target_effects_37 ops law before after state a b bits called
-  · exact scalar_target_effects_38 ops law before after state a b bits called
-  · exact scalar_target_effects_63 ops law before after state a b bits called
-  · exact scalar_target_effects_64 ops law before after state a b bits called
-  · exact scalar_target_effects_65 ops law before after state a b bits called
-  · exact scalar_target_effects_66 ops law before after state a b bits called
-  · exact scalar_target_effects_67 ops law before after state a b bits called
-  · exact scalar_target_effects_68 ops law before after state a b bits called
-  · exact scalar_target_effects_208 ops law before after state a b bits called
-  · exact scalar_target_effects_209 ops law before after state a b bits called
-  · exact scalar_target_effects_210 ops law before after state a b bits called
-  · exact scalar_target_effects_264 ops law before after state a b bits called
-  · exact scalar_target_effects_265 ops law before after state a b bits called
-  · exact scalar_target_effects_266 ops law before after state a b bits called
-  · exact scalar_target_effects_267 ops law before after state a b bits called
-  · exact scalar_target_effects_268 ops law before after state a b bits called
-  · exact scalar_target_effects_269 ops law before after state a b bits called
-  · exact scalar_target_effects_270 ops law before after state a b bits called
-  · exact scalar_target_effects_271 ops law before after state a b bits called
-  · exact scalar_target_effects_272 ops law before after state a b bits called
-  · exact scalar_target_effects_273 ops law before after state a b bits called
+  all_goals
+    first
+    | exact scalar_target_group_0 ops law _ (by decide) before after state a b bits called
+    | exact scalar_target_group_1 ops law _ (by decide) before after state a b bits called
+    | exact scalar_target_group_2 ops law _ (by decide) before after state a b bits called
+    | exact scalar_target_group_3 ops law _ (by decide) before after state a b bits called
+    | exact scalar_target_group_4 ops law _ (by decide) before after state a b bits called
+    | exact scalar_target_group_5 ops law _ (by decide) before after state a b bits called
 
 end Itasca.Runtime.Compiler
 

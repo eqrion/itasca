@@ -1,3 +1,5 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
 import Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix
 import Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates
 import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
@@ -24,7 +26,6 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca.ResultFacts
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
 
 /-- Ordinary metadata retention preserves all previously recorded result regions. -/
 theorem CompilerOrdinaryStable.exit_slots {A : Type} {before after : runtime.compiler.FunctionCompiler A}
@@ -311,20 +312,12 @@ theorem compiler_br_callback_exit_slots {A : Type} (ops : runtime.platform.Alloc
       FrameExitSlotBounds middle)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops before state depth types = .ok (.Ok (),after)) :
     FrameExitSlotBounds after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at called
-  split at called
-  · rename_i live
-    obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      have checked := branch live middle emitted
-      apply compiler_observe_exit_slots ops law {middle with reachable := false} after state _ rest
-      exact checked.retained rfl le_rfl
-  · exact compiler_observe_exit_slots ops law before after state held called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_exit_slots ops law before after state held observed
+  | @branched middle _ _ live emitted observed =>
+    have checked := branch live middle emitted
+    apply compiler_observe_exit_slots ops law {middle with reachable := false} after state _ observed
+    exact checked.retained rfl le_rfl
 
 /-- Lift source-derived conditional branch checking through actual br_if and
 its stack observation, including a dead prefix that emits no branch. -/
@@ -337,18 +330,10 @@ theorem compiler_br_if_callback_exit_slots {A : Type} (ops : runtime.platform.Al
       FrameExitSlotBounds middle)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if ops before state depth types = .ok (.Ok (),after)) :
     FrameExitSlotBounds after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at called
-  split at called
-  · rename_i live
-    obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      exact compiler_observe_exit_slots ops law middle after state (branch live middle emitted) rest
-  · exact compiler_observe_exit_slots ops law before after state held called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_exit_slots ops law before after state held observed
+  | @branched middle _ _ live emitted observed =>
+    exact compiler_observe_exit_slots ops law middle after state (branch live middle emitted) observed
 
 end Itasca.Runtime.Compiler
 
@@ -375,23 +360,15 @@ theorem compiler_br_callback_open_instructions {A : Type} (ops : runtime.platfor
       CompilerInstructionPrefix middle)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br ops before state depth types = .ok (.Ok (),after)) :
     CompilerInstructionPrefix after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br at called
-  split at called
-  · rename_i live
-    obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      have checked := branch live middle emitted
-      apply compiler_observe_open_instructions ops law {middle with reachable := false} after state _ rest
-      have owners : PendingInstructionSite {middle with reachable := false} = PendingInstructionSite middle := by
-        funext index
-        rfl
-      simpa only [CompilerInstructionPrefix,owners] using checked
-  · exact compiler_observe_open_instructions ops law before after state held called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_open_instructions ops law before after state held observed
+  | @branched middle _ _ live emitted observed =>
+    have checked := branch live middle emitted
+    apply compiler_observe_open_instructions ops law {middle with reachable := false} after state _ observed
+    have owners : PendingInstructionSite {middle with reachable := false} = PendingInstructionSite middle := by
+      funext index
+      rfl
+    simpa only [CompilerInstructionPrefix, owners] using checked
 
 /-- Lift source-derived conditional branch checking through actual br_if and
 its stack observation, including a dead prefix that emits no branch. -/
@@ -404,18 +381,10 @@ theorem compiler_br_if_callback_open_instructions {A : Type} (ops : runtime.plat
       CompilerInstructionPrefix middle)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if ops before state depth types = .ok (.Ok (),after)) :
     CompilerInstructionPrefix after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if at called
-  split at called
-  · rename_i live
-    obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ called
-    cases status with
-    | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-    | Ok unit =>
-      cases unit
-      simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-      exact compiler_observe_open_instructions ops law middle after state (branch live middle emitted) rest
-  · exact compiler_observe_open_instructions ops law before after state held called
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv ops before after state depth types (.Ok ()) called with
+  | dead dead observed => exact compiler_observe_open_instructions ops law before after state held observed
+  | @branched middle _ _ live emitted observed =>
+    exact compiler_observe_open_instructions ops law middle after state (branch live middle emitted) observed
 
 /-- Every ordinary dead opcode performs only observation, regardless of its
 immediates or numeric/reference/SIMD family. -/
@@ -570,7 +539,7 @@ theorem compiler_nop_drop_open_instructions {A : Type} (ops : runtime.platform.A
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   have dispatch : runtime.compiler.lower.FunctionCompiler.op ops before state
       (if drop then 26#u16 else 1#u16) 0#u32 0#u32 0#u128 = runtime.compiler.FunctionCompiler.observe ops before state := by
-    cases drop <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> split <;> rfl
+    exact lower_empty_eq ops before state drop
   rw [dispatch] at called
   exact ⟨compiler_observe_open_instructions ops law before after state held called,
     compiler_observe_exit_slots ops law before after state exits called⟩
@@ -684,33 +653,15 @@ theorem compiler_br_table_callback_exit_slots {A : Type} (ops : runtime.platform
       FrameExitSlotBounds lowered)
     (called : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
       ops before state fallback types = .ok (.Ok (),after)) : FrameExitSlotBounds after := by
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table at called
-  obtain ⟨⟨result,labeled⟩,labelCalled,rest⟩ := bind_ok_inv _ _ _ called
-  cases result with
-  | Err error =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok unit =>
-    cases unit
-    have checked := compiler_table_label_exit_slots ops law before labeled state fallback held labelCalled
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    split at rest
-    · rename_i live
-      obtain ⟨⟨result,lowered⟩,lowerCalled,rest⟩ := bind_ok_inv _ _ _ rest
-      cases result with
-      | Err error =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-      | Ok unit =>
-        cases unit
-        have loweredChecked := lower labeled labelCalled live lowered lowerCalled
-        simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-        obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-        exact compiler_observe_exit_slots ops law {lowered with reachable := false,table_depths := cleared}
-          after state (loweredChecked.retained rfl le_rfl) observed
-    · obtain ⟨cleared,_,observed⟩ := bind_ok_inv _ _ _ rest
-      exact compiler_observe_exit_slots ops law {labeled with table_depths := cleared}
-        after state (checked.retained rfl le_rfl) observed
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state fallback types (.Ok ()) called with
+  | @live labeled lowered cleared _ _ labelCall live lowerCall clearCall observed =>
+    have checked := lower labeled labelCall live lowered lowerCall
+    exact compiler_observe_exit_slots ops law {lowered with reachable := false, table_depths := cleared}
+      after state (checked.retained rfl le_rfl) observed
+  | @dead labeled cleared _ _ labelCall dead clearCall observed =>
+    have checked := compiler_table_label_exit_slots ops law before labeled state fallback held labelCall
+    exact compiler_observe_exit_slots ops law {labeled with table_depths := cleared}
+      after state (checked.retained rfl le_rfl) observed
 
 end Itasca.Runtime.Compiler
 

@@ -82,7 +82,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- All ordered arms resolve under one final completion plan. Each target is a
@@ -163,7 +162,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 /-- Successful actual lowering supplies the complete retained-table certificate

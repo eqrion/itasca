@@ -1,4 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
@@ -14,7 +15,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ out =>
       ∃ word, out = .Ok word ∧ word.val = compiler.function.local_slots.val +
         stackWords (values.take (values.length - depth.val)) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.operand
+  rw [runtime.compiler.FunctionCompiler.operand.eq]
   have length := observed.length
   step with operand_at compiler.before.deref depth positive (by simpa [alloc.vec.Vec.deref, length] using fits)
     as ⟨out, exactValue⟩
@@ -44,7 +45,6 @@ open Aeneas Aeneas.Std
 
 
 set_option maxRecDepth 4096 in
-set_option maxHeartbeats 1000000 in
 @[step] theorem compiler_select_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (values : List Itasca.code.StackType) (typed : Bool)

@@ -30,7 +30,6 @@ Main declarations: `StructuredReaderCompilerStateWasm2.control_total`. A direct 
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
-set_option maxHeartbeats 2000000
 
 theorem StructuredReaderCompilerStateWasm2.control_total {A}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)

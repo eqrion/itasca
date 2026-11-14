@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.TableBranchContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
@@ -24,8 +25,31 @@ theorem compiler_table_branch_growth {A : Type} (ops : runtime.platform.Alloc A)
     (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
     (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
     after.function.code.val.length ≤ before.function.code.val.length + 2 := by
-  unfold runtime.compiler.control.FunctionCompiler.table_branch at accepted
-  repeat' growth_control_step accepted using ops, law
+  obtain ⟨answer, current, called, rest⟩ :=
+    runtime.compiler.control.FunctionCompiler.table_branch.inv ops before after index status accepted
+  have pc := compiler_pc ops before
+  rw [called, WP.spec_ok] at pc
+  obtain ⟨budget, same⟩ := pc.2.2
+  change current = {before with budget} at same
+  subst current
+  cases answer with
+  | Err error =>
+    obtain ⟨_, same⟩ := rest
+    rw [same]
+    change before.function.code.val.length ≤ before.function.code.val.length + 2
+    omega
+  | Ok target =>
+    obtain ⟨answer, budget, table, _, rest⟩ := rest
+    cases answer with
+    | Err error =>
+      obtain ⟨_, same⟩ := rest
+      rw [same]
+      change before.function.code.val.length ≤ before.function.code.val.length + 2
+      omega
+    | Ok value =>
+      cases value
+      obtain ⟨depth, _, branch⟩ := rest
+      exact ((runtime.compiler.control.FunctionCompiler.branch.inv ops _ after depth 1#u32 false status branch).code_bound law).2
 
 end Itasca.Runtime.Compiler
 
@@ -180,19 +204,6 @@ section
 These lemmas do not assume a successful callback or compilation trace. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-/-- A remaining instruction budget excludes both resource rejection and checked
-arithmetic failure for the actual charge operation. -/
-theorem charge_instruction_available {A : Type} (ops : runtime.platform.Alloc A)
-    (budget : runtime.compiler.Budget A)
-    (room : budget.instructions.val < budget.limits.max_instructions.val) :
-    runtime.compiler.Budget.charge ops budget .Instructions ⦃ out =>
-      out.1 = .Ok () ∧ out.2.instructions.val = budget.instructions.val + 1 ∧
-      out.2.limits = budget.limits ∧ out.2.error = budget.error ⦄ := by
-  have notFull : ¬ budget.instructions ≥ budget.limits.max_instructions := by scalar_tac
-  simp only [runtime.compiler.Budget.charge,notFull,↓reduceIte]
-  step as ⟨used,increment⟩
-  exact increment
 
 end Itasca.Runtime.Compiler
 

@@ -21,7 +21,6 @@ Main declarations: `compiler_numeric_ordinary_result` and `compiler_numeric_capa
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std SourceMachine.Numeric
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 theorem compiler_numeric_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)

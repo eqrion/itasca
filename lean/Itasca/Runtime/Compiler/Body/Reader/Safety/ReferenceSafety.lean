@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSafety
@@ -322,13 +323,13 @@ theorem compiler_reader_ref_null_total {A} (ops : runtime.platform.Alloc A)
   · exact WP.spec_mono (code.read_ref_null.total st data shape capacity) (by simp)
   · intro state value read
     cases value
-    · simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-        runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,
+    · simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_ref_null.eq,
+        runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null.eq,bind_ok,
         Bool.false_eq_true,↓reduceIte,statefulOpcode] using
         compiler_stateful_total ops law compiler state (.refNull .FUNCREF) 0#u32 0#u32
           ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
-    · simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor,
-        runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null,bind_ok,
+    · simpa only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.project_on_ref_null.eq,
+        runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_ref_null.eq,bind_ok,
         Bool.false_eq_true,↓reduceIte,statefulOpcode] using
         compiler_stateful_total ops law compiler state (.refNull .EXTERNREF) 1#u32 0#u32
           ready.pairFits ready.codeFits ready.sourceFits ready.coordinateFits
