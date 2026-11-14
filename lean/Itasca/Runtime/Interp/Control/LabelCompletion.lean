@@ -1,5 +1,5 @@
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.SourceMachine.Sim.Step
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.SourceMachine.Sim.Host
 
 namespace Itasca.Runtime.Interp
 open Aeneas Aeneas.Std

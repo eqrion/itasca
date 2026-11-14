@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.NumericSafety
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemorySafety
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 
 /-!
@@ -11,7 +11,6 @@ Main declarations: `compiler_reader_numeric_dispatch_total` and `compiler_reader
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
-set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
 
 private theorem numeric_byte_partition (opcode : U8) (lower : 69 ≤ opcode.val)

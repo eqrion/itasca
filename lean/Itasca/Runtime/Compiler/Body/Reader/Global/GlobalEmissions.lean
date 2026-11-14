@@ -1,9 +1,95 @@
+import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Body.Reader.Local.Wasm2Local
-import Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEffects
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Emission.CoreLoweringEffects
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
+
+/-!
+Sections, each formerly its own module: GlobalEffects, GlobalEmissions.
+-/
+
+/-! ## GlobalEffects -/
+
+section
+
+/-!
+Successful global reads return the declared global type and append exactly that concrete operand to the physical validator stack.
+
+Main declarations: `reader_global_get_effect` and `reader_global_set_effect`. A direct consumer is `Compiler.Body.Reader.Acceptance.ReachedSimpleAcceptance`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+/-- Successful global reads return the declared global type and append exactly
+that concrete operand to the physical validator stack. -/
+theorem reader_global_get_effect (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (index : U32) (capacity : st.vals.val.length < Usize.max)
+    (accepted : code.read_global_get st data env = .ok (.Ok index, out)) :
+    ∃ ty : wasm_types.GlobalType, env.global_types.val[index.val]? = some ty ∧
+      out.vals.val = st.vals.val ++ [.Val ty.valtype] := by
+  obtain ⟨⟨result, state⟩, read, values, controls, post⟩ := WP.spec_imp_exists (code.take_global.spec st data env)
+  dsimp only at values controls post
+  cases result with
+  | Err error =>
+    simp [code.read_global_get, read, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
+  | Ok pair =>
+    obtain ⟨idx, ty⟩ := pair
+    obtain ⟨_, bound, lookup⟩ := post
+    obtain ⟨next, pushed, nextValues, _, _⟩ := WP.spec_imp_exists
+      (code.push_val.spec state (.Val ty.valtype) (by simpa [values] using capacity))
+    simp [code.read_global_get, read, core.result.Result.Insts.CoreOpsTry.branch,
+      pushed, bind_ok, Result.ok.injEq, Prod.mk.injEq, core.result.Result.Ok.injEq] at accepted
+    obtain ⟨rfl, rfl⟩ := accepted
+    exact ⟨ty, by simpa [List.getElem?_eq_getElem bound] using congrArg some lookup,
+      by simpa [values] using nextValues⟩
+
+/-- A live, concrete global write consumes exactly the global's declared type. -/
+theorem reader_global_set_effect (st out : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (index : U32) (outer segment : List code.StackType)
+    (values : st.vals.val = outer ++ segment) (base : (Control.base st).val = outer.length)
+    (monomorphic : Control.polymorphic st = false) (known : ConcreteStack segment)
+    (accepted : code.read_global_set st data env = .ok (.Ok index, out)) :
+    ∃ ty : wasm_types.GlobalType, env.global_types.val[index.val]? = some ty ∧ ty.mutability = .Var ∧
+      st.vals.val = out.vals.val ++ [.Val ty.valtype] := by
+  obtain ⟨⟨result, state⟩, read, stateValues, controls, post⟩ := WP.spec_imp_exists (code.take_global.spec st data env)
+  dsimp only at stateValues controls post
+  cases result with
+  | Err error =>
+    simp [code.read_global_set, read, core.result.Result.Insts.CoreOpsTry.branch,
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
+  | Ok pair =>
+    obtain ⟨idx, ty⟩ := pair
+    obtain ⟨_, bound, lookup⟩ := post
+    cases mutable : ty.mutability with
+    | Const =>
+      simp [code.read_global_set, read, mutable, core.result.Result.Insts.CoreOpsTry.branch] at accepted
+    | Var =>
+      obtain ⟨⟨popResult, next⟩, popped, _, _, rest, nextValues, popEffect⟩ := WP.spec_imp_exists
+        (code.pop_with_type.segment state outer segment ty.valtype (by simpa [stateValues] using values)
+          (by simpa [Control.base, controls] using base))
+      dsimp only at nextValues popEffect
+      cases popResult with
+      | Err error =>
+        simp [code.read_global_set, read, popped, mutable, core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at accepted
+      | Ok raw =>
+        have poly : Control.polymorphic state = false := by simpa [Control.polymorphic, controls] using monomorphic
+        rw [poly] at popEffect
+        have segmentShape := typed_pop_exact known popEffect
+        simp [code.read_global_set, read, popped, mutable, core.result.Result.Insts.CoreOpsTry.branch] at accepted
+        obtain ⟨rfl, rfl⟩ := accepted
+        exact ⟨ty, by simpa [List.getElem?_eq_getElem bound] using congrArg some lookup, mutable,
+          by simp [values, nextValues, segmentShape, List.append_assoc]⟩
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## GlobalEmissions -/
+
+section
 
 /-!
 Global get/set reader inversion and compiler emission, with source global types retained.
@@ -16,7 +102,7 @@ section
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 theorem reader_global_get_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
@@ -40,7 +126,7 @@ theorem reader_global_get_wasm2 {data env locals index st}
   exact ⟨idx, values, callback, read, source⟩
 
 theorem reader_global_set_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_GLOBAL_SET before =
@@ -74,7 +160,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -88,7 +174,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType),
       env.global_types.val[index.val]? = some ty ∧
@@ -121,7 +207,7 @@ theorem reader_emit_global_get_wasm2 {data env locals typeIndex st}
   exact ⟨ordinary, sources, cursor, index, ty, values, found, post, emitted,
     ⟨lower, SourceStack.of_map (types ++ [ty.valtype]) postConcrete (by simp)⟩, emission⟩
 theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
-    (p : Wasm2.Pending data env .Wasm2 locals typeIndex st) {A : Type}
+    (p : Wasm2.Pending data env locals typeIndex st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context) (contextLocals : ctx.locals = locals)
@@ -135,7 +221,7 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx typeIndex .Wasm2 code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
+      st data env ctx typeIndex code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
     (∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType) (front : List valtype),
@@ -177,5 +263,7 @@ theorem reader_emit_global_set_wasm2 {data env locals typeIndex st}
     emitted, ⟨lower, SourceStack.of_map types concrete rfl⟩, emission⟩
 
 end Itasca.Runtime.Compiler
+
+end
 
 end

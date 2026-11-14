@@ -32,7 +32,7 @@ pub enum OpError {
     UnknownTable,
     UnknownData,
     UnknownElement,
-    /// A function signature exceeds the selected profile's result limit.
+    /// A function signature exceeds the implementation result limit.
     TooManyResults,
     TooManyParams,
     /// An instruction's reserved zero byte is nonzero.
@@ -88,12 +88,9 @@ pub enum Error {
     DuplicateExportName,
     LimitsOutOfRange,
     MultipleMemories,
-    MultipleTables,
     InvalidStartType,
     MutableGlobalInConstExpr,
     InvalidConstExpr,
-    /// A Wasm 1.0 function type declares more than one result.
-    TooManyResults,
     TooManyLocals,
     ModuleTooLarge,
     /// A function body failed validation or an operator callback rejected it.
@@ -142,13 +139,11 @@ impl fmt::Display for Error {
             Error::DuplicateExportName => write!(f, "duplicate export name"),
             Error::LimitsOutOfRange => write!(f, "limits out of range"),
             Error::MultipleMemories => write!(f, "multiple memories"),
-            Error::MultipleTables => write!(f, "multiple tables"),
             Error::InvalidStartType => write!(f, "start function must have type [] -> []"),
             Error::MutableGlobalInConstExpr => {
                 write!(f, "mutable or non-imported global in constant expression")
             }
             Error::InvalidConstExpr => write!(f, "invalid constant expression"),
-            Error::TooManyResults => write!(f, "a function type returns more than one value"),
             Error::TooManyLocals => write!(f, "too many locals"),
             Error::ModuleTooLarge => write!(f, "module too large"),
             Error::Body(e) => write!(f, "invalid function body: {:?}", e),

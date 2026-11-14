@@ -1,15 +1,77 @@
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
-import Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2
+import Itasca.Runtime.Representation.StoreCapacity
+import Itasca.Runtime.Compiler.Local.Relations.Function.EntryTypedSteps
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead
 import Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedFullCapacity
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryEffects
 import Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.BulkAndSaturatingEncoding
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableCapacity
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
-import Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish
-import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
+
+/-!
+Sections, each formerly its own module: CapacityFoldWasm2, FunctionCapacity, ExecutableFunctionCapacity.
+-/
+
+/-! ## CapacityFoldWasm2 -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+theorem ValidatedStacksWasm2.head_width {data env ctx index st samples}
+    (trace : ValidatedStacksWasm2 data env ctx index st samples) :
+    stackWords st.core.vals.val ≤ maximumStackWords samples := by
+  cases trace with
+  | done => simp [maximumStackWords]
+  | step => exact Nat.le_max_left _ _
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## FunctionCapacity -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Source-indexed frame bounds retained for the defined function prefix. -/
+structure ModuleCapacities (module : runtime.compiler.ExecutableModule)
+    (sources : List funccode) : Prop where
+  count : sources.length = module.module.env.func_type_indices.val.length
+  entry : ∀ (index : Nat) (typeIndex : U32),
+    module.module.env.func_type_indices.val[index]? = some typeIndex →
+      ∃ compiled source, module.functions.val[index]? = some compiled ∧
+        sources[index]? = some source ∧
+        FunctionCapacity module.module.env typeIndex source compiled
+
+theorem ModuleCapacities.extend {before after : runtime.compiler.ExecutableModule} {sources}
+    (certificate : ModuleCapacities before sources)
+    (source : after.module = before.module)
+    (preserved : after.functions.val.take before.functions.val.length = before.functions.val) :
+    ModuleCapacities after sources := by
+  refine ⟨by simpa only [source] using certificate.count, ?_⟩
+  intro index typeIndex found
+  obtain ⟨compiled, src, foundCode, sourceLookup, code⟩ := certificate.entry index typeIndex
+    (by simpa only [source] using found)
+  refine ⟨compiled, src, ?_, sourceLookup, by simpa only [source] using code⟩
+  have bound := (List.getElem?_eq_some_iff.mp foundCode).1
+  have same := (List.getElem?_eq_some_iff.mp foundCode).2
+  have retained := congrArg (fun list => list[index]?) preserved
+  simpa [List.getElem?_take, bound, same] using retained
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## ExecutableFunctionCapacity -/
+
+section
 
 /-!
 Executable function capacity from reader-step accounting through the typed body fold and entry witness. The final certificate bounds compiled slots by independently validated source demand.
@@ -25,12 +87,12 @@ open Aeneas Aeneas.Std Itasca
 /-- A successful reader step in a fully encoded body retains the exact local
 layout and bounds slot growth by the canonical post-step operand stack. -/
 theorem reader_executable_capacity_wasm2 {data env ctx index st source}
-    (p : Wasm2.Pending data env .Wasm2 ctx.locals index st) {A : Type}
+    (p : Wasm2.Pending data env ctx.locals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (encoded : Wasm2.BodyEncoding data source)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   have allowed := encoded.next_reader_opcode p.consumed p.inbounds
   rcases allowed with ordinary | scope | isElse | isEnd | extra | floatBase | memory | indirect | table |
@@ -83,7 +145,7 @@ theorem TypedRunWasm2.executable_capacity_bound {A : Type}
     obtain ⟨reply, erased⟩ := Wasm2.Visitor.step_transfer
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor FullVisitor.empty_accepts
-      data env ctx ctx rfl index .Wasm2 _ {core := {st.core with pos := next}} out before () middle called
+      data env ctx ctx rfl index _ {core := {st.core with pos := next}} out before () middle called
     cases reply
     refine ⟨st.core.vals.val :: samples, .step typed pending start advance erased trace,
       localEq.trans capacity.1, ?_⟩
@@ -109,11 +171,11 @@ open Aeneas Aeneas.Std Itasca
 and the maximum word width of a source-only validation trace. -/
 theorem witness_compiler_executable_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (facts : CompilerEntryFacts w.startedState env w.ctx w.typeIdx w.ft w.body)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (budget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, budget)) :
     ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
@@ -137,15 +199,15 @@ theorem witness_compile_executable_capacity {A : Type} (ops : runtime.platform.A
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, finalBudget)) :
     ∃ samples, ValidatedStacksWasm2 w.body env w.ctx w.typeIdx (Wasm2.initial w.typeIdx) samples ∧
@@ -168,18 +230,18 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
     (endFits : batchStart.val + finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
-    {source : List instr} (encoded : Profile.BodyEncoding profile w.body source)
+    {source : List instr} (encoded : Profile.BodyEncoding w.body source)
     (compiled : runtime.bytecode.CompiledFunction) (finalBudget : runtime.compiler.Budget A)
     (finished : runtime.compiler.FunctionCompiler.finish ops final (.Ok ()) = .ok (.Ok compiled, finalBudget)) :
-    FunctionCapacity profile env w.typeIdx
+    FunctionCapacity env w.typeIdx
       (.FUNC (.mk_uN w.typeIdx.val)
         ((ModuleLocals.declared w.groups).map Translate.valueType |>.map local.LOCAL) source) compiled := by
   obtain ⟨samples, trace, bound⟩ := witness_compile_executable_capacity ops law w signatureTable functionTable
@@ -191,5 +253,7 @@ theorem witness_executable_function_capacity {A : Type} (ops : runtime.platform.
   · simpa only [List.map_append] using bound
 
 end Itasca.Runtime.Compiler
+
+end
 
 end

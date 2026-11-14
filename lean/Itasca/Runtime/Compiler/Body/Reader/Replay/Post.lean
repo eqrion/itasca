@@ -1,9 +1,42 @@
-import Itasca.Wasm2.Scalar.NumericReader
-import Itasca.Wasm2.Scalar.BasicReader
+import Itasca.Wasm2.EmptyVisitorLoop
+import Itasca.Wasm2.Scalar.IndexReader
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
-import Itasca.Visitor.EventDispatch
-import Itasca.Visitor.Erasure
+import Itasca.Visitor.BodyReplay
+import Itasca.Visitor.Events
 import Itasca.Wasm2.Scalar.Step
+
+/-!
+Sections, each formerly its own module: BodyTooLarge, Post.
+-/
+
+/-! ## BodyTooLarge -/
+
+section
+
+/-!
+Oversized function bodies reject before initialization or visitor calls.
+
+Main declarations: `reader_body_too_large`. A direct consumer is `Compiler.Module.CompileTotal`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Oversized function bodies reject before initialization or visitor calls. -/
+theorem reader_body_too_large {V} (visitor : code.OpVisitor V)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (value : V)
+    (large : limits.MAX_FUNCTION_BYTES.val < data.length) :
+    code.validate_body_with visitor data env ctx index value =
+      .ok (.Err .BodyTooLarge,value) := by
+  have guard : Slice.len data > limits.MAX_FUNCTION_BYTES := by simpa using large
+  simp only [code.validate_body_with,guard,↓reduceIte]
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## Post -/
+
+section
 
 /-!
 Accepted scalar steps expose their actual callback together with the shared
@@ -16,7 +49,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.Wasm2 Itasca.VisitorTrace
 
 theorem reader_nop_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
     (accepted : code.step visitor st.core data env ⟨locals, p.ft.results⟩ code.OP_NOP before =
@@ -31,7 +64,7 @@ theorem reader_nop_wasm2 {data env locals index st}
   exact ⟨callback, p.nop_reader byte⟩
 
 theorem reader_i32_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
@@ -50,7 +83,7 @@ theorem reader_i32_const_wasm2 {data env locals index st}
   exact ⟨value, callback, read, values, post⟩
 
 theorem reader_i64_const_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState)
     (capacity : st.core.vals.val.length < Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
@@ -69,7 +102,7 @@ theorem reader_i64_const_wasm2 {data env locals index st}
   exact ⟨value, callback, read, values, post⟩
 
 theorem reader_numeric_wasm2 {data env locals index st}
-    (p : Pending data env .Wasm2 locals index st) {V : Type} (visitor : code.OpVisitor V)
+    (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.OpIterState) (opcode : U8)
     (operation : Numeric.Operation) (hook : NumericHook)
     (capacity : st.core.vals.val.length < Usize.max)
@@ -97,3 +130,5 @@ theorem reader_numeric_wasm2 {data env locals index st}
   exact ⟨callback, read, controls, position, values, numeric, post⟩
 
 end Itasca.Runtime.Compiler
+
+end

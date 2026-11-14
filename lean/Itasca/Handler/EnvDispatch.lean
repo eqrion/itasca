@@ -1,6 +1,5 @@
-import Itasca.Handler.EnvCalls
-import Itasca.Binary.Wasm1.MemoryTyping
-import Itasca.Visitor.Basic
+import Itasca.Handler.Select
+import Itasca.Binary.Wasm1.DeclaredReferences
 import Itasca.Visitor.Total
 
 /-!

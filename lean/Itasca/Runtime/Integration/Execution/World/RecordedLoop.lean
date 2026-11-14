@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Execution.History.RecordedPrefix
-import Itasca.Runtime.Platform.Recording
+import Itasca.Runtime.Platform.Laws
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

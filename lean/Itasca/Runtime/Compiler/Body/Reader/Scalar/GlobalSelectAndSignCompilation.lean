@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectCompilation
+import Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.DeadBasicPrefix
 import Itasca.Runtime.Compiler.Body.Reader.Memory.Compilation
 import Itasca.Runtime.Compiler.Body.Reader.Float.ConstantPrefix
 
@@ -27,7 +27,7 @@ theorem StructuredReaderCompilerStateWasm2.core_extra {jumpTables : List U32} {A
     (opcode : U8) (covered : opcode.val ∈ [27,35,36,67,68,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62])
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (),out,after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   simp only [List.mem_cons,List.mem_nil_iff,or_false] at covered
   rcases covered with h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h | h

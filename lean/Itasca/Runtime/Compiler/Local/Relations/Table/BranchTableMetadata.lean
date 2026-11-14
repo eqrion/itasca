@@ -1,7 +1,99 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
+import Itasca.Runtime.Compiler.Local.Lowering.Control.TableBranchContracts
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchTableCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
+
+/-!
+Sections, each formerly its own module: BranchTableLower, BranchTableCallback, BranchTableMetadata.
+-/
+
+/-! ## BranchTableLower -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.ResultFacts
+set_option maxRecDepth 4096
+
+/-- Successful lowering retains the exact side-table start/count, selector
+lookup, dispatch emission, and finite sequence of target branches. -/
+theorem compiler_lower_table_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (accepted : runtime.compiler.control.FunctionCompiler.lower_table_branches ops before = .ok (.Ok (),after)) :
+    ∃ start len selector emitted,
+      start.val = before.function.jump_tables.val.length ∧
+      len.val = before.table_depths.val.length ∧
+      runtime.compiler.FunctionCompiler.operand ops before 1#usize = .ok (.Ok selector) ∧
+      Emitted before emitted (.JumpTable selector start len) ∧
+      TableBranchRun ops emitted 0 after := by
+  obtain ⟨start, length, selector, emitted, output, startEq, lengthEq, operand, emission, loopCall, successful, same⟩ :=
+    (runtime.compiler.control.FunctionCompiler.lower_table_branches.inv ops before after (.Ok ()) accepted).success law
+  have trace := (compiler_table_loop_trace ops law emitted 0#usize (.Ok ()) output loopCall successful).2
+  rw [same] at trace
+  exact ⟨start, length, selector, emitted, startEq, lengthEq, operand, emission.emitted, trace⟩
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## BranchTableCallback -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.ResultFacts
+
+/-- Label collection changes only its buffer and allocation accounting. -/
+theorem compiler_table_label_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (depth : U32)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label
+      ops before state depth = .ok (.Ok (),after)) :
+    ∃ budget depths, after = {before with budget, table_depths := depths} ∧
+      depths.val = before.table_depths.val ++ [depth] := by
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before after state depth (.Ok ()) accepted
+  exact ⟨after.budget, after.table_depths, effect.frame, effect.appended law⟩
+
+/-- The final callback lowers all previously collected labels plus the default,
+clears its private buffer, and observes the unreachable validator continuation. -/
+theorem compiler_br_table_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (default : U32) (types : Itasca.signature.ResultType)
+    (live : before.reachable = true)
+    (accepted : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table
+      ops before state default types = .ok (.Ok (),after)) :
+    ∃ budget depths lowered cleared,
+      depths.val = before.table_depths.val ++ [default] ∧
+      runtime.compiler.control.FunctionCompiler.lower_table_branches ops
+        {before with budget,table_depths := depths} = .ok (.Ok (),lowered) ∧
+      cleared.val = [] ∧
+      runtime.compiler.FunctionCompiler.observe ops
+        {lowered with reachable := false,table_depths := cleared} state = .ok (.Ok (),after) := by
+  cases runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table.inv ops before after state default types (.Ok ()) accepted with
+  | @live labeled lowered cleared _ _ labelCall reachable lowerCall clearCall observed =>
+    have label := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state default (.Ok ()) labelCall
+    have empty := runtime_clear lowered.table_depths
+    rw [clearCall, WP.spec_ok] at empty
+    refine ⟨labeled.budget, labeled.table_depths, lowered, cleared, label.appended law, ?_, empty, observed⟩
+    rw [← label.frame]
+    exact lowerCall
+  | @dead labeled cleared _ _ labelCall dead clearCall observed =>
+    have frame := (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_table_label.inv ops before labeled state default (.Ok ()) labelCall).frame
+    rw [frame] at dead
+    simp only [live, Bool.true_eq_false] at dead
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## BranchTableMetadata -/
+
+section
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
@@ -72,3 +164,5 @@ theorem compiler_br_table_fixed {A : Type} (ops : runtime.platform.Alloc A)
   exact (show TableFixed before lowered from ⟨⟨loweredFixed.stable.metadata,loweredFixed.stable.capacity⟩,
     loweredFixed.controls,loweredFixed.indirect,loweredFixed.simd,loweredFixed.constants⟩).trans finalFixed
 end Itasca.Runtime.Compiler
+
+end

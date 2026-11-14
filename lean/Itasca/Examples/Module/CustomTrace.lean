@@ -32,7 +32,7 @@ def unicodeEvents : List Event := [.custom unicodeChunk]
 
 private theorem unicode_length : Slice.len unicodeInput = 15#usize := UScalar.eq_of_val_eq rfl
 
-private theorem unicode_environment : metadata.validate_env_with customRecorder unicodeInput .Wasm1 [] =
+private theorem unicode_environment : metadata.validate_env_with customRecorder unicodeInput [] =
     .ok (.Ok (Examples.ModuleBasic.emptyEnv, 15#usize), [.custom unicodeChunk]) := by
   let nm := alloc.vec.Vec.from [0xF4#u8, 0x8F#u8, 0xBF#u8, 0xBF#u8] (by simp; scalar_tac)
   have hheader := metadata.read_header.complete unicodeInput 8#usize (by
@@ -68,7 +68,7 @@ private theorem unicode_environment : metadata.validate_env_with customRecorder 
 
 /-- `metadata.validate_env_with` with `customRecorder` on `unicodeInput` returns the empty
 environment, consumed length 15 and the trace `unicodeEvents`. -/
-theorem unicode_recorded : metadata.validate_env_with customRecorder unicodeInput .Wasm1 [] =
+theorem unicode_recorded : metadata.validate_env_with customRecorder unicodeInput [] =
     .ok (.Ok (Examples.ModuleBasic.emptyEnv, 15#usize), unicodeEvents) := unicode_environment
 
 /-- The recorded trace is an `EnvTrace` of `unicodeInput`, tying the callback to its section and

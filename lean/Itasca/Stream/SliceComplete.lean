@@ -1,12 +1,10 @@
-import Itasca.Stream.SliceSound
-import Itasca.Stream.DriverComplete
 import Itasca.Stream.SyncComplete
 
 /-!
 # Contiguous adapter completeness
 
 `stream.validate_module_slice.profile_complete_with_metadata`: every independently encoded,
-elaborated and typed module within the selected profile and implementation limits is accepted by
+elaborated and typed module within the implementation limits is accepted by
 `stream.validate_module_slice`, and the returned environment and tail match the raw module and its
 public accessor types. The slice source (`stream.SliceSource.available`) and synchronous scheduler
 (`StreamSync.accepts`) discharge the source availability and accepting scheduler premises of the
@@ -20,16 +18,16 @@ namespace Itasca
 open ModuleBinary ModuleElaboration
 
 /-- `stream.validate_module_slice` accepts every independently encoded, elaborated, typed module
-in the selected profile within the implementation limits. Its slice source and synchronous
+within the implementation limits. Its slice source and synchronous
 scheduler discharge all embedding premises. The returned environment and tail match the raw
 module and its public accessor types. -/
 theorem stream.validate_module_slice.profile_complete_with_metadata
-    (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
-    (hb : ModuleEncodingWithinLimits raw data.val profile)
+    (data : Slice U8) (raw : ModuleBinary.Module)
+    (hb : ModuleEncodingWithinLimits raw data.val)
     (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
-    ∃ decoded, stream.validate_module_slice data profile = .ok (.Ok decoded) ∧
+    (ht : Module_ok (moduleOf raw)) (hp : Restrictions raw) :
+    ∃ decoded, stream.validate_module_slice data = .ok (.Ok decoded) ∧
       Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw := by
   obtain ⟨⟨first, last⟩, hsplit, _⟩ := WP.spec_imp_exists (stream.find_code_region.spec data)
   obtain ⟨environment, code, tail, henvironment, hcode, htail, _⟩ :=
@@ -39,7 +37,7 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
       regions data :=
     ⟨regions, ⟨first, last, hsplit, henvironment, hcode, htail⟩, stream.SliceSource.available regions⟩
   obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
-  obtain ⟨env, after, run, hrun, hmatches, hmetadata, _⟩ := stream.validate_streaming.complete
+  obtain ⟨env, after, run, hrun, hmatches, hmetadata, _⟩ := stream.validate_streaming.complete_core
     stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } StreamSync.Queued StreamSync.accepts
     0#u64 regions ⟨none, none⟩ storage data raw hb hsignatures he ht hp hcanonical rfl
@@ -53,14 +51,14 @@ theorem stream.validate_module_slice.profile_complete_with_metadata
 
 /-- `stream.validate_module_slice.profile_complete_with_metadata` without the accessor types. -/
 theorem stream.validate_module_slice.profile_complete
-    (data : Slice U8) (raw : ModuleBinary.Module) (profile : ValidationProfile)
-    (hb : ModuleEncodingWithinLimits raw data.val profile)
+    (data : Slice U8) (raw : ModuleBinary.Module)
+    (hb : ModuleEncodingWithinLimits raw data.val)
     (hsignatures : ModuleSignaturesWithinLimits raw)
     (he : Elaborates raw (moduleOf raw))
-    (ht : Module_ok (moduleOf raw)) (hp : Profile raw profile) :
-    ∃ decoded, stream.validate_module_slice data profile = .ok (.Ok decoded) ∧
+    (ht : Module_ok (moduleOf raw)) (hp : Restrictions raw) :
+    ∃ decoded, stream.validate_module_slice data = .ok (.Ok decoded) ∧
       Matches decoded.env decoded.tail raw := by
-  obtain ⟨decoded, hr, hm, _⟩ := stream.validate_module_slice.profile_complete_with_metadata data raw profile hb hsignatures he ht hp
+  obtain ⟨decoded, hr, hm, _⟩ := stream.validate_module_slice.profile_complete_with_metadata data raw hb hsignatures he ht hp
   exact ⟨decoded, hr, hm⟩
 
 end Itasca

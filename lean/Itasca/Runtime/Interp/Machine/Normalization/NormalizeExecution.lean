@@ -1,11 +1,11 @@
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
+import Itasca.Runtime.Interp.Relations.ValueLookup
 import Itasca.Runtime.Interp.Machine.Normalization
 import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Control.NormalizeClosure
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Interp.Control.NormalizeCompose
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Normalization of a structured source point and its execution relation. Closure over administrative choices yields the normalized machine certificate.

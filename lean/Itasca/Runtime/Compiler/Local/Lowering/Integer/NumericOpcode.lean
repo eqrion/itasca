@@ -1,6 +1,7 @@
-import Itasca.Runtime.SourceMachine.Numeric.Semantics
+import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Representation.Layout
-import Itasca.Runtime.Equations
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
 
 /-!
 Binary encodings of all scalar integer numeric instructions.

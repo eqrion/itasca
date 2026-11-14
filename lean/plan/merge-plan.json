@@ -1,0 +1,5086 @@
+{
+ "cap": 1000,
+ "modules_before": 2407,
+ "modules_after": 780,
+ "estimated_critical_path_seconds": 458.3,
+ "groups": [
+  {
+   "target": "Itasca.Binary.Leb128",
+   "members": [
+    "Itasca.Binary.ReadByte",
+    "Itasca.Binary.Leb128"
+   ],
+   "lines": 371
+  },
+  {
+   "target": "Itasca.Binary.ModuleUnique",
+   "members": [
+    "Itasca.Binary.ModuleUniquePrimitives",
+    "Itasca.Binary.ModuleUniqueSections",
+    "Itasca.Binary.ModuleUniqueSegments",
+    "Itasca.Binary.ModuleUnique"
+   ],
+   "lines": 597
+  },
+  {
+   "target": "Itasca.Binary.SignedLeb32",
+   "members": [
+    "Itasca.Binary.FloatBits",
+    "Itasca.Binary.SignedLeb32"
+   ],
+   "lines": 326
+  },
+  {
+   "target": "Itasca.Binary.SignedLeb33",
+   "members": [
+    "Itasca.Binary.SignedLeb",
+    "Itasca.Binary.SignedLeb33"
+   ],
+   "lines": 402
+  },
+  {
+   "target": "Itasca.Binary.UnicodeUnique",
+   "members": [
+    "Itasca.Binary.Module",
+    "Itasca.Binary.PrefixUnique",
+    "Itasca.Binary.Unicode",
+    "Itasca.Binary.UnicodeUnique"
+   ],
+   "lines": 824
+  },
+  {
+   "target": "Itasca.Binary.Wasm1.DeclaredReferences",
+   "members": [
+    "Itasca.Binary.Wasm1.MemoryTyping",
+    "Itasca.Binary.Wasm1.DeclaredReferences"
+   ],
+   "lines": 234
+  },
+  {
+   "target": "Itasca.Binary.Wasm1.EncodingComplete",
+   "members": [
+    "Itasca.Binary.Wasm1.MemoryMeaning",
+    "Itasca.Binary.Wasm1.NumericMeaning",
+    "Itasca.Binary.Wasm1.Encoding",
+    "Itasca.Binary.Wasm1.BrTableLabels",
+    "Itasca.Binary.Wasm1.EncodingComplete"
+   ],
+   "lines": 901
+  },
+  {
+   "target": "Itasca.Binary.Wasm1.EncodingUnique",
+   "members": [
+    "Itasca.Binary.Wasm1.PrefixUnique",
+    "Itasca.Binary.Wasm1.EncodingUnique"
+   ],
+   "lines": 178
+  },
+  {
+   "target": "Itasca.Binary.Wasm2.DeclaredReferences",
+   "members": [
+    "Itasca.Binary.Wasm2.Bulk",
+    "Itasca.Binary.Wasm2.NumericExtensions",
+    "Itasca.Binary.Wasm2.References",
+    "Itasca.Binary.Wasm2.SimdLaneMeaning",
+    "Itasca.Binary.Wasm2.SimdMemoryMeaning",
+    "Itasca.Binary.Wasm2.DeclaredReferences"
+   ],
+   "lines": 872
+  },
+  {
+   "target": "Itasca.Binary.Wasm2.SyntaxUnique",
+   "members": [
+    "Itasca.Binary.Wasm2.Simd",
+    "Itasca.Binary.Wasm2.Encoding",
+    "Itasca.Binary.Wasm2.SyntaxComplete",
+    "Itasca.Binary.Wasm2.EncodingComplete",
+    "Itasca.Binary.Wasm2.SimdBitsMeaning",
+    "Itasca.Binary.Wasm2.SyntaxUnique"
+   ],
+   "lines": 686
+  },
+  {
+   "target": "Itasca.Handler.EnvReaders",
+   "members": [
+    "Itasca.Handler.Control",
+    "Itasca.Handler.Unreachable",
+    "Itasca.Handler.EnvReaders"
+   ],
+   "lines": 366
+  },
+  {
+   "target": "Itasca.Handler.RawControl",
+   "members": [
+    "Itasca.Handler.ScalarComplete",
+    "Itasca.Handler.EnvComplete",
+    "Itasca.Handler.BrTable",
+    "Itasca.Handler.BrTableComplete",
+    "Itasca.Handler.ControlFlow",
+    "Itasca.Handler.RawControl"
+   ],
+   "lines": 645
+  },
+  {
+   "target": "Itasca.Handler.Select",
+   "members": [
+    "Itasca.Handler.NumericDispatch",
+    "Itasca.Handler.EnvCalls",
+    "Itasca.Handler.SignedConst",
+    "Itasca.Handler.ScalarConst",
+    "Itasca.Handler.Select"
+   ],
+   "lines": 766
+  },
+  {
+   "target": "Itasca.Handler.SimplePrefix",
+   "members": [
+    "Itasca.Handler.Block",
+    "Itasca.Handler.Sequence",
+    "Itasca.Handler.Stack",
+    "Itasca.Handler.StackSemantics",
+    "Itasca.Handler.StackComplete",
+    "Itasca.Handler.ResumePrefix",
+    "Itasca.Handler.SimplePrefix"
+   ],
+   "lines": 926
+  },
+  {
+   "target": "Itasca.Module.Code.BodyContextComplete",
+   "members": [
+    "Itasca.Module.Code.BodyContext",
+    "Itasca.Module.Code.BodyContextComplete"
+   ],
+   "lines": 941
+  },
+  {
+   "target": "Itasca.Module.Code.Encoding",
+   "members": [
+    "Itasca.Module.Code.Context",
+    "Itasca.Module.Code.Locals",
+    "Itasca.Module.Code.Encoding"
+   ],
+   "lines": 418
+  },
+  {
+   "target": "Itasca.Module.Code.Framing",
+   "members": [
+    "Itasca.Module.Code.Entry",
+    "Itasca.Module.Code.EntryWitness",
+    "Itasca.Module.Code.ReachedEntry",
+    "Itasca.Module.Code.Framing"
+   ],
+   "lines": 491
+  },
+  {
+   "target": "Itasca.Module.Code.FuncTyping",
+   "members": [
+    "Itasca.Module.Code.EntryOfEnv",
+    "Itasca.Module.Code.FuncTyping"
+   ],
+   "lines": 122
+  },
+  {
+   "target": "Itasca.Module.Code.LocalsComplete",
+   "members": [
+    "Itasca.Module.Code.Section",
+    "Itasca.Module.Code.LocalsComplete"
+   ],
+   "lines": 264
+  },
+  {
+   "target": "Itasca.Module.Const.Parser",
+   "members": [
+    "Itasca.Module.Const.Syntax",
+    "Itasca.Module.Const.Typing",
+    "Itasca.Module.Const.Parser"
+   ],
+   "lines": 536
+  },
+  {
+   "target": "Itasca.Module.Const.ParserComplete",
+   "members": [
+    "Itasca.Module.Const.Inversion",
+    "Itasca.Module.Const.ParserComplete"
+   ],
+   "lines": 243
+  },
+  {
+   "target": "Itasca.Module.Custom.Trace",
+   "members": [
+    "Itasca.Module.Custom.Visitor",
+    "Itasca.Module.Custom.Invariant",
+    "Itasca.Module.Custom.TraceDefs",
+    "Itasca.Module.Custom.Trace"
+   ],
+   "lines": 762
+  },
+  {
+   "target": "Itasca.Module.Elab.Profile",
+   "members": [
+    "Itasca.Module.Elab.Elaboration",
+    "Itasca.Module.Elab.ExternalTyping",
+    "Itasca.Module.Elab.IndexSpaces",
+    "Itasca.Module.Elab.ElementTyping",
+    "Itasca.Module.Elab.TypingLists",
+    "Itasca.Module.Elab.Assembly",
+    "Itasca.Module.Elab.Declared",
+    "Itasca.Module.Elab.Profile"
+   ],
+   "lines": 941
+  },
+  {
+   "target": "Itasca.Module.Elab.SegmentTyping",
+   "members": [
+    "Itasca.Module.Elab.SegmentSyntax",
+    "Itasca.Module.Elab.SegmentTyping"
+   ],
+   "lines": 183
+  },
+  {
+   "target": "Itasca.Module.Elab.TypingInversion",
+   "members": [
+    "Itasca.Module.Elab.Metadata",
+    "Itasca.Module.Elab.TypingInversion"
+   ],
+   "lines": 267
+  },
+  {
+   "target": "Itasca.Module.Env.Complete",
+   "members": [
+    "Itasca.Module.Env.Slots",
+    "Itasca.Module.Env.Chain",
+    "Itasca.Module.Env.ReadyContexts",
+    "Itasca.Module.Env.DispatchComplete",
+    "Itasca.Module.Env.Replay",
+    "Itasca.Module.Env.Complete"
+   ],
+   "lines": 642
+  },
+  {
+   "target": "Itasca.Module.Env.Declarations",
+   "members": [
+    "Itasca.Module.Env.TypeBounds",
+    "Itasca.Module.Env.Declarations"
+   ],
+   "lines": 182
+  },
+  {
+   "target": "Itasca.Module.Env.Encoding",
+   "members": [
+    "Itasca.Module.Env.Effects",
+    "Itasca.Module.Env.Run",
+    "Itasca.Module.Env.Dispatch",
+    "Itasca.Module.Env.Parser",
+    "Itasca.Module.Env.NameFacts",
+    "Itasca.Module.Env.Encoding"
+   ],
+   "lines": 881
+  },
+  {
+   "target": "Itasca.Module.Env.Externals",
+   "members": [
+    "Itasca.Module.Env.References",
+    "Itasca.Module.Env.Externals"
+   ],
+   "lines": 294
+  },
+  {
+   "target": "Itasca.Module.Env.Requirements",
+   "members": [
+    "Itasca.Module.Env.Preservation",
+    "Itasca.Module.Env.Validity",
+    "Itasca.Module.Env.Semantics",
+    "Itasca.Module.Env.Requirements"
+   ],
+   "lines": 933
+  },
+  {
+   "target": "Itasca.Module.Layout",
+   "members": [
+    "Itasca.Module.Composition",
+    "Itasca.Module.Soundness",
+    "Itasca.Module.Limits",
+    "Itasca.Module.Layout"
+   ],
+   "lines": 355
+  },
+  {
+   "target": "Itasca.Module.Readers.Types",
+   "members": [
+    "Itasca.Module.Readers.Basic",
+    "Itasca.Module.Readers.Types"
+   ],
+   "lines": 528
+  },
+  {
+   "target": "Itasca.Module.Readers.TypesComplete",
+   "members": [
+    "Itasca.Module.Readers.Names",
+    "Itasca.Module.Readers.Utf8Complete",
+    "Itasca.Module.Readers.NamesComplete",
+    "Itasca.Module.Readers.TypesComplete"
+   ],
+   "lines": 483
+  },
+  {
+   "target": "Itasca.Module.Readers.Utf8",
+   "members": [
+    "Itasca.Module.Readers.BasicComplete",
+    "Itasca.Module.Readers.Header",
+    "Itasca.Module.Readers.FramingComplete",
+    "Itasca.Module.Readers.Copies",
+    "Itasca.Module.Readers.SegmentIndex",
+    "Itasca.Module.Readers.Utf8"
+   ],
+   "lines": 555
+  },
+  {
+   "target": "Itasca.Module.Sections.Data",
+   "members": [
+    "Itasca.Module.Sections.Export",
+    "Itasca.Module.Sections.Memory",
+    "Itasca.Module.Sections.Table",
+    "Itasca.Module.Sections.Data"
+   ],
+   "lines": 849
+  },
+  {
+   "target": "Itasca.Module.Sections.ElementHeader",
+   "members": [
+    "Itasca.Module.Sections.Type",
+    "Itasca.Module.Sections.DataCount",
+    "Itasca.Module.Sections.ElementInit",
+    "Itasca.Module.Sections.ElementHeader"
+   ],
+   "lines": 913
+  },
+  {
+   "target": "Itasca.Module.Sections.GlobalComplete",
+   "members": [
+    "Itasca.Module.Sections.ElementInitComplete",
+    "Itasca.Module.Sections.ElementHeaderComplete",
+    "Itasca.Module.Sections.ElementComplete",
+    "Itasca.Module.Sections.ExportComplete",
+    "Itasca.Module.Sections.FunctionComplete",
+    "Itasca.Module.Sections.GlobalComplete"
+   ],
+   "lines": 859
+  },
+  {
+   "target": "Itasca.Module.Sections.Tail",
+   "members": [
+    "Itasca.Module.Sections.Global",
+    "Itasca.Module.Sections.Function",
+    "Itasca.Module.Sections.Import",
+    "Itasca.Module.Sections.Imports",
+    "Itasca.Module.Sections.Element",
+    "Itasca.Module.Sections.Tail"
+   ],
+   "lines": 999
+  },
+  {
+   "target": "Itasca.Module.Sections.TailComplete",
+   "members": [
+    "Itasca.Module.Sections.DataMaterialize",
+    "Itasca.Module.Sections.DataComplete",
+    "Itasca.Module.Sections.TailComplete"
+   ],
+   "lines": 435
+  },
+  {
+   "target": "Itasca.Module.Sections.TypeComplete",
+   "members": [
+    "Itasca.Module.Sections.ImportsComplete",
+    "Itasca.Module.Sections.MemoryComplete",
+    "Itasca.Module.Sections.TableComplete",
+    "Itasca.Module.Sections.TypeComplete"
+   ],
+   "lines": 426
+  },
+  {
+   "target": "Itasca.Profile.BinaryUnique",
+   "members": [
+    "Itasca.Profile.Body",
+    "Itasca.Profile.BodyVisitor",
+    "Itasca.Profile.EntryPipeline",
+    "Itasca.Profile.EntryComplete",
+    "Itasca.Profile.EntrySound",
+    "Itasca.Profile.BinaryUnique"
+   ],
+   "lines": 351
+  },
+  {
+   "target": "Itasca.Profile.CodeEntry",
+   "members": [
+    "Itasca.Profile.BodySpec",
+    "Itasca.Profile.CodeEntry"
+   ],
+   "lines": 194
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix",
+    "Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixInitial",
+    "Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart"
+   ],
+   "lines": 127
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Capacity.ExecutableFunctionCapacity",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Capacity.CapacityFoldWasm2",
+    "Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity",
+    "Itasca.Runtime.Compiler.Body.Capacity.ExecutableFunctionCapacity"
+   ],
+   "lines": 242
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Closing.IndexedAdvanceOrClosed",
+    "Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness"
+   ],
+   "lines": 286
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredLinearEmbedding",
+    "Itasca.Runtime.Compiler.Body.Control.Embedding.StructuredScalarEmbedding",
+    "Itasca.Runtime.Compiler.Body.Control.Embedding.OrdinaryEmbedding"
+   ],
+   "lines": 70
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointRoot",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointOrdinary",
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointRoot"
+   ],
+   "lines": 86
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointTypedSelect",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointExtra",
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointNumeric",
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointTypedSelect"
+   ],
+   "lines": 140
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointIndirectCall",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredLinearEmbedding",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompiledBody"
+   ],
+   "lines": 102
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.CumulativeTableExclusion",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefix",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCompleted",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixElse",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixElseDormant",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseElse",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseBlock",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseIf",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseLoop",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixCloseDormant",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixEndEffects",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixAdvance",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixObserve",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish"
+   ],
+   "lines": 967
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixTerminal",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixBranch",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixLoopBranch",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant"
+   ],
+   "lines": 302
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixStart",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Control.Table.IndexedTablePointControl",
+    "Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixStart"
+   ],
+   "lines": 257
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ProfileAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedNumericAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand"
+   ],
+   "lines": 637
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.LiteralAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedSimpleAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.ScalarAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.StatefulCallbackAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance"
+   ],
+   "lines": 749
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundPointAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundBaseAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundScalarAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance"
+   ],
+   "lines": 929
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectEmission",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectCallPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectPairPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance"
+   ],
+   "lines": 418
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Calls.Safety",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.Compilation",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.IndirectPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Calls.Safety"
+   ],
+   "lines": 272
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Checking.CheckedPrefixWasm2",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.ScalarInstructionPrefixWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.StatefulInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.TypedSelectCheckedPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.NoncontrolCheckedPrefixWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.CheckedPrefixWasm2"
+   ],
+   "lines": 622
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Checking.OperationInstructionPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.CoreInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Checking.OperationInstructionPrefix"
+   ],
+   "lines": 724
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.SourceControlCapacity",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.TerminalInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceTransferBounds",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInstructionPrefixWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterInstructionPrefixWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.RootInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlCheckedPrefixWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ClosedInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication"
+   ],
+   "lines": 938
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.BranchesCompilation",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchesCompilation"
+   ],
+   "lines": 353
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSource",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSuffix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableTargetsWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableInputsWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePost",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects"
+   ],
+   "lines": 761
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BoundaryInitial",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind"
+   ],
+   "lines": 506
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseDormantPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseDormantWasm2Prefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseEnteredPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseCompilation"
+   ],
+   "lines": 371
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.EndWasm2Compilation",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndDormantPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndEnteredPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.RootEnd",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndDormantWasm2Prefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndWasm2Compilation"
+   ],
+   "lines": 521
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlBoundary",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndSignature",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions"
+   ],
+   "lines": 349
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.Reachability",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterStacks",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.Boundary",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchInfo",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchEffects",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ScopeZipper",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.Reachability"
+   ],
+   "lines": 578
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEnterAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedBranchAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedConditionalBranchAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedElseAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEndAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEnterAcceptance"
+   ],
+   "lines": 968
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlSafetyWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableLedger",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ControlLedger",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableDecodePrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance"
+   ],
+   "lines": 331
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.Return",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.KnownFronts",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.KnownFrontEntry",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.Return"
+   ],
+   "lines": 193
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ReturnSafety",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.TerminalCompilation",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSafetyWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.CloseSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReturnSafety"
+   ],
+   "lines": 644
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.LoopPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack"
+   ],
+   "lines": 191
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndPublication",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterPublicationWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication"
+   ],
+   "lines": 315
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.CloseWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2"
+   ],
+   "lines": 249
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Control.StructuredRootMapPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Control.SourceBranchInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchExitSlots",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.BranchInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseExitSlots",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.ElseInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndExitSlots",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EndInstructionPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.EnterExitSlotsWasm2",
+    "Itasca.Runtime.Compiler.Body.Reader.Control.StructuredRootMapPublication"
+   ],
+   "lines": 950
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Float.FloatFacts",
+    "Itasca.Runtime.Compiler.Body.Reader.Float.FloatEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstant",
+    "Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantLowering",
+    "Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions"
+   ],
+   "lines": 392
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Float.Compilation",
+    "Itasca.Runtime.Compiler.Body.Reader.Float.SaturatingCompilation"
+   ],
+   "lines": 281
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEffects",
+    "Itasca.Runtime.Compiler.Body.Reader.Global.GlobalEmissions"
+   ],
+   "lines": 254
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance"
+   ],
+   "lines": 330
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryStacks",
+    "Itasca.Runtime.Compiler.Body.Reader.Memory.Instructions",
+    "Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryTypes",
+    "Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions"
+   ],
+   "lines": 401
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.References.TypedSelect",
+    "Itasca.Runtime.Compiler.Body.Reader.References.StatefulReferences",
+    "Itasca.Runtime.Compiler.Body.Reader.References.TypedSelectEmission"
+   ],
+   "lines": 236
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance"
+   ],
+   "lines": 140
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.ReachedSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerInitial",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPointNonempty",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish"
+   ],
+   "lines": 139
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.DormantOperation",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.CompilerBounds",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved"
+   ],
+   "lines": 213
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedStateful",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedFold",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.StatefulFuturePrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedStateful"
+   ],
+   "lines": 225
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.PostDeclared",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.Span",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes"
+   ],
+   "lines": 112
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.Post",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.BodyTooLarge",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.Post"
+   ],
+   "lines": 119
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.OpcodeClassification",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.BodySafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileSafety"
+   ],
+   "lines": 164
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Safety.ProfileOrdinarySafety",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.ScalarSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.OrdinarySafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.ProfileOrdinarySafety"
+   ],
+   "lines": 207
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Safety.ReferenceSafety",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.BulkSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.LiteralSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Safety.ReferenceSafety"
+   ],
+   "lines": 381
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Scalar.DeadBasicPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.GlobalSelectCompilation",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.DeadBasicPrefix"
+   ],
+   "lines": 436
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Scalar.EmptyCompilation",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.ConstantCompilation",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.EmptyCompilation"
+   ],
+   "lines": 295
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.SaturatingEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectTypes",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.SelectEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions",
+    "Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable"
+   ],
+   "lines": 942
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.CallbackEmission",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEvent",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.Memory",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.Dispatch"
+   ],
+   "lines": 549
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.Prefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEventTables",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.IndexedTableCompilerSimd",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdSafety",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdPrefixAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication"
+   ],
+   "lines": 489
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdPure",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdLane",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdConstant",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.Shuffle",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdMeaning",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdTypes",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions"
+   ],
+   "lines": 483
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SourceBoundSimdAcceptance",
+    "Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix"
+   ],
+   "lines": 622
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Source.SourceMiscPrefix",
+    "Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies"
+   ],
+   "lines": 159
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Stacks.Values",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks",
+    "Itasca.Runtime.Compiler.Body.Reader.Stacks.Values"
+   ],
+   "lines": 86
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedFullCapacity",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulEmission",
+    "Itasca.Runtime.Compiler.Body.Reader.Stateful.ExtendedFullCapacity"
+   ],
+   "lines": 129
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Relations.Calls.OrdinaryCallbackReady",
+    "Itasca.Runtime.Compiler.Body.Relations.Calls.ControlCallbackReady"
+   ],
+   "lines": 127
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionAcceptance",
+    "Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionPrefix"
+   ],
+   "lines": 96
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.ExecutableEntryCompilerFinish",
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerExecutable",
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.EntryBodyExecutable"
+   ],
+   "lines": 138
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.FunctionStartFacts",
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial",
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedCompilerStart",
+    "Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial"
+   ],
+   "lines": 264
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission",
+   "members": [
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableEmission",
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunction",
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableModuleFunctions",
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableProjection",
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableFunctionContext",
+    "Itasca.Runtime.Compiler.Body.Relations.Executable.RecordingEmission"
+   ],
+   "lines": 344
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.FixupCallbacks",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds"
+   ],
+   "lines": 185
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerIndirectTactic",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackIndirect",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackEnter",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackDead",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.ScopeCallbackIf",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackGrowth",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCapacity",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks"
+   ],
+   "lines": 945
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone",
+    "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneTactic",
+    "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneScalar",
+    "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneStateful",
+    "Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotoneLiteral"
+   ],
+   "lines": 655
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ControlEffects",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSafety",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseMapEffect"
+   ],
+   "lines": 433
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeConditions",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrame",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFramePatch",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameGuard",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameElse",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeNesting",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStack",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope"
+   ],
+   "lines": 743
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameSelect",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerBranchMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseGuardedScope",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterElse",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSuccess",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseTransition",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackElse",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeStackClose",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl"
+   ],
+   "lines": 783
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseSource",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames"
+   ],
+   "lines": 86
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseBlock",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterBlock",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterLoop",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf"
+   ],
+   "lines": 459
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStart",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.FixupBranchPreservation",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.FixupElsePreservation",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStart"
+   ],
+   "lines": 156
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.Fixups",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra"
+   ],
+   "lines": 220
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanPop",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FramePlanUpdate",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget"
+   ],
+   "lines": 288
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Function.Finish",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Function.EnterDead"
+   ],
+   "lines": 135
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerPatchMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerFixupMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerEnterMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerCloseMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata"
+   ],
+   "lines": 938
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame"
+   ],
+   "lines": 219
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerSimdMetadata",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerCodeMonotoneSimd",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Simd.CompilerTableScratchSimd"
+   ],
+   "lines": 73
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTablePreservation",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableBoundary",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratch",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchScalar",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchStateful",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables"
+   ],
+   "lines": 687
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.FixupTablePreservation",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry"
+   ],
+   "lines": 187
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerPairTableAppend",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CallbackTables",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchControl",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchCallbacks",
+    "Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral"
+   ],
+   "lines": 552
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableAvailability"
+   ],
+   "lines": 856
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.TableGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.StatefulAuxiliaryGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability"
+   ],
+   "lines": 197
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.CallAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.DeadOpAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.LocalVariableAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.StatefulAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchLabelAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.TransferAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.CallAvailability"
+   ],
+   "lines": 434
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.CapacityHelpers",
+    "Itasca.Runtime.Compiler.Local.Capacity.CapacityTactic",
+    "Itasca.Runtime.Compiler.Local.Capacity.GrowthTactic",
+    "Itasca.Runtime.Compiler.Local.Capacity.ControlGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity"
+   ],
+   "lines": 446
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.SegmentBound",
+    "Itasca.Runtime.Compiler.Local.Capacity.LiteralBudgetAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.GlobalAvailability"
+   ],
+   "lines": 328
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.FunctionStartAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.SlotAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableCapacity",
+    "Itasca.Runtime.Compiler.Local.Capacity.GlobalCapacity"
+   ],
+   "lines": 384
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.OperandBounds",
+    "Itasca.Runtime.Compiler.Local.Capacity.SimdCapacity",
+    "Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay"
+   ],
+   "lines": 174
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableBounds",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableBoundary",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.BranchTableSourceGrowth",
+    "Itasca.Runtime.Compiler.Local.Capacity.LiteralCapacity"
+   ],
+   "lines": 487
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.EndDispatchAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.EnterAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.ScopeAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.ReturnAvailability"
+   ],
+   "lines": 842
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.SimdMeaningBound",
+    "Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth"
+   ],
+   "lines": 152
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.ConditionalBranchAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.ElseDispatchAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.SimdOpAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.SimdCallbacksAvailability"
+   ],
+   "lines": 894
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Capacity.ChargeAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.BudgetEffects",
+    "Itasca.Runtime.Compiler.Local.Capacity.EmitAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.ObserveAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.CallbackAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.EmissionFrameAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.ObserveBudgetAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.FinishBudgetAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.CopyBudgetAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.CallbackCapacity",
+    "Itasca.Runtime.Compiler.Local.Capacity.ScopeDemand",
+    "Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom",
+    "Itasca.Runtime.Compiler.Local.Capacity.MemoryAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.SelectAvailability",
+    "Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability"
+   ],
+   "lines": 988
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Checking.ElseExitSlotBounds",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Checking.ElseCallbackInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.ElseExitSlotBounds"
+   ],
+   "lines": 292
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Checking.PendingInstructionClose",
+    "Itasca.Runtime.Compiler.Local.Checking.ScopeCloseInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.ScopeCloseExitSlots",
+    "Itasca.Runtime.Compiler.Local.Checking.ScopeEntryExitSlots",
+    "Itasca.Runtime.Compiler.Local.Checking.RootInstructionPublication",
+    "Itasca.Runtime.Compiler.Local.Checking.RootCloseInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.FunctionStartExitSlots"
+   ],
+   "lines": 317
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Checking.ScalarExitSlotBounds",
+    "Itasca.Runtime.Compiler.Local.Checking.ConditionalInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.NumericInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.BranchCallbackExitSlots",
+    "Itasca.Runtime.Compiler.Local.Checking.BranchCallbackInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.DeadInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.TerminalInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.NoopInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.TableCallbackExitSlots",
+    "Itasca.Runtime.Compiler.Local.Checking.LoopBranchInstructionPrefix"
+   ],
+   "lines": 745
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Checking.OpenInstructionCompiler",
+    "Itasca.Runtime.Compiler.Local.Checking.CoreEmissionInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.LinearEmissionInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.FrameExitSlotBounds",
+    "Itasca.Runtime.Compiler.Local.Checking.OpenInstructionFragment",
+    "Itasca.Runtime.Compiler.Local.Checking.InstructionAppendEffect",
+    "Itasca.Runtime.Compiler.Local.Checking.ForwardBranchInstructionPrefix",
+    "Itasca.Runtime.Compiler.Local.Checking.OpenInstructionPatch",
+    "Itasca.Runtime.Compiler.Local.Checking.ScopeEntryInstructionPrefix"
+   ],
+   "lines": 943
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Control.UniversalBranch",
+    "Itasca.Runtime.Compiler.Local.Control.Control.StructuredElseResolvedAppend"
+   ],
+   "lines": 63
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Function.IndexedFunctionAssembly",
+    "Itasca.Runtime.Compiler.Local.Control.Function.IndexedFunction",
+    "Itasca.Runtime.Compiler.Local.Control.Function.CumulativeFunctionContext"
+   ],
+   "lines": 125
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalInitial",
+    "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal",
+    "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant"
+   ],
+   "lines": 110
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional",
+    "Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot"
+   ],
+   "lines": 79
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Segments.Structured",
+    "Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition",
+    "Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels"
+   ],
+   "lines": 242
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredLabelWiden",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunctionBodyClose",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedBranchPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredResolvedConditionalPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalBranch",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalConditional",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseBranches",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalLoopBranch",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalOpen",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeLabels",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredFunction"
+   ],
+   "lines": 801
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseElse",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalRoot",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseBlock",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadBlock",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredIfEndPrefix"
+   ],
+   "lines": 439
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormant",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalBranchTable",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixClose",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCompletedPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixChange",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseSource",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalElse",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalDormantElse",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseFrames",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixControl",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixElse",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseDeadElse"
+   ],
+   "lines": 942
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalEmpty",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCloseLoop",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalCall",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalEmpty"
+   ],
+   "lines": 255
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCode",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodePoint",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeAlgebra",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixEmission",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredSuspendedPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredPrefixZipper",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalPrefix",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredElseEvidence",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredParentPrefixPop",
+    "Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal"
+   ],
+   "lines": 951
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateCallbacks",
+    "Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinateTactic",
+    "Itasca.Runtime.Compiler.Local.Coordinates.ControlSourceCoordinates"
+   ],
+   "lines": 491
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Coordinates.OrdinarySourceCoordinates",
+    "Itasca.Runtime.Compiler.Local.Coordinates.ScalarSourceCoordinates"
+   ],
+   "lines": 421
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Coordinates.TableSourceCoordinates",
+    "Itasca.Runtime.Compiler.Local.Coordinates.NumericSourceCoordinates",
+    "Itasca.Runtime.Compiler.Local.Coordinates.SimdSourceCoordinates",
+    "Itasca.Runtime.Compiler.Local.Coordinates.CallbackSourceCoordinates",
+    "Itasca.Runtime.Compiler.Local.Coordinates.ScalarTargetEffects"
+   ],
+   "lines": 921
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Coordinates.TableCallbackTargetBounds",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Coordinates.LoweringTargetBounds",
+    "Itasca.Runtime.Compiler.Local.Coordinates.TableCallbackTargetBounds"
+   ],
+   "lines": 277
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Demand.ObservationDemand",
+    "Itasca.Runtime.Compiler.Local.Demand.RecordedDemand",
+    "Itasca.Runtime.Compiler.Local.Demand.IndependentBodyDemand"
+   ],
+   "lines": 198
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerProofs",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerMappings",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerMappingLoops",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend"
+   ],
+   "lines": 951
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerElementLoop",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerComplete",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerAcceptance",
+    "Itasca.Runtime.Compiler.Local.Initializer.InitializerExpressionAvailable"
+   ],
+   "lines": 761
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringForwardBranch",
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringLoopBranch",
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringBranchIf",
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringConditionalTransfer",
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn",
+    "Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap"
+   ],
+   "lines": 952
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering",
+    "Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty"
+   ],
+   "lines": 196
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEffects",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOperands",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEncoding"
+   ],
+   "lines": 132
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatInstructionPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatSaturatingSupport",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatInstructionPublication"
+   ],
+   "lines": 74
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering"
+   ],
+   "lines": 199
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatSafety",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion",
+    "Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding"
+   ],
+   "lines": 112
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding",
+    "Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic",
+    "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering"
+   ],
+   "lines": 231
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEffects",
+    "Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericOperands"
+   ],
+   "lines": 132
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor",
+    "Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources"
+   ],
+   "lines": 551
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdCallbacks",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks"
+   ],
+   "lines": 107
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowering",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMeaningCounts",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLoweringSuccess",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdOpcodeReduction",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdLowered",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch"
+   ],
+   "lines": 710
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceShape",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdPureSignature",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSourceSignature",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBits",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEffects"
+   ],
+   "lines": 197
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSafetyCallbacks",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdInstructionAcceptance"
+   ],
+   "lines": 312
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdConstructor",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdSignature",
+    "Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdMemoryValid"
+   ],
+   "lines": 537
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Lowering.Table.LiteralTablePreservation",
+    "Itasca.Runtime.Compiler.Local.Lowering.Table.ScalarTablePreservation"
+   ],
+   "lines": 369
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Publication.ControlMapBounds",
+    "Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.OrdinaryMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication"
+   ],
+   "lines": 631
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Publication.StartMapPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Publication.ScopeClosePublication",
+    "Itasca.Runtime.Compiler.Local.Publication.FinalControlMapBounds",
+    "Itasca.Runtime.Compiler.Local.Publication.RootMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.BranchMapOwners",
+    "Itasca.Runtime.Compiler.Local.Publication.BranchMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.LoweringMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.LiteralMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.CallbackMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.ElseMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationRanges",
+    "Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationHeader",
+    "Itasca.Runtime.Compiler.Local.Publication.StartMapPublication"
+   ],
+   "lines": 952
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Publication.TableMapPublication",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Publication.ScalarMapPublication",
+    "Itasca.Runtime.Compiler.Local.Publication.TableMapPublication"
+   ],
+   "lines": 933
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.BranchCallbackSafety",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.CallSafety",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions"
+   ],
+   "lines": 412
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmissionTransport",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata"
+   ],
+   "lines": 401
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallOperands",
+    "Itasca.Runtime.Compiler.Local.Relations.Calls.StatefulCallbacks"
+   ],
+   "lines": 202
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlCursor",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlSources",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates"
+   ],
+   "lines": 107
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessLoop",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional"
+   ],
+   "lines": 824
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlMapCounts",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlEntrySuccess",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservation",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout"
+   ],
+   "lines": 495
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ControlHeightSuccess",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessEmit",
+    "Itasca.Runtime.Compiler.Local.Relations.Control.ResolvedBranchPrefix"
+   ],
+   "lines": 159
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Function.Environment",
+    "Itasca.Runtime.Compiler.Local.Relations.Function.FunctionStartRaw",
+    "Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunction",
+    "Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext"
+   ],
+   "lines": 405
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Function.Signatures",
+    "Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEntry",
+    "Itasca.Runtime.Compiler.Local.Relations.Function.FunctionEnvironment"
+   ],
+   "lines": 348
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormed",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.SlotCheckAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.CoreInstructionAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance"
+   ],
+   "lines": 360
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.SimdInstructionAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.LinearInstructionAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.ScalarEmissionAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.StatefulInstructionAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance"
+   ],
+   "lines": 508
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Layout.ValueRegions",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Layout.ObservationLayout",
+    "Itasca.Runtime.Compiler.Local.Relations.Layout.ValueRegions"
+   ],
+   "lines": 94
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess",
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode",
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions"
+   ],
+   "lines": 176
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.EndSafety",
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.TerminalSafety",
+    "Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety"
+   ],
+   "lines": 162
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.DormantFrames",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedConditionalPrefix",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.ConditionalCertificates",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedLiteral",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix"
+   ],
+   "lines": 253
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.FutureFrames",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper"
+   ],
+   "lines": 177
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.Concatenation",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix",
+    "Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix"
+   ],
+   "lines": 213
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentProgram",
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentEmit",
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentData"
+   ],
+   "lines": 234
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentAcceptance",
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentFinish",
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentComplete",
+    "Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation"
+   ],
+   "lines": 966
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering",
+    "Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands"
+   ],
+   "lines": 162
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack",
+    "Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack"
+   ],
+   "lines": 70
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmissionTransport",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEffects",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOperands",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered"
+   ],
+   "lines": 330
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOpcode",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering",
+    "Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess"
+   ],
+   "lines": 446
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Syntax.ExecutableTokens",
+    "Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode"
+   ],
+   "lines": 306
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackLayout",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableScopeFrames",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable"
+   ],
+   "lines": 422
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableProduction",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallbackProduction",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableDead",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames"
+   ],
+   "lines": 178
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLower",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableCallback",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableMetadata"
+   ],
+   "lines": 199
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableOperands",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSites",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects"
+   ],
+   "lines": 195
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.TableSources",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableTrace"
+   ],
+   "lines": 249
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSkip",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableArguments",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation"
+   ],
+   "lines": 586
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables"
+   ],
+   "lines": 130
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Relations.Table.TableDepths",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayout",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableLayoutAlgebra",
+    "Itasca.Runtime.Compiler.Local.Relations.Table.TableDepths"
+   ],
+   "lines": 244
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.SourceCursor",
+    "Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic"
+   ],
+   "lines": 279
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.SourceEntry",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody",
+    "Itasca.Runtime.Compiler.Local.Source.SourceStartFrame",
+    "Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission",
+    "Itasca.Runtime.Compiler.Local.Source.TypedSelectLowering",
+    "Itasca.Runtime.Compiler.Local.Source.SourceEntry"
+   ],
+   "lines": 583
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.SourceLengths",
+    "Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic"
+   ],
+   "lines": 342
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.SourceSlice",
+    "Itasca.Runtime.Compiler.Local.Source.SourceRun",
+    "Itasca.Runtime.Compiler.Local.Source.SourceBatchLookup",
+    "Itasca.Runtime.Compiler.Local.Source.SourceExecutable",
+    "Itasca.Runtime.Compiler.Local.Source.SourceSubmission",
+    "Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping",
+    "Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms"
+   ],
+   "lines": 860
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.TableTransferBounds",
+    "Itasca.Runtime.Compiler.Local.Source.JumpTableBounds",
+    "Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds"
+   ],
+   "lines": 134
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Local.Source.TypedRunClosed",
+   "members": [
+    "Itasca.Runtime.Compiler.Local.Source.SourceBudget",
+    "Itasca.Runtime.Compiler.Local.Source.SourceControlBudget",
+    "Itasca.Runtime.Compiler.Local.Source.TypedRunClosed"
+   ],
+   "lines": 115
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.BatchLoopAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.EntryFinishAvailable",
+    "Itasca.Runtime.Compiler.Module.CompileEntryAvailable",
+    "Itasca.Runtime.Compiler.Module.PreparedBatchSource",
+    "Itasca.Runtime.Compiler.Module.BatchLoopAvailable"
+   ],
+   "lines": 931
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CodeRegionComplete",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.EnvironmentFrame",
+    "Itasca.Runtime.Compiler.Module.CollectFunctions",
+    "Itasca.Runtime.Compiler.Module.SchedulerSubmission",
+    "Itasca.Runtime.Compiler.Module.SchedulerSafety",
+    "Itasca.Runtime.Compiler.Module.CompileEntryTotal",
+    "Itasca.Runtime.Compiler.Module.CompileAssembly",
+    "Itasca.Runtime.Compiler.Module.CompilerDrain",
+    "Itasca.Runtime.Compiler.Module.CompileSource",
+    "Itasca.Runtime.Compiler.Module.CodeRegionComplete"
+   ],
+   "lines": 996
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CompileDataCount",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CompileCache",
+    "Itasca.Runtime.Compiler.Module.SegmentPayloadBounds",
+    "Itasca.Runtime.Compiler.Module.SourceInstantiation",
+    "Itasca.Runtime.Compiler.Module.CompileDataCount"
+   ],
+   "lines": 348
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CompileDriverFrame",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.InitializerDataAvailable",
+    "Itasca.Runtime.Compiler.Module.InitializerElementsAvailable",
+    "Itasca.Runtime.Compiler.Module.InitializerOffsetAvailable",
+    "Itasca.Runtime.Compiler.Module.CompileDriverFrame"
+   ],
+   "lines": 605
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CompileExecutable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.ExecutableCollectedFunctions",
+    "Itasca.Runtime.Compiler.Module.ExecutableSchedulerFunctions",
+    "Itasca.Runtime.Compiler.Module.CompileExecutable"
+   ],
+   "lines": 494
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CompileSubmit",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.Stream",
+    "Itasca.Runtime.Compiler.Module.CodeRegion",
+    "Itasca.Runtime.Compiler.Module.WellFormedTotal",
+    "Itasca.Runtime.Compiler.Module.FinishTotal",
+    "Itasca.Runtime.Compiler.Module.CompileEntry",
+    "Itasca.Runtime.Compiler.Module.CompileEntries",
+    "Itasca.Runtime.Compiler.Module.CompileSubmit"
+   ],
+   "lines": 833
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.CompileTotal",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.InitializerSourceTotal",
+    "Itasca.Runtime.Compiler.Module.SubmitTotal",
+    "Itasca.Runtime.Compiler.Module.SchedulerSubmissionSafety",
+    "Itasca.Runtime.Compiler.Module.CompileTotalDriver",
+    "Itasca.Runtime.Compiler.Module.SchedulerProfileSafety",
+    "Itasca.Runtime.Compiler.Module.CompileProfileTotal",
+    "Itasca.Runtime.Compiler.Module.PreparedExecutableSafety",
+    "Itasca.Runtime.Compiler.Module.CompileTotal"
+   ],
+   "lines": 691
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CompilerQueueAvailable",
+    "Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable"
+   ],
+   "lines": 324
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.InitializerCompilationAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.SegmentCompilationAvailable",
+    "Itasca.Runtime.Compiler.Module.InitializerCompilationAvailable"
+   ],
+   "lines": 681
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.PreparedFunctionAvailable",
+    "Itasca.Runtime.Compiler.Module.SourceEntryPrepared",
+    "Itasca.Runtime.Compiler.Module.EntryAvailable",
+    "Itasca.Runtime.Compiler.Module.SourceQueuePolicy",
+    "Itasca.Runtime.Compiler.Module.EnvironmentReadyAvailable",
+    "Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable"
+   ],
+   "lines": 719
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.InitializerTotal",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CompileSourceCertificate",
+    "Itasca.Runtime.Compiler.Module.CompileStreamSource",
+    "Itasca.Runtime.Compiler.Module.CompilerLargeEnvironment",
+    "Itasca.Runtime.Compiler.Module.InitializerTotalBasic",
+    "Itasca.Runtime.Compiler.Module.InitializerTotalMappings",
+    "Itasca.Runtime.Compiler.Module.InitializerTotal"
+   ],
+   "lines": 920
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.PreparedFunctionDemand",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CollectionAvailable",
+    "Itasca.Runtime.Compiler.Module.PreparedEntryReplay",
+    "Itasca.Runtime.Compiler.Module.PreparedFunctionDemand"
+   ],
+   "lines": 255
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.SchedulerCapacities",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CompileSchedulerAssembly",
+    "Itasca.Runtime.Compiler.Module.CompileSourceSetup",
+    "Itasca.Runtime.Compiler.Module.CompileSlice",
+    "Itasca.Runtime.Compiler.Module.SchedulerCapacities"
+   ],
+   "lines": 281
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.SegmentSource",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.CompileSemantic",
+    "Itasca.Runtime.Compiler.Module.SegmentSource"
+   ],
+   "lines": 109
+  },
+  {
+   "target": "Itasca.Runtime.Compiler.Module.SourceRegionsAvailable",
+   "members": [
+    "Itasca.Runtime.Compiler.Module.SourceCompilationDemand",
+    "Itasca.Runtime.Compiler.Module.SourceRegionsAvailable"
+   ],
+   "lines": 113
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Api.InitialHostInvocationCauses",
+   "members": [
+    "Itasca.Runtime.Integration.Api.StatefulGrowthChoice",
+    "Itasca.Runtime.Integration.Api.StatefulMemoryGrow",
+    "Itasca.Runtime.Integration.Api.StatefulTableGrow",
+    "Itasca.Runtime.Integration.Api.StatefulGrowthSlots",
+    "Itasca.Runtime.Integration.Api.StatefulMemoryGrowExecution",
+    "Itasca.Runtime.Integration.Api.StatefulTableGrowExecution",
+    "Itasca.Runtime.Integration.Api.InitialHostInvocationCauses"
+   ],
+   "lines": 712
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Api.InvocationBoundary",
+   "members": [
+    "Itasca.Runtime.Integration.Api.SupportedMemoryGrowExecution",
+    "Itasca.Runtime.Integration.Api.SupportedTableGrowExecution",
+    "Itasca.Runtime.Integration.Api.ReadbackIssued",
+    "Itasca.Runtime.Integration.Api.InvocationBoundary"
+   ],
+   "lines": 132
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Api.InvocationEntryResources",
+   "members": [
+    "Itasca.Runtime.Integration.Api.CertifiedApi",
+    "Itasca.Runtime.Integration.Api.ExecutableInv",
+    "Itasca.Runtime.Integration.Api.ExecutableCallEntry",
+    "Itasca.Runtime.Integration.Api.InvocationCanonicalResources",
+    "Itasca.Runtime.Integration.Api.InvocationEntryResources"
+   ],
+   "lines": 232
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Api.InvocationResourcesAdequate",
+   "members": [
+    "Itasca.Runtime.Integration.Api.InvocationObjectExclusion",
+    "Itasca.Runtime.Integration.Api.InvocationResourcesAdequate"
+   ],
+   "lines": 114
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Compilation.Complete",
+   "members": [
+    "Itasca.Runtime.Integration.Compilation.Certificate",
+    "Itasca.Runtime.Integration.Compilation.Complete"
+   ],
+   "lines": 78
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.HostResult",
+    "Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes"
+   ],
+   "lines": 79
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.Host",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.StoreOperations",
+    "Itasca.Runtime.Integration.Execution.Dispatch.HostSite",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Host"
+   ],
+   "lines": 666
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.Arguments",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Entry",
+    "Itasca.Runtime.Integration.Execution.Dispatch.IndirectCall",
+    "Itasca.Runtime.Integration.Execution.Dispatch.IndirectLookup",
+    "Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary"
+   ],
+   "lines": 377
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.Normalization",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.BranchTable",
+    "Itasca.Runtime.Integration.Execution.Dispatch.IndirectExecution",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Measure",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Normalization"
+   ],
+   "lines": 240
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.Simd",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.UniformOutcomes",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Scalar",
+    "Itasca.Runtime.Integration.Execution.Dispatch.Simd"
+   ],
+   "lines": 225
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Dispatch.TableSet",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Dispatch.SegmentDrop",
+    "Itasca.Runtime.Integration.Execution.Dispatch.StoreRead",
+    "Itasca.Runtime.Integration.Execution.Dispatch.TableSet"
+   ],
+   "lines": 144
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.MemoryInit",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.InstantiationSource",
+    "Itasca.Runtime.Integration.Execution.MemoryCopy",
+    "Itasca.Runtime.Integration.Execution.MemoryFill",
+    "Itasca.Runtime.Integration.Execution.MemoryInit"
+   ],
+   "lines": 677
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Mutation.BulkResult",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Mutation.Certificate",
+    "Itasca.Runtime.Integration.Execution.Mutation.GlobalShape",
+    "Itasca.Runtime.Integration.Execution.Mutation.BulkResult"
+   ],
+   "lines": 147
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Ownership.Publication",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Ownership.Contents",
+    "Itasca.Runtime.Integration.Execution.Ownership.Entry",
+    "Itasca.Runtime.Integration.Execution.Ownership.StoreOperations",
+    "Itasca.Runtime.Integration.Execution.Ownership.Publication"
+   ],
+   "lines": 191
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Ownership.CertifiedStore",
+    "Itasca.Runtime.Integration.Execution.Ownership.CodeInterpretation",
+    "Itasca.Runtime.Integration.Execution.Ownership.SegmentInitialization",
+    "Itasca.Runtime.Integration.Execution.Ownership.FrameTypeBounds",
+    "Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape"
+   ],
+   "lines": 191
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Resources.InvocationErrors",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Resources.Failure",
+    "Itasca.Runtime.Integration.Execution.Resources.FailureNormalization",
+    "Itasca.Runtime.Integration.Execution.Resources.FailureErrors",
+    "Itasca.Runtime.Integration.Execution.Resources.InvocationErrors"
+   ],
+   "lines": 214
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.Resources.SourceDemand",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.Resources.BoundaryCauses",
+    "Itasca.Runtime.Integration.Execution.Resources.SourceDemand"
+   ],
+   "lines": 236
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.TableInit",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.SegmentDrop",
+    "Itasca.Runtime.Integration.Execution.SegmentDropDispatch",
+    "Itasca.Runtime.Integration.Execution.SegmentDropStep",
+    "Itasca.Runtime.Integration.Execution.TableCopy",
+    "Itasca.Runtime.Integration.Execution.TableFill",
+    "Itasca.Runtime.Integration.Execution.TableInit"
+   ],
+   "lines": 896
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.TableSetStep",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.TableSetDispatch",
+    "Itasca.Runtime.Integration.Execution.TableSetStep"
+   ],
+   "lines": 139
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.World.NonhostStep",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.World.Infinite",
+    "Itasca.Runtime.Integration.Execution.World.NonhostStep"
+   ],
+   "lines": 142
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.World.Reinterpretation",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.World.RecordedStep",
+    "Itasca.Runtime.Integration.Execution.World.Reinterpretation"
+   ],
+   "lines": 94
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Execution.World.State",
+   "members": [
+    "Itasca.Runtime.Integration.Execution.World.ExecutionCode",
+    "Itasca.Runtime.Integration.Execution.World.State"
+   ],
+   "lines": 125
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Host.HostCallContext",
+   "members": [
+    "Itasca.Runtime.Integration.Host.HostCallSource",
+    "Itasca.Runtime.Integration.Host.HostCallRecording",
+    "Itasca.Runtime.Integration.Host.HostCallContext"
+   ],
+   "lines": 147
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Host.HostIndirectSelected",
+   "members": [
+    "Itasca.Runtime.Integration.Host.HostOwnership",
+    "Itasca.Runtime.Integration.Host.HostEventfulReturn",
+    "Itasca.Runtime.Integration.Host.HostIndirectContext",
+    "Itasca.Runtime.Integration.Host.HostResumeOwned",
+    "Itasca.Runtime.Integration.Host.HostCallFrames",
+    "Itasca.Runtime.Integration.Host.HostStructuredResume",
+    "Itasca.Runtime.Integration.Host.HostIndirectSelected"
+   ],
+   "lines": 348
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld",
+   "members": [
+    "Itasca.Runtime.Integration.Host.HostCallRetainedWorld",
+    "Itasca.Runtime.Integration.Host.HostCallStructuredWorld",
+    "Itasca.Runtime.Integration.Host.HostIndirectSelectedWorld",
+    "Itasca.Runtime.Integration.Host.HostIndirectStructuredWorld"
+   ],
+   "lines": 649
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Host.HostRecordingBoundary",
+   "members": [
+    "Itasca.Runtime.Integration.Host.HostRecordingSite",
+    "Itasca.Runtime.Integration.Host.HostRecordingBoundary"
+   ],
+   "lines": 227
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Host.HostSiteWorld",
+   "members": [
+    "Itasca.Runtime.Integration.Host.HostReadyWorld",
+    "Itasca.Runtime.Integration.Host.HostSiteWorld"
+   ],
+   "lines": 111
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Instantiation.InstantiateSource",
+   "members": [
+    "Itasca.Runtime.Integration.Instantiation.InstantiateExecutableEventfulOrigin",
+    "Itasca.Runtime.Integration.Instantiation.InstantiateSource"
+   ],
+   "lines": 512
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Instantiation.StartResolution",
+   "members": [
+    "Itasca.Runtime.Integration.Instantiation.InstantiateSourceOrigin",
+    "Itasca.Runtime.Integration.Instantiation.PreparedCertifiedExecutable",
+    "Itasca.Runtime.Integration.Instantiation.PreparedCertifiedExecutableApi",
+    "Itasca.Runtime.Integration.Instantiation.StartAmbient",
+    "Itasca.Runtime.Integration.Instantiation.StartResolution"
+   ],
+   "lines": 257
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Invocation.HostOutcomes",
+   "members": [
+    "Itasca.Runtime.Integration.Invocation.DefinedDivergence",
+    "Itasca.Runtime.Integration.Invocation.HostOutcomes"
+   ],
+   "lines": 269
+  },
+  {
+   "target": "Itasca.Runtime.Integration.Invocation.Outcomes",
+   "members": [
+    "Itasca.Runtime.Integration.Invocation.InitialHostCauses",
+    "Itasca.Runtime.Integration.Invocation.HostResources",
+    "Itasca.Runtime.Integration.Invocation.Outcomes"
+   ],
+   "lines": 338
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Calls.DirectCall",
+   "members": [
+    "Itasca.Runtime.Interp.Calls.Call",
+    "Itasca.Runtime.Interp.Calls.DirectCall"
+   ],
+   "lines": 184
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Calls.IndirectResolve",
+   "members": [
+    "Itasca.Runtime.Interp.Calls.CallRefinement",
+    "Itasca.Runtime.Interp.Calls.CallStack",
+    "Itasca.Runtime.Interp.Calls.ReturnResult",
+    "Itasca.Runtime.Interp.Calls.CallCauses",
+    "Itasca.Runtime.Interp.Calls.DirectCallCause",
+    "Itasca.Runtime.Interp.Calls.IndirectCall",
+    "Itasca.Runtime.Interp.Calls.IndirectCallNext",
+    "Itasca.Runtime.Interp.Calls.IndirectCallSlots",
+    "Itasca.Runtime.Interp.Calls.IndirectResolve"
+   ],
+   "lines": 481
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Calls.ReturnRefinement",
+   "members": [
+    "Itasca.Runtime.Interp.Calls.CallRegions",
+    "Itasca.Runtime.Interp.Calls.CallFrames",
+    "Itasca.Runtime.Interp.Calls.ReturnRegions",
+    "Itasca.Runtime.Interp.Calls.ReturnRefinement"
+   ],
+   "lines": 330
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Control.BrTableSource",
+   "members": [
+    "Itasca.Runtime.Interp.Control.SkipStack",
+    "Itasca.Runtime.Interp.Control.StructuredUnreachable",
+    "Itasca.Runtime.Interp.Control.JumpTable",
+    "Itasca.Runtime.Interp.Control.BrTableSource"
+   ],
+   "lines": 207
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Control.NormalizeCompose",
+   "members": [
+    "Itasca.Runtime.Interp.Control.NormalizeClosure",
+    "Itasca.Runtime.Interp.Control.BranchNoCopy",
+    "Itasca.Runtime.Interp.Control.BranchCondition",
+    "Itasca.Runtime.Interp.Control.BranchConditionStep",
+    "Itasca.Runtime.Interp.Control.LoopHead",
+    "Itasca.Runtime.Interp.Control.NormalizeCompose"
+   ],
+   "lines": 546
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Control.StructuredLinear",
+   "members": [
+    "Itasca.Runtime.Interp.Control.StructuredPoint",
+    "Itasca.Runtime.Interp.Control.PendingJump",
+    "Itasca.Runtime.Interp.Control.LoopBasis",
+    "Itasca.Runtime.Interp.Control.StructuredLinear"
+   ],
+   "lines": 302
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Host.HostReturnFrames",
+   "members": [
+    "Itasca.Runtime.Interp.Host.HostResume",
+    "Itasca.Runtime.Interp.Host.HostPreparationCauses",
+    "Itasca.Runtime.Interp.Host.HostRecording",
+    "Itasca.Runtime.Interp.Host.HostReturnFrames"
+   ],
+   "lines": 611
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Invocation.Recording",
+   "members": [
+    "Itasca.Runtime.Interp.Invocation.Checks",
+    "Itasca.Runtime.Interp.Invocation.Divergence",
+    "Itasca.Runtime.Interp.Invocation.ReadbackOwnership",
+    "Itasca.Runtime.Interp.Invocation.ResourceCauses",
+    "Itasca.Runtime.Interp.Invocation.PrefixCauses",
+    "Itasca.Runtime.Interp.Invocation.PrefixDivergence",
+    "Itasca.Runtime.Interp.Invocation.MutableCauses",
+    "Itasca.Runtime.Interp.Invocation.LoopRecording",
+    "Itasca.Runtime.Interp.Invocation.LoopRecordingFacts",
+    "Itasca.Runtime.Interp.Invocation.Recording"
+   ],
+   "lines": 854
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Invocation.RecordingErasure",
+   "members": [
+    "Itasca.Runtime.Interp.Invocation.RecordedPrefix",
+    "Itasca.Runtime.Interp.Invocation.RecordedChecks",
+    "Itasca.Runtime.Interp.Invocation.RecordingErasure"
+   ],
+   "lines": 317
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Calls.CallStackEntry",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Calls.IndirectPoint",
+    "Itasca.Runtime.Interp.Machine.Calls.CallLookup",
+    "Itasca.Runtime.Interp.Machine.Calls.CallStack",
+    "Itasca.Runtime.Interp.Machine.Calls.CallStackEntry"
+   ],
+   "lines": 336
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Calls.HostCallStack",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Calls.IndirectSelected",
+    "Itasca.Runtime.Interp.Machine.Calls.CallExecution",
+    "Itasca.Runtime.Interp.Machine.Calls.HostReturnFrames",
+    "Itasca.Runtime.Interp.Machine.Calls.HostCallStack"
+   ],
+   "lines": 344
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Calls.IndirectOperands",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Calls.CallPoint",
+    "Itasca.Runtime.Interp.Machine.Calls.PrepareCallStack",
+    "Itasca.Runtime.Interp.Machine.Calls.StructuredCall",
+    "Itasca.Runtime.Interp.Machine.Calls.IndirectOperands"
+   ],
+   "lines": 388
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Constants.FloatConstant",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Constants.FloatEmission",
+    "Itasca.Runtime.Interp.Machine.Constants.FloatSlots",
+    "Itasca.Runtime.Interp.Machine.Constants.IntegerEmission",
+    "Itasca.Runtime.Interp.Machine.Constants.IntegerSlots",
+    "Itasca.Runtime.Interp.Machine.Constants.FloatConstant"
+   ],
+   "lines": 883
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Control.BranchPoint",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Control.ForwardJump",
+    "Itasca.Runtime.Interp.Machine.Control.ControlInversion",
+    "Itasca.Runtime.Interp.Machine.Control.LabelCompletion",
+    "Itasca.Runtime.Interp.Machine.Control.BranchInversion",
+    "Itasca.Runtime.Interp.Machine.Control.BranchPoint"
+   ],
+   "lines": 318
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Control.BranchSource",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Control.BranchTable",
+    "Itasca.Runtime.Interp.Machine.Control.JumpExecution",
+    "Itasca.Runtime.Interp.Machine.Control.UniformSimulation",
+    "Itasca.Runtime.Interp.Machine.Control.UniformSource",
+    "Itasca.Runtime.Interp.Machine.Control.BranchSource"
+   ],
+   "lines": 362
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Control.ControlExecution",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Control.BranchIfOwned",
+    "Itasca.Runtime.Interp.Machine.Control.BranchOwned",
+    "Itasca.Runtime.Interp.Machine.Control.If",
+    "Itasca.Runtime.Interp.Machine.Control.Loop",
+    "Itasca.Runtime.Interp.Machine.Control.ControlExecution"
+   ],
+   "lines": 934
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Coverage.SupportedHeadCoverage",
+    "Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads"
+   ],
+   "lines": 170
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics",
+    "Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads"
+   ],
+   "lines": 160
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Coverage.SupportedBoundarySemantics",
+    "Itasca.Runtime.Interp.Machine.Coverage.SyntaxClosure"
+   ],
+   "lines": 103
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Emission.Local",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Emission.Integer",
+    "Itasca.Runtime.Interp.Machine.Emission.Empty",
+    "Itasca.Runtime.Interp.Machine.Emission.Binary",
+    "Itasca.Runtime.Interp.Machine.Emission.Opcode",
+    "Itasca.Runtime.Interp.Machine.Emission.Local"
+   ],
+   "lines": 148
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Frames.FrameDepth",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Frames.FunctionEnd",
+    "Itasca.Runtime.Interp.Machine.Frames.ReturnCompletion",
+    "Itasca.Runtime.Interp.Machine.Frames.EpilogueExecution",
+    "Itasca.Runtime.Interp.Machine.Frames.ReturnPoint",
+    "Itasca.Runtime.Interp.Machine.Frames.StructuredReturn",
+    "Itasca.Runtime.Interp.Machine.Frames.ReturnExecution",
+    "Itasca.Runtime.Interp.Machine.Frames.Finished",
+    "Itasca.Runtime.Interp.Machine.Frames.FrameStorePrefix",
+    "Itasca.Runtime.Interp.Machine.Frames.FrameDepth"
+   ],
+   "lines": 476
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Functions.Typing",
+    "Itasca.Runtime.Interp.Machine.Functions.FunctionCode",
+    "Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions"
+   ],
+   "lines": 122
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Global.Mutation",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Global.ExecutionOwned",
+    "Itasca.Runtime.Interp.Machine.Global.Mutation"
+   ],
+   "lines": 279
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Local.ExecutionOwned",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Local.MovePrefix",
+    "Itasca.Runtime.Interp.Machine.Local.Inversion",
+    "Itasca.Runtime.Interp.Machine.Local.ExecutionOwned"
+   ],
+   "lines": 509
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Normalization",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Memory",
+    "Itasca.Runtime.Interp.Machine.Normalization"
+   ],
+   "lines": 829
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Normalization.IndexedLinear",
+    "Itasca.Runtime.Interp.Machine.Normalization.LinearContinuation",
+    "Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty"
+   ],
+   "lines": 69
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Progress.PendingExecution",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Progress.OrdinaryAdvance",
+    "Itasca.Runtime.Interp.Machine.Progress.PendingExecution"
+   ],
+   "lines": 209
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack",
+    "Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution",
+    "Itasca.Runtime.Interp.Machine.Progress.Advance",
+    "Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance"
+   ],
+   "lines": 200
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Progress.ActiveLoop",
+    "Itasca.Runtime.Interp.Machine.Progress.UniformAdvance",
+    "Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution"
+   ],
+   "lines": 169
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Retention.CodeBounds",
+    "Itasca.Runtime.Interp.Machine.Retention.Ownership",
+    "Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership"
+   ],
+   "lines": 169
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Select",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Global",
+    "Itasca.Runtime.Interp.Machine.Numeric",
+    "Itasca.Runtime.Interp.Machine.Select"
+   ],
+   "lines": 931
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Select.Operands",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Select.Emission",
+    "Itasca.Runtime.Interp.Machine.Select.Operands"
+   ],
+   "lines": 91
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Simd.FrameStep",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Simd.Point",
+    "Itasca.Runtime.Interp.Machine.Simd.Continue",
+    "Itasca.Runtime.Interp.Machine.Simd.ExecutionJoin",
+    "Itasca.Runtime.Interp.Machine.Simd.ConstantFrame",
+    "Itasca.Runtime.Interp.Machine.Simd.FrameOutcome",
+    "Itasca.Runtime.Interp.Machine.Simd.Prepare",
+    "Itasca.Runtime.Interp.Machine.Simd.LaneFrame",
+    "Itasca.Runtime.Interp.Machine.Simd.MemoryFrame",
+    "Itasca.Runtime.Interp.Machine.Simd.PureFrame",
+    "Itasca.Runtime.Interp.Machine.Simd.ShuffleFrame",
+    "Itasca.Runtime.Interp.Machine.Simd.FrameStep"
+   ],
+   "lines": 885
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Simulation.CoreErasure",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Simulation.Measure",
+    "Itasca.Runtime.Interp.Machine.Simulation.CoreErasure"
+   ],
+   "lines": 64
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.Stateful.Prepare",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Stateful.Projection",
+    "Itasca.Runtime.Interp.Machine.Stateful.Prepare"
+   ],
+   "lines": 110
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Machine.SuspendedPoint",
+   "members": [
+    "Itasca.Runtime.Interp.Machine.Point",
+    "Itasca.Runtime.Interp.Machine.SuspendedPoint"
+   ],
+   "lines": 113
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Memory.MemoryCoreStep",
+   "members": [
+    "Itasca.Runtime.Interp.Memory.MemoryDescriptor",
+    "Itasca.Runtime.Interp.Memory.MemoryMutation",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreEmission",
+    "Itasca.Runtime.Interp.Memory.MemoryValueSlots",
+    "Itasca.Runtime.Interp.Memory.MemoryCore",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreStore",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreOperandBounds",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreResult",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreStep"
+   ],
+   "lines": 1000
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Memory.MemoryGrow",
+   "members": [
+    "Itasca.Runtime.Interp.Memory.MemoryLoadStepFootprint",
+    "Itasca.Runtime.Interp.Memory.MemoryGrow"
+   ],
+   "lines": 137
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Memory.MemorySize",
+   "members": [
+    "Itasca.Runtime.Interp.Memory.MemoryAddress",
+    "Itasca.Runtime.Interp.Memory.MemoryScalar",
+    "Itasca.Runtime.Interp.Memory.MemoryEncoding",
+    "Itasca.Runtime.Interp.Memory.MemoryDecode",
+    "Itasca.Runtime.Interp.Memory.MemoryDispatch",
+    "Itasca.Runtime.Interp.Memory.MemoryCoreTransition",
+    "Itasca.Runtime.Interp.Memory.MemorySize"
+   ],
+   "lines": 721
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatInstructionComparison",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatInstructionBasic",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatInstructionComparison"
+   ],
+   "lines": 939
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatOwnership",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatDispatch",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatFetch",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatOwnership"
+   ],
+   "lines": 444
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatPromote",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatCompareBits",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatCompare",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatMinMax",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatSigns",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatBounded",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatPromote"
+   ],
+   "lines": 937
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatReinterpretSource",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatComparisonScalar",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatSource",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatConvertSource",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatMinMaxSource",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatPromoteSource",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatReinterpretSource"
+   ],
+   "lines": 955
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatTrunc64",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatTruncTail",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatTrunc32",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatTrunc64"
+   ],
+   "lines": 541
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Float.FloatTruncInstruction",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Float.FloatTruncSource",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatInstructionOutcome",
+    "Itasca.Runtime.Interp.Numeric.Float.FloatTruncInstruction"
+   ],
+   "lines": 809
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Integer.IntCounts",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Integer.Interrupt",
+    "Itasca.Runtime.Interp.Numeric.Integer.NumericCodePoint",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntSigned",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntShift",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntRotate",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntCounts"
+   ],
+   "lines": 865
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Integer.IntegerBinary",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Integer.IntExtend",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntCompareSigned",
+    "Itasca.Runtime.Interp.Numeric.Integer.IntegerBinary"
+   ],
+   "lines": 790
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Numeric.Integer.NumericFetch",
+   "members": [
+    "Itasca.Runtime.Interp.Numeric.Integer.IntegerDispatch",
+    "Itasca.Runtime.Interp.Numeric.Integer.NumericDispatch",
+    "Itasca.Runtime.Interp.Numeric.Integer.NumericWords",
+    "Itasca.Runtime.Interp.Numeric.Integer.NumericFetch"
+   ],
+   "lines": 699
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.ArgumentRejectionKind",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.SourceValueCauses",
+    "Itasca.Runtime.Interp.Relations.SourceAllocationCauses",
+    "Itasca.Runtime.Interp.Relations.SourceCanonicalCapacity",
+    "Itasca.Runtime.Interp.Relations.SourceIndirectResources",
+    "Itasca.Runtime.Interp.Relations.StepRecordingLookup",
+    "Itasca.Runtime.Interp.Relations.StepRecordingInversion",
+    "Itasca.Runtime.Interp.Relations.ArgumentRejectionKind"
+   ],
+   "lines": 450
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.Defaults",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.DecodeValue",
+    "Itasca.Runtime.Interp.Relations.ScalarDispatch",
+    "Itasca.Runtime.Interp.Relations.Execute",
+    "Itasca.Runtime.Interp.Relations.Copy",
+    "Itasca.Runtime.Interp.Relations.Rel",
+    "Itasca.Runtime.Interp.Relations.CopyRel",
+    "Itasca.Runtime.Interp.Relations.Ensure",
+    "Itasca.Runtime.Interp.Relations.Fetch",
+    "Itasca.Runtime.Interp.Relations.InitLocals",
+    "Itasca.Runtime.Interp.Relations.Defaults"
+   ],
+   "lines": 872
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.FrameStoreMetadata",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.FrameStack",
+    "Itasca.Runtime.Interp.Relations.CompiledFunctions",
+    "Itasca.Runtime.Interp.Relations.ControlPoint",
+    "Itasca.Runtime.Interp.Relations.StackRelation",
+    "Itasca.Runtime.Interp.Relations.FrameStoreMetadata"
+   ],
+   "lines": 148
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.ReferenceSource",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.WordEncoding",
+    "Itasca.Runtime.Interp.Relations.PackedMemorySource",
+    "Itasca.Runtime.Interp.Relations.ReferenceSource"
+   ],
+   "lines": 258
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.SourceCallCause",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.HeadCoverage",
+    "Itasca.Runtime.Interp.Relations.SourceCallCause"
+   ],
+   "lines": 125
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.SourceClosure",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.InitializerExecute",
+    "Itasca.Runtime.Interp.Relations.Initializer",
+    "Itasca.Runtime.Interp.Relations.Synthetic",
+    "Itasca.Runtime.Interp.Relations.InitializerResolution",
+    "Itasca.Runtime.Interp.Relations.Range",
+    "Itasca.Runtime.Interp.Relations.ControlEntry",
+    "Itasca.Runtime.Interp.Relations.Erased",
+    "Itasca.Runtime.Interp.Relations.SourceClosure"
+   ],
+   "lines": 787
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.StackPreservation",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.PrefixEffect",
+    "Itasca.Runtime.Interp.Relations.PrefixDispatch",
+    "Itasca.Runtime.Interp.Relations.FrameStorePrefix",
+    "Itasca.Runtime.Interp.Relations.WordDecoding",
+    "Itasca.Runtime.Interp.Relations.StackPreservation"
+   ],
+   "lines": 590
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.StepActive",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.SourceIndirectCallCause",
+    "Itasca.Runtime.Interp.Relations.EventfulControl",
+    "Itasca.Runtime.Interp.Relations.TypedSelectOperands",
+    "Itasca.Runtime.Interp.Relations.EventfulNormalize",
+    "Itasca.Runtime.Interp.Relations.StepRecording",
+    "Itasca.Runtime.Interp.Relations.DecodeOwnership",
+    "Itasca.Runtime.Interp.Relations.StepActive"
+   ],
+   "lines": 274
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.SuspendedPoint",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.Readback",
+    "Itasca.Runtime.Interp.Relations.ReferenceArguments",
+    "Itasca.Runtime.Interp.Relations.FrameBindings",
+    "Itasca.Runtime.Interp.Relations.SuspendedPoint"
+   ],
+   "lines": 193
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.Epilogue",
+    "Itasca.Runtime.Interp.Relations.Move",
+    "Itasca.Runtime.Interp.Relations.LocalCodePoint",
+    "Itasca.Runtime.Interp.Relations.LocalCapacity",
+    "Itasca.Runtime.Interp.Relations.TypedArguments",
+    "Itasca.Runtime.Interp.Relations.InitializerErrors",
+    "Itasca.Runtime.Interp.Relations.SelectSlots",
+    "Itasca.Runtime.Interp.Relations.SyntheticInitializerCauses"
+   ],
+   "lines": 900
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.TypedOperands",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.Arguments",
+    "Itasca.Runtime.Interp.Relations.ExecutionLoop",
+    "Itasca.Runtime.Interp.Relations.TypeSlots",
+    "Itasca.Runtime.Interp.Relations.Marshal",
+    "Itasca.Runtime.Interp.Relations.Conditional",
+    "Itasca.Runtime.Interp.Relations.Unreachable",
+    "Itasca.Runtime.Interp.Relations.Capacity",
+    "Itasca.Runtime.Interp.Relations.ConstCodePoint",
+    "Itasca.Runtime.Interp.Relations.TypedOperands"
+   ],
+   "lines": 775
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Relations.ValueLookup",
+   "members": [
+    "Itasca.Runtime.Interp.Relations.Normalization",
+    "Itasca.Runtime.Interp.Relations.ReferenceTransfers",
+    "Itasca.Runtime.Interp.Relations.ValueLookup"
+   ],
+   "lines": 159
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Execution.PureSound",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Execution.ExecuteSource",
+    "Itasca.Runtime.Interp.Simd.Execution.LaneValuesExecute",
+    "Itasca.Runtime.Interp.Simd.Execution.PureCompare",
+    "Itasca.Runtime.Interp.Simd.Execution.PureSound"
+   ],
+   "lines": 930
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Execution.PureUnary",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Execution.ExecutePure",
+    "Itasca.Runtime.Interp.Simd.Execution.PureConversions",
+    "Itasca.Runtime.Interp.Simd.Execution.PureUnary"
+   ],
+   "lines": 711
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Execution.PureValuesExecute",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Execution.ConstValues",
+    "Itasca.Runtime.Interp.Simd.Execution.FrameCapacity",
+    "Itasca.Runtime.Interp.Simd.Execution.FrameRetention",
+    "Itasca.Runtime.Interp.Simd.Execution.BytecodeDispatch",
+    "Itasca.Runtime.Interp.Simd.Execution.PureValuesExecute"
+   ],
+   "lines": 265
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Float.PureEntries",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Float.Binary",
+    "Itasca.Runtime.Interp.Simd.Float.Unary",
+    "Itasca.Runtime.Interp.Simd.Float.PureEntries"
+   ],
+   "lines": 832
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Float.TruncSat",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Float.CompareWords",
+    "Itasca.Runtime.Interp.Simd.Float.CompareLanes",
+    "Itasca.Runtime.Interp.Simd.Float.Compare",
+    "Itasca.Runtime.Interp.Simd.Float.Resize",
+    "Itasca.Runtime.Interp.Simd.Float.TruncSat"
+   ],
+   "lines": 712
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Integer.CompareSigned",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Integer.Signed",
+    "Itasca.Runtime.Interp.Simd.Integer.ExtractSigned",
+    "Itasca.Runtime.Interp.Simd.Integer.BinaryLoop",
+    "Itasca.Runtime.Interp.Simd.Integer.ShiftBits",
+    "Itasca.Runtime.Interp.Simd.Integer.WidenWords",
+    "Itasca.Runtime.Interp.Simd.Integer.WidenLanes",
+    "Itasca.Runtime.Interp.Simd.Integer.WidenSound",
+    "Itasca.Runtime.Interp.Simd.Integer.Shift",
+    "Itasca.Runtime.Interp.Simd.Integer.CompareLoop",
+    "Itasca.Runtime.Interp.Simd.Integer.CompareSigned"
+   ],
+   "lines": 916
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Integer.PureInteger",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Integer.Saturating",
+    "Itasca.Runtime.Interp.Simd.Integer.PureInteger"
+   ],
+   "lines": 439
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Integer.Q15",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Integer.AllTrueSound",
+    "Itasca.Runtime.Interp.Simd.Integer.UnarySigns",
+    "Itasca.Runtime.Interp.Simd.Integer.BitmaskSound",
+    "Itasca.Runtime.Interp.Simd.Integer.Population",
+    "Itasca.Runtime.Interp.Simd.Integer.UnaryBits",
+    "Itasca.Runtime.Interp.Simd.Integer.PopcountSound",
+    "Itasca.Runtime.Interp.Simd.Integer.ShiftSound",
+    "Itasca.Runtime.Interp.Simd.Integer.UnarySound",
+    "Itasca.Runtime.Interp.Simd.Integer.Arithmetic",
+    "Itasca.Runtime.Interp.Simd.Integer.Average",
+    "Itasca.Runtime.Interp.Simd.Integer.MinMax",
+    "Itasca.Runtime.Interp.Simd.Integer.Q15"
+   ],
+   "lines": 995
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Integer.UnaryAll",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Integer.ConvertInteger",
+    "Itasca.Runtime.Interp.Simd.Integer.Saturation",
+    "Itasca.Runtime.Interp.Simd.Integer.Q15Word",
+    "Itasca.Runtime.Interp.Simd.Integer.Dot",
+    "Itasca.Runtime.Interp.Simd.Integer.Narrow",
+    "Itasca.Runtime.Interp.Simd.Integer.Pairwise",
+    "Itasca.Runtime.Interp.Simd.Integer.UnaryAll"
+   ],
+   "lines": 985
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Integer.UnaryWords",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Integer.CompareWords",
+    "Itasca.Runtime.Interp.Simd.Integer.CompareLanes",
+    "Itasca.Runtime.Interp.Simd.Integer.CompareMaskBits",
+    "Itasca.Runtime.Interp.Simd.Integer.Compare",
+    "Itasca.Runtime.Interp.Simd.Integer.ArithmeticWord",
+    "Itasca.Runtime.Interp.Simd.Integer.ArithmeticLanes",
+    "Itasca.Runtime.Interp.Simd.Integer.UnaryWord",
+    "Itasca.Runtime.Interp.Simd.Integer.UnaryWords"
+   ],
+   "lines": 653
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Lanes.Shuffle",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Lanes.LaneEntries",
+    "Itasca.Runtime.Interp.Simd.Lanes.Shuffle"
+   ],
+   "lines": 329
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Lanes.SplatSound",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Lanes.Access",
+    "Itasca.Runtime.Interp.Simd.Lanes.LaneBits",
+    "Itasca.Runtime.Interp.Simd.Lanes.Splat",
+    "Itasca.Runtime.Interp.Simd.Lanes.Packing",
+    "Itasca.Runtime.Interp.Simd.Lanes.SplatSound"
+   ],
+   "lines": 384
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Lanes.Swizzle",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Lanes.Extract",
+    "Itasca.Runtime.Interp.Simd.Lanes.ReplacePacking",
+    "Itasca.Runtime.Interp.Simd.Lanes.Replace",
+    "Itasca.Runtime.Interp.Simd.Lanes.ShuffleBytes",
+    "Itasca.Runtime.Interp.Simd.Lanes.Swizzle"
+   ],
+   "lines": 439
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Memory.ExecuteError",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Memory.LaneSource",
+    "Itasca.Runtime.Interp.Simd.Memory.StoreEncoding",
+    "Itasca.Runtime.Interp.Simd.Memory.LaneStoreSource",
+    "Itasca.Runtime.Interp.Simd.Memory.Splat",
+    "Itasca.Runtime.Interp.Simd.Memory.SplatSource",
+    "Itasca.Runtime.Interp.Simd.Memory.StoreSource",
+    "Itasca.Runtime.Interp.Simd.Memory.ZeroSource",
+    "Itasca.Runtime.Interp.Simd.Memory.Relation",
+    "Itasca.Runtime.Interp.Simd.Memory.Transition",
+    "Itasca.Runtime.Interp.Simd.Memory.ValuesTransition",
+    "Itasca.Runtime.Interp.Simd.Memory.ChangeDecode",
+    "Itasca.Runtime.Interp.Simd.Memory.ExecuteEffect",
+    "Itasca.Runtime.Interp.Simd.Memory.ExecuteError"
+   ],
+   "lines": 803
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Memory.ExtendSource",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Memory.Execute",
+    "Itasca.Runtime.Interp.Simd.Memory.Bytes",
+    "Itasca.Runtime.Interp.Simd.Memory.Range",
+    "Itasca.Runtime.Interp.Simd.Memory.FullStore",
+    "Itasca.Runtime.Interp.Simd.Memory.Plain",
+    "Itasca.Runtime.Interp.Simd.Memory.Dispatch",
+    "Itasca.Runtime.Interp.Simd.Memory.ExtendLoop",
+    "Itasca.Runtime.Interp.Simd.Memory.Extend",
+    "Itasca.Runtime.Interp.Simd.Memory.Lane",
+    "Itasca.Runtime.Interp.Simd.Memory.LaneEffect",
+    "Itasca.Runtime.Interp.Simd.Memory.Encoding",
+    "Itasca.Runtime.Interp.Simd.Memory.LoadSource",
+    "Itasca.Runtime.Interp.Simd.Memory.LaneBytes",
+    "Itasca.Runtime.Interp.Simd.Memory.ExtendBytes",
+    "Itasca.Runtime.Interp.Simd.Memory.ExtendSource"
+   ],
+   "lines": 972
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Memory.ValuesExecute",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Memory.Entries",
+    "Itasca.Runtime.Interp.Simd.Memory.WriteEntries",
+    "Itasca.Runtime.Interp.Simd.Memory.Sound",
+    "Itasca.Runtime.Interp.Simd.Memory.SourceExecute",
+    "Itasca.Runtime.Interp.Simd.Memory.ValuesExecute"
+   ],
+   "lines": 752
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Relations.InputValues",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Relations.ValueSlots",
+    "Itasca.Runtime.Interp.Simd.Relations.LaneRelation",
+    "Itasca.Runtime.Interp.Simd.Relations.InputValues"
+   ],
+   "lines": 245
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Relations.Mutation",
+    "Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots"
+   ],
+   "lines": 72
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Relations.PureRelation",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Relations.Slots",
+    "Itasca.Runtime.Interp.Simd.Relations.Operands",
+    "Itasca.Runtime.Interp.Simd.Relations.OperandsBounded",
+    "Itasca.Runtime.Interp.Simd.Relations.PureRelation"
+   ],
+   "lines": 151
+  },
+  {
+   "target": "Itasca.Runtime.Interp.Simd.Relations.PureResultSlots",
+   "members": [
+    "Itasca.Runtime.Interp.Simd.Relations.ShuffleRelation",
+    "Itasca.Runtime.Interp.Simd.Relations.PureResultSlots"
+   ],
+   "lines": 96
+  },
+  {
+   "target": "Itasca.Runtime.Interp.State.GlobalCoreStep",
+   "members": [
+    "Itasca.Runtime.Interp.State.Globals",
+    "Itasca.Runtime.Interp.State.GlobalCoreWrite",
+    "Itasca.Runtime.Interp.State.GlobalMutation",
+    "Itasca.Runtime.Interp.State.GlobalCoreEmission",
+    "Itasca.Runtime.Interp.State.GlobalCoreOperands",
+    "Itasca.Runtime.Interp.State.GlobalCoreStep"
+   ],
+   "lines": 856
+  },
+  {
+   "target": "Itasca.Runtime.Interp.State.StatefulIntegerOperands",
+   "members": [
+    "Itasca.Runtime.Interp.State.StatefulSlots",
+    "Itasca.Runtime.Interp.State.StatefulOperandSlots",
+    "Itasca.Runtime.Interp.State.TableGrow",
+    "Itasca.Runtime.Interp.State.StatefulReferenceValue",
+    "Itasca.Runtime.Interp.State.StatefulOperandValues",
+    "Itasca.Runtime.Interp.State.StatefulIntegerOperands"
+   ],
+   "lines": 562
+  },
+  {
+   "target": "Itasca.Runtime.Interp.State.StatefulSegmentLookup",
+   "members": [
+    "Itasca.Runtime.Interp.State.GlobalMutationStep",
+    "Itasca.Runtime.Interp.State.TableMutation",
+    "Itasca.Runtime.Interp.State.StatefulPrepare",
+    "Itasca.Runtime.Interp.State.StatefulLookup",
+    "Itasca.Runtime.Interp.State.StatefulContinue",
+    "Itasca.Runtime.Interp.State.StatefulSegmentLookup"
+   ],
+   "lines": 239
+  },
+  {
+   "target": "Itasca.Runtime.Interp.State.StatefulTableSetSlots",
+   "members": [
+    "Itasca.Runtime.Interp.State.StatefulReadStep",
+    "Itasca.Runtime.Interp.State.StatefulTableSetSlots"
+   ],
+   "lines": 379
+  },
+  {
+   "target": "Itasca.Runtime.Interp.State.TableSource",
+   "members": [
+    "Itasca.Runtime.Interp.State.TableAccess",
+    "Itasca.Runtime.Interp.State.TableSource"
+   ],
+   "lines": 180
+  },
+  {
+   "target": "Itasca.Runtime.Platform.Laws",
+   "members": [
+    "Itasca.Runtime.Platform.Alloc",
+    "Itasca.Runtime.Platform.Recording",
+    "Itasca.Runtime.Platform.ReturnedLoop",
+    "Itasca.Runtime.Platform.Memory",
+    "Itasca.Runtime.Platform.Float",
+    "Itasca.Runtime.Platform.DivSpec",
+    "Itasca.Runtime.Platform.Laws"
+   ],
+   "lines": 520
+  },
+  {
+   "target": "Itasca.Runtime.Representation.StoreCapacity",
+   "members": [
+    "Itasca.Runtime.Representation.ValidatedStacks",
+    "Itasca.Runtime.Representation.FunctionCapacity",
+    "Itasca.Runtime.Representation.Store",
+    "Itasca.Runtime.Representation.StoreInvariant",
+    "Itasca.Runtime.Representation.FunctionTable",
+    "Itasca.Runtime.Representation.TypeEntries",
+    "Itasca.Runtime.Representation.NameSource",
+    "Itasca.Runtime.Representation.StoreCapacity"
+   ],
+   "lines": 597
+  },
+  {
+   "target": "Itasca.Runtime.Representation.Values",
+   "members": [
+    "Itasca.Runtime.Representation.StackLayout",
+    "Itasca.Runtime.Representation.Collection",
+    "Itasca.Runtime.Representation.Encoding",
+    "Itasca.Runtime.Representation.Values"
+   ],
+   "lines": 492
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Bound",
+   "members": [
+    "Itasca.Runtime.SourceMachine.StepSafety",
+    "Itasca.Runtime.SourceMachine.Bound"
+   ],
+   "lines": 349
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.BrTable",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Invoke",
+    "Itasca.Runtime.SourceMachine.Results",
+    "Itasca.Runtime.SourceMachine.ReferenceBounds",
+    "Itasca.Runtime.SourceMachine.LabelHeights",
+    "Itasca.Runtime.SourceMachine.SupportedState",
+    "Itasca.Runtime.SourceMachine.ExecutableExclusion",
+    "Itasca.Runtime.SourceMachine.StoreTyping",
+    "Itasca.Runtime.SourceMachine.BrTable"
+   ],
+   "lines": 601
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.CallSafety",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Progress",
+    "Itasca.Runtime.SourceMachine.Preservation",
+    "Itasca.Runtime.SourceMachine.ControlSafety",
+    "Itasca.Runtime.SourceMachine.CallSafety"
+   ],
+   "lines": 890
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Core.SelectPositive",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Core.Bound",
+    "Itasca.Runtime.SourceMachine.Core.MemoryAccess",
+    "Itasca.Runtime.SourceMachine.Core.Correct",
+    "Itasca.Runtime.SourceMachine.Core.Extension",
+    "Itasca.Runtime.SourceMachine.Core.Terminal",
+    "Itasca.Runtime.SourceMachine.Core.PositiveControl",
+    "Itasca.Runtime.SourceMachine.Core.MemoryPositive",
+    "Itasca.Runtime.SourceMachine.Core.SelectPositive"
+   ],
+   "lines": 619
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Core.Trap",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Core.Typing",
+    "Itasca.Runtime.SourceMachine.Core.ContentExtension",
+    "Itasca.Runtime.SourceMachine.Core.GlobalContents",
+    "Itasca.Runtime.SourceMachine.Core.GlobalTyping",
+    "Itasca.Runtime.SourceMachine.Core.Simulation",
+    "Itasca.Runtime.SourceMachine.Core.Globals",
+    "Itasca.Runtime.SourceMachine.Core.Select",
+    "Itasca.Runtime.SourceMachine.Core.MemoryStep",
+    "Itasca.Runtime.SourceMachine.Core.Step",
+    "Itasca.Runtime.SourceMachine.Core.Pure",
+    "Itasca.Runtime.SourceMachine.Core.PureMetadata",
+    "Itasca.Runtime.SourceMachine.Core.MemoryTyping",
+    "Itasca.Runtime.SourceMachine.Core.MemoryMutation",
+    "Itasca.Runtime.SourceMachine.Core.Trap"
+   ],
+   "lines": 975
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Cumulative.Step",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Cumulative.Heap",
+    "Itasca.Runtime.SourceMachine.Cumulative.Step"
+   ],
+   "lines": 69
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Decode",
+   "members": [
+    "Itasca.Runtime.SourceMachine.State",
+    "Itasca.Runtime.SourceMachine.Decode"
+   ],
+   "lines": 74
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.DecodeDepth",
+   "members": [
+    "Itasca.Runtime.SourceMachine.BrTableTransition",
+    "Itasca.Runtime.SourceMachine.HostTyping",
+    "Itasca.Runtime.SourceMachine.HostCallSite",
+    "Itasca.Runtime.SourceMachine.DecodeDepth"
+   ],
+   "lines": 353
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Float.Results",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Float.Descriptor",
+    "Itasca.Runtime.SourceMachine.Float.Results"
+   ],
+   "lines": 320
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Indirect.HostSimulation",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Indirect.Definition",
+    "Itasca.Runtime.SourceMachine.Indirect.Operands",
+    "Itasca.Runtime.SourceMachine.Indirect.Correct",
+    "Itasca.Runtime.SourceMachine.Indirect.Transport",
+    "Itasca.Runtime.SourceMachine.Indirect.Results",
+    "Itasca.Runtime.SourceMachine.Indirect.HostSimulation"
+   ],
+   "lines": 604
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Measure",
+   "members": [
+    "Itasca.Runtime.SourceMachine.BinaryInstr",
+    "Itasca.Runtime.SourceMachine.PureHead",
+    "Itasca.Runtime.SourceMachine.Core",
+    "Itasca.Runtime.SourceMachine.Safety",
+    "Itasca.Runtime.SourceMachine.ModuleBindingsExtension",
+    "Itasca.Runtime.SourceMachine.FrameTypingExtension",
+    "Itasca.Runtime.SourceMachine.Measure"
+   ],
+   "lines": 497
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Memory.Decode",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Memory.Descriptor",
+    "Itasca.Runtime.SourceMachine.Memory.Semantics",
+    "Itasca.Runtime.SourceMachine.Memory.Decode"
+   ],
+   "lines": 193
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Numeric.Decode",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Numeric.Semantics",
+    "Itasca.Runtime.SourceMachine.Numeric.Decode"
+   ],
+   "lines": 200
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Numeric.Transition",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Numeric.OperandsCore",
+    "Itasca.Runtime.SourceMachine.Numeric.Transition"
+   ],
+   "lines": 252
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Numeric.TransitionSafety",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Numeric.Instruction",
+    "Itasca.Runtime.SourceMachine.Numeric.TransitionSafety"
+   ],
+   "lines": 560
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Numeric.OperandBounds",
+    "Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation"
+   ],
+   "lines": 110
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Ownership.Extension",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Ownership.Bounds",
+    "Itasca.Runtime.SourceMachine.Ownership.Numeric",
+    "Itasca.Runtime.SourceMachine.Ownership.Slice",
+    "Itasca.Runtime.SourceMachine.Ownership.Core",
+    "Itasca.Runtime.SourceMachine.Ownership.Extension"
+   ],
+   "lines": 435
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Sim.Control",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Sim.Context",
+    "Itasca.Runtime.SourceMachine.Sim.Basic",
+    "Itasca.Runtime.SourceMachine.Sim.Int",
+    "Itasca.Runtime.SourceMachine.Sim.Typing",
+    "Itasca.Runtime.SourceMachine.Sim.Trace",
+    "Itasca.Runtime.SourceMachine.Sim.Trap",
+    "Itasca.Runtime.SourceMachine.Sim.Control"
+   ],
+   "lines": 810
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Sim.Host",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Sim.Instruction",
+    "Itasca.Runtime.SourceMachine.Sim.Step",
+    "Itasca.Runtime.SourceMachine.Sim.Terminal",
+    "Itasca.Runtime.SourceMachine.Sim.Compose",
+    "Itasca.Runtime.SourceMachine.Sim.Host"
+   ],
+   "lines": 308
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Sim.Structured",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Sim.Branch",
+    "Itasca.Runtime.SourceMachine.Sim.Return",
+    "Itasca.Runtime.SourceMachine.Sim.Call",
+    "Itasca.Runtime.SourceMachine.Sim.Local",
+    "Itasca.Runtime.SourceMachine.Sim.Typed",
+    "Itasca.Runtime.SourceMachine.Sim.Structured"
+   ],
+   "lines": 935
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Simd.MemoryTransition",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Simd.Exclusion",
+    "Itasca.Runtime.SourceMachine.Simd.Transition",
+    "Itasca.Runtime.SourceMachine.Simd.MemoryTransition"
+   ],
+   "lines": 378
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Simd.Source",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Simd.Signature",
+    "Itasca.Runtime.SourceMachine.Simd.Source"
+   ],
+   "lines": 89
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Stateful.Bound",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Stateful.TableTransfer",
+    "Itasca.Runtime.SourceMachine.Stateful.Transition",
+    "Itasca.Runtime.SourceMachine.Stateful.Ownership",
+    "Itasca.Runtime.SourceMachine.Stateful.Bound"
+   ],
+   "lines": 999
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Stateful.Signature",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Stateful.Descriptor",
+    "Itasca.Runtime.SourceMachine.Stateful.Signature"
+   ],
+   "lines": 138
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Stateful.TableRead",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Stateful.SignatureTyping",
+    "Itasca.Runtime.SourceMachine.Stateful.Continuation",
+    "Itasca.Runtime.SourceMachine.Stateful.TableTyping",
+    "Itasca.Runtime.SourceMachine.Stateful.MemorySize",
+    "Itasca.Runtime.SourceMachine.Stateful.ObjectReplacement",
+    "Itasca.Runtime.SourceMachine.Stateful.PayloadTyping",
+    "Itasca.Runtime.SourceMachine.Stateful.CopyStore",
+    "Itasca.Runtime.SourceMachine.Stateful.InitStore",
+    "Itasca.Runtime.SourceMachine.Stateful.GrowthTyping",
+    "Itasca.Runtime.SourceMachine.Stateful.MemoryGrow",
+    "Itasca.Runtime.SourceMachine.Stateful.Reference",
+    "Itasca.Runtime.SourceMachine.Stateful.ReferenceOperands",
+    "Itasca.Runtime.SourceMachine.Stateful.TableGrow",
+    "Itasca.Runtime.SourceMachine.Stateful.TableRead"
+   ],
+   "lines": 991
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Stateful.TableSet",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Stateful.OwnershipStore",
+    "Itasca.Runtime.SourceMachine.Stateful.Drops",
+    "Itasca.Runtime.SourceMachine.Stateful.BulkSimulation",
+    "Itasca.Runtime.SourceMachine.Stateful.TableMutation",
+    "Itasca.Runtime.SourceMachine.Stateful.FillStore",
+    "Itasca.Runtime.SourceMachine.Stateful.Operands",
+    "Itasca.Runtime.SourceMachine.Stateful.MemoryFill",
+    "Itasca.Runtime.SourceMachine.Stateful.MemoryTransfer",
+    "Itasca.Runtime.SourceMachine.Stateful.TableFill",
+    "Itasca.Runtime.SourceMachine.Stateful.TableSet"
+   ],
+   "lines": 968
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Supported.PureCoverage",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Supported.CoreStuck",
+    "Itasca.Runtime.SourceMachine.Supported.Invoke",
+    "Itasca.Runtime.SourceMachine.Supported.PureCoverage"
+   ],
+   "lines": 305
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.TypedSelect.Step",
+   "members": [
+    "Itasca.Runtime.SourceMachine.TypedSelect.Correct",
+    "Itasca.Runtime.SourceMachine.TypedSelect.Step"
+   ],
+   "lines": 175
+  },
+  {
+   "target": "Itasca.Runtime.SourceMachine.Typing",
+   "members": [
+    "Itasca.Runtime.SourceMachine.Step",
+    "Itasca.Runtime.SourceMachine.Typing"
+   ],
+   "lines": 508
+  },
+  {
+   "target": "Itasca.Runtime.Spec.FloatPromote",
+   "members": [
+    "Itasca.Runtime.Spec.MemoryStore",
+    "Itasca.Runtime.Spec.PackedMemory",
+    "Itasca.Runtime.Spec.TableAccess",
+    "Itasca.Runtime.Spec.MemorySize",
+    "Itasca.Runtime.Spec.CopyInterval",
+    "Itasca.Runtime.Spec.MemoryInit",
+    "Itasca.Runtime.Spec.CopySnapshot",
+    "Itasca.Runtime.Spec.TableFill",
+    "Itasca.Runtime.Spec.FillSlice",
+    "Itasca.Runtime.Spec.References",
+    "Itasca.Runtime.Spec.ReferenceFunction",
+    "Itasca.Runtime.Spec.TableWriteBounds",
+    "Itasca.Runtime.Spec.FloatPromote"
+   ],
+   "lines": 1000
+  },
+  {
+   "target": "Itasca.Runtime.Spec.FloatTrunc",
+   "members": [
+    "Itasca.Runtime.Spec.TableInit",
+    "Itasca.Runtime.Spec.Globals",
+    "Itasca.Runtime.Spec.ByteEncoding",
+    "Itasca.Runtime.Spec.MemoryLoad",
+    "Itasca.Runtime.Spec.SegmentCopySlice",
+    "Itasca.Runtime.Spec.SegmentDrops",
+    "Itasca.Runtime.Spec.IntegerDeterminism",
+    "Itasca.Runtime.Spec.FloatPure",
+    "Itasca.Runtime.Spec.FloatComparison",
+    "Itasca.Runtime.Spec.FloatMinMax",
+    "Itasca.Runtime.Spec.FloatConvert",
+    "Itasca.Runtime.Spec.FloatReinterpret",
+    "Itasca.Runtime.Spec.FloatSigns",
+    "Itasca.Runtime.Spec.FloatTrunc"
+   ],
+   "lines": 994
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Integer",
+   "members": [
+    "Itasca.Runtime.Spec.Steps",
+    "Itasca.Runtime.Spec.Wf",
+    "Itasca.Runtime.Spec.Extend",
+    "Itasca.Runtime.Spec.Mutation",
+    "Itasca.Runtime.Spec.ExtensionTyping",
+    "Itasca.Runtime.Spec.Float",
+    "Itasca.Runtime.Spec.Context",
+    "Itasca.Runtime.Spec.Integer"
+   ],
+   "lines": 986
+  },
+  {
+   "target": "Itasca.Runtime.Spec.MemoryGrowth",
+   "members": [
+    "Itasca.Runtime.Spec.MemoryFill",
+    "Itasca.Runtime.Spec.MemoryByteCopy",
+    "Itasca.Runtime.Spec.MemoryCopy",
+    "Itasca.Runtime.Spec.CopyPlain",
+    "Itasca.Runtime.Spec.TableCopy",
+    "Itasca.Runtime.Spec.TableGrowth",
+    "Itasca.Runtime.Spec.MemoryGrowth"
+   ],
+   "lines": 996
+  },
+  {
+   "target": "Itasca.Runtime.Spec.ModuleMembership",
+   "members": [
+    "Itasca.Runtime.Spec.IndirectCallSource",
+    "Itasca.Runtime.Spec.Invocation",
+    "Itasca.Runtime.Spec.Allocation",
+    "Itasca.Runtime.Spec.SegmentPrograms",
+    "Itasca.Runtime.Spec.Instantiation",
+    "Itasca.Runtime.Spec.AllocationModule",
+    "Itasca.Runtime.Spec.SplitCopy",
+    "Itasca.Runtime.Spec.PureWf",
+    "Itasca.Runtime.Spec.EventfulInfinite",
+    "Itasca.Runtime.Spec.HostCall",
+    "Itasca.Runtime.Spec.Depth",
+    "Itasca.Runtime.Spec.ModuleMembership"
+   ],
+   "lines": 908
+  },
+  {
+   "target": "Itasca.Runtime.Spec.SegmentInitCases",
+   "members": [
+    "Itasca.Runtime.Spec.IntegerDiv",
+    "Itasca.Runtime.Spec.IntegerBits",
+    "Itasca.Runtime.Spec.Counted",
+    "Itasca.Runtime.Spec.IntegerSigned",
+    "Itasca.Runtime.Spec.IntegerCompareSigned",
+    "Itasca.Runtime.Spec.IntegerShift",
+    "Itasca.Runtime.Spec.IntegerExtend",
+    "Itasca.Runtime.Spec.IntegerRotate",
+    "Itasca.Runtime.Spec.SegmentCopy",
+    "Itasca.Runtime.Spec.SegmentInitCases"
+   ],
+   "lines": 824
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Simd.CompareInteger",
+   "members": [
+    "Itasca.Runtime.Spec.Simd.Bitwise",
+    "Itasca.Runtime.Spec.Simd.Shape",
+    "Itasca.Runtime.Spec.Simd.Replace",
+    "Itasca.Runtime.Spec.Simd.Extract",
+    "Itasca.Runtime.Spec.Simd.ExtractSigned",
+    "Itasca.Runtime.Spec.Simd.AnyTrue",
+    "Itasca.Runtime.Spec.Simd.ByteView",
+    "Itasca.Runtime.Spec.Simd.ByteSelect",
+    "Itasca.Runtime.Spec.Simd.Shuffle",
+    "Itasca.Runtime.Spec.Simd.Swizzle",
+    "Itasca.Runtime.Spec.Simd.PureValues",
+    "Itasca.Runtime.Spec.Simd.CompareInteger"
+   ],
+   "lines": 957
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Simd.ExtendLanes",
+   "members": [
+    "Itasca.Runtime.Spec.Simd.IntegerArithmetic",
+    "Itasca.Runtime.Spec.Simd.Shift",
+    "Itasca.Runtime.Spec.Simd.Widen",
+    "Itasca.Runtime.Spec.Simd.Choices",
+    "Itasca.Runtime.Spec.Simd.CompareFloat",
+    "Itasca.Runtime.Spec.Simd.ExtendLanes"
+   ],
+   "lines": 949
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Simd.FloatResize",
+   "members": [
+    "Itasca.Runtime.Spec.Simd.MemoryLoad",
+    "Itasca.Runtime.Spec.Simd.MemoryChunks",
+    "Itasca.Runtime.Spec.Simd.MemoryLane",
+    "Itasca.Runtime.Spec.Simd.MemoryExtend",
+    "Itasca.Runtime.Spec.Simd.MemoryLaneStore",
+    "Itasca.Runtime.Spec.Simd.MemorySplat",
+    "Itasca.Runtime.Spec.Simd.MemoryStore",
+    "Itasca.Runtime.Spec.Simd.MemoryZero",
+    "Itasca.Runtime.Spec.Simd.FloatUnary",
+    "Itasca.Runtime.Spec.Simd.FloatResize"
+   ],
+   "lines": 969
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Simd.IntegerMinMax",
+   "members": [
+    "Itasca.Runtime.Spec.Simd.AllTrue",
+    "Itasca.Runtime.Spec.Simd.Bitmask",
+    "Itasca.Runtime.Spec.Simd.Popcount",
+    "Itasca.Runtime.Spec.Simd.Unary",
+    "Itasca.Runtime.Spec.Simd.FloatBinary",
+    "Itasca.Runtime.Spec.Simd.Average",
+    "Itasca.Runtime.Spec.Simd.IntegerMinMax"
+   ],
+   "lines": 876
+  },
+  {
+   "target": "Itasca.Runtime.Spec.Simd.Pairwise",
+   "members": [
+    "Itasca.Runtime.Spec.Simd.TruncSat",
+    "Itasca.Runtime.Spec.Simd.ConvertInteger",
+    "Itasca.Runtime.Spec.Simd.Saturation",
+    "Itasca.Runtime.Spec.Simd.Q15",
+    "Itasca.Runtime.Spec.Simd.Dot",
+    "Itasca.Runtime.Spec.Simd.Narrow",
+    "Itasca.Runtime.Spec.Simd.Pairwise"
+   ],
+   "lines": 986
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.ApiMetadata",
+   "members": [
+    "Itasca.Runtime.Store.Api.TableFillLoop",
+    "Itasca.Runtime.Store.Api.TableCopyDistinct",
+    "Itasca.Runtime.Store.Api.ApiMetadata"
+   ],
+   "lines": 322
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.DefineTable",
+   "members": [
+    "Itasca.Runtime.Store.Api.Grow",
+    "Itasca.Runtime.Store.Api.Write",
+    "Itasca.Runtime.Store.Api.Define",
+    "Itasca.Runtime.Store.Api.DefineMemory",
+    "Itasca.Runtime.Store.Api.DefineTable"
+   ],
+   "lines": 578
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.GlobalStagingCauses",
+   "members": [
+    "Itasca.Runtime.Store.Api.TableAllocationLoop",
+    "Itasca.Runtime.Store.Api.TableBindingLoop",
+    "Itasca.Runtime.Store.Api.GlobalStagingCauses"
+   ],
+   "lines": 513
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.GrowthLimits",
+   "members": [
+    "Itasca.Runtime.Store.Api.TableInit",
+    "Itasca.Runtime.Store.Api.MemoryInit",
+    "Itasca.Runtime.Store.Api.MemoryAllocationCauses",
+    "Itasca.Runtime.Store.Api.NewMemoryCauses",
+    "Itasca.Runtime.Store.Api.MemoryStagingCauses",
+    "Itasca.Runtime.Store.Api.TableAllocationCauses",
+    "Itasca.Runtime.Store.Api.NewTableCauses",
+    "Itasca.Runtime.Store.Api.TableStagingCauses",
+    "Itasca.Runtime.Store.Api.GrowthEffects",
+    "Itasca.Runtime.Store.Api.GrowthLimits"
+   ],
+   "lines": 896
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.MemoryAllocationLoop",
+   "members": [
+    "Itasca.Runtime.Store.Api.GlobalErrors",
+    "Itasca.Runtime.Store.Api.GlobalLoop",
+    "Itasca.Runtime.Store.Api.GlobalErrorLoop",
+    "Itasca.Runtime.Store.Api.TableTypes",
+    "Itasca.Runtime.Store.Api.GlobalLoopCertificates",
+    "Itasca.Runtime.Store.Api.GlobalMapPreservation",
+    "Itasca.Runtime.Store.Api.TableMemoryOrder",
+    "Itasca.Runtime.Store.Api.MemoryAllocationLoop"
+   ],
+   "lines": 913
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.MemoryBindingLoop",
+   "members": [
+    "Itasca.Runtime.Store.Api.MemoryStaging",
+    "Itasca.Runtime.Store.Api.TableStaging",
+    "Itasca.Runtime.Store.Api.TableMemoryBindings",
+    "Itasca.Runtime.Store.Api.ExportBounds",
+    "Itasca.Runtime.Store.Api.GlobalStaging",
+    "Itasca.Runtime.Store.Api.MemoryBindingLoop"
+   ],
+   "lines": 660
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.MemoryFill",
+   "members": [
+    "Itasca.Runtime.Store.Api.MemoryCopyLoops",
+    "Itasca.Runtime.Store.Api.MemoryCopy",
+    "Itasca.Runtime.Store.Api.MemoryFill"
+   ],
+   "lines": 531
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.TableGrowSource",
+   "members": [
+    "Itasca.Runtime.Store.Api.TableFill",
+    "Itasca.Runtime.Store.Api.MemoryGrowSource",
+    "Itasca.Runtime.Store.Api.TableGrowSource"
+   ],
+   "lines": 333
+  },
+  {
+   "target": "Itasca.Runtime.Store.Api.TableInitLists",
+   "members": [
+    "Itasca.Runtime.Store.Api.GlobalEffects",
+    "Itasca.Runtime.Store.Api.GlobalTypeMap",
+    "Itasca.Runtime.Store.Api.TableInitLists"
+   ],
+   "lines": 631
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.BulkMemoryAt",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.BulkTableAt",
+    "Itasca.Runtime.Store.Initialization.BulkMemoryAt"
+   ],
+   "lines": 189
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.Data",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.InitializerSource",
+    "Itasca.Runtime.Store.Initialization.InitializerSourceContext",
+    "Itasca.Runtime.Store.Initialization.Data"
+   ],
+   "lines": 327
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.DataLoopCertificates",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.DataStagingLoop",
+    "Itasca.Runtime.Store.Initialization.DataLoopCertificates"
+   ],
+   "lines": 399
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementLoop",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentAccounting",
+    "Itasca.Runtime.Store.Initialization.SegmentCounts",
+    "Itasca.Runtime.Store.Initialization.Initializer",
+    "Itasca.Runtime.Store.Initialization.InitializerResolve",
+    "Itasca.Runtime.Store.Initialization.BulkDrop",
+    "Itasca.Runtime.Store.Initialization.BulkTableLoop",
+    "Itasca.Runtime.Store.Initialization.BulkTable",
+    "Itasca.Runtime.Store.Initialization.BulkMemory",
+    "Itasca.Runtime.Store.Initialization.ElementLoop"
+   ],
+   "lines": 775
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementOrderLoop",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.DataErrorLoop",
+    "Itasca.Runtime.Store.Initialization.ElementErrors",
+    "Itasca.Runtime.Store.Initialization.ElementErrorLoop",
+    "Itasca.Runtime.Store.Initialization.DataGlobalTypes",
+    "Itasca.Runtime.Store.Initialization.ElementGlobalTypes",
+    "Itasca.Runtime.Store.Initialization.ElementBoundsLoop",
+    "Itasca.Runtime.Store.Initialization.InitializerTableMemoryBindings",
+    "Itasca.Runtime.Store.Initialization.ElementOrderLoop"
+   ],
+   "lines": 903
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementShapeLoop",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentEffects",
+    "Itasca.Runtime.Store.Initialization.InitializerMetadata",
+    "Itasca.Runtime.Store.Initialization.StoreParts",
+    "Itasca.Runtime.Store.Initialization.ElementShapeLoop"
+   ],
+   "lines": 286
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementSourceStaging",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.ElementContentEffect",
+    "Itasca.Runtime.Store.Initialization.SegmentGlobalMetadata",
+    "Itasca.Runtime.Store.Initialization.DataValueMetadata",
+    "Itasca.Runtime.Store.Initialization.SegmentBoundsEffects",
+    "Itasca.Runtime.Store.Initialization.ElementCompleteLoop",
+    "Itasca.Runtime.Store.Initialization.InitializerMetadataCertificates",
+    "Itasca.Runtime.Store.Initialization.ElementSourceLoop",
+    "Itasca.Runtime.Store.Initialization.ElementValues",
+    "Itasca.Runtime.Store.Initialization.ElementSourceStaging"
+   ],
+   "lines": 884
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementStagingCauses",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.DataStagingCauses",
+    "Itasca.Runtime.Store.Initialization.ElementStagingCauses"
+   ],
+   "lines": 571
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.ElementTypedEffect",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.ElementEffects",
+    "Itasca.Runtime.Store.Initialization.ElementTypedEffect"
+   ],
+   "lines": 234
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.InitializerErrors",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentInstructionShape",
+    "Itasca.Runtime.Store.Initialization.InitializerErrors"
+   ],
+   "lines": 169
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.InitializerResourceCauses",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentLoopSource",
+    "Itasca.Runtime.Store.Initialization.SegmentSyntheticSource",
+    "Itasca.Runtime.Store.Initialization.SegmentInitializeSource",
+    "Itasca.Runtime.Store.Initialization.InitializerResourceCauses"
+   ],
+   "lines": 883
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.SegmentExtension",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentCodeMetadata",
+    "Itasca.Runtime.Store.Initialization.SegmentTypes",
+    "Itasca.Runtime.Store.Initialization.SegmentObjectMetadata",
+    "Itasca.Runtime.Store.Initialization.SegmentExtension"
+   ],
+   "lines": 321
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.SegmentLoop",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentInstruction",
+    "Itasca.Runtime.Store.Initialization.SegmentCertificate",
+    "Itasca.Runtime.Store.Initialization.SegmentLoop"
+   ],
+   "lines": 394
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.SegmentObjectEffects",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentCompatible",
+    "Itasca.Runtime.Store.Initialization.SegmentObjectEffects"
+   ],
+   "lines": 129
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.SegmentReady",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.BulkPreservation",
+    "Itasca.Runtime.Store.Initialization.SegmentStep",
+    "Itasca.Runtime.Store.Initialization.SegmentReady"
+   ],
+   "lines": 423
+  },
+  {
+   "target": "Itasca.Runtime.Store.Initialization.SegmentSyntheticPreservation",
+   "members": [
+    "Itasca.Runtime.Store.Initialization.SegmentLoopPreservation",
+    "Itasca.Runtime.Store.Initialization.SegmentSyntheticPreservation"
+   ],
+   "lines": 370
+  },
+  {
+   "target": "Itasca.Runtime.Store.Instantiation.Linked",
+   "members": [
+    "Itasca.Runtime.Store.Instantiation.PrepareInstanceClassified",
+    "Itasca.Runtime.Store.Instantiation.Classified",
+    "Itasca.Runtime.Store.Instantiation.Linked"
+   ],
+   "lines": 773
+  },
+  {
+   "target": "Itasca.Runtime.Store.Instantiation.NoStart",
+   "members": [
+    "Itasca.Runtime.Store.Instantiation.PreparedSourceInstantiation",
+    "Itasca.Runtime.Store.Instantiation.PreparedExportBounds",
+    "Itasca.Runtime.Store.Instantiation.NoStart"
+   ],
+   "lines": 718
+  },
+  {
+   "target": "Itasca.Runtime.Store.Instantiation.PrecommitOrigins",
+   "members": [
+    "Itasca.Runtime.Store.Instantiation.PublishInstance",
+    "Itasca.Runtime.Store.Instantiation.PreparedCommitShape",
+    "Itasca.Runtime.Store.Instantiation.PreparedRun",
+    "Itasca.Runtime.Store.Instantiation.LinkedPreparedRun",
+    "Itasca.Runtime.Store.Instantiation.PrecommitOrigins"
+   ],
+   "lines": 270
+  },
+  {
+   "target": "Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory",
+   "members": [
+    "Itasca.Runtime.Store.Instantiation.PreparedGlobalTypes",
+    "Itasca.Runtime.Store.Instantiation.PreparedSegmentBounds",
+    "Itasca.Runtime.Store.Instantiation.PreparedRunCertificates",
+    "Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory"
+   ],
+   "lines": 561
+  },
+  {
+   "target": "Itasca.Runtime.Store.Instantiation.TailCommit",
+   "members": [
+    "Itasca.Runtime.Store.Instantiation.PreparationResourcePath",
+    "Itasca.Runtime.Store.Instantiation.ResourceDecomposition",
+    "Itasca.Runtime.Store.Instantiation.TailCommitExecution",
+    "Itasca.Runtime.Store.Instantiation.TailCommit"
+   ],
+   "lines": 885
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.AddressOrder",
+    "Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop"
+   ],
+   "lines": 185
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.CodeAgreement",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.FunctionTables",
+    "Itasca.Runtime.Store.Invariant.CodeAgreement"
+   ],
+   "lines": 145
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.CoreInstantiationSource",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.BindingMaps",
+    "Itasca.Runtime.Store.Invariant.SourceBindings",
+    "Itasca.Runtime.Store.Invariant.CoreInstantiationSource"
+   ],
+   "lines": 276
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.ErrorPost",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.CoreTypingExtension",
+    "Itasca.Runtime.Store.Invariant.DefinitionErrors",
+    "Itasca.Runtime.Store.Invariant.ErrorPost"
+   ],
+   "lines": 157
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.FunctionStaging",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.Extension",
+    "Itasca.Runtime.Store.Invariant.ValueDecode",
+    "Itasca.Runtime.Store.Invariant.ValueRead",
+    "Itasca.Runtime.Store.Invariant.InvalidWrite",
+    "Itasca.Runtime.Store.Invariant.TypeStaging",
+    "Itasca.Runtime.Store.Invariant.FunctionStaging"
+   ],
+   "lines": 679
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.FunctionStagingCauses",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.SourceExports",
+    "Itasca.Runtime.Store.Invariant.FunctionPayload",
+    "Itasca.Runtime.Store.Invariant.FunctionSourceAllocation",
+    "Itasca.Runtime.Store.Invariant.SourceFunctionAllocation",
+    "Itasca.Runtime.Store.Invariant.FunctionOrderLoop",
+    "Itasca.Runtime.Store.Invariant.ExecutableInstantiationCode",
+    "Itasca.Runtime.Store.Invariant.OwnedInitializerCauses",
+    "Itasca.Runtime.Store.Invariant.InternTypeCauses",
+    "Itasca.Runtime.Store.Invariant.FunctionTypeCauses",
+    "Itasca.Runtime.Store.Invariant.FunctionStagingCauses"
+   ],
+   "lines": 936
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.HostSignature",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.ForeignValues",
+    "Itasca.Runtime.Store.Invariant.IssuedValues",
+    "Itasca.Runtime.Store.Invariant.CheckedValues",
+    "Itasca.Runtime.Store.Invariant.CanonicalSignatures",
+    "Itasca.Runtime.Store.Invariant.HostSignature"
+   ],
+   "lines": 301
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.ObjectAllocationErrors",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.AllocatedDataLoop",
+    "Itasca.Runtime.Store.Invariant.AllocatedElementLoop",
+    "Itasca.Runtime.Store.Invariant.AllocatedGlobalLoop",
+    "Itasca.Runtime.Store.Invariant.ObjectAllocationErrors"
+   ],
+   "lines": 537
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.OwnedGlobalLoop",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.InstanceMapShape",
+    "Itasca.Runtime.Store.Invariant.OwnedDataLoop",
+    "Itasca.Runtime.Store.Invariant.OwnedGlobalLoop"
+   ],
+   "lines": 292
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.OwnedInitializerErrors",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.SourceSyntax",
+    "Itasca.Runtime.Store.Invariant.SourceStoreTyping",
+    "Itasca.Runtime.Store.Invariant.SupportedFunctionTables",
+    "Itasca.Runtime.Store.Invariant.OwnedInitializerErrors"
+   ],
+   "lines": 204
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.PrecommitError",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.FunctionSignatures",
+    "Itasca.Runtime.Store.Invariant.InstantiationCode",
+    "Itasca.Runtime.Store.Invariant.NormalResult",
+    "Itasca.Runtime.Store.Invariant.PrecommitError"
+   ],
+   "lines": 182
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.Rollback",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.CopyTypes",
+    "Itasca.Runtime.Store.Invariant.TypeEquality",
+    "Itasca.Runtime.Store.Invariant.InternTypes",
+    "Itasca.Runtime.Store.Invariant.Rollback"
+   ],
+   "lines": 496
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.SemanticApi",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.BindingTyping",
+    "Itasca.Runtime.Store.Invariant.ObjectExtension",
+    "Itasca.Runtime.Store.Invariant.SemanticApi"
+   ],
+   "lines": 173
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.SourceAllocationLists",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.AllocatedTableLoop",
+    "Itasca.Runtime.Store.Invariant.AllocatedTypeLoop",
+    "Itasca.Runtime.Store.Invariant.AllocatedFunctionLoop",
+    "Itasca.Runtime.Store.Invariant.FunctionAllocatedPreparation",
+    "Itasca.Runtime.Store.Invariant.FunctionPreparation",
+    "Itasca.Runtime.Store.Invariant.InstanceItems",
+    "Itasca.Runtime.Store.Invariant.ShapeAssembly",
+    "Itasca.Runtime.Store.Invariant.ItemErrors",
+    "Itasca.Runtime.Store.Invariant.SourceAllocationLists"
+   ],
+   "lines": 978
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.TypeStagingCauses",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.InstanceItemCauses",
+    "Itasca.Runtime.Store.Invariant.TypeStagingCauses"
+   ],
+   "lines": 223
+  },
+  {
+   "target": "Itasca.Runtime.Store.Invariant.Typing",
+   "members": [
+    "Itasca.Runtime.Store.Invariant.Syntax",
+    "Itasca.Runtime.Store.Invariant.ValueShape",
+    "Itasca.Runtime.Store.Invariant.Typing"
+   ],
+   "lines": 423
+  },
+  {
+   "target": "Itasca.Runtime.Store.Linking.LinkLoop",
+   "members": [
+    "Itasca.Runtime.Store.Linking.LinkErrors",
+    "Itasca.Runtime.Store.Linking.ExternalMaps",
+    "Itasca.Runtime.Store.Linking.LinkLoop"
+   ],
+   "lines": 495
+  },
+  {
+   "target": "Itasca.Runtime.Store.Linking.LinkedOwners",
+   "members": [
+    "Itasca.Runtime.Store.Linking.LinkEffects",
+    "Itasca.Runtime.Store.Linking.LinkMaps",
+    "Itasca.Runtime.Store.Linking.LinkedOwners"
+   ],
+   "lines": 627
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.AllocationStorage",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.AllocationErrors",
+    "Itasca.Runtime.Store.Preparation.PreparationInputs",
+    "Itasca.Runtime.Store.Preparation.PreparedInitializers",
+    "Itasca.Runtime.Store.Preparation.AllocationShape",
+    "Itasca.Runtime.Store.Preparation.AllocationStorage"
+   ],
+   "lines": 452
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.PreparationCalls",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.AllocationCauses",
+    "Itasca.Runtime.Store.Preparation.PreparationCalls"
+   ],
+   "lines": 66
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.PreparationErrorLoops",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.AllocationInitializers",
+    "Itasca.Runtime.Store.Preparation.PreparationErrorLoops"
+   ],
+   "lines": 156
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.PreparationResults",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.StagingAddresses",
+    "Itasca.Runtime.Store.Preparation.PreparationResults"
+   ],
+   "lines": 111
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.PreparationSuccess",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.PreparationAllocatedMaps",
+    "Itasca.Runtime.Store.Preparation.PreparationCertificates",
+    "Itasca.Runtime.Store.Preparation.PreparationSuccess"
+   ],
+   "lines": 504
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.PreparationTableMemoryBindings",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.PreparationTableMemoryAllocations",
+    "Itasca.Runtime.Store.Preparation.PreparationTableMemoryBindings"
+   ],
+   "lines": 377
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.StagingSegmentBounds",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.StagingGlobalTypes",
+    "Itasca.Runtime.Store.Preparation.StagingSegmentBounds"
+   ],
+   "lines": 171
+  },
+  {
+   "target": "Itasca.Runtime.Store.Preparation.StagingTypeCertificates",
+   "members": [
+    "Itasca.Runtime.Store.Preparation.StagingTypeBindings",
+    "Itasca.Runtime.Store.Preparation.StagingTypeCertificates"
+   ],
+   "lines": 47
+  },
+  {
+   "target": "Itasca.Spec.Checks",
+   "members": [
+    "Itasca.Spec.DeclaredReferences",
+    "Itasca.Spec.Checks"
+   ],
+   "lines": 234
+  },
+  {
+   "target": "Itasca.Spec.TypingInversion",
+   "members": [
+    "Itasca.Spec.Instr",
+    "Itasca.Spec.ScalarConst",
+    "Itasca.Spec.TypingInversion"
+   ],
+   "lines": 436
+  },
+  {
+   "target": "Itasca.Stream.DriverRegions",
+   "members": [
+    "Itasca.Stream.InvariantSubmission",
+    "Itasca.Stream.InvariantDriver",
+    "Itasca.Stream.ReachedBatch",
+    "Itasca.Stream.SchedulerComplete",
+    "Itasca.Stream.HeaderComplete",
+    "Itasca.Stream.DriverRegions"
+   ],
+   "lines": 895
+  },
+  {
+   "target": "Itasca.Stream.Header",
+   "members": [
+    "Itasca.Stream.Retirement",
+    "Itasca.Stream.Scheduler",
+    "Itasca.Stream.EntryFrame",
+    "Itasca.Stream.BatchBounds",
+    "Itasca.Stream.DriverRun",
+    "Itasca.Stream.Header"
+   ],
+   "lines": 868
+  },
+  {
+   "target": "Itasca.Stream.InvariantRetirement",
+   "members": [
+    "Itasca.Stream.DriverSound",
+    "Itasca.Stream.InvariantRetirement"
+   ],
+   "lines": 187
+  },
+  {
+   "target": "Itasca.Stream.Source",
+   "members": [
+    "Itasca.Stream.Batch",
+    "Itasca.Stream.BatchTotal",
+    "Itasca.Stream.BatchComplete",
+    "Itasca.Stream.Source"
+   ],
+   "lines": 817
+  },
+  {
+   "target": "Itasca.Stream.SplitTotal",
+   "members": [
+    "Itasca.Stream.FramingTotal",
+    "Itasca.Stream.SubmissionTotal",
+    "Itasca.Stream.DriverTotal",
+    "Itasca.Stream.SplitTotal"
+   ],
+   "lines": 720
+  },
+  {
+   "target": "Itasca.Stream.SubmissionSound",
+   "members": [
+    "Itasca.Stream.FramingStep",
+    "Itasca.Stream.FramingSound",
+    "Itasca.Stream.Partition",
+    "Itasca.Stream.SubmissionSound"
+   ],
+   "lines": 893
+  },
+  {
+   "target": "Itasca.Stream.SyncComplete",
+   "members": [
+    "Itasca.Stream.SubmissionComplete",
+    "Itasca.Stream.DriverComplete",
+    "Itasca.Stream.Sync",
+    "Itasca.Stream.SliceSound",
+    "Itasca.Stream.SyncComplete"
+   ],
+   "lines": 935
+  },
+  {
+   "target": "Itasca.Support.Result",
+   "members": [
+    "Itasca.Support.TypeTranslation",
+    "Itasca.Support.EnvTranslation",
+    "Itasca.Support.ControlTranslation",
+    "Itasca.Support.BodyState",
+    "Itasca.Support.Result"
+   ],
+   "lines": 501
+  },
+  {
+   "target": "Itasca.Visitor.BodyReplay",
+   "members": [
+    "Itasca.Visitor.EventDispatch",
+    "Itasca.Visitor.StepRefinement",
+    "Itasca.Visitor.TraceBytes",
+    "Itasca.Visitor.ReachedTableLabels",
+    "Itasca.Visitor.InvariantBodyLoop",
+    "Itasca.Visitor.ReaderAcceptedProgress",
+    "Itasca.Visitor.ReaderAcceptance",
+    "Itasca.Visitor.BodyReplay"
+   ],
+   "lines": 749
+  },
+  {
+   "target": "Itasca.Visitor.EventTables",
+   "members": [
+    "Itasca.Visitor.Refinement",
+    "Itasca.Visitor.BrTableRefinement",
+    "Itasca.Visitor.EventMeaning",
+    "Itasca.Visitor.EventTables"
+   ],
+   "lines": 865
+  },
+  {
+   "target": "Itasca.Visitor.Events",
+   "members": [
+    "Itasca.Visitor.Dispatch",
+    "Itasca.Visitor.Erasure",
+    "Itasca.Visitor.Events"
+   ],
+   "lines": 886
+  },
+  {
+   "target": "Itasca.Visitor.RunTrace",
+   "members": [
+    "Itasca.Visitor.BrTableErasure",
+    "Itasca.Visitor.StepErasure",
+    "Itasca.Visitor.StepLift",
+    "Itasca.Visitor.Recording",
+    "Itasca.Visitor.RunTrace"
+   ],
+   "lines": 980
+  },
+  {
+   "target": "Itasca.Visitor.Total",
+   "members": [
+    "Itasca.Visitor.Basic",
+    "Itasca.Visitor.Total"
+   ],
+   "lines": 583
+  },
+  {
+   "target": "Itasca.Wasm1.Complete.Scalar",
+   "members": [
+    "Itasca.Wasm1.Complete.Frame",
+    "Itasca.Wasm1.Complete.Env",
+    "Itasca.Wasm1.Complete.Scalar"
+   ],
+   "lines": 519
+  },
+  {
+   "target": "Itasca.Wasm2.Bulk.Total",
+   "members": [
+    "Itasca.Wasm2.Bulk.Dispatch",
+    "Itasca.Wasm2.Bulk.Total"
+   ],
+   "lines": 142
+  },
+  {
+   "target": "Itasca.Wasm2.Complete.Leaf",
+   "members": [
+    "Itasca.Wasm2.Complete.Program",
+    "Itasca.Wasm2.Complete.Leaf"
+   ],
+   "lines": 268
+  },
+  {
+   "target": "Itasca.Wasm2.Control.BranchComplete",
+   "members": [
+    "Itasca.Wasm2.Control.BranchSound",
+    "Itasca.Wasm2.Control.BrTableSound",
+    "Itasca.Wasm2.Control.BrTableComplete",
+    "Itasca.Wasm2.Control.BranchComplete"
+   ],
+   "lines": 757
+  },
+  {
+   "target": "Itasca.Wasm2.Control.EnterSound",
+   "members": [
+    "Itasca.Wasm2.Control.EndTotal",
+    "Itasca.Wasm2.Control.EndSound",
+    "Itasca.Wasm2.Control.EndComplete",
+    "Itasca.Wasm2.Control.EndStep",
+    "Itasca.Wasm2.Control.EnterSound"
+   ],
+   "lines": 915
+  },
+  {
+   "target": "Itasca.Wasm2.Control.EnterStep",
+   "members": [
+    "Itasca.Wasm2.Control.EnterComplete",
+    "Itasca.Wasm2.Control.EnterStep"
+   ],
+   "lines": 246
+  },
+  {
+   "target": "Itasca.Wasm2.Control.Return",
+   "members": [
+    "Itasca.Wasm2.Control.Call",
+    "Itasca.Wasm2.Control.BranchStep",
+    "Itasca.Wasm2.Control.Return"
+   ],
+   "lines": 583
+  },
+  {
+   "target": "Itasca.Wasm2.EmptyVisitorLoop",
+   "members": [
+    "Itasca.Wasm2.ResultStack",
+    "Itasca.Wasm2.ResultStackSemantics",
+    "Itasca.Wasm2.Suffix",
+    "Itasca.Wasm2.Prefix",
+    "Itasca.Wasm2.EmptyVisitorLoop"
+   ],
+   "lines": 789
+  },
+  {
+   "target": "Itasca.Wasm2.LoopDispatch",
+   "members": [
+    "Itasca.Wasm2.BodySpec",
+    "Itasca.Wasm2.Frames",
+    "Itasca.Wasm2.Invariant",
+    "Itasca.Wasm2.LoopDispatch"
+   ],
+   "lines": 914
+  },
+  {
+   "target": "Itasca.Wasm2.NumericExt.Sound",
+   "members": [
+    "Itasca.Wasm2.NumericExt.Complete",
+    "Itasca.Wasm2.NumericExt.Sound"
+   ],
+   "lines": 218
+  },
+  {
+   "target": "Itasca.Wasm2.NumericExt.Total",
+   "members": [
+    "Itasca.Wasm2.NumericExt.Dispatch",
+    "Itasca.Wasm2.NumericExt.Total"
+   ],
+   "lines": 312
+  },
+  {
+   "target": "Itasca.Wasm2.References.Complete",
+   "members": [
+    "Itasca.Wasm2.References.ReadersComplete",
+    "Itasca.Wasm2.References.Complete"
+   ],
+   "lines": 380
+  },
+  {
+   "target": "Itasca.Wasm2.References.Reader",
+   "members": [
+    "Itasca.Wasm2.References.Operands",
+    "Itasca.Wasm2.References.EnvMatches",
+    "Itasca.Wasm2.References.Reader"
+   ],
+   "lines": 586
+  },
+  {
+   "target": "Itasca.Wasm2.References.Readers",
+   "members": [
+    "Itasca.Wasm2.References.ReadersTotal",
+    "Itasca.Wasm2.References.Readers"
+   ],
+   "lines": 415
+  },
+  {
+   "target": "Itasca.Wasm2.Scalar.Env",
+   "members": [
+    "Itasca.Wasm2.Scalar.ReadersTotal",
+    "Itasca.Wasm2.Scalar.Total",
+    "Itasca.Wasm2.Scalar.Prefix",
+    "Itasca.Wasm2.Scalar.Env"
+   ],
+   "lines": 767
+  },
+  {
+   "target": "Itasca.Wasm2.Scalar.IndexReader",
+   "members": [
+    "Itasca.Wasm2.Scalar.ReaderPost",
+    "Itasca.Wasm2.Scalar.NumericReader",
+    "Itasca.Wasm2.Scalar.BasicReader",
+    "Itasca.Wasm2.Scalar.IndexReader"
+   ],
+   "lines": 320
+  },
+  {
+   "target": "Itasca.Wasm2.Scalar.MemoryReader",
+   "members": [
+    "Itasca.Wasm2.Scalar.Memory",
+    "Itasca.Wasm2.Scalar.MemoryReader"
+   ],
+   "lines": 286
+  },
+  {
+   "target": "Itasca.Wasm2.Simd.LaneReaders",
+   "members": [
+    "Itasca.Wasm2.Simd.ReadersTotal",
+    "Itasca.Wasm2.Simd.Tables",
+    "Itasca.Wasm2.Simd.Dispatch",
+    "Itasca.Wasm2.Simd.DispatchTotal",
+    "Itasca.Wasm2.Simd.Decode",
+    "Itasca.Wasm2.Simd.Carry",
+    "Itasca.Wasm2.Simd.Operands",
+    "Itasca.Wasm2.Simd.LaneReaders"
+   ],
+   "lines": 863
+  },
+  {
+   "target": "Itasca.Wasm2.Simd.Sound",
+   "members": [
+    "Itasca.Wasm2.Simd.Complete",
+    "Itasca.Wasm2.Simd.Reader",
+    "Itasca.Wasm2.Simd.Sound"
+   ],
+   "lines": 716
+  },
+  {
+   "target": "Itasca.Wasm2.Simd.Visitor",
+   "members": [
+    "Itasca.Wasm2.Simd.MemoryReaders",
+    "Itasca.Wasm2.Simd.Shuffle",
+    "Itasca.Wasm2.Simd.Visitor"
+   ],
+   "lines": 442
+  },
+  {
+   "target": "Itasca.Wasm2.SoundLoop",
+   "members": [
+    "Itasca.Wasm2.Execution",
+    "Itasca.Wasm2.Totality",
+    "Itasca.Wasm2.SoundLoop"
+   ],
+   "lines": 275
+  },
+  {
+   "target": "Itasca.Wasm2.Step.Context",
+   "members": [
+    "Itasca.Wasm2.Step.Dispatch",
+    "Itasca.Wasm2.Step.Context"
+   ],
+   "lines": 236
+  },
+  {
+   "target": "Itasca.Wasm2.Step.NonControlSound",
+   "members": [
+    "Itasca.Wasm2.Step.Sound",
+    "Itasca.Wasm2.Step.NonControlSound"
+   ],
+   "lines": 170
+  },
+  {
+   "target": "Itasca.Wasm2.SuffixTyping",
+   "members": [
+    "Itasca.Wasm2.FixedOperands",
+    "Itasca.Wasm2.SuffixTyping"
+   ],
+   "lines": 266
+  },
+  {
+   "target": "Itasca.Wasm2.TableAdapters",
+   "members": [
+    "Itasca.Wasm2.HandlerAdapters",
+    "Itasca.Wasm2.Signature",
+    "Itasca.Wasm2.Typing",
+    "Itasca.Wasm2.SignatureEquality",
+    "Itasca.Wasm2.TableAdapters"
+   ],
+   "lines": 669
+  },
+  {
+   "target": "Itasca.Wasm2.Trace.Acceptance",
+   "members": [
+    "Itasca.Wasm2.Trace.Step",
+    "Itasca.Wasm2.Trace.Correspondence",
+    "Itasca.Wasm2.Trace.Acceptance"
+   ],
+   "lines": 304
+  },
+  {
+   "target": "Itasca.Wasm2.Trace.BytesDispatch",
+   "members": [
+    "Itasca.Wasm2.Trace.BytesBulk",
+    "Itasca.Wasm2.Trace.BytesSimd",
+    "Itasca.Wasm2.Trace.BytesDispatch"
+   ],
+   "lines": 675
+  },
+  {
+   "target": "Itasca.Wasm2.Trace.BytesReferences",
+   "members": [
+    "Itasca.Wasm2.Trace.Refinement",
+    "Itasca.Wasm2.Trace.ControlRefinement",
+    "Itasca.Wasm2.Trace.Basic",
+    "Itasca.Wasm2.Trace.Bytes",
+    "Itasca.Wasm2.Trace.BytesReferences"
+   ],
+   "lines": 996
+  },
+  {
+   "target": "Itasca.Wasm2.Trace.BytesScalar",
+   "members": [
+    "Itasca.Wasm2.Trace.Body",
+    "Itasca.Wasm2.Trace.BytesScalar"
+   ],
+   "lines": 846
+  },
+  {
+   "target": "Itasca.Wasm2.Trace.ControlRecords",
+   "members": [
+    "Itasca.Wasm2.Trace.BodyRefinement",
+    "Itasca.Wasm2.Trace.ControlBytes",
+    "Itasca.Wasm2.Trace.ControlRecords"
+   ],
+   "lines": 836
+  },
+  {
+   "target": "Itasca.Wasm2.Visitor.ReachedTableLoop",
+   "members": [
+    "Itasca.Wasm2.Visitor.Transfer",
+    "Itasca.Wasm2.Visitor.Body",
+    "Itasca.Wasm2.Visitor.ReachedTableLoop"
+   ],
+   "lines": 318
+  },
+  {
+   "target": "SpecExt.Builtins",
+   "members": [
+    "SpecExt.Host",
+    "SpecExt.Builtins"
+   ],
+   "lines": 101
+  },
+  {
+   "target": "SpecExt.Builtins.Examples",
+   "members": [
+    "SpecExt.Builtins.Lanes",
+    "SpecExt.Builtins.EncodingLemmas",
+    "SpecExt.Builtins.Bitwise",
+    "SpecExt.Builtins.Rotations",
+    "SpecExt.Builtins.Counts",
+    "SpecExt.Builtins.BitwiseVector",
+    "SpecExt.Builtins.LaneLaws",
+    "SpecExt.Builtins.LaneView",
+    "SpecExt.Builtins.LaneMap",
+    "SpecExt.Builtins.Misc",
+    "SpecExt.Builtins.Examples"
+   ],
+   "lines": 474
+  },
+  {
+   "target": "SpecExt.Builtins.Float.MinMax",
+   "members": [
+    "SpecExt.Builtins.Float.Storage",
+    "SpecExt.Builtins.Float.Order",
+    "SpecExt.Builtins.Float.Classify",
+    "SpecExt.Builtins.Float.SignedOrder",
+    "SpecExt.Builtins.Float.Compare",
+    "SpecExt.Builtins.Float.RawCompare",
+    "SpecExt.Builtins.Float.MinMax"
+   ],
+   "lines": 925
+  },
+  {
+   "target": "SpecExt.Builtins.Float.PromotionFirst",
+   "members": [
+    "SpecExt.Builtins.Float.RoundExact",
+    "SpecExt.Builtins.Float.Promotion",
+    "SpecExt.Builtins.Float.TruncRange",
+    "SpecExt.Builtins.Float.Truncation",
+    "SpecExt.Builtins.Float.TruncSemantics",
+    "SpecExt.Builtins.Float.TruncBounds",
+    "SpecExt.Builtins.Float.Examples",
+    "SpecExt.Builtins.Float.FirstChoice",
+    "SpecExt.Builtins.Float.MinMaxFirst",
+    "SpecExt.Builtins.Float.PromotionFirst"
+   ],
+   "lines": 880
+  },
+  {
+   "target": "SpecExt.Builtins.Float.Sign",
+   "members": [
+    "SpecExt.Builtins.Float.Encoding",
+    "SpecExt.Builtins.Float.Decoding",
+    "SpecExt.Builtins.Float.Lemmas",
+    "SpecExt.Builtins.Float.RoundingLemmas",
+    "SpecExt.Builtins.Float.Canonical",
+    "SpecExt.Builtins.Float.Wf",
+    "SpecExt.Builtins.Float.Sign"
+   ],
+   "lines": 885
+  }
+ ]
+}

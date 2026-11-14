@@ -1,8 +1,7 @@
 import Itasca.Wasm2.SoundLoop
 import Itasca.Wasm2.Step.NonControlSound
 import Itasca.Wasm2.Control.EnterStep
-import Itasca.Wasm2.Control.EndStep
-import Itasca.Wasm2.Control.BranchStep
+import Itasca.Wasm2.Control.EnterSound
 import Itasca.Wasm2.Control.Return
 
 /-!
@@ -20,9 +19,9 @@ namespace Itasca.Wasm2
 
 /-- Every opcode preserves semantic control and exact byte provenance on
 success. Reserved opcodes and malformed immediates need no input premise. -/
-theorem steps (data : Slice U8) (env : metadata.Env) (profile : ValidationProfile)
+theorem steps (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
-    (hlocals : ctx.locals = locals) : Steps data env profile locals ctx index := by
+    (hlocals : ctx.locals = locals) : Steps data env locals ctx index := by
   intro st p
   generalize hbyte : data.val[p.start.val]'p.inbounds = opcode
   by_cases hs : opcode.val ∉ controlOpcodes
@@ -50,17 +49,17 @@ namespace Itasca
 
 /-- `code.bodyCore` is sound for either profile, on arbitrary bytes and contexts. -/
 theorem code.bodyCore.spec (data : Slice U8) (env : metadata.Env)
-    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile) :
-    code.bodyCore data env locals results index profile ⦃ r =>
-      r = .Ok () → Wasm2.Validated profile data env locals index ⦄ :=
-  Wasm2.public_spec_of_steps data env profile locals results index
-    (Wasm2.steps data env profile locals ⟨locals, results⟩ index rfl)
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) :
+    code.bodyCore data env locals results index ⦃ r =>
+      r = .Ok () → Wasm2.Validated data env locals index ⦄ :=
+  Wasm2.public_spec_of_steps data env locals results index
+    (Wasm2.steps data env locals ⟨locals, results⟩ index rfl)
 
 theorem code.bodyCore.sound (data : Slice U8) (env : metadata.Env)
-    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (profile : ValidationProfile)
-    (haccepted : code.bodyCore data env locals results index profile = .ok (.Ok ())) :
-    Wasm2.Validated profile data env locals index := by
-  have hs := code.bodyCore.spec data env locals results index profile
+    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
+    (haccepted : code.bodyCore data env locals results index = .ok (.Ok ())) :
+    Wasm2.Validated data env locals index := by
+  have hs := code.bodyCore.spec data env locals results index
   simpa [haccepted] using hs
 
 end Itasca

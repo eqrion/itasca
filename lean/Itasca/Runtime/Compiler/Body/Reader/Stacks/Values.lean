@@ -1,5 +1,60 @@
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
-import Itasca.Runtime.Compiler.Body.Reader.Stacks.Stacks
+
+/-!
+Sections, each formerly its own module: Stacks, Values.
+-/
+
+/-! ## Stacks -/
+
+section
+
+/-!
+A live concrete stack has exactly one declarative interpretation.
+
+Main declarations: `realized_concrete_types` and `numeric_effect_types`. A direct consumer is `Compiler.Body.Reader.Control.ElseExitSlots`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- A live concrete stack has exactly one declarative interpretation. -/
+theorem realized_concrete_types {values : List code.StackType} {types : List valtype}
+    (known : ConcreteStack values) (realized : Sequence.Realizes false values types) :
+    types = Sequence.stackTypes values := by
+  obtain ⟨front, suffix, empty, related, rfl⟩ := realized
+  rw [empty rfl, List.nil_append]
+  induction related with
+  | nil => rfl
+  | @cons value ty rest types accepted related ih =>
+    have tail : ConcreteStack rest := fun v member => known v (by simp [member])
+    have head := known value (by simp)
+    cases value with
+    | Bot => exact False.elim (head rfl)
+    | Val value =>
+      change ty = Translate.valueType value at accepted
+      simp only [Sequence.stackTypes, List.map_cons, accepted]
+      exact congrArg (List.cons _) (ih tail)
+
+/-- Successful numeric readers expose the exact concrete input suffix and the
+corresponding output stack, including source framing below the operands. -/
+theorem numeric_effect_types {before after : List code.StackType} {inputs output}
+    (known : ConcreteStack before)
+    (effect : StackSemantics.NumericEffect false before inputs output after) :
+    ∃ front, Sequence.stackTypes before = front ++ inputs.map Translate.valueType ∧
+      Sequence.stackTypes after = front ++ [Translate.valueType output] ∧ ConcreteStack after := by
+  have afterKnown := concrete_numeric_effect known effect
+  obtain ⟨rest, rfl, transfer⟩ := effect
+  have beforeTypes := realized_concrete_types known (transfer _ (Sequence.realizes_default false rest))
+  exact ⟨Sequence.stackTypes rest, beforeTypes.symm, by simp [Sequence.stackTypes], afterKnown⟩
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## Values -/
+
+section
 
 /-!
 Concrete operand values and their types after reader execution.
@@ -11,7 +66,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem _root_.Itasca.Wasm2.ReaderPost.values {data env locals index st out instruction poly values}
-    {p : Wasm2.Pending data env .Wasm2 locals index st} (post : Wasm2.ReaderPost p out instruction poly values) :
+    {p : Wasm2.Pending data env locals index st} (post : Wasm2.ReaderPost p out instruction poly values) :
     st.core.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ p.current.vals ∧
     out.vals.val = p.parents.flatMap Wasm2.Frames.Saved.vals ++ values := by
   obtain ⟨_, outer, spine, _, _, _, _, _, old⟩ := p.opened
@@ -42,3 +97,5 @@ theorem numeric_full_stack_types {before after outer segment result : List code.
     simpa only [List.append_assoc, Sequence.stackTypes] using congrArg (Sequence.stackTypes outer ++ ·) newTypes
 
 end Itasca.Runtime.Compiler
+
+end

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Safety.NumericSafety
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Saturating
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
 
 /-!
 Sign-extension readers and callbacks return normally from every reached boundary.
@@ -9,7 +9,6 @@ Main declarations: `compiler_reader_sign_total` and `compiler_reader_sign_dispat
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem sign_callback {A} (ops : runtime.platform.Alloc A)

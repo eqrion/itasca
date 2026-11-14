@@ -1,4 +1,4 @@
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ScalarAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.RecordedAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ScalarDispatchSafety
 import Itasca.Runtime.Compiler.Body.Reader.Safety.ExtendedNumericSafety
@@ -7,7 +7,6 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.SaturatingSafety
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 8192
-set_option maxHeartbeats 8000000
 
 theorem source_numeric_byte_partition (opcode : U8) (lower : 69 ≤ opcode.val)
     (upper : opcode.val < 192) :

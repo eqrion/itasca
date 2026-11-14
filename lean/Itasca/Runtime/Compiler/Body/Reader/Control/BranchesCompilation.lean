@@ -1,26 +1,72 @@
-import Itasca.Runtime.Compiler.Body.Reader.Control.StructuredBranchLayout
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixBranch
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixLoopBranch
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessCallbacks
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessControls
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCallbackMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchLayout
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalConditional
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseEvidence
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredBranchIfLayout
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchReachable
-import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchSuccessConditionalCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.BranchCallbacks
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CompilerCodeMonotoneControl
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
+import Itasca.Runtime.Compiler.Body.Reader.Control.FrontTransitions
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixOpenDormant
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallMetadata
+import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalRoot
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ElseFrames
 import Itasca.Runtime.Compiler.Body.Relations.Control.BranchIfLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.SourceStacks
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredState
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
+import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
+
+/-!
+Sections, each formerly its own module: StructuredBranchLayout, BranchesCompilation.
+-/
+
+/-! ## StructuredBranchLayout -/
+
+section
+
+/-!
+Exact live branch slot coordinates follow from source scope selection and the compiler's current layout; no equality of word widths substitutes for a target's source type list.
+
+Main declarations: `StructuredCompilerPrefix.branch_layout`. A direct consumer is `Compiler.Body.Reader.Control.ReachedBranchAcceptance`.
+-/
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- Exact live branch slot coordinates follow from source scope selection and
+the compiler's current layout; no equality of word widths substitutes for a
+target's source type list. -/
+theorem StructuredCompilerPrefix.branch_layout {jumpTables : List Aeneas.Std.U32} {A : Type}
+    {initial before : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals parents current raw position}
+    (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current raw position)
+    (reachable : before.reachable = true) (depth : Nat) (scope : SourceScope)
+    (selected : (current :: parents.reverse)[depth]? = some scope)
+    (discarded : List valtype)
+    (input : Sequence.stackTypes raw = scope.front ++ discarded ++ scope.branchTypes) :
+    ∃ index : Usize, ∃ frame : runtime.compiler.Frame, ∃ source : U32,
+      before.frames.val[index.val]? = some frame ∧
+      index.val + depth + 1 = before.frames.val.length ∧
+      FrameScope locals before scope frame ∧
+      frame.height.val = slots locals + slots scope.front ∧
+      source.val = slots locals + slots (scope.front ++ discarded) ∧
+      source.val + slots scope.branchTypes = before.height.val := by
+  obtain ⟨entered, retained⟩ := invariant.live reachable
+  obtain ⟨index, frame, found, position, shape, _, height⟩ :=
+    invariant.frames.selected_live invariant.entryChain entered depth scope selected
+  obtain ⟨source, sourcePosition, sourceWidth⟩ := branch_source_coordinate
+    (input ▸ retained.layout) retained.localsEq
+  exact ⟨index, frame, source, found, position, shape, height, sourcePosition, sourceWidth⟩
+
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## BranchesCompilation -/
+
+section
 
 /-!
 Direct and conditional branch prefixes and structured compilation. Live/dormant prefix transitions compose into the reader-state branch results.
@@ -87,7 +133,12 @@ theorem StructuredCompilerPrefix.br_dead {jumpTables : List Aeneas.Std.U32} {A :
       state.vals.val state.pos.val ∧ after.reachable = false := by
   have sources := compiler_br_sources ops law before after state depth view accepted
   have cursor := compiler_br_cursor ops law before after state depth view accepted
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br, dead, Bool.false_eq_true, ↓reduceIte] at accepted
+  have accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (.Ok (), after) := by
+    have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br.inv
+      ops before after state depth view (.Ok ()) accepted
+    cases effect with
+    | dead _ observed => exact observed
+    | branched live _ _ => simp [dead] at live
   have ordinary := compiler_observe_ordinary_stable ops law before after state accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame
@@ -173,7 +224,12 @@ theorem StructuredCompilerPrefix.br_if_dead {jumpTables : List Aeneas.Std.U32} {
   have sources := compiler_br_if_sources ops law before after state depth view accepted
   have cursor := compiler_br_if_cursor ops law before after state depth view accepted
   have reach := callback_branch_if_reachable_result ops law before after state depth view (.Ok ()) accepted
-  simp only [runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if, dead, Bool.false_eq_true, ↓reduceIte] at accepted
+  have accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (.Ok (), after) := by
+    have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_br_if.inv
+      ops before after state depth view (.Ok ()) accepted
+    cases effect with
+    | dead _ observed => exact observed
+    | branched live _ _ => simp [dead] at live
   have ordinary := compiler_observe_ordinary_stable ops law before after state accepted
   have frame := compiler_observe_frame ops law before state
   rw [accepted, WP.spec_ok] at frame
@@ -192,7 +248,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_br_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -202,7 +258,7 @@ theorem structured_reader_prefix_br_wasm2 {jumpTables : List U32} {data env sour
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (byte : data.val[p.start.val]'p.inbounds = 12#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ∃ depth : U32, Wasm2.ReaderPost p out.core (.BR (.mk_uN depth.val)) true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.BR (.mk_uN depth.val)))
         out.core.vals.val out.core.pos.val ∧ after.reachable = false := by
@@ -228,7 +284,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env sourceLocals index st}
-    (p : Wasm2.Pending data env .Wasm2 sourceLocals index st) {A : Type}
+    (p : Wasm2.Pending data env sourceLocals index st) {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (initial before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     {emit types functions returns locals parents current}
@@ -239,7 +295,7 @@ theorem structured_reader_prefix_br_if_wasm2 {jumpTables : List U32} {data env s
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (byte : data.val[p.start.val]'p.inbounds = 13#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
+      st data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ∃ (depth : U32) (values : List code.StackType),
       Wasm2.ReaderPost p out.core (.BR_IF (.mk_uN depth.val)) p.current.ctrl.polymorphic_base values ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.BR_IF (.mk_uN depth.val)))
@@ -275,7 +331,7 @@ theorem StructuredReaderCompilerStateWasm2.br {jumpTables : List U32} {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (byte : data.val[st.core.pos.val]'inbounds = 12#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 12#u8 before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ∃ depth : U32, StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance (.BR (.mk_uN depth.val))) savedParents
       (savedCurrent.advance (.plain (.BR (.mk_uN depth.val))) (.BR (.mk_uN depth.val)) true []) := by
@@ -295,7 +351,7 @@ theorem StructuredReaderCompilerStateWasm2.br_if {jumpTables : List U32} {A : Ty
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (byte : data.val[st.core.pos.val]'inbounds = 13#u8)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 13#u8 before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ∃ (depth : U32) (values : List code.StackType), StructuredReaderCompilerStateWasm2 jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance (.BR_IF (.mk_uN depth.val))) savedParents
       (savedCurrent.advance (.plain (.BR_IF (.mk_uN depth.val))) (.BR_IF (.mk_uN depth.val))
@@ -308,5 +364,7 @@ theorem StructuredReaderCompilerStateWasm2.br_if {jumpTables : List U32} {A : Ty
     (fun live => state.reach.current (reach.symm.trans live))⟩
 
 end Itasca.Runtime.Compiler
+
+end
 
 end

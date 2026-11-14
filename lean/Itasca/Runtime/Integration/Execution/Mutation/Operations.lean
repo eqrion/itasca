@@ -1,32 +1,27 @@
 import Itasca.Runtime.Store.Api.GrowthLimits
-import Itasca.Runtime.Integration.Execution.Mutation.Certificate
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
 import Itasca.Runtime.Integration.Execution.Mutation.TableShape
-import Itasca.Runtime.Interp.Memory.MemoryMutation
-import Itasca.Runtime.Store.Invariant.ObjectExtension
-import Itasca.Runtime.Store.Api.GrowthEffects
+import Itasca.Runtime.Interp.Memory.MemoryCoreStep
+import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Api.MemoryFill
-import Itasca.Runtime.Store.Api.TableFill
-import Itasca.Runtime.Store.Api.MemoryCopy
+import Itasca.Runtime.Store.Api.TableGrowSource
 import Itasca.Runtime.Store.Api.TableCopy
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
-import Itasca.Runtime.Store.Invariant.SemanticApi
-import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Spec.Mutation
+import Itasca.Runtime.Store.Invariant.Typing
+import Itasca.Runtime.Spec.Integer
 import Itasca.Runtime.Interp.Machine.Mutation.Core
-import Itasca.Runtime.Interp.Machine.Functions.Typing
-import Itasca.Runtime.SourceMachine.Core
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
+import Itasca.Runtime.Interp.Machine.Functions.CompiledFunctions
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Store.Invariant.CodeAgreement
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
+import Itasca.Runtime.Store.Invariant.ErrorPost
 import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Store.Invariant.SourceSyntax
+import Itasca.Runtime.Store.Invariant.OwnedInitializerErrors
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
 theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}

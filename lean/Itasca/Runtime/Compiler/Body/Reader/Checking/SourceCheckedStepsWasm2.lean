@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Body.Reader.Publication.SourcePublicationAdvanceWasm2
 import Itasca.Runtime.Compiler.Body.Reader.Checking.CheckedPrefixWasm2
-import Itasca.Runtime.Compiler.Body.Reader.Control.ClosedInstructionPrefix
+import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTablePublication
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceStepAcceptanceWasm2
 
 /-!
@@ -43,7 +43,7 @@ theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A)
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
     (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄)
     (coordinates : SourceCoordinates compiler) (maps : ControlMapPublication compiler)
@@ -53,7 +53,7 @@ theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A)
     (instructions : CompilerInstructionPrefix compiler) (exits : FrameExitSlotBounds compiler)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourceCheckedReachedBodyWasm2 initial C locals data env sourceLocals index ft result.2.2 out ∧
         next.val ≤ out.core.pos.val ⦄ := by
@@ -75,7 +75,7 @@ theorem source_checked_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A)
     rcases point.advance_or_closing ops law C layout localsMatch metadata matched contextLocals signatures
       bodyBound next advance inbounds out called with ⟨ended,_⟩ | fresh
     · have callEnd : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-          {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2 11#u8 compiler =
+          {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index 11#u8 compiler =
             .ok (.Ok (),out,after) := by simpa only [ended] using called
       exact state.closed_checked_instructions (ctx := ⟨sourceLocals,ft.results⟩) ops law layout initialLocals initialCapacity extentBefore maps
         instructions exits next advance inbounds out closed ended callEnd
@@ -110,7 +110,7 @@ theorem source_checked_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (la
     (room : BodyResourceRoom initial data.length (observationDemand final).operands bound)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
     ReachedBody.AcceptingSuffixRefinement recorder (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env ⟨sourceLocals,ft.results⟩ index .Wasm2 final
+      data env ⟨sourceLocals,ft.results⟩ index final
       (fun st _ compiler => SourceCheckedReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st) := by
   intro st before compiler held suffix nonempty inbounds next advance out after reference
   obtain ⟨publication,instructions,exits,finalInstructions⟩ := held

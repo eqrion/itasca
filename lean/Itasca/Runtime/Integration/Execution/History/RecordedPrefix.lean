@@ -1,5 +1,6 @@
 import Itasca.Runtime.Integration.Execution.World.Loop
-import Itasca.Runtime.Interp.Invocation.LoopRecordingFacts
+import Itasca.Runtime.Interp.Invocation.Recording
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

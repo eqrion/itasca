@@ -1,23 +1,19 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.Machine.Constants.IntegerEmission
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatValueEncoding
+import Itasca.Runtime.Interp.Machine.Constants.FloatConstant
+import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Interp.Machine.Constants.IntegerSlots
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.Interp.Machine.Control.ForwardJump
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.Interp.Machine.Control.BranchPoint
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
-import Itasca.Runtime.SourceMachine.Core.Bound
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.SourceMachine.Core.SelectPositive
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Integer constants through structured machine execution.

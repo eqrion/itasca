@@ -1,7 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 Append one source instruction to the current open scope. Its saved entry, control signature, and physical branch coordinates do not change.

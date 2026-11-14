@@ -1,8 +1,9 @@
-import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessForward
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
+import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSuccessConditional
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem branch_underflow_total {A} (ops : runtime.platform.Alloc A)
@@ -13,34 +14,12 @@ private theorem branch_underflow_total {A} (ops : runtime.platform.Alloc A)
     (underflow : compiler.height.val <
       (match frame.kind with | .Loop => frame.params | _ => frame.results).val) :
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth 0#u32 false ⦃ _ => True ⦄ := by
-  cases kindEq : frame.kind
-  all_goals simp only [kindEq] at underflow
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, lastValue⟩
-    step as ⟨d, dValue⟩
-    step as ⟨actualIndex, indexValue⟩
-    have indexEq : actualIndex = index := by
-      apply UScalar.eq_of_val_eq
-      simp [alloc.vec.Vec.len] at lastValue
-      scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, foundValue⟩
-    have foundEq : found = frame := foundValue.trans (List.getElem?_eq_some_iff.mp lookup).2
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-    step as ⟨sum, sumValue⟩
-    cases sum with
-    | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨source, sourceValue⟩
-      cases source with
-      | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | some source => simp at sumValue sourceValue; omega
+  apply runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth 0#u32 false
+    ⟨index, frame, lookup, position⟩
+  intro source sourcePosition
+  change compiler.height.val < (branchWidth frame).val at underflow
+  dsimp only at sourcePosition
+  omega
 
 @[step] theorem compiler_branch_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)

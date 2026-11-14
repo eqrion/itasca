@@ -1,54 +1,37 @@
 import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
-import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerDeadMetadata
-import Itasca.Runtime.Compiler.Local.Source.SourceCursor
-import Itasca.Runtime.Compiler.Local.Relations.Operations.DeadCode
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ProfileAgreement
-import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownPopStack
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
+import Itasca.Runtime.Compiler.Body.Callbacks.Prefix.CompilerPrefixStart
+import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
+import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
+import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Replay.BulkAndSaturatingAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownNumericStack
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.SignExtension
-import Itasca.Runtime.Compiler.Body.Reader.Control.Boundary
-import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeFronts
-import Itasca.Runtime.Compiler.Body.Reader.Control.ReachabilitySteps
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.NumericEmissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerFacts
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Emissions
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Empty
+import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
+import Itasca.Runtime.Compiler.Body.Reader.Control.Return
 import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralSources
 import Itasca.Runtime.Compiler.Local.Source.SourceLengthsTactic
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.LoweringArithmetic
 import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
-import Itasca.Runtime.Compiler.Local.Lowering.Literal.LiteralCursor
-import Itasca.Runtime.Compiler.Local.Source.SourceCursorTactic
 import Itasca.Runtime.Compiler.Body.Source.TypedLowering
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerLiteralMetadata
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerMetadataTactic
-import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEmissions
+import Itasca.Runtime.Compiler.Body.Reader.Local.LocalAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Local.LocalEffects
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Calls.CallLowering
-import Itasca.Support.EnvTranslation
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
+import Itasca.Support.Result
 import Itasca.Runtime.Compiler.Body.Reader.Calls.CallEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSources
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackCursor
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerOrdinaryResults
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CompilerCodeMonotoneCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.Unreachable
-import Itasca.Runtime.Compiler.Local.Callbacks.Metadata.CompilerTerminalMetadata
-import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringReturn
+import Itasca.Runtime.Compiler.Local.Lowering.Control.LoweringTrap
 import Itasca.Runtime.Compiler.Local.Relations.Control.KnownControlStack
 import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnStack
-import Itasca.Runtime.Compiler.Body.Reader.Control.RootFrame
+import Itasca.Runtime.Compiler.Body.Reader.Control.ControlKind
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.IntegerCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
-import Itasca.Runtime.Compiler.Body.Reader.Scalar.ConstantCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Local.Compilation
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.EmptyCompilation
-import Itasca.Runtime.Compiler.Body.Reader.Calls.Compilation
-import Itasca.Runtime.Compiler.Body.Reader.Control.TerminalCompilation
+import Itasca.Runtime.Compiler.Body.Reader.Local.Compilation
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Safety
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReturnSafety
 
 /-!
 Actual accepted ordinary dispatch preserves the retained compiler/source point. All opcode-specific stack and callback facts are derived internally.
@@ -76,17 +59,17 @@ theorem StructuredReaderCompilerStateWasm2.ordinary_base {jumpTables : List U32}
     (opcode : U8) (ordinary : opcode ∈ readerBaseOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   simp only [readerBaseOrdinaryOpcodes, List.mem_cons, List.mem_nil_iff, or_false] at ordinary
   rcases ordinary with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl
-  · exact (state.unreachable ops law next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
-  · obtain ⟨_, changed⟩ := state.nop ops law embedding next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
+  · exact (state.unreachable ops law next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
+  · obtain ⟨_, changed⟩ := state.nop ops law embedding next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
   · exact (state.return_ ops law next advance inbounds out sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)).point
   · obtain ⟨_, _, changed⟩ := state.call ops law metadata next advance inbounds out sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
-  · obtain ⟨_, changed⟩ := state.drop ops law embedding next advance inbounds out  (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
+  · obtain ⟨_, changed⟩ := state.drop ops law embedding next advance inbounds out (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
   · obtain ⟨_, _, changed⟩ := state.local_get ops law embedding next advance inbounds out localsMatch sourceBound bodyBound (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
     exact changed.point
@@ -145,7 +128,7 @@ theorem StructuredReaderCompilerStateWasm2.ordinary {jumpTables : List U32} {A :
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   rcases List.mem_append.mp ordinary with base | numeric
   · exact state.ordinary_base ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode base byte accepted
@@ -168,7 +151,7 @@ theorem StructuredReaderCompilerPointWasm2.ordinary {jumpTables : List U32} {A :
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ctx index .Wasm2 opcode before = .ok (.Ok (), out, after)) :
+      {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPointWasm2 jumpTables emit initial after types (env.func_types.val.map EnvTranslation.funcType) (ft.results.val.map Translate.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point
   exact state.ordinary ops law embedding metadata localsMatch next advance inbounds out sourceBound bodyBound opcode ordinary byte accepted

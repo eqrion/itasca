@@ -54,13 +54,20 @@ llbc: check-tools
 
 extract: llbc
 	$(AENEAS) -backend lean .build/itasca.llbc -dest . -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py Itasca/Generated/Types.lean Itasca/Generated/Funs.lean
+	python3 scripts/split_funs.py Itasca/Generated/Funs.lean
 
 # Do not refresh checked-in files while checking their provenance.
 extract-check: llbc
 	mkdir -p .build/extract-check
 	$(AENEAS) -backend lean .build/itasca.llbc -dest .build/extract-check -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py .build/extract-check/Itasca/Generated/Types.lean .build/extract-check/Itasca/Generated/Funs.lean
+	python3 scripts/split_funs.py .build/extract-check/Itasca/Generated/Funs.lean
 	cmp .build/extract-check/Itasca/Generated/Types.lean Itasca/Generated/Types.lean
 	cmp .build/extract-check/Itasca/Generated/Funs.lean Itasca/Generated/Funs.lean
+	@for file in FunsValidator FunsRuntimeCommon FunsCompiler FunsStore FunsInterp FunsInstantiate; do \
+		cmp .build/extract-check/Itasca/Generated/$$file.lean Itasca/Generated/$$file.lean || exit 1; \
+	done
 
 prove:
 	lake build Itasca SpecExt

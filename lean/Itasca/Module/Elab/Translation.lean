@@ -1,4 +1,4 @@
-import Itasca.Support.EnvTranslation
+import Itasca.Support.Result
 
 /-!
 # Import projections and validity translation

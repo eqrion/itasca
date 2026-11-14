@@ -1,6 +1,5 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 
 /-!
 A new IF guard is its own pending group, separate from body branches. Its future resolution touches only the newly appended guard.

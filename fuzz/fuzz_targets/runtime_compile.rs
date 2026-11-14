@@ -1,20 +1,10 @@
 #![no_main]
 #[path = "../../tests/support/runtime_differential.rs"]
 mod differential;
-#[path = "../../tests/support/mvp_binary.rs"]
-mod mvp_binary;
 
 libfuzzer_sys::fuzz_target!(|data: &[u8]| {
-    let Some((&which, bytes)) = data.split_first() else {
-        differential::record(differential::Coverage::Invalid);
-        return;
-    };
-    let profile = if which % 2 == 0 {
-        itasca::ValidationProfile::Wasm1
-    } else {
-        itasca::ValidationProfile::Wasm2
-    };
-    let Ok(module) = itasca::runtime::compile(bytes, profile) else {
+    let bytes = data;
+    let Ok(module) = itasca::runtime::compile(bytes) else {
         differential::record(differential::Coverage::Invalid);
         return;
     };
@@ -45,5 +35,5 @@ libfuzzer_sys::fuzz_target!(|data: &[u8]| {
         differential::record(differential::Coverage::NumericNondeterminism);
         return;
     }
-    differential::record(differential::compare(bytes, profile, data));
+    differential::record(differential::compare(bytes, data));
 });

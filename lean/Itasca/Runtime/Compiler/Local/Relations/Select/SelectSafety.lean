@@ -1,5 +1,7 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
+import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
 /-! SELECT normal return from raw observed offsets. Polymorphic stacks and
 rejected emission/observation outcomes require no final body certificate. -/
@@ -13,7 +15,7 @@ open Aeneas Aeneas.Std
     runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ out =>
       ∃ word, out = .Ok word ∧ word.val = compiler.function.local_slots.val +
         stackWords (values.take (values.length - depth.val)) ⦄ := by
-  unfold runtime.compiler.FunctionCompiler.operand
+  rw [runtime.compiler.FunctionCompiler.operand.eq]
   have length := observed.length
   step with operand_at compiler.before.deref depth positive (by simpa [alloc.vec.Vec.deref, length] using fits)
     as ⟨out, exactValue⟩
@@ -29,18 +31,20 @@ open Aeneas Aeneas.Std
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
     runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state instruction ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2 state.vals.val ⦄ := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op
-  step with compiler_emit ops law compiler instruction codeFits sourceFits coordinateFits as ⟨r, c, emitted⟩
-  cases r with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    cases value
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    exact compiler_observe_stack ops law c state
+  obtain ⟨⟨reply, after⟩, called, _⟩ := WP.spec_imp_exists
+    (runtime.compiler.lower.FunctionCompiler.finish_op.total ops law compiler state instruction codeFits sourceFits coordinateFits)
+  rw [called, WP.spec_ok]
+  intro accepted
+  dsimp only at accepted ⊢
+  subst reply
+  obtain ⟨middle, _, observed⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops compiler after state instruction (.Ok ()) called).success
+  have effect := compiler_observe_stack ops law middle state
+  rw [observed, WP.spec_ok] at effect
+  exact effect rfl
+
 
 set_option maxRecDepth 4096 in
-set_option maxHeartbeats 1000000 in
 @[step] theorem compiler_select_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
     (state : Itasca.code.OpIterState) (values : List Itasca.code.StackType) (typed : Bool)
@@ -72,8 +76,7 @@ set_option maxHeartbeats 1000000 in
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state
         (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 =
         runtime.compiler.FunctionCompiler.observe ops compiler state := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+      rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 

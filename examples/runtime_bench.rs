@@ -3,7 +3,6 @@ use itasca::runtime::{
     compile, Execution, Extern, FuncAddr, HostError, InterruptAction, Platform, Store, Value,
     VecMemory,
 };
-use itasca::ValidationProfile;
 use std::{
     fs::File,
     hint::black_box,
@@ -58,7 +57,6 @@ impl Options {
 
 struct Case {
     name: &'static str,
-    profile: ValidationProfile,
     text: String,
     argument: i32,
     expected: i32,
@@ -67,10 +65,9 @@ struct Case {
 
 fn cases() -> Vec<Case> {
     let mut cases = Vec::new();
-    let mut add = |name, profile, text: &str, argument, expected| {
+    let mut add = |name, text: &str, argument, expected| {
         cases.push(Case {
             name,
-            profile,
             text: text.into(),
             argument,
             expected,
@@ -79,14 +76,12 @@ fn cases() -> Vec<Case> {
     };
     add(
         "call_boundary",
-        ValidationProfile::Wasm1,
         r#"(module (func (export "run") (param i32) (result i32) local.get 0))"#,
         10000,
         10000,
     );
     add(
         "integer_loop",
-        ValidationProfile::Wasm1,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum i32)
         loop $loop
           local.get $sum local.get $n i32.add local.set $sum
@@ -103,29 +98,16 @@ fn cases() -> Vec<Case> {
           local.get $sum local.get $n call $inc i32.add local.set $sum
           local.get $n i32.const 1 i32.sub local.tee $n br_if $loop
         end local.get $sum))"#;
-    add(
-        "direct_calls",
-        ValidationProfile::Wasm1,
-        direct,
-        10000,
-        50_015_000,
-    );
+    add("direct_calls", direct, 10000, 50_015_000);
     let indirect = direct
         .replace(
             "(func $inc",
             "(table 1 funcref) (elem (i32.const 0) $inc) (func $inc",
         )
         .replace("call $inc", "i32.const 0 call_indirect (type $unary)");
-    add(
-        "indirect_calls",
-        ValidationProfile::Wasm1,
-        &indirect,
-        10000,
-        50_015_000,
-    );
+    add("indirect_calls", &indirect, 10000, 50_015_000);
     add(
         "float_loop",
-        ValidationProfile::Wasm1,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum f64)
         loop $loop
           local.get $sum f64.const 0.5 f64.add local.set $sum
@@ -146,14 +128,12 @@ fn cases() -> Vec<Case> {
     );
     add(
         "memory_sum_64k",
-        ValidationProfile::Wasm1,
         &memory,
         16384,
         0x01010101u32.wrapping_mul(16384) as i32,
     );
     add(
         "bulk_copy_8m",
-        ValidationProfile::Wasm2,
         r#"(module (memory 2)
       (func (export "run") (param $n i32) (result i32)
         i32.const 0 i32.const 90 i32.const 65536 memory.fill
@@ -166,7 +146,6 @@ fn cases() -> Vec<Case> {
     );
     add(
         "simd_loop",
-        ValidationProfile::Wasm2,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum v128)
         loop $loop
           local.get $sum v128.const i32x4 1 2 3 4 i32x4.add local.set $sum
@@ -183,16 +162,9 @@ fn cases() -> Vec<Case> {
         ));
     }
     many.push_str("(func (export \"run\") (param i32) (result i32) local.get 0 call $f127))");
-    add(
-        "many_functions",
-        ValidationProfile::Wasm1,
-        &many,
-        10000,
-        10032,
-    );
+    add("many_functions", &many, 10000, 10032);
     add(
         "unary_conversion",
-        ValidationProfile::Wasm2,
         r#"(module (func (export "run") (param $n i32) (result i32) (local $sum i32)
         loop $loop
           local.get $sum local.get $n i64.extend_i32_u i64.clz i32.wrap_i64
@@ -204,7 +176,6 @@ fn cases() -> Vec<Case> {
     );
     add(
         "memory_widths",
-        ValidationProfile::Wasm1,
         r#"(module (memory 1)
         (func (export "run") (param $n i32) (result i32) (local $sum i32)
         loop $loop
@@ -222,7 +193,6 @@ fn cases() -> Vec<Case> {
     );
     add(
         "recursive_calls",
-        ValidationProfile::Wasm1,
         r#"(module (func $recur (export "run") (param $n i32) (result i32)
           local.get $n i32.eqz if (result i32) i32.const 0 else
             local.get $n local.get $n i32.const 1 i32.sub call $recur i32.add
@@ -243,16 +213,9 @@ fn cases() -> Vec<Case> {
     for _ in 0..1024 {
         expected = (expected + 1) ^ 3;
     }
-    add(
-        "large_mixed_body",
-        ValidationProfile::Wasm1,
-        &mixed,
-        10000,
-        expected,
-    );
+    add("large_mixed_body", &mixed, 10000, expected);
     cases.push(Case {
         name: "cross_instance",
-        profile: ValidationProfile::Wasm1,
         text: direct.replace(
             "(func $inc (type $unary) local.get 0 i32.const 1 i32.add)",
             "(import \"provider\" \"inc\" (func $inc (type $unary)))",
@@ -268,18 +231,17 @@ fn cases() -> Vec<Case> {
     cases
 }
 
-fn oracle_engine(profile: ValidationProfile) -> wasmi::Engine {
-    let wasm2 = profile == ValidationProfile::Wasm2;
+fn oracle_engine() -> wasmi::Engine {
     let mut config = wasmi::Config::default();
     config
         .compilation_mode(wasmi::CompilationMode::Eager)
         .wasm_mutable_global(true)
-        .wasm_sign_extension(wasm2)
-        .wasm_saturating_float_to_int(wasm2)
-        .wasm_multi_value(wasm2)
-        .wasm_bulk_memory(wasm2)
-        .wasm_reference_types(wasm2)
-        .wasm_simd(wasm2)
+        .wasm_sign_extension(true)
+        .wasm_saturating_float_to_int(true)
+        .wasm_multi_value(true)
+        .wasm_bulk_memory(true)
+        .wasm_reference_types(true)
+        .wasm_simd(true)
         .wasm_multi_memory(false)
         .wasm_tail_call(false)
         .wasm_extended_const(false)
@@ -304,26 +266,18 @@ impl Platform<VecMemory> for BenchPlatform {
         Err(HostError::Trap)
     }
 }
-fn our_instance(
-    bytes: &[u8],
-    provider: Option<&[u8]>,
-    profile: ValidationProfile,
-) -> (Store, FuncAddr) {
+fn our_instance(bytes: &[u8], provider: Option<&[u8]>) -> (Store, FuncAddr) {
     let mut store = Store::new();
     let mut imports = Vec::new();
     if let Some(provider) = provider {
         let instance = store
-            .instantiate(compile(provider, profile).unwrap(), &[], &mut BenchPlatform)
+            .instantiate(compile(provider).unwrap(), &[], &mut BenchPlatform)
             .unwrap()
             .instance;
         imports.push(store.export(instance, b"inc").unwrap().unwrap());
     }
     let instance = store
-        .instantiate(
-            compile(bytes, profile).unwrap(),
-            &imports,
-            &mut BenchPlatform,
-        )
+        .instantiate(compile(bytes).unwrap(), &imports, &mut BenchPlatform)
         .unwrap()
         .instance;
     let Some(Extern::Func(function)) = store.export(instance, b"run").unwrap() else {
@@ -447,7 +401,7 @@ fn measure_pair(
                     csv,
                     "{},{:?},{},{},{},{},{},{:.3}",
                     case.name,
-                    case.profile,
+                    "Wasm2",
                     stage,
                     ["itasca", "wasmi"][engine],
                     sample + 1,
@@ -513,8 +467,8 @@ fn main() {
             .unwrap()
             .encode()
             .unwrap();
-        let code = compile(&bytes, case.profile).unwrap();
-        let engine = oracle_engine(case.profile);
+        let code = compile(&bytes).unwrap();
+        let engine = oracle_engine();
         let oracle_code = wasmi::Module::new(&engine, &bytes).unwrap();
         let provider_bytes = case.provider.as_ref().map(|text| {
             let buffer = wast::parser::ParseBuffer::new(text).unwrap();
@@ -526,7 +480,7 @@ fn main() {
         let oracle_provider = provider_bytes
             .as_ref()
             .map(|bytes| wasmi::Module::new(&engine, bytes).unwrap());
-        let (mut store, function) = our_instance(&bytes, provider_bytes.as_deref(), case.profile);
+        let (mut store, function) = our_instance(&bytes, provider_bytes.as_deref());
         let (mut oracle_store, oracle_function) =
             oracle_instance(&engine, &oracle_code, oracle_provider.as_ref());
         for _ in 0..5 {
@@ -544,13 +498,13 @@ fn main() {
             case,
             "compile",
             || {
-                black_box(compile(black_box(&bytes), case.profile).unwrap());
+                black_box(compile(black_box(&bytes)).unwrap());
             },
             || {
                 // Wasmi stores compiled bodies in its engine's append-only code map.
                 // Drop the fresh engine in this iteration so compilation retains no
                 // earlier modules and all compiled storage destruction is timed.
-                let fresh_engine = oracle_engine(case.profile);
+                let fresh_engine = oracle_engine();
                 black_box(wasmi::Module::new(&fresh_engine, black_box(&bytes)).unwrap());
             },
         );
@@ -559,14 +513,10 @@ fn main() {
             case,
             "compile_instance",
             || {
-                black_box(our_instance(
-                    &bytes,
-                    provider_bytes.as_deref(),
-                    case.profile,
-                ));
+                black_box(our_instance(&bytes, provider_bytes.as_deref()));
             },
             || {
-                let fresh = oracle_engine(case.profile);
+                let fresh = oracle_engine();
                 let module = wasmi::Module::new(&fresh, &bytes).unwrap();
                 let provider = provider_bytes
                     .as_ref()

@@ -1,8 +1,10 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchEffects
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Copy
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchCertificates
-import Itasca.Runtime.Compiler.Local.Initializer.InitializerExpression
-import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Observe
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Initializer.InitializerElementAppend
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 
 /-!
 Safety of skipped forward and loop branches, combining the distinct branch encodings under one callback safety argument.
@@ -14,9 +16,7 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
-set_option maxHeartbeats 2000000 in
 set_option maxRecDepth 4096 in
 @[step] theorem branch_transfer_forward_with_skip {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -37,79 +37,56 @@ set_option maxRecDepth 4096 in
         ∃ fixups site, site.val = compiler.function.code.val.length + 1 ∧
           out.2.frames.val = compiler.frames.val.set index.val { frame with end_reachable := true, fixups } ∧
           fixups.val = frame.fixups.val ++ [site] ⦄ := by
-  cases kindEq : frame.kind
-  all_goals try exact (forward kindEq).elim
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, hlast⟩
-    step as ⟨d, hd⟩
-    step as ⟨actualIndex, hindex⟩
-    have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, hfound⟩
-    have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false]
-    step as ⟨sum, hsum⟩
-    cases sum with
-    | none => simp at hsum; scalar_tac
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨operand, hoperand⟩
-      cases operand with
-      | none => simp at hoperand; scalar_tac
-      | some operand =>
-        have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-        rw [sourceEq]
-        simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          Bool.false_eq_true, ite_false, bne_iff_ne, nonempty, different, ite_true]
-        rw [if_pos nonempty]
-        simp only [bind_ok, bne_iff_ne, if_pos different]
-        step with compiler_copy ops law compiler frame.height source frame.results nonempty different
-          (by omega) (by omega) coordinateFits as ⟨copied, afterCopy, emitted⟩
-        cases copied with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok value =>
-          cases value
-          obtain ⟨copyBudget, copyCode, copyOffsets, rfl, copiedCode, copiedOffsets⟩ := emitted rfl
-          simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-          step as ⟨current, back, hcurrent, hback⟩
-          have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-          rw [currentEq]
-          simp only [kindEq, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false]
-          step with budget_push ops law copyBudget frame.fixups (alloc.vec.Vec.len copyCode) fixupsFit
-            as ⟨result, budget, fixups, pushed⟩
-          rcases pushed with ⟨rfl, rfl, appended⟩ | ⟨rfl, rfl, rejected⟩
-          · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair,
-              Bool.false_eq_true, ite_false]
-            have copyCodeFits : copyCode.val.length < Usize.max := by simp [copiedCode]; omega
-            have copyOffsetsFits : copyOffsets.val.length < Usize.max := by
-              have lengths := congrArg List.length copiedOffsets
-              simp only [List.length_map, List.length_append, List.length_singleton] at lengths
-              omega
-            have emit := compiler_emit ops law
-              { compiler with budget := budget, function := { compiler.function with code := copyCode, source_offsets := copyOffsets }, frames := back { frame with end_reachable := true, fixups } }
-              (.Jump core.num.U32.MAX) copyCodeFits copyOffsetsFits coordinateFits
-            simp only [kindEq] at emit
-            step with emit
-              as ⟨result, afterJump, emitted⟩
-            cases result with
-            | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok value =>
-              cases value
-              simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, WP.spec_ok]
-              intro accepted
-              obtain ⟨budget, code, offsets, exactState, finalCode, finalOffsets⟩ := emitted rfl
-              refine ⟨?_, fixups, alloc.vec.Vec.len copyCode, ?_, ?_, appended⟩
-              · simpa [exactState, copiedCode, List.append_assoc] using finalCode
-              · simp [alloc.vec.Vec.len, copiedCode]
-              · simp [exactState, hback, alloc.vec.Vec.set_val_eq, kindEq]
-          · simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-set_option maxHeartbeats 2000000 in
+  have width : branchWidth frame = frame.results := by
+    cases kind : frame.kind <;> simp only [branchWidth, kind]
+    exact False.elim (forward kind)
+  have loop : branchLoop frame.kind = false := by
+    cases kind : frame.kind <;> simp only [branchLoop]
+    exact False.elim (forward kind)
+  have nonelided : ¬ (frame.results = 0#u32 ∨ source = frame.height) :=
+    fun choice => choice.elim nonempty different
+  have ready : false = true → runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok (0#u32)) := by
+    intro impossible
+    cases impossible
+  have count : branchInstructionCount false frame source = 2 := by
+    simp only [branchInstructionCount, width, if_neg nonelided,
+      Bool.false_eq_true, Bool.true_eq, ite_false, ite_true]
+  have normal := runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth skip false
+    ({ index := index, frame := frame, lookup := lookup, position := position } : BranchSelection compiler depth)
+    (by
+      intro actual interval
+      have same : actual = source := by
+        apply UScalar.eq_of_val_eq
+        simp only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] at interval
+        omega
+      subst actual
+      apply Or.inr
+      refine ⟨law, ?_⟩
+      rw [count]
+      refine ⟨?_, ?_, coordinateFits, fun _ => fixupsFit⟩
+      · change compiler.function.code.val.length + _ ≤ Usize.max
+        omega
+      · change compiler.function.source_offsets.val.length + _ ≤ Usize.max
+        omega)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  have effect := runtime.compiler.control.FunctionCompiler.branch.inv ops compiler after depth skip false (.Ok ()) called
+  obtain ⟨actualResume, site, code, sitePosition, updated, resumeValid⟩ :=
+    effect.success ⟨index, frame, lookup, position⟩ source
+      (by simpa only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] using sourcePosition)
+      (0#u32) ready law
+  simp only [branchOutput, width, if_neg nonelided, branchTarget, loop, branchJump,
+    Bool.not_true, Bool.not_false, Bool.and_false, Bool.and_true, Bool.false_and,
+    Bool.true_and, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at code
+  simp only [branchInstructionCount, width, if_neg nonelided, Bool.false_eq_true,
+    Bool.true_eq, ite_false, ite_true, Nat.add_zero] at sitePosition
+  simp only [BranchFrameUpdate, loop, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at updated
+  obtain ⟨fixups, frames, appended⟩ := updated
+  exact ⟨code, fixups, site, sitePosition, frames, appended⟩
+
 set_option maxRecDepth 4096 in
 @[step] theorem branch_elided_forward_with_skip {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -129,66 +106,53 @@ set_option maxRecDepth 4096 in
         ∃ fixups site, site.val = compiler.function.code.val.length ∧
           out.2.frames.val = compiler.frames.val.set index.val { frame with end_reachable := true, fixups } ∧
           fixups.val = frame.fixups.val ++ [site] ⦄ := by
-  cases kindEq : frame.kind
-  all_goals try exact (forward kindEq).elim
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, hlast⟩
-    step as ⟨d, hd⟩
-    step as ⟨actualIndex, hindex⟩
-    have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, hfound⟩
-    have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false]
-    step as ⟨sum, hsum⟩
-    cases sum with
-    | none => simp at hsum; scalar_tac
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨operand, hoperand⟩
-      cases operand with
-      | none => simp at hoperand; scalar_tac
-      | some operand =>
-        have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-        rw [sourceEq]
-        simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-          Bool.false_eq_true, ite_false]
-        have copyFalse : (if frame.results != 0#u32 then (Result.ok (source != frame.height) : Result Bool)
-            else Result.ok false) = Result.ok false := by rcases elided with h | h <;> simp [h]
-        rw [copyFalse]
-        simp only [bind_ok, Bool.false_eq_true, ite_false]
-        step as ⟨current, back, hcurrent, hback⟩
-        have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-        rw [currentEq]
-        simp only [kindEq, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false]
-        step with budget_push ops law compiler.budget frame.fixups (alloc.vec.Vec.len compiler.function.code) fixupsFit
-          as ⟨result, budget, fixups, pushed⟩
-        rcases pushed with ⟨rfl, rfl, appended⟩ | ⟨rfl, rfl, rejected⟩
-        · simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, uncurry_apply_pair,
-            Bool.false_eq_true, ite_false]
-          have emit := compiler_emit ops law
-            { compiler with frames := back { frame with end_reachable := true, fixups } }
-            (.Jump core.num.U32.MAX) codeFits offsetsFit coordinateFits
-          simp only [kindEq] at emit
-          step with emit
-            as ⟨result, afterJump, emitted⟩
-          cases result with
-          | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-          | Ok value =>
-            cases value
-            simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, WP.spec_ok]
-            intro accepted
-            obtain ⟨budget, code, offsets, exactState, finalCode, finalOffsets⟩ := emitted rfl
-            refine ⟨?_, fixups, alloc.vec.Vec.len compiler.function.code, ?_, ?_, appended⟩
-            · simpa [exactState] using finalCode
-            · simp [alloc.vec.Vec.len]
-            · simp [exactState, hback, alloc.vec.Vec.set_val_eq, kindEq]
-        · simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  have width : branchWidth frame = frame.results := by
+    cases kind : frame.kind <;> simp only [branchWidth, kind]
+    exact False.elim (forward kind)
+  have loop : branchLoop frame.kind = false := by
+    cases kind : frame.kind <;> simp only [branchLoop]
+    exact False.elim (forward kind)
+  have ready : false = true → runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok (0#u32)) := by
+    intro impossible
+    cases impossible
+  have count : branchInstructionCount false frame source = 1 := by
+    simp only [branchInstructionCount, width, if_pos elided,
+      Bool.false_eq_true, Bool.true_eq, ite_false, ite_true]
+  have normal := runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth skip false
+    ({ index := index, frame := frame, lookup := lookup, position := position } : BranchSelection compiler depth)
+    (by
+      intro actual interval
+      have same : actual = source := by
+        apply UScalar.eq_of_val_eq
+        simp only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] at interval
+        omega
+      subst actual
+      apply Or.inr
+      refine ⟨law, ?_⟩
+      rw [count]
+      refine ⟨?_, ?_, coordinateFits, fun _ => fixupsFit⟩
+      · change compiler.function.code.val.length + _ ≤ Usize.max
+        omega
+      · change compiler.function.source_offsets.val.length + _ ≤ Usize.max
+        omega)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  have effect := runtime.compiler.control.FunctionCompiler.branch.inv ops compiler after depth skip false (.Ok ()) called
+  obtain ⟨actualResume, site, code, sitePosition, updated, resumeValid⟩ :=
+    effect.success ⟨index, frame, lookup, position⟩ source
+      (by simpa only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] using sourcePosition)
+      (0#u32) ready law
+  simp only [branchOutput, width, if_pos elided, branchTarget, loop, branchJump,
+    Bool.not_true, Bool.not_false, Bool.and_false, Bool.and_true, Bool.false_and,
+    Bool.true_and, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at code
+  simp only [branchInstructionCount, width, if_pos elided, Bool.false_eq_true,
+    Bool.true_eq, ite_false, ite_true, Nat.add_zero] at sitePosition
+  simp only [BranchFrameUpdate, loop, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at updated
+  obtain ⟨fixups, frames, appended⟩ := updated
+  exact ⟨code, fixups, site, sitePosition, frames, appended⟩
 
 end Itasca.Runtime.Compiler
 
@@ -200,7 +164,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 3000000
 set_option maxRecDepth 4096
 set_option maxRecDepth 4096 in
 @[step] theorem branch_transfer_loop_with_skip {A : Type} (ops : runtime.platform.Alloc A)
@@ -219,69 +182,53 @@ set_option maxRecDepth 4096 in
         out.2.function.code.val = compiler.function.code.val ++
           [transferInstruction frame.height source frame.params, .Jump frame.start_pc] ∧
         out.2.frames = compiler.frames ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.branch
-  step as ⟨last, hlast⟩
-  step as ⟨d, hd⟩
-  step as ⟨actualIndex, hindex⟩
-  have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-  subst actualIndex
-  have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-  step as ⟨found, hfound⟩
-  have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-  rw [foundEq]
-  simp only [kind, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-  step as ⟨sum, hsum⟩
-  cases sum with
-  | none => simp at hsum; scalar_tac
-  | some sum =>
-    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step as ⟨operand, hoperand⟩
-    cases operand with
-    | none => simp at hoperand; scalar_tac
-    | some operand =>
-      have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-      rw [sourceEq]
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Bool.false_eq_true, ite_false, bne_iff_ne, nonempty, different, ite_true]
-      rw [if_pos nonempty]
-      simp only [bind_ok, bne_iff_ne, if_pos different]
-      step with compiler_copy ops law compiler frame.height source frame.params nonempty different
-        (by omega) (by omega) coordinateFits as ⟨copied, afterCopy, emitted⟩
-      cases copied with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok value =>
-        cases value
-        obtain ⟨copyBudget, copyCode, copyOffsets, rfl, copiedCode, copiedOffsets⟩ := emitted rfl
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-        step as ⟨current, back, hcurrent, hback⟩
-        have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-        rw [currentEq]
-        simp only [kind, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false, ite_true]
-        have copyCodeFits : copyCode.val.length < Usize.max := by simp [copiedCode]; omega
-        have copyOffsetsFits : copyOffsets.val.length < Usize.max := by
-          have lengths := congrArg List.length copiedOffsets
-          simp only [List.length_map, List.length_append, List.length_singleton] at lengths
-          omega
-        step with compiler_emit ops law
-          { compiler with budget := copyBudget, function := { compiler.function with code := copyCode, source_offsets := copyOffsets }, frames := back { frame with kind := .Loop } }
-          (.Jump frame.start_pc) copyCodeFits copyOffsetsFits coordinateFits
-          as ⟨result, afterJump, emitted⟩
-        cases result with
-        | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok value =>
-          cases value
-          simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, WP.spec_ok]
-          intro accepted
-          obtain ⟨budget, code, offsets, exactState, finalCode, finalOffsets⟩ := emitted rfl
-          refine ⟨?_, ?_⟩
-          · simpa [exactState, copiedCode, List.append_assoc] using finalCode
-          · simp [exactState, hback, alloc.vec.Vec.set_val_eq, kind]
-            apply alloc.vec.Vec.ext
-            simp only [alloc.vec.Vec.set_val_eq]
-            have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
-            simpa only [← kind, ← atIndex] using List.set_getElem_self inBounds
+  have width : branchWidth frame = frame.params := by
+    simp only [branchWidth, kind]
+  have loop : branchLoop frame.kind = true := by
+    simp only [branchLoop, kind]
+  have nonelided : ¬ (frame.params = 0#u32 ∨ source = frame.height) :=
+    fun choice => choice.elim nonempty different
+  have ready : false = true → runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok (0#u32)) := by
+    intro impossible
+    cases impossible
+  have count : branchInstructionCount false frame source = 2 := by
+    simp only [branchInstructionCount, width, if_neg nonelided,
+      Bool.false_eq_true, Bool.true_eq, ite_false, ite_true]
+  have normal := runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth skip false
+    ({ index := index, frame := frame, lookup := lookup, position := position } : BranchSelection compiler depth)
+    (by
+      intro actual interval
+      have same : actual = source := by
+        apply UScalar.eq_of_val_eq
+        simp only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] at interval
+        omega
+      subst actual
+      apply Or.inr
+      refine ⟨law, ?_⟩
+      rw [count]
+      refine ⟨?_, ?_, coordinateFits, fun different => False.elim (different kind)⟩
+      · change compiler.function.code.val.length + _ ≤ Usize.max
+        omega
+      · change compiler.function.source_offsets.val.length + _ ≤ Usize.max
+        omega)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  have effect := runtime.compiler.control.FunctionCompiler.branch.inv ops compiler after depth skip false (.Ok ()) called
+  obtain ⟨actualResume, site, code, sitePosition, updated, resumeValid⟩ :=
+    effect.success ⟨index, frame, lookup, position⟩ source
+      (by simpa only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] using sourcePosition)
+      (0#u32) ready law
+  simp only [branchOutput, width, if_neg nonelided, branchTarget, loop, branchJump,
+    Bool.not_true, Bool.not_false, Bool.and_false, Bool.and_true, Bool.false_and,
+    Bool.true_and, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at code
+  simp only [branchInstructionCount, width, if_neg nonelided, Bool.false_eq_true,
+    Bool.true_eq, ite_false, ite_true, Nat.add_zero] at sitePosition
+  simp only [BranchFrameUpdate, loop, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at updated
+  exact ⟨code, updated⟩
+
 set_option maxRecDepth 4096 in
 @[step] theorem branch_elided_loop_with_skip {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -298,57 +245,50 @@ set_option maxRecDepth 4096 in
         out.2.function.code.val = compiler.function.code.val ++
           [.Jump frame.start_pc] ∧
         out.2.frames = compiler.frames ⦄ := by
-  unfold runtime.compiler.control.FunctionCompiler.branch
-  step as ⟨last, hlast⟩
-  step as ⟨d, hd⟩
-  step as ⟨actualIndex, hindex⟩
-  have indexEq : actualIndex = index := by apply UScalar.eq_of_val_eq; simp [alloc.vec.Vec.len] at hlast; scalar_tac
-  subst actualIndex
-  have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-  step as ⟨found, hfound⟩
-  have foundEq : found = frame := by simpa [List.getElem?_eq_getElem inBounds, hfound] using lookup
-  rw [foundEq]
-  simp only [kind, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-  step as ⟨sum, hsum⟩
-  cases sum with
-  | none => simp at hsum; scalar_tac
-  | some sum =>
-    simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step as ⟨operand, hoperand⟩
-    cases operand with
-    | none => simp at hoperand; scalar_tac
-    | some operand =>
-      have sourceEq : operand = source := by apply UScalar.eq_of_val_eq; simp at hoperand; omega
-      rw [sourceEq]
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-        Bool.false_eq_true, ite_false]
-      have copyFalse : (if frame.params != 0#u32 then (Result.ok (source != frame.height) : Result Bool)
-          else Result.ok false) = Result.ok false := by rcases elided with h | h <;> simp [h]
-      rw [copyFalse]
-      simp only [bind_ok, Bool.false_eq_true, ite_false]
-      step as ⟨current, back, hcurrent, hback⟩
-      have currentEq : current = frame := by simpa [List.getElem?_eq_getElem inBounds, hcurrent] using lookup
-      rw [currentEq]
-      simp only [kind, bind_ok, uncurry_apply_pair, Bool.false_eq_true, ite_false, ite_true]
-      step with compiler_emit ops law
-        { compiler with frames := back { frame with kind := .Loop } }
-        (.Jump frame.start_pc) codeFits offsetsFit coordinateFits
-        as ⟨result, afterJump, emitted⟩
-      cases result with
-      | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok value =>
-        cases value
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, WP.spec_ok]
-        intro accepted
-        obtain ⟨budget, code, offsets, exactState, finalCode, finalOffsets⟩ := emitted rfl
-        refine ⟨?_, ?_⟩
-        · simpa [exactState] using finalCode
-        · simp [exactState, hback]
-          apply alloc.vec.Vec.ext
-          simp only [alloc.vec.Vec.set_val_eq]
-          have atIndex := (List.getElem?_eq_some_iff.mp lookup).2
-          simpa only [← kind, ← atIndex] using List.set_getElem_self inBounds
+  have width : branchWidth frame = frame.params := by
+    simp only [branchWidth, kind]
+  have loop : branchLoop frame.kind = true := by
+    simp only [branchLoop, kind]
+  have ready : false = true → runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok (0#u32)) := by
+    intro impossible
+    cases impossible
+  have count : branchInstructionCount false frame source = 1 := by
+    simp only [branchInstructionCount, width, if_pos elided,
+      Bool.false_eq_true, Bool.true_eq, ite_false, ite_true]
+  have normal := runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth skip false
+    ({ index := index, frame := frame, lookup := lookup, position := position } : BranchSelection compiler depth)
+    (by
+      intro actual interval
+      have same : actual = source := by
+        apply UScalar.eq_of_val_eq
+        simp only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] at interval
+        omega
+      subst actual
+      apply Or.inr
+      refine ⟨law, ?_⟩
+      rw [count]
+      refine ⟨?_, ?_, coordinateFits, fun different => False.elim (different kind)⟩
+      · change compiler.function.code.val.length + _ ≤ Usize.max
+        omega
+      · change compiler.function.source_offsets.val.length + _ ≤ Usize.max
+        omega)
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  apply WP.exists_imp_spec ⟨(status, after), called, ?_⟩
+  intro accepted
+  change status = .Ok () at accepted
+  rw [accepted] at called
+  have effect := runtime.compiler.control.FunctionCompiler.branch.inv ops compiler after depth skip false (.Ok ()) called
+  obtain ⟨actualResume, site, code, sitePosition, updated, resumeValid⟩ :=
+    effect.success ⟨index, frame, lookup, position⟩ source
+      (by simpa only [width, UScalar.ofNatCore_val_eq, Nat.add_zero] using sourcePosition)
+      (0#u32) ready law
+  simp only [branchOutput, width, if_pos elided, branchTarget, loop, branchJump,
+    Bool.not_true, Bool.not_false, Bool.and_false, Bool.and_true, Bool.false_and,
+    Bool.true_and, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at code
+  simp only [branchInstructionCount, width, if_pos elided, Bool.false_eq_true,
+    Bool.true_eq, ite_false, ite_true, Nat.add_zero] at sitePosition
+  simp only [BranchFrameUpdate, loop, Bool.false_eq_true, Bool.true_eq, ite_false, ite_true] at updated
+  exact ⟨code, updated⟩
 
 end Itasca.Runtime.Compiler
 
@@ -360,7 +300,6 @@ section
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-set_option maxHeartbeats 2000000
 set_option maxRecDepth 4096
 
 private theorem branch_skip_underflow_total {A} (ops : runtime.platform.Alloc A)
@@ -371,34 +310,12 @@ private theorem branch_skip_underflow_total {A} (ops : runtime.platform.Alloc A)
     (underflow : compiler.height.val <
       (match frame.kind with | .Loop => frame.params | _ => frame.results).val + skip.val) :
     runtime.compiler.control.FunctionCompiler.branch ops compiler depth skip false ⦃ _ => True ⦄ := by
-  cases kindEq : frame.kind
-  all_goals simp only [kindEq] at underflow
-  all_goals
-    unfold runtime.compiler.control.FunctionCompiler.branch
-    step as ⟨last, lastValue⟩
-    step as ⟨d, dValue⟩
-    step as ⟨actualIndex, indexValue⟩
-    have indexEq : actualIndex = index := by
-      apply UScalar.eq_of_val_eq
-      simp [alloc.vec.Vec.len] at lastValue
-      scalar_tac
-    subst actualIndex
-    have inBounds := (List.getElem?_eq_some_iff.mp lookup).1
-    step as ⟨found, foundValue⟩
-    have foundEq : found = frame := foundValue.trans (List.getElem?_eq_some_iff.mp lookup).2
-    rw [foundEq]
-    simp only [kindEq, bind_ok, Bool.false_eq_true, ite_false, ite_true]
-    step as ⟨sum, sumValue⟩
-    cases sum with
-    | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | some sum =>
-      simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-      step as ⟨source, sourceValue⟩
-      cases source with
-      | none => simp [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | some source => simp at sumValue sourceValue; omega
+  apply runtime.compiler.control.FunctionCompiler.branch.total ops compiler depth skip false
+    ⟨index, frame, lookup, position⟩
+  intro source sourcePosition
+  change compiler.height.val < (branchWidth frame).val + skip.val at underflow
+  dsimp only at sourcePosition
+  omega
 
 @[step] theorem compiler_branch_skip_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)

@@ -1,7 +1,6 @@
-import Itasca.Wasm2.SignatureEquality
-import Itasca.Wasm2.HandlerAdapters
+import Itasca.Wasm2.TableAdapters
 import Itasca.Binary.Wasm2.BlockType
-import Itasca.Wasm2.Suffix
+import Itasca.Wasm2.EmptyVisitorLoop
 
 /-!
 # Control frames and labels

@@ -1,11 +1,7 @@
-import Itasca.Binary.Wasm2.References
-import Itasca.Binary.Wasm2.Bulk
-import Itasca.Binary.PrefixUnique
-import Itasca.Binary.Wasm2.Encoding
-import Itasca.Binary.Wasm2.EncodingComplete
+import Itasca.Binary.Wasm2.DeclaredReferences
+import Itasca.Binary.UnicodeUnique
 import Itasca.Binary.Wasm2.SyntaxUnique
-import Itasca.Binary.Wasm2.Simd
-import Itasca.Binary.Wasm1.PrefixUnique
+import Itasca.Binary.Wasm1.EncodingUnique
 
 /-!
 # Uniqueness of Wasm 2.0 instruction decoding

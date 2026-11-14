@@ -1,6 +1,6 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPreserved
 
 /-!
 Initial indexed compiler certificates from validated entries.
@@ -14,9 +14,9 @@ theorem indexed_witness_compiler_start (jumpTables : List U32) (emit : List valt
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
@@ -50,9 +50,9 @@ theorem indexed_witness_compiler_initial_wasm2 (jumpTables : List U32) (emit : L
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish profile}
+    {initial final : runtime.compiler.FunctionCompiler A} {data env index start finish }
     (w : CodeEntry.Witness (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env index start finish initial final profile)
+      data env index start finish initial final )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
       env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))

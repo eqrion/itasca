@@ -1,5 +1,41 @@
-import Itasca.Runtime.Integration.Execution.Dispatch.Entry
-import Itasca.Runtime.Interp.Calls.CallCauses
+import Itasca.Runtime.Integration.Execution.History.State
+import Itasca.Runtime.Integration.Execution.Dispatch.Host
+import Itasca.Runtime.Integration.Host.HostFrameSiteExecution
+import Itasca.Runtime.Integration.Host.HostCallContext
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.Integration.Host.HostIndirectSelected
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
+import Itasca.Runtime.Interp.Relations.StepActive
+import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
+import Itasca.Runtime.Interp.Calls.IndirectResolve
+
+/-!
+Sections, each formerly its own module: HostResult, EntryOutcomes.
+-/
+
+/-! ## HostResult -/
+
+section
+
+namespace Itasca.Runtime.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+
+abbrev EventfulDispatchResult (M P : Type) :=
+  core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P
+
+end Itasca.Runtime.Integration
+
+end
+
+/-! ## EntryOutcomes -/
+
+section
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt
 
@@ -53,3 +89,5 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
   simp only [WP.spec_ok] at causes ⊢
   exact ⟨unchanged,entered,fun error rejected => ⟨inst,compiled,hi,hc,causes error rejected⟩⟩
 end Itasca.Runtime.Integration
+
+end

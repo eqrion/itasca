@@ -1,6 +1,6 @@
 import Aeneas
 import «wasm2.0»
-import Itasca.Spec.DeclaredReferences
+import Itasca.Spec.Checks
 
 /-!
 # Wasm 2.0 SIMD instructions without immediates

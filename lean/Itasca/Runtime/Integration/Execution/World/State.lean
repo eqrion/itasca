@@ -1,5 +1,50 @@
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
+import Itasca.Runtime.Interp.Machine.Execution
+import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Execution.History.State
-import Itasca.Runtime.Integration.Execution.World.ExecutionCode
+
+/-!
+Sections, each formerly its own module: ExecutionCode, State.
+-/
+
+/-! ## ExecutionCode -/
+
+section
+
+namespace Itasca.Runtime.Interp.Machine
+open Aeneas Aeneas.Std
+
+/-- Changing ghost meanings only at unissued instance keys leaves the entire
+active and suspended execution relation intact. No frame is reconstructed. -/
+theorem Execution.change_code {M : Type} {view : M → Slice U8} {before after : Itasca.Runtime.Store.CodeInterpretation}
+    {store : runtime.store.Store M} {exec : runtime.interp.Execution}
+    {source : Itasca.Runtime.SourceMachine.AState} {expected : List valtype} {pc : Nat} {pending : Bool}
+    (held : Execution view before store exec source expected pc pending)
+    (agrees : Itasca.Runtime.Store.CodeAgreesOn store before after) :
+    Execution view after store exec source expected pc pending :=
+  { held with storeEq := held.storeEq.trans (Itasca.Runtime.Store.decode_store_code_agrees view agrees).symm }
+
+end Itasca.Runtime.Interp.Machine
+
+namespace Itasca.Runtime.Store
+open Aeneas Aeneas.Std
+
+/-- Agreement on old issued keys composes through actual retained instances. -/
+theorem CodeAgreesOn.trans_prefix {M : Type} {before middle : runtime.store.Store M}
+    {first second third : CodeInterpretation}
+    (left : CodeAgreesOn before first second)
+    (retained : Interp.FrameStorePrefix before middle)
+    (right : CodeAgreesOn middle second third) : CodeAgreesOn before first third := by
+  intro index inst found function
+  exact (right index inst (retained.instance_lookup found) function).trans
+    (left index inst found function)
+end Itasca.Runtime.Store
+
+end
+
+/-! ## State -/
+
+section
 
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std Itasca.Runtime.Interp
@@ -91,3 +136,5 @@ theorem EventfulWorld.history_metadata {M P F A : Type}
       edge.agrees.trans_prefix edge.metadata ih.2.2⟩
 
 end Itasca.Runtime.Integration
+
+end

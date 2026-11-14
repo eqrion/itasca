@@ -1,4 +1,4 @@
-import Itasca.Support.ControlTranslation
+import Itasca.Support.Result
 
 /-!
 # Wasm 2.0 instruction syntax

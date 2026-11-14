@@ -1,7 +1,6 @@
 import Itasca.Runtime.Store.Initialization.SegmentLoop
-import Itasca.Runtime.Interp.Relations.Synthetic
+import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Compiler.Module.SegmentSource
-import Itasca.Runtime.Compiler.Module.CompileSemantic
 
 /-!
 Total compiled segment initialization. Synthetic-frame loop execution lifts to complete segment programs and the accepted compiler certificate, returning without invoking the start function.
@@ -167,18 +166,18 @@ theorem initialize_segments_compiled {M P F A : Type}
     (view : M → Slice U8) (laws : Platform.MemoryLaws memory view)
     (law : Platform.AllocCorrect allocator)
     (store : runtime.store.Store M) (platform : P) (instIndex : Usize)
-    (inst : runtime.store.ModuleInst) (bytes : Slice U8) (profile : Itasca.ValidationProfile)
+    (inst : runtime.store.ModuleInst) (bytes : Slice U8)
     (limits : runtime.compiler.CompileLimits)
-    (accepted : runtime.compiler.compile_with allocator bytes profile limits = .ok (.Ok inst.module))
+    (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok inst.module))
     (found : store.instances.val[instIndex.val]? = some inst)
     (shape : InstanceShape store inst) (imports : InitializerImports store inst)
     (bindings : InitializerBindings store inst) :
     runtime.interp.initialize_segments memory hooks floats allocator store platform instIndex
       ⦃ out => SegmentAddressSpace store out.2.1 ∧ out.2.2 = platform ⦄ := by
-  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes profile limits inst.module accepted
+  obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits inst.module accepted
   obtain ⟨code, functionFound, program⟩ := witness.segment_program law
   obtain ⟨valid, dataValid⟩ := witness.semantic law
-  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes profile limits inst.module accepted code program
+  have pcBound := Compiler.segment_compile_pc_bound allocator law bytes limits inst.module accepted code program
   exact initialize_segments_program_total memory hooks floats allocator view laws law store platform instIndex inst code
     found functionFound program pcBound shape imports bindings valid.elements dataValid
 

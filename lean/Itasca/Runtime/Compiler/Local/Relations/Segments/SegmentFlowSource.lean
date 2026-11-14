@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
-import Itasca.Runtime.Spec.SegmentPrograms
-import Itasca.Module.Elab.SegmentSyntax
-import Itasca.Runtime.Compiler.Local.Source.SourceFunctionTyping
+import Itasca.Runtime.Spec.ModuleMembership
+import Itasca.Module.Elab.SegmentTyping
+import Itasca.Runtime.Compiler.Local.Source.SourceSegmentPrograms
 
 /-!
 Every emitted global read uses an imported i32 global.

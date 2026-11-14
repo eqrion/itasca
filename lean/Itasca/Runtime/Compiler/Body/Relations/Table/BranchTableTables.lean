@@ -1,6 +1,7 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableSafetyEffects
+import Itasca.Runtime.Compiler.Body.Reader.Control.ControlEffects
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
@@ -30,7 +31,7 @@ theorem compiler_reader_table_tables_wasm2 {A : Type} (ops : runtime.platform.Al
     (shape : Control.Shape st.core) (depths : List U32) (fallback : U32) (next : Usize)
     (encoded : BrTable.Decoded data st.core.pos depths fallback next)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before=.ok (.Ok (),final,after)) :
+      st data env before=.ok (.Ok (),final,after)) :
     ∃ targets, CompilerTables.ofFunction after.function =
       (CompilerTables.ofFunction before.function).append ⟨[],[],[],targets⟩ := by
   obtain ⟨budget,buffer,types,_,callback⟩ := compiler_table_source_wasm2 ops law before after st final data env

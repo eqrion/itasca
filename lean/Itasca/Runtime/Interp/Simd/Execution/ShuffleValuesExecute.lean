@@ -1,7 +1,7 @@
 import Itasca.Runtime.Interp.Simd.Relations.InputValues
 import Itasca.Runtime.Interp.Simd.Relations.NumericResultSlots
-import Itasca.Runtime.Interp.Simd.Relations.ShuffleRelation
-import Itasca.Runtime.Interp.Simd.Execution.ExecuteSource
+import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots
+import Itasca.Runtime.Interp.Simd.Execution.PureSound
 
 /-!
 Typed value correspondence for SIMD shuffle execution.

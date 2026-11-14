@@ -25,7 +25,7 @@ theorem compiler_body_wasm2_checked_available {A} (ops : runtime.platform.Alloc 
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (ledger : ReachedCompilerLedger initial [])
     (limits : Profile.EnvironmentWithinLimits env)
-    (body : Profile.Body .Wasm2 data env sourceLocals index)
+    (body : Wasm2.Validated data env sourceLocals index)
     (room : BodyResourceRoom initial data.length
       (independentBodyDemand data env ⟨sourceLocals,ft.results⟩ index).operands bound)
     (coordinates : SourceCoordinates initial) (maps : ControlMapPublication initial)
@@ -35,11 +35,11 @@ theorem compiler_body_wasm2_checked_available {A} (ops : runtime.platform.Alloc 
     (instructions : CompilerInstructionPrefix initial) (exits : FrameExitSlotBounds initial)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
     code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data
-      env ⟨sourceLocals,ft.results⟩ index .Wasm2 initial ⦃ result => result.1 = .Ok () ∧
+      env ⟨sourceLocals,ft.results⟩ index initial ⦃ result => result.1 = .Ok () ∧
         ∃ closed, SourceCheckedReachedBodyWasm2 initial C locals data env sourceLocals index ft result.2 closed ∧
           closed.core.ctrls.val = [] ∧ closed.core.pos = Slice.len data ⦄ := by
   refine independent_body_accepted_replay (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-    .Wasm2 data env ⟨sourceLocals,ft.results⟩ index limits room.size body
+     data env ⟨sourceLocals,ft.results⟩ index limits room.size body
     (fun st _ compiler => SourceCheckedReachedBodyWasm2 initial C locals data env sourceLocals index ft compiler st)
     initial ?_ ?_
   · intro st started

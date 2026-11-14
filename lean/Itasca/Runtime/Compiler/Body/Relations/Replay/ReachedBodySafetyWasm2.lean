@@ -1,8 +1,7 @@
-import Itasca.Runtime.Compiler.Body.Reader.Replay.ReachedSafety
-import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedAdvanceOrClosed
-import Itasca.Visitor.InvariantBodyLoop
-import Itasca.Visitor.ReaderAcceptedProgress
-import Itasca.Wasm2.Trace.Body
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
+import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
+import Itasca.Visitor.BodyReplay
+import Itasca.Wasm2.Trace.BytesScalar
 
 /-!
 A rejected body needs no retained suffix; an accepted open boundary retains both the exact compiler/source point and its quantitative callback ledger.
@@ -34,7 +33,7 @@ theorem compiler_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Pl
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (bodyBound : initial.function.body_start.val+data.length≤Usize.max) :
     ReachedBody.StepTotalOn (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env ⟨sourceLocals,ft.results⟩ index .Wasm2 (ReachedBodyWasm2 initial C locals data env sourceLocals index ft) := by
+      data env ⟨sourceLocals,ft.results⟩ index (ReachedBodyWasm2 initial C locals data env sourceLocals index ft) := by
   intro st compiler held nonempty inbounds next advance
   rcases held with closed | ⟨point,ledger⟩
   · exact False.elim (nonempty closed)
@@ -52,7 +51,7 @@ theorem compiler_body_steps_wasm2 {A} (ops : runtime.platform.Alloc A) (law : Pl
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out run
   have cursor := code.step_profile.accepted_progress
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance run
   refine ⟨?_,cursor⟩
@@ -75,9 +74,9 @@ theorem compiler_body_wasm2_total {A} (ops : runtime.platform.Alloc A) (law : Pl
     (ledger : ReachedCompilerLedger initial [])
     (bodyBound : initial.function.body_start.val+data.length≤Usize.max) :
     code.validate_body_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      data env ⟨sourceLocals,ft.results⟩ index .Wasm2 initial ⦃ _ => True ⦄ := by
+      data env ⟨sourceLocals,ft.results⟩ index initial ⦃ _ => True ⦄ := by
   apply WP.spec_mono (code.validate_body_with.total_on
-    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+    (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
     (ReachedBodyWasm2 initial C locals data env sourceLocals index ft) (fun _ => True) initial ?_
     (compiler_body_steps_wasm2 ops law initial C locals data env sourceLocals index ft layout localsMatch metadata
       matched contextLocals signatures bodyBound) (by intros; trivial))

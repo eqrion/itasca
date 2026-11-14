@@ -1,6 +1,5 @@
 import Itasca.Runtime.Interp.Machine.Frames.FrameStack
 import Itasca.Runtime.Interp.Relations.StackPreservation
-import Itasca.Runtime.Interp.Relations.PrefixEffect
 
 /-!
 A checked ordinary mutation preserves the full caller chain through both source store extension and exact concrete metadata/prefix preservation.

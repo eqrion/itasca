@@ -1,4 +1,4 @@
-import Itasca.Module.Const.Inversion
+import Itasca.Module.Const.ParserComplete
 
 /-!
 # Inversion of section typing

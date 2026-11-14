@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupPreservation
-import Itasca.Runtime.Compiler.Local.Capacity.AuxiliaryGrowth
-import Itasca.Runtime.Compiler.Local.Capacity.CapacityHelpers
+import Itasca.Runtime.Compiler.Local.Capacity.BudgetAvailability
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
 /-!
 What every compiler callback preserves when it emits code without opening,

@@ -1,4 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStack
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
+
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 

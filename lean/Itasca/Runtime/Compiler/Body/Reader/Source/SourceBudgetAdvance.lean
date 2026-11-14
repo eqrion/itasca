@@ -1,5 +1,5 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.AcceptedAdvance
-import Itasca.Runtime.Compiler.Local.Capacity.BodyResourceRoom
+import Itasca.Runtime.Compiler.Local.Capacity.UnreachableAvailability
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
@@ -35,11 +35,11 @@ theorem source_budget_reader_advance_wasm2 {A} (ops : runtime.platform.Alloc A) 
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
     (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourceBudgetReachedBodyWasm2 initial C locals data env sourceLocals index ft result.2.2 out ∧
         next.val ≤ out.core.pos.val ⦄ := by

@@ -1,3 +1,4 @@
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EndContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CloseScope
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.Emit
 
@@ -30,83 +31,21 @@ open Aeneas Aeneas.Std
         ∃ closed, out.2.function.controls.val[frame.map.val]? = some closed ∧
           closed.end_pc.val = target.val ∧
           closed.source_end.val = compiler.function.body_start.val + state.pos.val ⦄ := by
-  have pop : alloc.vec.Vec.pop Global compiler.frames = .ok (some frame, rest) := by
-    simp only [alloc.vec.Vec.pop, frames, List.getLast?_concat, List.dropLast_concat]
-    congr 2
-    apply alloc.vec.Vec.ext
-    simp
-  unfold runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end
-  have popSpec : alloc.vec.Vec.pop Global compiler.frames ⦃ out => out = (some frame, rest) ⦄ := by
-    rw [pop]
-    simp [WP.spec_ok]
-  step with popSpec as ⟨o, remaining, ho, hremaining⟩
-  subst o remaining
-  simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-  rw [compiler_pc_eq ops { compiler with frames := rest } target position]
-  simp only [bind_ok, noIf]
-  step with compiler_fixups ops { compiler with frames := rest } frame.fixups target 0#usize
-    (by simp) branches as ⟨s, params, budget, batch, func, frames', reach, source, before,
-      height, offsets, depths, result, after, hsnapshot, onlyCode, effect⟩
-  simp only [compilerSnapshot, Prod.mk.injEq] at hsnapshot
-  rcases hsnapshot with ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
-  obtain ⟨code, rfl⟩ := onlyCode
-  simp only [bind_ok]
-  step as ⟨map, back, hmap, hback⟩
-  step as ⟨pcword, hpcword⟩
-  step as ⟨coordinate, hcoordinate⟩
-  have choice : (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) = .ok (frame.kind, scopeExitLive compiler.reachable frame) := by
-    cases kind : frame.kind <;> cases reach : compiler.reachable <;> cases ends : frame.end_reachable <;>
-      simp [scopeExitLive, kind, reach, ends, bind_ok]
-  change WP.spec (Aeneas.Std.bind (if compiler.reachable then .ok (frame.kind, true)
-      else if frame.end_reachable then .ok (frame.kind, true)
-      else Aeneas.Std.bind (match frame.kind with
-          | .Body | .Block | .Loop => (.ok false : Result Bool)
-          | .Then => .ok true
-          | .Else => .ok false) (fun thenLabel =>
-        Aeneas.Std.bind (if thenLabel then .ok frame.entry_reachable else .ok false)
-          (fun entered => .ok (frame.kind, entered)))) _) _
-  rw [choice, bind_ok]
-  simp only [kind, bind_ok]
-  change WP.spec (Aeneas.Std.bind (.ok true) _) _
-  rw [bind_ok]
-  simp only [ite_true]
-  have codeLength : code.val.length = compiler.function.code.val.length := by
-    simpa only [patch_code_length] using congrArg List.length effect
-  change WP.spec (Aeneas.Std.bind (if scopeExitLive compiler.reachable frame then
-    .ok frame.results else .ok 0#u32) _) _
-  have choose : (if scopeExitLive compiler.reachable frame then .ok frame.results else .ok 0#u32) =
-      (.ok (if scopeExitLive compiler.reachable frame then frame.results else 0#u32) : Result U32) := by split <;> rfl
-  rw [choose, bind_ok]
-  let updated := { compiler with frames := rest, reachable := scopeExitLive compiler.reachable frame, function := { compiler.function with code, controls := back { map with source_end := coordinate, end_pc := pcword } } }
-  step with compiler_emit ops law updated _ (by simpa [updated, codeLength] using codeFits)
-    (by simpa [updated] using sourceFits) (by simpa [updated] using emitCoordinateFits) as
-    ⟨status, emitted, hEmitted⟩
-  cases status with
-  | Err error => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok value =>
-    have emittedEffect := hEmitted rfl
-    obtain ⟨budget, instructions, sources, rfl, emittedCode, emittedSources⟩ := emittedEffect
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    step with compiler_observe ops law _ state as ⟨out, hout, success⟩
-    obtain ⟨hoff, hh, hl, hls, hlo, hr, hcode, hsources, hnext, hcap, hmono, hframes, hcontrols⟩ := hout success
-    refine ⟨?_, ?_, ?_, ?_⟩
-    · exact hframes
-    · simpa using hr
-    · rw [hcode]
-      simpa only [effect, List.drop_zero] using emittedCode
-    · refine ⟨{ map with source_end := coordinate, end_pc := pcword }, ?_, ?_, hcoordinate⟩
-      · rw [hcontrols, hback]
-        simp [alloc.vec.Vec.set_val_eq, mapFits]
-      · rw [hpcword]
-        scalar_tac
-
+  have normal := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.total ops law compiler state .Block .Empty
+    ⟨frame, rest, frames, branches, (by intro queried selected; rw [noIf] at selected; cases selected),
+      mapFits, coordinateFits, (by intro body; exact ⟨codeFits, sourceFits, emitCoordinateFits⟩)⟩
+  obtain ⟨⟨status, after⟩, called, _⟩ := WP.spec_imp_exists normal
+  rw [called, WP.spec_ok]
+  intro successful
+  dsimp only at successful ⊢
+  subst status
+  have effect := runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_end.inv ops compiler after state .Block .Empty (.Ok ()) called
+  obtain ⟨remaining, reachable, code, original, closed, selected, controls, start, sourceStart, endPc, sourceEnd⟩ :=
+    effect.unguarded_success law frame rest target frames position noIf branches mapFits
+  have closedLookup : after.function.controls.val[frame.map.val]? = some closed := by
+    rw [controls]
+    exact List.getElem?_set_self mapFits
+  refine ⟨remaining, reachable, ?_, closed, closedLookup, endPc, sourceEnd⟩
+  simpa only [kind, endReachable, scopeExitLive] using code
 
 end Itasca.Runtime.Compiler

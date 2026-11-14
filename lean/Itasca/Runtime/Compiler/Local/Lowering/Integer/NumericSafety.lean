@@ -7,12 +7,7 @@ ordinary visitor errors. -/
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
 
-@[step] theorem compiler_operand_total {A} (ops : runtime.platform.Alloc A)
-    (compiler : runtime.compiler.FunctionCompiler A) (depth : Usize) :
-    runtime.compiler.FunctionCompiler.operand ops compiler depth ⦃ out =>
-      ∀ word, out = .Ok word → word ∈ compiler.before.val ⦄ := by
-  simpa [runtime.compiler.FunctionCompiler.operand, alloc.vec.Vec.deref] using
-    operand_at_total compiler.before.deref depth
+
 
 @[step] theorem compiler_numeric_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -48,8 +43,7 @@ open Aeneas Aeneas.Std
   · have dead : runtime.compiler.lower.FunctionCompiler.op ops compiler state
         (integerOpcode op) 0#u32 0#u32 0#u128 =
         runtime.compiler.FunctionCompiler.observe ops compiler state := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+      rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     rw [dead]
     exact compiler_observe_stack ops law compiler state
 

@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
-import Itasca.Runtime.Store.Initialization.SegmentInstruction
+import Itasca.Runtime.Store.Initialization.SegmentLoop
 
 /-!
 Segment initializer object-metadata preservation. Bulk-operation effects lift to every ready segment instruction while preserving object identities and maps.

@@ -1,10 +1,9 @@
 import Itasca.Runtime.Integration.Execution.Dispatch.Outcomes
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
-import Itasca.Runtime.Integration.Execution.TableFill
-import Itasca.Runtime.Integration.Execution.TableCopy
 import Itasca.Runtime.Integration.Execution.TableInit
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Spec Itasca.Runtime.Interp
 theorem stateful_table_fill_execution_supported

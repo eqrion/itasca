@@ -1,6 +1,6 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackSafety
+import Itasca.Runtime.Compiler.Local.Callbacks.Calls.CallbackBounds
 import Itasca.Runtime.Compiler.Body.Reader.Replay.OrdinaryLedger
-import Itasca.Runtime.Compiler.Body.Reader.Control.ControlLedger
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedReturnAcceptance
 
 /-!
 The numerical callback ledger at a complete source-instruction boundary.
@@ -29,11 +29,11 @@ theorem ReachedCompilerLedger.advance {A} {before after : runtime.compiler.Funct
 
 theorem ReachedCompilerLedger.reader_wasm2 {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) {before after : runtime.compiler.FunctionCompiler A}
-    {data env locals index st} (p : Wasm2.Pending data env .Wasm2 locals index st)
+    {data env locals index st} (p : Wasm2.Pending data env locals index st)
     (out : code.BodyState) (ctx : code.Context)
     (held : ReachedCompilerLedger before st.core.vals.val) (observed : ObservedStack after out.core.vals.val)
     (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env ctx index .Wasm2 (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
+      st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     ReachedCompilerLedger after out.core.vals.val := by
   by_cases control : (data.val[p.start.val]'p.inbounds).val ∈ [2,3,4,5,11,12,13,14,15]
   · obtain ⟨growth,fixups⟩ := reader_control_ledger_wasm2 ops law before after st out data env ctx index _ control held.fixups accepted

@@ -9,10 +9,10 @@ to install the pinned tools.
 
 | Path | Responsibility |
 | --- | --- |
-| `src/lib.rs` | Explicit consumer exports and profile selection. |
+| `src/lib.rs` | Explicit consumer exports and the public validation API. |
 | `src/stream.rs` | Module orchestration, source/scheduler contracts, issued batches, and the private contiguous adapter. |
 | `src/module.rs` | Read-only module metadata and internal environment, entry, and tail validation. |
-| `src/code.rs` | Shared body execution, both profiles' control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
+| `src/code.rs` | Wasm 2.0 body execution, control handlers, scalar/reference/SIMD instructions, operator callbacks, and opcode tables. |
 | `src/signature.rs` | Allocation-free block and result descriptors. |
 | `src/types.rs`, `error.rs` | Shared metadata and error vocabulary. |
 | `src/reader.rs`, `limits.rs` | Byte readers, specification bounds, and resource caps. |
@@ -22,9 +22,9 @@ to install the pinned tools.
 | `lean/SpecExt/` | Handwritten execution extensions and proofs about the patched builtins. |
 | `lean/SpecTec/` | Committed generated specification. |
 | `vendor/`, `patches/` | Pinned tool/specification sources and reproducible source repairs. |
-| `tests/spec_tests.rs`, `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
+| `tests/spec2_tests.rs` | End-to-end specification corpus and metadata checks. |
 | `tests/runtime_wast.rs`, `tests/runtime_api.rs` | Full execution corpora and store/host/interrupt regressions. |
-| `tests/support/`, `examples/wast_extract.rs` | Fixture normalization and generation. |
+| `tests/support/` | Fixture normalization and generation. |
 | `fuzz/` | Differential fuzzers against wasmparser. |
 
 The internal Rust modules follow the implementation and proof boundaries. Keep
@@ -48,21 +48,30 @@ just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Wasm2.Step.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build every proof module
+just lint             # Static proof health checks
+just audit            # Headline theorem axioms and statement cone
 just spec-check       # Regenerate and compare the specification
 just verify           # Run the complete verification sequence
 ```
 
 | Change | Required checks |
 | --- | --- |
-| Handwritten Lean proofs or adapters | `just prove` |
+| Handwritten Lean proofs or adapters | `just prove`, `just lint`, and `just audit` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
 | Extraction tool installation or pins | Rust/extraction checks |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
 | Documentation outside extraction inputs | Check links and `git diff --check` |
 
-Generated source locations change when Rust lines move. Inspect generated diffs;
-never repair `Types.lean` or `Funs.lean` by hand. `FunsExternal.lean` is handwritten,
-and the generated external template is ignored and must never be imported.
+Generated comments retain Rust filenames but omit line ranges, so moving Rust
+lines does not change generated source locations. Rust changes that affect
+extracted definitions still require regeneration. `just extract` generates
+`Types.lean`, the `FunsValidator`, `FunsRuntimeCommon`, `FunsCompiler`,
+`FunsStore`, `FunsInterp`, and `FunsInstantiate` partitions, and the `Funs.lean`
+umbrella. A post-Aeneas splitter runs after `strip_source_lines.py`; it preserves
+declaration text, namespaces and headers, and adds ordered imports. Inspect
+generated diffs; never repair these files by hand. `FunsExternal.lean` is
+handwritten, and the generated external template is ignored and must never be
+imported.
 Specification changes belong in source or generator patches, followed by
 regeneration. Consistency checks write to ignored build directories and fail on
 stale committed output.
@@ -111,7 +120,7 @@ allocation, and store identity issuance remain explicit embedding boundaries.
 - Use explicit copy helpers instead of `.clone()`. Extraction excludes Clone
   and Copy implementations.
 
-Rust enums already represent profiles, value types, control kinds, signatures,
+Rust enums already represent value types, control kinds, signatures,
 imports, exports, and errors. The current Lean backend also handles fieldless
 enums with explicit discriminants, decoding matches, and casts. Remaining
 opcode/section constants represent wire bytes; resource constants represent
@@ -154,17 +163,18 @@ results, coordinate systems, error behavior, and caller obligations. Keep
 proof limitations precise. Implementation rationale belongs beside the code;
 public docs should describe the consumer's contract.
 
-The four guides have separate responsibilities: `README.md` describes usage and
+The five guides have separate responsibilities: `README.md` describes usage and
 public guarantees; this guide describes changes and integration;
-`lean/README.md` describes tool setup and proof contracts; `AGENTS.md` records
-mandatory editing and verification rules. Historical migration records are not
-sources of current API or toolchain requirements.
+`lean/README.md` describes tool setup and proof contracts;
+`lean/PROOF_ENGINEERING.md` describes how to write maintainable proofs; and
+`AGENTS.md` records mandatory editing and verification rules. Historical
+migration records are not sources of current API or toolchain requirements.
 
 ## Streaming contract
 
 The driver owns phase order and acceptance. It decodes the environment, frames
 and submits code batches, validates the tail, and drains all outstanding work.
-Each batch fixes its profile, environment, bytes, and module/batch identity.
+Each batch fixes its environment, bytes, and module/batch identity.
 Dispatch and validation have independent cursors; a framed entry is not yet
 validated. The first validation error remains stored. Only successful
 `validate_func` calls advance validation, and the driver checks the returned
@@ -209,26 +219,25 @@ meaning independently of dispatch so correspondence checks can detect wrong
 mappings. Module and streaming callbacks also affect scheduler invariants;
 every callback must preserve the relation between issued and returned workers.
 
-Keep language restrictions and implementation limits separate in
-`Itasca/Profile/`. Shared body and entry certificates connect independent bytes
-to generated typing; module and streaming proofs compose those certificates.
-Changes to sections, index spaces, initializers, or segment encodings also need
-independent module-grammar and elaboration updates. A new body feature alone
-does not establish a new module profile. The Wasm 2.0 certificate includes the
+Keep WebAssembly validity conditions separate from implementation limits.
+Shared body and entry certificates connect independent bytes to generated
+typing; module and streaming proofs compose those certificates. Changes to
+sections, index spaces, initializers, or segment encodings also need independent
+module-grammar and elaboration updates. The Wasm 2.0 certificate includes the
 independent declared-reference condition for `ref.func`; preserve it through
 body, entry, module, and worker certificates. The pinned generated typing model
 does not supply that condition.
 
 Check encoded counts before allocation where available. `MAX_LOCALS` excludes
 parameters; `MAX_FUNCTION_BYTES` includes the final `end` and excludes local
-declarations. Signatures in either profile have at most 1000 parameters and
-results; Wasm 1.0 additionally allows at most one result.
+declarations. Wasm 2.0 signatures have at most 1000 parameters and results.
 
 Place new proofs by layer, as described in the
 [Lean guide](lean/README.md#proof-architecture): independent grammar in
-`Binary/`, per-handler lemmas in `Handler/`, and body proofs for both profiles
-in `Wasm2/`. Keep imports within the documented dependency layers. Only the
+`Binary/`, per-handler lemmas in `Handler/`, and body proofs in `Wasm2/`. Keep
+imports within the documented dependency layers. Only the
 standard logical axioms `propext`, `Classical.choice`, and `Quot.sound` are
-permitted; there is no automatic axiom-allowlist check. Review proof-bearing
-adapters as well as exported theorems. Report changes to the trust boundary
-explicitly.
+permitted. `just lint` checks layering and forbidden constructs; `just audit`
+checks the headline theorem axiom allowlist and statement cone. Review
+proof-bearing adapters as well as exported theorems. Report changes to the
+trust boundary explicitly.

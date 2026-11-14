@@ -15,7 +15,7 @@ use super::value::{self, width};
 use crate::{
     BlockType, CodeBatch, Config, Context, ElemType, Env, Error, LabelKind, MemArg, Module,
     ModuleVisitor, OpIterState, OpVisitor, Region, ResultType, Source, StackType, StreamingVisitor,
-    Tail, ValidationProfile, ValueType, VisitError, VisitResult,
+    Tail, ValueType, VisitError, VisitResult,
 };
 use alloc::vec::Vec;
 use core::marker::PhantomData;
@@ -150,7 +150,6 @@ impl<A: Alloc> Budget<A> {
 #[cfg_attr(not(charon), derive(Debug))]
 pub struct ExecutableModule {
     pub(super) module: Module,
-    pub(super) profile: ValidationProfile,
     /// Defined functions, followed by compiled initialization code.
     pub(super) functions: Vec<CompiledFunction>,
     // The remaining fields are indices into `functions`.
@@ -212,10 +211,6 @@ impl ExecutableModule {
     pub fn tail(&self) -> &Tail {
         self.module.tail()
     }
-    /// Returns the language profile used during compilation.
-    pub fn profile(&self) -> ValidationProfile {
-        self.profile
-    }
     /// Returns the number of defined functions, excluding imported functions.
     pub fn function_count(&self) -> usize {
         self.module.env().func_type_indices().len()
@@ -269,11 +264,8 @@ impl ExecutableModule {
 
 /// Compiles with the default limits, reporting resource failures as
 /// `Error::Visitor(VisitError::OutOfMemory)`.
-pub(crate) fn compile_default_with<A: Alloc>(
-    bytes: &[u8],
-    profile: ValidationProfile,
-) -> Result<ExecutableModule, Error> {
-    match compile_with::<A>(bytes, profile, CompileLimits::default()) {
+pub(crate) fn compile_default_with<A: Alloc>(bytes: &[u8]) -> Result<ExecutableModule, Error> {
+    match compile_with::<A>(bytes, CompileLimits::default()) {
         Ok(module) => Ok(module),
         Err(CompileError::Validation(err)) => Err(err),
         Err(CompileError::Resource(_)) => Err(Error::Visitor(VisitError::OutOfMemory)),
@@ -283,7 +275,6 @@ pub(crate) fn compile_default_with<A: Alloc>(
 /// Validates and compiles a complete module with explicit budgets.
 pub(crate) fn compile_with<A: Alloc>(
     bytes: &[u8],
-    profile: ValidationProfile,
     limits: CompileLimits,
 ) -> Result<ExecutableModule, CompileError> {
     if bytes.len() > limits.max_module_bytes {
@@ -315,7 +306,7 @@ pub(crate) fn compile_with<A: Alloc>(
     };
     // Batches never leave this invocation's private scheduler, so ID zero is
     // unique among all batches that can reach it, even across concurrent calls.
-    if let Err(error) = crate::validate_streaming(0, profile, &source, &mut scheduler, &mut env) {
+    if let Err(error) = crate::validate_streaming(0, &source, &mut scheduler, &mut env) {
         return Err(match scheduler.budget.error {
             Some(resource) => CompileError::Resource(resource),
             None => CompileError::Validation(error),
@@ -332,7 +323,6 @@ pub(crate) fn compile_with<A: Alloc>(
     let functions = collect_functions(&mut budget, &mut pending_functions)?;
     let mut executable = ExecutableModule {
         module: Module { env, tail },
-        profile,
         functions,
         global_initializers: Vec::new(),
         element_initializers: Vec::new(),
@@ -770,7 +760,7 @@ mod tests {
             .unwrap()
             .encode()
             .unwrap();
-        crate::runtime::compile(&bytes, ValidationProfile::Wasm2).unwrap()
+        crate::runtime::compile(&bytes).unwrap()
     }
 
     #[test]

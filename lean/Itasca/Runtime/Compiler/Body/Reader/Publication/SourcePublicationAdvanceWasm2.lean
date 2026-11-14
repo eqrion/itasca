@@ -1,13 +1,10 @@
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceBudgetAdvance
 import Itasca.Runtime.Compiler.Body.Reader.Publication.PublicationWasm2
-
 import Itasca.Runtime.Compiler.Body.Control.Closing.IndexedClosingWitness
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPointNonempty
+import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerFinish
 import Itasca.Runtime.Compiler.Body.Reader.Control.RootMapPublication
-
 import Itasca.Runtime.Compiler.Body.Reader.Checking.JumpTargets
-
-import Itasca.Runtime.Compiler.Local.Publication.FunctionPublicationRanges
+import Itasca.Runtime.Compiler.Local.Publication.StartMapPublication
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
@@ -49,14 +46,14 @@ theorem source_publication_reader_advance_wasm2 {A} (ops : runtime.platform.Allo
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
     (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄)
     (coordinates : SourceCoordinates compiler) (maps : ControlMapPublication compiler)
     (targets : JumpTableBounds compiler)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourcePublicationReachedBodyWasm2 initial C locals data env sourceLocals index ft result.2.2 out ∧
         next.val ≤ out.core.pos.val ⦄ := by
@@ -81,7 +78,7 @@ theorem source_publication_reader_advance_wasm2 {A} (ops : runtime.platform.Allo
     rcases point.advance_or_closing ops law C layout localsMatch metadata matched contextLocals signatures
       bodyBound next advance inbounds out called with ⟨ended,_⟩ | fresh
     · have callEnd : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-          {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2 11#u8 compiler =
+          {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index 11#u8 compiler =
             .ok (.Ok (),out,after) := by simpa only [ended] using called
       exact reader_root_map_publication_wasm2 pending ops law _ compiler after out ⟨sourceLocals,ft.results⟩
         _ _ _ _ parents current state.compiled state.sources maps extentBefore closed ended callEnd

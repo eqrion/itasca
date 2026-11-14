@@ -1,15 +1,102 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericEncoding
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatOpcode
-import Itasca.Runtime.Compiler.Local.Relations.Syntax.ExecutableTokens
-import Itasca.Runtime.Compiler.Local.Source.SourceExecutableBody
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericLowering
+import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatLowering
+import Itasca.Runtime.Compiler.Local.Source.SourceEntry
+
+/-!
+Sections, each formerly its own module: ExecutableTokens, ReaderOpcode.
+-/
+
+/-! ## ExecutableTokens -/
+
+section
+
+/-!
+Structured headers/delimiters and only the plain instructions of the complete executable instruction family may occur in its flattened source token stream.
+
+Main declarations: `ExecutableToken`. A direct consumer is `Compiler.Local.Relations.Syntax.ReaderOpcode`.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Wasm2
+
+/-- Structured headers/delimiters and only the plain instructions of the
+complete executable instruction family may occur in its flattened source token stream. -/
+def ExecutableToken : Token → Prop
+  | .plain instruction => Itasca.Runtime.SourceMachine.BinaryInstr instruction
+  | _ => True
+
+theorem Emits.executable_tokens {tokens ops} (emitted : Emits tokens ops) :
+    Forall Itasca.Runtime.SourceMachine.BinaryInstr ops → Forall ExecutableToken tokens := by
+  induction emitted with
+  | nil => simp [Forall]
+  | @simple tokens ops token op previous simple ih =>
+    intro supported
+    have earlier := ih (fun instruction member => supported instruction (List.mem_append_left _ member))
+    have last := supported op (by simp)
+    cases simple
+    simpa [Forall, or_imp, forall_and, ExecutableToken] using And.intro earlier last
+  | @block tokens ops bodyTokens body bt previous inner ih ihBody =>
+    intro supported
+    have earlier := ih (fun instruction member => supported instruction (List.mem_append_left _ member))
+    have last := supported (.BLOCK (blockType bt) body) (by simp)
+    have inside := ihBody (Itasca.Runtime.SourceMachine.BinaryInstr.block_body last)
+    simpa [Forall, or_imp, forall_and, ExecutableToken] using And.intro earlier inside
+  | @loop tokens ops bodyTokens body bt previous inner ih ihBody =>
+    intro supported
+    have earlier := ih (fun instruction member => supported instruction (List.mem_append_left _ member))
+    have last := supported (.LOOP (blockType bt) body) (by simp)
+    have inside := ihBody (Itasca.Runtime.SourceMachine.BinaryInstr.loop_body last)
+    simpa [Forall, or_imp, forall_and, ExecutableToken] using And.intro earlier inside
+  | @ifElse tokens ops yesTokens yes noTokens no bt previous yesCode noCode ih ihYes ihNo =>
+    intro supported
+    have earlier := ih (fun instruction member => supported instruction (List.mem_append_left _ member))
+    have last := supported (.IFELSE (blockType bt) yes no) (by simp)
+    obtain ⟨yesSupported, noSupported⟩ := Itasca.Runtime.SourceMachine.BinaryInstr.if_bodies last
+    have yesInside := ihYes yesSupported
+    have noInside := ihNo noSupported
+    simpa [Forall, or_imp, forall_and, ExecutableToken, and_assoc] using ⟨earlier, yesInside, noInside⟩
+  | @ifEnd tokens ops bodyTokens body bt previous inner ih ihBody =>
+    intro supported
+    have earlier := ih (fun instruction member => supported instruction (List.mem_append_left _ member))
+    have last := supported (.IFELSE (blockType bt) body []) (by simp)
+    have inside := ihBody (Itasca.Runtime.SourceMachine.BinaryInstr.if_bodies last).1
+    simpa [Forall, or_imp, forall_and, ExecutableToken] using And.intro earlier inside
+
+theorem BodyTokens.executable_tokens {tokens ops} (body : BodyTokens tokens ops)
+    (supported : Forall Itasca.Runtime.SourceMachine.BinaryInstr ops) : Forall ExecutableToken tokens := by
+  obtain ⟨inner, rfl, emitted⟩ := body
+  have inside := emitted.executable_tokens supported
+  simpa [Forall, or_imp, forall_and, ExecutableToken] using inside
+/-- A retained unfinished reader prefix selects a supported token from the
+original complete executable body, independently of opcode-specific parser facts. -/
+theorem BodyEncoding.next_executable_token {data body tokens position}
+    (encoded : BodyEncoding data body) (supported : Forall Itasca.Runtime.SourceMachine.BinaryInstr body)
+    (before : Consumed data 0#usize tokens position) (remaining : position.val < data.length) :
+    ∃ token next, At data position token next ∧ ExecutableToken token := by
+  obtain ⟨allTokens, finish, complete, endPosition, spelling⟩ := encoded
+  obtain ⟨token, next, suffix, split, atToken, rest⟩ :=
+    before.next_of_prefix complete (by omega)
+  refine ⟨token, next, atToken, spelling.executable_tokens supported token ?_⟩
+  rw [split]
+  simp
+
+end Itasca.Wasm2
+
+end
+
+/-! ## ReaderOpcode -/
+
+section
 
 /-!
 Opcode bytes a body reader step can start with, grouped by the compiler entry
-point that handles them. Both profiles share every family except the Wasm 2.0
-extensions: table access, references, the `0xFC` prefix, SIMD and typed select.
+point that handles them. The base dispatcher is extended by Wasm 2.0
+families: table access, references, the `0xFC` prefix, SIMD and typed select.
 -/
 
-set_option maxHeartbeats 8000000
 set_option maxRecDepth 8192
 open Aeneas Aeneas.Std Itasca
 namespace Itasca.Runtime.Compiler
@@ -106,22 +193,39 @@ theorem float_base_opcode_of_mem {opcode : U8} (member : opcode.val ∈ floatBas
   · exact ⟨.promote,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
   · exact ⟨.demote,by decide,(UScalar.eq_equiv _ _).mpr h.symm⟩
 
-/-- The opcode families a successful reader step under `profile` starts
+/-- Opcode families handled by the base `code.step` dispatcher. -/
+inductive BaseOpcode : U8 → Prop where
+  | ordinary {opcode} : opcode ∈ readerOrdinaryOpcodes → BaseOpcode opcode
+  | scope {opcode} : ScopeOpcode opcode → BaseOpcode opcode
+  | else_ {opcode} : opcode = 5#u8 → BaseOpcode opcode
+  | end_ {opcode} : opcode = 11#u8 → BaseOpcode opcode
+  | scalar {opcode} : opcode.val ∈ scalarOpcodeValues → BaseOpcode opcode
+  | float {opcode} : opcode.val ∈ floatBaseOpcodeValues → BaseOpcode opcode
+  | memory {opcode} : opcode.val ∈ [63, 64] → BaseOpcode opcode
+  | callIndirect {opcode} : opcode = 17#u8 → BaseOpcode opcode
+  | brTable {opcode} : opcode = 14#u8 → BaseOpcode opcode
+
+/-- The opcode families a successful reader step starts
 with, one constructor per compiler entry point. -/
-inductive ReaderOpcode : ValidationProfile → U8 → Prop where
-  | ordinary {profile opcode} : opcode ∈ readerOrdinaryOpcodes → ReaderOpcode profile opcode
-  | scope {profile opcode} : ScopeOpcode opcode → ReaderOpcode profile opcode
-  | else_ {profile opcode} : opcode = 5#u8 → ReaderOpcode profile opcode
-  | end_ {profile opcode} : opcode = 11#u8 → ReaderOpcode profile opcode
-  | scalar {profile opcode} : opcode.val ∈ scalarOpcodeValues → ReaderOpcode profile opcode
-  | float {profile opcode} : opcode.val ∈ floatBaseOpcodeValues → ReaderOpcode profile opcode
-  | memory {profile opcode} : opcode.val ∈ [63, 64] → ReaderOpcode profile opcode
-  | callIndirect {profile opcode} : opcode = 17#u8 → ReaderOpcode profile opcode
-  | brTable {profile opcode} : opcode = 14#u8 → ReaderOpcode profile opcode
-  | stateful {opcode} : opcode.val ∈ [37, 38, 208, 209, 210] → ReaderOpcode .Wasm2 opcode
-  | misc {opcode} : opcode = 252#u8 → ReaderOpcode .Wasm2 opcode
-  | simd {opcode} : opcode = 253#u8 → ReaderOpcode .Wasm2 opcode
-  | typedSelect {opcode} : opcode = 28#u8 → ReaderOpcode .Wasm2 opcode
+inductive ReaderOpcode : U8 → Prop where
+  | ordinary {opcode} : opcode ∈ readerOrdinaryOpcodes → ReaderOpcode opcode
+  | scope {opcode} : ScopeOpcode opcode → ReaderOpcode opcode
+  | else_ {opcode} : opcode = 5#u8 → ReaderOpcode opcode
+  | end_ {opcode} : opcode = 11#u8 → ReaderOpcode opcode
+  | scalar {opcode} : opcode.val ∈ scalarOpcodeValues → ReaderOpcode opcode
+  | float {opcode} : opcode.val ∈ floatBaseOpcodeValues → ReaderOpcode opcode
+  | memory {opcode} : opcode.val ∈ [63, 64] → ReaderOpcode opcode
+  | callIndirect {opcode} : opcode = 17#u8 → ReaderOpcode opcode
+  | brTable {opcode} : opcode = 14#u8 → ReaderOpcode opcode
+  | stateful {opcode} : opcode.val ∈ [37, 38, 208, 209, 210] → ReaderOpcode opcode
+  | misc {opcode} : opcode = 252#u8 → ReaderOpcode opcode
+  | simd {opcode} : opcode = 253#u8 → ReaderOpcode opcode
+  | typedSelect {opcode} : opcode = 28#u8 → ReaderOpcode opcode
+
+theorem BaseOpcode.reader {opcode} : BaseOpcode opcode → ReaderOpcode opcode
+  | .ordinary h => .ordinary h | .scope h => .scope h | .else_ h => .else_ h | .end_ h => .end_ h
+  | .scalar h => .scalar h | .float h => .float h | .memory h => .memory h
+  | .callIndirect h => .callIndirect h | .brTable h => .brTable h
 
 /-- The Wasm 2.0 stateful entry point also handles `memory.size` and `memory.grow`. -/
 theorem stateful_opcode_values {opcode : U8}
@@ -130,13 +234,7 @@ theorem stateful_opcode_values {opcode : U8}
   simp only [List.mem_cons, List.not_mem_nil, or_false] at h ⊢
   omega
 
-theorem ReaderOpcode.wasm2 {profile opcode} : ReaderOpcode profile opcode → ReaderOpcode .Wasm2 opcode
-  | .ordinary h => .ordinary h | .scope h => .scope h | .else_ h => .else_ h | .end_ h => .end_ h
-  | .scalar h => .scalar h | .float h => .float h | .memory h => .memory h
-  | .callIndirect h => .callIndirect h | .brTable h => .brTable h | .stateful h => .stateful h
-  | .misc h => .misc h | .simd h => .simd h | .typedSelect h => .typedSelect h
-
-/-- Closes `ReaderOpcode profile opcode` for a concrete opcode byte. -/
+/-- Closes `ReaderOpcode opcode` for a concrete opcode byte. -/
 macro "reader_opcode" : tactic => `(tactic| first
   | exact .ordinary (by clear * -; decide +revert) | exact .scope (by clear * -; unfold ScopeOpcode; decide +revert)
   | exact .else_ (by clear * -; decide +revert) | exact .end_ (by clear * -; decide +revert)
@@ -154,32 +252,34 @@ macro "reader_opcode_cases " opcode:ident : tactic => `(tactic| all_goals
   subst value
   reader_opcode)
 
-set_option maxHeartbeats 2000000 in
-theorem numeric_reader_opcode {profile opcode operation}
-    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode := by
+theorem numeric_base_opcode {opcode operation}
+    (meaning : Numeric.opcodeMeaning opcode = some operation) : BaseOpcode opcode := by
   unfold Numeric.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
 
-theorem memory_reader_opcode {profile opcode operation}
-    (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) : ReaderOpcode profile opcode := by
+theorem numeric_reader_opcode {opcode operation}
+    (meaning : Numeric.opcodeMeaning opcode = some operation) : ReaderOpcode opcode :=
+  (numeric_base_opcode meaning).reader
+
+theorem memory_reader_opcode {opcode operation}
+    (meaning : MemoryMeaning.opcodeMeaning opcode = some operation) : ReaderOpcode opcode := by
   unfold MemoryMeaning.opcodeMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
 
-set_option maxHeartbeats 2000000 in
-theorem sign_reader_opcode {profile opcode operation}
+theorem sign_reader_opcode {opcode operation}
     (meaning : Wasm2.NumericExtensions.signMeaning opcode = some operation) :
-    ReaderOpcode profile opcode := by
+    ReaderOpcode opcode := by
   unfold Wasm2.NumericExtensions.signMeaning at meaning
   split at meaning <;> simp only [Option.some.injEq,reduceCtorEq] at meaning <;> try contradiction
   all_goals subst operation
   reader_opcode_cases opcode
 
-theorem wasm1_immediate_reader_opcode {profile opcode token bytes}
-    (encoded : Wasm1.Immediate opcode token bytes) : ReaderOpcode profile opcode := by
+theorem wasm1_immediate_reader_opcode {opcode token bytes}
+    (encoded : Wasm1.Immediate opcode token bytes) : ReaderOpcode opcode := by
   cases encoded
   all_goals first
     | reader_opcode
@@ -187,7 +287,7 @@ theorem wasm1_immediate_reader_opcode {profile opcode token bytes}
     | exact memory_reader_opcode (by assumption)
 
 theorem wasm2_immediate_reader_opcode {opcode token bytes}
-    (encoded : Wasm2.Immediate opcode token bytes) : ReaderOpcode .Wasm2 opcode := by
+    (encoded : Wasm2.Immediate opcode token bytes) : ReaderOpcode opcode := by
   cases encoded with
   | plain encoded => exact wasm1_immediate_reader_opcode encoded
   | signExtension _ _ meaning => exact sign_reader_opcode meaning
@@ -199,7 +299,7 @@ end Itasca.Runtime.Compiler
 namespace Itasca.Wasm2
 theorem At.reader_opcode {data start token next}
     (encoded : At data start token next) (inbounds : start.val < data.length) :
-    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[start.val] := by
+    Itasca.Runtime.Compiler.ReaderOpcode data.val[start.val] := by
   obtain ⟨bytes,⟨opcode,immediate,rfl,grammar⟩,span⟩ := encoded
   have head := congrArg List.head? span.suffix
   have equal : data.val[start.val] = opcode := by
@@ -210,7 +310,9 @@ theorem At.reader_opcode {data start token next}
 theorem BodyEncoding.next_reader_opcode {data body tokens position}
     (encoded : BodyEncoding data body)
     (before : Consumed data 0#usize tokens position) (remaining : position.val < data.length) :
-    Itasca.Runtime.Compiler.ReaderOpcode .Wasm2 data.val[position.val] := by
+    Itasca.Runtime.Compiler.ReaderOpcode data.val[position.val] := by
   obtain ⟨token,next,atToken,_⟩ := encoded.next_executable_token (Itasca.Runtime.Compiler.SourceExecutable.body_wasm2 encoded) before remaining
   exact atToken.reader_opcode remaining
 end Itasca.Wasm2
+
+end

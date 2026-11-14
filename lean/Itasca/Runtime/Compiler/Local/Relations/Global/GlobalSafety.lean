@@ -1,20 +1,9 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std
-
-@[step] theorem top_is_v128_total (values : Slice Itasca.code.StackType) :
-    runtime.compiler.lower.top_is_v128 values ⦃ _ => True ⦄ := by
-  unfold runtime.compiler.lower.top_is_v128
-  simp only [core.slice.Slice.is_empty, Slice.len_val, bind_ok]
-  split
-  · simp [WP.spec_ok]
-  · step as ⟨index, indexEq⟩
-    step as ⟨value, found⟩
-    cases value with
-    | Bot => simp [WP.spec_ok]
-    | Val ty => cases ty <;> simp [WP.spec_ok]
 
 @[step] theorem compiler_operand_height {A} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (values : List Itasca.code.StackType)
@@ -40,8 +29,7 @@ set_option maxRecDepth 4096 in
   · obtain ⟨wide, top, _⟩ := WP.spec_imp_exists (top_is_v128_total state.vals.deref)
     rw [lower_global_get_eq ops compiler state index wide live top]
     exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 set_option maxRecDepth 4096 in
@@ -57,9 +45,7 @@ set_option maxRecDepth 4096 in
   by_cases live : compiler.reachable = true
   · have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state 36#u16 index 0#u32 0#u128 =
         globalSetLowering ops compiler state index := by
-      unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_pos live]
-      rfl
+      exact runtime.compiler.lower.FunctionCompiler.op.global_set ops compiler state index 0#u32 0#u128 live
     rw [dispatch]
     unfold globalSetLowering
     step with compiler_operand_height ops compiler values observed 1#usize as ⟨answer, bound⟩
@@ -72,8 +58,7 @@ set_option maxRecDepth 4096 in
       step as ⟨difference, differenceEq⟩
       split <;> simp only [bind_ok] <;>
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 end Itasca.Runtime.Compiler

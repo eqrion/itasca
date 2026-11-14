@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.Wf
+import Itasca.Runtime.Spec.Integer
 
 /-! Slot layout derived from specification value types. Prefix widths give
 positions independently of the compiler's counters. Vector values use adjacent

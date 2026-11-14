@@ -1,5 +1,288 @@
-import Itasca.Runtime.Interp.Simd.Lanes.Packing
-import Itasca.Runtime.Spec.Simd.Shape
+import Itasca.Runtime.Interp.Numeric.Integer.Int
+import SpecExt.Builtins.Examples
+import Itasca.Runtime.Spec.Simd.CompareInteger
+
+/-!
+Sections, each formerly its own module: Access, LaneBits, Splat, Packing, SplatSound.
+-/
+
+/-! ## Access -/
+
+section
+
+/-!
+Runtime lane masks, extraction and insertion.
+
+Main declarations: `mask` and `put`. A direct consumer is `Interp.Simd.Bitwise.Whole`.
+-/
+
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std
+
+@[step] theorem mask (width : U32) (bound : width.val < 128) :
+    runtime.interp.simd.mask width ⦃ result => result.val = 2^width.val - 1 ⦄ := by
+  unfold runtime.interp.simd.mask
+  step as ⟨power, powerEq, powerBits⟩
+  have powerValue : power.val = 2^width.val := by
+    rw [powerEq]
+    rw [Nat.shiftLeft_eq, Nat.one_mul]
+    apply Nat.mod_eq_of_lt
+    simp only [U128.size, U128.numBits, UScalarTy.U128_numBits_eq]
+    exact Nat.pow_lt_pow_right (by decide) bound
+  have positive : 1 ≤ power.val := by rw [powerValue]; exact Nat.one_le_pow _ _ (by decide)
+  step
+  scalar_tac
+
+@[step] theorem lane (v : U128) (width index : U32)
+    (positive : 0 < width.val) (widthBound : width.val ≤ 64)
+    (positionBound : width.val * index.val < 128) :
+    runtime.interp.simd.lane v width index ⦃ result =>
+      result.val = v.val / 2^(width.val * index.val) % 2^width.val ⦄ := by
+  unfold runtime.interp.simd.lane
+  step as ⟨position, positionEq⟩
+  step as ⟨shifted, shiftedEq, shiftedBits⟩
+  step with mask width (by omega) as ⟨maskValue, maskEq⟩
+  simp only [lift, bind_ok, WP.spec_ok]
+  rw [UScalar.cast_val_eq, UScalar.val_and, maskEq, Nat.and_two_pow_sub_one_eq_mod,
+    shiftedEq, Nat.shiftRight_eq_div_pow, positionEq]
+  apply Nat.mod_eq_of_lt
+  exact lt_of_lt_of_le (Nat.mod_lt _ (by positivity))
+    (Nat.pow_le_pow_right (by decide) widthBound)
+
+@[step] theorem put (v : U128) (width index : U32) (x : U64)
+    (positive : 0 < width.val) (widthBound : width.val ≤ 64)
+    (positionBound : width.val * index.val < 128) :
+    runtime.interp.simd.put v width index x ⦃ result =>
+      result.bv =
+        (v.bv &&& ~~~((BitVec.ofNat 128 (2^width.val-1)) <<< (width.val*index.val))) |||
+        (((x.bv.setWidth 128) &&& (BitVec.ofNat 128 (2^width.val-1))) <<< (width.val*index.val)) ⦄ := by
+  unfold runtime.interp.simd.put
+  step as ⟨position, positionEq⟩
+  step with mask width (by omega) as ⟨maskValue, maskEq⟩
+  have maskBits : maskValue.bv = BitVec.ofNat 128 (2^width.val-1) := by
+    rw [←maskEq]
+    apply BitVec.eq_of_toNat_eq
+    rw [BitVec.toNat_ofNat]
+    change maskValue.val = maskValue.val % 2^128
+    exact (Nat.mod_eq_of_lt (by scalar_tac)).symm
+  step as ⟨shiftedMask, shiftedMaskEq, shiftedMaskBits⟩
+  simp only [lift,bind_ok]
+  step as ⟨shiftedValue, shiftedValueEq, shiftedValueBits⟩
+  simp only [WP.spec_ok,UScalar.bv_or,UScalar.bv_and,UScalar.bv_not,
+    shiftedMaskBits,shiftedValueBits,maskBits,positionEq]
+  rfl
+end Itasca.Runtime.Interp.Simd
+
+end
+
+/-! ## LaneBits -/
+
+section
+
+/-!
+Bit-level lane extraction and replacement.
+
+Main declarations: `laneBits` and `writeLaneBits`. A direct consumer is `Interp.Simd.Lanes.Splat`.
+-/
+
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std
+
+def laneBits (width index : Nat) (v : BitVec 128) : BitVec width :=
+  (v >>> (width*index)).setWidth width
+
+def writeLaneBits (width index : Nat) (v : BitVec 128) (x : BitVec 64) : BitVec 128 :=
+  (v &&& ~~~((BitVec.ofNat 128 (2^width-1)) <<< (width*index))) |||
+    (((x.setWidth 128) &&& BitVec.ofNat 128 (2^width-1)) <<< (width*index))
+
+theorem lane_bits_get (width index bit : Nat) (v : BitVec 128) :
+    (laneBits width index v).getLsbD bit =
+      (decide (bit < width) && v.getLsbD (width*index+bit)) := by
+  simp only [laneBits, BitVec.getLsbD_setWidth, BitVec.getLsbD_ushiftRight]
+
+theorem write_lane_bits_get (width index bit : Nat) (v : BitVec 128) (x : BitVec 64)
+    (bound : bit < 128) :
+    (writeLaneBits width index v x).getLsbD bit =
+      if width*index ≤ bit ∧ bit < width*index+width then x.getLsbD (bit-width*index)
+      else v.getLsbD bit := by
+  simp only [writeLaneBits, BitVec.getLsbD_or, BitVec.getLsbD_and,
+    BitVec.getLsbD_not, BitVec.getLsbD_shiftLeft, BitVec.getLsbD_setWidth,
+    BitVec.getLsbD_ofNat, Nat.testBit_two_pow_sub_one]
+  by_cases inside : width*index ≤ bit ∧ bit < width*index+width
+  · have below : bit-width*index < width := by omega
+    have valid : bit-width*index < 128 := by omega
+    simp [bound, inside, Nat.not_lt.mpr inside.1, below, valid]
+  · by_cases before : bit < width*index
+    · simp [bound, inside, before]
+    · have after : ¬bit-width*index < width := by omega
+      simp [bound, inside, before, after]
+
+theorem lane_bits_write_same (width index : Nat) (v : BitVec 128) (x : BitVec 64)
+    (range : width*index+width ≤ 128) :
+    laneBits width index (writeLaneBits width index v x) = x.setWidth width := by
+  apply BitVec.eq_of_getLsbD_eq
+  intro bit
+  rw [lane_bits_get, BitVec.getLsbD_setWidth]
+  by_cases valid : bit < width
+  · rw [write_lane_bits_get width index _ v x (by omega)]
+    simp [valid, show width*index ≤ width*index+bit by omega,
+      show width*index+bit < width*index+width by omega]
+  · simp [valid]
+
+theorem lane_bits_write_other (width index other : Nat) (v : BitVec 128) (x : BitVec 64)
+    (range : width*other+width ≤ 128) (different : other ≠ index) :
+    laneBits width other (writeLaneBits width index v x) = laneBits width other v := by
+  apply BitVec.eq_of_getLsbD_eq
+  intro bit
+  rw [lane_bits_get, lane_bits_get]
+  by_cases valid : bit < width
+  · have outside : ¬(width*index ≤ width*other+bit ∧ width*other+bit < width*index+width) := by
+      rcases Nat.lt_or_gt_of_ne different with less | greater
+      · have order : width*(other+1) ≤ width*index := Nat.mul_le_mul_left _ less
+        rw [Nat.mul_succ] at order
+        omega
+      · have order : width*(index+1) ≤ width*other := Nat.mul_le_mul_left _ greater
+        rw [Nat.mul_succ] at order
+        omega
+    rw [write_lane_bits_get width index _ v x (by omega)]
+    simp [outside]
+  · simp [valid]
+
+@[step] theorem put_lanes (v : U128) (width index : U32) (x : U64)
+    (positive : 0 < width.val) (widthBound : width.val ≤ 64)
+    (range : width.val*index.val+width.val ≤ 128) :
+    runtime.interp.simd.put v width index x ⦃ result =>
+      laneBits width.val index.val result.bv = x.bv.setWidth width.val ∧
+      ∀ other, width.val*other+width.val ≤ 128 → other ≠ index.val →
+        laneBits width.val other result.bv = laneBits width.val other v.bv ⦄ := by
+  apply WP.spec_mono (put v width index x positive widthBound (by omega))
+  intro result bits
+  change result.bv = writeLaneBits width.val index.val v.bv x.bv at bits
+  constructor
+  · exact (congrArg (laneBits width.val index.val) bits).trans
+      (lane_bits_write_same _ _ _ _ range)
+  · intro other bound different
+    exact (congrArg (laneBits width.val other) bits).trans
+      (lane_bits_write_other _ _ _ _ _ bound different)
+
+end Itasca.Runtime.Interp.Simd
+
+end
+
+/-! ## Splat -/
+
+section
+
+/-!
+Lane bounds and runtime scalar splatting.
+
+Main declarations: `lane_range` and `splat`. A direct consumer is `Interp.Simd.Float.Binary`.
+-/
+
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std
+
+theorem lane_range (width index : Nat) (bound : index < 128/width) :
+    width*index+width ≤ 128 := by
+  have order := Nat.mul_le_mul_left width bound
+  have limit := Nat.mul_div_le 128 width
+  rw [Nat.mul_succ] at order
+  omega
+
+@[step] theorem splat_loop (x : U64) (width : U32) (initial : U128) (i : U32)
+    (positive : 0 < width.val) (widthBound : width.val ≤ 64)
+    (position : i.val ≤ 128/width.val)
+    (initializedPrefix : ∀ j, j < i.val → laneBits width.val j initial.bv = x.bv.setWidth width.val) :
+    runtime.interp.simd.splat_loop x width initial i ⦃ result =>
+      ∀ j, j < 128/width.val → laneBits width.val j result.bv = x.bv.setWidth width.val ⦄ := by
+  unfold runtime.interp.simd.splat_loop
+  apply loop.spec_decr_nat (fun p => 128/width.val-p.2.val)
+    (fun p => p.2.val ≤ 128/width.val ∧
+      ∀ j, j < p.2.val → laneBits width.val j p.1.bv = x.bv.setWidth width.val)
+  · rintro ⟨current, index⟩ ⟨indexBound, initialized⟩
+    dsimp only at indexBound initialized
+    unfold runtime.interp.simd.splat_loop.body
+    dsimp only
+    step as ⟨count, countEq⟩
+    split
+    · rename_i more
+      have less : index.val < 128/width.val := by scalar_tac
+      have range := lane_range width.val index.val less
+      step with put_lanes current width index x positive widthBound range as ⟨updated, same, other⟩
+      have countBound : 128/width.val ≤ 128 := Nat.div_le_self _ _
+      step as ⟨next, nextEq⟩
+      refine ⟨?_, ?_, ?_⟩
+      · omega
+      · intro j bound
+        by_cases eq : j = index.val
+        · subst j; exact same
+        · rw [other j (lane_range _ _ (by omega)) eq]
+          exact initialized j (by omega)
+      · omega
+    · have finished : index.val = 128/width.val := by scalar_tac
+      simpa [finished] using initialized
+  · exact ⟨position, initializedPrefix⟩
+
+@[step] theorem splat (x : U64) (width : U32)
+    (positive : 0 < width.val) (widthBound : width.val ≤ 64) :
+    runtime.interp.simd.splat x width ⦃ result =>
+      ∀ j, j < 128/width.val → laneBits width.val j result.bv = x.bv.setWidth width.val ⦄ := by
+  exact splat_loop x width 0#u128 0#u32 positive widthBound (by simp) (by simp)
+
+end Itasca.Runtime.Interp.Simd
+
+end
+
+/-! ## Packing -/
+
+section
+
+/-!
+Relating packed lane bits to source vectors.
+
+Main declarations: `lane_bits_to_nat` and `splat_packed`. A direct consumer is `Interp.Simd.Float.Binary`.
+-/
+
+namespace Itasca.Runtime.Interp.Simd
+open Aeneas Aeneas.Std
+
+theorem lane_bits_to_nat (width index : Nat) (v : BitVec 128) :
+    (laneBits width index v).toNat = v.toNat / 2^(width*index) % 2^width := by
+  simp only [laneBits, BitVec.toNat_setWidth, BitVec.toNat_ushiftRight, Nat.shiftRight_eq_div_pow]
+
+theorem pack_lanes_of_lane_bits (ty : lanetype) (v : BitVec 128) (x : BitVec 64)
+    (lanes : ∀ j, j < 128/lsize ty → laneBits (lsize ty) j v = x.setWidth (lsize ty)) :
+    SpecExt.Builtins.packLanes ty
+      (List.replicate (128/lsize ty) (SpecExt.Builtins.laneOfBits ty (x.setWidth (lsize ty)).toNat)) =
+      v.toNat := by
+  have eq := SpecExt.Builtins.pack_replicate_of_lanes ty (128/lsize ty) v.toNat
+    (x.setWidth (lsize ty)).toNat (by
+      intro j bound
+      rw [←lane_bits_to_nat]
+      exact congrArg BitVec.toNat (lanes j bound))
+  have covers : lsize ty * (128/lsize ty) = 128 := by cases ty <;> decide
+  rw [covers, Nat.mod_eq_of_lt (BitVec.toNat_lt_twoPow_of_le (by rfl))] at eq
+  exact eq
+
+theorem splat_packed (ty : lanetype) (x : U64) (width : U32)
+    (widthEq : width.val = lsize ty) :
+    runtime.interp.simd.splat x width ⦃ result =>
+      uN.mk_uN result.val = inv_lanes_ (.X ty (.mk_dim (128/lsize ty)))
+        (List.replicate (128/lsize ty) (SpecExt.Builtins.laneOfBits ty (x.bv.setWidth (lsize ty)).toNat)) ⦄ := by
+  apply WP.spec_mono (splat x width (by rw [widthEq]; cases ty <;> decide)
+    (by rw [widthEq]; cases ty <;> decide))
+  intro result lanes
+  rw [widthEq] at lanes
+  have eq := pack_lanes_of_lane_bits ty result.bv x.bv lanes
+  exact congrArg uN.mk_uN eq.symm
+
+end Itasca.Runtime.Interp.Simd
+
+end
+
+/-! ## SplatSound -/
+
+section
 
 /-!
 Opcode, input and source correspondence for scalar splatting.
@@ -126,3 +409,5 @@ theorem splat_dispatch_eq {F : Type} (floats : runtime.platform.FloatOps F)
   exact ⟨value, rfl, source⟩
 
 end Itasca.Runtime.Interp.Simd
+
+end

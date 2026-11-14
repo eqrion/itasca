@@ -1,7 +1,7 @@
 # Coding-agent instructions
 
 itasca is a Rust WebAssembly validator verified in Lean against SpecTec-generated
-Wasm 2.0 typing rules and explicit Wasm 1.0 and Wasm 2.0 profiles.
+Wasm 2.0 typing rules and an independent binary grammar.
 
 Before changing Rust, proofs, or extraction inputs, read
 [DEVELOPMENT.md](DEVELOPMENT.md), the
@@ -12,8 +12,12 @@ consumer API and checked theorem premises.
 ## Coupled sources
 
 - `src/` and `lean/Itasca/Generated/` are coupled. Regenerate committed
-  `Types.lean` and `Funs.lean` with `just extract`; never edit them by hand.
-  Rust comment and line-number changes also require regeneration.
+  `Types.lean`, the six `Funs{Validator,RuntimeCommon,Compiler,Store,Interp,Instantiate}.lean`
+  partitions, and the `Funs.lean` umbrella with `just extract`; never edit them
+  by hand. Rust changes still require regeneration. Generated comments retain
+  Rust filenames but omit line ranges, so moving lines no longer changes those
+  comments. After comment normalization, `lean/scripts/split_funs.py` partitions
+  the generated functions without rewriting declaration text.
 - `FunsExternal.lean` is handwritten. The generated external template is ignored
   and must never be imported by a proof.
 - `lean/SpecTec/wasm2.0.lean` is generated from pinned sources and versioned
@@ -45,19 +49,23 @@ Use the documented rustdoc style and keep byte-coordinate systems explicit.
 
 ## Proof discipline
 
+Follow the [proof engineering guide](lean/PROOF_ENGINEERING.md).
+
 Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
 kernel bypasses. Use only the standard logical axioms `propext`, `Classical.choice`,
 and `Quot.sound`. Keep `Support/`, `Spec/`, `Binary/`, and `Handler/` free of
-imports from higher layers. Review proof-bearing adapters as well as exported
-theorems; there is no automatic axiom-allowlist check.
+imports from higher layers. `just lint` checks layering and forbidden
+constructs; `just audit` checks the headline theorem axiom allowlist and
+statement cone. Review proof-bearing adapters as well as exported theorems.
 
-Use `just check Itasca.ModuleName` for iteration and `just prove` for integration.
+Iterate with the Lean language server tools, confirm with
+`just check Itasca.ModuleName`, and use `just prove` for integration.
 Preserve dependency and build caches. Scratch files belong in `$TMPDIR`, outside
 the proof source tree. Report any trust-boundary change explicitly.
 
 ## Required checks
 
-- Handwritten Lean proofs or adapters: `just prove`.
+- Handwritten Lean proofs or adapters: `just prove`, `just lint`, and `just audit`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
 - Extraction tool installation or pins: the Rust/extraction checks.
@@ -66,5 +74,5 @@ the proof source tree. Report any trust-boundary change explicitly.
 - Documentation outside extraction inputs: check links and `git diff --check`.
 
 `just verify` runs both Rust test configurations, Rust/specification regeneration
-checks and the integrated Lean build. The Rocq implementation
-is archived under `rocq-baseline`; the active branch has no Rocq build requirement.
+checks and the integrated Lean build. The Rocq implementation is archived under
+`rocq-baseline`; the active branch has no Rocq build requirement.

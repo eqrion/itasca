@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.SignatureTable
-import Itasca.Runtime.Compiler.Body.Reader.Control.EnterWasm2
+import Itasca.Runtime.Compiler.Local.Relations.Table.StatefulAuxiliaryTables
+import Itasca.Runtime.Compiler.Body.Reader.Control.ScopeWasm2
 
 /-!
 Concrete block selection agrees with the canonical resolved parameter and result vectors, including indexed multi-value block signatures.

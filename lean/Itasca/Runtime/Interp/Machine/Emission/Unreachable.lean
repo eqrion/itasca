@@ -1,29 +1,20 @@
-import Itasca.Runtime.Interp.Control.StructuredUnreachable
+import Itasca.Runtime.Interp.Control.BrTableSource
 import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
 import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.SourceMachine.Measure
+import Itasca.Runtime.Compiler.Local.Control.Table.StructuredUniversalTerminal
 import Itasca.Runtime.Interp.Machine.Execution
 import Itasca.Runtime.Interp.Relations.SuspendedPoint
 import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
-import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.SourceMachine.Core
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
+import Itasca.Runtime.SourceMachine.Core.Trap
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
 import Itasca.Runtime.Interp.Relations.StackPreservation
-import Itasca.Runtime.Interp.Relations.PrefixEffect
-import Itasca.Runtime.Interp.Control.SkipStack
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.Spec.Integer
 
 /-!
 Exclusion of unreachable from ordinary scalar emission.

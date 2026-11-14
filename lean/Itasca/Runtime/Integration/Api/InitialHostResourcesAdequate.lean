@@ -1,5 +1,6 @@
-import Itasca.Runtime.Integration.Invocation.InitialHostCauses
+import Itasca.Runtime.Integration.Invocation.Outcomes
 import Itasca.Runtime.Integration.Api.InvocationResourcesAdequate
+
 namespace Itasca.Runtime.Integration
 open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
 

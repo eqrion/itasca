@@ -1,4 +1,4 @@
-import Itasca.Runtime.Spec.Simd.Saturation
+import Itasca.Runtime.Spec.Simd.Pairwise
 
 /-!
 Source-rule algebra for saturating integer lane arithmetic. Lane/list calculations establish the generated source operation and its reduction step, consumed by source-machine and interpreter correspondence proofs.

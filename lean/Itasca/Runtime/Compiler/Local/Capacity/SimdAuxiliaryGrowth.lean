@@ -1,29 +1,43 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdStaticTables
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdDispatch
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdBitsCallbacks
 import Itasca.Runtime.Compiler.Local.Capacity.EmissionGrowth
+
+/-!
+Sections, each formerly its own module: SimdMeaningBound, SimdAuxiliaryGrowth.
+-/
+
+/-! ## SimdMeaningBound -/
+
+section
+
 namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std Itasca.ResultFacts
-set_option maxHeartbeats 4000000
+open Aeneas Aeneas.Std Itasca.Wasm2.Simd
 set_option maxRecDepth 4096
 
-private theorem emit_auxiliary_result {A : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
-    (instruction : runtime.bytecode.Instr) (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.FunctionCompiler.emit ops before instruction = .ok (status, after)) :
-    after.function.simd = before.function.simd ∧
-    after.function.v128_pool = before.function.v128_pool ∧
-    after.function.indirect = before.function.indirect ∧
-    (status = .Ok () → after.function.code.val.length = before.function.code.val.length + 1) := by
-  have tables := compiler_emit_tables ops before after instruction status accepted
-  refine ⟨?_, ?_, ?_, ?_⟩
-  · apply (alloc.vec.Vec.eq_iff _ _).mpr
-    exact congrArg CompilerTables.simd tables
-  · apply (alloc.vec.Vec.eq_iff _ _).mpr
-    exact congrArg CompilerTables.constants tables
-  · apply (alloc.vec.Vec.eq_iff _ _).mpr
-    exact congrArg CompilerTables.indirect tables
-  · intro success
-    subst status
-    simp [compiler_emit_code_success ops law before after instruction accepted]
+theorem SimdImmediateMeaning.opcode_bound {C opcode immediate input source output}
+    (meaning : SimdImmediateMeaning C opcode immediate input source output) : opcode.val < 256 := by
+  cases meaning with
+  | pure opcode immediate op meaning => exact pure_bound meaning
+  | lane opcode immediate op meaning lane position =>
+    unfold laneMeaning at meaning
+    split at meaning <;> first | contradiction | omega
+  | memory opcode immediate op meaning argument lane memory available offset position =>
+    unfold memoryMeaning at meaning
+    split at meaning <;> first | contradiction | omega
+  | shuffle => decide
+end Itasca.Runtime.Compiler
+
+end
+
+/-! ## SimdAuxiliaryGrowth -/
+
+section
+
+namespace Itasca.Runtime.Compiler
+open Aeneas Aeneas.Std Itasca.ResultFacts
+set_option maxRecDepth 4096
+
+
 
 private theorem observe_auxiliary_result {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
@@ -39,58 +53,7 @@ private theorem observe_auxiliary_result {A : Type} (ops : runtime.platform.Allo
   rw [frame]
   exact ⟨rfl, rfl, rfl, rfl⟩
 
-private theorem push_auxiliary_result {A T : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (budget afterBudget : runtime.compiler.Budget A)
-    (before after : alloc.vec.Vec T) (value : T) (status : core.result.Result Unit Itasca.error.VisitError)
-    (accepted : runtime.compiler.Budget.push ops budget before value = .ok (status,afterBudget,after)) :
-    after.val.length ≤ before.val.length + 1 := by
-  rcases budget_push_code_result ops law budget afterBudget before after value status accepted with same | appended
-  · simp [same]
-  · simp [appended]
 
-open Lean Meta Elab Tactic in
-elab "simd_auxiliary_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
-  let hyp ← elabTerm h none
-  let ty ← inferType hyp
-  let some (_, lhs, _) := ty.eq? | throwError "not an equation"
-  let some functionName := lhs.getAppFn.constName? | throwError "not a named helper"
-  let tac ← match functionName with
-    | ``runtime.compiler.FunctionCompiler.emit =>
-      `(tactic| obtain ⟨simdEq, poolEq, indirectEq, codeGrowth⟩ := emit_auxiliary_result $ops $law _ _ _ _ $h)
-    | ``runtime.compiler.FunctionCompiler.observe =>
-      `(tactic| obtain ⟨simdEq, poolEq, indirectEq, codeEq⟩ := observe_auxiliary_result $ops $law _ _ _ _ $h)
-    | ``runtime.compiler.Budget.push =>
-      `(tactic| have pushedGrowth := push_auxiliary_result $ops $law _ _ _ _ _ _ $h)
-    | _ => throwError "not an auxiliary-vector helper"
-  evalTactic tac
-
-macro "simd_auxiliary_close" : tactic => `(tactic|
-  (simp_all only [Prod.mk.injEq, Result.ok.injEq, source_unit_eq]
-   try simp_all [show (524#16#uscalar : U16) = 524#u16 from rfl]
-   try omega))
-
-macro "simd_auxiliary_step " h:ident " using " ops:term ", " law:term : tactic => `(tactic|
-  first
-  | solve | (sources_terminal $h; simd_auxiliary_close)
-  | (fail_if_no_progress dsimp only at $h:ident)
-  | solve | (simd_auxiliary_effect $h using $ops, $law; simd_auxiliary_close)
-  | (fail_if_no_progress simp only [Std.uncurry, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      core.convert.FromSame, bind_ok, bind_tc_ok] at $h:ident)
-  | (sources_nonterminal $h
-     obtain ⟨value, called, rest⟩ := bind_ok_inv _ _ _ $h
-     clear $h
-     rename' rest => $h
-     first
-     | (guard_hyp value : Prod _ _; rcases value with ⟨firstValue, secondValue⟩)
-     | skip
-     try simd_auxiliary_effect called using $ops, $law
-     first
-     | (guard_hyp firstValue : core.result.Result _ _; cases firstValue)
-     | (guard_hyp value : core.result.Result _ _; cases value)
-     | skip
-     try simp only [uncurry_apply_pair] at $h:ident)
-  | sources_split $h)
 
 /-- Every accepted SIMD callback emits one instruction. Its immediate record
 or vector-constant pool grows by at most one; rejected prefixes are excluded. -/
@@ -103,8 +66,37 @@ theorem compiler_simd_auxiliary_success {A : Type} (ops : runtime.platform.Alloc
     after.function.v128_pool.val.length ≤ before.function.v128_pool.val.length + 1 ∧
     after.function.indirect = before.function.indirect ∧
     (opcode ≠ 524#u16 → after.function.v128_pool = before.function.v128_pool) := by
-  unfold runtime.compiler.simd.FunctionCompiler.simd_op at accepted
-  repeat' simd_auxiliary_step accepted using ops, law
+  obtain ⟨staged, instruction, allocated, finished⟩ :=
+    (runtime.compiler.simd.FunctionCompiler.simd_op.inv ops before after state opcode a bits (.Ok ()) accepted).execution.success
+  have frame := allocated.frame
+  have bounds := allocated.bounds law
+  have tables := compiler_finish_op_tables ops law staged after state instruction (.Ok ()) finished
+  have simds := congrArg CompilerTables.simd tables
+  have pools := congrArg CompilerTables.constants tables
+  have indirect := congrArg CompilerTables.indirect tables
+  change after.function.simd.val = staged.function.simd.val at simds
+  change after.function.v128_pool.val = staged.function.v128_pool.val at pools
+  change after.function.indirect.val = staged.function.indirect.val at indirect
+  obtain ⟨middle, emitted, observed⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops staged after state instruction (.Ok ()) finished).success
+  have code : after.function.code.val.length = staged.function.code.val.length + 1 := by
+    rw [compiler_observe_code_result ops law middle after state (.Ok ()) observed,
+      compiler_emit_code_success ops law staged middle instruction emitted]
+    simp only [List.length_append, List.length_singleton]
+  rw [frame] at code
+  refine ⟨code, ?_, ?_, ?_, ?_⟩
+  · rw [simds]
+    exact bounds.1
+  · rw [pools]
+    exact bounds.2.1
+  · apply alloc.vec.Vec.ext
+    rw [indirect, frame]
+  · intro nonconstant
+    apply alloc.vec.Vec.ext
+    rw [pools]
+    have notLiteral : decide (opcode = 524#u16) = false := by
+      simp only [nonconstant, decide_false]
+    exact congrArg alloc.vec.Vec.val (bounds.2.2 notLiteral)
 
 /-- Successful live or dormant SIMD dispatch preserves auxiliary-table
 headroom relative to actual emitted code. Vector constants use the pool;
@@ -126,10 +118,11 @@ theorem compiler_lower_simd_auxiliary_growth {A : Type} (ops : runtime.platform.
     obtain ⟨code, simd, pool, indirect, poolEq⟩ :=
       compiler_simd_auxiliary_success ops law before after state opcode a bits accepted
     exact ⟨by omega, by omega, by omega, indirect, poolEq⟩
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg reachable] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reachable)] at accepted
     obtain ⟨simd, pool, indirect, code⟩ :=
       observe_auxiliary_result ops law before after state (.Ok ()) accepted
     simp [simd, pool, indirect, code]
 
 end Itasca.Runtime.Compiler
+
+end

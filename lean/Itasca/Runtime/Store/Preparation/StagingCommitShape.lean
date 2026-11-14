@@ -1,12 +1,10 @@
+import Itasca.Generated.FunsInstantiate
 import Itasca.Runtime.Store.Preparation.StagingTypeCertificates
-import Itasca.Runtime.Store.Invariant.AllocatedGlobalLoop
-import Itasca.Runtime.Store.Invariant.AllocatedElementLoop
-import Itasca.Runtime.Store.Invariant.AllocatedDataLoop
+import Itasca.Runtime.Store.Invariant.ObjectAllocationErrors
 import Itasca.Runtime.Store.Invariant.OwnedGlobalLoop
-import Itasca.Runtime.Store.Initialization.ElementCompleteLoop
-import Itasca.Runtime.Store.Invariant.OwnedDataLoop
-import Itasca.Runtime.Store.Invariant.InstanceMapShape
-import Itasca.Runtime.Store.Invariant.ShapeAssembly
+import Itasca.Runtime.Store.Initialization.ElementSourceStaging
+import Itasca.Runtime.Store.Invariant.SourceAllocationLists
+import Itasca.Runtime.Store.Initialization.ElementShapeLoop
 
 /-!
 Store shape at staging commit. Allocation certificates and issued ownership establish staged instance shape and the final committed-store invariant.
@@ -32,7 +30,7 @@ theorem staging_allocated_certificates {M P F A : Type}
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Compiler.InitializerMappings inst.module)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (objectBound : objectCount store ≤ Usize.max)
@@ -81,7 +79,7 @@ theorem staging_allocated_certificates {M P F A : Type}
     simpa [globalElements, globalSource] using elementCapacity
   have mapRoom : globalInst.elems.length + (globalInst.module.module.env.elements.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [globalEmpty, globalSource] using inst.module.module.env.elements.property
-  have elements  := element_allocated_loop memory hooks floats allocator law view before globalStore platform index 0#usize globalInst (.Ok ())
+  have elements := element_allocated_loop memory hooks floats allocator law view before globalStore platform index 0#usize globalInst (.Ok ())
     globalStaged fresh globalFound (by simpa only [globalSource] using compiled)
     (by simpa only [globalSource] using valid.elements) globalBindings globalImports globalSegments globalBound globalAllocated
     (by simp) elementRoom mapRoom (fun _ => initialTypes) globalContents
@@ -97,7 +95,7 @@ theorem staging_allocated_certificates {M P F A : Type}
     simpa [elementData, globalData, elementSource, globalSource] using dataCapacity
   have dataMapRoom : elementInst.datas.length + (elementInst.module.module.tail.data.val.length - 0#usize.val) ≤ Usize.max := by
     simpa [elementEmpty, elementSource, globalSource] using inst.module.module.tail.data.property
-  have data  := data_allocated_loop memory allocator law view before elementStore index 0#usize elementInst (.Ok ())
+  have data := data_allocated_loop memory allocator law view before elementStore index 0#usize elementInst (.Ok ())
     elementStaged fresh elementFound elementBindings elementImports elementSegments elementBound elementAllocated
     (by simp) dataRoom dataMapRoom (by simpa only [elementSource] using elementTypes rfl) elementContents (by simp [elementEmpty])
   rw [dataRun] at data
@@ -147,7 +145,7 @@ theorem staging_owned_certificates {M P F A : Type}
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Compiler.InitializerMappings inst.module)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (objectBound : objectCount store ≤ Usize.max)
@@ -260,7 +258,7 @@ theorem staging_instance_shape {M P F A : Type}
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Compiler.InitializerMappings inst.module)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (objectBound : objectCount store ≤ Usize.max)
@@ -337,7 +335,7 @@ theorem staging_commit_shape {M P F A : Type}
     (staged : StagedPrefix before store) (fresh : before.instances.length ≤ index.val)
     (found : store.instances.val[index.val]? = some inst)
     (compiled : Compiler.InitializerMappings inst.module)
-    (valid : Itasca.ModuleEnv.Valid inst.module.module.env inst.module.profile)
+    (valid : Itasca.ModuleEnv.Valid inst.module.module.env)
     (bindings : InitializerBindings store inst) (imports : InitializerImports store inst)
     (segments : InitializerSegmentBindings store inst)
     (objectBound : objectCount store ≤ Usize.max)

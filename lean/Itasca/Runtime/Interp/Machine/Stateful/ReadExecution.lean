@@ -1,7 +1,7 @@
-import Itasca.Runtime.Interp.State.StatefulReadStep
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Interp.State.StatefulTableSetSlots
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+import Itasca.Runtime.Interp.Relations.TypedOperands
 
 /-!
 Stateful read execution under the supported-source relation.

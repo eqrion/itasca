@@ -1,5 +1,5 @@
-import Itasca.Runtime.Compiler.Body.Control.Table.StructuredPrefixDead
-import Itasca.Runtime.Compiler.Body.Reader.Replay.Span
+import Itasca.Runtime.Compiler.Body.Control.Table.StructuredCompilerPrefixFinish
+import Itasca.Runtime.Compiler.Body.Reader.Replay.MetadataTypes
 
 /-!
 Structured reader prefixes for skipped source instructions.
@@ -11,7 +11,7 @@ namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem _root_.Itasca.Wasm2.ReaderPost.structured_skip {jumpTables : List U32} {data env sourceLocals index st}
-    {p : Wasm2.Pending data env .Wasm2 sourceLocals index st} {A : Type}
+    {p : Wasm2.Pending data env sourceLocals index st} {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {initial before after : runtime.compiler.FunctionCompiler A} {out : code.OpIterState}
     {emit types functions returns locals parents current instruction poly values}

@@ -1,13 +1,13 @@
-//! WebAssembly validation for the Wasm 1.0 and Wasm 2.0 core profiles.
+//! WebAssembly Core 2.0 validation.
 //!
 //! [`validate_module`] validates a complete byte slice and returns read-only
-//! module metadata. It requires no caller preconditions. Both profiles have
-//! Lean proofs of termination, acceptance soundness, and completeness within
-//! the implementation limits, assuming successful allocation.
+//! module metadata. It requires no caller preconditions. Lean proves
+//! termination, acceptance soundness, and completeness within the
+//! implementation limits, assuming successful allocation.
 //!
 //! ```
 //! let bytes = b"\x00asm\x01\x00\x00\x00";
-//! let module = itasca::validate_module(bytes, itasca::ValidationProfile::Wasm1)?;
+//! let module = itasca::validate_module(bytes)?;
 //! let imports = itasca::import_types(module.env())?;
 //! # Ok::<(), itasca::Error>(())
 //! ```
@@ -67,16 +67,6 @@ pub use wasm_types::{
 };
 
 mod stream;
-
-/// The language profile used for module and function validation.
-#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-#[derive(Clone, Copy)]
-pub enum ValidationProfile {
-    /// WebAssembly 1.0, including its original segment and branch-table rules.
-    Wasm1,
-    /// WebAssembly Core 2.0, including reference types, bulk memory, and SIMD.
-    Wasm2,
-}
 
 /// Instantiation and execution.
 pub mod runtime;

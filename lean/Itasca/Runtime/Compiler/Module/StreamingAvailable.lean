@@ -1,8 +1,7 @@
-import Itasca.Runtime.Compiler.Module.SourceQueuePolicy
-import Itasca.Stream.SubmissionComplete
+import Itasca.Runtime.Compiler.Module.InitializerGlobalsAvailable
+import Itasca.Stream.SyncComplete
 import Itasca.Runtime.Compiler.Module.EnvironmentCompilationAvailable
 import Itasca.Runtime.Compiler.Module.CompileDriverFrame
-import Itasca.Stream.DriverComplete
 
 /-!
 Successful compiler streaming from source submission invariants through the remaining driver work. The proof follows actual submit/poll results under availability premises.
@@ -15,42 +14,36 @@ section
 open Aeneas Aeneas.Std Itasca
 
 namespace Itasca.Runtime.Compiler.StreamAvailability
-
-variable {profile : ValidationProfile}
-
 open ModuleBinary StreamAcceptingScheduler
 
 /-- The scheduler's queue of valid work matches the pending vector, and the remaining bytes and
 entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config)
-    (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (profile : ValidationProfile := .Wasm1) : Prop :=
+    (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize) : Prop :=
   batchId.val ≤ func.val ∧ pending.length ≤ batchId.val ∧ pending.length ≤ config.max_batches.val ∧
-    ∃ queue entries, Queued id queue func.val v ∧ ValidQueue id queue profile ∧
+    ∃ queue entries, Queued id queue func.val v ∧ ValidQueue id queue ∧
       pending.val.Perm (queue.map StreamBatch.Issued.batch_id) ∧
       func.val + entries.length = env.func_type_indices.val.length ∧
-      ModuleCode.EntriesTyped (profile := profile) env func.val entries ∧
-      At (Rep (Profile.CodeEncodingWithinLimits profile)) code pos entries (Slice.len code)
+      ModuleCode.EntriesTyped env func.val entries ∧
+      At (Rep (Profile.CodeEncodingWithinLimits)) code pos entries (Slice.len code)
 
 /-- A successful submission leaves a valid queue whose batch IDs are a permutation of the pending
 IDs, so the final drain can retire exactly this queue. Errors are excluded. -/
 def CompletePost {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (id : U64) (config : Itasca.stream.Config) (env : metadata.Env)
-    (profile : ValidationProfile := .Wasm1) :
+    (id : U64) (config : Itasca.stream.Config) (env : metadata.Env) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
-  | (.Ok pending, v) => ∃ queue, Queued id queue env.func_type_indices.val.length v ∧ ValidQueue id queue profile ∧
+  | (.Ok pending, v) => ∃ queue, Queued id queue env.func_type_indices.val.length v ∧ ValidQueue id queue ∧
       pending.val.Perm (queue.map StreamBatch.Issued.batch_id) ∧ pending.length ≤ config.max_batches.val
   | (.Err _, _) => False
 
 private def CompleteBodyPost {V : Type} (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
-    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config) (func : Usize)
-    (profile : ValidationProfile := .Wasm1) :
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config) (func : Usize) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
-  | .done result => CompletePost (profile := profile) Queued id config env result
+  | .done result => CompletePost Queued id config env result
   | .cont (v, pending, pos, next, batchId) =>
-      CompleteInvariant (profile := profile) Queued code env id config v pending pos next batchId ∧ func.val < next.val
+      CompleteInvariant Queued code env id config v pending pos next batchId ∧ func.val < next.val
 
 private theorem increment (n bound : Usize) (h : n.val < bound.val) :
     ∃ next, (n + 1#usize : Result Usize) = .ok next ∧ next.val = n.val + 1 := by
@@ -62,18 +55,18 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-    (ha : QueuePolicy visitor config env profile Queued)
+    (ha : QueuePolicy visitor config env Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (queue : List StreamBatch.Issued) (entries : List ModuleBinary.Code)
-    (hv : Queued moduleId queue func.val v) (hq : ValidQueue moduleId queue profile)
+    (hv : Queued moduleId queue func.val v) (hq : ValidQueue moduleId queue)
     (hp : pending.val.Perm (queue.map StreamBatch.Issued.batch_id))
     (hcount : func.val + entries.length = env.func_type_indices.val.length)
-    (htyped : ModuleCode.EntriesTyped (profile := profile) env func.val entries)
-    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) code pos entries (Slice.len code))
+    (htyped : ModuleCode.EntriesTyped env func.val entries)
+    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits)) code pos entries (Slice.len code))
     (hbatch : batchId.val ≤ func.val) (hpending : pending.length ≤ batchId.val)
     (hfunc : func.val < env.func_type_indices.val.length)
     (hroom : pending.length < config.max_batches.val) :
@@ -90,7 +83,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
           let pending1 ← alloc.vec.Vec.push pending batchId
           let count ← next - func
           let (r2, v') ← visitor.submit_code_batch v
-            { module_id := moduleId, batch_id := batchId, profile := profile, env := env, code := bytes,
+            { module_id := moduleId, batch_id := batchId, env := env, code := bytes,
               code_offset := pos, first_func := func, num_funcs := count,
               num_dispatched := 0#usize, dispatch_end := 0#usize,
               num_validated := 0#usize, validated_end := 0#usize, error := none }
@@ -110,7 +103,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r1 ← core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           (alloc.vec.Vec Usize) (core.convert.FromSame error.Error) residual
-        Result.ok (ControlFlow.done (r1, v))) ⦃ out => CompleteBodyPost (profile := profile) Queued code env moduleId config func out ⦄ := by
+        Result.ok (ControlFlow.done (r1, v))) ⦃ out => CompleteBodyPost Queued code env moduleId config func out ⦄ := by
   obtain ⟨finish, next, taken, rest, view, hframe, hframepost, heq, hne, hnext, hrestcount,
       htakenbytes, hrestbytes, hread, hspan, hrep⟩ := Itasca.stream.get_next_batch.complete_view source state
     environment tail code hs (Slice.len code) pos func (alloc.vec.Vec.len env.func_type_indices)
@@ -119,13 +112,13 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
   obtain ⟨hprogress, hfinishbound, hnextprogress, hnextbound⟩ := hframepost
   rw [heq] at htyped
   obtain ⟨htaken, hrest⟩ := htyped.split
-  have hnexttyped : ModuleCode.EntriesTyped (profile := profile) env next.val rest := by simpa [hnext] using hrest
+  have hnexttyped : ModuleCode.EntriesTyped env next.val rest := by simpa [hnext] using hrest
   obtain ⟨nextPending, hpush, hpushval⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec pending batchId (by scalar_tac))
   obtain ⟨count, hsub, hsubval⟩ := WP.spec_imp_exists
     (UScalar.sub_spec (x := next) (y := func) (by scalar_tac))
   have hcountval : count.val = taken.length := by omega
-  let issued : StreamBatch.Issued := ⟨moduleId, batchId, env, view, pos, func, count, profile⟩
+  let issued : StreamBatch.Issued := ⟨moduleId, batchId, env, view, pos, func, count⟩
   have hbounded : issued.Bounded := by
     have hlen := hspan.length
     change finish.val = pos.val + view.length at hlen
@@ -135,8 +128,8 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
       le_trans (by simpa using hfinishbound) hcap
     simp only [Slice.length] at hlen ⊢
     omega
-  have hvalid : Valid issued profile :=
-    ⟨rfl, hbounded, henv, hprofile, hlimits, taken, hcountval.symm, htaken, hrep⟩
+  have hvalid : Valid issued :=
+    ⟨hbounded, henv, hlimits, taken, hcountval.symm, htaken, hrep⟩
   have hqueuelen : queue.length = pending.length := by
     simpa [alloc.vec.Vec.length] using hp.length_eq.symm
   obtain ⟨v', hsubmit, hv'⟩ := ha.submit moduleId queue func.val issued v hv hvalid rfl rfl rfl (by omega)
@@ -147,7 +140,7 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
     (by simpa using (show batchId.val < env.func_type_indices.val.length by omega))
   simp only [issued, StreamBatch.Issued.seed] at hsubmit
   simp [hframe, core.result.Result.Insts.CoreOpsTry.branch, hread, hpush, hsub, hsubmit, hinc]
-  change CompleteInvariant (profile := profile) Queued code env moduleId config v' nextPending finish next nextId ∧ _
+  change CompleteInvariant Queued code env moduleId config v' nextPending finish next nextId ∧ _
   constructor
   · refine ⟨by omega, ?_, ?_, queue ++ [issued], rest, hvNext, ?_, ?_, ?_, hnexttyped, hrestbytes⟩
     · change nextPending.val.length ≤ _
@@ -171,28 +164,25 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
 end Itasca.Runtime.Compiler.StreamAvailability
 
 namespace Itasca.Runtime.Compiler.StreamAvailability
-
-variable {profile : ValidationProfile}
-
 open ModuleBinary StreamAcceptingScheduler
 
 private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-    (ha : QueuePolicy visitor config env profile Queued)
+    (ha : QueuePolicy visitor config env Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (hinv : CompleteInvariant (profile := profile) Queued code env moduleId config v pending pos func batchId) :
-    Itasca.stream.submit_code_batches_loop.body source visitor moduleId profile state env.types env.imports
+    (hinv : CompleteInvariant Queued code env moduleId config v pending pos func batchId) :
+    Itasca.stream.submit_code_batches_loop.body source visitor moduleId state env.types env.imports
       env.globals env.exports env.elements env.data_count env.declared_funcs env.start
       env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config (alloc.vec.Vec.len env.func_type_indices) v pending pos func batchId
-        ⦃ CompleteBodyPost (profile := profile) Queued code env moduleId config func ⦄ := by
+        ⦃ CompleteBodyPost Queued code env moduleId config func ⦄ := by
   obtain ⟨hbatch, hpending, hmax, queue, entries, hv, hq, hp, hcount, htyped, hbytes⟩ := hinv
   unfold Itasca.stream.submit_code_batches_loop.body
   by_cases hmore : func < alloc.vec.Vec.len env.func_type_indices
@@ -207,18 +197,18 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
         have hge : config.max_batches.val ≤ pending.length := by simpa using hfull
         omega
       obtain ⟨v', remaining, rest, hr, hv', hvalid, hids, hlen⟩ :=
-        retire_complete visitor config env profile Queued ha moduleId queue func.val v pending hv hq hp hnonempty
+        retire_complete visitor config env Queued ha moduleId queue func.val v pending hv hq hp hnonempty
       rw [hr]
       simp only [bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
       have hresume := resume_complete source visitor Queued config state moduleId env code ha
-        environment tail hs henv hprofile hlimits hcap v' remaining pos func batchId rest entries
+        environment tail hs henv hlimits hcap v' remaining pos func batchId rest entries
         hv' hvalid hids hcount htyped hbytes hbatch (by omega) hfunc (by omega)
       simp [core.result.Result.Insts.CoreOpsTry.branch] at hresume ⊢
       convert hresume using 1
       rfl
     · rw [if_neg hfull]
       exact resume_complete source visitor Queued config state moduleId env code ha
-        environment tail hs henv hprofile hlimits hcap v pending pos func batchId queue entries
+        environment tail hs henv hlimits hcap v pending pos func batchId queue entries
         hv hq hp hcount htyped hbytes hbatch hpending hfunc (by scalar_tac)
   · rw [if_neg hmore]
     have hn : env.func_type_indices.val.length ≤ func.val := by scalar_tac
@@ -232,9 +222,6 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
 end Itasca.Runtime.Compiler.StreamAvailability
 
 namespace Itasca.Runtime.Compiler.StreamAvailability
-
-variable {profile : ValidationProfile}
-
 open ModuleBinary StreamAcceptingScheduler
 
 /-- The submission loop accepts independently encoded and typed entries, maintaining the queue of
@@ -243,26 +230,26 @@ theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-    (ha : QueuePolicy visitor config env profile Queued)
+    (ha : QueuePolicy visitor config env Queued)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
-    (hinv : CompleteInvariant (profile := profile) Queued code env moduleId config v pending pos func batchId) :
-    Itasca.stream.submit_code_batches_loop source visitor moduleId profile state env.types env.imports
+    (hinv : CompleteInvariant Queued code env moduleId config v pending pos func batchId) :
+    Itasca.stream.submit_code_batches_loop source visitor moduleId state env.types env.imports
       env.globals env.exports env.elements env.data_count env.declared_funcs env.start
       env.func_type_indices env.func_types
       env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
       (Slice.len code) config v pending pos func batchId (alloc.vec.Vec.len env.func_type_indices)
-        ⦃ CompletePost (profile := profile) Queued moduleId config env ⦄ := by
+        ⦃ CompletePost Queued moduleId config env ⦄ := by
   unfold Itasca.stream.submit_code_batches_loop
   apply loop.spec_decr_nat (fun s => env.func_type_indices.val.length - s.2.2.2.1.val)
-    (fun s => CompleteInvariant (profile := profile) Queued code env moduleId config
+    (fun s => CompleteInvariant Queued code env moduleId config
       s.1 s.2.1 s.2.2.1 s.2.2.2.1 s.2.2.2.2)
   · rintro ⟨v', pending', pos', func', batchId'⟩ h
     apply WP.spec_mono (body_complete source visitor Queued config state moduleId env
-      code ha environment tail hs henv hprofile hlimits hcap v' pending' pos' func' batchId' h)
+      code ha environment tail hs henv hlimits hcap v' pending' pos' func' batchId' h)
     intro out hout
     cases out with
     | done result => exact hout
@@ -282,21 +269,21 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List StreamBatch.Issued → Nat → V → Prop)
     (config : Itasca.stream.Config)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-    (ha : QueuePolicy visitor config env profile Queued) (start : Usize)
+    (ha : QueuePolicy visitor config env Queued) (start : Usize)
     (environment tail : List U8) (hs : StreamSource.Available source state environment code.val tail)
-    (henv : CodeEntry.Bounds env) (hprofile : Profile.Environment profile env)
+    (henv : CodeEntry.Bounds env)
     (hlimits : Profile.EnvironmentWithinLimits env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (entries : List ModuleBinary.Code) (hcount : entries.length = env.func_type_indices.val.length)
-    (htyped : ModuleCode.EntriesTyped (profile := profile) env 0 entries)
-    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits profile)) code start entries (Slice.len code))
+    (htyped : ModuleCode.EntriesTyped env 0 entries)
+    (hbytes : At (Rep (Profile.CodeEncodingWithinLimits)) code start entries (Slice.len code))
     (v : V) (hv : Queued moduleId [] 0 v) :
     ∃ pending v' queue,
-      Itasca.stream.submit_code_batches source visitor moduleId profile state env (Slice.len code) start config v =
-        .ok (.Ok pending, v') ∧ Queued moduleId queue env.func_type_indices.val.length v' ∧ ValidQueue moduleId queue profile ∧
+      Itasca.stream.submit_code_batches source visitor moduleId state env (Slice.len code) start config v =
+        .ok (.Ok pending, v') ∧ Queued moduleId queue env.func_type_indices.val.length v' ∧ ValidQueue moduleId queue ∧
       pending.val.Perm (queue.map StreamBatch.Issued.batch_id) ∧
       pending.length ≤ config.max_batches.val := by
-  have hi : CompleteInvariant (profile := profile) Queued code env moduleId config v
+  have hi : CompleteInvariant Queued code env moduleId config v
       (alloc.vec.Vec.new _) start 0#usize 0#usize := by
     refine ⟨by simp, by simp [alloc.vec.Vec.new], by simp [alloc.vec.Vec.new],
       [], entries, hv, ?_, ?_, by simpa using hcount, htyped, hbytes⟩
@@ -304,7 +291,7 @@ theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
     · simp [alloc.vec.Vec.new]
   obtain ⟨⟨r, v'⟩, hr, hp⟩ := WP.spec_imp_exists
     (submit_loop_complete_spec source visitor Queued config state moduleId env code ha
-      environment tail hs henv hprofile hlimits hcap v (alloc.vec.Vec.new _) start 0#usize 0#usize hi)
+      environment tail hs henv hlimits hcap v (alloc.vec.Vec.new _) start 0#usize 0#usize hi)
   cases r with
   | Err e => exact False.elim hp
   | Ok pending =>
@@ -333,25 +320,25 @@ reverse-order retirement accept from independent region validity and numerical
 demand. No successful compiler call or emitted certificate is an input. -/
 theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (source : Itasca.stream.Source S) (state : S) (id : U64) (profile : ValidationProfile)
+    (source : Itasca.stream.Source S) (state : S) (id : U64)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : Itasca.stream.SliceSource)
     (env : metadata.Env) (tail : metadata.Tail)
-    (certificate : StreamCompleteRegions.Certificate data raw regions env tail profile)
+    (certificate : StreamCompleteRegions.Certificate data raw regions env tail)
     (available : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
     (before : runtime.compiler.CompileScheduler A) (bodyBytes localCount peak : Nat)
     (environmentDemand : EnvironmentDemand before env bound)
     (envelope : FunctionDemandEnvelope before.budget env.func_type_indices.val.length bodyBytes localCount peak bound)
-    (maxima : SourcePreparationMaxima env profile bodyBytes localCount peak) (queueRoom : 4 ≤ bound)
+    (maxima : SourcePreparationMaxima env bodyBytes localCount peak) (queueRoom : 4 ≤ bound)
     (emptyTypes : before.signatures.val = []) (emptySlots : before.func_param_slots.val = [])
     (emptyFunctions : before.functions.val = []) (emptyQueue : before.completed.val = [])
     (origin : before.code_start.val ≤ Itasca.limits.MAX_MODULE_BYTES.val) :
     ∃ after, ∃ run : StreamRun.Remaining source (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      id state env (Slice.len regions.env) before after profile,
+      id state env (Slice.len regions.env) before after,
       run.tail = tail ∧ after.tail = some tail ∧
       CompilerQueued env before.budget bodyBytes localCount id [] env.func_type_indices.val.length after := by
   let visitor := runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops
   let Queued := CompilerQueued env before.budget bodyBytes localCount
-  have policy := compiler_queue_policy ops law bound allocation env profile before.budget bodyBytes localCount peak envelope maxima queueRoom
+  have policy := compiler_queue_policy ops law bound allocation env before.budget bodyBytes localCount peak envelope maxima queueRoom
   obtain ⟨len,lengthCall,lengthValue⟩ := available.code_len_read
   have lengthEq : len = Slice.len regions.code := UScalar.eq_of_val_eq lengthValue
   subst len
@@ -372,7 +359,7 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
   subst reply
   obtain ⟨pending,submitted,queue,submitCall,submittedReady,valid,ids,pendingBound⟩ := StreamAvailability.submit_complete source visitor Queued
     ⟨25000#usize,4#usize⟩ state id env regions.code policy entries regions.env.val regions.tail.val available
-    certificate.entry_bounds certificate.profile certificate.signature_limits (by omega) raw.codes certificate.code_count certificate.typed encoded
+    certificate.entry_bounds certificate.signature_limits (by omega) raw.codes certificate.code_count certificate.typed encoded
     configured configuredReady
   obtain ⟨tailBytes,tailCall,tailValue⟩ := available.tail_read
   have tailEq : tailBytes = regions.tail := Slice.ext _ _ tailValue
@@ -393,7 +380,7 @@ theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc 
   have readyQueued : Queued id queue env.func_type_indices.val.length ready := by
     obtain ⟨stateReady,workers⟩ := submittedReady
     exact ⟨⟨stateReady.signatures,stateReady.functionSlots,stateReady.origin,stateReady.slots,stateReady.paid⟩,workers⟩
-  obtain ⟨after,remaining,drainCall,empty,afterQueued⟩ := StreamAvailability.drain_complete visitor ⟨25000#usize,4#usize⟩ env profile Queued policy
+  obtain ⟨after,remaining,drainCall,empty,afterQueued⟩ := StreamAvailability.drain_complete visitor ⟨25000#usize,4#usize⟩ env Queued policy
     id queue env.func_type_indices.val.length ready pending readyQueued valid ids
   have finalFrame := compiler_drain_frame ops id ready after pending remaining drainCall
   refine ⟨after,⟨Slice.len regions.code,codeEnd,entries,⟨25000#usize,4#usize⟩,configured,pending,submitted,submitted,
@@ -418,22 +405,22 @@ The certificate is produced by independent validator completeness, not by an
 accepted compiler trace or a caller-supplied emitted-code certificate. -/
 theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (source : Itasca.stream.Source S) (state : S) (id : U64) (profile : ValidationProfile)
+    (source : Itasca.stream.Source S) (state : S) (id : U64)
     (data : Slice U8) (raw : ModuleBinary.Module) (regions : Itasca.stream.SliceSource)
     (env : metadata.Env) (tail : metadata.Tail)
-    (certificate : StreamCompleteRegions.Certificate data raw regions env tail profile)
+    (certificate : StreamCompleteRegions.Certificate data raw regions env tail)
     (available : StreamSource.Available source state regions.env.val regions.code.val regions.tail.val)
     (before : runtime.compiler.CompileScheduler A) (storage : metadata.Env) (bodyBytes localCount peak : Nat)
     (environmentDemand : EnvironmentDemand before env bound)
     (envelope : FunctionDemandEnvelope before.budget env.func_type_indices.val.length bodyBytes localCount peak bound)
-    (maxima : SourcePreparationMaxima env profile bodyBytes localCount peak) (queueRoom : 4 ≤ bound)
+    (maxima : SourcePreparationMaxima env bodyBytes localCount peak) (queueRoom : 4 ≤ bound)
     (emptyTypes : before.signatures.val = []) (emptySlots : before.func_param_slots.val = [])
     (emptyFunctions : before.functions.val = []) (emptyQueue : before.completed.val = [])
     (origin : before.code_start.val ≤ Itasca.limits.MAX_MODULE_BYTES.val) :
     ∃ after, ∃ run : StreamRun.Accepted source (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-      id state before after env profile,
+      id state before after env,
       Itasca.stream.validate_streaming source (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
-        id profile state before storage = .ok (.Ok (),after,env) ∧
+        id state before storage = .ok (.Ok (),after,env) ∧
       run.remaining.tail = tail ∧ after.tail = some tail ∧
       CompilerQueued env before.budget bodyBytes localCount id [] env.func_type_indices.val.length after := by
   let visitor := runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops
@@ -457,10 +444,10 @@ theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc 
   have decodedEq : decoded = before := metadata.validate_env_with.accepted_invariant visitor.metadataModuleVisitorInst
     (fun scheduler => scheduler = before) (compiler_custom_preserves ops _) regions.env before env (Slice.len regions.env) decoded decodeCall rfl
   subst decoded
-  obtain ⟨after,remaining,tailEq,delivered,retained⟩ := compiler_remaining_available ops law bound allocation source state id profile
+  obtain ⟨after,remaining,tailEq,delivered,retained⟩ := compiler_remaining_available ops law bound allocation source state id
     data raw regions env tail certificate available before bodyBytes localCount peak environmentDemand envelope maxima queueRoom
     emptyTypes emptySlots emptyFunctions emptyQueue origin
-  let run : StreamRun.Accepted source visitor id state before after env profile :=
+  let run : StreamRun.Accepted source visitor id state before after env :=
     ⟨regions.env,Slice.len regions.env,before,before,environmentCall,environmentBound,rfl,decodeCall,remaining⟩
   exact ⟨after,run,run.run storage,tailEq,delivered,retained⟩
 

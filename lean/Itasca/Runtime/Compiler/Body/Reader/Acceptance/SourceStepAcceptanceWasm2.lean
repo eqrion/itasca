@@ -1,19 +1,14 @@
 import Itasca.Runtime.Compiler.Body.Reader.Source.SourceOpcodeFamilies
-import Itasca.Runtime.Compiler.Body.Reader.Source.SourceMiscPrefix
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundScalarAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundPointAcceptance
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundTypedSelectAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundNumericExtensionAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundStatefulAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 import Itasca.Runtime.Compiler.Body.Reader.Control.SourceBoundControlAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableSourceBoundAcceptance
-import Itasca.Runtime.Compiler.Body.Reader.Simd.SourceBoundSimdAcceptance
-import Itasca.Visitor.ReaderAcceptedProgress
+import Itasca.Runtime.Compiler.Body.Reader.Control.ReachedEnterAcceptance
+import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdInstructionPrefix
+import Itasca.Visitor.BodyReplay
 
 namespace Itasca.Runtime.Compiler
 open Aeneas Aeneas.Std Itasca Itasca.VisitorTrace
 set_option maxRecDepth 8192
-set_option maxHeartbeats 2000000
 
 /-- Complete Wasm 2 reached-step acceptance from independent source validation
 and source-derived resource bounds. Every opcode family, including dead code,
@@ -37,26 +32,26 @@ theorem IndexedTableReaderCompilerPointWasm2.step_available_from_source {A : Typ
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
-      ⟨sourceLocals,ft.results⟩ index .Wasm2 data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
-    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2 before st =
+      ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
+    (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
     code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+      {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
-  have progress := code.step_profile.accepted_progress recorder data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+  have progress := code.step_profile.accepted_progress recorder data env ⟨sourceLocals,ft.results⟩ index
     st out before after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance reference
   have liftOrdinary
       (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
         data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget
             (fun counter => if counter = .instructions then 1 else 0) ⦄) :
       code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index .Wasm2
+        {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
         data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget
             (fun counter => bodyResourceRate counter * (out.core.pos.val-st.core.pos.val)) ⦄ := by

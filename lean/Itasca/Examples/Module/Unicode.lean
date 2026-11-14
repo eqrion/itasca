@@ -123,7 +123,7 @@ private theorem small_leb (b : U8) (h : b.val < 128) : Leb128.Encoding [b] b.val
 `metadata.validate_utf8` accepts the name, and returns its error otherwise. -/
 private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Result Unit error.Error)
     (hutf8 : metadata.validate_utf8 (bytes [a,b,c,d]) = .ok reply) :
-    metadata.validate_module (fourByteCustom a b c d) .Wasm1 = .ok (match reply with
+    metadata.validate_module (fourByteCustom a b c d) = .ok (match reply with
       | .Ok _ => .Ok Examples.ModuleBasic.emptyModule
       | .Err e => .Err e) := by
   let data := fourByteCustom a b c d
@@ -141,7 +141,7 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
     refine ⟨[4#u8,a,b,c,d], ModuleBinary.ByteVecEncoding.iff.mpr ⟨[4#u8], small_leb 4#u8 (by decide), rfl⟩, ?_⟩
     constructor <;> simp [data, fourByteCustom, bytes, alloc.vec.Vec.deref, ModuleBinary.magicVersion]
   have hname := metadata.decode_name.from_utf8 data 10#usize nm 15#usize hnamebytes reply hutf8
-  have henv : metadata.validate_env data .Wasm1 = .ok (match reply with
+  have henv : metadata.validate_env data = .ok (match reply with
       | .Ok _ => .Ok (Examples.ModuleBasic.emptyEnv, 15#usize)
       | .Err e => .Err e) := by
     simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hheader,
@@ -171,22 +171,22 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
   cases reply with
   | Err e => exact Examples.ModuleBasic.environment_error data e hsize hsplit henv
   | Ok u =>
-      exact Examples.ModuleBasic.accepted_at_end data Examples.ModuleBasic.emptyEnv hsize rfl (by simpa [hlen] using henv)
+      exact Examples.ModuleBasic.accepted_at_end data Examples.ModuleBasic.emptyEnv hsize rfl rfl (by simpa [hlen] using henv)
 
 /-- A custom section named U+10FFFF is accepted. -/
 theorem last_scalar_module_accepted :
-    metadata.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) .Wasm1 =
+    metadata.validate_module (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) =
       .ok (.Ok Examples.ModuleBasic.emptyModule) :=
   four_byte_custom_reply _ _ _ _ (.Ok ()) last_scalar_accepted
 
 /-- The accepted module with a custom section named U+10FFFF has a soundness certificate. -/
 theorem last_scalar_module_validated :
     ModuleSound.Validated (fourByteCustom 0xF4#u8 0x8F#u8 0xBF#u8 0xBF#u8) Examples.ModuleBasic.emptyModule :=
-  metadata.validate_module.wasm_sound _ _ last_scalar_module_accepted
+  metadata.validate_module.sound _ _ last_scalar_module_accepted
 
 /-- A custom section named by `f4 90 80 80` is rejected with `InvalidUtf8`. -/
 theorem beyond_unicode_module_rejected :
-    metadata.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) .Wasm1 =
+    metadata.validate_module (fourByteCustom 0xF4#u8 0x90#u8 0x80#u8 0x80#u8) =
       .ok (.Err .InvalidUtf8) :=
   four_byte_custom_reply _ _ _ _ (.Err .InvalidUtf8) beyond_unicode_rejected
 

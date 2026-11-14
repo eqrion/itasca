@@ -96,6 +96,6 @@ fuzz_target!(|data: &[u8]| {
     if !within_limits(&bytes) {
         return;
     }
-    let result = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm2);
+    let result = itasca::validate_module(&bytes);
     assert!(result.is_ok(), "itasca rejected valid Core 2.0: {result:?}");
 });

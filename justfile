@@ -22,6 +22,22 @@ extract-check:
 prove:
     @make prove
 
+# Proof-health metrics. See lean/PROOF_ENGINEERING.md.
+metrics:
+    @cd lean && python3 scripts/metrics.py
+
+# Static checks: layering, metric ratchet, links, and forbidden constructs.
+lint:
+    @cd lean && python3 scripts/metrics.py --violations
+    @cd lean && python3 scripts/metrics.py --check metrics/baseline.json
+    @cd lean && python3 scripts/check_links.py
+    @cd lean && ! rg -n --glob '*.lean' --glob '!**/Generated/**' '\bsorry\b|\bnative_decide\b|^\s*axiom\b|^\s*admit\b' Itasca SpecExt
+
+# Axioms and statement cone of the headline theorems. Builds first.
+audit:
+    @cd lean && lake build Itasca && lake env lean scripts/Audit.lean > metrics/audit.txt
+    @git --no-pager diff --stat -- lean/metrics/audit.txt
+
 check +modules:
     @cd lean && lake build {{ modules }}
 
