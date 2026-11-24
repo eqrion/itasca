@@ -1,34 +1,129 @@
-import Itasca.Runtime.Store.Api.GrowthLimits
-import Itasca.Runtime.Integration.Execution.Mutation.Certificate
-import Itasca.Runtime.Integration.Execution.Mutation.TableShape
-import Itasca.Runtime.Interp.Memory.MemoryMutation
-import Itasca.Runtime.Store.Invariant.ObjectExtension
-import Itasca.Runtime.Store.Api.GrowthEffects
-import Itasca.Runtime.Store.Api.MemoryFill
-import Itasca.Runtime.Store.Api.TableFill
-import Itasca.Runtime.Store.Api.MemoryCopy
-import Itasca.Runtime.Store.Api.TableCopy
-import Itasca.Runtime.Store.Initialization.SegmentObjectEffects
+import Itasca.Runtime.Interp.State.ObjectBindingsAndMutation
+import Itasca.Runtime.Spec.PrimitiveOperations
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
+import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
+import Itasca.Runtime.Interp.Calls.OutcomesAndResolution
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.Interp.Machine.Frames.Reposition
+import Itasca.Runtime.Interp.Machine.StateAndOwnership
+import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
+import Itasca.Runtime.SourceMachine.EntryAndBranchTables
+import Itasca.Runtime.Interp.Invocation.Recording
+import Itasca.Runtime.Interp.Relations.TypedOperands
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
+import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
+import Itasca.Runtime.Interp.Relations.EntryEffects
+import Itasca.Runtime.Store.Invariant.Typing
+import Itasca.Runtime.Store.Invariant.PrecommitError
+import Itasca.Runtime.SourceMachine.StructureAndTyping
+import Itasca.Runtime.Interp.Machine.CompiledFunctions
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
+import Itasca.Runtime.Compiler.Local.Relations.Function.CapturedContext
 import Itasca.Runtime.Store.Invariant.SemanticApi
-import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Spec.Mutation
-import Itasca.Runtime.Interp.Machine.Mutation.Core
-import Itasca.Runtime.Interp.Machine.Functions.Typing
-import Itasca.Runtime.SourceMachine.Core
-import Itasca.Runtime.Integration.Execution.Ownership.Contents
-import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Store.Invariant.FunctionTables
-import Itasca.Runtime.Interp.Relations.CompiledFunctions
-import Itasca.Runtime.Compiler.Local.Relations.Function.CoreFunctionContext
-import Itasca.Runtime.Store.Invariant.CoreTypingExtension
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Integration.Execution.Mutation.GlobalShape
-import Itasca.Runtime.Integration.Execution.Ownership.Entry
-import Itasca.Runtime.Store.Initialization.SegmentExtension
-import Itasca.Runtime.Store.Invariant.SourceSyntax
+import Itasca.Runtime.Store.Invariant.FunctionCapacities
+import Itasca.Runtime.Store.Api.AllocationAndGrowth
+import Itasca.Runtime.Integration.Execution.Mutation.BulkResult
+import Itasca.Runtime.Interp.Memory.MemoryEffects
+import Itasca.Runtime.Store.Api.BulkCopiesAndFill
+import Itasca.Runtime.Store.Api.TableFillAndGrowth
+import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
+import Itasca.Runtime.Spec.TypingAndNumericOperations
+import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
-namespace Itasca.Runtime.Integration
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Store Itasca.Runtime.Interp
+
+open Itasca.Representation
+
+/-!
+# Store-mutation certificates
+
+Typed table shape, exact concrete footprints and source extension combine into the cumulative mutation evidence consumed by execution.
+-/
+
+/-! ## TableShape -/
+
+section TableShape
+
+/-!
+# Typed table mutation shape
+
+Replacing table contents under the typing premises preserves decoded store shape and source extension. Joined mutation certificates use these facts.
+-/
+
+namespace Itasca.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Store Itasca.Interp
+
+theorem table_mutation_shape {M : Type} (view : M → Slice U8)
+    (before after : runtime.store.Store M) (shape : Shape view before)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
+    (issued : before.tables.val[address.index.val]? = some object)
+    (mutation : TableMutation before after address object replacement)
+    (reference : ReferenceShape before object.ty replacement) : Shape view after := by
+  obtain ⟨words,rfl,lengthEq,references⟩ := mutation
+  obtain ⟨bound,found⟩ := List.getElem?_eq_some_iff.mp issued
+  have old := shape.tables object (List.mem_of_getElem? issued)
+  apply shape.table_replace_same_length address.index bound {object with elements := words}
+  · refine ⟨by simpa only [lengthEq] using old.1,by simpa only [lengthEq] using old.2.1,?_⟩
+    intro word member
+    rcases references word member with previous | changed
+    · exact old.2.2 word previous
+    · simpa only [changed] using reference
+  · simpa only [found] using lengthEq
+
+/-- Typed table content replacement retains decoded store extension. -/
+theorem table_mutation_extends {M : Type} (view : M → Slice U8)
+    (code : CodeInterpretation) (before after : runtime.store.Store M)
+    (shape : Shape view before) (syntaxProof : StoreSyntax code before)
+    (address : runtime.TableAddr) (object : runtime.store.TableInst) (replacement : U64)
+    (issued : before.tables.val[address.index.val]? = some object)
+    (mutation : TableMutation before after address object replacement)
+    (reference : ReferenceShape before object.ty replacement) :
+    Shape view after ∧ Extend_store (decodeStore view code before) (decodeStore view code after) := by
+  have fresh := table_mutation_shape view before after shape address object replacement issued mutation reference
+  obtain ⟨words,rfl,lengthEq,references⟩ := mutation
+  obtain ⟨bound,found⟩ := List.getElem?_eq_some_iff.mp issued
+  let after := {before with tables := before.tables.set address.index {object with elements := words}}
+  have sourceSyntax : StoreSyntax code after := syntaxProof
+  have oldWf := decode_store_wf view code before shape syntaxProof
+  have newWf := decode_store_wf view code after fresh sourceSyntax
+  have oldTableWf : wf_tableinst (decodeTable object) := by
+    apply wf_tableinst.tableinst_case_
+    apply wf_tabletype.tabletype_case_0
+    exact decode_limits_wf _ _ (shape.tables object (List.mem_of_getElem? issued)).1
+  have newTableWf : wf_tableinst (decodeTable {object with elements := words}) := by
+    apply wf_tableinst.tableinst_case_
+    apply wf_tabletype.tabletype_case_0
+    apply decode_limits_wf
+    simpa only [lengthEq] using (shape.tables object (List.mem_of_getElem? issued)).1
+  have objectExtension := decode_table_extends object {object with elements := words}
+    rfl rfl (Nat.le_of_eq lengthEq.symm) oldTableWf newTableWf
+  refine ⟨fresh,?_⟩
+  unfold after at newWf
+  rw [decode_store_table_update view code before (before.tables.set address.index {object with elements := words})] at newWf ⊢
+  simp only [alloc.vec.Vec.set_val_eq,List.map_set] at newWf ⊢
+  apply Spec.extend_store_set_table _ _ _ oldWf
+  · simpa only [decodeStore] using newWf
+  · intro indexBound
+    simpa only [decodeStore,found,
+      getElem!_pos (before.tables.val.map decodeTable) address.index.val
+        (by simpa only [List.length_map] using bound),List.getElem_map] using objectExtension
+
+end Itasca.Integration
+
+end TableShape
+
+/-! ## Operations -/
+
+section Operations
+
+/-!
+# Joined store-mutation certificates
+
+Exact growth footprints establish raw invariants; typed source transitions establish store extension. Their join constructs cumulative mutation evidence for concrete operations.
+-/
+
+namespace Itasca.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Store Itasca.Interp
 theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}
     {code : CodeInterpretation} {store : runtime.store.Store M}
     (shaped : Shape view store) (sourceSyntaxBefore : StoreSyntax code store) (bounds : SegmentBounds store) :
@@ -36,7 +131,7 @@ theorem CumulativeStoreMutation.refl_of_shape {M : Type} {view : M → Slice U8}
   ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,shaped,bounds,Spec.extend_store_refl _ (decode_store_wf view code store shaped sourceSyntaxBefore),⟨rfl,rfl⟩,rfl⟩
 
 theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
-    (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
+    (code : Representation.CodeInterpretation) (before after : runtime.store.Store M)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before)
     (address : runtime.MemoryAddr) (object : runtime.store.MemInst M)
     (issued : before.memories.val[address.index.val]? = some object)
@@ -46,21 +141,21 @@ theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
   have inBounds : address.index.val < before.memories.length := (List.getElem?_eq_some_iff.mp issued).1
   have found : before.memories.val[address.index.val] = object := (List.getElem?_eq_some_iff.mp issued).2
   let after := {before with memories := before.memories.set address.index {object with buf := buffer}}
-  have shape : Store.Shape view after := by
+  have shape : Representation.Shape view after := by
     apply shaped.memory_replace_same_length address.index inBounds
     · simpa only [found] using lengthEq
     · simp only [found]
   have sourceSyntax : Store.StoreSyntax code after := sourceSyntaxBefore
   have oldWf := Store.decode_store_wf view code before shaped sourceSyntaxBefore
   have newWf := Store.decode_store_wf view code after shape sourceSyntax
-  have oldMemoryWf : wf_meminst (Store.decodeMemory view object) := by
+  have oldMemoryWf : wf_meminst (Representation.decodeMemory view object) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
       apply Store.decode_limits_wf
       have bound := (shaped.memories object (List.mem_of_getElem? issued)).2.1
       scalar_tac
     · exact Store.decode_bytes_wf _
-  have newMemoryWf : wf_meminst (Store.decodeMemory view {object with buf := buffer}) := by
+  have newMemoryWf : wf_meminst (Representation.decodeMemory view {object with buf := buffer}) := by
     apply wf_meminst.meminst_case_
     · apply wf_memtype.memtype_case_0
       apply Store.decode_limits_wf
@@ -70,16 +165,16 @@ theorem memory_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
     · exact Store.decode_bytes_wf _
   have objectExtension := Store.decode_memory_extends view object {object with buf := buffer}
     rfl (Nat.le_of_eq lengthEq.symm) oldMemoryWf newMemoryWf
-  have extension : Extend_store (Store.decodeStore view code before) (Store.decodeStore view code after) := by
+  have extension : Extend_store (Representation.decodeStore view code before) (Representation.decodeStore view code after) := by
     unfold after at newWf ⊢
-    rw [Store.decode_store_memory_update view code before
+    rw [Representation.decode_store_memory_update view code before
       (before.memories.set address.index {object with buf := buffer})] at newWf ⊢
     simp only [alloc.vec.Vec.set_val_eq,List.map_set] at newWf ⊢
     apply Spec.extend_store_set_mem _ _ _ oldWf
-    · simpa only [Store.decodeStore] using newWf
+    · simpa only [Representation.decodeStore] using newWf
     · intro bound
-      simpa only [Store.decodeStore,found,
-        getElem!_pos (before.memories.val.map (Store.decodeMemory view)) address.index.val
+      simpa only [Representation.decodeStore,found,
+        getElem!_pos (before.memories.val.map (Representation.decodeMemory view)) address.index.val
           (by simpa only [List.length_map] using inBounds),List.getElem_map] using objectExtension
   exact ⟨⟨rfl,rfl,rfl,rfl⟩,rfl,shape,⟨bounds.elements,bounds.data⟩,extension,⟨rfl,rfl⟩,rfl⟩
 theorem table_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
@@ -214,7 +309,7 @@ theorem element_drop_cumulative_mutation_of_shape {M : Type} {view : M → Slice
   segment_mutation_cumulative_of_shape shaped sourceSyntaxBefore bounds (.element_drop view store index object issued) (shaped.element_drop index object)
 
 theorem global_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
-    (code : Store.CodeInterpretation) (before after : runtime.store.Store M)
+    (code : Representation.CodeInterpretation) (before after : runtime.store.Store M)
     (shaped : Shape view before) (sourceSyntaxBefore : StoreSyntax code before) (bounds : SegmentBounds before) (value : val)
     (mutation : GlobalMutation before after value) (wellFormed : wf_val value)
     (owned : SourceMachine.Ownership.ValueOwned (ownershipBounds before) value) :
@@ -252,4 +347,6 @@ theorem core_mutation_cumulative_of_shape {M : Type} (view : M → Slice U8)
   | unchanged => exact .refl_of_shape shaped sourceSyntaxBefore bounds
   | memory issued mutation => exact memory_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ _ issued mutation
   | global live wellFormed mutation => exact global_mutation_cumulative_of_shape view code before _ shaped sourceSyntaxBefore bounds _ mutation wellFormed (live.owned owned)
-end Itasca.Runtime.Integration
+end Itasca.Integration
+
+end Operations

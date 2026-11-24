@@ -1,4 +1,61 @@
-import Itasca.Runtime.SourceMachine.Numeric.OperandsCore
+import Itasca.Runtime.SourceMachine.StructureAndTyping
+import Itasca.Runtime.SourceMachine.Numeric.Decode
+
+/-! ## OperandsCore -/
+
+section
+
+namespace Itasca.SourceMachine.Numeric
+open SpecExt Itasca.Spec
+
+theorem word_bound (ty : Inn) (bits : BitVec (sizenn (numtype_Inn ty))) :
+    bits.toNat < 2 ^ integerWidth ty := by cases ty <;> exact bits.isLt
+
+theorem Instruction.arity_cases (op : Instruction) : op.arity = 1 ∨ op.arity = 2 := by
+  cases op <;> simp [arity]
+
+def Instruction.operands (op : Instruction)
+    (a b : BitVec (sizenn (numtype_Inn op.input))) : List val :=
+  if op.arity = 1 then [integerVal op.input a.toNat]
+  else [integerVal op.input a.toNat, integerVal op.input b.toNat]
+
+ theorem word_exists (ty : Inn) (bits : Nat) (bound : bits < 2^integerWidth ty) :
+    ∃ word : BitVec (sizenn (numtype_Inn ty)), word.toNat = bits := by
+  refine ⟨BitVec.ofNat _ bits, ?_⟩
+  rw [BitVec.toNat_ofNat, Nat.mod_eq_of_lt]
+  cases ty <;> simpa [integerWidth, numtype_Inn, sizenn, size, valtype_numtype] using bound
+
+ theorem Instruction.typed_operands (op : Instruction) {s : store} {f : AFrame}
+    {after : List instr} (typed : FrameTyped s { f with code := op.source :: after } []) :
+    ∃ front a b, f.vals = front ++ op.operands a b := by
+  obtain ⟨C, first, operands, ins, outs, _, _, hop, hsplit, hoperands⟩ := frame_typed_operands typed
+  cases op <;> cases hop
+  all_goals
+    first
+    | cases hoperands with
+      | cons hl hr =>
+        cases hr with
+        | cons hr hend =>
+          cases hend
+          obtain ⟨a, rfl, ha⟩ := integer_val_inv hl
+          obtain ⟨b, rfl, hb⟩ := integer_val_inv hr
+          obtain ⟨wa, hwa⟩ := word_exists _ a ha
+          obtain ⟨wb, hwb⟩ := word_exists _ b hb
+          exact ⟨first, wa, wb, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa, hwb] using hsplit⟩
+    | cases hoperands with
+      | cons hv hend =>
+        cases hend
+        obtain ⟨a, rfl, ha⟩ := integer_val_inv hv
+        obtain ⟨wa, hwa⟩ := word_exists _ a ha
+        exact ⟨first, wa, wa, by simpa [Instruction.operands, Instruction.arity, Instruction.input, hwa] using hsplit⟩
+
+end Itasca.SourceMachine.Numeric
+
+end
+
+/-! ## Transition -/
+
+section
 
 /-!
 Integer source-machine transition contracts and compatibility with the retained abstract step function. This layer is consumed by numeric simulations and interpreter effects.
@@ -8,7 +65,7 @@ Integer source-machine transition contracts and compatibility with the retained 
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Numeric
+namespace Itasca.SourceMachine.Numeric
 
  theorem Instruction.apply_unary (op : Instruction)
     (a b : BitVec (sizenn (numtype_Inn op.input))) (one : op.arity = 1) :
@@ -32,7 +89,7 @@ namespace Itasca.Runtime.SourceMachine.Numeric
     simp only [hb, BitVec.ofNat_toNat, pop_append, ha]
     simp [finish]
 
-end Itasca.Runtime.SourceMachine.Numeric
+end Itasca.SourceMachine.Numeric
 
 end
 
@@ -40,7 +97,7 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Numeric
+namespace Itasca.SourceMachine.Numeric
 
 theorem binary_add_nat (ty : Inn) (a b : BitVec (sizenn (numtype_Inn ty))) :
     (a + b).toNat = (a.toNat + b.toNat) % 2^integerWidth ty := by
@@ -92,7 +149,7 @@ theorem finish_lt_u (s f rest after front) (ty : Inn)
   simp only [finish, Instruction.apply, Instruction.output, compare, BitVec.toNat_ofNat]
   split <;> simp_all
 
-end Itasca.Runtime.SourceMachine.Numeric
+end Itasca.SourceMachine.Numeric
 
 end
 
@@ -100,7 +157,7 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Numeric
+namespace Itasca.SourceMachine.Numeric
 
 theorem pop_two (front : List val) (a b : val) :
     pop (front ++ [a,b]) = some (front ++ [a], b) := by
@@ -131,7 +188,7 @@ theorem astep_operands (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [numtype_Inn] at ha hb <;>
       simp only [Instruction.source, numtype_Inn, astep, Instruction.operands,
         Instruction.arity, Instruction.input, if_false, Nat.reduceEqDiff, pop_two, pop_append,
-        ha, hb, ite_true, ite_false, if_pos rfl, integerBinary, finish_add, finish_sub]
+        ha, hb, ite_true, if_pos rfl, integerBinary, finish_add, finish_sub]
     all_goals
       first
       | rfl
@@ -146,18 +203,18 @@ theorem astep_operands (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [numtype_Inn] at ha hb <;>
       simp only [Instruction.source, numtype_Inn, astep, Instruction.operands,
         Instruction.arity, Instruction.input, if_false, Nat.reduceEqDiff, pop_two, pop_append,
-        ha, hb, ite_true, ite_false, if_pos rfl, finish_eq, finish_lt_u]
+        ha, hb, ite_true, if_pos rfl, finish_eq, finish_lt_u]
     all_goals
       first
       | rfl
-      | simp only [decide_eq_true_eq, Bool.true_eq, Bool.false_eq]
+      | simp only [decide_eq_true_eq]
       | exact transition_operands_code _ f rest _ after front (.compare _ _) a b
     all_goals rfl
   | eqz ty =>
     simp only [Instruction.input] at a b ha hb
     cases ty <;> simp only [numtype_Inn] at ha hb <;>
       simp only [Instruction.source, numtype_Inn, astep, Instruction.operands,
-        Instruction.arity, Instruction.input, if_true, pop_append, ha, ite_true, ite_false, if_pos rfl, finish_eqz]
+        Instruction.arity, Instruction.input, if_true, pop_append, ha, ite_true, if_pos rfl, finish_eqz]
     all_goals rfl
   | conversion conv =>
     cases conv <;>
@@ -175,7 +232,7 @@ theorem astep_typed_eq (s : AState) (f : AFrame) (rest : List AFrame)
     cases f; simp_all
   rw [same, astep_operands, transition_operands_code]
 
-end Itasca.Runtime.SourceMachine.Numeric
+end Itasca.SourceMachine.Numeric
 
 end
 
@@ -183,7 +240,7 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Numeric
+namespace Itasca.SourceMachine.Numeric
 
 theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Instruction) (next : AState)
@@ -198,6 +255,8 @@ theorem astep_effect (s : AState) (f : AFrame) (rest : List AFrame)
       simp only [advance, AResult.next.injEq] at step
       exact ⟨_, step.symm⟩
 
-end Itasca.Runtime.SourceMachine.Numeric
+end Itasca.SourceMachine.Numeric
+
+end
 
 end

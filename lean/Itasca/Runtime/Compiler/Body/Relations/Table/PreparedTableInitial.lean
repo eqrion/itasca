@@ -1,8 +1,9 @@
-import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedCompilerStart
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedCompilerInitial
-import Itasca.Runtime.Compiler.Body.Reader.Replay.StructuredPoint
-import Itasca.Runtime.Compiler.Body.Reader.Replay.IndexedPoint
+import Itasca.Runtime.Compiler.Body.Relations.Entry.PreparedRawInitial
+import Itasca.Runtime.Compiler.Body.Reader.Replay.SafetyAndFinish
+import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry
+
+open Itasca.Representation
 
 /-!
 Initial reader/compiler and compiler-table certificates for a prepared function entry.
@@ -12,26 +13,26 @@ Initial reader/compiler and compiler-table certificates for a prepared function 
 
 section
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem indexed_prepared_compiler_start (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
-      env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
+      env.func_types.val.map (fun ft => slots (ft.params.val.map Translation.valueType)))
     (endFits : batchStart.val + w.finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (startedCall : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
     CompilerEntryFacts started env w.ctx w.typeIdx w.ft w.body ∧
     StructuredCompilerPrefix jumpTables emit started started
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      [] (SourceScope.initial (w.ft.results.val.map Translate.valueType)) [] 0 := by
+      (env.types.val.map Translation.Environment.funcType) (env.func_types.val.map Translation.Environment.funcType)
+      (w.ft.results.val.map Translation.valueType) (w.ctx.locals.val.map Translation.valueType)
+      [] (SourceScope.initial (w.ft.results.val.map Translation.valueType)) [] 0 := by
   have sourceLookup : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
   obtain ⟨signature, lookup, matched⟩ := signatureTable.lookup_source sourceLookup
@@ -51,31 +52,31 @@ theorem indexed_prepared_compiler_start (jumpTables : List U32) (emit : List val
   · exact structured_compiler_function_start_prefix emit ops law signatures functionSlots budget batchStart initial started
       w.ctx w.typeIdx signature w.bodyStart w.finish _ _ _ lookup matched.resultWords beginFits endFits created startedCall
 
-theorem indexed_prepared_compiler_initial_wasm2 (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
+theorem indexed_prepared_compiler_initial (jumpTables : List U32) (emit : List valtype → instr → List Bytecode → List valtype → Prop) {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (bodyBound : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val) =
-      env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
+      env.func_types.val.map (fun ft => slots (ft.params.val.map Translation.valueType)))
     (endFits : batchStart.val + w.finish.val ≤ Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (startedCall : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
     CompilerEntryFacts started env w.ctx w.typeIdx w.ft w.body ∧
-    StructuredReaderCompilerPointWasm2 jumpTables emit started started
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      w.body env w.ctx.locals w.typeIdx w.ft (Wasm2.initial w.typeIdx) := by
+    StructuredReaderCompilerPoint jumpTables emit started started
+      (env.types.val.map Translation.Environment.funcType) (env.func_types.val.map Translation.Environment.funcType)
+      (w.ft.results.val.map Translation.valueType) (w.ctx.locals.val.map Translation.valueType)
+      w.body env w.ctx.locals w.typeIdx w.ft (Body.initial w.typeIdx) := by
   obtain ⟨facts, compiled⟩ := indexed_prepared_compiler_start jumpTables emit ops law w signatureTable functionTable endFits created startedCall
   have lookup : env.types.val[w.typeIdx.val]? = some w.ft := by
     simp only [List.getElem?_eq_getElem w.type_lt, w.function_type]
-  exact ⟨facts, (StructuredReaderCompilerStateWasm2.initial _ _ _ _ _ _ _ _ _ lookup bodyBound compiled).point⟩
+  exact ⟨facts, (StructuredReaderCompilerState.initial _ _ _ _ _ _ _ _ _ lookup bodyBound compiled).point⟩
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
 
 end
 
@@ -83,15 +84,15 @@ end
 
 section
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem prepared_compiler_table_boundary {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial)
     (startedCall : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
@@ -101,32 +102,32 @@ theorem prepared_compiler_table_boundary {A : Type} (ops : runtime.platform.Allo
   exact compiler_function_start_table_boundary ops law initial started w.ctx w.typeIdx w.bodyStart w.finish
     (.Ok ()) boundary startedCall
 
-theorem indexed_table_prepared_compiler_initial_wasm2
+theorem indexed_table_prepared_compiler_initial
     (emit : CompilerTables → List valtype → instr → List Bytecode → List valtype → Prop)
     {A : Type} (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     {signatures : Slice runtime.compiler.Signature} {functionSlots : Slice U32}
     {budget : runtime.compiler.Budget A} {batchStart : Usize}
-    {initial started : runtime.compiler.FunctionCompiler A} {data env index start profile}
-    (w : CodeEntry.Prepared data env index start profile)
+    {initial started : runtime.compiler.FunctionCompiler A} {data env index start }
+    (w : CodeEntry.Prepared data env index start )
     (bodyBound : w.body.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (signatureTable : SignatureSequence signatures.val env.types.val)
     (functionTable : functionSlots.val.map (fun word => word.val)=
-      env.func_types.val.map (fun ft => slots (ft.params.val.map Translate.valueType)))
+      env.func_types.val.map (fun ft => slots (ft.params.val.map Translation.valueType)))
     (endFits : batchStart.val+w.finish.val≤Usize.max)
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart=.ok initial)
     (startedCall : runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor.on_function_start
       ops initial w.ctx w.typeIdx w.bodyStart w.finish = .ok (.Ok (),started)) :
     CompilerEntryFacts started env w.ctx w.typeIdx w.ft w.body ∧
-    IndexedTableReaderCompilerPointWasm2 emit started started
-      (env.types.val.map EnvTranslation.funcType) (env.func_types.val.map EnvTranslation.funcType)
-      (w.ft.results.val.map Translate.valueType) (w.ctx.locals.val.map Translate.valueType)
-      w.body env w.ctx.locals w.typeIdx w.ft (Wasm2.initial w.typeIdx) := by
-  have all := fun more : CompilerTables => indexed_prepared_compiler_initial_wasm2
+    IndexedTableReaderCompilerPoint emit started started
+      (env.types.val.map Translation.Environment.funcType) (env.func_types.val.map Translation.Environment.funcType)
+      (w.ft.results.val.map Translation.valueType) (w.ctx.locals.val.map Translation.valueType)
+      w.body env w.ctx.locals w.typeIdx w.ft (Body.initial w.typeIdx) := by
+  have all := fun more : CompilerTables => indexed_prepared_compiler_initial
     ((CompilerTables.ofFunction started.function).append more).jumpTables
     (emit ((CompilerTables.ofFunction started.function).append more))
     ops law w bodyBound signatureTable functionTable endFits created startedCall
   exact ⟨(all .empty).1,⟨prepared_compiler_table_boundary ops law w created startedCall,fun more => (all more).2⟩⟩
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
 
 end

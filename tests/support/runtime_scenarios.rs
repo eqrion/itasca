@@ -1,6 +1,6 @@
 #![allow(dead_code)]
 use crate::differential::{Coverage, Pair};
-use itasca::{runtime::Value, ValidationProfile};
+use itasca::runtime::Value;
 
 fn wat(source: &str) -> Vec<u8> {
     let buffer = wast::parser::ParseBuffer::new(source).unwrap();
@@ -41,9 +41,9 @@ pub fn stateful(data: &[u8]) -> Coverage {
       (func (export "table-fill") (param i32 i32)
         local.get 0 ref.null func local.get 1 table.fill)
       (func (export "drop") data.drop $d))"#);
-    let mut pair = Pair::new(ValidationProfile::Wasm2);
+    let mut pair = Pair::new();
     for (bytes, provider) in [(&provider, None), (&consumer, Some(0))] {
-        let status = pair.instantiate(bytes, ValidationProfile::Wasm2, provider);
+        let status = pair.instantiate(bytes, provider);
         if status != Coverage::Compared {
             return status;
         }
@@ -99,10 +99,10 @@ pub fn linking(data: &[u8]) -> Coverage {
         ),
     };
     let consumer = wat(&source);
-    let mut pair = Pair::new(ValidationProfile::Wasm2);
-    let status = pair.instantiate(&provider, ValidationProfile::Wasm2, None);
+    let mut pair = Pair::new();
+    let status = pair.instantiate(&provider, None);
     if status != Coverage::Compared {
         return status;
     }
-    pair.instantiate(&consumer, ValidationProfile::Wasm2, Some(0))
+    pair.instantiate(&consumer, Some(0))
 }

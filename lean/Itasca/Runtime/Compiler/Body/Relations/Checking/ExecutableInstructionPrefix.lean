@@ -1,13 +1,69 @@
-import Itasca.Runtime.Compiler.Body.Relations.Checking.ExecutableInstructionAcceptance
-import Itasca.Runtime.Compiler.Local.Checking.CoreEmissionInstructionPrefix
+import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
+import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.InstructionChecks
+import Itasca.Runtime.Compiler.Local.Checking.ScopeInstructionPrefixes
+
+open Itasca.Representation
+
+/-! ## ExecutableInstructionAcceptance -/
+
+section
+
+/-!
+Explicit select has the same width-specific checker as ordinary select.
+
+Main declarations: `TypedSelectEmission.instructions_accept` and `ExecutableEmission.ordinary_instructions_accept`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std
+
+/-- Explicit select has the same width-specific checker as ordinary select. -/
+theorem TypedSelectEmission.instructions_accept {C before source emitted after}
+    (emission : TypedSelectEmission C before source emitted after)
+    (function : runtime.bytecode.CompiledFunction)
+    (inputs : slots C.LOCALS+slots before ≤ function.slot_count.val)
+    (outputs : slots C.LOCALS+slots after ≤ function.slot_count.val) :
+    ∀ instruction ∈ emitted,
+      runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
+  cases emission with
+  | select front ty left right condition first second test =>
+    exact (ScalarEmission.select front ty left right condition first second test).instructions_accept function inputs outputs
+
+/-- Every ordinary complete emission passes the bytecode checker from
+source stack capacities and the exact retained tables. Branch-table gates are
+checked separately with their structural target-table layout. -/
+theorem ExecutableEmission.ordinary_instructions_accept (function : runtime.bytecode.CompiledFunction)
+    {C before source emitted after}
+    (emission : ExecutableEmission (CompilerTables.ofFunction function) C before source emitted after)
+    (ordinary : ∀ depths fallback, source ≠ .BR_TABLE depths fallback)
+    (inputs : slots C.LOCALS+slots before ≤ function.slot_count.val)
+    (outputs : slots C.LOCALS+slots after ≤ function.slot_count.val) :
+    ∀ instruction ∈ emitted,
+      runtime.bytecode.CompiledFunction.instruction_valid function instruction = .ok true := by
+  cases emission with
+  | scalar head => exact head.instructions_accept function inputs outputs
+  | stateful head => exact head.instructions_accept function rfl inputs outputs
+  | indirect head => exact head.instructions_accept function rfl inputs
+  | simd head => exact head.instructions_accept function rfl rfl inputs outputs
+  | typedSelect head => exact head.instructions_accept function inputs outputs
+  | branchTable stack depths fallback selector start len => exact False.elim (ordinary depths fallback rfl)
+
+end Itasca.Compiler
+
+end
+
+/-! ## ExecutableInstructionPrefix -/
+
+section
 
 /-!
 Captured table appends increase every local checker index space. The contents are separately related to source syntax by emission certificates.
 
-Main declarations: `instruction_check_extends_of_tables_append` and `Lowered.executable_instruction_prefix`. A direct consumer is `Compiler.Body.Reader.Calls.InstructionPrefix`.
+Main declarations: `instruction_check_extends_of_tables_append` and `Lowered.executable_instruction_prefix`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 /-- Captured table appends increase every local checker index space. The
@@ -29,7 +85,7 @@ theorem instruction_check_extends_of_tables_append (before after : runtime.bytec
   · change before.jump_tables.val.length ≤ after.jump_tables.val.length
     omega
 
-/-- All ordinary complete-profile source emissions preserve checking of every
+/-- All ordinary complete source emissions preserve checking of every
 stored instruction, including outstanding branches in older code. Appended
 SIMD, constant, and indirect-call metadata are allowed. -/
 theorem Lowered.executable_instruction_prefix {A : Type}
@@ -48,4 +104,6 @@ theorem Lowered.executable_instruction_prefix {A : Type}
   intro index owned
   simpa only [PendingInstructionSite,frames] using owned
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end

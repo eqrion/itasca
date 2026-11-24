@@ -1,15 +1,17 @@
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
-import Itasca.Runtime.Compiler.Local.Lowering.Float.FloatEmissionInversion
-import Itasca.Runtime.Interp.Machine.Select.Emission
-import Itasca.Runtime.Interp.Relations.SelectSlots
-import Itasca.Runtime.Interp.Relations.TypedSelectOperands
-import Itasca.Runtime.Interp.Machine.Control.ForwardJump
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
+import Itasca.Runtime.Compiler.Local.Lowering.Float.SafetyAndEncoding
+import Itasca.Runtime.Interp.Machine.Select.Operands
+import Itasca.Runtime.Interp.Relations.EntryEffects
+import Itasca.Runtime.Interp.Relations.StepActive
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
-import Itasca.Runtime.SourceMachine.Core.Bound
-import Itasca.Runtime.SourceMachine.TypedSelect.Step
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.SourceMachine.Core.ProgressAndBounds
+import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Spec.TypingAndNumericOperations
+
+open Itasca.Representation
 
 /-!
 Typed select machine fetch, step and execution. The resulting argument is consumed by complete machine advance while preserving its source grammar and store premises.
@@ -19,10 +21,10 @@ Typed select machine fetch, step and execution. The resulting argument is consum
 
 section
 
-namespace Itasca.Runtime.Interp.Machine.TypedSelect
+namespace Itasca.Interp.Machine.TypedSelect
 variable {jumpTables : List Aeneas.Std.U32}
 variable {family : ContextEmission} [TypedSelectHeads family]
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+open Aeneas Aeneas.Std SpecExt Itasca.Interp
 theorem point_select_head {declared : valtype} {C returns code labels stack pc next output} (after : List instr)
     (point : Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
       (.SELECT (some [declared]) :: after) pc next output) :
@@ -30,9 +32,9 @@ theorem point_select_head {declared : valtype} {C returns code labels stack pc n
       Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels stack
         (.SELECT (some [declared]) :: after) target.val next output) ∨
     (∃ front ty left right condition, stack = front ++ [ty,ty,.I32] ∧
-      left.val = Compiler.slots C.LOCALS+Compiler.slots front ∧ right.val = left.val+Compiler.width ty ∧
-      condition.val = right.val+Compiler.width ty ∧
-      code[pc]? = some (Compiler.selectInstruction (decide (Compiler.width ty = 2)) left right condition) ∧
+      left.val = Representation.slots C.LOCALS+Representation.slots front ∧ right.val = left.val+Representation.width ty ∧
+      condition.val = right.val+Representation.width ty ∧
+      code[pc]? = some (Compiler.selectInstruction (decide (Representation.width ty = 2)) left right condition) ∧
       Compiler.StructuredCode.Point (family C) C.TYPES C.FUNCS returns C.LOCALS code jumpTables labels
         (front ++ [ty]) after (pc+1) next output) := by
   have relation := point.current
@@ -53,7 +55,7 @@ theorem point_select_head {declared : valtype} {C returns code labels stack pc n
     exact Or.inl ⟨_,forward,instruction,⟨rest,point.targets,point.normal,point.exit,point.root⟩⟩
   | _ => simp at sourceEq
 
-end Itasca.Runtime.Interp.Machine.TypedSelect
+end Itasca.Interp.Machine.TypedSelect
 
 end
 
@@ -61,7 +63,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.Machine.TypedSelect
+namespace Itasca.Interp.Machine.TypedSelect
 open Aeneas Aeneas.Std SpecExt
 
 theorem step_select {M P F A : Type}
@@ -104,33 +106,33 @@ theorem step_select {M P F A : Type}
   · have frameTyped : SourceMachine.FrameTyped sourceStore {f with code := .SELECT (some [declared])::after} [] := by
       cases typed.typed.frames with | cons head _ => exact head
     obtain ⟨front,left,right,bits,valueTy,split,bitsBound,leftType,rightType,heights⟩ := Interp.TypedSelect.select_typed_operands frameTyped
-    have conditionType : Compiler.valueType (SourceMachine.integerVal .I32 bits) = .I32 := rfl
-    have stackEq : front.map Compiler.valueType ++ [valueTy,valueTy,.I32] = types ++ [ty,ty,.I32] := by
+    have conditionType : Representation.valueType (SourceMachine.integerVal .I32 bits) = .I32 := rfl
+    have stackEq : front.map Representation.valueType ++ [valueTy,valueTy,.I32] = types ++ [ty,ty,.I32] := by
       simpa only [split,List.map_append,List.map_cons,List.map_nil,leftType,rightType,conditionType] using input
-    have lengthEq : (front.map Compiler.valueType).length = types.length := by
+    have lengthEq : (front.map Representation.valueType).length = types.length := by
       have lengths := congrArg List.length stackEq
       simp only [List.length_append,List.length_cons,List.length_nil] at lengths
       omega
     obtain ⟨frontEq,typeEq⟩ := List.append_inj stackEq lengthEq
     have sameTy : valueTy = ty := (List.cons.inj typeEq).1
-    have leftType' : Compiler.valueType left = ty := leftType.trans sameTy
-    have rightType' : Compiler.valueType right = ty := rightType.trans sameTy
-    have position : a.val = Compiler.slots ((f.locals++front).map Compiler.valueType) := by
-      simpa only [List.map_append,Compiler.slots_append,point.locals,← frontEq] using leftPos
+    have leftType' : Representation.valueType left = ty := leftType.trans sameTy
+    have rightType' : Representation.valueType right = ty := rightType.trans sameTy
+    have position : a.val = Representation.slots ((f.locals++front).map Representation.valueType) := by
+      simpa only [List.map_append,Representation.slots_append,point.locals,← frontEq] using leftPos
     have actual := Interp.TypedSelect.select_source_next (annotation := some [declared]) (s := sourceStore) (ambient := ambient) (rest := rest) (after := after) split (leftType.trans rightType.symm) bitsBound
     obtain ⟨nextState,nextEq,fresh,source⟩ := SourceMachine.TypedSelect.progress sourceStore ambient f rest (some [declared]) after typed
     have nextEq' : SourceMachine.Core.select ⟨sourceStore,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ f rest after = .next nextState := nextEq
     have sameState := SourceMachine.AResult.next.inj (actual.symm.trans nextEq')
     subst nextState
     apply step_fetch memory hooks floats allocator exec store platform index raw inst compiled
-      (Compiler.selectInstruction (decide (Compiler.width ty = 2)) a b condition) last frameFound instanceFound codeFound fetched pcBound
+      (Compiler.selectInstruction (decide (Representation.width ty = 2)) a b condition) last frameFound instanceFound codeFound fetched pcBound
     intro pc pcNext
     have continuation : FramePoint sourceStore {raw with pc := pc}
         {f with code := after,vals := front++[if bits = 0 then right else left]} compiled C targets next output := by
       refine ⟨point.bindings,point.locals,?_,?_⟩
       · have labels : LabelsMatch (front++[left,right,SourceMachine.integerVal .I32 bits]) f.labels targets := by simpa only [split] using point.labels
         exact labels.replace_suffix heights
-      · have selectedType : Compiler.valueType (if bits = 0 then right else left) = ty := by split <;> first | exact rightType' | exact leftType'
+      · have selectedType : Representation.valueType (if bits = 0 then right else left) = ty := by split <;> first | exact rightType' | exact leftType'
         simpa only [List.map_append,List.map_cons,List.map_nil,selectedType,frontEq,pcNext] using tail
     have represented : ValuesAt exec.slots.val raw.base.val ((f.locals++front)++[left,right,SourceMachine.integerVal .I32 bits]) := by
       simpa only [FrameSlots,split,List.append_assoc] using slots
@@ -141,8 +143,8 @@ theorem step_select {M P F A : Type}
     obtain ⟨success,sameStore,samePlatform,represented,fields,preserved⟩ := effect
     refine ⟨success,sameStore,samePlatform,pc,_,fields,?_,continuation,fresh,⟨rfl,rfl,rfl,rfl⟩,Or.inr actual,?_,preserved⟩
     · simpa only [FrameSlots,List.append_assoc] using represented
-    · exact Or.inr ⟨1,by omega,by simpa using Itasca.Runtime.Spec.StepsHN.cons source (Itasca.Runtime.Spec.StepsHN.refl (Itasca.Runtime.Spec.step_h_wf source).2)⟩
-end Itasca.Runtime.Interp.Machine.TypedSelect
+    · exact Or.inr ⟨1,by omega,by simpa using Itasca.Spec.StepsHN.cons source (Itasca.Spec.StepsHN.refl (Itasca.Spec.step_h_wf source).2)⟩
+end Itasca.Interp.Machine.TypedSelect
 
 end
 
@@ -150,7 +152,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.Machine.TypedSelect
+namespace Itasca.Interp.Machine.TypedSelect
 open Aeneas Aeneas.Std
 theorem step_execution {M P F A : Type}
     (memory : runtime.platform.MemoryBuffer M) (hooks : runtime.platform.Platform P M)
@@ -158,18 +160,18 @@ theorem step_execution {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
-    (next : Nat) (output : List valtype) (view : M → Slice U8) (code : Store.CodeInterpretation) (ambient : frame)
+    (next : Nat) (output : List valtype) (view : M → Slice U8) (code : Representation.CodeInterpretation) (ambient : frame)
     (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (declared : valtype) (after : List instr)
     (last : index.val+1 = exec.frames.length) (frameFound : exec.frames.val[index.val]? = some raw)
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)
     (codeFound : inst.module.functions.val[raw.function.val]? = some compiled)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint (Store.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
+    (point : FramePoint (Representation.decodeStore view code store) raw {f with code := .SELECT (some [declared])::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Execution view code store exec
-      ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
-    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩
+      ⟨Representation.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩ expected raw.pc.val false)
+    (program : FrameProgram store raw compiled (f.locals.map Representation.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Representation.decodeStore view code store,ambient,{f with code := .SELECT (some [declared])::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.1 = .Ok () ∧ out.2.2.1 = store ∧ out.2.2.2 = platform ∧
       ∃ (pc : U32) (g : SourceMachine.AFrame),
@@ -187,16 +189,16 @@ theorem step_execution {M P F A : Type}
       have limit := program.fetchBound
       omega
   apply WP.spec_mono (step_select memory hooks floats allocator exec store platform index raw inst compiled C targets next output
-    (Store.decodeStore view code store) ambient f rest declared after last frameFound instanceFound codeFound pcBound slots point machine.typed)
+    (Representation.decodeStore view code store) ambient f rest declared after last frameFound instanceFound codeFound pcBound slots point machine.typed)
   intro out effect
   obtain ⟨success,sameStore,samePlatform,pc,g,fields,represented,retained,fresh,metadata,transition,simulation,preserved⟩ := effect
-  have covered : SourceMachine.SupportedState ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ := by
+  have covered : SourceMachine.SupportedState ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ := by
     rcases transition with same | step
     · rw [← same]; exact machine.core
     · exact (SourceMachine.TypedSelect.Step.next step).next_supported machine.core
   refine ⟨success,sameStore,samePlatform,pc,g,
     Execution.ordinary view code ambient {f with code := .SELECT (some [declared])::after} g rest expected raw.pc.val false machine
-      (.refl store) (Itasca.Runtime.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
+      (.refl store) (Itasca.Spec.extend_store_refl _ machine.typed.typed.store) raw index pc last frameFound program
       (.ready retained) represented ⟨metadata.address,metadata.module,metadata.results,metadata.locals⟩ fields preserved fresh covered,simulation,?_,?_⟩
   · intro bounds owned
     rcases transition with same | step
@@ -206,6 +208,6 @@ theorem step_execution {M P F A : Type}
     rcases transition with same | step
     · rw [←same]; exact bounded
     · exact (SourceMachine.TypedSelect.Step.next step).next_bound bounded
-end Itasca.Runtime.Interp.Machine.TypedSelect
+end Itasca.Interp.Machine.TypedSelect
 
 end

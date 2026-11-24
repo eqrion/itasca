@@ -1,5 +1,12 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStack
-namespace Itasca.Runtime.Compiler
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
+
+/-!
+# Entered control-scope ancestry
+
+Entered child scopes have entered ancestors. Entry-chain updates preserve that condition through source advancement, ELSE and scope changes, without imposing liveness on unreachable children.
+-/
+
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 /-- An entered child has entered ancestors. Unreachable child scopes impose
@@ -78,4 +85,4 @@ theorem ScopeFrameStack.frame_entered {A : Type} {locals parents current}
     (frame : runtime.compiler.Frame) (member : frame ∈ compiler.frames.val) : frame.entry_reachable = true := by
   obtain ⟨scope, present, shape⟩ := paired_member stack.frames member
   exact shape.entered.trans (chain.all_entered live scope present)
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

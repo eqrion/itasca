@@ -1,7 +1,15 @@
+import Itasca.Runtime.Interp.Recording
 import Itasca.Runtime.Integration.Execution.World.Loop
-import Itasca.Runtime.Interp.Invocation.LoopRecordingFacts
-namespace Itasca.Runtime.Integration
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+import Itasca.Runtime.Interp.Invocation.Recording
+
+/-!
+# Recorded history prefixes
+
+Actual recorded histories preserve the writer prefix through normal and stopped executions. The world-loop recording argument uses these log-extension facts.
+-/
+
+namespace Itasca.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Interp
 
 theorem world_recorded_history_writer_prefix {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
@@ -31,4 +39,4 @@ theorem world_recorded_history_stopped_writer {M P F A : Type}
   rw [world_recorded_history_writer_prefix history prior]
   exact recorded_invoke_loop_stopped memory hooks floats allocator _ stopped _
 
-end Itasca.Runtime.Integration
+end Itasca.Integration

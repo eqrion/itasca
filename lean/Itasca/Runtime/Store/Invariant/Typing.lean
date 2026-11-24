@@ -1,7 +1,193 @@
-import Itasca.Runtime.Store.Invariant.Syntax
-import Itasca.Runtime.Store.Invariant.ValueShape
+import Itasca.Runtime.Store.Definitions
+import Itasca.Runtime.Representation.Store
 
-namespace Itasca.Runtime.Store
+open Itasca.Representation
+
+/-! ## Syntax -/
+
+section
+
+/-! Syntactic well-formedness of the decoded store. The named source certificates
+below are supplied by compilation: export-name syntax and source function syntax.
+They contain no execution-correctness premise. `wf_store` is SpecTec syntax;
+it is deliberately distinct from the semantic typing judgment `Store_ok`. -/
+namespace Itasca.Store
+open Aeneas Aeneas.Std
+
+theorem decode_words_wf (ty : Itasca.wasm_types.ValueType) (lo hi : U64) :
+    wf_val (decodeWords ty lo hi) := by
+  cases ty with
+  | I32 =>
+    apply wf_val.val_case_0
+    apply wf_num_.num__case_0 .I32 .I32 _ (by decide) ?_ rfl
+    apply wf_uN.uN_case_0
+    change 0 ≤ lo.val % 2^32 ∧ lo.val % 2^32 ≤ 4294967295
+    have h := Nat.mod_lt lo.val (by decide : 0 < 2^32)
+    omega
+  | I64 =>
+    apply wf_val.val_case_0
+    apply wf_num_.num__case_0 .I64 .I64 _ (by decide) ?_ rfl
+    apply wf_uN.uN_case_0
+    change 0 ≤ lo.val ∧ lo.val ≤ 18446744073709551615
+    scalar_tac
+  | F32 =>
+    apply wf_val.val_case_0
+    exact .num__case_1 _ _ _ (SpecExt.Builtins.Float.float_of_bits_wf_32 _ (Nat.mod_lt _ (by decide))) rfl
+  | F64 =>
+    apply wf_val.val_case_0
+    exact .num__case_1 _ _ _ (SpecExt.Builtins.Float.float_of_bits_wf_64 lo.val (by scalar_tac)) rfl
+  | V128 =>
+    apply wf_val.val_case_1 _ _ (by decide)
+    apply wf_uN.uN_case_0
+    change 0 ≤ lo.val + hi.val * 2^64 ∧ lo.val + hi.val * 2^64 ≤ 340282366920938463463374607431768211455
+    scalar_tac
+  | FuncRef =>
+    simp only [decodeWords, decodeRef]
+    split <;> constructor
+  | ExternRef =>
+    simp only [decodeWords, decodeRef]
+    split <;> constructor
+
+theorem decode_limits_wf (length : Nat) (maximum : Option U32) (h : length ≤ U32.max) :
+    wf_limits (decodeLimits length maximum) := by
+  apply wf_limits.limits_case_0
+  · apply wf_uN.uN_case_0
+    change 0 ≤ length ∧ length ≤ 4294967295
+    scalar_tac
+  · cases maximum with
+    | none => simp [Forall]
+    | some bound =>
+      intro value hvalue
+      simp only [Option.map_some, Option.toList_some, List.mem_singleton] at hvalue
+      subst value
+      apply wf_uN.uN_case_0
+      change 0 ≤ bound.val ∧ bound.val ≤ 4294967295
+      scalar_tac
+
+theorem decode_bytes_wf (bytes : List U8) : Forall wf_byte (decodeBytes bytes) := by
+  intro value hvalue
+  obtain ⟨b, hb, rfl⟩ := List.mem_map.mp hvalue
+  apply wf_byte.byte_case_0
+  scalar_tac
+
+theorem decode_instance_wf {M : Type} (code : CodeInterpretation) (index : Nat)
+    (s : runtime.store.Store M) (inst : runtime.store.ModuleInst) (h : InstanceSyntax code index inst) :
+    wf_moduleinst (decodeInstance s inst) := by
+  constructor
+  intro entry hentry
+  obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hentry
+  unfold decodeExport
+  exact .exportinst_case_ _ _ (h.exportNames raw hraw)
+
+theorem decode_function_wf {M : Type} (code : CodeInterpretation)
+    (s : runtime.store.Store M) (hsyntax : StoreSyntax code s)
+    (function : runtime.store.FuncInst) (hshape : FunctionShape s function) :
+    wf_funcinst (decodeFunction code s function) := by
+  unfold decodeFunction
+  dsimp only
+  cases hc : function.code with
+  | Host identity =>
+    constructor
+    · constructor
+      change Forall wf_exportinst []
+      simp [Forall]
+    · constructor
+  | Wasm instanceIndex functionIndex =>
+    have h := hshape.2
+    simp only [hc] at h
+    obtain ⟨inst, hinst, hfunction⟩ := h
+    simp only [hinst]
+    constructor
+    · exact decode_instance_wf code instanceIndex.val s inst (hsyntax _ _ hinst)
+    · exact (hsyntax _ _ hinst).functionCodes functionIndex.val hfunction
+
+/-- Structural representation bounds and source syntax establish SpecTec's
+syntactic store well-formedness. This theorem does not assert `Store_ok`. -/
+theorem decode_store_wf {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
+    (s : runtime.store.Store M) (shape : Shape view s) (hsyntax : StoreSyntax code s) :
+    wf_store (decodeStore view code s) := by
+  constructor
+  · intro function hfunction
+    obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hfunction
+    exact decode_function_wf code s hsyntax raw (shape.functions raw hraw)
+  · intro global hglobal
+    obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hglobal
+    exact .globalinst_case_ _ _ (decode_words_wf raw.ty.valtype raw.lo raw.hi)
+  · intro table htable
+    obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp htable
+    apply wf_tableinst.tableinst_case_
+    apply wf_tabletype.tabletype_case_0
+    exact decode_limits_wf _ _ (shape.tables raw hraw).1
+  · intro memory hmemory
+    obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hmemory
+    apply wf_meminst.meminst_case_
+    · apply wf_memtype.memtype_case_0
+      apply decode_limits_wf
+      have h := (shape.memories raw hraw).2.1
+      scalar_tac
+    · exact decode_bytes_wf _
+  · intro data hdata
+    obtain ⟨raw, hraw, rfl⟩ := List.mem_map.mp hdata
+    exact .datainst_case_ _ (decode_bytes_wf _)
+
+end Itasca.Store
+
+end
+
+/-! ## ValueShape -/
+
+section
+
+namespace Itasca.Store
+open Aeneas Aeneas.Std
+
+/-- Encoding an owned typed API value establishes the canonical global-word
+invariant, including reference ownership and scalar high-word zeros. -/
+theorem encode_global_shape {M : Type} (s : runtime.store.Store M)
+    (value : runtime.Value) (ty : Itasca.wasm_types.GlobalType)
+    (ht : ty.valtype = Representation.rawType value) (hv : ValueInStore s value) :
+    runtime.value.encode value ⦃ words => GlobalShape s {ty, lo := words.1, hi := words.2} ⦄ := by
+  cases value <;> simp only [runtime.value.encode, GlobalShape, ht, Representation.rawType]
+  all_goals simp [lift]
+  case I32 v => scalar_tac
+  case F32 v => scalar_tac
+  case V128 v => step
+  case FuncRef address =>
+    cases address with
+    | none => simp [ReferenceShape]
+    | some a =>
+      simp only [ValueInStore, Representation.ValueOwnedFits] at hv
+      simp
+      step as ⟨word, hword⟩
+      right
+      scalar_tac
+  case ExternRef address =>
+    cases address with
+    | none => simp [ReferenceShape]
+    | some a =>
+      simp only [ValueInStore, Representation.ValueOwnedFits] at hv
+      simp
+      step as ⟨word, hword⟩
+      right
+      scalar_tac
+
+theorem encode_reference_shape {M : Type} (s : runtime.store.Store M)
+    (value : runtime.Value) (ty : Itasca.wasm_types.ElemType)
+    (ht : elementValueType ty = Representation.rawType value) (hv : ValueInStore s value) :
+    runtime.value.encode value ⦃ words => ReferenceShape s ty words.1 ⦄ := by
+  apply WP.spec_mono (encode_global_shape s value {valtype := elementValueType ty, mutability := .Const} ht hv)
+  intro words hwords
+  cases ty <;> exact hwords.1
+
+end Itasca.Store
+
+end
+
+/-! ## Typing -/
+
+section
+
+namespace Itasca.Store
 open Aeneas Aeneas.Std
 
 theorem function_ref_typed (s : _root_.store) (hwf : wf_store s)
@@ -15,17 +201,17 @@ theorem function_ref_typed (s : _root_.store) (hwf : wf_store s)
 theorem decode_ref_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
     (ty : Itasca.wasm_types.ElemType) (word : U64) (h : ReferenceShape s ty word) :
-    Ref_ok (decodeStore view code s) (decodeRef ty word) (decodeElemType ty) := by
+    Ref_ok (decodeStore view code s) (decodeRef ty word) (Itasca.Translation.referenceType ty) := by
   by_cases hz : word.val = 0
   · simp [decodeRef, hz]
     exact .null _ _ hwf
   · cases ty with
     | FuncRef =>
-      simp [decodeRef, hz, decodeElemType]
+      simp [decodeRef, hz, Itasca.Translation.referenceType]
       apply function_ref_typed _ hwf
       simpa [ReferenceShape, hz, decodeStore] using h
     | ExternRef =>
-      simp [decodeRef, hz, decodeElemType]
+      simp [decodeRef, hz, Itasca.Translation.referenceType]
       exact .extern _ _ hwf
 
 theorem ref_val_eq (r : ref) : refVal r = val_ref r := by cases r <;> rfl
@@ -34,7 +220,7 @@ theorem decode_words_typed {M : Type} (view : M → Slice U8) (code : CodeInterp
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
     (global : runtime.store.GlobalInst) (h : GlobalShape s global) :
     Val_ok (decodeStore view code s) (decodeWords global.ty.valtype global.lo global.hi)
-      (Interp.sourceType global.ty.valtype) := by
+      (Itasca.Translation.valueType global.ty.valtype) := by
   have hv := decode_words_wf global.ty.valtype global.lo global.hi
   cases ht : global.ty.valtype with
   | I32 => exact .numtype _ .I32 _ hwf (by simpa [ht, decodeWords] using hv)
@@ -46,13 +232,13 @@ theorem decode_words_typed {M : Type} (view : M → Slice U8) (code : CodeInterp
     have hr : ReferenceShape s .FuncRef global.lo := by
       simp only [GlobalShape, ht] at h
       exact h.1
-    simpa [decodeWords, ref_val_eq, Interp.sourceType, decodeElemType, valtype_reftype] using
+    simpa [decodeWords, ref_val_eq, Itasca.Translation.valueType, Itasca.Translation.referenceType, valtype_reftype] using
       (Val_ok.reftype _ _ _ (decode_ref_typed view code s hwf .FuncRef global.lo hr) hwf)
   | ExternRef =>
     have hr : ReferenceShape s .ExternRef global.lo := by
       simp only [GlobalShape, ht] at h
       exact h.1
-    simpa [decodeWords, ref_val_eq, Interp.sourceType, decodeElemType, valtype_reftype] using
+    simpa [decodeWords, ref_val_eq, Itasca.Translation.valueType, Itasca.Translation.referenceType, valtype_reftype] using
       (Val_ok.reftype _ _ _ (decode_ref_typed view code s hwf .ExternRef global.lo hr) hwf)
 
 /-- Issued API values become typed specification values after ownership/index
@@ -60,14 +246,14 @@ checks. The source value retains float payloads and both v128 words exactly. -/
 theorem value_in_store_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
     (value : runtime.Value) (h : ValueInStore s value) :
-    Val_ok (decodeStore view code s) (Interp.sourceValue value)
-      (Interp.sourceType (Interp.rawType value)) := by
+    Val_ok (decodeStore view code s) (Representation.sourceValue value)
+      (Itasca.Translation.valueType (Representation.rawType value)) := by
   cases value with
-  | I32 bits => exact .numtype _ .I32 _ hwf (Interp.source_value_wf (.I32 bits))
-  | I64 bits => exact .numtype _ .I64 _ hwf (Interp.source_value_wf (.I64 bits))
-  | F32 bits => exact .numtype _ .F32 _ hwf (Interp.source_value_wf (.F32 bits))
-  | F64 bits => exact .numtype _ .F64 _ hwf (Interp.source_value_wf (.F64 bits))
-  | V128 bits => exact .vectype _ .V128 _ hwf (Interp.source_value_wf (.V128 bits))
+  | I32 bits => exact .numtype _ .I32 _ hwf (Representation.source_value_wf (.I32 bits))
+  | I64 bits => exact .numtype _ .I64 _ hwf (Representation.source_value_wf (.I64 bits))
+  | F32 bits => exact .numtype _ .F32 _ hwf (Representation.source_value_wf (.F32 bits))
+  | F64 bits => exact .numtype _ .F64 _ hwf (Representation.source_value_wf (.F64 bits))
+  | V128 bits => exact .vectype _ .V128 _ hwf (Representation.source_value_wf (.V128 bits))
   | FuncRef address =>
     cases address with
     | none => exact .reftype _ (.REF_NULL .FUNCREF) _ (.null _ _ hwf) hwf
@@ -169,12 +355,6 @@ theorem decode_memory_typed {M : Type} (view : M → Slice U8) (code : CodeInter
     · exact decode_bytes_wf _
   · simpa only [decodeMemory, decode_limits_option] using hwt
 
-/-- Segment lengths come from validated binary counts. They remain explicit
-structural bounds because dropped segments may be shorter than their sources. -/
-structure SegmentBounds {M : Type} (s : runtime.store.Store M) : Prop where
-  elements : ∀ element ∈ s.elems.val, element.refs.length < 2^32
-  data : ∀ segment ∈ s.datas.val, segment.bytes.length < 2^32
-
 theorem decode_element_typed {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
     (s : runtime.store.Store M) (hwf : wf_store (decodeStore view code s))
     (element : runtime.store.ElemInst)
@@ -225,4 +405,6 @@ theorem decoded_components_typed {M : Type} (view : M → Slice U8) (code : Code
     obtain ⟨raw, hr, rfl⟩ := List.mem_map.mp hd
     exact decode_data_typed _ hwf raw (segments.data raw hr)
 
-end Itasca.Runtime.Store
+end Itasca.Store
+
+end

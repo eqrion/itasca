@@ -6,14 +6,9 @@ use itasca::runtime::{
     InterruptAction, LinkError, MemoryBuffer, Platform, ResourceLimit, Store, StoreLimits, Trap,
     Value, VecMemory,
 };
-use itasca::{
-    ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValidationProfile, ValueType,
-};
-use wast::core::{
-    AbstractHeapType, DataKind, ElemKind, HeapType, ModuleField, ModuleKind, NanPattern,
-    V128Pattern, WastArgCore, WastRetCore,
-};
-use wast::{QuoteWat, Wast, WastArg, WastDirective, WastExecute, WastInvoke, WastRet, Wat};
+use itasca::{ElemType, FuncType, GlobalType, Limits, MemType, Mut, TableType, ValueType};
+use wast::core::{AbstractHeapType, HeapType, NanPattern, V128Pattern, WastArgCore, WastRetCore};
+use wast::{QuoteWat, Wast, WastArg, WastDirective, WastExecute, WastInvoke, WastRet};
 
 // These harness limits are infrastructure failures, never Wasm traps or exhaustion.
 const ACTION_INTERRUPTS: u64 = 1_000_000_000;
@@ -116,7 +111,6 @@ impl From<ExecError> for Failure {
 type Result<T> = std::result::Result<T, Failure>;
 
 struct Script {
-    profile: ValidationProfile,
     store: Store,
     current: Option<InstanceAddr>,
     named: BTreeMap<String, InstanceAddr>,
@@ -126,9 +120,8 @@ struct Script {
 }
 
 impl Script {
-    fn new(profile: ValidationProfile) -> Result<Self> {
+    fn new() -> Result<Self> {
         let mut script = Self {
-            profile,
             store: Store::with_limits(StoreLimits {
                 max_values: 4_000_000,
                 ..StoreLimits::default()
@@ -211,58 +204,15 @@ impl Script {
     }
 
     fn encode(&self, mut module: QuoteWat<'_>) -> Result<Vec<u8>> {
-        // Wasm 1 names immediately following `data`/`elem` denote the target
-        // memory/table. Current wast parses those as segment names instead.
-        // Recover that historical syntax in the AST before name resolution.
-        if self.profile == ValidationProfile::Wasm1 {
-            if let QuoteWat::Wat(Wat::Module(m)) = &mut module {
-                if let ModuleKind::Text(fields) = &mut m.kind {
-                    for field in fields {
-                        match field {
-                            ModuleField::Data(data) => {
-                                if let (Some(id), DataKind::Active { memory, .. }) =
-                                    (data.id.take(), &mut data.kind)
-                                {
-                                    *memory = wast::token::Index::Id(id);
-                                }
-                            }
-                            ModuleField::Elem(elem) => {
-                                if let (Some(id), ElemKind::Active { table, .. }) =
-                                    (elem.id.take(), &mut elem.kind)
-                                {
-                                    *table = Some(wast::token::Index::Id(id));
-                                }
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            }
-        }
-        // Literal binary fixtures must remain verbatim, including malformed
-        // encodings. Only generated Wasm 1 text uses the existing normalization.
-        let literal = matches!(&module, QuoteWat::Wat(Wat::Module(m)) if matches!(m.kind, ModuleKind::Binary(_)));
         let bytes = module
             .encode()
             .map_err(|e| Failure::Encoding(e.to_string()))?;
-        if self.profile == ValidationProfile::Wasm1 && !literal {
-            match crate::mvp_binary::normalize_to_wasm1(&bytes) {
-                Ok(bytes) => Ok(bytes),
-                // Invalid constant-expression fixtures are intentionally not
-                // accepted by the valid-expression normalizer. Their ordinary
-                // implicit-zero segment encoding is also the original Wasm 1
-                // encoding; retain those bytes and require validator rejection.
-                Err(_) if itasca::validate_module(&bytes, self.profile).is_err() => Ok(bytes),
-                Err(e) => Err(Failure::Encoding(e.0)),
-            }
-        } else {
-            Ok(bytes)
-        }
+        Ok(bytes)
     }
 
     fn compile(&self, module: QuoteWat<'_>) -> Result<ExecutableModule> {
         let bytes = self.encode(module)?;
-        compile(&bytes, self.profile).map_err(Failure::Validation)
+        compile(&bytes).map_err(Failure::Validation)
     }
 
     fn instantiate(&mut self, module: QuoteWat<'_>) -> Result<InstanceAddr> {
@@ -663,25 +613,6 @@ fn assertion(
         WastDirective::AssertUnlinkable {
             module, message, ..
         } => {
-            // The old script grammar calls prechecked active-segment bounds
-            // failures unlinkable. The runtime exposes the same bounds reason
-            // as a trap while preserving Wasm 1's all-or-nothing segment writes.
-            if script.profile == ValidationProfile::Wasm1
-                && matches!(
-                    message,
-                    "data segment does not fit" | "elements segment does not fit"
-                )
-            {
-                let result = script.instantiate(QuoteWat::Wat(module));
-                if !matches!(&result, Err(Failure::Runtime(ExecError::Trap(actual))) if Some(*actual) == expected_trap(message))
-                {
-                    return Err(format!(
-                        "expected historical segment link failure {message:?}, got {result:?}"
-                    ));
-                }
-                counts.unlinkable += 1;
-                return Ok(());
-            }
             let expected = match message {
                 "unknown import" => LinkError::MissingImport,
                 "incompatible import type" => LinkError::IncompatibleImportType,
@@ -738,7 +669,7 @@ fn collect_wast(dir: &Path, files: &mut Vec<PathBuf>) {
     }
 }
 
-pub fn run_corpus(directory: &str, profile: ValidationProfile) {
+pub fn run_corpus(directory: &str) {
     let root = Path::new(env!("CARGO_MANIFEST_DIR")).join(directory);
     let mut files = Vec::new();
     collect_wast(&root, &mut files);
@@ -759,7 +690,7 @@ pub fn run_corpus(directory: &str, profile: ValidationProfile) {
             .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
         let parsed = wast::parser::parse::<Wast>(&buffer)
             .unwrap_or_else(|e| panic!("{}: {e}", path.display()));
-        let mut script = Script::new(profile).unwrap();
+        let mut script = Script::new().unwrap();
         for (index, directive) in parsed.directives.into_iter().enumerate() {
             let span = directive.span();
             let (line, column) = span.linecol_in(&source);
@@ -772,7 +703,7 @@ pub fn run_corpus(directory: &str, profile: ValidationProfile) {
                 &mut counts,
             ) {
                 failures.push(format!(
-                    "{}:{}:{} [{profile:?}] directive {} ({kind}): {error}",
+                    "{}:{}:{} directive {} ({kind}): {error}",
                     path.display(),
                     line + 1,
                     column + 1,
@@ -785,7 +716,7 @@ pub fn run_corpus(directory: &str, profile: ValidationProfile) {
         }
         counts.files += 1;
     }
-    eprintln!("{profile:?} executed: {counts:?}");
+    eprintln!("Wasm2 executed: {counts:?}");
     for failure in &failures {
         eprintln!("{failure}");
     }
@@ -796,38 +727,20 @@ pub fn run_corpus(directory: &str, profile: ValidationProfile) {
     );
     assert_eq!(counts.unsupported, 0);
     if filter.is_none() {
-        let expected = if profile == ValidationProfile::Wasm1 {
-            Counts {
-                files: 73,
-                modules: 780,
-                malformed_text: 429,
-                malformed_binary: 662,
-                invalid: 989,
-                registrations: 10,
-                invocations: 42,
-                returns: 13894,
-                traps: 460,
-                unlinkable: 95,
-                exhaustion: 15,
-                legacy_nan: 1894,
-                unsupported: 0,
-            }
-        } else {
-            Counts {
-                files: 148,
-                modules: 1599,
-                malformed_text: 1081,
-                malformed_binary: 729,
-                invalid: 2146,
-                registrations: 22,
-                invocations: 155,
-                returns: 45734,
-                traps: 2442,
-                unlinkable: 83,
-                exhaustion: 15,
-                legacy_nan: 0,
-                unsupported: 0,
-            }
+        let expected = Counts {
+            files: 148,
+            modules: 1599,
+            malformed_text: 1081,
+            malformed_binary: 729,
+            invalid: 2146,
+            registrations: 22,
+            invocations: 155,
+            returns: 45734,
+            traps: 2442,
+            unlinkable: 83,
+            exhaustion: 15,
+            legacy_nan: 0,
+            unsupported: 0,
         };
         assert_eq!(counts, expected, "pinned execution coverage changed");
     }

@@ -1,8 +1,15 @@
 import Itasca.Runtime.Store.Invariant.Rollback
-import Itasca.Runtime.Store.Api.DefineTable
-import Itasca.Runtime.Store.Invariant.InternTypes
+import Itasca.Runtime.Store.Api.DefinitionsAndGrowth
 
-namespace Itasca.Runtime.Store
+open Itasca.Representation
+
+/-!
+# Staged store prefixes
+
+Reflexivity and transitivity compose the retained object-prefix relation across preparation stages. Publication and rollback proofs use the resulting shared prefix.
+-/
+
+namespace Itasca.Store
 open Aeneas Aeneas.Std
 
 theorem StagedPrefix.refl {M : Type} (s : runtime.store.Store M) : StagedPrefix s s := by
@@ -32,4 +39,4 @@ theorem StagedPrefix.trans {M : Type} {a b c : runtime.store.Store M}
   externs := hbc.externs.trans hab.externs
   instanceItems := hbc.instanceItems.trans hab.instanceItems
 
-end Itasca.Runtime.Store
+end Itasca.Store

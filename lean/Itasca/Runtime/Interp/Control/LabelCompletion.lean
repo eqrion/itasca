@@ -1,7 +1,13 @@
-import Itasca.Runtime.Interp.Relations.ControlPoint
-import Itasca.Runtime.SourceMachine.Sim.Step
+import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
+import Itasca.Runtime.SourceMachine.Sim.Host
 
-namespace Itasca.Runtime.Interp
+/-!
+# Typed label completion
+
+Generated empty-code typing determines the exact result suffix and source label-completion step. Concrete control simulation consumes these derived facts.
+-/
+
+namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
 /-- Generated empty-code typing gives both the precise result suffix and the
@@ -24,4 +30,4 @@ theorem typed_label_completion (s : store) (ambient : frame) (f : SourceMachine.
       rw [List.map_drop, heq, ← height, List.drop_left]
     exact ⟨hstack, htail, by simp [SourceMachine.astep, hstack, htail, SourceMachine.advance]⟩
 
-end Itasca.Runtime.Interp
+end Itasca.Interp

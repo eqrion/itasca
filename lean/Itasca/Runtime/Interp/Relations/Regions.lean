@@ -1,7 +1,15 @@
-import Itasca.Runtime.Interp.Relations.CopyRel
+import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 import Itasca.Runtime.Compiler.Local.Relations.Layout.ValueRegions
 
-namespace Itasca.Runtime.Interp
+open Itasca.Representation
+
+/-!
+# Slot regions and source values
+
+Word/value lookup relations restrict to prefixes, suffixes and live regions. Adjacent writes extend the live prefix and support concrete frame-slot preservation.
+-/
+
+namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
 theorem WordsAt.take {words : List U64} {base : Nat} {bits : List Nat}
@@ -24,12 +32,12 @@ theorem WordsAt.region {words : List U64} {base : Nat} {bits : List Nat}
 theorem ValuesAt.lookup {words : List U64} {base : Nat} {values : List val}
     (h : ValuesAt words base values) {index : Nat} {value : val}
     (lookup : values[index]? = some value) :
-    WordsAt words (base + Compiler.offset (values.map Compiler.valueType) index) (Compiler.encodeValue value) := by
-  have bound : Compiler.offset (values.map Compiler.valueType) index ≤ (Compiler.encodeValues values).length := by
-    rw [Compiler.encode_values_length]
-    exact Compiler.offset_le _ _
-  have region := WordsAt.region h (Compiler.offset (values.map Compiler.valueType) index)
-    (Compiler.width (Compiler.valueType value)) bound
+    WordsAt words (base + Representation.offset (values.map Representation.valueType) index) (Representation.encodeValue value) := by
+  have bound : Representation.offset (values.map Representation.valueType) index ≤ (Representation.encodeValues values).length := by
+    rw [Representation.encode_values_length]
+    exact Representation.offset_le _ _
+  have region := WordsAt.region h (Representation.offset (values.map Representation.valueType) index)
+    (Representation.width (Representation.valueType value)) bound
   simpa only [Compiler.encode_values_lookup lookup] using region
 
 theorem WordsAt.set_outside {words : List U64} {base : Nat} {bits : List Nat}
@@ -85,4 +93,4 @@ theorem WordsAt.copy_replace {words : List U64} {base src : Nat}
       (by intro j hj; exact Or.inr (by omega))
     simpa only [List.length_append, Nat.add_assoc, width] using preserved
 
-end Itasca.Runtime.Interp
+end Itasca.Interp

@@ -1,0 +1,145 @@
+import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
+import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Bounds
+import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
+import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
+import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
+
+/-!
+# Callback Readiness
+
+Ordinary and control callbacks receive the source-derived inputs required by their compiler contracts. Readiness is established from the reader relation.
+-/
+
+/-! ## OrdinaryCallbackReady -/
+
+section
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca
+
+structure OrdinaryNamespaces {A} (compiler : runtime.compiler.FunctionCompiler A)
+    (env : metadata.Env) (ctx : code.Context) : Prop where
+  locals : compiler.function.locals.val.length = ctx.locals.val.length
+  offsets : compiler.local_offsets.val.length = ctx.locals.val.length
+  functions : compiler.func_param_slots.val.length = env.func_types.val.length
+  signatures : compiler.signatures.val.length = env.types.val.length
+
+theorem OrdinaryNamespaces.of_initial {A} {compiler : runtime.compiler.FunctionCompiler A}
+    {env : metadata.Env} {ctx : code.Context}
+    (layout : LocalLayout compiler) (locals : compiler.function.locals = ctx.locals)
+    (functions : FunctionParameterSlots compiler env)
+    (signatures : SignatureSequence compiler.signatures.val env.types.val) :
+    OrdinaryNamespaces compiler env ctx := by
+  have offsets := congrArg List.length layout.offsets
+  have counts := congrArg List.length functions
+  refine ⟨by rw [locals],?_,?_,List.Forall₂.length_eq signatures⟩
+  · simpa only [compilerLocals,List.length_map,List.length_range,locals] using offsets
+  · simpa only [List.length_map] using counts
+
+theorem OrdinaryNamespaces.stable {A} {before after : runtime.compiler.FunctionCompiler A}
+    {env : metadata.Env} {ctx : code.Context}
+    (names : OrdinaryNamespaces before env ctx) (stable : CompilerStable before after) :
+    OrdinaryNamespaces after env ctx := by
+  obtain ⟨signatures,functions,_,_,locals,_,_,_,_,offsets⟩ := stable.fields
+  exact ⟨by simpa [locals] using names.locals,by simpa [offsets] using names.offsets,
+    by simpa [functions] using names.functions,by simpa [signatures] using names.signatures⟩
+
+/-- All bounds used by ordinary callbacks are numerical invariants of the
+reached compiler; raw stack observation includes polymorphic bottom operands. -/
+structure OrdinaryCallbackReady {A} (compiler : runtime.compiler.FunctionCompiler A)
+    (env : metadata.Env) (ctx : code.Context) (values : List code.StackType) : Prop where
+  namespaces : OrdinaryNamespaces compiler env ctx
+  observed : ObservedStack compiler values
+  codeFits : compiler.function.code.val.length < Usize.max
+  sourceFits : compiler.function.source_offsets.val.length < Usize.max
+  coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max
+  pairFits : compiler.function.indirect.val.length < Usize.max
+  simdFits : compiler.function.simd.val.length < Usize.max
+  poolFits : compiler.function.v128_pool.val.length < Usize.max
+
+theorem ordinary_callback_ready_of_prefix {A} {initial compiler : runtime.compiler.FunctionCompiler A}
+    {jumpTables emit types functions returns locals parents current values position}
+    (point : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current values position)
+    {env : metadata.Env} {ctx : code.Context} (length : Nat)
+    (namespaces : OrdinaryNamespaces initial env ctx)
+    (observed : ObservedStack compiler values)
+    (bounded : length ≤ limits.MAX_MODULE_BYTES.val) (positionBound : position ≤ length)
+    (bodyBound : initial.function.body_start.val + length ≤ Usize.max)
+    (pairs : compiler.function.indirect.val.length ≤ compiler.function.code.val.length)
+    (simd : compiler.function.simd.val.length ≤ compiler.function.code.val.length)
+    (pool : compiler.function.v128_pool.val.length ≤ compiler.function.code.val.length) :
+    OrdinaryCallbackReady compiler env ctx values := by
+  have capacities := point.capacities (positionBound.trans bounded)
+  have body := point.metadata.body_bound bodyBound
+  have cursor := point.cursor
+  exact ⟨namespaces.stable point.metadata,observed,capacities.1,capacities.2.1,
+    by omega,by omega,by omega,by omega⟩
+
+theorem IndexedTableReaderCompilerPoint.ordinary_ready {A} {initial compiler : runtime.compiler.FunctionCompiler A}
+    {emit types functions returns locals data env sourceLocals index ft st}
+    (point : IndexedTableReaderCompilerPoint emit initial compiler types functions returns locals data env sourceLocals index ft st)
+    (namespaces : OrdinaryNamespaces initial env ⟨sourceLocals,ft.results⟩)
+    (observed : ObservedStack compiler st.core.vals.val)
+    (bodyBound : initial.function.body_start.val + data.length ≤ Usize.max)
+    (pairs : compiler.function.indirect.val.length ≤ compiler.function.code.val.length)
+    (simd : compiler.function.simd.val.length ≤ compiler.function.code.val.length)
+    (pool : compiler.function.v128_pool.val.length ≤ compiler.function.code.val.length) :
+    OrdinaryCallbackReady compiler env ⟨sourceLocals,ft.results⟩ st.core.vals.val := by
+  obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
+  exact ordinary_callback_ready_of_prefix state.compiled data.length namespaces observed
+    state.boundary.source_bound state.boundary.bounds.pos bodyBound pairs simd pool
+end Itasca.Compiler
+
+end
+
+/-! ## ControlCallbackReady -/
+
+section
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca
+
+structure ControlCallbackReady {A} (compiler : runtime.compiler.FunctionCompiler A)
+    (position : Nat) : Prop where
+  pc : compiler.function.code.val.length + 3 < 2^32
+  code : compiler.function.code.val.length + 3 ≤ Usize.max
+  sources : compiler.function.source_offsets.val.length + 3 ≤ Usize.max
+  maps : compiler.function.controls.val.length < Usize.max
+  frames : compiler.frames.val.length < Usize.max
+  nonempty : 0 < compiler.frames.val.length
+  coordinate : compiler.function.body_start.val + position ≤ Usize.max
+  emittedCoordinate : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max
+
+theorem StructuredCompilerPrefix.control_ready {A}
+    {initial compiler : runtime.compiler.FunctionCompiler A}
+    {jumpTables emit types functions returns locals parents current values position}
+    (point : StructuredCompilerPrefix jumpTables emit initial compiler types functions returns locals parents current values position)
+    (length next : Nat) (bounded : length ≤ limits.MAX_MODULE_BYTES.val)
+    (positionBound : position ≤ length) (nextBound : next ≤ length)
+    (bodyBound : initial.function.body_start.val + length ≤ Usize.max) :
+    ControlCallbackReady compiler next := by
+  have room := point.codeBudget.callback_headroom (positionBound.trans bounded) point.sources
+  have capacities := point.capacities (positionBound.trans bounded)
+  have body := point.metadata.body_bound bodyBound
+  have cursor := point.cursor
+  obtain ⟨prior,frame,frames,_⟩ := point.frames.split
+  exact ⟨room.1,room.2.1,room.2.2,capacities.2.2.1,capacities.2.2.2,
+    by simp [frames],by omega,by omega⟩
+
+theorem StructuredReaderCompilerState.frames_length {A}
+    {initial compiler : runtime.compiler.FunctionCompiler A}
+    {jumpTables emit types functions returns locals data env sourceLocals index ft st parents current savedParents savedCurrent}
+    (state : StructuredReaderCompilerState jumpTables emit initial compiler types functions returns locals
+      data env sourceLocals index ft st parents current savedParents savedCurrent) :
+    compiler.frames.val.length = st.core.ctrls.val.length := by
+  have physical := List.Forall₂.length_eq state.compiled.frames.frames
+  have source := List.Forall₂.length_eq state.sources.parents
+  obtain ⟨C,outer,spine,header,base,typed,controls,blocks,values⟩ := state.boundary.opened
+  have count := congrArg List.length controls
+  simp only [List.length_append,List.length_map,List.length_singleton] at physical count
+  omega
+
+end Itasca.Compiler
+
+end

@@ -1,12 +1,69 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableTactic
-import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth.CompilerCodeMonotone
-import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSuccess
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallLowering
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
-namespace Itasca.Runtime.Compiler
-open Aeneas Aeneas.Std Itasca.ResultFacts
+import Itasca.Runtime.Compiler.Local.Lowering.Control.BranchContracts
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.CallbackRetention
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+import Itasca.Runtime.Compiler.Local.Callbacks.CodeGrowth
+import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
+import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectAndStatefulCallbacks
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
+import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
+
+/-!
+# Auxiliary Growth
+
+Auxiliary table and buffer growth retain the capacity bounds required by later compiler callbacks.
+-/
+
+/-! ## TableGrowth -/
+
+section
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca.Computation
 set_option maxRecDepth 4096
-set_option maxHeartbeats 4000000
+
+theorem compiler_table_branch_growth {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (index : Usize) (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.control.FunctionCompiler.table_branch ops before index = .ok (status, after)) :
+    after.function.code.val.length ≤ before.function.code.val.length + 2 := by
+  obtain ⟨answer, current, called, rest⟩ :=
+    runtime.compiler.control.FunctionCompiler.table_branch.inv ops before after index status accepted
+  have pc := compiler_pc ops before
+  rw [called, WP.spec_ok] at pc
+  obtain ⟨budget, same⟩ := pc.2.2
+  change current = {before with budget} at same
+  subst current
+  cases answer with
+  | Err error =>
+    obtain ⟨_, same⟩ := rest
+    rw [same]
+    change before.function.code.val.length ≤ before.function.code.val.length + 2
+    omega
+  | Ok target =>
+    obtain ⟨answer, budget, table, _, rest⟩ := rest
+    cases answer with
+    | Err error =>
+      obtain ⟨_, same⟩ := rest
+      rw [same]
+      change before.function.code.val.length ≤ before.function.code.val.length + 2
+      omega
+    | Ok value =>
+      cases value
+      obtain ⟨depth, _, branch⟩ := rest
+      exact ((runtime.compiler.control.FunctionCompiler.branch.inv ops _ after depth 1#u32 false status branch).code_bound law).2
+
+end Itasca.Compiler
+
+end
+
+/-! ## AuxiliaryGrowth -/
+
+section
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca.Computation
+set_option maxRecDepth 4096
 
 /-- Each auxiliary entry is charged to a newly emitted instruction. -/
 def AuxiliaryGrowth {A} (before after : runtime.compiler.FunctionCompiler A) : Prop :=
@@ -42,17 +99,11 @@ private theorem finish_code_success {A} (ops : runtime.platform.Alloc A)
     (state : Itasca.code.OpIterState) (instruction : runtime.bytecode.Instr)
     (accepted : runtime.compiler.lower.FunctionCompiler.finish_op ops before state instruction = .ok (.Ok (),after)) :
     after.function.code.val.length = before.function.code.val.length + 1 := by
-  unfold runtime.compiler.lower.FunctionCompiler.finish_op at accepted
-  obtain ⟨⟨status,middle⟩,emitted,rest⟩ := bind_ok_inv _ _ _ accepted
-  cases status with
-  | Err error => simp [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at rest
-  | Ok value =>
-    cases value
-    simp only [uncurry_apply_pair,core.result.Result.Insts.CoreOpsTry.branch,bind_ok] at rest
-    rw [compiler_observe_code_result ops law middle after state (.Ok ()) rest,
-      compiler_emit_code_success ops law before middle instruction emitted]
-    simp
+  obtain ⟨middle, emitted, rest⟩ :=
+    (runtime.compiler.lower.FunctionCompiler.finish_op.inv ops before after state instruction (.Ok ()) accepted).success
+  rw [compiler_observe_code_result ops law middle after state (.Ok ()) rest,
+    compiler_emit_code_success ops law before middle instruction emitted]
+  simp
 
 open Lean Meta Elab Tactic in
 elab "auxiliary_growth_effect " h:ident " using " ops:term ", " law:term : tactic => withMainContext do
@@ -115,9 +166,34 @@ theorem compiler_indirect_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
   · rw [lower_indirect_call_dispatch ops before state a b live] at accepted
     unfold indirectCallLowering at accepted
     repeat' auxiliary_growth_step accepted using ops, law
-  · unfold runtime.compiler.lower.FunctionCompiler.op at accepted
-    rw [if_neg live] at accepted
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at accepted
     exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
       (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end
+
+/-! ## StatefulAuxiliaryGrowth -/
+
+section
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca.Computation
+set_option maxRecDepth 4096
+
+theorem compiler_stateful_auxiliary_growth {A} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (op : SourceMachine.Stateful.Instruction) (a b : U32)
+    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (),after)) :
+    AuxiliaryGrowth before after := by
+  by_cases live : before.reachable = true
+  · rw [lower_stateful_dispatch ops before state op a b live] at accepted
+    cases op <;> simp only [statefulLowering] at accepted
+    all_goals repeat' auxiliary_growth_step accepted using ops, law
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)] at accepted
+    exact .of_tables (compiler_observe_tables ops law before after state (.Ok ()) accepted)
+      (compiler_observe_code_mono ops law before after state (.Ok ()) accepted)
+end Itasca.Compiler
+
+end

@@ -1,13 +1,13 @@
-import Itasca.Runtime.Compiler.Local.Relations.Operations.PairSafety
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowering
+import Itasca.Runtime.Compiler.Local.Relations.Operations.TerminalAndPairSafety
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 
 /-!
 Normal return of plain and complete stateful compiler callbacks.
 
-Main declarations: `compiler_stateful_plain_total` and `compiler_stateful_total`. A direct consumer is `Compiler.Body.Reader.Safety.BulkSafety`.
+Main declarations: `compiler_stateful_plain_total` and `compiler_stateful_total`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_stateful_plain_total {A} (ops : runtime.platform.Alloc A)
@@ -41,8 +41,7 @@ open Aeneas Aeneas.Std
           | Ok secondWord =>
             simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
             exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 @[step] theorem compiler_stateful_total {A} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (compiler : runtime.compiler.FunctionCompiler A)
@@ -58,7 +57,7 @@ open Aeneas Aeneas.Std
   · exact compiler_stateful_plain_total ops law compiler state op a b plain codeFits sourceFits coordinateFits
   · by_cases live : compiler.reachable = true
     · rw [lower_stateful_dispatch ops compiler state op a b live]
-      cases op <;> simp only [statefulUsesPair, Bool.false_eq_true, not_true_eq_false] at plain
+      cases op <;> simp only [statefulUsesPair, not_true_eq_false] at plain
       all_goals simp only [statefulLowering]
       all_goals
         step with compiler_pair_total ops law compiler a b pairFits
@@ -76,8 +75,7 @@ open Aeneas Aeneas.Std
           | Ok first =>
             simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
             exact finish_op_observed ops law _ state _ codeFits sourceFits coordinateFits
-    · unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
       exact compiler_observe_stack ops law compiler state
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

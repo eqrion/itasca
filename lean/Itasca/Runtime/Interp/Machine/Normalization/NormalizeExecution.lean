@@ -1,11 +1,13 @@
-import Itasca.Runtime.Interp.Relations.ReferenceTransfers
-import Itasca.Runtime.Interp.Machine.Normalization
-import Itasca.Runtime.Interp.Machine.Simulation.CoreErasure
+import Itasca.Runtime.Interp.Relations.NormalizationAndValueTypes
+import Itasca.Runtime.Interp.Machine.ScalarExecution
+import Itasca.Runtime.Interp.Machine.StateAndOwnership
 import Itasca.Runtime.Interp.Relations.SourceClosure
-import Itasca.Runtime.Interp.Control.NormalizeClosure
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.Interp.Control.NormalizeCompose
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Spec.TypingAndNumericOperations
+
+open Itasca.Representation
 
 /-!
 Normalization of a structured source point and its execution relation. Closure over administrative choices yields the normalized machine certificate.
@@ -15,7 +17,7 @@ Normalization of a structured source point and its execution relation. Closure o
 
 section
 
-namespace Itasca.Runtime.Interp.Machine
+namespace Itasca.Interp.Machine
 
 theorem normalization_choice (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
@@ -85,7 +87,7 @@ theorem normalize (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     · exact ⟨0, f, targets, next, output, .nil f, by omega, slots, point, typed,
         ⟨rfl, rfl, rfl, rfl⟩, Or.inr ready⟩
 
-end Itasca.Runtime.Interp.Machine
+end Itasca.Interp.Machine
 
 end
 
@@ -93,29 +95,29 @@ end
 
 section
 
-namespace Itasca.Runtime.Interp.Machine
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
+namespace Itasca.Interp.Machine
+open Aeneas Aeneas.Std SpecExt Itasca.Spec
 
 theorem normalize_execution {M : Type}
- (view : M → Slice U8) (code : Store.CodeInterpretation)
+ (view : M → Slice U8) (code : Representation.CodeInterpretation)
     (store : runtime.store.Store M) (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (index : Usize) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)] [ErasedHeads (emission compiled)] (C : context)
     (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (last : index.val+1 = exec.frames.length) (lookup : exec.frames.val[index.val]? = some raw)
-    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS)
+    (program : FrameProgram store raw compiled (f.locals.map Representation.valueType) f.resultTypes C.FUNCS)
     (slots : FrameSlots exec raw f)
-    (point : FramePoint (Store.decodeStore view code store) raw f compiled C targets next output)
+    (point : FramePoint (Representation.decodeStore view code store) raw f compiled C targets next output)
     (expected : List valtype)
-    (machine : Execution view code store exec ⟨Store.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false) :
+    (machine : Execution view code store exec ⟨Representation.decodeStore view code store,ambient,f::rest,[]⟩ expected raw.pc.val false) :
     ∃ count g targets' next' output', ErasedSteps count f g ∧
       count + normalizationMeasure g ≤ normalizationMeasure f ∧
-      FrameSlots exec raw g ∧ FramePoint (Store.decodeStore view code store) raw g compiled C targets' next' output' ∧
-      Execution view code store exec ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ expected raw.pc.val false ∧
+      FrameSlots exec raw g ∧ FramePoint (Representation.decodeStore view code store) raw g compiled C targets' next' output' ∧
+      Execution view code store exec ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ expected raw.pc.val false ∧
       FrameMetadata f g ∧
-      (ForwardSkip (Store.decodeStore view code store) raw g compiled C targets' next' output' ∨ ReadySource g) := by
+      (ForwardSkip (Representation.decodeStore view code store) raw g compiled C targets' next' output' ∨ ReadySource g) := by
   obtain ⟨count,g,targets',next',output',chain,bound,represented,retained,typed,metadata,ready⟩ :=
-    normalize exec raw compiled C targets next output (Store.decodeStore view code store) ambient f rest machine.typed slots point
+    normalize exec raw compiled C targets next output (Representation.decodeStore view code store) ambient f rest machine.typed slots point
   have same : exec.frames.set index raw = exec.frames := by
     apply alloc.vec.Vec.ext
     have valid : index.val < exec.frames.val.length := (List.getElem?_eq_some_iff.mp lookup).1
@@ -126,6 +128,6 @@ theorem normalize_execution {M : Type}
   exact machine.ordinary view code ambient f g rest expected raw.pc.val false (.refl store)
     (extend_store_refl _ machine.typed.typed.store) raw index raw.pc last lookup program (.ready retained)
     represented metadata (by simpa only [same]) (.refl _ _) typed (Machine.erased_steps_supported chain machine.core)
-end Itasca.Runtime.Interp.Machine
+end Itasca.Interp.Machine
 
 end

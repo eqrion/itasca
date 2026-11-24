@@ -4,15 +4,15 @@ import Itasca.Main
 # Contiguous adapter rejection
 
 Shows that errors of the default environment parser and of the code header reader reach the caller
-of `metadata.validate_module` unchanged. `StreamSliceRejection.environment_error` covers an
+of `metadata.validate_module` unchanged. `Examples.Stream.SliceRejection.environment_error` covers an
 environment rejection when the splitter places the whole input in the environment region, and
-`StreamSliceRejection.code_header_error` covers a code header rejection after the environment
-region was accepted. Both are for Wasm 1.0.
+`Examples.Stream.SliceRejection.code_header_error` covers a code header rejection after the environment
+region was accepted. Both are for Wasm 2.0.
 -/
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.StreamSliceRejection
+namespace Itasca.Examples.Stream.SliceRejection
 
 /-- A custom-section hook that leaves the state unchanged and succeeds does not change the result
 of the environment loop, including its error constructor. -/
@@ -22,9 +22,9 @@ theorem environment_loop_noop {V : Type} (visitor : metadata.ModuleVisitor V)
     (data : Slice U8) (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
     (result : core.result.Result (metadata.Env × Usize) error.Error)
     (h : metadata.validate_env_with_loop
-      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data .Wasm1 () env pos lastId =
+      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data () env pos lastId =
       .ok (result, ())) :
-    metadata.validate_env_with_loop visitor data .Wasm1 v env pos lastId = .ok (result, v) := by
+    metadata.validate_env_with_loop visitor data v env pos lastId = .ok (result, v) := by
   generalize hn : data.length - pos.val = n
   induction n using Nat.strong_induction_on generalizing env pos lastId with
   | h n ih =>
@@ -79,7 +79,7 @@ theorem environment_loop_noop {V : Type} (visitor : metadata.ModuleVisitor V)
                 by_cases horder : rank.val ≤ lastId.val
                 · simpa [horder] using h
                 · simp only [horder, ↓reduceIte, Std.bind_assoc] at h ⊢
-                  obtain ⟨⟨read, updated⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
+                  obtain ⟨⟨read, updated⟩, hr, ht⟩ := Computation.bind_ok_inv _ _ _ h
                   rw [hr]
                   simp only [bind_ok]
                   cases read with
@@ -104,18 +104,18 @@ theorem environment_noop {V : Type} (visitor : metadata.ModuleVisitor V)
       visitor.on_custom_section v chunk = .ok (.Ok (), v))
     (data : Slice U8) (v : V)
     (result : core.result.Result (metadata.Env × Usize) error.Error)
-    (h : metadata.validate_env data .Wasm1 = .ok result) :
-    metadata.validate_env_with visitor data .Wasm1 v = .ok (result, v) := by
+    (h : metadata.validate_env data = .ok result) :
+    metadata.validate_env_with visitor data v = .ok (result, v) := by
   unfold metadata.validate_env at h
-  obtain ⟨⟨read, w⟩, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ h
+  obtain ⟨⟨read, w⟩, hr, ht⟩ := Computation.bind_ok_inv _ _ _ h
   have ht : read = result := by simpa using ht
   subst read
   cases w
   unfold metadata.validate_env_with at hr ⊢
-  obtain ⟨initial, hi, ht⟩ := ResultFacts.bind_ok_inv _ _ _ hr
+  obtain ⟨initial, hi, ht⟩ := Computation.bind_ok_inv _ _ _ hr
   rw [hi]
   simp only [bind_ok]
-  obtain ⟨read, hr, ht⟩ := ResultFacts.bind_ok_inv _ _ _ ht
+  obtain ⟨read, hr, ht⟩ := Computation.bind_ok_inv _ _ _ ht
   rw [hr]
   simp only [bind_ok]
   cases read with
@@ -131,8 +131,8 @@ theorem environment_noop {V : Type} (visitor : metadata.ModuleVisitor V)
 theorem environment_error (data : Slice U8) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data))
-    (herror : metadata.validate_env data .Wasm1 = .ok (.Err e)) :
-    metadata.validate_module data .Wasm1 = .ok (.Err e) := by
+    (herror : metadata.validate_env data = .ok (.Err e)) :
+    metadata.validate_module data = .ok (.Err e) := by
   obtain ⟨environment, code, tail, he, hc, ht, _⟩ :=
     stream.find_code_region.slices data (Slice.len data) (Slice.len data) hsplit
   have hwhole : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
@@ -150,7 +150,7 @@ theorem environment_error (data : Slice U8) (e : error.Error)
   have hparse := environment_noop stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor
     (fun _ _ => rfl) data (⟨none, none⟩ : stream.SyncVisitor) (.Err e) herror
   have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 .Wasm1
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
       ⟨data, code, code⟩ ⟨none, none⟩ storage = .ok (.Err e, ⟨none, none⟩, storage) := by
     simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, hadd, hparse,
@@ -167,12 +167,12 @@ after the default environment parser has accepted the whole environment region. 
 theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
     (env : metadata.Env) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hsplit : StreamCompleteRegions.Split data regions)
-    (henv : metadata.validate_env regions.env .Wasm1 = .ok (.Ok (env, Slice.len regions.env)))
+    (hsplit : Stream.CompleteRegions.Split data regions)
+    (henv : metadata.validate_env regions.env = .ok (.Ok (env, Slice.len regions.env)))
     (herror : stream.read_code_header stream.SliceSource.Insts.ItascaStreamSource
       regions (Slice.len regions.code) env = .ok (.Err e)) :
-    metadata.validate_module data .Wasm1 = .ok (.Err e) := by
-  obtain ⟨first, last, hsplit, he, hc, ht⟩ := hsplit
+    metadata.validate_module data = .ok (.Err e) := by
+  obtain ⟨first, last, hsplit, he, hc, ht⟩ := hsplit.computed
   obtain ⟨environment, code, tail, he', hc', ht', hbytes⟩ :=
     stream.find_code_region.slices data first last hsplit
   have heq : environment = regions.env := by simpa [he] using he'.symm
@@ -192,13 +192,13 @@ theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
     (fun _ _ => rfl) regions.env (⟨none, none⟩ : stream.SyncVisitor)
     (.Ok (env, Slice.len regions.env)) henv
   have hremaining : stream.validate_remaining stream.SliceSource.Insts.ItascaStreamSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 .Wasm1 regions env (Slice.len regions.env)
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions env (Slice.len regions.env)
       ⟨none, none⟩ = .ok (.Err e, ⟨none, none⟩) := by
     simp [stream.validate_remaining, stream.SliceSource.Insts.ItascaStreamSource.code_len,
       hcodeadd, herror, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 .Wasm1 regions ⟨none, none⟩ storage =
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions ⟨none, none⟩ storage =
       .ok (.Err e, ⟨none, none⟩, env) := by
     simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, henvadd, hparse,
@@ -209,4 +209,4 @@ theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
   simp [hrun, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
-end Itasca.StreamSliceRejection
+end Itasca.Examples.Stream.SliceRejection

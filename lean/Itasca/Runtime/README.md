@@ -1,360 +1,197 @@
-# Execution proofs
+# Execution proof constructions
 
-Start with [Main](../Main.lean): it lists every headline theorem, each stated in
-full under [Results/](../Results), and [Contracts](Contracts.lean) lists every
-premise an embedder must discharge. The
-[execution boundary](../../README.md#execution-boundary) summarizes the guarantees.
-This guide explains how the proofs are assembled. The [Lean guide](../../README.md)
-covers tool setup and the independent validator.
-
-## Canonical public constructions
-
-[Main](../Main.lean) and [Results/](../Results) expose the public theorems.
-Each result projects an internal construction:
-
-| Public result | Construction |
-| --- | --- |
-| Compilation soundness and completeness | [Compilation/Certificate](Integration/Compilation/Certificate.lean) and [Compilation/Complete](Integration/Compilation/Complete.lean) |
-| Invocation behavior, termination and no spurious errors | [Invocation/Behaves](Integration/Invocation/Behaves.lean), using [Resources](Integration/Invocation/Resources.lean) and [Outcomes](Integration/Invocation/Outcomes.lean) |
-| Total instantiation and its source outcome | [Instantiation/InstantiateSource](Integration/Instantiation/InstantiateSource.lean) |
-
-Invocation retains exact recorded host events, resource causes, the final code
-interpretation, and the full store invariant. Divergence means an infinite
-source run or a reachable diverging host callback. Instantiation runs no host
-callback or start function: it links, allocates, initializes, and returns the
-resolved start function for a separate invocation.
+Start with the [definition reading map](../Results/Definitions/README.md) and
+[public audit guide](../Results/README.md) to determine each statement's meaning.
+This guide follows the implementation proofs that construct those guarantees.
+Public vocabulary belongs to Interface; these proofs never become an additional
+premise merely because they share a namespace with a definition.
 
 ## Dependency layers
 
-The extracted program and the source machine are independent foundations;
-representation certificates connect them. Keep imports within the library
-boundaries and compiler stages below; Lean rejects import cycles.
-
-| Area | Responsibility and boundary |
+| Area | Responsibility |
 | --- | --- |
-| `SpecExt/`, `Spec/` | Source semantics, generated-rule algebra, typing, numeric and store semantics; no extracted runtime dependency. |
-| `SourceMachine/` | Flat source states, decoding, transitions, typing, ownership, simulation and progress; independent of the extracted runtime. |
-| `Equations` | Shared equation lemmas; the sole runtime gateway to `Itasca.Generated.Funs`. |
-| `Platform/` | Allocator, memory, floating-point, callback, recording and divergence contracts. |
-| `Representation/` | Slot layout, encoding, store decoding, function tables and source capacity certificates; no compiler, interpreter or store-construction imports. |
-| `Compiler/` | Per-operation emission, body construction, then complete-module certificates. |
-| `Interp/` | Concrete operations, machine relations and preservation, then invocation. |
-| `Store/` | Issued-object APIs, invariants, linking, preparation, initialization and instantiation. |
-| `Integration/` | API certificates and constructions joining compilation, execution, hosts and instantiation. |
-| `Contracts` | Embedder obligations, including `Platform.Laws` and `HostLaws`; its only integration dependency is the exact [Api/ExecutableInv](Integration/Api/ExecutableInv.lean) module. |
-| `../Results/`, `../Main` | Public statements shared with the validator; only `Main` and examples import runtime results. |
+| [Spec](Spec/README.md) | Source typing, numeric operations, memory and segment algebra over the pinned rules. |
+| [SourceMachine](SourceMachine/README.md) | Flat source transitions, invariants, simulation and progress. |
+| [Equations](Equations/README.md) | Equations over narrow extracted function partitions. |
+| [Platform](Platform/README.md) | Law preservation, recording erasure and satisfiable example implementations. |
+| [Representation](Representation/README.md) | Concrete/source value, slot, store and capacity correspondence. |
+| [Compiler](Compiler/README.md) | Local emission, body traversal and complete-module constructions. |
+| [Interp](Interp/README.md) | Operation effects, machine simulation and invocation. |
+| [Store](Store/README.md) | API effects, linking, preparation, initialization and publication. |
+| [Integration](Integration/README.md) | Joined compilation, store, invocation and instantiation guarantees. |
 
-Module paths express dependency placement; namespaces express semantic
-ownership. Handwritten compiler declarations belong to `Itasca.Runtime.Compiler`
-and the flat source model to `Itasca.Runtime.SourceMachine`. Machine adapters
-use `Interp.Machine`, and joined constructions use `Integration`. For example,
-`Store.decodeStore` belongs to `Store` but lives in
-[Representation/Store](Representation/Store.lean), below its interpreter and
-store-construction consumers.
-
-The source model retains its `astep` transition system. Moving a proof to
-`SourceMachine` does not identify compiled code with a unique source program:
-`CodeInterpretation` remains explicit, including interpretation changes made by
-host publication.
+The extracted program and independent source semantics are named foundations.
+[SpecExt](../../SpecExt/README.md) supplies host-aware source reduction independently
+of extracted runtime code. public definitions may use these foundations but
+cannot import handwritten implementation modules. Compiler Local → Body → Module
+stages apply to definitions and proofs; no compiler owner may transitively import
+FunsInterp. Validator proofs remain independent of runtime implementations,
+execution partitions and SpecExt.
 
 ## Compiler stages
 
-Keep Local → Body → Module: Local cannot import Body or Module, and Body
-cannot import Module.
+[Local](Compiler/Local/README.md) establishes individual callback/lowering effects,
+source relations, resource bounds, instruction checks and publication coordinates.
+[Body](Compiler/Body/README.md) composes reader replay and structured source control
+into function and initializer certificates. [Module](Compiler/Module/README.md)
+assembles environment parsing, entries, scheduling, finishing and collection.
 
-- `Compiler/Local/` proves emission, callbacks, lowering, source relations and
-  per-operation bounds. Its relation families distinguish emission, layout,
-  control, function and operation certificates; control maps and published
-  segments have their own subjects.
-- `Compiler/Body/` combines reader replay and structured control into body and
-  entry certificates. `Relations/` separates checking, replay, stacks, entry,
-  calls, control, executable syntax and branch-table contracts. A lemma that
-  depends on the body fold belongs here even if it concerns one callback.
-- `Compiler/Module/` assembles entry parsing, scheduling, finishing and complete
-  modules. The final certificate relates one independently encoded source
-  module to its metadata, functions, initializers and frame capacities.
+Read [Results/Compile](../Results/Compile.lean), then
+[Compilation/Complete](Integration/Compilation.lean).
+[CompilationAvailable](Compiler/Module/BatchLoopAvailable.lean) constructs
+acceptance from independent source validity and demand;
+[BatchLoopAvailable](Compiler/Module/BatchLoopAvailable.lean) joins entry reading,
+[BodyChecked](Compiler/Body/Relations/Checking/BodyChecked.lean) and finishing.
+[ExecutableFunctionCapacity](Compiler/Body/ExecutableFunctionCapacity.lean)
+constructs the source-frame capacities retained by the result.
 
-Shared certificates stay below their constructions. In particular,
-`Representation` describes source capacities independently of compiler success;
-compiler proofs establish these certificates and interpreter proofs consume them.
+Reader proofs share exact source-prefix certificates with validation in
+[Body/Scalar/IndexReader](../Body/Scalar/Readers.lean). Preservation projects
+Pending.After; compiler inversion retains the decoded operands, callback state
+and source frame. Reader families separate scalar, float, local/global, memory,
+reference, SIMD, stateful, control and call cases. For a representative family,
+[Calls/Instructions](Compiler/Body/Reader/Calls/Instructions.lean) inverts the reader,
+[Calls/Safety](Compiler/Body/Reader/Calls/Safety.lean) establishes its compiler bounds,
+and [Calls/Acceptance](Compiler/Body/Reader/Calls/Acceptance.lean) constructs replay.
+[AcceptedTable](../Body/Visitor/ReachedTableLoop.lean) retains repeated label callbacks
+and the distinct final branch-table callback, including a rejected partial table.
 
-## Interpreter, execution integration and store
+Completeness constructs an actual compiler run and the syntactic certificate;
+it assumes neither a successful compiler trace nor execution correctness.
+Source maxima and numerical demand remain conservative: eligibility can exclude
+an input whose actual output happens to fit at a configured limit.
 
-`Interp/Relations/` holds shared frame, slot, argument and store contracts.
-`Numeric/`, `Memory/`, `State/`, `Simd/`, `Control/` and `Calls/` prove concrete
-runtime operations. `Interp/Machine/` connects these operations to source states:
+## Interpreter execution, integration and store
 
-| Machine subject | What to follow |
-| --- | --- |
-| `Constants/`, `Local/`, `Global/`, `Select/`, `Simd/` | Instruction fetch and operands through capacity, execution and ownership. |
-| `Control/`, `Frames/`, `Calls/` | Branch targets, labels, saved frames, returns and call entry. |
-| `Coverage/`, `Emission/`, `Normalization/` | Supported source heads, emitted instructions and administrative steps. |
-| `Retention/`, `Mutation/`, `Resources/` | Ownership/code bounds, store footprints and resource failures. |
-| `Progress/`, `Simulation/`, `History/` | Machine advance, source correspondence, decreasing measures and finite histories. |
-| `Execution`, `Point`, `Functions/` | Shared machine state, program positions and compiled-function certificates. |
+Operation proofs connect concrete words, frames and store effects to independent
+source transitions. Interp.Machine joins them into the active/suspended frame
+relation. SourceMachine.decode reconstructs specification evaluation contexts;
+the [cumulative source transition](SourceMachine/TransitionAndHostPreparation.lean) simulates
+the host-aware source reduction SpecExt.StepsH.
 
-`Interp/Invocation/` combines setup, execution loops, readback, recording and
-divergence. Other interpreter modules cannot import this final stage.
+For invocation, read [Results/Invoke](../Results/Invoke.lean), then
+[Invocation/Behaves](Integration/Invocation/Behaves.lean).
+[Callback observations](../Results/Definitions/Host.lean) match actual
+embedding exchanges to source events. Internal [recording definitions](Interp/Recording.lean)
+and [observation correspondence](Interp/Invocation/Recording.lean) connect
+the simulation's event writer to the actual extracted invocation.
+[World/RecordedLoop](Integration/Execution/World/NonhostStep.lean) and
+[World/NonhostStep](Integration/Execution/World/NonhostStep.lean) connect the recorded
+machine history to finite or infinite source execution. Evolving code worlds
+retain source interpretations for every previously issued instance key while
+allowing callbacks to publish new modules.
 
-`Integration/Execution/` assembles the operation proofs while keeping their
-premises visible:
+Keep distinct the concrete dispatch, source simulation, exact event recording,
+store extension and reached resource cause. Internal theorems retain all of them; the public contract projects source
+outcomes, actual host observations, preservation and divergence. Fixed-code and event-erased intermediate lemmas alone do not provide that
+guarantee. Resource adequacy ranges over all relevant source runs and typed host
+replies; a single terminating source run cannot establish termination.
 
-| Execution subject | Responsibility |
-| --- | --- |
-| `Ownership/` | Certified stores, references, frame type bounds and publication. |
-| `Mutation/` | Store footprints, metadata retention and the resulting certificates. |
-| `Dispatch/` | Instruction-family outcomes, entry, normalization and host-call sites. |
-| `History/` | Recorded prefixes and fixed-interpretation execution histories. |
-| `World/` | Evolving interpretations, actual recorded steps and loops, and source productivity. |
-| `Resources/` | Source demand, boundary causes, invocation errors and resource accounting through loops. |
-| `MemoryFill`, `MemoryCopy`, `MemoryInit`, `TableFill`, `TableCopy`, `TableInit` | Complete per-operation effect, source-step and dispatch arguments. |
+A concrete operation can be followed through
+[Execution/MemoryOperations](Integration/Execution/MemoryOperations.lean),
+[Api/MemoryCopyAndFill](Store/Api/BulkCopiesAndFill.lean) and
+[Spec/BulkOperations](Spec/BulkOperations.lean): dispatch, concrete mutation and
+source meaning. [IntegerConstant](Interp/Machine/Constants/EncodingAndFloat.lean)
+contains the scalar fetch/capacity/execution/ownership argument;
+[EncodingAndFloat](Interp/Machine/Constants/EncodingAndFloat.lean) retains the
+separate floating-point premises.
 
-`Integration/Api/` owns the retained public store certificates;
-`Compilation/`, `Invocation/`, `Instantiation/` and `Host/` combine them with
-operation and execution proofs. The contract entry point does not import these
-constructions merely because it uses `ExecutableInv`.
-
-Store `Invariant/` establishes retained metadata and code properties. `Api/`
-proves issued-object operations, `Linking/` resolves imports, `Preparation/`
-stages allocations, and `Initialization/` handles initializers and segments.
-`Store/Instantiation/` joins these with publication and start-function resolution;
-lower store modules cannot import that final stage.
-
-Instantiation rolls back failure before publication. Failure after publication
-retains initialization effects. Success reaches the source call of the returned
-start function, before its execution. The embedder invokes that function with
-`invoke_with`, whose theorem then accounts for its execution and any host effects.
-Previously issued keys retain their source interpretation through publication.
+Store Invariant establishes metadata, ownership and code properties. Api proves
+issued-object operations, Linking resolves imports, Preparation stages objects,
+and Initialization runs initializers and segment programs. Instantiation joins
+those stages. Lower store modules cannot import final instantiation; lower
+interpreter modules cannot import final invocation.
 
 ## Source store typing
 
-[`ExecutableInv.source_typed`](Integration/Api/ExecutableInv.lean) and
-[`CertifiedApiStore.source_typed`](Integration/Api/CertifiedApi.lean) derive the
-generated `Store_ok` judgment. Their bridge uses the existing certificates below;
-it does not assume store typing or execution correctness as another field.
+[ExecutableInv.source_typed and CertifiedApiStore.source_typed](Integration/Api/CreationAndGrowth.lean)
+derive the generated Store_ok judgment from retained certificates. Source store
+typing and execution correctness are not additional invariant fields.
 
-| Source obligation | Retained evidence and construction |
+| Source obligation | Evidence and construction |
 | --- | --- |
-| Global values, memories, tables and reference membership | `Shape` and the object lemmas in [Invariant/Typing](Store/Invariant/Typing.lean). |
-| Data and element segments | `SegmentBounds`, reference shape, and the same object-typing lemmas. |
-| Wasm bodies and module environments | `CoreFunctionsTyped` retains `Func_ok` under the exact canonical `ModuleBindings`. [SourceMachine/StoreTyping](SourceMachine/StoreTyping.lean) recovers generated module-instance typing. |
-| Export membership and unique source names | `ExportBounds` retains descriptor bounds and decoded-name uniqueness, constructed from validator `ModuleEnv.Valid`. Completed instance maps resolve each export into its own module namespace. |
-| Host functions | The repaired generated host `Funcinst_ok` rule types signatures without Wasm bodies; the decoder's empty module environment is well formed. |
+| Globals, memories, tables and references | Shape and object lemmas in [Invariant/Typing](Store/Invariant/Typing.lean). |
+| Data and element segments | SegmentBounds, reference shape and those same object lemmas. |
+| Wasm functions and environments | CoreFunctionsTyped under the exact ModuleBindings; [EntryAndBranchTables](SourceMachine/EntryAndBranchTables.lean) recovers module-instance typing. |
+| Exports | ExportBounds retains descriptor bounds and decoded-name uniqueness; instance maps resolve each export in its own namespace. |
+| Host functions | The generated host rule types signatures without Wasm bodies; the decoder supplies a well-formed empty module environment. |
 
-[Invariant/SourceStoreTyping](Store/Invariant/SourceStoreTyping.lean) assembles
-these facts. Existing API preservation theorems retain their certificates on
-success and error, including committed effects and evolving code interpretations.
-Intermediate preparation states need typing only where that invariant is
-established. Atomic host return and trap require post-call `Store_ok`.
-`Platform.HostSound.of_invariant` derives this obligation from invariant
-preservation and its checked source-typing projection. Recorded, resource-cause,
-and divergence proofs retain the stronger host target.
+[OwnedInitializerErrors](Store/Invariant/CoreInstantiationSource.lean) assembles the
+object facts. Atomic host return and trap require a source-typed post-call store;
+Platform.HostSound.of_invariant derives that obligation from retained certificates.
+Raw metadata retention remains a separate host obligation.
 
-## Source typing
+## Instantiation and host composition
 
-`Spec/Typing/` proves source configuration typing, value/stack inversion, and
-preservation. It is source-only and cannot depend on the extracted runtime.
+Read [Results/Instantiate](../Results/Instantiate.lean), then
+[InstantiateSource](Integration/Instantiation/InstantiateSource.lean).
+[Precommit](Store/Instantiation/NoStart.lean) joins staged-error origins and
+resource causes; [NoStart](Store/Instantiation/NoStart.lean) constructs source
+allocation and instantiation. [InitializerResourceCauses](Store/Initialization/InitializerResourceCauses.lean)
+accounts for segment setup, effects and traps.
 
-## Compiler completeness
+Before publication, failure rolls back the old store. After publication, segment
+traps retain completed writes and allocations. Success returns the resolved start
+handle, stopping before its execution. Instantiation invokes neither host callbacks
+nor the start function; a separate invoke_with call accounts for that execution.
 
-The compiler uses the same Local → Body → Module stages for soundness and
-acceptance. The additional local directories separate the maintained evidence:
+Atomic [host proofs](Integration/Host) consume HostRetention from
+[HostContracts](../Results/Definitions/Runtime.lean); world proofs consume
+HostLaws. Returning or diverging callbacks remain distinct. Native identity
+issuance, allocation, memory and floating-point wrappers retain the explicit
+[trust boundary](../../../README.md#trust-boundary). Example implementations show
+premises are satisfiable; they do not discharge them for arbitrary embeddings.
 
-| Directory | Responsibility |
-| --- | --- |
-| `Compiler/Local/Demand/` | Independent source demand and recorded stack/control peaks. |
-| `Compiler/Local/Capacity/` | Counter accounting, allocation availability, and accepting callbacks. |
-| `Compiler/Local/Coordinates/` | Source offsets, target bounds, and callback coordinate preservation. |
-| `Compiler/Local/Publication/` | Open/closed control maps and final published ranges/header. |
-| `Compiler/Local/Checking/` | Stored-instruction checks, pending forward branches, and exit-slot bounds. |
+## Abstract runtime protocol
 
-`Compiler/Local/Source/` retains the underlying source/compiler relations and typed
-source traces. These relations describe the source independently of compiler
-success. Shared lemmas belong at the lowest stage their imports permit.
+[RuntimeContract](Integration/RuntimeContract.lean) constructs the public protocol
+from the internal executable invariant. The existence theorem in
+[Results/Store](../Results/Store.lean) exports `∃ Inv, RuntimeContract view Inv`.
+Its semantic fields cover fresh stores, definitions, reads, writes, instantiation,
+invocation and divergence. Resource causes remain in the implementation proofs. The client chooses a single predicate
+and uses these laws to preserve it, including in host callbacks. The witness's
+implementation is not part of the public statement vocabulary.
 
-`Compiler/Body/Reader/` groups opcode adapters under `Scalar/`, `Float/`,
-`Local/`, `Global/`, `References/`, `Memory/`, `Calls/`, `Control/` and `Simd/`.
-`Stateful/` joins table, segment and bulk operation evidence. Branch-table
-selection, label/control maps and dormant scopes belong to `Control/`; they
-are distinct from Wasm table storage operations.
+The [private definitions](Integration/Definitions.lean) retain the old executable
+invariant for the simulation proof. Local emission, completed function and module
+certificates live in the corresponding compiler `Definitions` modules. Private
+representation shape and capacities live in
+[Representation/Definitions](Representation/Definitions.lean). These are proof
+construction tools; moving them is justified by the changed public statements.
 
-The call family illustrates the direction of each argument:
-[Calls/Instructions](Compiler/Body/Reader/Calls/Instructions.lean) inverts
-accepted direct and indirect reader steps,
-[Calls/Compilation](Compiler/Body/Reader/Calls/Compilation.lean) relates their
-compiler effects, and [Calls/Acceptance](Compiler/Body/Reader/Calls/Acceptance.lean)
-constructs successful replay from independent source and allocation premises.
-Cross-family composition uses:
+The one-call and fixed-platform behavioral experiments have been replaced by this
+protocol. The verified protocol quantifies platform dictionaries at each operation,
+preserves stores across external API mutations and instantiation, and retains the
+invocation source behavior and divergence guarantees. The same final code
+interpretation explains both the source outcome and the retained predicate.
 
-| Reader subject | Responsibility |
-| --- | --- |
-| `Stacks/` | Shared source values and reader/compiler stack relations. |
-| `Safety/` | Operation and profile bounds needed for normal return. |
-| `Acceptance/` | Successful callback replay from source prefixes and demand. |
-| `Checking/` | Instruction-check and exit-slot invariants. |
-| `Publication/` | Source coordinates and published control maps. |
-| `Replay/` | Callback/profile agreement, reader folds and whole-body preservation. |
-| `Source/` | Source opcode families and independent source demand. |
+[Runtime examples](../Examples/Runtime.lean) choose the existential predicate and
+compose fresh-store creation, host definition and invocation, and compilation
+with instantiation. Their client proofs do not name the internal executable
+invariant. Host soundness uses the protocol's explicit source typing and
+well-formedness fields; native/platform laws remain separate obligations.
 
-Both profiles use the Wasm 2.0 reader proofs. A valid Wasm 1.0 body has the same
-run under both profiles (`code.validate_body_with.wasm1_of_body`).
-The exact source-prefix certificate is shared with the validator in
-[Wasm2/Scalar/ReaderPost](../Wasm2/Scalar/ReaderPost.lean). Shared reader proofs
-cover scalar constants and stack operations, numeric instructions, local/global
-indices, memory operands, reference/table metadata and SIMD effects. Validator
-preservation projects `Pending.After`; compiler inversion retains the same exact
-source frame, decoded arguments and operand effects. Control entry and closure
-use [EnterStep](../Wasm2/Control/EnterStep.lean) and
-[EndStep](../Wasm2/Control/EndStep.lean); branches and calls use
-[BranchStep](../Wasm2/Control/BranchStep.lean).
+After the integrated build, check the protocol's transitive reading surface:
 
-Accepted steps expose the actual reader and callback via
-`CoreVisitor.run.accepted` or
-[CallbackTrace.bodyRun.accepted](../Wasm2/Trace/Acceptance.lean).
-[Visitor/ReaderAcceptance](../Visitor/ReaderAcceptance.lean) and
-[Visitor/BodyReplay](../Visitor/BodyReplay.lean) replay only the reached callback
-obligations. [AcceptedTable](../Wasm2/Visitor/AcceptedTable.lean) preserves the
-repeated label callbacks and distinct final callback of `br_table`. Successful
-inversion does not require total visitors or acceptance at unrelated states.
-Emission, allocation, control layout, checking and publication remain in the
-compiler layers; completeness still constructs actual compiler acceptance.
-[Checking/BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
-constructs actual body success with the checker premises at root close.
+```sh
+cd lean
+lake env lean scripts/RuntimeContract.lean
+```
 
-[EntryFinishAvailable](Compiler/Module/EntryFinishAvailable.lean) composes entry
-parsing, body compilation and actual finishing. Module demand envelopes account
-for metadata, functions, initializers, scheduling, collection, output counters
-and temporary reserves. [Compilation/Complete](Integration/Compilation/Complete.lean)
-constructs successful compilation and the existing certificate for both complete
-profiles from independent source validity, conservative source-only
-`CompileEligible`, allocator correctness and bounded allocation availability.
-It assumes neither compiler success nor a completed callback trace. Uniform
-source maxima can exclude modules whose actual output fits exactly at a limit.
+The regression follows definition bodies and constructors, just as the audit
+does, and rejects the retired executable, emission, initializer-layout and
+representation-shape certificates. The full audit independently enforces closure
+ownership and the axiom allowlist.
 
-## Host composition
+## Naming and iteration
 
-The atomic host-call proofs live directly in `Integration/Host/`. They take the
-per-host `HostRetention` laws of [Contracts](Contracts.lean) as premises and
-never model a particular callback; the world layers above take `HostLaws`.
-Callbacks may diverge, so these proofs conclude `DivSpec (HostDiverges hooks
-store)` ([Platform/DivSpec](Platform/DivSpec.lean)): each step returns with its
-outcome or diverges in a callback called from the current store. [Examples/TrapHost](../Examples/TrapHost.lean) shows the laws
-are satisfiable: a trapping callback, continuing interrupts and a granting
-allocator discharge every host, interrupt and allocator premise of
-`no_spurious_errors`.
+Module paths identify dependency owners; namespaces identify semantic subjects.
+Core, Scalar, Cumulative, Supported and Executable denote the actual relations
+and premises documented at their definitions, not versions of a proof effort.
+The scalar decomposition is internal and no runtime profile is modeled.
 
-## Reading paths
-
-Each path starts with a public statement, follows its construction, then reaches
-the foundational certificates. The listed files are the argument's main stops,
-not every transitive import.
-
-### Compilation
-
-1. [Results/Compile](../Results/Compile.lean) states soundness, normal return
-   and completeness for both profiles.
-2. [Compilation/Certificate](Integration/Compilation/Certificate.lean) constructs
-   `CompilationCertificate` and `ModuleCodeRel`;
-   [Compilation/Complete](Integration/Compilation/Complete.lean) combines the
-   certificate with an actual successful compilation.
-3. [CompilationAvailable](Compiler/Module/CompilationAvailable.lean) assembles
-   module acceptance. [EntryFinishAvailable](Compiler/Module/EntryFinishAvailable.lean)
-   joins entry reading, [BodyCheckedWasm2](Compiler/Body/Relations/Checking/BodyCheckedWasm2.lean)
-   and finishing.
-4. [FunctionCapacity](Representation/FunctionCapacity.lean) and
-   [StackLayout](Representation/StackLayout.lean) describe independent source
-   demand and slot layout, which the compiler certificate supplies to execution.
-
-### Invocation
-
-1. [Results/Invoke](../Results/Invoke.lean) states `behaves`, `terminates` and
-   `no_spurious_errors`; [Contracts](Contracts.lean) lists platform and host laws.
-2. [Invocation/Behaves](Integration/Invocation/Behaves.lean) joins recorded
-   returns, divergence and exclusion of spurious errors.
-   [Resources](Integration/Invocation/Resources.lean) supplies actual returned
-   outcomes and resource causes; [Outcomes](Integration/Invocation/Outcomes.lean)
-   defines the retained store interpretation and certificates.
-3. [Invocation/Recording](Interp/Invocation/Recording.lean) fixes events to
-   actual callback arguments and replies. [World/RecordedLoop](Integration/Execution/World/RecordedLoop.lean)
-   and [World/Infinite](Integration/Execution/World/Infinite.lean) connect machine
-   histories to finite or infinite source execution.
-4. [ExecutableInv](Integration/Api/ExecutableInv.lean),
-   [Store](Representation/Store.lean) and [StoreCapacity](Representation/StoreCapacity.lean)
-   provide the store invariant, decoding and source resource demand.
-
-For one concrete operation, read
-[Execution/MemoryFill](Integration/Execution/MemoryFill.lean), then
-[Store/Api/MemoryFill](Store/Api/MemoryFill.lean) and
-[Spec/MemoryFill](Spec/MemoryFill.lean). These three proof units follow dispatch,
-store mutation and source meaning. For scalar execution,
-[Constants/IntegerConstant](Interp/Machine/Constants/IntegerConstant.lean)
-contains fetch inversion, capacity, the step and ownership preservation in order;
-[FloatConstant](Interp/Machine/Constants/FloatConstant.lean) retains the separate
-floating-point premises.
-
-### Instantiation
-
-1. [Results/Instantiate](../Results/Instantiate.lean) states totality, rollback,
-   the retained invariant, source correspondence and resource causes.
-2. [InstantiateSource](Integration/Instantiation/InstantiateSource.lean)
-   distinguishes prepublication rejection from published initialization.
-   `StartResolved` identifies the returned function; `InitializedSource` stops
-   at its source call, before execution.
-3. [Precommit](Store/Instantiation/Precommit.lean) combines staging-error origins
-   and resource causes. [PreparedSourceInstantiation](Store/Instantiation/PreparedSourceInstantiation.lean)
-   constructs source allocation and instantiation;
-   [SegmentInitializeSource](Store/Initialization/SegmentInitializeSource.lean)
-   supplies initialization steps and traps.
-4. [InstantiationCode](Store/Invariant/InstantiationCode.lean) records staged
-   type/function tables; [FunctionTables](Store/Invariant/FunctionTables.lean)
-   defines `installCode` at the new instance key. [Rollback](Store/Invariant/Rollback.lean)
-   preserves the old store before publication. Their common decoding contract
-   is [Representation/Store](Representation/Store.lean).
-
-## Naming and extending the proofs
-
-Module paths describe dependency placement; declaration namespaces describe
-semantic ownership: `Compiler` for handwritten compiler concepts,
-`SourceMachine` for the flat source model, `Interp.Machine` for machine proofs
-and `Integration` for joined constructions. Extracted Rust names and SpecTec
-names retain their spelling. A decoder can belong to `Store` while living in
-`Representation`.
-
-Modules, types, structures, inductives, and named predicates use
-`UpperCamelCase`; computations use `lowerCamelCase`, as in `decodeStore`;
-theorem basenames use `snake_case`, as in `memory_fill_decodes` and
-`step_integer32_core_forward`. Theorem names state their conclusion. Facts
-about extracted functions remain under their Rust path, including the public
-`runtime.interp.invoke_with.behaves`; Wasm spellings such as `br_if` and
-`call_indirect` remain intact. The [proof guide](../../PROOF_GUIDE.md#names-and-proof-units)
-gives the complete conventions.
-
-A consolidated module should answer one question: memory-fill effect,
-mutation, and decoded source meaning form an argument; integer-constant fetch,
-capacity, step preservation, and ownership form another. Keep independently
-consumed contracts below their constructions. Start each new or consolidated
-module with a docstring explaining that question and its consumers, and use
-section comments to mark the argument's stages.
-
-Names such as `Core`, `FloatCore`, `Cumulative`, and `Executable` distinguish
-instruction grammars and theorem premises. They are not interchangeable proof
-versions. In particular:
-
-| Retained name | Distinction to preserve when reorganizing its proofs |
-| --- | --- |
-| `CoreHead`, `ScalarHead` | `CoreHead` adds constants, select, globals, and scalar memory operations to the pure transition heads; `ScalarHead` also admits scalar float operations. |
-| `SupportedState` | Active frame code, label continuations, and Wasm function bodies satisfy `BinaryInstr`, independently of concrete emission or current values. |
-| `FloatCoreTrap` | The scalar trap cases: unreachable, integer division by zero/overflow, memory bounds, and invalid float-to-integer conversion. |
-| `CumulativeStoreMutation` | A dispatch mutation retains metadata, externs, shape, segment bounds/counts and limits, with decoded source-store extension. |
-| `EventfulTransition` | A fixed code interpretation, the actual dispatch equation, and source simulation labeled by the actual host events. |
-| `EventfulWorldTransition` | The interpretation may evolve; previously issued keys retain their meaning through `CodeAgreesOn`. |
-| `ExecutableInv` | The public API store certificate together with segment accounting and function-capacity certificates; host freedom is not a field. |
-
-Shared slice lookup and list transport lemmas live in
-[Representation/Collection.lean](Representation/Collection.lean).
-Keep shared helpers at the lowest layer supported by their actual dependencies.
-
-Run `just check Itasca.Runtime.Store.Api.MemoryFill` while iterating and
-`just prove` for integration. Rust changes
-also require both Cargo test configurations and extraction/regeneration checks,
-as specified in [DEVELOPMENT.md](../../../DEVELOPMENT.md). Preserve build caches.
+Follow the [proof engineering guide](../../PROOF_ENGINEERING.md) for naming,
+contracts and validation. Iterate with the language server or a targeted command,
+for example `just check Itasca.Runtime.Store.Api.MemoryCopyAndFill`. Bundle source
+changes before integration, preserve caches, and reuse the successful integrated
+build for the final audit.

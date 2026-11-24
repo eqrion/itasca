@@ -1,8 +1,63 @@
-import Itasca.Runtime.Representation.Encoding
+import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
+import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
+import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
+import Itasca.Runtime.Representation.Values
+
+open Itasca.Representation
+
+/-! ## ObservationLayout -/
+
+section
+
+/-!
+An actual successful final observation establishes operand layout from concrete validator values and the fixed local layout of the resulting compiler.
+
+Main declarations: `compiler_observe_layout_success` and `CompilerStable.local_layout`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std Itasca
+
+/-- An actual successful final observation establishes operand layout from
+concrete validator values and the fixed local layout of the resulting compiler. -/
+theorem compiler_observe_layout_success {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : code.OpIterState) (known : ConcreteStack state.vals.val) (locals : LocalLayout after)
+    (accepted : runtime.compiler.FunctionCompiler.observe ops before state = .ok (.Ok (), after)) :
+    CompilerLayout after (Body.Stack.stackTypes state.vals.val) := by
+  obtain ⟨types, concrete⟩ := (concrete_stack_iff state.vals.val).mp known
+  have post := compiler_observe ops law before state
+  rw [accepted, WP.spec_ok] at post
+  obtain ⟨offsets, height, localTypes, localSlots, localOffsets, reachable, code, sources,
+    next, capacity, growth, frames, controls⟩ := post rfl
+  have decoded : Body.Stack.stackTypes state.vals.val = types.map Translation.valueType := by
+    simp [concrete, Body.Stack.stackTypes, List.map_map, Function.comp_def]
+  rw [decoded]
+  refine ⟨locals.slots, locals.offsets, ?_, ?_, capacity⟩
+  · rw [offsets, concrete, observed_offsets_values, ← localSlots, locals.slots]
+    simp [stackOffsets]
+  · rw [height, concrete, observed_height_values, ← localSlots, locals.slots]
+
+/-- Fixed source/local metadata transports local layout independently of the
+current operand stack or reachability mode. -/
+theorem CompilerStable.local_layout {A : Type} {before after : runtime.compiler.FunctionCompiler A}
+    (stable : CompilerStable before after) (locals : LocalLayout before) : LocalLayout after := by
+  have fields := stable.fields
+  obtain ⟨signatures, functions, batch, typeIndex, types, params, slotsEq, start, finish, offsets⟩ := fields
+  constructor
+  · simpa [compilerLocals, types, slotsEq] using locals.slots
+  · simpa [compilerLocals, types, offsets] using locals.offsets
+end Itasca.Compiler
+
+end
+
+/-! ## ValueRegions -/
+
+section
 
 /-! Local value boundaries in the mathematical word encoding. These lemmas
 apply uniformly to one-word scalar/reference values and two-word vectors. -/
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 
 theorem encode_values_drop (values : List val) (count : Nat) :
     (encodeValues values).drop (offset (values.map valueType) count) =
@@ -48,4 +103,6 @@ theorem value_types_set {values : List val} {index : Nat} {old replacement : val
   rw [← hv]
   exact List.set_getElem_self hb
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end

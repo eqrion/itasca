@@ -1,16 +1,25 @@
-import Itasca.Runtime.Integration.Host.HostCallSource
-import Itasca.Runtime.Interp.Relations.SourceIndirectResources
-import Itasca.Runtime.Interp.Machine.Frames.SourceBase
-import Itasca.Runtime.Integration.Execution.Dispatch.SignatureWords
-namespace Itasca.Runtime.Integration
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Interp
+import Itasca.Runtime.Integration.Execution.Certificates
+import Itasca.Runtime.Integration.Host.HostCallContext
+import Itasca.Runtime.Interp.Relations.ResourceCausesAndArgumentErrors
+import Itasca.Runtime.Interp.Machine.Frames.ReturnsAndDepth
+
+open Itasca.Representation
+
+/-!
+# Host dispatch resource causes
+
+Selected source host calls fix source signatures and shared argument bases, including suspended callers. Cause relations retain concrete allocation, interrupt and callback failures.
+-/
+
+namespace Itasca.Integration
+open Aeneas Aeneas.Std SpecExt Itasca.Interp
 
 /-- A selected source host call fixes both its source signature and its shared
 argument base, including suspended source callers. -/
 def HostSignatureSite (source : SourceMachine.AState) (address : funcaddr) (identity : Nat)
     (signature : Itasca.wasm_types.FuncType) (base : Nat) : Prop :=
   SourceInvocationSite source address base ∧ HostFunction source.store address identity
-    (signature.params.val.map sourceType) (signature.results.val.map sourceType)
+    (signature.params.val.map Itasca.Translation.valueType) (signature.results.val.map Itasca.Translation.valueType)
 
 /-- The actual dispatch calls the selected host with an exact PC-updated
 execution. Every refusal is the retained concrete helper's own cause. -/
@@ -54,17 +63,6 @@ theorem HostDispatchCause.prepend {M P F A : Type}
   exact ⟨failed,index,raw,pc,address,signature,base,identity,found,next,
     site.prepend steps sameStore sameAmbient,actual,refused⟩
 
-/-- Bounded actual requests for a host's shared slot region and argument/result
-vectors. The signature buffer demand remains explicit. -/
-def HostSignatureAllocation {A : Type} (allocator : runtime.platform.Alloc A)
-    (params results : List valtype) (base : Nat) : Prop :=
-  (∃ (slots : alloc.vec.Vec U64) (n : Usize), n.val≤base+max (Compiler.slots params) (Compiler.slots results) ∧
-    allocator.reserve slots n=.ok (false,slots)) ∨
-  (∃ (arguments : alloc.vec.Vec runtime.Value) (n : Usize), n.val≤params.length ∧
-    allocator.reserve arguments n=.ok (false,arguments)) ∨
-  (∃ (returned : alloc.vec.Vec runtime.Value) (n : Usize), n.val≤results.length ∧
-    allocator.reserve returned n=.ok (false,returned))
-
 theorem HostDispatchCause.source_values {M P F A : Type}
     {memory : runtime.platform.MemoryBuffer M} {hooks : runtime.platform.Platform P M}
     {floats : runtime.platform.FloatOps F} {allocator : runtime.platform.Alloc A}
@@ -73,7 +71,7 @@ theorem HostDispatchCause.source_values {M P F A : Type}
     (cause : HostDispatchCause memory hooks floats allocator exec store platform source out (.Exhausted .Values)) :
     ∃ address identity base params results, SourceInvocationSite source address base ∧
       HostFunction source.store address identity params results ∧
-      store.limits.max_values.val<base+max (Compiler.slots params) (Compiler.slots results) := by
+      store.limits.max_values.val<base+max (Representation.slots params) (Representation.slots results) := by
   obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := cause
   simp only [HostCallCauses,failed,HostPreparationCause,hostSlotDemand,typeSlots] at refused
   exact ⟨address.index.val,identity.val,base.val,_,_,site.1,site.2,by simpa only [Nat.max_comm] using refused⟩
@@ -114,4 +112,4 @@ theorem HostDispatchCause.host_overflow {M P F A : Type}
       hooks.call_host p store identity args defaults=.ok (.Err .StackOverflow,out.2.2.2,out.2.2.1,returned) := by
   obtain ⟨failed,index,raw,pc,address,signature,base,identity,found,next,site,actual,refused⟩ := cause
   exact ⟨identity,by simpa only [HostCallCauses,failed] using refused⟩
-end Itasca.Runtime.Integration
+end Itasca.Integration

@@ -1,46 +1,51 @@
-import Itasca.Runtime.SourceMachine.Stateful.Descriptor
+import Itasca.Runtime.SourceMachine.Simulation
 
-namespace Itasca.Runtime.SourceMachine.Stateful
+/-! ## Descriptor -/
 
-/-- Canonical source index spaces determine the operand/result types. -/
-inductive Signature (C : context) : Instruction → List valtype → List valtype → Prop where
-  | refNull (type) : Signature C (.refNull type) [] [valtype_reftype type]
-  | refFunc (index) (type : functype) (found : C.FUNCS[index]? = some type) :
-      Signature C (.refFunc index) [] [.FUNCREF]
-  | refIsNull (type) : Signature C .refIsNull [valtype_reftype type] [.I32]
-  | tableGet (index) (type) (bounds) (found : C.TABLES[index]? = some (.mk_tabletype bounds type)) :
-      Signature C (.tableGet index) [.I32] [valtype_reftype type]
-  | tableSet (index) (type) (bounds) (found : C.TABLES[index]? = some (.mk_tabletype bounds type)) :
-      Signature C (.tableSet index) [.I32, valtype_reftype type] []
-  | tableSize (index) (type : tabletype) (found : C.TABLES[index]? = some type) :
-      Signature C (.tableSize index) [] [.I32]
-  | tableGrow (index) (type) (bounds) (found : C.TABLES[index]? = some (.mk_tabletype bounds type)) :
-      Signature C (.tableGrow index) [valtype_reftype type, .I32] [.I32]
-  | tableFill (index) (type) (bounds) (found : C.TABLES[index]? = some (.mk_tabletype bounds type)) :
-      Signature C (.tableFill index) [.I32, valtype_reftype type, .I32] []
-  | tableCopy (destination source) (type) (destinationBounds sourceBounds)
-      (destinationFound : C.TABLES[destination]? = some (.mk_tabletype destinationBounds type))
-      (sourceFound : C.TABLES[source]? = some (.mk_tabletype sourceBounds type)) :
-      Signature C (.tableCopy destination source) [.I32, .I32, .I32] []
-  | tableInit (table element) (type) (bounds)
-      (tableFound : C.TABLES[table]? = some (.mk_tabletype bounds type))
-      (elementFound : C.ELEMS[element]? = some type) :
-      Signature C (.tableInit table element) [.I32, .I32, .I32] []
-  | elemDrop (index) (type : reftype) (found : C.ELEMS[index]? = some type) :
-      Signature C (.elemDrop index) [] []
-  | memorySize (type : memtype) (found : C.MEMS[0]? = some type) :
-      Signature C .memorySize [] [.I32]
-  | memoryGrow (type : memtype) (found : C.MEMS[0]? = some type) :
-      Signature C .memoryGrow [.I32] [.I32]
-  | memoryFill (type : memtype) (found : C.MEMS[0]? = some type) :
-      Signature C .memoryFill [.I32, .I32, .I32] []
-  | memoryCopy (type : memtype) (found : C.MEMS[0]? = some type) :
-      Signature C .memoryCopy [.I32, .I32, .I32] []
-  | memoryInit (index) (type : memtype) (found : C.MEMS[0]? = some type)
-      (dataFound : C.DATAS[index]? = some .OK) :
-      Signature C (.memoryInit index) [.I32, .I32, .I32] []
-  | dataDrop (index) (found : C.DATAS[index]? = some .OK) :
-      Signature C (.dataDrop index) [] []
+section
+
+namespace Itasca.SourceMachine.Stateful
+
+def decodeInstruction : instr → Option Instruction
+  | .REF_NULL type => some (.refNull type)
+  | .REF_FUNC (.mk_uN function) => some (.refFunc function)
+  | .REF_IS_NULL => some .refIsNull
+  | .TABLE_GET (.mk_uN table) => some (.tableGet table)
+  | .TABLE_SET (.mk_uN table) => some (.tableSet table)
+  | .TABLE_SIZE (.mk_uN table) => some (.tableSize table)
+  | .TABLE_GROW (.mk_uN table) => some (.tableGrow table)
+  | .TABLE_FILL (.mk_uN table) => some (.tableFill table)
+  | .TABLE_COPY (.mk_uN destination) (.mk_uN source) => some (.tableCopy destination source)
+  | .TABLE_INIT (.mk_uN table) (.mk_uN element) => some (.tableInit table element)
+  | .ELEM_DROP (.mk_uN element) => some (.elemDrop element)
+  | .MEMORY_SIZE => some .memorySize
+  | .MEMORY_GROW => some .memoryGrow
+  | .MEMORY_FILL => some .memoryFill
+  | .MEMORY_COPY => some .memoryCopy
+  | .MEMORY_INIT (.mk_uN data) => some (.memoryInit data)
+  | .DATA_DROP (.mk_uN data) => some (.dataDrop data)
+  | _ => none
+
+@[simp] theorem decode_source (op : Instruction) : decodeInstruction op.source = some op := by
+  cases op <;> rfl
+
+theorem source_injective {left right : Instruction} (same : left.source = right.source) :
+    left = right := by
+  have h := congrArg decodeInstruction same
+  simpa only [decode_source, Option.some.injEq] using h
+
+theorem Instruction.arity_le_three (op : Instruction) : op.arity ≤ 3 := by
+  cases op <;> simp [Instruction.arity]
+
+end Itasca.SourceMachine.Stateful
+
+end
+
+/-! ## Signature -/
+
+section
+
+namespace Itasca.SourceMachine.Stateful
 
 theorem Signature.input_length {C op input output} (signature : Signature C op input output) :
     input.length = op.arity := by
@@ -53,4 +58,6 @@ theorem Signature.inputs_scalar {C op input output} (signature : Signature C op 
     ∀ type ∈ input, type ≠ valtype.V128 := by
   cases signature <;> simp_all [reference_scalar]
 
-end Itasca.Runtime.SourceMachine.Stateful
+end Itasca.SourceMachine.Stateful
+
+end

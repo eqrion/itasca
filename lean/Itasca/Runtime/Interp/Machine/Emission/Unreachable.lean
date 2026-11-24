@@ -1,37 +1,27 @@
-import Itasca.Runtime.Interp.Control.StructuredUnreachable
-import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Control.Segments.Structured
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredComposition
-import Itasca.Runtime.Compiler.Local.Control.Segments.StructuredLabels
-import Itasca.Runtime.Interp.Control.StructuredPoint
-import Itasca.Runtime.SourceMachine.ModuleBindingsExtension
-import Itasca.Runtime.Compiler.Local.Control.Table.StructuredCodeTableExclusion
-import Itasca.Runtime.Interp.Machine.Execution
-import Itasca.Runtime.Interp.Relations.SuspendedPoint
-import Itasca.Runtime.Interp.Relations.FrameStoreMetadata
+import Itasca.Runtime.Interp.Control.BrTableSource
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
+import Itasca.Runtime.Interp.Control.StructuredLinear
+import Itasca.Runtime.SourceMachine.StructureAndTyping
+import Itasca.Runtime.Compiler.Local.Control.Structured.Prefixes
+import Itasca.Runtime.Interp.Machine.CompiledFunctions
+import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Interp.Machine.Frames.Reposition
-import Itasca.Runtime.SourceMachine.Core.Typing
-import Itasca.Runtime.SourceMachine.Core
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryExecution
-import Itasca.Runtime.Interp.Machine.Progress.OrdinaryStack
-import Itasca.Runtime.Interp.Machine.Frames.StackPreservation
+import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
+import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
+import Itasca.Runtime.Interp.Machine.Frames.FrameAndReturnStacks
 import Itasca.Runtime.Interp.Relations.StackPreservation
-import Itasca.Runtime.Interp.Relations.PrefixEffect
-import Itasca.Runtime.Interp.Control.SkipStack
-import Itasca.Runtime.Interp.Relations.PrefixDispatch
-import Itasca.Runtime.SourceMachine.Core.Step
 import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.SourceMachine.Core.Pure
-import Itasca.Runtime.Spec.Extend
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.Spec.TypingAndNumericOperations
 
 /-!
 Exclusion of unreachable from ordinary scalar emission.
 
-Main declarations: `scalar_emission_not_unreachable`. A direct consumer is `Interp.Machine.Progress.UnreachableExecution`.
+Main declarations: `scalar_emission_not_unreachable`.
 -/
 
-namespace Itasca.Runtime.Interp
+namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
 theorem scalar_emission_not_unreachable {C before after emitted}
@@ -42,4 +32,4 @@ theorem scalar_emission_not_unreachable {C before after emitted}
   | float stack other => cases other <;> simp [SourceMachine.Float.Instruction.source,SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
   | _ => simp [SourceMachine.Memory.Load.source,SourceMachine.Memory.Store.source] at equality
 
-end Itasca.Runtime.Interp
+end Itasca.Interp

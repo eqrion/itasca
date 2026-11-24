@@ -1,4 +1,4 @@
-import SpecExt.Builtins
+import SpecExt.Host
 import Lean.Elab.Command
 
 /-! Coverage inventory of every pinned builtin signature. Classification records

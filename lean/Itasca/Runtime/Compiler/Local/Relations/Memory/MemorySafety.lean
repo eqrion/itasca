@@ -1,6 +1,14 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Integer.NumericSafety
+import Itasca.Runtime.Compiler.Local.Lowering.Integer.Safety
 import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryEmission
-namespace Itasca.Runtime.Compiler
+
+open Itasca.Representation
+
+/-!
+# Memory lowering normal return
+
+Load/store lowering returns normally under code, source-offset and coordinate bounds. Successful operations preserve the observed validator-stack relation for both live and unreachable code.
+-/
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_total {A} (ops : runtime.platform.Alloc A)
@@ -23,8 +31,7 @@ open Aeneas Aeneas.Std
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
         memory_load_instruction_make, core.option.Option.ok_or]
       exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
 
 @[step] theorem compiler_memory_store_total {A} (ops : runtime.platform.Alloc A)
@@ -53,7 +60,6 @@ open Aeneas Aeneas.Std
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
           memory_store_instruction_make, core.option.Option.ok_or]
         exact finish_op_observed ops law compiler state _ codeFits sourceFits coordinateFits
-  · unfold runtime.compiler.lower.FunctionCompiler.op
-    rw [if_neg live]
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
     exact compiler_observe_stack ops law compiler state
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
