@@ -5,4 +5,3 @@ __pycache__/
 lean/.lake/
 lean/.build/
 lean/Itasca/Generated/*_Template.lean
-lean/Exec/Generated/*_Template.lean

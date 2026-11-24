@@ -1,7 +1,53 @@
-import Itasca.Runtime.Compiler.Local.Relations.Memory.MemoryOpcode
-import Itasca.Runtime.Compiler.Local.Lowering.Emission.Lowering
-import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
-import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Runtime.SourceMachine.Typing
+import Itasca.Runtime.Equations.Bytecode
+import Itasca.Generated.FunsCompiler
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.LoweringLocal
+
+/-!
+Proofs for Runtime / Compiler / Local / Relations / Memory.
+
+This module collects MemoryOpcode, MemoryEmission.
+Each section documents its contracts and consumers.
+-/
+
+/-! ## MemoryOpcode -/
+
+section
+
+/-!
+# Memory instruction descriptors
+
+Canonical load/store descriptors reproduce the emitted instruction constructors. Memory lowering and its source-emission relations use these exact constructor equations.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std
+
+theorem memory_load_instruction_make (op : SourceMachine.Memory.Load) (dst address offset : U32) :
+    runtime.bytecode.Instr.make_load (memoryLoadOpcode op) dst address offset =
+      .ok (some (memoryLoadInstruction op dst address offset)) := by
+  cases op with
+  | full ty => cases ty <;> rfl
+  | packed ty width sign => cases ty <;> cases width <;> cases sign <;> rfl
+
+theorem memory_store_instruction_make (op : SourceMachine.Memory.Store) (address value offset : U32) :
+    runtime.bytecode.Instr.make_store (memoryStoreOpcode op) address value offset =
+      .ok (some (memoryStoreInstruction op address value offset)) := by
+  cases op with
+  | full ty => cases ty <;> rfl
+  | packed ty width => cases ty <;> cases width <;> rfl
+end Itasca.Compiler
+
+end
+
+/-! ## MemoryEmission -/
+
+section
+
+open Itasca.Representation
 
 /-!
 Scalar memory lowering, operands and emitted instruction relations. Opcode descriptors and numeric safety remain independently consumed.
@@ -11,10 +57,9 @@ Scalar memory lowering, operands and emitted instruction relations. Opcode descr
 
 section
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std Aeneas.Std.Result
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 noncomputable def memoryLoadLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -62,11 +107,12 @@ theorem lower_memory_load_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (op : SourceMachine.Memory.Load) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryLoadOpcode op) offset alignment 0#u128 =
       memoryLoadLowering ops compiler state op offset := by
-  cases op with
-  | full ty => cases ty <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | packed ty width sign =>
-    cases ty <;> cases width <;> cases sign <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have allowed : 40 ≤ (memoryLoadOpcode op).val ∧ (memoryLoadOpcode op).val ≤ 53 := by
+    cases op with
+    | full ty => cases ty <;> decide
+    | packed ty width sign => cases ty <;> cases width <;> cases sign <;> decide
+  exact runtime.compiler.lower.FunctionCompiler.op.memory_load ops compiler state (memoryLoadOpcode op)
+    offset alignment 0#u128 reachable allowed
 
 noncomputable def memoryStoreLowering {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -117,11 +163,12 @@ theorem lower_memory_store_dispatch {A : Type} (ops : runtime.platform.Alloc A)
     (op : SourceMachine.Memory.Store) (offset alignment : U32) (reachable : compiler.reachable = true) :
     runtime.compiler.lower.FunctionCompiler.op ops compiler state (memoryStoreOpcode op) offset alignment 0#u128 =
       memoryStoreLowering ops compiler state op offset := by
-  cases op with
-  | full ty => cases ty <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
-  | packed ty width =>
-    cases ty <;> cases width <;>
-      unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos reachable] <;> rfl
+  have allowed : 54 ≤ (memoryStoreOpcode op).val ∧ (memoryStoreOpcode op).val ≤ 62 := by
+    cases op with
+    | full ty => cases ty <;> decide
+    | packed ty width => cases ty <;> cases width <;> decide
+  exact runtime.compiler.lower.FunctionCompiler.op.memory_store ops compiler state (memoryStoreOpcode op)
+    offset alignment 0#u128 reachable allowed
 
 theorem lower_memory_load_eq {A : Type} (ops : runtime.platform.Alloc A)
     (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
@@ -145,7 +192,7 @@ theorem lower_memory_store_eq {A : Type} (ops : runtime.platform.Alloc A)
   unfold memoryStoreLowering
   simp only [addressOperand, valueOperand, bind_ok, core.result.Result.Insts.CoreOpsTry.branch,
     memory_store_instruction_make, core.option.Option.ok_or]
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
 
 end
 
@@ -153,7 +200,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 /-- A load consumes the final scalar address slot and overwrites that slot. -/
@@ -191,7 +238,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
     (front : List valtype) (op : SourceMachine.Memory.Load) (offset alignment : U32)
     (layout : CompilerLayout compiler (front ++ [.I32])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ [valtype_numtype op.type])
+    (typed : types.map Itasca.Translation.valueType = front ++ [valtype_numtype op.type])
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -211,7 +258,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
     (front : List valtype) (op : SourceMachine.Memory.Store) (offset alignment : U32)
     (layout : CompilerLayout compiler (front ++ [.I32,valtype_numtype op.type])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front)
+    (typed : types.map Itasca.Translation.valueType = front)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -224,7 +271,7 @@ theorem memory_store_operands {A : Type} (ops : runtime.platform.Alloc A)
   step with finish_op ops law compiler state types (memoryStoreInstruction op address value offset) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out,lowered,success⟩
   exact ⟨address,value,addressPosition,valuePosition,by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
 
 end
 
@@ -232,7 +279,7 @@ end
 
 section
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 @[step] theorem compiler_memory_load_emission {A : Type} (ops : runtime.platform.Alloc A)
@@ -244,7 +291,7 @@ open Aeneas Aeneas.Std
     (sourceOffset : argument.OFFSET = .mk_uN offset.val)
     (layout : CompilerLayout compiler (front ++ [.I32])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ [valtype_numtype op.type])
+    (typed : types.map Itasca.Translation.valueType = front ++ [valtype_numtype op.type])
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -267,7 +314,7 @@ open Aeneas Aeneas.Std
     (sourceOffset : argument.OFFSET = .mk_uN offset.val)
     (layout : CompilerLayout compiler (front ++ [.I32,valtype_numtype op.type])) (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front)
+    (typed : types.map Itasca.Translation.valueType = front)
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -281,6 +328,8 @@ open Aeneas Aeneas.Std
   obtain ⟨address,value,addressPosition,valuePosition,lowered⟩ := success accepted
   exact ⟨_,lowered,.store front op argument address value offset memory available sourceOffset
     (by simpa only [locals] using addressPosition) valuePosition⟩
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end
 
 end

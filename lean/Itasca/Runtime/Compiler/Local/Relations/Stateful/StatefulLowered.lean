@@ -1,13 +1,217 @@
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulOperands
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
+import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallMetadata
+import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
+import Itasca.Runtime.Compiler.Local.Source.SourceTactics
+import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
+
+open Itasca.Representation
+
+/-! ## StatefulEmissionTransport -/
+
+section
+
+/-!
+Transport of stateful emission across compiler index-pair tables.
+
+Main declarations: `StatefulEmission.map_pairs`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas.Std
+
+theorem StatefulEmission.map_pairs {beforePairs afterPairs C before instruction emitted after}
+    (preserve : ∀ (index : Nat) (pair : U32 × U32), beforePairs[index]? = some pair → afterPairs[index]? = some pair)
+    (head : StatefulEmission beforePairs C before instruction emitted after) :
+    StatefulEmission afterPairs C before instruction emitted after := by
+  cases head with
+  | instruction stack input output op signature first second a b entry firstSlot secondSlot arguments pair =>
+    refine .instruction stack input output op signature first second a b entry firstSlot secondSlot arguments ?_
+    cases op <;> simp only [StatefulPair] at pair ⊢ <;> try trivial
+    all_goals exact preserve _ _ pair
+
+end Itasca.Compiler
+
+end
+
+/-! ## StatefulEffects -/
+
+section
+
+/-!
+Metadata, source-offset and capacity effects of stateful lowering.
+
+Main declarations: `compiler_stateful_ordinary_result` and `compiler_stateful_capacity`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std SourceMachine.Stateful
+set_option maxRecDepth 4096
+theorem compiler_stateful_ordinary_result {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (op : Instruction) (a b : U32)
+    (status : core.result.Result Unit Itasca.error.VisitError)
+    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (status, after)) :
+    CompilerOrdinaryStable before after := by
+  by_cases reach : before.reachable = true
+  · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
+    cases op <;> simp only [statefulLowering] at accepted
+    all_goals repeat' metadata_step accepted using ops, law
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
+    exact compiler_observe_ordinary_result ops law before after state status accepted
+
+theorem compiler_stateful_sources {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (op : Instruction) (a b : U32)
+    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (), after)) :
+    SourceProgress before after := by
+  by_cases reach : before.reachable = true
+  · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
+    cases op <;> simp only [statefulLowering] at accepted
+    all_goals repeat' sources_step accepted using ops, law
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
+    exact compiler_observe_sources ops law before after state (.Ok ()) accepted
+
+theorem compiler_stateful_cursor {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (op : Instruction) (a b : U32)
+    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (), after)) :
+    after.next_source = state.pos := by
+  by_cases reach : before.reachable = true
+  · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
+    cases op <;> simp only [statefulLowering] at accepted
+    all_goals repeat' cursor_step accepted using ops, law
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
+    exact compiler_observe_cursor ops law before after state (.Ok ()) accepted rfl
+
+theorem compiler_stateful_capacity {A : Type} (ops : runtime.platform.Alloc A)
+    (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
+    (state : Itasca.code.OpIterState) (op : Instruction) (a b : U32)
+    (accepted : runtime.compiler.lower.FunctionCompiler.op ops before state (statefulOpcode op) a b 0#u128 = .ok (.Ok (), after)) :
+    CapacityStep before after state := by
+  by_cases reach : before.reachable = true
+  · rw [lower_stateful_dispatch ops before state op a b reach] at accepted
+    cases op <;> simp only [statefulLowering] at accepted
+    all_goals repeat' capacity_step accepted using ops, law
+  · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true reach)] at accepted
+    exact ⟨(compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).1,
+      (compiler_observe_capacity_bound ops law before after state (.Ok ()) accepted).2 rfl⟩
+
+end Itasca.Compiler
+
+end
+
+/-! ## StatefulOperands -/
+
+section
+
+/-!
+Actual compiler operand reads and coordinates follow from the source signature and full stack layout, including reference values.
+
+Main declarations: `stateful_operands`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std
+
+private theorem first_suffix_operand {A : Type} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (front input : List valtype)
+    (layout : CompilerLayout compiler (front ++ input)) (depth : Usize)
+    (positive : 0 < depth.val) (count : depth.val = input.length) :
+    ∃ first : U32, runtime.compiler.FunctionCompiler.operand ops compiler depth = .ok (.Ok first) ∧
+      first.val = slots (compilerLocals compiler) + slots front := by
+  obtain ⟨r,read,first,rfl,position⟩ := WP.spec_imp_exists
+    (compiler_operand ops compiler _ layout depth positive (by simp [count]))
+  refine ⟨first,read,?_⟩
+  simpa [offset,List.length_append,count] using position
+
+private theorem next_suffix_operand {A : Type} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (front input : List valtype)
+    (layout : CompilerLayout compiler (front ++ input)) (depth : Usize)
+    (positive : 0 < depth.val) (count : depth.val + 1 = input.length)
+    (scalar : ∀ type ∈ input, type ≠ valtype.V128) :
+    ∃ second : U32, runtime.compiler.FunctionCompiler.operand ops compiler depth = .ok (.Ok second) ∧
+      second.val = slots (compilerLocals compiler) + slots front + 1 := by
+  obtain ⟨r,read,second,rfl,position⟩ := WP.spec_imp_exists
+    (compiler_operand ops compiler _ layout depth positive (by simp only [List.length_append]; omega))
+  have index : (front ++ input).length - depth.val = front.length + 1 := by
+    simp only [List.length_append]; omega
+  have takeFront : front.take (front.length + 1) = front := List.take_of_length_le (by omega)
+  have firstWidth : slots (input.take 1) = 1 := by
+    cases input with
+    | nil => simp at count
+    | cons head tail =>
+      have nonvector := scalar head (by simp)
+      cases head <;> simp_all [slots,width]
+  refine ⟨second,read,?_⟩
+  rw [index] at position
+  simpa [offset,List.take_append,takeFront,slots_append,firstWidth,Nat.add_assoc] using position
+
+/-- Actual compiler operand reads and coordinates follow from the source
+signature and full stack layout, including reference values. -/
+theorem stateful_operands {A : Type} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (C : context)
+    (front input output : List valtype) (op : SourceMachine.Stateful.Instruction)
+    (signature : SourceMachine.Stateful.Signature C op input output)
+    (layout : CompilerLayout compiler (front ++ input)) :
+    ∃ first second : U32, StatefulReads ops compiler op first second ∧
+      first.val = slots (compilerLocals compiler) + slots front ∧
+      (op.arity ≥ 2 → second.val = first.val + 1) := by
+  have count := signature.input_length
+  have bound := op.arity_le_three
+  have alternatives : op.arity = 0 ∨ op.arity = 1 ∨ op.arity = 2 ∨ op.arity = 3 := by omega
+  rcases alternatives with zero | one | two | three
+  · have empty : input = [] := List.length_eq_zero_iff.mp (count.trans zero)
+    refine ⟨compiler.height,compiler.height,⟨?_,?_⟩,?_,?_⟩
+    · simp [StatefulReads,zero]
+    · intro table same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
+      change op.arity = 2 at impossible
+      omega
+    · simpa [empty] using layout.height
+    · omega
+  · obtain ⟨first,read,position⟩ := first_suffix_operand ops compiler front input layout 1#usize (by decide) (by simpa [one] using count.symm)
+    refine ⟨first,first,⟨?_,?_⟩,position,?_⟩
+    · simpa [one,statefulDepth] using read
+    · intro table same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
+      change op.arity = 2 at impossible
+      omega
+    · omega
+  · obtain ⟨first,read,position⟩ := first_suffix_operand ops compiler front input layout 2#usize (by decide) (by simpa [two] using count.symm)
+    obtain ⟨second,readSecond,secondPosition⟩ := next_suffix_operand ops compiler front input layout 1#usize (by decide)
+      (by simpa [two] using count.symm) signature.inputs_scalar
+    refine ⟨first,second,⟨?_,?_⟩,position,?_⟩
+    · simpa [two,statefulDepth] using read
+    · intro table same; exact readSecond
+    · intro _; omega
+  · obtain ⟨first,read,position⟩ := first_suffix_operand ops compiler front input layout 3#usize (by decide) (by simpa [three] using count.symm)
+    obtain ⟨second,readSecond,secondPosition⟩ := next_suffix_operand ops compiler front input layout 2#usize (by decide)
+      (by simpa [three] using count.symm) signature.inputs_scalar
+    refine ⟨first,second,⟨?_,?_⟩,position,?_⟩
+    · simpa [three,statefulDepth] using read
+    · intro table same
+      have impossible := congrArg SourceMachine.Stateful.Instruction.arity same
+      change op.arity = 2 at impossible
+      omega
+    · intro _; omega
+
+end Itasca.Compiler
+
+end
+
+/-! ## StatefulLowered -/
+
+section
 
 /-!
 Actual accepted non-pair callbacks produce their source-indexed emission.
 
-Main declarations: `compiler_stateful_single_emission` and `compiler_stateful_emission`. A direct consumer is `Compiler.Body.Control.Closing.IndexedAdvanceOrClosed`.
+Main declarations: `compiler_stateful_single_emission` and `compiler_stateful_emission`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 /-- Actual accepted non-pair callbacks produce their source-indexed emission. -/
@@ -19,7 +223,7 @@ theorem compiler_stateful_single_emission {A : Type} (ops : runtime.platform.All
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ output)
+    (typed : types.map Itasca.Translation.valueType = front ++ output)
     (codeFits : before.function.code.val.length < Usize.max)
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
@@ -50,7 +254,7 @@ theorem compiler_stateful_pair_emission {A : Type} (ops : runtime.platform.Alloc
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ output)
+    (typed : types.map Itasca.Translation.valueType = front ++ output)
     (codeFits : before.function.code.val.length < Usize.max)
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
@@ -93,7 +297,7 @@ theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
     (locals : C.LOCALS = compilerLocals before) (arguments : StatefulArguments op a b)
     (layout : CompilerLayout before (front ++ input)) (reachable : before.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ output)
+    (typed : types.map Itasca.Translation.valueType = front ++ output)
     (codeFits : before.function.code.val.length < Usize.max)
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
@@ -110,4 +314,6 @@ theorem compiler_stateful_emission {A : Type} (ops : runtime.platform.Alloc A)
       signature locals arguments layout reachable concrete typed codeFits sourceFits coordinateFits single accepted
     exact ⟨⟨[],by simp [pairs]⟩,emission⟩
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end

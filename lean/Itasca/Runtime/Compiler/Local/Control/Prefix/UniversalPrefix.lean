@@ -1,15 +1,14 @@
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
 /-!
 Append one source instruction to the current open scope. Its saved entry, control signature, and physical branch coordinates do not change.
 
-Main declarations: `SourceScope.advance` and `UniversalPrefix`. A direct consumer is `Compiler.Local.Control.Prefix.UniversalTerminal`.
+Main declarations: `SourceScope.advance` and `UniversalPrefix`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas.Std
 
 /-- Append one source instruction to the current open scope. Its saved entry,
@@ -34,4 +33,4 @@ structure UniversalPrefix {A : Type} (compiler : runtime.compiler.FunctionCompil
     CodePrefix types functions returns locals (resolvedCode compiler.function.code.val groups)
       (label :: labels) current.input current.source current.bodyPc compiler.function.code.val.length stack
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

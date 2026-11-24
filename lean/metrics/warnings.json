@@ -1,0 +1,850 @@
+{
+  "Itasca/Body/Control/EnterSound.lean": {
+    "unreachableTactic": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Body/EmptyVisitorLoop.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Body/LoopDispatch.lean": {
+    "unusedSimpArgs": 1,
+    "unusedVariables": 1
+  },
+  "Itasca/Body/NumericExt/Sound.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Body/References/Readers.lean": {
+    "other": 5
+  },
+  "Itasca/Body/Scalar/Env.lean": {
+    "other": 1
+  },
+  "Itasca/Body/Scalar/Readers.lean": {
+    "constructorNameAsVariable": 3,
+    "unusedVariables": 1
+  },
+  "Itasca/Body/Simd/LaneReaders.lean": {
+    "other": 5
+  },
+  "Itasca/Body/Simd/Sound.lean": {
+    "constructorNameAsVariable": 3
+  },
+  "Itasca/Body/TableAdapters.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Body/Trace/ControlRecords.lean": {
+    "other": 4,
+    "unnecessarySimpa": 1
+  },
+  "Itasca/Body/Visitor/BrTable.lean": {
+    "other": 2
+  },
+  "Itasca/Body/Visitor/ReachedTableLoop.lean": {
+    "constructorNameAsVariable": 2
+  },
+  "Itasca/Examples/Runtime.lean": {
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Module/Code/Framing.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Compiler/Body/Control/StructuredPrefixes.lean": {
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Acceptance/SourceBoundAcceptance.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Calls/Instructions.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Calls/Safety.lean": {
+    "other": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Checking/CheckedPrefix.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/BranchAndElseCompilation.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/BranchAndScopeEffects.lean": {
+    "constructorNameAsVariable": 5,
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/ControlInstructionPrefixes.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/Reachability.lean": {
+    "constructorNameAsVariable": 3,
+    "unusedSimpArgs": 7
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/ReachedControlAcceptance.lean": {
+    "unusedSimpArgs": 2,
+    "unusedVariables": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/StackPrefixes.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Control/TerminalCompilationAndSafety.lean": {
+    "other": 2,
+    "unreachableTactic": 11,
+    "unusedSimpArgs": 6,
+    "unusedTactic": 13
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Float/ConstantAndSaturatingCompilation.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Float/FloatConstantEmissions.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Local/Compilation.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Local/LocalAcceptance.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Memory/MemoryEmissions.lean": {
+    "constructorNameAsVariable": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Publication/ScalarCallbackPublication.lean": {
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/References/TypedSelectEmission.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Replay/OrdinaryEffects.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Replay/OrdinaryLedger.lean": {
+    "unnecessarySimpa": 6
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Replay/Post.lean": {
+    "constructorNameAsVariable": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Replay/ReaderCompilerState.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Safety/InstructionSafety.lean": {
+    "unusedVariables": 6
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Safety/Run.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Scalar/DeadBasicPrefix.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Scalar/OrdinaryCompilation.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Scalar/ScalarEffects.lean": {
+    "constructorNameAsVariable": 3,
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 3,
+    "unusedTactic": 1,
+    "unusedVariables": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Simd/Dispatch.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Simd/SimdInstructionPrefix.lean": {
+    "unreachableTactic": 2,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Compiler/Body/Reader/Stateful/StatefulMetadataPosts.lean": {
+    "constructorNameAsVariable": 4,
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Control/CallbackRetention.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Control/ClosingContracts.lean": {
+    "unusedSimpArgs": 66
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Control/EnterContracts.lean": {
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 53,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Control/ScopeEffects.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Control/ScopeFrames.lean": {
+    "other": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Fixups/FixupBudget.lean": {
+    "unnecessarySeqFocus": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Function/FunctionStartContracts.lean": {
+    "constructorNameAsVariable": 4,
+    "unusedSimpArgs": 11
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Observation/Frame.lean": {
+    "unnecessarySimpa": 1,
+    "unreachableTactic": 2,
+    "unusedSimpArgs": 6,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Table/CompilerTableScratchEntry.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Callbacks/Table/CompilerTableScratchLiteral.lean": {
+    "unusedVariables": 11
+  },
+  "Itasca/Runtime/Compiler/Local/Capacity/BranchTableAvailability.lean": {
+    "unusedSimpArgs": 3,
+    "unusedVariables": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Capacity/CallbackBudgets.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Compiler/Local/Capacity/ConditionalAndSimdAvailability.lean": {
+    "unusedSimpArgs": 1,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Capacity/ControlAvailability.lean": {
+    "unusedVariables": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Capacity/ControlCapacity.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Checking/ScopeInstructionPrefixes.lean": {
+    "unreachableTactic": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Control/Structured/NestedScopes.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Control/Structured/Prefixes.lean": {
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Coordinates/SourceCoordinates.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/IndependentBodyDemand.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Initializer.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Initializer/ExpressionContracts.lean": {
+    "unusedSimpArgs": 18
+  },
+  "Itasca/Runtime/Compiler/Local/Initializer/LowerContracts.lean": {
+    "unnecessarySeqFocus": 1,
+    "unreachableTactic": 2,
+    "unusedSimpArgs": 23,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Initializer/ModuleMappings.lean": {
+    "unnecessarySimpa": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Initializer/SegmentEmissionContracts.lean": {
+    "other": 1,
+    "unnecessarySimpa": 3,
+    "unreachableTactic": 2,
+    "unusedSimpArgs": 83,
+    "unusedTactic": 3,
+    "unusedVariables": 4
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Control/BranchAndTerminalEffects.lean": {
+    "unusedSimpArgs": 54
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Control/BranchContracts.lean": {
+    "constructorNameAsVariable": 2,
+    "other": 1,
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 122,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Emission/LoweringEmpty.lean": {
+    "constructorNameAsVariable": 2,
+    "other": 1,
+    "unusedSimpArgs": 14
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Float/SafetyAndEncoding.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Integer/Safety.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Literal/Safety.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Simd/Callbacks.lean": {
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Simd/Contracts.lean": {
+    "other": 1,
+    "unusedSimpArgs": 57
+  },
+  "Itasca/Runtime/Compiler/Local/Lowering/Simd/Emission.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Publication/ControlMapPublication.lean": {
+    "unusedSimpArgs": 1,
+    "unusedVariables": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Publication/ScopeEntryPublication.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Calls/BranchAndCallMetadata.lean": {
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Calls/BranchAndCallSafety.lean": {
+    "unusedSimpArgs": 16,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Calls/IndirectAndStatefulCallbacks.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Control/BranchSkipSafety.lean": {
+    "unusedSimpArgs": 28
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Control/BranchSuccessConditional.lean": {
+    "unusedSimpArgs": 38
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Control/ControlCoordinates.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Control/ControlObservedLayout.lean": {
+    "unusedVariables": 6
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Function/EnvironmentContracts.lean": {
+    "constructorNameAsVariable": 9,
+    "unusedSimpArgs": 21,
+    "unusedVariables": 10
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Global/GlobalLowering.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Instructions/InstructionCheckAcceptance.lean": {
+    "other": 4,
+    "unreachableTactic": 4,
+    "unusedSimpArgs": 11,
+    "unusedTactic": 4
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Instructions/WellFormedAcceptance.lean": {
+    "unnecessarySeqFocus": 10,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Layout/LayoutProofs.lean": {
+    "unusedSimpArgs": 3,
+    "unusedVariables": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Local/LocalDeclarations.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 16
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Local/LocalSafety.lean": {
+    "constructorNameAsVariable": 2,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Memory/MemorySafety.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Segments/SegmentTranslation.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Stateful/StatefulLowered.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Stateful/StatefulSafety.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Table/BranchTable.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Table/BranchTableFrames.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Table/BranchTableTrace.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Local/Relations/Table/ControlTablePreservation.lean": {
+    "unusedSimpArgs": 16,
+    "unusedVariables": 4
+  },
+  "Itasca/Runtime/Compiler/Module/BatchLoopAvailable.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Compiler/Module/CollectionContracts.lean": {
+    "unusedSimpArgs": 9,
+    "unusedVariables": 8
+  },
+  "Itasca/Runtime/Compiler/Module/Compilation.lean": {
+    "unnecessarySeqFocus": 6,
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 3,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Compiler/Module/DriverAndCodeRegions.lean": {
+    "constructorNameAsVariable": 1,
+    "unnecessarySimpa": 3,
+    "unusedSimpArgs": 2,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Compiler/Module/SourceAndSubmission.lean": {
+    "unusedSimpArgs": 9
+  },
+  "Itasca/Runtime/Integration/Api/CreationAndGrowth.lean": {
+    "unnecessarySimpa": 2,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Integration/Api/DefinitionAndWrite.lean": {
+    "unusedSimpArgs": 30
+  },
+  "Itasca/Runtime/Integration/Api/GrowthAndHostResourceCauses.lean": {
+    "unnecessarySeqFocus": 4,
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Integration/Api/StoreRead.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Execution/Dispatch/Host.lean": {
+    "constructorNameAsVariable": 2
+  },
+  "Itasca/Runtime/Integration/Execution/Dispatch/Normalization.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Integration/Execution/MemoryOperations.lean": {
+    "unusedSimpArgs": 26
+  },
+  "Itasca/Runtime/Integration/Execution/Mutation/BulkResult.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Integration/Execution/Ownership/Publication.lean": {
+    "unnecessarySimpa": 1
+  },
+  "Itasca/Runtime/Integration/Execution/TableAndSegmentOperations.lean": {
+    "unusedSimpArgs": 31
+  },
+  "Itasca/Runtime/Integration/Execution/TableSetStep.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Execution/World/Loop.lean": {
+    "constructorNameAsVariable": 3,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Execution/World/NonhostStep.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Host/HostCallContext.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Host/HostIndirectStructuredWorld.lean": {
+    "unnecessarySeqFocus": 2,
+    "unreachableTactic": 4,
+    "unusedSimpArgs": 2,
+    "unusedTactic": 6,
+    "unusedVariables": 12
+  },
+  "Itasca/Runtime/Integration/Host/HostRecordingBoundary.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Integration/Host/HostSiteWorld.lean": {
+    "constructorNameAsVariable": 2,
+    "unusedVariables": 12
+  },
+  "Itasca/Runtime/Integration/Instantiation/InstantiateSource.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Integration/Invocation/Behaves.lean": {
+    "unusedVariables": 4
+  },
+  "Itasca/Runtime/Integration/Invocation/Outcomes.lean": {
+    "constructorNameAsVariable": 3,
+    "unusedSimpArgs": 1,
+    "unusedTactic": 1,
+    "unusedVariables": 3
+  },
+  "Itasca/Runtime/Interp/Calls/DirectCall.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Interp/Calls/OutcomesAndResolution.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 6,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Interp/Control/BrTableSource.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/HostCalls.lean": {
+    "auxLemma": 1,
+    "unusedSimpArgs": 21,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Invocation/Recording.lean": {
+    "constructorNameAsVariable": 8,
+    "unusedSimpArgs": 35,
+    "unusedTactic": 5
+  },
+  "Itasca/Runtime/Interp/Machine/Calls/HostCallStack.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Interp/Machine/Constants/EncodingAndFloat.lean": {
+    "unusedSimpArgs": 9
+  },
+  "Itasca/Runtime/Interp/Machine/Control/BranchSource.lean": {
+    "unnecessarySimpa": 1
+  },
+  "Itasca/Runtime/Interp/Machine/Coverage/OrdinaryHeads.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Interp/Machine/Emission/Local.lean": {
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/Interp/Machine/Emission/Unreachable.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Machine/Normalization/NormalizeExecution.lean": {
+    "unnecessarySimpa": 1
+  },
+  "Itasca/Runtime/Interp/Machine/Progress/PendingExecution.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Machine/ScalarExecution.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Interp/Machine/Select/Operands.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Machine/Simd/FrameStep.lean": {
+    "constructorNameAsVariable": 1
+  },
+  "Itasca/Runtime/Interp/Memory/EncodingAndDispatch.lean": {
+    "unnecessarySeqFocus": 1,
+    "unnecessarySimpa": 2,
+    "unusedSimpArgs": 9
+  },
+  "Itasca/Runtime/Interp/Memory/MemoryEffects.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 6,
+    "unusedVariables": 6
+  },
+  "Itasca/Runtime/Interp/Numeric/Float.lean": {
+    "unusedSimpArgs": 17
+  },
+  "Itasca/Runtime/Interp/Numeric/Float/DispatchAndOwnership.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 27,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Numeric/Float/InstructionContracts.lean": {
+    "unnecessarySeqFocus": 12,
+    "unusedSimpArgs": 94,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Interp/Numeric/Float/SourceRelations.lean": {
+    "unreachableTactic": 12,
+    "unusedSimpArgs": 98,
+    "unusedTactic": 12
+  },
+  "Itasca/Runtime/Interp/Numeric/Integer/ArithmeticAndBitwise.lean": {
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/Interp/Numeric/Integer/ConversionsAndBinaryContracts.lean": {
+    "unusedSimpArgs": 69
+  },
+  "Itasca/Runtime/Interp/Numeric/Integer/SignedOperationsAndCounts.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Relations/EntryEffects.lean": {
+    "constructorNameAsVariable": 2,
+    "unnecessarySeqFocus": 1,
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 12,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Relations/ReadbackAndBindings.lean": {
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 4,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Relations/ReferenceSource.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Relations/ResourceCausesAndArgumentErrors.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Interp/Relations/SlotsAndDefaults.lean": {
+    "unnecessarySeqFocus": 5,
+    "unreachableTactic": 3,
+    "unusedSimpArgs": 5,
+    "unusedTactic": 3
+  },
+  "Itasca/Runtime/Interp/Relations/SourceClosure.lean": {
+    "constructorNameAsVariable": 1,
+    "unnecessarySeqFocus": 4,
+    "unnecessarySimpa": 2,
+    "unusedSimpArgs": 11
+  },
+  "Itasca/Runtime/Interp/Relations/StepActive.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Interp/Relations/TypedOperands.lean": {
+    "constructorNameAsVariable": 3,
+    "unusedSimpArgs": 10
+  },
+  "Itasca/Runtime/Interp/Simd/Execution/PureSound.lean": {
+    "unnecessarySeqFocus": 1,
+    "unreachableTactic": 1,
+    "unusedSimpArgs": 4,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Interp/Simd/Execution/PureUnary.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Interp/Simd/Integer/ArithmeticAndReductions.lean": {
+    "unnecessarySeqFocus": 1,
+    "unreachableTactic": 2,
+    "unusedSimpArgs": 3,
+    "unusedTactic": 6
+  },
+  "Itasca/Runtime/Interp/Simd/Integer/LaneArithmetic.lean": {
+    "unusedSimpArgs": 2,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Simd/Integer/ShiftsAndComparison.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Interp/Simd/Lanes/Permutation.lean": {
+    "unreachableTactic": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Simd/Lanes/SplatSound.lean": {
+    "unusedSimpArgs": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Interp/Simd/Memory/EncodingAndEffects.lean": {
+    "unusedSimpArgs": 12,
+    "unusedTactic": 5
+  },
+  "Itasca/Runtime/Interp/Simd/Memory/SourceEffectsAndErrors.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 12,
+    "unusedTactic": 4,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Interp/Simd/Relations/InputValues.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Interp/State/GlobalOperations.lean": {
+    "unnecessarySeqFocus": 2,
+    "unusedSimpArgs": 6,
+    "unusedTactic": 2
+  },
+  "Itasca/Runtime/Interp/State/ObjectBindingsAndMutation.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Interp/State/OperandSlots.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Interp/State/ReadAndTableSetEffects.lean": {
+    "unusedSimpArgs": 10
+  },
+  "Itasca/Runtime/Interp/State/TableOperations.lean": {
+    "unnecessarySeqFocus": 2,
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Platform/VecMemory.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/SourceMachine/Core/OperationsAndMemoryTyping.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/SourceMachine/EntryAndBranchTables.lean": {
+    "unnecessarySeqFocus": 2,
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/SourceMachine/Indirect/HostSimulation.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/SourceMachine/Indirect/HostTyping.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/SourceMachine/Numeric/Transition.lean": {
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/SourceMachine/OwnershipExtension.lean": {
+    "unreachableTactic": 6,
+    "unusedSimpArgs": 5,
+    "unusedTactic": 6
+  },
+  "Itasca/Runtime/SourceMachine/Preservation.lean": {
+    "unusedSimpArgs": 1,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/SourceMachine/Sim/Structured.lean": {
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/SourceMachine/Stateful/AccessAndGrowth.lean": {
+    "unnecessarySeqFocus": 3,
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/SourceMachine/Stateful/TransitionInvariants.lean": {
+    "unusedSimpArgs": 7
+  },
+  "Itasca/Runtime/SourceMachine/Supported/CumulativeStep.lean": {
+    "unnecessarySeqFocus": 1
+  },
+  "Itasca/Runtime/SourceMachine/Supported/PureCoverage.lean": {
+    "unreachableTactic": 1,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/SourceMachine/TransitionAndHostPreparation.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Spec/BulkOperations.lean": {
+    "unusedSimpArgs": 7
+  },
+  "Itasca/Runtime/Spec/PrimitiveOperations.lean": {
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Spec/Simd/ArithmeticMemoryAndFloat.lean": {
+    "unnecessarySeqFocus": 1,
+    "unnecessarySimpa": 1,
+    "unreachableTactic": 17,
+    "unusedSimpArgs": 41,
+    "unusedTactic": 20,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Spec/Simd/ConversionAndPacking.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 2,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Spec/Simd/LaneOperations.lean": {
+    "unusedSimpArgs": 9
+  },
+  "Itasca/Runtime/Spec/TypingAndNumericOperations.lean": {
+    "unnecessarySeqFocus": 2,
+    "unnecessarySimpa": 5,
+    "unusedSimpArgs": 1,
+    "unusedTactic": 4,
+    "unusedVariables": 8
+  },
+  "Itasca/Runtime/Store/Api/AllocationAndGrowth.lean": {
+    "unusedSimpArgs": 13
+  },
+  "Itasca/Runtime/Store/Api/BulkCopiesAndFill.lean": {
+    "unusedSimpArgs": 18
+  },
+  "Itasca/Runtime/Store/Api/DefinitionsAndGrowth.lean": {
+    "unusedSimpArgs": 11
+  },
+  "Itasca/Runtime/Store/Api/Exports.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Store/Api/GlobalStagingAndCopy.lean": {
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Store/Api/TableAndGlobalAllocation.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Store/Api/TableFillAndGrowth.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Store/Initialization/DataLoopCertificates.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Store/Initialization/InitializerResourceCauses.lean": {
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 6
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentInitializePreservation.lean": {
+    "unusedSimpArgs": 5
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentLoops.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentOperations.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 20
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentReady.lean": {
+    "unnecessarySimpa": 4,
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentSourceStaging.lean": {
+    "constructorNameAsVariable": 6,
+    "unusedSimpArgs": 11,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Store/Initialization/SegmentSyntheticPreservation.lean": {
+    "unusedSimpArgs": 10
+  },
+  "Itasca/Runtime/Store/Instantiation/Linked.lean": {
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Store/Instantiation/NoStart.lean": {
+    "unnecessarySimpa": 2
+  },
+  "Itasca/Runtime/Store/Instantiation/PreparedRunTableMemory.lean": {
+    "unnecessarySimpa": 8
+  },
+  "Itasca/Runtime/Store/Instantiation/TailCommit.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 14,
+    "unusedVariables": 1
+  },
+  "Itasca/Runtime/Store/Invariant/CoreInstantiationSource.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Store/Invariant/FunctionAndTypeStagingCauses.lean": {
+    "constructorNameAsVariable": 2,
+    "unnecessarySeqFocus": 1,
+    "unusedSimpArgs": 11
+  },
+  "Itasca/Runtime/Store/Invariant/FunctionStaging.lean": {
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Runtime/Store/Invariant/ObjectAllocationErrors.lean": {
+    "constructorNameAsVariable": 2,
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/Store/Invariant/Rollback.lean": {
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 4
+  },
+  "Itasca/Runtime/Store/Invariant/SemanticApi.lean": {
+    "unusedSimpArgs": 2
+  },
+  "Itasca/Runtime/Store/Invariant/SourceAllocationLists.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Store/Invariant/Typing.lean": {
+    "unusedSimpArgs": 1
+  },
+  "Itasca/Runtime/Store/Linking/LinkLoop.lean": {
+    "constructorNameAsVariable": 2,
+    "unusedSimpArgs": 8
+  },
+  "Itasca/Runtime/Store/Linking/LinkedOwners.lean": {
+    "unusedSimpArgs": 2,
+    "unusedTactic": 1
+  },
+  "Itasca/Runtime/Store/Preparation/PreparationErrorLoops.lean": {
+    "constructorNameAsVariable": 2,
+    "unnecessarySimpa": 1,
+    "unusedSimpArgs": 3
+  },
+  "Itasca/Visitor/BodyReplay.lean": {
+    "constructorNameAsVariable": 1,
+    "unusedSimpArgs": 2
+  },
+  "SpecExt/Builtins/Float/Conversion.lean": {
+    "other": 1
+  }
+}

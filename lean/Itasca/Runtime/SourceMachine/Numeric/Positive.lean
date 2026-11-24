@@ -1,7 +1,14 @@
 import Itasca.Runtime.SourceMachine.Numeric.TransitionSimulation
-import Itasca.Runtime.SourceMachine.Core.Pure
-namespace Itasca.Runtime.SourceMachine.Numeric
-open SpecExt Itasca.Runtime.Spec
+import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
+
+/-!
+# Positive source transition progress
+
+Numeric and core abstract transitions have the positive progress properties required by source-machine simulation and termination measures.
+-/
+
+namespace Itasca.SourceMachine.Numeric
+open SpecExt Itasca.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
     (typed : ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
@@ -47,4 +54,4 @@ theorem core_step_positive (s : store) (ambient : frame) (f : AFrame)
   simp only [Core.step] at step
   rw [Core.instruction_slice s ambient {f with code := op.source::after} rest op.source after (.numeric op) hf] at step
   exact astep_positive s ambient f rest after op next typed step
-end Itasca.Runtime.SourceMachine.Numeric
+end Itasca.SourceMachine.Numeric

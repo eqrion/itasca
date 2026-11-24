@@ -1,17 +1,12 @@
-import Itasca.Runtime.SourceMachine.Core.Bound
-import Itasca.Runtime.SourceMachine.Supported.CoreStuck
-import Itasca.Runtime.SourceMachine.Core.Correct
-import Itasca.Runtime.SourceMachine.Core.Extension
-import Itasca.Runtime.SourceMachine.Indirect.Transport
-import Itasca.Runtime.SourceMachine.SupportedState
-import Itasca.Runtime.SourceMachine.Ownership.Core
-import Itasca.Runtime.SourceMachine.Numeric.Transition
-import Itasca.Runtime.SourceMachine.StepSafety
-import Itasca.Runtime.SourceMachine.Core.Step
-import Itasca.Runtime.SourceMachine.Core.Pure
+import Itasca.Runtime.SourceMachine.Core.ProgressAndBounds
 import Itasca.Runtime.SourceMachine.Supported.PureCoverage
-import Itasca.Runtime.SourceMachine.Core.Terminal
-import Itasca.Runtime.SourceMachine.Cumulative.Step
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
+import Itasca.Runtime.SourceMachine.EntryAndBranchTables
+import Itasca.Runtime.SourceMachine.OwnershipExtension
+import Itasca.Runtime.SourceMachine.Numeric.Transition
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
+import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 
 /-!
 Supported source execution: correctness, ownership, code bounds, extension and terminal cases compose the cumulative step theorem. The independently consumed coverage contract remains separate.
@@ -21,8 +16,8 @@ Supported source execution: correctness, ownership, code bounds, extension and t
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Core
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Core
 
 theorem step_bound (bound : Nat) (s next : AState)
     (typed : CoreTyped s) (covered : SupportedState s) (bounded : CodeBound bound s)
@@ -58,7 +53,7 @@ theorem step_bound (bound : Nat) (s next : AState)
             change sizeOf label.after ≤ bound
             omega
           · contradiction
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -66,9 +61,9 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Core
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Core
+open SpecExt Itasca.Spec
 
 /-- Every successful mutable Core step is source typed and source simulated;
 ordinary and mutable instructions share the same active/suspended-frame model. -/
@@ -92,7 +87,7 @@ theorem step_correct (s next : AState) (typed : CoreTyped s) (covered : Supporte
         · exact Core.instruction_correct source ambient frame rest op after next head typed equation
         · exact nomatch (stuck _ _ _ _ _).symm.trans equation
 
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -100,9 +95,9 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Core
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Core
+open SpecExt Itasca.Spec
 
 /-- The mutable machine preserves issued source objects by the generated store
 extension relation at every successful transition. -/
@@ -130,7 +125,7 @@ theorem step_extends (s next : AState) (typed : CoreTyped s) (covered : Supporte
         rw [same]
         exact extend_store_refl _ typed.typed.store
 
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -138,7 +133,7 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Indirect
+namespace Itasca.SourceMachine.Indirect
 
 theorem invoke_supported {s : AState} {f : AFrame} {rest : List AFrame} {address after next}
     (functions : FunctionsSupported s.store) (tail : Forall BinaryInstr after)
@@ -181,8 +176,7 @@ theorem step_supported {s ambient f rest table type after next}
   exact invoke_supported (f:={f with vals:=_}) covered.functions (fun item member => frame.1 item (List.mem_cons_of_mem _ member)) frame.2
     (fun item member => covered.active item (List.mem_cons_of_mem _ member)) stepped
 
-
-end Itasca.Runtime.SourceMachine.Indirect
+end Itasca.SourceMachine.Indirect
 
 end
 
@@ -190,8 +184,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Ownership
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Ownership
 
 theorem step_owned {bounds : Bounds} {s next : AState}
     (typed : CoreTyped s) (covered : SupportedState s) (owned : CoreOwned bounds s)
@@ -223,7 +217,7 @@ theorem step_owned {bounds : Bounds} {s next : AState}
         rcases BinaryInstr.core_head (supported op (by simp)) with head | stuck
         · exact Ownership.instruction_owned bounds store ambient ⟨address,types,locals,module,labels,[],values⟩ rest op after next head frameTyped owned.globals first remaining step
         · exact nomatch (stuck _ _ _ _ _).symm.trans step
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -231,8 +225,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Core
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Core
 
 /-- Successful instructions retain the supported source grammar, including
 unchanged defined function bodies after mutable object-content writes. -/
@@ -311,7 +305,7 @@ theorem step_covered (s next : AState) (typed : ATyped s) (covered : SupportedSt
             exact ⟨(body.2 label (by simp)).2,fun outer member => body.2 outer (by simp [member])⟩
           · contradiction
 
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -319,9 +313,9 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Supported
-open Itasca.Runtime.SourceMachine.Core
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Supported
+open Itasca.SourceMachine.Core
+open SpecExt Itasca.Spec
 
 theorem step_trap (s : AState) (typed : CoreTyped s) (covered : SupportedState s)
     (equation : step s = .trap) :
@@ -346,7 +340,7 @@ theorem step_trap (s : AState) (typed : CoreTyped s) (covered : SupportedState s
         simp only [step,astep,returnFrame,advance] at equation
         repeat' first | contradiction | split at equation
 
-end Itasca.Runtime.SourceMachine.Supported
+end Itasca.SourceMachine.Supported
 
 end
 
@@ -354,8 +348,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Cumulative
-open SpecExt Itasca.Runtime.Spec Itasca.Runtime.SourceMachine.Ownership
+namespace Itasca.SourceMachine.Cumulative
+open SpecExt Itasca.Spec Itasca.SourceMachine.Ownership
 
 theorem Step.next_typed_supported {before next : AState} (step : Step before (.next next))
  (typed : CoreTyped before) (covered : SupportedState before) : CoreTyped next := by
@@ -465,6 +459,6 @@ theorem Step.trap_simulation_supported {before : AState} (step : Step before .tr
   | indirect equation _ => exact Indirect.trap_simulation _ _ _ _ _ _ _ typed equation
   | stateful transition _ => exact Stateful.transition_trap _ _ _ _ _ _ typed transition
 
-end Itasca.Runtime.SourceMachine.Cumulative
+end Itasca.SourceMachine.Cumulative
 
 end

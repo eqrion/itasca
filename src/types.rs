@@ -4,7 +4,7 @@ use alloc::vec::Vec;
 
 /// A WebAssembly value type.
 ///
-/// The Wasm 1.0 profile admits only the four numeric types.
+/// Includes numeric, vector, and reference types from WebAssembly Core 2.0.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
 pub enum ValueType {
@@ -123,7 +123,7 @@ pub enum ExternType {
 /// A decoded initializer or segment-offset expression.
 ///
 /// Initializers contain one constant instruction or a read of an immutable
-/// imported global. Reference and vector constants require the extended profile.
+/// imported global. Reference and vector constants are also supported.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub enum ConstExpr {

@@ -1,7 +1,14 @@
-import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableEffects
-import Itasca.Runtime.Compiler.Body.Reader.Control.BranchTableEffects
-import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTables
-namespace Itasca.Runtime.Compiler
+import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTable
+import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndScopeEffects
+import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
+
+/-!
+# Retained compiler branch tables
+
+Branch-table callbacks preserve the compiler's auxiliary tables. Reader-level preservation follows for actual returning branch-table steps.
+-/
+
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 
 theorem compiler_br_table_tables {A : Type} (ops : runtime.platform.Alloc A)
@@ -24,16 +31,16 @@ theorem compiler_br_table_tables {A : Type} (ops : runtime.platform.Alloc A)
     simp only [CompilerTables.ofFunction,CompilerTables.append,List.append_nil,
       fixed.indirect,fixed.simd,fixed.constants,tables]
 
-theorem compiler_reader_table_tables_wasm2 {A : Type} (ops : runtime.platform.Alloc A)
+theorem compiler_reader_table_tables {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env)
-    (shape : Control.Shape st.core) (depths : List U32) (fallback : U32) (next : Usize)
-    (encoded : BrTable.Decoded data st.core.pos depths fallback next)
+    (shape : Body.Control.Shape st.core) (depths : List U32) (fallback : U32) (next : Usize)
+    (encoded : Body.BrTable.Decoded data st.core.pos depths fallback next)
     (accepted : code.branch_table_with (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      st data env .Wasm2 before=.ok (.Ok (),final,after)) :
+      st data env before=.ok (.Ok (),final,after)) :
     ∃ targets, CompilerTables.ofFunction after.function =
       (CompilerTables.ofFunction before.function).append ⟨[],[],[],targets⟩ := by
-  obtain ⟨budget,buffer,types,_,callback⟩ := compiler_table_source_wasm2 ops law before after st final data env
+  obtain ⟨budget,buffer,types,_,callback⟩ := compiler_table_source ops law before after st final data env
     shape depths fallback next encoded accepted
   exact compiler_br_table_tables ops law {before with budget,table_depths := buffer} after final.core fallback types callback
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

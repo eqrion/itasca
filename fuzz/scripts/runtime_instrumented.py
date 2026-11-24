@@ -23,23 +23,38 @@ def main():
     target_dir = options.target_dir or (ROOT / "fuzz/target/instrumented")
     environment = dict(os.environ, RUSTUP_TOOLCHAIN="nightly-2026-09-17", ITASCA_FUZZ_REPORT_EACH="1")
     print(f"Instrumented inputs, logs, and failure artifacts: {work}", flush=True)
-    targets = ["wasm1_execute", "wasm2_execute", "runtime_linking",
+    targets = ["wasm2_execute", "runtime_linking",
                "runtime_numeric", "runtime_stateful", "runtime_compile"]
     for number, target in enumerate(targets, 1):
         corpus = work / target
         corpus.mkdir()
         if target == "runtime_compile":
-            for index, fixture in enumerate(sorted((ROOT / "tests/spec/valid").glob("*.wasm"))[:100]):
-                for profile in (0, 1):
-                    (corpus / f"seed-{profile}-{index}").write_bytes(bytes([profile]) + fixture.read_bytes())
-        else:
-            for seed in range(64):
-                state = seed + 1
-                data = bytearray()
-                for _ in range(1024 + seed * 16):
-                    state = (state * 6364136223846793005 + 1) % (1 << 64)
-                    data.append((state >> 32) & 255)
-                (corpus / f"seed-{seed}").write_bytes(data)
+            modules = [
+                bytes.fromhex("0061736d01000000"),
+                bytes.fromhex(
+                    "0061736d01000000"
+                    "0106016000017f"
+                    "03020100"
+                    "07050101660000"
+                    "0a06010400412a0b"
+                ),
+                bytes.fromhex(
+                    "0061736d01000000"
+                    "0106016000027f7e"
+                    "03020100"
+                    "07050101660000"
+                    "0a08010600412a42000b"
+                ),
+            ]
+            for index, module in enumerate(modules):
+                (corpus / f"wasm2-{index}").write_bytes(module)
+        for seed in range(64):
+            state = seed + 1
+            data = bytearray()
+            for _ in range(1024 + seed * 16):
+                state = (state * 6364136223846793005 + 1) % (1 << 64)
+                data.append((state >> 32) & 255)
+            (corpus / f"seed-{seed}").write_bytes(data)
         command = [options.cargo_fuzz, "fuzz", "run", "--dev", "--target-dir", str(target_dir),
                    target, str(corpus), "--", f"-seed={number}",
                    f"-max_total_time={options.seconds}", "-timeout=10", "-rss_limit_mb=2048",

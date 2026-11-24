@@ -1,6 +1,25 @@
-import Itasca.Runtime.Integration.Execution.Dispatch.Entry
-import Itasca.Runtime.Interp.Calls.CallCauses
-namespace Itasca.Runtime.Integration
+import Itasca.Runtime.Integration.Execution.Certificates
+import Itasca.Runtime.Integration.Execution.History.State
+import Itasca.Runtime.Integration.Execution.Dispatch.Host
+import Itasca.Runtime.Integration.Host.HostRecordingBoundary
+import Itasca.Runtime.Integration.Host.HostCallContext
+import Itasca.Runtime.Interp.Relations.StackPreservation
+import Itasca.Runtime.Integration.Host.HostIndirectSelected
+import Itasca.Runtime.Integration.Execution.Ownership.ReferenceShape
+import Itasca.Runtime.Integration.Execution.Ownership.Publication
+import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
+import Itasca.Runtime.Integration.Execution.Dispatch.Normalization
+import Itasca.Runtime.Interp.Relations.StepActive
+import Itasca.Runtime.Interp.Machine.Progress.UnreachableExecution
+import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
+import Itasca.Runtime.Integration.Execution.Dispatch.IndirectBoundary
+import Itasca.Runtime.Interp.Calls.OutcomesAndResolution
+
+/-! ## EntryOutcomes -/
+
+section
+
+namespace Itasca.Integration
 open Aeneas Aeneas.Std SpecExt
 
 /-- Entry rejections retain the exact allocator, frame limit, value limit, or interrupt witness. -/
@@ -9,18 +28,18 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (allocation : Platform.AllocCorrect allocator)
     (interrupts : ∀ p, hooks.interrupt p ⦃ _ => True ⦄)
-    (view : M → Slice U8) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (code : Representation.CodeInterpretation)
     (before : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
-    (shaped : Store.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
+    (shaped : Representation.Shape view store) (sourceSyntax : Store.StoreSyntax code store) (bounds : Store.SegmentBounds store)
     (functionTyping : Interp.CoreFunctionsTyped view code store)
-    (coveredFunctions : SourceMachine.FunctionsSupported (Store.decodeStore view code store))
+    (coveredFunctions : SourceMachine.FunctionsSupported (Representation.decodeStore view code store))
     (compiledFunctions : Interp.Machine.CompiledFunctions code store)
     (ambient : frame) (ambientWf : wf_frame ambient)
     (address : runtime.FuncAddr) (function : runtime.store.FuncInst)
     (signature : Itasca.wasm_types.FuncType) (instanceIndex functionIndex : Usize)
     (args : Slice runtime.Value)
     (empty : before.frames.val = []) (identity : before.store = store.id)
-    (arguments : Interp.ValuesAt before.slots.val 0 (args.val.map Interp.sourceValue))
+    (arguments : Interp.ValuesAt before.slots.val 0 (args.val.map Representation.sourceValue))
     (accepted : runtime.interp.check_values memory store args (alloc.vec.Vec.deref signature.params) = .ok (.Ok ()))
     (owned : ∀ value ∈ args.val, Store.ValueInStore store value)
     (hf : store.funcs.val[address.index.val]? = some function)
@@ -29,11 +48,11 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
     runtime.interp.call memory hooks floats allocator before store platform address 0#usize ⦃ out =>
       out.2.2.1 = store ∧ (out.1 = .Ok () → ∃ entry,
         Interp.Machine.Execution view code store out.2.1 entry
-          (signature.results.val.map Interp.sourceType) 0 false ∧
+          (signature.results.val.map Itasca.Translation.valueType) 0 false ∧
         SourceMachine.Ownership.StatefulOwned (Store.ownershipBounds store) entry ∧
         entry.ambient = ambient ∧
-        StepH ⟨⟨Store.decodeStore view code store, ambient⟩,
-          vals (args.val.map Interp.sourceValue) ++ [.CALL_ADDR address.index.val]⟩ [] (SourceMachine.decode entry)) ∧
+        StepH ⟨⟨Representation.decodeStore view code store, ambient⟩,
+          vals (args.val.map Representation.sourceValue) ++ [.CALL_ADDR address.index.val]⟩ [] (SourceMachine.decode entry)) ∧
       (∀ error, out.1 = .Err error → ∃ inst compiled,
         store.instances.val[instanceIndex.val]? = some inst ∧
         inst.module.functions.val[functionIndex.val]? = some compiled ∧
@@ -45,11 +64,13 @@ theorem call_defined_supported_entry_outcomes {M P F A : Type}
   obtain ⟨inst,compiled,actualSignature,declared,body,epilogue,hi,hc,actualHs,table,certificate,bindings,lookup⟩ :=
     compiledFunctions.defined view functionTyping address function instanceIndex functionIndex hf hw
   have params : compiled.param_slots.val ≤ compiled.local_slots.val := by
-    rw [certificate.2.parameterSlots,certificate.2.localSlots,Compiler.slots_append]
+    rw [certificate.2.parameterSlots,certificate.2.localSlots,Representation.slots_append]
     omega
   have causes := Interp.call_wasm_causes memory hooks floats allocator allocation interrupts before store platform address 0#usize
     function instanceIndex functionIndex inst compiled hf hw hi hc params certificate.2.capacity
   rw [returned] at causes ⊢
   simp only [WP.spec_ok] at causes ⊢
   exact ⟨unchanged,entered,fun error rejected => ⟨inst,compiled,hi,hc,causes error rejected⟩⟩
-end Itasca.Runtime.Integration
+end Itasca.Integration
+
+end

@@ -15,8 +15,7 @@ SPECTEC_WRITE_BOUNDS_PATCH := $(ROOT)/patches/spectec-wasm2-memory-write-bounds.
 SPECTEC_TABLE_WRITE_BOUNDS_PATCH := $(ROOT)/patches/spectec-wasm2-table-write-bounds.patch
 SPECTEC_EXPORT_MEMBERSHIP_PATCH := $(ROOT)/patches/spectec-wasm2-export-membership.patch
 SPECTEC_MEMORY_PATCH := $(ROOT)/patches/spectec-wasm2-memory-boundary.patch
-# Current Charon reads Cargo metadata rather than the retired Charon.toml.
-# Keep the verified extraction configuration explicit here.
+# Keep the verified Charon extraction configuration explicit.
 CHARON_FLAGS := --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
 	--exclude='{impl core::clone::Clone for _}' \
 	--exclude='{impl core::marker::Copy for _}' \
@@ -54,13 +53,20 @@ llbc: check-tools
 
 extract: llbc
 	$(AENEAS) -backend lean .build/itasca.llbc -dest . -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py Itasca/Generated/Types.lean Itasca/Generated/Funs.lean
+	python3 scripts/split_funs.py Itasca/Generated/Funs.lean
 
 # Do not refresh checked-in files while checking their provenance.
 extract-check: llbc
 	mkdir -p .build/extract-check
 	$(AENEAS) -backend lean .build/itasca.llbc -dest .build/extract-check -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+	python3 scripts/strip_source_lines.py .build/extract-check/Itasca/Generated/Types.lean .build/extract-check/Itasca/Generated/Funs.lean
+	python3 scripts/split_funs.py .build/extract-check/Itasca/Generated/Funs.lean
 	cmp .build/extract-check/Itasca/Generated/Types.lean Itasca/Generated/Types.lean
 	cmp .build/extract-check/Itasca/Generated/Funs.lean Itasca/Generated/Funs.lean
+	@for file in FunsValidator FunsRuntimeCommon FunsCompiler FunsStore FunsInterp FunsInstantiate; do \
+		cmp .build/extract-check/Itasca/Generated/$$file.lean Itasca/Generated/$$file.lean || exit 1; \
+	done
 
 prove:
 	lake build Itasca SpecExt
@@ -71,7 +77,7 @@ clean:
 
 # Check the spec and concrete external models independently of the Rust model.
 checkpoint:
-	lake build Itasca.Spec.Checks Itasca.Generated.FunsExternal
+	lake build Itasca.Spec.Typing Itasca.Generated.FunsExternal
 
 spec-build: patch-spectec
 	$(MAKE) -C $(SPECTEC_DIR) src/backend-interpreter/reference-interpreter
@@ -92,4 +98,4 @@ spec-compare: spec-generate
 	cmp .build/spec/wasm2.0.lean SpecTec/wasm2.0.lean
 
 spec-check: spec-compare
-	lake build SpecTecGenerated Itasca.Spec.Checks
+	lake build SpecTecGenerated Itasca.Spec.Typing

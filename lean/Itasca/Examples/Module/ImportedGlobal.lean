@@ -1,11 +1,11 @@
 import Itasca.Main
 import Itasca.Examples.Module.Basic
-import Itasca.Examples.Module.Support
+import Itasca.Examples.Module.SliceLayout
 
 /-!
 # Imported and defined globals in constant expressions
 
-Under Wasm 1.0 a global initializer may read only an imported immutable global.
+Under Wasm 2.0 a global initializer may read only an imported immutable global.
 `imported_initializer_accepted` accepts a module that imports an immutable `i32` global under a
 four-byte UTF-8 name (U+1F600) and initializes a defined global with `global.get 0`.
 `defined_global_initializer_rejected` rejects a module whose second global reads the first defined
@@ -14,28 +14,28 @@ global.
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.Examples.ModuleImportedGlobal
+namespace Itasca.Examples.Module.ImportedGlobal
 
-open ModuleSupport (leb one padded omitted)
+open Itasca.Examples.Module.Support (leb one padded omitted)
 
-open ModuleBinary ModuleEnv
+open Binary Module.Environment
 
 /-- An immutable `i32` global type. -/
 def globalType : wasm_types.GlobalType := ⟨.Const, .I32⟩
 /-- An import of global `m.<U+1F600>` of type `globalType`. -/
-def imported : ModuleBinary.Import := ⟨[0x6D#u8], [0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], .Global globalType⟩
+def imported : Binary.Import := ⟨[0x6D#u8], [0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], .Global globalType⟩
 /-- A defined global of type `globalType` initialized by `global.get 0`. -/
 def global : metadata.Global := ⟨globalType, .GlobalGet 0#u32⟩
 /-- The import and global declarations of the module. -/
 def declarations : Declarations := { imports := [imported], globals := [global] }
 /-- The decoded module: `declarations` with no functions or data. -/
-def raw : ModuleBinary.Module := declarations.module [] []
+def raw : Binary.Module := declarations.module [] []
 /-- The bytes of the import and global sections. -/
 def layout : Layout :=
   { imports := [2#u8,11#u8,1#u8,1#u8,0x6D#u8,4#u8,0xF0#u8,0x9F#u8,0x98#u8,0x80#u8,3#u8,0x7F#u8,0#u8]
     globals := [6#u8,6#u8,1#u8,0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8] }
 /-- The full module bytes: header and `layout`. -/
-def input : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++ layout.bytes)
+def input : Slice U8 := Examples.Module.Support.bytes (magicVersion ++ layout.bytes)
   (by simp [magicVersion, layout, Layout.bytes]; scalar_tac)
 
 private theorem layout_valid : Layout.Valid 9 declarations layout := by
@@ -53,23 +53,21 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
-  · exact ⟨rfl, rfl⟩
+  · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
-  · simp [ModuleTypesAllowed, ValueTypeAllowed, ConstAllowed, declarations,
-      Declarations.module, globalType, imported, global]
 
-private theorem init_typed : Expr_ok_const (ModuleElaboration.initializerContextOf raw)
-    (ModuleConstants.expression (.GlobalGet 0#u32)) (Translate.valueType .I32) := by
-  let env : metadata.Env := { Examples.ModuleBasic.emptyEnv with
+private theorem init_typed : Expr_ok_const (Module.Elaboration.initializerContextOf raw)
+    (Module.Constants.expression (.GlobalGet 0#u32)) (Translation.valueType .I32) := by
+  let env : metadata.Env := { Examples.Module.Basic.emptyEnv with
     global_types := alloc.vec.Vec.from [globalType] (by simp; scalar_tac)
     num_imported_globals := 1#usize }
-  have hv : ModuleConstants.Valid env (.GlobalGet 0#u32) .I32 :=
+  have hv : Module.Constants.Valid env (.GlobalGet 0#u32) .I32 :=
     .globalGet _ globalType (by simp [env]) rfl (by simp [env]) rfl
   apply hv.expr_ok_const
-  · constructor <;> simp [ModuleElaboration.contextOf,
-      raw, declarations, Declarations.module, imported, ModuleElaboration.importType,
-      ModuleTranslation.tables, ModuleTranslation.mems, Forall]
+  · constructor <;> simp [Module.Elaboration.contextOf,
+      raw, declarations, Declarations.module, imported, Module.Elaboration.importType,
+      Module.Translation.tables, Module.Translation.mems, Forall]
   · rfl
   · rfl
 
@@ -82,102 +80,98 @@ private theorem requirements : Requirements raw := by
       have he : e = imported := by simpa [raw, declarations, Declarations.module] using he
       subst e
       trivial
-    · simp [hr.empty_tables (by decide), ModuleSections.rawTables, raw, declarations, Declarations.module, imported]
-    · simp [hr.empty_memories (by decide), ModuleSections.rawMemories, raw, declarations, Declarations.module, imported]
+    · simp [hr.empty_memories (by decide), Module.Sections.rawMemories, raw, declarations, Declarations.module, imported]
+  · simp [SectionValid, raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
   · constructor
     · simp [raw, declarations, Declarations.module]
-    · rw [hr.tables_count (by decide) (by decide)]
-      simp [raw, declarations, Declarations.module, imported, ModuleElaboration.importType, ModuleTranslation.tables]
-  · constructor
-    · simp [raw, declarations, Declarations.module]
     · rw [hr.memories_count (by decide) (by decide)]
-      simp [raw, declarations, Declarations.module, imported, ModuleElaboration.importType, ModuleTranslation.mems]
+      simp [raw, declarations, Declarations.module, imported, Module.Elaboration.importType, Module.Translation.mems]
   · intro g hg
     have hg : g = global := by simpa [raw, declarations, Declarations.module] using hg
     subst g
-    exact ModuleConstants.valid_of_typing (hr.initializer_globals (by decide))
-      (by simpa [ModuleConstants.FunctionContext, ModuleElaboration.initializerContextOf]
+    exact Module.Constants.valid_of_typing (hr.initializer_globals (by decide))
+      (by simpa [Module.Constants.FunctionContext, Module.Elaboration.initializerContextOf]
         using hr.funcs_context (by decide)) init_typed
   · constructor <;> simp [raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
   · simp [SectionValid, raw, declarations, Declarations.module]
   · trivial
 
-/-- `metadata.validate_module` accepts `input` under Wasm 1.0. The import name is a four-byte UTF-8
+/-- `metadata.validate_module` accepts `input` under Wasm 2.0. The import name is a four-byte UTF-8
 sequence, and the imported immutable `i32` global is available to the `global.get` initializer of
 the defined global. -/
-theorem imported_initializer_accepted : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) := by
-  have hp : At PrefixEncoding input 0#usize declarations (Slice.len input) := by
+theorem imported_initializer_accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) := by
+  have hp : At (fun ds bs => PrefixEncoding ds bs ) input 0#usize declarations (Slice.len input) := by
     refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
-    constructor <;> simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
+    constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes]
   obtain ⟨env, decls, he, hr⟩ := metadata.validate_env.complete input raw declarations (Slice.len input)
     hp rfl (.inl rfl) requirements
-  exact ⟨⟨env, ⟨alloc.vec.Vec.new _⟩⟩, Examples.ModuleBasic.accepted_at_end input env
-    (by simp [input, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref,
+  exact ⟨⟨env, ⟨alloc.vec.Vec.new _⟩⟩, Examples.Module.Basic.accepted_at_end input env
+    (by simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, limits.MAX_MODULE_BYTES])
-    (hr.functions_eq (by decide)) he⟩
+    (hr.functions_eq (by decide)) (hr.data_count_eq (by decide)) he⟩
 
-/-- The accepted module has a `ModuleSound.Validated` certificate for the bytes of `input`. -/
-theorem imported_initializer_validated : ∃ decoded, metadata.validate_module input .Wasm1 = .ok (.Ok decoded) ∧
-    ModuleSound.Validated input decoded := by
+/-- The accepted module has a `Module.Sound.Validated` certificate for the bytes of `input`. -/
+theorem imported_initializer_validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
+    Module.Sound.Validated input decoded := by
   obtain ⟨decoded, ha⟩ := imported_initializer_accepted
-  exact ⟨decoded, ha, metadata.validate_module.wasm_sound _ _ ha⟩
+  exact ⟨decoded, ha, metadata.validate_module.sound _ _ ha⟩
 
 /-- A module with no imports and two immutable `i32` globals: the first is `i32.const 0` and the
 second is `global.get 0`. -/
-def definedGlobalInput : Slice U8 := Examples.ModuleSupport.bytes (magicVersion ++
+def definedGlobalInput : Slice U8 := Examples.Module.Support.bytes (magicVersion ++
   [6#u8,11#u8,2#u8,0x7F#u8,0#u8,0x41#u8,0#u8,0x0B#u8,
     0x7F#u8,0#u8,0x23#u8,0#u8,0x0B#u8])
   (by simp [magicVersion]; scalar_tac)
 
-/-- `metadata.validate_module` rejects `definedGlobalInput` under Wasm 1.0 with
+/-- `metadata.validate_module` rejects `definedGlobalInput` under Wasm 2.0 with
 `MutableGlobalInConstExpr`: a defined global, even an immutable one, is not available in a
 constant expression. -/
-theorem defined_global_initializer_rejected : metadata.validate_module definedGlobalInput .Wasm1 =
+theorem defined_global_initializer_rejected : metadata.validate_module definedGlobalInput =
     .ok (.Err .MutableGlobalInConstExpr) := by
   let data := definedGlobalInput
-  let initial := Examples.ModuleBasic.emptyEnv
+  let initial := Examples.Module.Basic.emptyEnv
   have hheader := metadata.read_header.complete data 8#usize (by
-    constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion])
+    constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion])
   have hh : SectionHeader data 8#usize 6#u8 10#usize 21#usize := by
     refine ⟨9#usize, 11#u32, ⟨[6#u8], rfl, ?_⟩, ?_, rfl, by decide⟩
-    · constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
+    · constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]
     · refine ⟨[11#u8], ?_, rfl, by decide, leb 11#u8⟩
-      simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]
+      simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]
   have hcount := (show At IndexEncoding data 10#usize 2#u32 11#usize from
-    ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
+    ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hg1 := metadata.decode_global_type.complete data 11#usize globalType 13#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
-    .Wasm1 trivial
+    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
     .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := metadata.decode_const_expr.complete
     (env := initial) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
-      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _) .Wasm1 trivial
+      ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _)
   obtain ⟨types, htypes, htval⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, Examples.ModuleBasic.emptyEnv]; scalar_tac))
+    (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, Examples.Module.Basic.emptyEnv]; scalar_tac))
   obtain ⟨globals, hglobals, hgval⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec initial.globals (⟨globalType, .I32 0#i32⟩ : metadata.Global)
-      (by simp [initial, Examples.ModuleBasic.emptyEnv]; scalar_tac))
+      (by simp [initial, Examples.Module.Basic.emptyEnv]; scalar_tac))
   let updated := {initial with global_types := types, globals := globals}
-  have hgt : updated.global_types.val = [globalType] := by simpa [updated, initial, Examples.ModuleBasic.emptyEnv] using htval
+  have hgt : updated.global_types.val = [globalType] := by simpa [updated, initial, Examples.Module.Basic.emptyEnv] using htval
   have hglobal : metadata.const_global updated 0#u32 = .ok (.Err .MutableGlobalInConstExpr) := by
     have hcast : UScalar.cast .Usize 0#u32 = 0#usize := by scalar_tac
-    simp [metadata.const_global, hcast, lift, hgt, updated, initial, Examples.ModuleBasic.emptyEnv]
+    simp [metadata.const_global, hcast, lift, hgt, updated, initial, Examples.Module.Basic.emptyEnv]
   have hg2 := metadata.decode_global_type.complete data 16#usize globalType 18#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩
-    .Wasm1 trivial
+    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+
   have hop := (show At ByteEncoding data 18#usize 0x23#u8 19#usize from
-    ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
+    ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
   have hidx := (show At IndexEncoding data 19#usize 0#u32 20#usize from
-    ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have he2 : metadata.decode_const_expr data 18#usize updated .I32 .Wasm1 = .ok (.Err .MutableGlobalInConstExpr) := by
+    ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
+  have he2 : metadata.decode_const_expr data 18#usize updated .I32 = .ok (.Err .MutableGlobalInConstExpr) := by
     simp [metadata.decode_const_expr, hop, hidx, hglobal, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  have hrest : metadata.decode_global_section_loop data updated .Wasm1 2#u32 16#usize 1#u32 =
+  have hrest : metadata.decode_global_section_loop data updated 2#u32 16#usize 1#u32 =
       .ok (.Err .MutableGlobalInConstExpr, updated) := by
     unfold metadata.decode_global_section_loop
     rw [loop]
@@ -189,7 +183,7 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     obtain ⟨x, hx, rfl⟩ := WP.spec_imp_exists hs
     exact hx
   simp only [globalType] at htypes hglobals
-  have hread : metadata.decode_global_section data 10#usize initial .Wasm1 =
+  have hread : metadata.decode_global_section data 10#usize initial =
       .ok (.Err .MutableGlobalInConstExpr, updated) := by
     simp [metadata.decode_global_section, hcount, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_global_section_loop
@@ -209,14 +203,14 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     unfold stream.find_code_region
-    rw [split_skip_section data 8#usize 10#usize 21#usize 6#u8 hh (by decide)]
+    rw [Stream.Split.skip_section data 8#usize 10#usize 21#usize 6#u8 hh (by decide)]
     have hlen : Slice.len data = 21#usize := UScalar.eq_of_val_eq rfl
-    simpa [hlen] using split_loop_eof data
-  apply Examples.ModuleBasic.environment_error data _
-    (by simp [data, definedGlobalInput, Examples.ModuleSupport.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
+    simpa [hlen] using Stream.Split.loop_eof data
+  apply Examples.Module.Basic.environment_error data _
+    (by simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
   simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hheader,
-    core.result.Result.Insts.CoreOpsTry.branch, initial, Examples.ModuleBasic.emptyEnv,
+    core.result.Result.Insts.CoreOpsTry.branch, initial, Examples.Module.Basic.emptyEnv,
     parseLoop] at hloop ⊢
   simp [hloop]
 
-end Itasca.Examples.ModuleImportedGlobal
+end Itasca.Examples.Module.ImportedGlobal

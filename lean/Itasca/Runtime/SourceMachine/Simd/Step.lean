@@ -1,8 +1,7 @@
-import Itasca.Runtime.SourceMachine.Simd.Transition
-import Itasca.Runtime.SourceMachine.Stateful.OwnershipStore
-import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
-import Itasca.Runtime.SourceMachine.SupportedState
+import Itasca.Runtime.SourceMachine.Stateful.TransitionInvariants
+import Itasca.Runtime.SourceMachine.Bound
+import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 
 /-!
 SIMD step invariant preservation, combining constants and memory operations with support coverage. Primitive transition contracts remain below this composition.
@@ -12,8 +11,8 @@ SIMD step invariant preservation, combining constants and memory operations with
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Simd
-open SpecExt Itasca.Runtime.Spec Ownership
+namespace Itasca.SourceMachine.Simd
+open SpecExt Itasca.Spec Ownership
 
 theorem numeric_value_owned {value : val} {output : valtype}
     (numeric : output = .V128 ∨ ∃ ty : numtype, output = valtype_numtype ty)
@@ -74,7 +73,7 @@ theorem transition_bound {s : store} {ambient : frame} {f : AFrame}
     have size : sizeOf after < sizeOf (source :: after) := by simp
     exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Itasca.Runtime.SourceMachine.Simd
+end Itasca.SourceMachine.Simd
 
 end
 
@@ -82,8 +81,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Simd
-open SpecExt Itasca.Runtime.Spec Ownership
+namespace Itasca.SourceMachine.Simd
+open SpecExt Itasca.Spec Ownership
 
 def constant (s : AState) (f : AFrame) (rest : List AFrame) (after : List instr) (value : vec_) : AState :=
   ⟨s.store,s.ambient,{f with code := after, vals := f.vals ++ [.VCONST .V128 value]} :: rest,[]⟩
@@ -156,7 +155,7 @@ theorem constant_bound {s : store} {ambient : frame} {f : AFrame}
   have size : sizeOf after < sizeOf (instr.VCONST .V128 value :: after) := by simp
   exact Nat.le_trans (Nat.le_of_lt size) active.1
 
-end Itasca.Runtime.SourceMachine.Simd
+end Itasca.SourceMachine.Simd
 
 end
 
@@ -164,8 +163,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Simd
-open SpecExt Itasca.Runtime.Spec Ownership
+namespace Itasca.SourceMachine.Simd
+open SpecExt Itasca.Spec Ownership
 
 theorem MemorySignature.results_owned {source inputs outputs}
     (signature : MemorySignature source inputs outputs) {values : List val}
@@ -231,7 +230,7 @@ theorem memory_transition_bound {s : _root_.store} {ambient : frame} {f : AFrame
       rw [change.functions]
       exact bounded.functions
 
-end Itasca.Runtime.SourceMachine.Simd
+end Itasca.SourceMachine.Simd
 
 end
 
@@ -239,8 +238,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Simd
-open SpecExt Itasca.Runtime.Spec Ownership
+namespace Itasca.SourceMachine.Simd
+open SpecExt Itasca.Spec Ownership
 
 /-- Relational SIMD execution, preserving source nondeterminism in pure results
 and exact payload mutations for memory operations. -/
@@ -302,7 +301,7 @@ theorem Step.trap_simulation {before} (step : Step before .trap) (typed : CoreTy
   cases step with
   | memory signature transition => exact memory_transition_trap_simulation signature typed.typed transition
 
-end Itasca.Runtime.SourceMachine.Simd
+end Itasca.SourceMachine.Simd
 
 end
 
@@ -310,7 +309,7 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Simd
+namespace Itasca.SourceMachine.Simd
 
 /-- SIMD consumes its source head without changing any remaining source syntax.
 The argument is independent of the eventual cumulative instruction family. -/
@@ -327,6 +326,6 @@ theorem Step.next_supported {before next}
     | next front operands results store values types resultTypes change effect =>
       exact covered.tail change.functions _
 
-end Itasca.Runtime.SourceMachine.Simd
+end Itasca.SourceMachine.Simd
 
 end

@@ -1,17 +1,56 @@
-import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalTerminal
-import Itasca.Runtime.Compiler.Local.Callbacks.Function.CloseFunction
-import Itasca.Runtime.Compiler.Local.Relations.Function.Function
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.LabelWiden
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Extension
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.Prefix
+import Itasca.Runtime.Compiler.Local.Control.StructuredElseResolvedAppend
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.ConsumedPrefix
+import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
+import Itasca.Runtime.Compiler.Local.Callbacks.Function.FunctionStartContracts
+import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
+import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
+
+open Itasca.Representation
+
+/-! ## UniversalConditional -/
+
+section
+
+/-!
+Adding a conditional branch to retained frame sites.
+
+Main declarations: `FrameSites.add_conditional`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas.Std
+
+theorem FrameSites.add_conditional {code frame} (valid : FrameSites code frame)
+    (dst src count old condition resume : U32) (site : Usize) (fixups : alloc.vec.Vec Usize)
+    (appended : fixups.val = frame.fixups.val ++ [site])
+    (position : site.val = code.length + (if count = 0#u32 ∨ src = dst then 0 else 2)) :
+    FrameSites (code ++ branchIfInstructions dst src count old condition resume)
+      {frame with end_reachable := true, fixups} := by
+  have extended := valid.extend (branchIfInstructions dst src count old condition resume)
+  refine ⟨?_, extended.guard⟩
+  intro pc member
+  simp only [appended, List.mem_append, List.mem_singleton] at member
+  rcases member with previous | rfl
+  · exact extended.branches pc previous
+  · by_cases elided : count = 0#u32 ∨ src = dst
+    · exact Or.inr ⟨condition, old, by simp [branchIfInstructions, elided, position]⟩
+    · exact Or.inl ⟨old, by simp [branchIfInstructions, elided, position]⟩
+
+end Itasca.Compiler
+
+end
+
+/-! ## UniversalRoot -/
+
+section
 
 /-!
 Final END fixes the root's coordinates and both liveness flags, producing one admissible future plan from the actual root frame's source metadata.
 
-Main declarations: `root_frame_plan` and `root_scope_label`. A direct consumer is `Compiler.Local.Control.Table.StructuredUniversalCloseBlock`.
+Main declarations: `root_frame_plan` and `root_scope_label`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas.Std
 
 /-- Final END fixes the root's coordinates and both liveness flags, producing
@@ -47,4 +86,6 @@ theorem root_scope_label (scope : SourceScope) (returns : List valtype)
   refine ⟨front.symm, ?_, results.symm⟩
   simp [SourceScope.branchTypes, form, results]
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end

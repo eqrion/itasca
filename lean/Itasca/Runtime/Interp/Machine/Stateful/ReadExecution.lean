@@ -1,21 +1,23 @@
-import Itasca.Runtime.Interp.State.StatefulReadStep
-import Itasca.Runtime.Interp.Machine.Coverage.SupportedControlSemantics
-import Itasca.Runtime.Interp.Machine.Control.JumpExecution
-import Itasca.Runtime.Interp.Relations.Capacity
+import Itasca.Runtime.Interp.State.ReadAndTableSetEffects
+import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
+import Itasca.Runtime.Interp.Machine.Control.BranchSource
+import Itasca.Runtime.Interp.Relations.TypedOperands
+
+open Itasca.Representation
 
 /-!
 Stateful read execution under the supported-source relation.
 
-Main declarations: `read_execution_supported_forward` and `read_execution_supported`. A direct consumer is `Integration.Execution.Dispatch.StoreRead`.
+Main declarations: `read_execution_supported_forward` and `read_execution_supported`.
 -/
 
-namespace Itasca.Runtime.Interp.Stateful
-open Aeneas Aeneas.Std SpecExt Itasca.Runtime.Spec
+namespace Itasca.Interp.Stateful
+open Aeneas Aeneas.Std SpecExt Itasca.Spec
 
 theorem read_execution_supported_forward
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Representation.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [Machine.StatefulProjection (emission compiled) compiled.indirect.val]
@@ -25,22 +27,22 @@ theorem read_execution_supported_forward
     (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
-    (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : Machine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (moduleEq : f.module=Representation.decodeInstance store inst) (slots : FrameSlots exec raw f)
+    (point : Machine.FramePoint (Representation.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Machine.Execution view code store exec
-      ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
-    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩
+      ⟨Representation.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (program : FrameProgram store raw compiled (f.locals.map Representation.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Representation.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1=store ∧ out.2.2.2=platform ∧
       ((out.1=.Ok () ∧ ∃ pc : U32,∃ g : SourceMachine.AFrame, raw.pc.val < pc.val ∧
-        Machine.Execution view code store out.2.1 ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ expected pc.val false ∧
-        ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ ∧
-        (∀ bounds,SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩) ∧
-        (∀ bound,SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩)) ∨
+        Machine.Execution view code store out.2.1 ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ expected pc.val false ∧
+        ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ ∧
+        (∀ bounds,SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩) ∧
+        (∀ bound,SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩)) ∨
        (out.1=.Err (.Trap .TableOutOfBounds) ∧ ∃ n,0<n ∧ StepsHN n (SourceMachine.decode initial) []
-         ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+         ⟨⟨Representation.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   dsimp only
   have top : exec.frames.val.getLast?=some raw := by
     rw [List.getLast?_eq_getElem?]
@@ -78,7 +80,7 @@ theorem read_execution_supported_forward
 theorem read_execution_supported
  {M P F A : Type} (memory : runtime.platform.MemoryBuffer M)
     (hooks : runtime.platform.Platform P M) (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
-    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Store.CodeInterpretation)
+    (view : M → Slice U8) (laws : Platform.MemoryLaws memory view) (code : Representation.CodeInterpretation)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P) (index : Usize)
     (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     [Machine.StatefulProjection (emission compiled) compiled.indirect.val]
@@ -88,26 +90,26 @@ theorem read_execution_supported
     (frameFound : exec.frames.val[index.val]?=some raw)
     (found : store.instances.val[raw.instance.val]?=some inst)
     (codeFound : inst.module.functions.val[raw.function.val]?=some compiled)
-    (moduleEq : f.module=Store.decodeInstance store inst) (slots : FrameSlots exec raw f)
-    (point : Machine.FramePoint (Store.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
+    (moduleEq : f.module=Representation.decodeInstance store inst) (slots : FrameSlots exec raw f)
+    (point : Machine.FramePoint (Representation.decodeStore view code store) raw {f with code:=op.source::after} compiled C targets next output)
     (expected : List valtype)
     (machine : Machine.Execution view code store exec
-      ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
-    (program : FrameProgram store raw compiled (f.locals.map Compiler.valueType) f.resultTypes C.FUNCS) :
-    let initial : SourceMachine.AState := ⟨Store.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩
+      ⟨Representation.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩ expected raw.pc.val false)
+    (program : FrameProgram store raw compiled (f.locals.map Representation.valueType) f.resultTypes C.FUNCS) :
+    let initial : SourceMachine.AState := ⟨Representation.decodeStore view code store,ambient,{f with code:=op.source::after}::rest,[]⟩
     runtime.interp.step memory hooks floats allocator exec store platform ⦃ out =>
       out.2.2.1=store ∧ out.2.2.2=platform ∧
       ((out.1=.Ok () ∧ ∃ pc : U32,∃ g : SourceMachine.AFrame,
-        Machine.Execution view code store out.2.1 ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ expected pc.val false ∧
-        ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩ ∧
-        (∀ bounds,SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩) ∧
-        (∀ bound,SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Store.decodeStore view code store,ambient,g::rest,[]⟩)) ∨
+        Machine.Execution view code store out.2.1 ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ expected pc.val false ∧
+        ConcreteSim compiled.code.length raw.pc.val pc.val false false initial ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩ ∧
+        (∀ bounds,SourceMachine.Ownership.StatefulOwned bounds initial → SourceMachine.Ownership.StatefulOwned bounds ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩) ∧
+        (∀ bound,SourceMachine.CodeBound bound initial → SourceMachine.CodeBound bound ⟨Representation.decodeStore view code store,ambient,g::rest,[]⟩)) ∨
        (out.1=.Err (.Trap .TableOutOfBounds) ∧ ∃ n,0<n ∧ StepsHN n (SourceMachine.decode initial) []
-         ⟨⟨Store.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
+         ⟨⟨Representation.decodeStore view code store,ambient⟩,[.TRAP]⟩)) ⦄ := by
   apply WP.spec_mono (read_execution_supported_forward memory hooks floats allocator view laws code exec store platform index raw inst compiled C targets next output ambient f rest after op readOnly last frameFound found codeFound moduleEq slots point expected machine program)
   rintro out ⟨sameStore,samePlatform,normal | failed⟩
   · obtain ⟨ok,pc,g,forward,fresh⟩ := normal
     exact ⟨sameStore,samePlatform,Or.inl ⟨ok,pc,g,fresh⟩⟩
   · exact ⟨sameStore,samePlatform,Or.inr failed⟩
 
-end Itasca.Runtime.Interp.Stateful
+end Itasca.Interp.Stateful

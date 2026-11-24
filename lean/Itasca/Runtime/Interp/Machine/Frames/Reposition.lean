@@ -1,23 +1,23 @@
-import Itasca.Runtime.Interp.Relations.StackRelation
-import Itasca.Runtime.SourceMachine.Results
+import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
+import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 
 /-!
 Repositioning a frame program certificate.
 
-Main declarations: `FrameProgram.reposition`. A direct consumer is `Interp.Machine.Execution`.
+Main declarations: `FrameProgram.reposition`.
 -/
 
-namespace Itasca.Runtime.Interp
+namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
 theorem FrameProgram.reposition {M : Type} {store : runtime.store.Store M}
     {raw : runtime.interp.Frame} {compiled : runtime.bytecode.CompiledFunction}
     {before after : SourceMachine.AFrame} {functions : List functype}
-    (program : FrameProgram store raw compiled (before.locals.map Compiler.valueType) before.resultTypes functions)
+    (program : FrameProgram store raw compiled (before.locals.map Representation.valueType) before.resultTypes functions)
     (pc : U32) (metadata : FrameMetadata before after) :
-    FrameProgram store { raw with pc := pc } compiled (after.locals.map Compiler.valueType) after.resultTypes functions := by
+    FrameProgram store { raw with pc := pc } compiled (after.locals.map Representation.valueType) after.resultTypes functions := by
   exact ⟨program.lookup, program.checked, program.fetchBound,
-    program.localSlots.trans (congrArg Compiler.slots metadata.locals).symm,
+    program.localSlots.trans (congrArg Representation.slots metadata.locals).symm,
     by simpa only [metadata.results] using program.epilogue⟩
 
-end Itasca.Runtime.Interp
+end Itasca.Interp

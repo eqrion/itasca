@@ -1,13 +1,110 @@
-import Itasca.Runtime.Compiler.Local.Relations.Select.SelectLowering
-import Itasca.Runtime.Compiler.Local.Lowering.Local.LoweringLocal
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
+import Itasca.Runtime.Compiler.Local.Lowering.LoweringLocal
+
+open Itasca.Representation
+
+/-! ## SelectLowering -/
+
+section
+
+/-!
+The bytecode lowering of untyped select.
+
+Main declarations: `selectLowering` and `selectInstruction`.
+-/
+
+namespace Itasca.Compiler
+open Aeneas Aeneas.Std
+open Aeneas.Std.Result
+set_option maxRecDepth 4096
+
+noncomputable def selectLowering {A : Type} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState) :
+    Result (core.result.Result Unit Itasca.error.VisitError × runtime.compiler.FunctionCompiler A) := do
+  let r ←
+    runtime.compiler.FunctionCompiler.operand ops compiler
+      3#usize
+  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+  match cf with
+  | core.ops.control_flow.ControlFlow.Continue val =>
+    let r1 ←
+      runtime.compiler.FunctionCompiler.operand ops compiler
+        2#usize
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      let r2 ←
+        runtime.compiler.FunctionCompiler.operand ops compiler
+          1#usize
+      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf2 with
+      | core.ops.control_flow.ControlFlow.Continue val2 =>
+        let i ← val1 - val
+        let instruction ←
+          if i = 2#u32
+          then ok (runtime.bytecode.Instr.Select2 val val1 val2)
+          else ok (runtime.bytecode.Instr.Select val val1 val2)
+        runtime.compiler.lower.FunctionCompiler.finish_op ops
+          compiler state instruction
+      | core.ops.control_flow.ControlFlow.Break residual =>
+        let r3 ←
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+            Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
+            residual
+        ok (r3, compiler)
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
+          residual
+      ok (r2, compiler)
+  | core.ops.control_flow.ControlFlow.Break residual =>
+    let r1 ←
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        Unit (core.convert.FromSame _root_.Itasca.error.VisitError)
+        residual
+    ok (r1, compiler)
+
+theorem lower_select_eq {A : Type} (ops : runtime.platform.Alloc A)
+    (compiler : runtime.compiler.FunctionCompiler A) (state : Itasca.code.OpIterState)
+    (left right condition difference : U32) (typed : Bool)
+    (reachable : compiler.reachable = true)
+    (hleft : runtime.compiler.FunctionCompiler.operand ops compiler 3#usize = .ok (.Ok left))
+    (hright : runtime.compiler.FunctionCompiler.operand ops compiler 2#usize = .ok (.Ok right))
+    (hcondition : runtime.compiler.FunctionCompiler.operand ops compiler 1#usize = .ok (.Ok condition))
+    (hdifference : (right - left) = Result.ok difference) :
+    runtime.compiler.lower.FunctionCompiler.op ops compiler state
+      (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 =
+      runtime.compiler.lower.FunctionCompiler.finish_op ops compiler state
+        (selectInstruction (decide (difference = 2#u32)) left right condition) := by
+  have dispatch : runtime.compiler.lower.FunctionCompiler.op ops compiler state
+      (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 =
+      selectLowering ops compiler state := by
+    exact runtime.compiler.lower.FunctionCompiler.op.select ops compiler state (if typed then 28#u16 else 27#u16)
+      0#u32 0#u32 0#u128 reachable (by cases typed <;> decide)
+  rw [dispatch]
+  unfold selectLowering
+  simp only [hleft, hright, hcondition, hdifference, bind_ok,
+    core.result.Result.Insts.CoreOpsTry.branch, selectInstruction]
+  split <;> simp_all
+
+end Itasca.Compiler
+
+end
+
+/-! ## SelectOperands -/
+
+section
 
 /-!
 Operand correspondence and lowering for untyped select.
 
-Main declarations: `select_operands` and `compiler_select_lowered`. A direct consumer is `Compiler.Local.Relations.Operations.CoreBasicEmissions`.
+Main declarations: `select_operands` and `compiler_select_lowered`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
@@ -44,7 +141,7 @@ theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
     (layout : CompilerLayout compiler (front ++ [ty, ty, .I32]))
     (reachable : compiler.reachable = true)
     (concrete : state.vals.val = types.map Itasca.code.StackType.Val)
-    (typed : types.map Itasca.Translate.valueType = front ++ [ty])
+    (typed : types.map Itasca.Translation.valueType = front ++ [ty])
     (codeFits : compiler.function.code.val.length < Usize.max)
     (sourceFits : compiler.function.source_offsets.val.length < Usize.max)
     (coordinateFits : compiler.function.body_start.val + compiler.next_source.val ≤ Usize.max) :
@@ -72,4 +169,6 @@ theorem select_operands {A : Type} (ops : runtime.platform.Alloc A)
     (selectInstruction (decide (width ty = 2)) left right condition) _ layout concrete
     codeFits sourceFits coordinateFits as ⟨out, lowered, success⟩
   exact ⟨left, right, condition, lp, rp, cp, by simpa only [typed] using lowered success⟩
-end Itasca.Runtime.Compiler
+end Itasca.Compiler
+
+end

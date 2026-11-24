@@ -1,5 +1,5 @@
-//! Pinned complete wg-2.0 corpus. No binary normalization or feature exclusions
-//! in the full-profile tests; the older control-flow gate remains during migration.
+//! Pinned complete wg-2.0 corpus. The control-flow subset is also checked with
+//! only MVP and multi-value features enabled to isolate that supported subset.
 use std::path::{Path, PathBuf};
 use wast::{QuoteWat, Wast, WastDirective, WastExecute};
 
@@ -58,7 +58,7 @@ fn check_module(
         path.display()
     );
     if check_itasca {
-        let result = itasca::validate_module(&bytes, itasca::ValidationProfile::Wasm2);
+        let result = itasca::validate_module(&bytes);
         assert_eq!(
             result.is_ok(),
             valid,

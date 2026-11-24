@@ -1,7 +1,14 @@
-import Itasca.Runtime.SourceMachine.HostTyping
-import Itasca.Runtime.SourceMachine.Indirect.Correct
-namespace Itasca.Runtime.SourceMachine.Indirect
-open SpecExt Itasca.Runtime.Spec
+import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
+import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
+
+/-!
+# Typed indirect host preparation
+
+A typed indirect host transition retains its selected address, concrete argument suffix and typed continuation. Host simulation consumes that actual transition evidence.
+-/
+
+namespace Itasca.SourceMachine.Indirect
+open SpecExt Itasca.Spec
 
 /-- A typed indirect host call retains the selected address, concrete argument
 suffix, and typed continuation produced by the actual abstract transition. -/
@@ -62,4 +69,4 @@ theorem host_preparation (s : store) (ambient : frame) (f : AFrame) (rest : List
     | FUNC index locals source =>
       cases defaults : defaultLocals locals <;>
         simp [step,values,←List.append_assoc,pop_append,decoded,resolved,invoke,lookup,actualType,←argLength,argTypes,body,defaults] at stepped
-end Itasca.Runtime.SourceMachine.Indirect
+end Itasca.SourceMachine.Indirect

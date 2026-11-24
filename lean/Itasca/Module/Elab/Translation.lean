@@ -1,4 +1,6 @@
-import Itasca.Support.EnvTranslation
+import Itasca.Module.Definitions
+import Itasca.Results.Definitions.Validation
+import Itasca.Support.Translation
 
 /-!
 # Import projections and validity translation
@@ -12,13 +14,7 @@ a list of external types, matching the generated `fun_funcsxt`, `fun_globalsxt`,
 
 open Aeneas Aeneas.Std
 
-namespace Itasca.ModuleTranslation
-
-/-- The function types among the external types, in order. -/
-def funcs : List externtype → List functype
-  | [] => []
-  | .FUNC t :: rest => t :: funcs rest
-  | _ :: rest => funcs rest
+namespace Itasca.Module.Translation
 
 /-- `funcs` satisfies the generated `fun_funcsxt` relation. -/
 theorem funcs_spec (xs : List externtype) : fun_funcsxt xs (funcs xs) := by
@@ -35,12 +31,6 @@ theorem funcs_spec (xs : List externtype) : fun_funcsxt xs (funcs xs) := by
 theorem funcs_unique {xs result} (h : fun_funcsxt xs result) : result = funcs xs := by
   induction h <;> simp_all [funcs]
 
-/-- The global types among the external types, in order. -/
-def globals : List externtype → List globaltype
-  | [] => []
-  | .GLOBAL t :: rest => t :: globals rest
-  | _ :: rest => globals rest
-
 /-- `globals` satisfies the generated `fun_globalsxt` relation. -/
 theorem globals_spec (xs : List externtype) : fun_globalsxt xs (globals xs) := by
   induction xs with
@@ -56,12 +46,6 @@ theorem globals_spec (xs : List externtype) : fun_globalsxt xs (globals xs) := b
 theorem globals_unique {xs result} (h : fun_globalsxt xs result) : result = globals xs := by
   induction h <;> simp_all [globals]
 
-/-- The table types among the external types, in order. -/
-def tables : List externtype → List tabletype
-  | [] => []
-  | .TABLE t :: rest => t :: tables rest
-  | _ :: rest => tables rest
-
 /-- `tables` satisfies the generated `fun_tablesxt` relation. -/
 theorem tables_spec (xs : List externtype) : fun_tablesxt xs (tables xs) := by
   induction xs with
@@ -76,12 +60,6 @@ theorem tables_spec (xs : List externtype) : fun_tablesxt xs (tables xs) := by
 /-- The generated `fun_tablesxt` relation determines `tables`. -/
 theorem tables_unique {xs result} (h : fun_tablesxt xs result) : result = tables xs := by
   induction h <;> simp_all [tables]
-
-/-- The memory types among the external types, in order. -/
-def mems : List externtype → List memtype
-  | [] => []
-  | .MEM t :: rest => t :: mems rest
-  | _ :: rest => mems rest
 
 /-- `mems` satisfies the generated `fun_memsxt` relation. -/
 theorem mems_spec (xs : List externtype) : fun_memsxt xs (mems xs) := by
@@ -105,8 +83,8 @@ def LimitsValid (lim : wasm_types.Limits) (bound : Nat) : Prop :=
 
 /-- Valid limits are typed by the generated `Limits_ok`. -/
 theorem limits_valid (lim : wasm_types.Limits) (bound : Nat) (h : LimitsValid lim bound) :
-    Limits_ok (EnvTranslation.limitsType lim) bound := by
-  have hw := EnvTranslation.limitsType_wf lim
+    Limits_ok (Translation.Environment.limitsType lim) bound := by
+  have hw := Translation.Environment.limits_type_wf lim
   cases lim with
   | mk minimum maximum =>
     cases maximum with
@@ -117,21 +95,21 @@ theorem limits_valid (lim : wasm_types.Limits) (bound : Nat) (h : LimitsValid li
         (by simpa [Forall] using h.2 maximum (by simp)) hw
 
 /-- Every translated function type is valid. -/
-theorem funcType_valid (ft : wasm_types.FuncType) : Functype_ok (EnvTranslation.funcType ft) :=
+theorem func_type_valid (ft : wasm_types.FuncType) : Functype_ok (Translation.Environment.funcType ft) :=
   .mk_Functype_ok _ _
 
 /-- A table type with valid limits is typed by `Tabletype_ok`. -/
-theorem tableType_valid (tt : wasm_types.TableType)
+theorem table_type_valid (tt : wasm_types.TableType)
     (h : LimitsValid tt.limits (2 ^ 32 - 1)) :
-    Tabletype_ok (EnvTranslation.tableType tt) := by
+    Tabletype_ok (Translation.Environment.tableType tt) := by
   apply Tabletype_ok.mk_Tabletype_ok
   · exact limits_valid tt.limits _ h
-  · exact EnvTranslation.tableType_wf tt
+  · exact Translation.Environment.table_type_wf tt
 
 /-- A memory type with valid limits is typed by `Memtype_ok`. -/
-theorem memType_valid (mt : wasm_types.MemType)
+theorem mem_type_valid (mt : wasm_types.MemType)
     (h : LimitsValid mt.limits (2 ^ 16)) :
-    Memtype_ok (EnvTranslation.memType mt) :=
-  .mk_Memtype_ok _ (limits_valid mt.limits _ h) (EnvTranslation.memType_wf mt)
+    Memtype_ok (Translation.Environment.memType mt) :=
+  .mk_Memtype_ok _ (limits_valid mt.limits _ h) (Translation.Environment.mem_type_wf mt)
 
-end Itasca.ModuleTranslation
+end Itasca.Module.Translation

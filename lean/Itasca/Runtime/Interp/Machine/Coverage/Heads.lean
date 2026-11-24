@@ -1,14 +1,13 @@
-import Itasca.Runtime.Interp.Machine.Point
-import Itasca.Runtime.Interp.Machine.Emission.Empty
-import Itasca.Runtime.SourceMachine.Core
-import Itasca.Runtime.Compiler.Local.Relations.Emission.ScalarEmission
-import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulEmission
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallEmission
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallExclusions
-import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectCallInversion
-import Itasca.Runtime.Compiler.Local.Source.TypedSelectEmission
-import Itasca.Runtime.Compiler.Body.Lowering.Simd.SimdEmissionExclusion
-import Itasca.Runtime.Compiler.Body.Relations.Executable.ExecutableProjection
+import Itasca.Runtime.Interp.Machine.SuspendedPoint
+import Itasca.Runtime.Interp.Machine.Emission.Local
+import Itasca.Runtime.SourceMachine.StructureAndTyping
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
+import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallMetadata
+import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallSafety
+import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
+import Itasca.Runtime.Compiler.Body.Simd.EmissionTags
+import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 
 /-!
 # Emission head projections
@@ -20,7 +19,7 @@ of its instruction family: `OrdinaryHeads`, `ErasedHeads`, `FloatHeads`, `Statef
 function's retained metadata tables.
 -/
 
-namespace Itasca.Runtime.Interp.Machine
+namespace Itasca.Interp.Machine
 open Aeneas.Std
 
 def ordinarySource : instr → Bool
@@ -96,9 +95,9 @@ theorem scalar_not_indirect {table type} (covered : SourceMachine.ScalarHead (.C
     | _ => cases equal
   | float op => cases op <;> cases equal
 
-end Itasca.Runtime.Interp.Machine
+end Itasca.Interp.Machine
 
-namespace Itasca.Runtime.Interp.Stateful
+namespace Itasca.Interp.Stateful
 
 theorem linear_decode_none {locals before instruction emitted after}
     (head : Compiler.LinearEmission locals before instruction emitted after) :
@@ -116,9 +115,9 @@ theorem scalar_decode_none {C before instruction emitted after}
   | float stack op a b left right => cases op <;> rfl
   | _ => rfl
 
-end Itasca.Runtime.Interp.Stateful
+end Itasca.Interp.Stateful
 
-namespace Itasca.Runtime.Interp.Machine
+namespace Itasca.Interp.Machine
 
 instance : OrdinaryHeads Compiler.ScalarEmission where
   ordinary := by
@@ -278,4 +277,4 @@ instance executable_simd_projection (compiled : runtime.bytecode.CompiledFunctio
     (Compiler.CompilerTables.ofFunction compiled).simd (Compiler.CompilerTables.ofFunction compiled).constants
   infer_instance
 
-end Itasca.Runtime.Interp.Machine
+end Itasca.Interp.Machine

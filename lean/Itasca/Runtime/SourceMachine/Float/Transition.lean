@@ -1,7 +1,7 @@
-import Itasca.Runtime.SourceMachine.Float.Results
-import Itasca.Runtime.SourceMachine.Sim.Typed
+import Itasca.Runtime.SourceMachine.Float.Descriptors
+import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.SourceMachine.Preservation
-import Itasca.Runtime.SourceMachine.Sim.Trap
+import Itasca.Runtime.SourceMachine.Sim.Control
 
 /-!
 Floating-point source-machine transition from typed operands through preservation, simulation and positivity. Descriptor and result selection remain independently available.
@@ -11,8 +11,8 @@ Floating-point source-machine transition from typed operands through preservatio
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Float
-open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.SourceMachine.Float
+open SpecExt Itasca.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem number_encoding (ty : numtype) (number : num_) (valid : wf_num_ ty number) :
     ∃ bits, number = numberOfBits ty bits ∧ bits < 2^sizenn ty := by
@@ -70,7 +70,7 @@ theorem Instruction.typed_operands (op : Instruction) {s : store} {f : AFrame}
         refine ⟨front, a, a, ?_, firstBound, firstBound, frontWf, heights⟩
         simpa [Instruction.operands, Instruction.arity, Instruction.input] using split
 
-end Itasca.Runtime.SourceMachine.Float
+end Itasca.SourceMachine.Float
 
 end
 
@@ -78,8 +78,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Float
-open SpecExt Itasca.Runtime.Spec SpecExt.Builtins SpecExt.Builtins.Float
+namespace Itasca.SourceMachine.Float
+open SpecExt Itasca.Spec SpecExt.Builtins SpecExt.Builtins.Float
 
 theorem Instruction.source_signature_inv (op : Instruction) {C : context} {signature : functype}
     (typed : Instr_ok C op.source signature) : signature = op.signature := by
@@ -112,7 +112,7 @@ theorem Instruction.frame_preservation (op : Instruction) {s : store} {f : AFram
         List.rel_append frontTyped (List.Forall₂.cons resultTyped List.Forall₂.nil)
     · simpa only [List.map_append, List.map_cons, List.map_nil, List.append_nil, valueType, stack] using continuation
 
-end Itasca.Runtime.SourceMachine.Float
+end Itasca.SourceMachine.Float
 
 end
 
@@ -120,8 +120,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Float
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Float
+open SpecExt Itasca.Spec
 
 theorem Instruction.simulation (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (front : List val)
@@ -182,7 +182,7 @@ theorem Instruction.trap_simulation (s : store) (ambient : frame) (f : AFrame)
   rw [decode_labels_move_values _ _ _ _ heights]
   simpa [decodeFrames, operands, vals, instrContext, AFrame.toFrame, AFrame.arity, List.append_assoc] using all
 
-end Itasca.Runtime.SourceMachine.Float
+end Itasca.SourceMachine.Float
 
 end
 
@@ -190,8 +190,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Float
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Float
+open SpecExt Itasca.Spec
 
 /-- Relational scalar float transition: every permitted NaN result remains available. -/
 inductive Transition (s : AState) (f : AFrame) (rest : List AFrame)
@@ -282,7 +282,7 @@ theorem transition_trap_simulation (s : store) (ambient : frame) (f : AFrame)
     simpa only [values] using op.trap_simulation s ambient f rest after front a b first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Itasca.Runtime.SourceMachine.Float
+end Itasca.SourceMachine.Float
 
 end
 
@@ -290,8 +290,8 @@ end
 
 section
 
-namespace Itasca.Runtime.SourceMachine.Float
-open SpecExt Itasca.Runtime.Spec
+namespace Itasca.SourceMachine.Float
+open SpecExt Itasca.Spec
 theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (after : List instr) (op : Instruction) (next : AState)
     (typed : ATyped ⟨s, ambient, { f with code := op.source :: after } :: rest, []⟩)
@@ -310,6 +310,6 @@ theorem transition_positive (s : store) (ambient : frame) (f : AFrame)
     simpa only [values] using op.simulation s ambient f rest after front a b bits first second effect
       typed.store typed.ambient hw hl frontWf (fun i hi => hc i (by simp [hi])) hr heights
 
-end Itasca.Runtime.SourceMachine.Float
+end Itasca.SourceMachine.Float
 
 end

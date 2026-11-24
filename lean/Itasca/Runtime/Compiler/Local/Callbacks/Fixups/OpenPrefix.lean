@@ -1,14 +1,13 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterIf
+import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterContracts
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
-import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedPrefix
 
 /-!
 A new IF guard is its own pending group, separate from body branches. Its future resolution touches only the newly appended guard.
 
-Main declarations: `resolved_code_open_guard`. A direct consumer is `Compiler.Local.Callbacks.Control.ElseTransition`.
+Main declarations: `resolved_code_open_guard`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std
 
 /-- A new IF guard is its own pending group, separate from body branches. Its
@@ -28,4 +27,4 @@ theorem resolved_code_open_guard (code : List Bytecode) (groups : List FixupTarg
     resolved_code_new_branch code [] [] groups ⟨[], target⟩ (.zero condition) old site
       (by simpa using position) allInside
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

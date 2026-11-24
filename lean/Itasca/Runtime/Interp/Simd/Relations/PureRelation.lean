@@ -1,16 +1,112 @@
-import Itasca.Runtime.Compiler.Local.Lowering.Simd.SimdEmission
-import Itasca.Runtime.Spec.Simd.PureValues
-import Itasca.Runtime.Interp.Simd.Bitwise.Whole
-import Itasca.Runtime.Interp.Simd.Lanes.Swizzle
+import Itasca.Runtime.Interp.Relations.SourceClosure
+import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
+import Itasca.Runtime.Compiler.Local.Lowering.Simd.Emission
+import Itasca.Runtime.Spec.Simd.LaneOperations
+import Itasca.Runtime.Interp.Simd.Bitwise
+import Itasca.Runtime.Interp.Simd.Lanes.Permutation
+
+open Itasca.Representation
+
+/-! ## Slots -/
+
+section
+
+/-!
+Two little-endian slot words, including the interpreter's zero padding.
+
+Main declarations: `vectorBits`.
+-/
+
+namespace Itasca.Interp
+open Aeneas Aeneas.Std
+
+/-- Two little-endian slot words, including the interpreter's zero padding. -/
+def vectorBits (words : List U64) (position : Nat) : BitVec 128 :=
+  ((words[position]?).getD 0#u64).bv.setWidth 128 |||
+    (((words[position+1]?).getD 0#u64).bv.setWidth 128 <<< 64)
+
+@[step] theorem vector_effect (slots : Slice U64) (position : Usize)
+    (space : position.val < Usize.max) :
+    runtime.interp.vector slots position ⦃ value => value.bv = vectorBits slots.val position.val ⦄ := by
+  unfold runtime.interp.vector
+  step with get_effect as ⟨lo, hlo⟩
+  simp only [lift, bind_ok]
+  step as ⟨next, hnext⟩
+  step with get_effect as ⟨hi, hhi⟩
+  step as ⟨shifted, hshifted, shiftBits⟩
+  simp only [UScalar.bv_or, UScalar.cast_bv_eq, shiftBits]
+  simp only [vectorBits, hlo, hhi, hnext]
+  rfl
+
+end Itasca.Interp
+
+end
+
+/-! ## Operands -/
+
+section
+
+/-!
+The slot-level input interpretation of SIMD operations.
+
+Main declarations: `simdInput`.
+-/
+
+namespace Itasca.Interp
+open Aeneas Aeneas.Std
+
+def simdInput (words : List U64) (position : Nat) (width : U32) : U128 :=
+  if width = 2#u32 then ⟨vectorBits words position⟩
+  else UScalar.cast .U128 ((words[position]?).getD 0#u64)
+
+end Itasca.Interp
+
+end
+
+/-! ## OperandsBounded -/
+
+section
+
+/-!
+Bounds sufficient to read SIMD inputs from runtime slots.
+
+Main declarations: `simd_input_bounded`.
+-/
+
+namespace Itasca.Interp
+open Aeneas Aeneas.Std
+
+@[step] theorem simd_input_bounded (slots : Slice U64) (position : Usize) (width : U32)
+    (space : width = 2#u32 → position.val < Usize.max) :
+    (if width = 2#u32 then runtime.interp.vector slots position
+      else do let word ← runtime.interp.get slots position
+              pure (UScalar.cast .U128 word))
+      ⦃ value => value = simdInput slots.val position.val width ⦄ := by
+  split
+  · rename_i two
+    step with vector_effect slots position (space two) as ⟨value,bits⟩
+    simp only [simdInput,if_pos two]
+    exact (UScalar.eq_equiv_bv_eq _ _).mpr bits
+  · rename_i other
+    step with get_effect as ⟨value,word⟩
+    simp [simdInput,other,word]
+
+end Itasca.Interp
+
+end
+
+/-! ## PureRelation -/
+
+section
 
 /-!
 Source effects and opcode correspondence for pure SIMD instructions.
 
-Main declarations: `PureEntrySound` and `PureSourceEffect`. A direct consumer is `Interp.Simd.Execution.PureCompare`.
+Main declarations: `PureEntrySound` and `PureSourceEffect`.
 -/
 
-namespace Itasca.Runtime.Interp.Simd
-open Aeneas Aeneas.Std Itasca.Wasm2.Simd
+namespace Itasca.Interp.Simd
+open Aeneas Aeneas.Std Itasca.Body.Simd
 
 def pureResult (signature : Signature) (bits : BitVec 128) : val :=
   match signature with
@@ -29,49 +125,51 @@ def PureEntrySound {F : Type} (floats : runtime.platform.FloatOps F) (opcode : U
 
 theorem pure_entry_14 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 14#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure14 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure14 = some op at meaning
   cases meaning
   with_unfolding_all exact swizzle_dispatch_sound floats offset laneIndex bits x y z memory
 
 theorem pure_entry_77 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 77#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure77 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure77 = some op at meaning
   cases meaning
   with_unfolding_all exact not_dispatch_sound floats offset laneIndex bits x y z memory
 
 theorem pure_entry_78 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 78#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure78 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure78 = some op at meaning
   cases meaning
   with_unfolding_all exact binary_dispatch_sound floats .AND offset laneIndex bits x y z memory
 
 theorem pure_entry_79 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 79#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure79 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure79 = some op at meaning
   cases meaning
   with_unfolding_all exact binary_dispatch_sound floats .ANDNOT offset laneIndex bits x y z memory
 
 theorem pure_entry_80 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 80#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure80 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure80 = some op at meaning
   cases meaning
   with_unfolding_all exact binary_dispatch_sound floats .OR offset laneIndex bits x y z memory
 
 theorem pure_entry_81 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 81#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure81 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure81 = some op at meaning
   cases meaning
   with_unfolding_all exact binary_dispatch_sound floats .XOR offset laneIndex bits x y z memory
 
 theorem pure_entry_82 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 82#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure82 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure82 = some op at meaning
   cases meaning
   with_unfolding_all exact bitselect_dispatch_sound floats offset laneIndex bits x y z memory
 
 theorem pure_entry_83 {F : Type} (floats : runtime.platform.FloatOps F) : PureEntrySound floats 83#u32 := by
   intro op meaning offset laneIndex bits x y z memory
-  change some Itasca.Wasm2.Simd.pure83 = some op at meaning
+  change some Itasca.Body.Simd.Operation.pure83 = some op at meaning
   cases meaning
   with_unfolding_all exact any_true_dispatch_sound floats offset laneIndex bits x y z memory
-end Itasca.Runtime.Interp.Simd
+end Itasca.Interp.Simd
+
+end

@@ -1,17 +1,26 @@
-import Itasca.Runtime.Compiler.Body.Capacity.FunctionCapacity
-import Itasca.Runtime.Representation.Collection
-import Itasca.Runtime.Store.Invariant.InstantiationCode
-import Itasca.Runtime.Representation.StoreCapacity
-namespace Itasca.Runtime.Store
-open Aeneas Aeneas.Std Itasca.ModuleEnv
+import Itasca.Runtime.Compiler.Body.ExecutableFunctionCapacity
+import Itasca.Runtime.Representation.Values
+import Itasca.Runtime.Store.Invariant.PrecommitError
+import Itasca.Runtime.Representation.Store
 
-theorem FunctionCapacity.staged {M : Type} {before after : runtime.store.Store M}
+open Itasca.Representation
+
+/-!
+# Published function capacities
+
+Publication retains bounds for old functions and installs the compiler's source-frame certificates for newly defined functions. Instantiation and invocation consume those capacities.
+-/
+
+namespace Itasca.Store
+open Aeneas Aeneas.Std Itasca.Module.Environment
+
+theorem _root_.Itasca.Representation.FunctionCapacity.staged {M : Type} {before after : runtime.store.Store M}
     {oldCode newCode : CodeInterpretation} (retained : StagedPrefix before after)
     (agrees : CodeAgreesOn before oldCode newCode) {function : runtime.store.FuncInst}
     (capacity : FunctionCapacity oldCode before function) : FunctionCapacity newCode after function := by
   intro instanceIndex functionIndex defined
   obtain ⟨inst, compiled, typeIndex, found, functionFound, bound, entries, table, signature, typeFound, signatureFound⟩ := capacity instanceIndex functionIndex defined
-  refine ⟨inst, compiled, typeIndex, Itasca.Runtime.Representation.lookup_prefix _ _ retained.instances found, functionFound, ?_,
+  refine ⟨inst, compiled, typeIndex, Itasca.Representation.lookup_prefix _ _ retained.instances found, functionFound, ?_,
     entries.extend retained, function_table_prefix retained table, signature, typeFound,
     retained.type_lookup signatureFound⟩
   rw [agrees instanceIndex.val inst found functionIndex.val]
@@ -28,7 +37,7 @@ theorem function_capacities_publish {M : Type}
     (certificate : Compiler.ModuleCapacities inst.module sources)
     {tables memories} (cache : Cache inst.module.module.env tables memories)
     (entries : TypeEntries after inst.module.module.env.types.val inst.types.val)
-    (table : Interp.FunctionTable after inst (inst.module.module.env.func_types.val.map decodeFuncType))
+    (table : Representation.FunctionTable after inst (inst.module.module.env.func_types.val.map Itasca.Translation.Environment.funcType))
     (staged : StagedFunctionSignatures before after before.instances.len
       (inst.module.module.env.func_types.val.drop (importedFuncs inst.module.module.env.imports.val).length)) :
     FunctionCapacities (installCode oldCode before.instances.len.val sources) after := by
@@ -74,15 +83,15 @@ theorem InstantiationCode.capacities {M : Type}
 
 /-- Updates to runtime contents preserve source frame bounds whenever function
 and instance metadata remain equal. -/
-theorem FunctionCapacities.metadata {M : Type} {before after : runtime.store.Store M}
+theorem _root_.Itasca.Representation.FunctionCapacities.metadata {M : Type} {before after : runtime.store.Store M}
     {code : CodeInterpretation} (capacities : FunctionCapacities code before)
     (functions : after.funcs = before.funcs) (instances : after.instances = before.instances)
     (types : after.types = before.types) (identity : after.id = before.id) :
     FunctionCapacities code after := by
-  simpa only [FunctionCapacities, FunctionCapacity, TypeEntries, Interp.FunctionTable, functions, instances, types, identity] using capacities
+  simpa only [FunctionCapacities, FunctionCapacity, TypeEntries, Representation.FunctionTable, functions, instances, types, identity] using capacities
 
 /-- Reassigning code at a fresh instance key preserves all old source bounds. -/
-theorem FunctionCapacities.code_agrees {M : Type} {store : runtime.store.Store M}
+theorem _root_.Itasca.Representation.FunctionCapacities.code_agrees {M : Type} {store : runtime.store.Store M}
     {oldCode newCode : CodeInterpretation} (capacities : FunctionCapacities oldCode store)
     (agrees : CodeAgreesOn store oldCode newCode) : FunctionCapacities newCode store := by
   intro function present instanceIndex functionIndex defined
@@ -91,4 +100,4 @@ theorem FunctionCapacities.code_agrees {M : Type} {store : runtime.store.Store M
   refine ⟨inst, compiled, typeIndex, found, functionFound, ?_, entries, table, signature, typeFound, signatureFound⟩
   rw [agrees instanceIndex.val inst found functionIndex.val]
   exact bound
-end Itasca.Runtime.Store
+end Itasca.Store

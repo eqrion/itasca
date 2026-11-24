@@ -1,16 +1,19 @@
-import Itasca.Runtime.Compiler.Local.Relations.Emission.Rel
-import Itasca.Support.TypeTranslation
+import Itasca.Runtime.Representation.Layout
+import Itasca.Runtime.Compiler.Local.Definitions
+import Itasca.Support.Translation
+
+open Itasca.Representation
 
 /-! The layout component of the compiler invariant, stated over the actual
 extracted compiler state. Prefix-code, open-label, and fixup preservation are
 separate obligations; this file does not assert the final compilation theorem. -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas.Std
 
 /-- The compiler keeps locals in source order, including function parameters. -/
 def compilerLocals {A : Type} (compiler : runtime.compiler.FunctionCompiler A) :
-    List valtype := compiler.function.locals.val.map Itasca.Translate.valueType
+    List valtype := compiler.function.locals.val.map Itasca.Translation.valueType
 
 /-- Slot starts for a typed operand stack, after the fixed local region. -/
 def stackOffsets (locals stack : List valtype) : List Nat :=
@@ -59,4 +62,4 @@ theorem CompilerLayout.live_slots_fit {A : Type}
   rw [← h.height]
   exact h.capacity live
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

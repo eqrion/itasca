@@ -1,12 +1,12 @@
-import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FrameSites
+import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
 /-!
 Resolution schedules can be divided at a selected IF guard.
 
-Main declarations: `resolved_code_append_groups` and `FramePlans.away_guard`. A direct consumer is `Compiler.Module.CompileSlice`.
+Main declarations: `resolved_code_append_groups` and `FramePlans.away_guard`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas.Std
 
 /-- Resolution schedules can be divided at a selected IF guard. -/
@@ -72,4 +72,4 @@ theorem FramePlans.away_guard {length locals frames labels groups code}
       · exact current.branches.not_guard found site atSite
     · exact rest group remaining site atSite
 
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

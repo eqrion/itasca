@@ -1,20 +1,11 @@
-import Itasca.Runtime.Spec.Wf
+import Itasca.Runtime.Representation.Definitions
+import Itasca.Runtime.Spec.TypingAndNumericOperations
 
 /-! Slot layout derived from specification value types. Prefix widths give
 positions independently of the compiler's counters. Vector values use adjacent
 low/high slots; every scalar or reference uses one slot. -/
 
-namespace Itasca.Runtime.Compiler
-
-def width : valtype → Nat
-  | .V128 => 2
-  | _ => 1
-
-def slots : List valtype → Nat
-  | [] => 0
-  | t :: ts => width t + slots ts
-
-def offset (types : List valtype) (index : Nat) : Nat := slots (types.take index)
+namespace Itasca.Representation
 
 theorem width_positive (t : valtype) : 0 < width t := by cases t <;> decide
 
@@ -62,4 +53,4 @@ theorem slots_le_twice_length (ts : List valtype) : slots ts ≤ 2 * ts.length :
     simp only [List.length_cons, slots]
     omega
 
-end Itasca.Runtime.Compiler
+end Itasca.Representation

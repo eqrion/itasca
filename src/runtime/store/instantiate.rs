@@ -180,21 +180,6 @@ impl<M: MemoryBuffer> Store<M> {
             i += 1;
         }
         status?;
-        if wasm1(self.instances[identity.index].module.profile()) {
-            i = 0;
-            while i < self.instances[identity.index].module.env().elements().len() && status.is_ok()
-            {
-                status = self.check_element_bounds::<P, F, A>(platform, identity.index, i);
-                i += 1;
-            }
-            status?;
-            i = 0;
-            while i < self.instances[identity.index].module.tail().data.len() && status.is_ok() {
-                status = self.check_data_bounds::<P, F, A>(platform, identity.index, i);
-                i += 1;
-            }
-            status?;
-        }
         Ok((identity, items))
     }
     /// Publishes a prepared instance: writes active segments into possibly
@@ -378,64 +363,6 @@ impl<M: MemoryBuffer> Store<M> {
         let address = self.datas.len();
         self.datas.push(DataInst { bytes });
         self.instances[instance].datas.push(address);
-        Ok(())
-    }
-    /// Wasm 1.0 checks every active element segment before any table write.
-    fn check_element_bounds<P: Platform<M>, F: FloatOps, A: Alloc>(
-        &mut self,
-        platform: &mut P,
-        instance: usize,
-        index: usize,
-    ) -> Result<(), ExecError> {
-        let mode = self.instances[instance].module.env().elements()[index].mode;
-        if let ElementMode::Active { table_idx, .. } = mode {
-            let initializer = match self.instances[instance].module.element_offsets[index] {
-                Some(i) => i,
-                None => return Err(ExecError::Internal),
-            };
-            let start =
-                eval_const::<M, P, F, A>(self, platform, instance, initializer, ValueType::I32)?
-                    .i32()?;
-            let len = self.instances[instance].module.env().elements()[index]
-                .init
-                .len();
-            let table = self.instances[instance].tables[table_idx as usize].index;
-            range(
-                start as u64,
-                len as u64,
-                self.tables[table].elements.len(),
-                Trap::TableOutOfBounds,
-            )?;
-        }
-        Ok(())
-    }
-    /// Wasm 1.0 checks every active data segment before any memory write.
-    fn check_data_bounds<P: Platform<M>, F: FloatOps, A: Alloc>(
-        &mut self,
-        platform: &mut P,
-        instance: usize,
-        index: usize,
-    ) -> Result<(), ExecError> {
-        let mode = self.instances[instance].module.tail().data[index].mode;
-        if let DataMode::Active { memory_idx, .. } = mode {
-            let initializer = match self.instances[instance].module.data_offsets[index] {
-                Some(i) => i,
-                None => return Err(ExecError::Internal),
-            };
-            let start =
-                eval_const::<M, P, F, A>(self, platform, instance, initializer, ValueType::I32)?
-                    .i32()?;
-            let len = self.instances[instance].module.tail().data[index]
-                .init
-                .len();
-            let memory = self.instances[instance].memories[memory_idx as usize].index;
-            range(
-                start as u64,
-                len as u64,
-                self.memories[memory].buf.bytes().len(),
-                Trap::MemoryOutOfBounds,
-            )?;
-        }
         Ok(())
     }
 }

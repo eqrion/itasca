@@ -1,0 +1,863 @@
+import Itasca.Body.Trace.Refinement
+import Itasca.Body.Visitor.ReachedTableLoop
+import Itasca.Body.Scalar.Readers
+import Itasca.Body.NumericExt.Total
+import Itasca.Visitor.BodyReplay
+
+/-!
+# Bytes Scalar
+
+Scalar body traces identify the independently encoded instruction bytes observed by callbacks. The proofs retain exact positions and immediates.
+-/
+
+/-! ## Body -/
+
+section
+
+/-!
+# Body-level callback byte provenance
+
+`StepContract` assigns an exact `StepTrace` to every ordinary returning
+`code.step_profile` step. `code.body_loop_loop.trace_of_contract` lifts it
+through the body loop, and `code.validate_body_with.trace_of_contract` through
+initialization, giving a `BodyTrace` for every ordinary outcome of the extracted validator.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Body.CallbackTrace
+
+open Visitor.Trace
+
+/-- Byte provenance and stopping for every ordinary step. -/
+def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
+  ∀ st (p : Pending data env locals index st) v result out v',
+    code.step_profile visitor st data env ctx index
+      (data.val[p.start.val]'p.inbounds) v = .ok (result, out, v') →
+    ∃ observations, observe v' = observe v ++ observations ∧
+      StepTrace data p.start observations result out.core
+
+theorem BodyTrace.empty {data start result} (hb : start.val ≤ data.length)
+    (hend : result = .Ok () → start.val = data.length) : BodyTrace data start [] result := by
+  exact ⟨.empty result, [], [], start, [], rfl, .nil start hb, Or.inl rfl,
+    fun h => ⟨rfl, hend h⟩⟩
+
+theorem StepTrace.rejected {data start observations e st}
+    (h : StepTrace data start observations (.Err e) st) (hb : start.val ≤ data.length) :
+    BodyTrace data start observations (.Err e) := by
+  refine ⟨h.outcomes, ?_⟩
+  cases h with
+  | silent => exact ⟨[], [], start, [], rfl, .nil start hb, Or.inl rfl, by simp⟩
+  | complete hc _ =>
+      exact ⟨observations, [_], st.pos, [], by simp,
+        by simpa using Completed.cons hc (.nil _ hc.encoded.span.2), Or.inl rfl, by simp⟩
+  | unfinished _ hp _ =>
+      exact ⟨[], [], start, _, by simp, .nil start hb, Or.inr hp, by simp⟩
+
+theorem BodyTrace.prepend {data start first token middle rest result}
+    (hc : Chunk data start first token middle) (ho : AllAccepted first)
+    (h : BodyTrace data middle rest result) : BodyTrace data start (first ++ rest) result := by
+  obtain ⟨hout, complete, tokens, cursor, tail, rfl, hcomplete, htail, hend⟩ := h
+  exact ⟨hout.prepend ho, first ++ complete, token :: tokens, cursor, tail,
+    by simp [List.append_assoc], .cons hc hcomplete, htail, hend⟩
+
+end Itasca.Body.CallbackTrace
+
+namespace Itasca
+
+open Body
+
+/-- Lifts returned-step byte provenance through the body loop. The accepting-visitor invariant
+supplies strict cursor progress. -/
+theorem code.body_loop_loop.trace_of_contract {V : Type}
+    (visitor : code.OpVisitor V) (observe : V → List Visitor.Trace.Observation)
+    (data : Slice U8) (env : metadata.Env)
+    (locals : alloc.vec.Vec wasm_types.ValueType)
+    (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
+    (htrace : CallbackTrace.StepContract visitor observe data env locals ctx index)
+    (st : code.BodyState) (v v' : V) (result : Visitor.Trace.BodyResult)
+    (hi : State data env locals index st)
+    (h : code.body_loop_loop visitor data env ctx index v st = .ok (result, v')) :
+    ∃ observations, observe v' = observe v ++ observations ∧
+      CallbackTrace.BodyTrace data st.core.pos observations result := by
+  generalize hn : data.length - st.core.pos.val = n
+  induction n using Nat.strong_induction_on generalizing st v with
+  | h n ih =>
+    unfold code.body_loop_loop at h
+    rw [loop] at h
+    simp only at h
+    obtain ⟨cf, hb, ht⟩ := Computation.bind_ok_inv _ _ _ h
+    have hb0 := hb
+    unfold code.body_loop_loop.body at hb
+    simp only [alloc.vec.Vec.is_empty, bind_ok] at hb
+    by_cases hc : st.blocks.val = []
+    · have he : st.core.ctrls.val = [] := by simpa using hc
+      simp only [he, List.isEmpty_nil, ↓reduceIte] at hb
+      by_cases hp : st.core.pos = Slice.len data
+      · simp [hp] at hb
+        subst cf
+        simp at ht
+        obtain ⟨rfl, rfl⟩ := ht
+        exact ⟨[], by simp, .empty hi.bounds.pos (by intro _; scalar_tac)⟩
+      · simp [hp] at hb
+        subst cf
+        simp at ht
+        obtain ⟨rfl, rfl⟩ := ht
+        exact ⟨[], by simp, .empty hi.bounds.pos (by simp)⟩
+    · have he : st.core.ctrls.val.isEmpty = false := by simpa using hc
+      simp only [he, Bool.false_eq_true, ↓reduceIte] at hb
+      by_cases hp : st.core.pos.val < data.length
+      · obtain ⟨r, hr, next, heq, hnext⟩ :=
+          WP.spec_imp_exists (reader.read_byte.spec data st.core.pos hp)
+        rw [heq] at hr
+        rw [hr] at hb
+        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at hb
+        obtain ⟨⟨res, out, w⟩, hs, htail⟩ := Computation.bind_ok_inv _ _ _ hb
+        obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
+        have hs' : code.step_profile visitor {core := {st.core with pos := next}}
+            data env ctx index (data.val[p.start.val]'p.inbounds) v =
+            .ok (res, out, w) := by simpa [hstart] using hs
+        obtain ⟨first, hfirst, hchunk⟩ := htrace _ p v res out w hs'
+        rw [hstart] at hchunk
+        cases res with
+        | Err e =>
+          simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at htail
+          subst cf
+          simp at ht
+          obtain ⟨rfl, rfl⟩ := ht
+          exact ⟨first, hfirst, hchunk.rejected hi.bounds.pos⟩
+        | Ok u =>
+          cases u
+          simp at htail
+          subst cf
+          obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
+            code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+            data env ctx ctx rfl index st v () _ hb0 trivial
+          obtain ⟨⟨res, s⟩, hs0, hafter⟩ :=
+            WP.spec_imp_exists (steps data env locals ctx index hlocals _ p)
+          simp only [hstart] at hs0
+          have heval : Visitor.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+              data env ctx index () st =
+              .ok (match continueStep (res, s) with
+                | .cont (s, _) => .cont ((), s)
+                | .done r => .done (r, ())) := by
+            change code.body_loop_loop.body _ _ _ _ _ _ _ = _
+            rw [Body.emptyVisitorLoop.body_eq]
+            change (loopBody data env ctx index st >>= fun r => .ok
+              (match r with | .cont (s, _) => .cont ((), s) | .done r => .done (r, ()) : ControlFlow (Unit × code.BodyState) (core.result.Result Unit error.OpError × Unit))) = _
+            rw [loop_body_eq, if_neg hc, hr]
+            simp only [bind_ok, hs0]
+            cases res <;> simp [continueStep]
+          rw [hempty] at heval
+          simp only [Result.ok.injEq] at heval
+          subst emptyCf
+          cases res with
+          | Err e => simp [continueStep, Visitor.bodyObserve] at hobs
+          | Ok u =>
+            cases u
+            simp only [continueStep, Visitor.bodyObserve, ControlFlow.cont.injEq] at hobs
+            subst s
+            obtain ⟨hi', hge, hbound⟩ := hafter rfl
+            change next.val ≤ out.core.pos.val at hge
+            have hmeasure : data.length - out.core.pos.val < n := by omega
+            have ht' : code.body_loop_loop visitor data env ctx index w out =
+                .ok (result, v') := by
+              simpa [code.body_loop_loop] using ht
+            obtain ⟨rest, hrest, hbody⟩ := ih (data.length - out.core.pos.val)
+              hmeasure out w hi' ht' rfl
+            obtain ⟨token, hencoded⟩ := hchunk.accepted
+            exact ⟨first ++ rest, by simp [hrest, hfirst, List.append_assoc],
+              hbody.prepend hencoded hchunk.outcomes⟩
+      · rw [reader.read_byte.eof data st.core.pos (by omega)] at hb
+        simp [core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at hb
+        subst cf
+        simp at ht
+        obtain ⟨rfl, rfl⟩ := ht
+        exact ⟨[], by simp, .empty hi.bounds.pos (by simp)⟩
+
+/-- Successful initialization selects the actual type entry and the same root frame used by the
+independent syntax invariant. -/
+theorem code.initial_state.start (env : metadata.Env) (index : U32) :
+    code.initial_state env index ⦃ r => match r with
+      | .Err _ => True
+      | .Ok st => st = initial index ∧ ∃ ft, env.types.val[index.val]? = some ft ⦄ := by
+  unfold code.initial_state
+  step as ⟨idx, hidx⟩
+  split
+  · simp
+  · rename_i hbound
+    step as ⟨ft, hft⟩
+    have hi : env.types.val[index.val]? = some ft := by
+      rw [List.getElem?_eq_getElem (by scalar_tac)]
+      simp_all
+    step as ⟨r, hr⟩
+    cases r with
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+    | Ok u =>
+      cases u
+      simp [core.result.Result.Insts.CoreOpsTry.branch, code.push_frame.initial]
+      exact ⟨ft, hi⟩
+
+/-- Initialization emits no callback. Step provenance therefore gives
+an exact whole-body trace for every ordinary public outcome, including errors. -/
+theorem code.validate_body_with.trace_of_contract {V : Type}
+    (visitor : code.OpVisitor V) (observe : V → List Visitor.Trace.Observation)
+    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+
+    (htrace : CallbackTrace.StepContract visitor observe data env ctx.locals ctx index)
+    (v v' : V) (result : Visitor.Trace.BodyResult)
+    (h : code.validate_body_with visitor data env ctx index v = .ok (result, v')) :
+    ∃ observations, observe v' = observe v ++ observations ∧
+      CallbackTrace.BodyTrace data 0#usize observations result := by
+  unfold code.validate_body_with at h
+  by_cases hsize : Slice.len data > limits.MAX_FUNCTION_BYTES
+  · simp [hsize] at h
+    obtain ⟨rfl, rfl⟩ := h
+    exact ⟨[], by simp, .empty (by simp) (by simp)⟩
+  · simp only [hsize, if_false] at h
+    obtain ⟨r, hr, h⟩ := Computation.bind_ok_inv _ _ _ h
+    cases r with
+    | Err e =>
+      simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+      obtain ⟨rfl, rfl⟩ := h
+      exact ⟨[], by simp, .empty (by simp) (by simp)⟩
+    | Ok st =>
+      simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, code.body_loop] at h
+      have hp := code.initial_state.start env index
+      rw [hr, WP.spec_ok] at hp
+      obtain ⟨rfl, ft, hi⟩ := hp
+      exact code.body_loop_loop.trace_of_contract visitor observe
+        data env ctx.locals ctx index rfl htrace (initial index) v v' result
+        (State.start data env ctx.locals index ft hi (by scalar_tac)) h
+
+end Itasca
+
+end
+
+/-! ## BytesScalar -/
+
+section
+
+/-!
+# Byte provenance for scalar callbacks
+
+Independent byte provenance for the scalar scalar instructions and the Wasm 2.0 numeric
+extensions (sign extension and saturating conversion) under `code.step_wasm2`. Each
+`step_*` lemma covers one instruction, and `base_scalar_records`, `extended_scalar_records` and
+`scalar` assemble them. Callback rejection is recorded, and an undecodable instruction contributes
+no operator callback.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Body.CallbackBytes
+
+open Visitor.Trace CallbackTrace
+
+/-- The scalar scalar dispatcher records independently decoded tokens. -/
+def BaseRecords {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (opcode : U8) : Prop :=
+  ∀ v result final v', code.step visitor st.core data env ⟨locals, p.ft.results⟩ opcode v =
+      .ok (result, final, v') →
+    ∃ observations, observe v' = observe v ++ observations ∧
+      CallbackTrace.StepTrace data p.start observations result final
+
+theorem step_nop {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_NOP) :
+    BaseRecords p visitor observe code.OP_NOP := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_nop] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (fun _ => .nop) ?_ v result final v' h
+  intro s a hr
+  have heq : st.core = s := by simpa using hr
+  subst s
+  exact ⟨.plain .NOP, rfl, by simp only [Action.opcode]; decide,
+    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop)⟩
+
+theorem step_i32_const {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST) :
+    BaseRecords p visitor observe code.OP_I32_CONST := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_i32_const] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .i32_const ?_ v result final v' h
+  intro s a hr
+  have hs := code.read_i32_const.spec st.core data (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain (Spec.i32Const a), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_s32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+
+theorem step_i64_const {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST) :
+    BaseRecords p visitor observe code.OP_I64_CONST := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_i64_const] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .i64_const ?_ v result final v' h
+  intro s a hr
+  have hs := code.read_i64_const.spec st.core data (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain (Spec.Constants.i64 a), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_s64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+
+theorem step_f32_const {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST) :
+    BaseRecords p visitor observe code.OP_F32_CONST := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_f32_const] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .f32_const ?_ v result final v' h
+  intro s a hr
+  have hs := code.read_f32_const.spec st.core data (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain (Spec.Constants.f32 a), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_f32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+
+theorem step_f64_const {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST) :
+    BaseRecords p visitor observe code.OP_F64_CONST := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_f64_const] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .f64_const ?_ v result final v' h
+  intro s a hr
+  have hs := code.read_f64_const.spec st.core data (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain (Spec.Constants.f64 a), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_f64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+
+theorem step_drop {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_DROP) :
+    BaseRecords p visitor observe code.OP_DROP := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_drop] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .drop ?_ v result final v' h
+  intro s a hr
+  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
+  have hs := code.pop_stack_type.segment st.core outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base])
+  change code.pop_stack_type st.core = .ok (.Ok a, s) at hr
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain .DROP, rfl, by simp only [Action.opcode]; decide,
+    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+      (by simpa [hs.2.1] using p.pos) .drop)⟩
+
+theorem step_select {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_SELECT) :
+    BaseRecords p visitor observe code.OP_SELECT := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_select] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .select ?_ v result final v' h
+  intro s a hr
+  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
+  have hs := code.read_select.segment st.core outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base]) (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  exact ⟨.plain (.SELECT none), rfl, by simp only [Action.opcode]; decide,
+    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+      (by simpa [hs.2.1] using p.pos) .select)⟩
+
+theorem step_unreachable {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE) :
+    BaseRecords p visitor observe code.OP_UNREACHABLE := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_unreachable] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (fun _ => .unreachable) ?_
+    v result final v' h
+  intro s a hr
+  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
+  obtain ⟨s', hm, _, _, _, hp⟩ := WP.spec_imp_exists
+    (code.mark_unreachable.spec st.core (p.parents.map Frames.Saved.ctrl) p.current.ctrl ctrls
+      (by simp [vals, base]))
+  have heq : s' = s := by simpa [code.read_unreachable, hm] using hr
+  subst s
+  exact ⟨.plain .UNREACHABLE, rfl, by simp only [Action.opcode]; decide,
+    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+      (by simpa [hp] using p.pos) .unreachable)⟩
+
+theorem step_local_get {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_GET) :
+    BaseRecords p visitor observe code.OP_LOCAL_GET := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_local_get] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .local_get ?_ v result final v' h
+  intro s a hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_local_get.prefix st.core data env ctx outer p.current.vals vals
+    (by have := capacity; omega)
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
+  exact ⟨.plain (.LOCAL_GET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+      (.localGet a encoding) ⟨suffix, length, bound⟩)⟩
+
+theorem step_local_set {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_SET) :
+    BaseRecords p visitor observe code.OP_LOCAL_SET := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_local_set] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .local_set ?_ v result final v' h
+  intro s a hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_local_set.prefix st.core data env ctx outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base])
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
+  exact ⟨.plain (.LOCAL_SET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+      (.localSet a encoding) ⟨suffix, length, bound⟩)⟩
+
+theorem step_local_tee {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_LOCAL_TEE) :
+    BaseRecords p visitor observe code.OP_LOCAL_TEE := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_local_tee] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .local_tee ?_ v result final v' h
+  intro s a hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_local_tee.prefix st.core data env ctx outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base])
+    (by have := capacity; omega)
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
+  exact ⟨.plain (.LOCAL_TEE (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+      (.localTee a encoding) ⟨suffix, length, bound⟩)⟩
+
+theorem step_global_get {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_GET) :
+    BaseRecords p visitor observe code.OP_GLOBAL_GET := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_global_get] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .global_get ?_ v result final v' h
+  intro s a hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_global_get.prefix st.core data env ctx outer p.current.vals vals
+    (by have := capacity; omega)
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
+  exact ⟨.plain (.GLOBAL_GET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+      (.globalGet a encoding) ⟨suffix, length, bound⟩)⟩
+
+theorem step_global_set {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (_capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_GLOBAL_SET) :
+    BaseRecords p visitor observe code.OP_GLOBAL_SET := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_global_set] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords .global_set ?_ v result final v' h
+  intro s a hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_global_set.prefix st.core data env ctx outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base])
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
+  exact ⟨.plain (.GLOBAL_SET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+      (.globalSet a encoding) ⟨suffix, length, bound⟩)⟩
+
+theorem step_memory_size {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_SIZE) :
+    BaseRecords p visitor observe code.OP_MEMORY_SIZE := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_memory_size] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (fun _ => .memory_size) ?_ v result final v' h
+  intro s a hr
+  cases a
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_memory_size.prefix st.core data env ctx outer p.current.vals vals
+    (by have := capacity; omega)
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨hb, hv, hn⟩ := (hs rfl).1
+  exact ⟨.plain .MEMORY_SIZE, rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memorySize hb hv hn)⟩
+
+theorem step_memory_grow {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (hbyte : data.val[p.start.val]'p.inbounds = code.OP_MEMORY_GROW) :
+    BaseRecords p visitor observe code.OP_MEMORY_GROW := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  intro v result final v' h
+  rw [dispatch_memory_grow] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (fun _ => .memory_grow) ?_ v result final v' h
+  intro s a hr
+  cases a
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs := code.read_memory_grow.prefix st.core data env ctx outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base])
+    (by have := capacity; omega)
+    _ hC p.current.ops (by simpa [hpoly] using typed)
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨hb, hv, hn⟩ := (hs rfl).1
+  exact ⟨.plain .MEMORY_GROW, rfl, by simp only [Action.opcode]; decide,
+    .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memoryGrow hb hv hn)⟩
+
+theorem step_numeric {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max) (opcode : U8) (operation : Body.Numeric.Operation)
+    (hbyte : data.val[p.start.val]'p.inbounds = opcode)
+    (hrow : Body.Numeric.opcodeMeaning opcode = some operation) :
+    BaseRecords p visitor observe opcode := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  obtain ⟨hook, hh, hcode, hmeaning⟩ := NumericHook.of_meaning hrow
+  intro v result final v' h
+  rw [dispatch_numeric visitor st.core data env ctx v opcode operation hook hrow hh] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (fun _ => .numeric hook) ?_
+    v result final v' h
+  intro s a hr
+  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
+  have hs := Body.Numeric.read.segment operation st.core outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base]) (by have := capacity; omega)
+  rw [hr, WP.spec_ok] at hs
+  dsimp only at hs
+  refine ⟨.plain operation.instruction, by simp only [actionToken, Action.token, hmeaning], ?_,
+    .plain (.no_immediate p.inbounds hbyte (by simpa [hs.2.1] using p.pos) (.numeric opcode operation hrow))⟩
+  change some hook.opcode ≠ some 0x0E#u8
+  intro he
+  have hv : opcode.val = 14 := by rw [← hcode, Option.some.inj he]; rfl
+  have hb := Body.Numeric.NumericOp.bounds hrow
+  omega
+
+theorem step_memory {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max) (opcode : U8) (operation : Body.MemoryMeaning.Operation)
+    (hbyte : data.val[p.start.val]'p.inbounds = opcode)
+    (hrow : Body.MemoryMeaning.opcodeMeaning opcode = some operation) :
+    BaseRecords p visitor observe opcode := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  obtain ⟨hook, hh, _, hmeaning⟩ := MemoryHook.of_meaning hrow
+  intro v result final v' h
+  rw [dispatch_memory visitor st.core data env ctx v opcode operation hook hrow hh] at h
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe hrecords (.memory hook) ?_
+    v result final v' h
+  intro s arg hr
+  obtain ⟨C, outer, spine, _, base, typed, ctrls, _, vals⟩ := p.opened
+  have hpoly : Body.Control.polymorphic st.core = p.current.ctrl.polymorphic_base := by
+    simp [Body.Control.polymorphic, ctrls]
+  have hC : Translation.Environment.Matches env ctx
+      (Frames.enter C p.current.form p.current.ins p.current.outs) :=
+    (spine.matches (Translation.Environment.Matches.root env ctx)).enter _
+  have hs :
+      (if operation.store then code.read_store st.core data env operation.ty operation.naturalAlign
+        else code.read_load st.core data env operation.ty operation.naturalAlign) ⦃
+        Itasca.Body.Scalar.MemoryPost ((p.current.form.params p.current.ins).map Translation.valueType) data st.core outer p.current.vals
+          (Frames.enter C p.current.form p.current.ins p.current.outs) p.current.ops operation.op ⦄ := by
+    cases hstore : operation.store with
+    | false =>
+      simpa only [hstore, Bool.false_eq_true, ↓reduceIte] using
+        code.read_load.prefix st.core data env ctx outer p.current.vals vals
+          (by simp [Body.Control.base, ctrls, base]) (by have := capacity; omega)
+          _ hC p.current.ops (by simpa [hpoly] using typed) opcode operation hrow hstore
+    | true =>
+      simpa only [hstore, ↓reduceIte] using
+        code.read_store.prefix st.core data env ctx outer p.current.vals vals
+          (by simp [Body.Control.base, ctrls, base])
+          _ hC p.current.ops (by simpa [hpoly] using typed) opcode operation hrow hstore
+  rw [hr, WP.spec_ok] at hs
+  obtain ⟨middle, ha, ho⟩ := (hs arg rfl).1
+  exact ⟨.plain (operation.op arg), by simp only [actionToken, Action.token, hmeaning],
+    by cases hook <;> simp only [Action.opcode, MemoryHook.opcode] <;> decide,
+    .plain (.of_memory operation arg hrow p.inbounds hbyte p.pos ha ho)⟩
+
+private theorem memory_meaning_exists (opcode : U8)
+    (hlo : 0x28 ≤ opcode.val) (hhi : opcode.val ≤ 0x3E) :
+    ∃ operation, Body.MemoryMeaning.opcodeMeaning opcode = some operation := by
+  rcases opcode with ⟨⟨n, hn⟩⟩
+  change 40 ≤ n at hlo
+  change n ≤ 62 at hhi
+  interval_cases n <;> exact ⟨_, rfl⟩
+
+/-- All scalar scalar opcode bytes, including reserved-opcode rejection, satisfy `BaseRecords`. -/
+theorem base_scalar_records {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (hrecords : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
+    (hbyte : data.val[p.start.val]'p.inbounds = opcode) :
+    BaseRecords p visitor observe opcode := by
+  let ctx : code.Context := ⟨locals, p.ft.results⟩
+  by_cases hhigh : 0x45 ≤ opcode.val
+  · cases hm : Body.Numeric.opcodeMeaning opcode with
+    | some operation => exact step_numeric p visitor observe hrecords capacity opcode operation hbyte hm
+    | none =>
+      intro v result final v' h
+      rw [code.step.numeric_dispatch visitor st.core data env ctx opcode v hhigh,
+        code.step_numeric.unrecognized visitor st.core opcode v hm] at h
+      simp only [Result.ok.injEq, Prod.mk.injEq] at h
+      obtain ⟨rfl, rfl, rfl⟩ := h
+      exact ⟨[], by simp, .silent _ _ (.empty _)⟩
+  by_cases hmemory : 0x28 ≤ opcode.val ∧ opcode.val ≤ 0x3E
+  · obtain ⟨operation, hm⟩ := memory_meaning_exists opcode hmemory.1 hmemory.2
+    exact step_memory p visitor observe hrecords capacity opcode operation hbyte hm
+  by_cases h_nop : opcode = code.OP_NOP
+  · rw [h_nop] at hbyte ⊢
+    exact step_nop p visitor observe hrecords capacity hbyte
+  by_cases h_unreachable : opcode = code.OP_UNREACHABLE
+  · rw [h_unreachable] at hbyte ⊢
+    exact step_unreachable p visitor observe hrecords capacity hbyte
+  by_cases h_i32_const : opcode = code.OP_I32_CONST
+  · rw [h_i32_const] at hbyte ⊢
+    exact step_i32_const p visitor observe hrecords capacity hbyte
+  by_cases h_i64_const : opcode = code.OP_I64_CONST
+  · rw [h_i64_const] at hbyte ⊢
+    exact step_i64_const p visitor observe hrecords capacity hbyte
+  by_cases h_f32_const : opcode = code.OP_F32_CONST
+  · rw [h_f32_const] at hbyte ⊢
+    exact step_f32_const p visitor observe hrecords capacity hbyte
+  by_cases h_f64_const : opcode = code.OP_F64_CONST
+  · rw [h_f64_const] at hbyte ⊢
+    exact step_f64_const p visitor observe hrecords capacity hbyte
+  by_cases h_drop : opcode = code.OP_DROP
+  · rw [h_drop] at hbyte ⊢
+    exact step_drop p visitor observe hrecords capacity hbyte
+  by_cases h_select : opcode = code.OP_SELECT
+  · rw [h_select] at hbyte ⊢
+    exact step_select p visitor observe hrecords capacity hbyte
+  by_cases h_local_get : opcode = code.OP_LOCAL_GET
+  · rw [h_local_get] at hbyte ⊢
+    exact step_local_get p visitor observe hrecords capacity hbyte
+  by_cases h_local_set : opcode = code.OP_LOCAL_SET
+  · rw [h_local_set] at hbyte ⊢
+    exact step_local_set p visitor observe hrecords capacity hbyte
+  by_cases h_local_tee : opcode = code.OP_LOCAL_TEE
+  · rw [h_local_tee] at hbyte ⊢
+    exact step_local_tee p visitor observe hrecords capacity hbyte
+  by_cases h_global_get : opcode = code.OP_GLOBAL_GET
+  · rw [h_global_get] at hbyte ⊢
+    exact step_global_get p visitor observe hrecords capacity hbyte
+  by_cases h_global_set : opcode = code.OP_GLOBAL_SET
+  · rw [h_global_set] at hbyte ⊢
+    exact step_global_set p visitor observe hrecords capacity hbyte
+  by_cases h_memory_size : opcode = code.OP_MEMORY_SIZE
+  · rw [h_memory_size] at hbyte ⊢
+    exact step_memory_size p visitor observe hrecords capacity hbyte
+  by_cases h_memory_grow : opcode = code.OP_MEMORY_GROW
+  · rw [h_memory_grow] at hbyte ⊢
+    exact step_memory_grow p visitor observe hrecords capacity hbyte
+  have hreserved : (0x06 ≤ opcode.val ∧ opcode.val ≤ 0x0A) ∨
+      (0x12 ≤ opcode.val ∧ opcode.val ≤ 0x19) ∨
+      (0x1C ≤ opcode.val ∧ opcode.val ≤ 0x1F) ∨
+      (0x25 ≤ opcode.val ∧ opcode.val ≤ 0x27) := by
+    simp only [controlOpcodes, List.mem_cons, not_or] at hscalar
+    simp only [global_simps] at *
+    scalar_tac
+  intro v result final v' h
+  rw [code.step.reserved visitor st.core data env ctx opcode v hreserved] at h
+  simp only [Result.ok.injEq, Prod.mk.injEq] at h
+  obtain ⟨rfl, rfl, rfl⟩ := h
+  exact ⟨[], by simp, .silent _ _ (.empty _)⟩
+
+/-- Unary checking preserves a decoded cursor even when the callback rejects. -/
+theorem conversion_trace {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (operation : Body.Numeric.Operation) (unary : operation.binary = false)
+    (pos : Usize) (action : Action)
+    (token : actionToken action [] = some (.plain operation.instruction))
+    (not_table : action.opcode ≠ some 14#u8)
+    (bytes : At data p.start (.plain operation.instruction) pos)
+    (v : V) (result : BodyResult) (final : code.OpIterState) (v' : V)
+    (run : Visitor.Core.run
+      (code.read_conversion {st.core with pos := pos} operation.input operation.output)
+      (fun v s (_ : Unit) => invoke visitor v (.op s action)) v =
+        .ok (result, final, v')) :
+    ∃ observations, observe v' = observe v ++ observations ∧
+      CallbackTrace.StepTrace data p.start observations result final := by
+  apply CallbackTrace.run_step_trace data p.start _ visitor observe records (fun _ => action)
+    ?_ v result final v' run
+  intro s a hr
+  obtain ⟨_, outer, _, _, base, _, ctrls, _, vals⟩ := p.opened
+  have spec := Body.Numeric.read.segment operation {st.core with pos := pos} outer p.current.vals vals
+    (by simp [Body.Control.base, ctrls, base]) capacity
+  simp only [Body.Numeric.read, unary, Bool.false_eq_true, ↓reduceIte] at spec
+  rw [hr, WP.spec_ok] at spec
+  dsimp only at spec
+  exact ⟨_, token, not_table, by simpa only [spec.2.1] using bytes⟩
+
+/-- Sign-extension and saturating conversion callbacks record their complete opcode and prefix
+bytes. -/
+theorem extended_scalar_records {data env locals index st} (p : Pending data env locals index st)
+    {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
+    (records : Records visitor observe) (capacity : st.core.vals.val.length < Usize.max)
+    (ctx : code.Context) (hlocals : ctx.locals = locals)
+    (opcode : U8) (hscalar : opcode.val ∉ controlOpcodes)
+    (hbyte : data.val[p.start.val]'p.inbounds = opcode)
+    (v : V) (result : BodyResult) (final : code.OpIterState) (v' : V)
+    (run : code.step_extended visitor st.core data env ctx opcode v =
+      .ok (result, final, v')) :
+    ∃ observations, observe v' = observe v ++ observations ∧
+      CallbackTrace.StepTrace data p.start observations result final := by
+  cases hm : NumericExtensions.signMeaning opcode with
+  | some operation =>
+    rw [code.step_extended.sign visitor st.core data env ctx opcode operation v hm] at run
+    have unary := (NumericExtensions.sign_properties hm).1
+    have bytes : At data p.start (.plain operation.instruction) st.core.pos :=
+      At.of_immediate p.inbounds hbyte p.pos (.signExtension opcode operation hm)
+        (Body.Scalar.BytesAt.nil data st.core.pos (by have := p.pos; have := p.inbounds; omega))
+    have bounds := (NumericExtensions.sign_properties hm).2.2
+    rcases opcode with ⟨⟨n, hn⟩⟩
+    change 192 ≤ n ∧ n ≤ 196 at bounds
+    obtain ⟨lower, upper⟩ := bounds
+    interval_cases n
+    all_goals simp [NumericExtensions.signMeaning, UScalar.val] at hm
+    all_goals subst operation
+    all_goals first
+      | exact conversion_trace p visitor observe records capacity _ unary st.core.pos
+          (.extendedNumeric .i32_extend8_s) rfl (by decide) bytes v result final v' run
+      | exact conversion_trace p visitor observe records capacity _ unary st.core.pos
+          (.extendedNumeric .i32_extend16_s) rfl (by decide) bytes v result final v' run
+      | exact conversion_trace p visitor observe records capacity _ unary st.core.pos
+          (.extendedNumeric .i64_extend8_s) rfl (by decide) bytes v result final v' run
+      | exact conversion_trace p visitor observe records capacity _ unary st.core.pos
+          (.extendedNumeric .i64_extend16_s) rfl (by decide) bytes v result final v' run
+      | exact conversion_trace p visitor observe records capacity _ unary st.core.pos
+          (.extendedNumeric .i64_extend32_s) rfl (by decide) bytes v result final v' run
+  | none =>
+    by_cases hp : opcode = code.OP_MISC_PREFIX
+    · have he : opcode = 0xFC#u8 := by simpa [global_simps] using hp
+      rw [he] at hbyte run
+      rw [code.step_extended.prefixed] at run
+      obtain ⟨r, hr, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
+      simp only [prefixedStep, hr, bind_ok] at run
+      cases r with
+      | Err e =>
+        simp only [Result.ok.injEq, Prod.mk.injEq] at run
+        obtain ⟨rfl, rfl, rfl⟩ := run
+        exact ⟨[], by simp, .silent _ _ (.empty _)⟩
+      | Ok pair =>
+        obtain ⟨subopcode, next⟩ := pair
+        cases hs : NumericExtensions.saturatingMeaning subopcode with
+        | none =>
+          simp only [hs, Result.ok.injEq, Prod.mk.injEq] at run
+          obtain ⟨rfl, rfl, rfl⟩ := run
+          exact ⟨[], by simp, .silent _ _ (.empty _)⟩
+        | some operation =>
+          simp only [hs] at run
+          have unary := NumericExtensions.saturating_unary hs
+          have bytes : At data p.start (.plain operation.instruction) next := by
+            obtain ⟨bytes, hbytes, length, bound, encoding⟩ := hd
+            exact At.of_immediate p.inbounds hbyte p.pos (.saturating subopcode operation hs encoding)
+              ⟨hbytes, length, bound⟩
+          have bound : subopcode.val < 8 := by
+            unfold NumericExtensions.saturatingMeaning at hs
+            split at hs <;> simp_all
+          rcases subopcode with ⟨⟨n, hn⟩⟩
+          change n < 8 at bound
+          interval_cases n
+          all_goals simp [NumericExtensions.saturatingMeaning, UScalar.val] at hs
+          all_goals subst operation
+          all_goals first
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i32_trunc_sat_f32_s) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i32_trunc_sat_f32_u) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i32_trunc_sat_f64_s) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i32_trunc_sat_f64_u) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i64_trunc_sat_f32_s) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i64_trunc_sat_f32_u) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i64_trunc_sat_f64_s) rfl (by decide) bytes v result final v' run
+            | exact conversion_trace p visitor observe records capacity _ unary next
+                (.extendedNumeric .i64_trunc_sat_f64_u) rfl (by decide) bytes v result final v' run
+    · rw [code.step_extended.base visitor st.core data env ctx opcode v hm hp] at run
+      rw [scalar_context visitor st.core data env ctx ⟨locals, p.ft.results⟩ opcode v hscalar hlocals] at run
+      exact base_scalar_records p visitor observe records capacity opcode hscalar hbyte v result final v' run
+
+end Itasca.Body.CallbackBytes
+
+end

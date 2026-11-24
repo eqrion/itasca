@@ -1,5 +1,10 @@
 import «wasm2.0»
 import Batteries.Data.List.Basic
+import SpecExt.Builtins.IntegerRepresentation
+
+/-! ## Host -/
+
+section
 
 /-!
 Host extension of the generated Wasm 2.0 reduction relation. Host calls are
@@ -96,3 +101,5 @@ inductive StepsH : config → List HostEvent → config → Prop where
       StepH c events c' → StepsH c' rest c'' → StepsH c (events ++ rest) c''
 
 end SpecExt
+
+end

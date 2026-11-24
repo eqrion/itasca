@@ -22,6 +22,25 @@ extract-check:
 prove:
     @make prove
 
+# Proof-health metrics. See lean/PROOF_ENGINEERING.md.
+metrics:
+    @cd lean && python3 scripts/metrics.py
+
+# Static checks: layering, metric ratchet, links, and forbidden constructs.
+lint:
+    @make lint
+
+# Check handwritten warning counts using the completed build's cached traces.
+warnings:
+    @cd lean && python3 scripts/lean_warnings.py --check
+
+# Check the public surface and all artifacts; --update refreshes them explicitly.
+audit *args:
+    @make audit AUDIT_ARGS='{{args}}'
+
+tooling-test:
+    @make tooling-test
+
 check +modules:
     @cd lean && lake build {{ modules }}
 
@@ -41,9 +60,6 @@ verify:
 clean:
     @make clean
 
-# Compatibility aliases for the port's recorded commands.
-alias lean-extract := extract
-alias lean-prove := prove
 
 lean-spec:
     @make -C lean spec-generate

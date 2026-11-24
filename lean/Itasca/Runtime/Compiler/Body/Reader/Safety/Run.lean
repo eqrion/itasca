@@ -1,16 +1,17 @@
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectSafety
-import Itasca.Visitor.Basic
+import Itasca.Visitor.Total
+import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
 /-!
 Only a reader's actual successful result needs a returning compiler hook. Parser and callback rejections are included in the normal-return conclusion.
 
-Main declarations: `reader_run_reached` and `compiler_select_raw_total`. A direct consumer is `Compiler.Body.Reader.Calls.Safety`.
+Main declarations: `reader_run_reached` and `compiler_select_raw_total`.
 -/
 
-namespace Itasca.Runtime.Compiler
+namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 set_option maxRecDepth 4096
-set_option maxHeartbeats 1000000
 
 /-- Only a reader's actual successful result needs a returning compiler hook.
 Parser and callback rejections are included in the normal-return conclusion. -/
@@ -21,19 +22,19 @@ theorem reader_run_reached {T V : Type}
     (reader : read ⦃ _ => True ⦄)
     (callback : ∀ state value, read = .ok (.Ok value,state) →
       hook visitor state value ⦃ out => out.1 = .Ok () → post state out.2 ⦄) :
-    CoreVisitor.run read hook visitor ⦃ out => out.1 = .Ok () → post out.2.1 out.2.2 ⦄ := by
+    Visitor.Core.run read hook visitor ⦃ out => out.1 = .Ok () → post out.2.1 out.2.2 ⦄ := by
   obtain ⟨⟨result,state⟩,readEq,_⟩ := WP.spec_imp_exists reader
   cases result with
-  | Err error => simp [CoreVisitor.run,readEq,core.result.Result.Insts.CoreOpsTry.branch,
+  | Err error => simp [Visitor.Core.run,readEq,core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok value =>
     obtain ⟨⟨result,after⟩,called,ready⟩ := WP.spec_imp_exists (callback state value readEq)
     cases result with
-    | Err error => simp [CoreVisitor.run,readEq,called,code.visit,core.result.Result.Insts.CoreOpsTry.branch,
+    | Err error => simp [Visitor.Core.run,readEq,called,code.visit,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok unitValue =>
       cases unitValue
-      simpa [CoreVisitor.run,readEq,called,code.visit,core.result.Result.Insts.CoreOpsTry.branch,
+      simpa [Visitor.Core.run,readEq,called,code.visit,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,WP.spec_ok] using ready rfl
 
 /-- SELECT can reject an undersized raw operand stack normally; only ordered
@@ -54,18 +55,19 @@ theorem compiler_select_raw_total {A} (ops : runtime.platform.Alloc A)
   · by_cases live : compiler.reachable = true
     · have lower : runtime.compiler.lower.FunctionCompiler.op ops compiler state
           (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 = selectLowering ops compiler state := by
-        cases typed <;> unfold runtime.compiler.lower.FunctionCompiler.op <;> rw [if_pos live] <;> rfl
+        exact runtime.compiler.lower.FunctionCompiler.op.select ops compiler state
+          (if typed then 28#u16 else 27#u16) 0#u32 0#u32 0#u128 live (by cases typed <;> decide)
       have bound : Slice.len compiler.before.deref < 3#usize := by
         have len := observed.length
         simp only [alloc.vec.Vec.deref,Slice.len,Slice.length,Slice.from_val]
         scalar_tac
       have missing : runtime.compiler.FunctionCompiler.operand ops compiler 3#usize =
           .ok (.Err error.VisitError.OutOfMemory) := by
-        simp [runtime.compiler.FunctionCompiler.operand,runtime.compiler.operand_at,bound]
+        rw [runtime.compiler.FunctionCompiler.operand.eq]
+        exact operand_at_out_of_bounds compiler.before.deref 3#usize bound
       rw [lower]
       simp [selectLowering,missing,core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    · unfold runtime.compiler.lower.FunctionCompiler.op
-      rw [if_neg live]
+    · rw [runtime.compiler.lower.FunctionCompiler.op.dead _ _ _ _ _ _ _ (Bool.eq_false_of_not_eq_true live)]
       exact compiler_observe_stack ops law compiler state
-end Itasca.Runtime.Compiler
+end Itasca.Compiler

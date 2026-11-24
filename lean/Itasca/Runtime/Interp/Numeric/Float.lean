@@ -1,12 +1,12 @@
-import Itasca.Runtime.Equations
-import Itasca.Runtime.Platform.Float
-import Itasca.Runtime.Spec.Float
-import SpecExt.Builtins.Float.Sign
+import Itasca.Runtime.Equations.Interp
+import Itasca.Runtime.Platform.Laws
+import Itasca.Runtime.Spec.TypingAndNumericOperations
+import SpecExt.Builtins.Float.Representation
 
 /-! Refinement of the extracted NaN-canonicalizing wrappers. These lemmas use
 ordinary integer/bitvector semantics and the checked IEEE decoder. -/
 
-namespace Itasca.Runtime.Interp
+namespace Itasca.Interp
 open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
 
 @[step] theorem quiet32_bits (bits : U32) :
@@ -35,7 +35,7 @@ open Aeneas Aeneas.Std SpecExt.Builtins SpecExt.Builtins.Float Platform
   obtain ⟨result, hr, heq⟩ := WP.spec_imp_exists (quiet32_bits bits)
   rw [hr]
   simp only [WP.spec_ok]
-  rw [heq, isNaN_floatOfBits_32]
+  rw [heq, is_nan_float_of_bits_32]
   by_cases hn : bits.val % 2147483648 > 2139095040
   · simp only [hn, if_true, decide_true]
     decide +kernel
@@ -78,7 +78,7 @@ theorem quiet32_sound (bits : U32) (allowed : List fN)
   obtain ⟨result, hr, heq⟩ := WP.spec_imp_exists (quiet64_bits bits)
   rw [hr]
   simp only [WP.spec_ok]
-  rw [heq, isNaN_floatOfBits_64]
+  rw [heq, is_nan_float_of_bits_64]
   by_cases hn : bits.val % 9223372036854775808 > 9218868437227405312
   · simp only [hn, if_true, decide_true]
     decide +kernel
@@ -102,7 +102,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary32
   with_unfolding_all change (ops.f32_add a b >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fadd_ 32 (floatOfBits 32 a.val) (floatOfBits 32 b.val) ⦄
   step with hf.f32_add a b as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_add 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_add 32 (by omega) _ _)
 
 @[step] theorem binary32_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U32) :
@@ -111,7 +111,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary32
   with_unfolding_all change (ops.f32_sub a b >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fsub_ 32 (floatOfBits 32 a.val) (floatOfBits 32 b.val) ⦄
   step with hf.f32_sub a b as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_sub 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_sub 32 (by omega) _ _)
 
 @[step] theorem binary32_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U32) :
@@ -120,7 +120,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary32
   with_unfolding_all change (ops.f32_mul a b >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fmul_ 32 (floatOfBits 32 a.val) (floatOfBits 32 b.val) ⦄
   step with hf.f32_mul a b as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_mul 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_mul 32 (by omega) _ _)
 
 @[step] theorem binary32_div_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U32) :
@@ -129,7 +129,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary32
   with_unfolding_all change (ops.f32_div a b >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fdiv_ 32 (floatOfBits 32 a.val) (floatOfBits 32 b.val) ⦄
   step with hf.f32_div a b as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_div 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_div 32 (by omega) _ _)
 
 @[step] theorem unary32_ceil_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U32) :
@@ -138,7 +138,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change (ops.f32_ceil a >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fceil_ 32 (floatOfBits 32 a.val) ⦄
   step with hf.f32_ceil a as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_integral 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_integral 32 (by omega) _ _)
 
 @[step] theorem unary32_floor_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U32) :
@@ -147,7 +147,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change (ops.f32_floor a >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ ffloor_ 32 (floatOfBits 32 a.val) ⦄
   step with hf.f32_floor a as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_integral 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_integral 32 (by omega) _ _)
 
 @[step] theorem unary32_trunc_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U32) :
@@ -156,7 +156,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change (ops.f32_trunc a >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ ftrunc_ 32 (floatOfBits 32 a.val) ⦄
   step with hf.f32_trunc a as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_integral 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_integral 32 (by omega) _ _)
 
 @[step] theorem unary32_nearest_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U32) :
@@ -165,7 +165,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change (ops.f32_nearest a >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fnearest_ 32 (floatOfBits 32 a.val) ⦄
   step with hf.f32_nearest a as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_integral 32 (by omega) _ _)
+  exact quiet32_sound raw _ hraw (canonical_closed_integral 32 (by omega) _ _)
 
 @[step] theorem unary32_sqrt_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U32) :
@@ -174,7 +174,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change (ops.f32_sqrt a >>= runtime.interp.float.quiet32) ⦃ result => floatOfBits 32 result.val ∈ fsqrt_ 32 (floatOfBits 32 a.val) ⦄
   step with hf.f32_sqrt a as ⟨raw, hraw⟩
-  exact quiet32_sound raw _ hraw (canonicalClosed_sqrt 32 (by omega) _)
+  exact quiet32_sound raw _ hraw (canonical_closed_sqrt 32 (by omega) _)
 
 @[step] theorem binary64_add_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -183,7 +183,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary64
   with_unfolding_all change (ops.f64_add a b >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fadd_ 64 (floatOfBits 64 a.val) (floatOfBits 64 b.val) ⦄
   step with hf.f64_add a b as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_add 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_add 64 (by omega) _ _)
 
 @[step] theorem binary64_sub_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -192,7 +192,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary64
   with_unfolding_all change (ops.f64_sub a b >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fsub_ 64 (floatOfBits 64 a.val) (floatOfBits 64 b.val) ⦄
   step with hf.f64_sub a b as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_sub 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_sub 64 (by omega) _ _)
 
 @[step] theorem binary64_mul_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -201,7 +201,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary64
   with_unfolding_all change (ops.f64_mul a b >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fmul_ 64 (floatOfBits 64 a.val) (floatOfBits 64 b.val) ⦄
   step with hf.f64_mul a b as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_mul 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_mul 64 (by omega) _ _)
 
 @[step] theorem binary64_div_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -210,7 +210,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.binary64
   with_unfolding_all change (ops.f64_div a b >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fdiv_ 64 (floatOfBits 64 a.val) (floatOfBits 64 b.val) ⦄
   step with hf.f64_div a b as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_div 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_div 64 (by omega) _ _)
 
 @[step] theorem unary64_ceil_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U64) :
@@ -219,7 +219,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change (ops.f64_ceil a >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fceil_ 64 (floatOfBits 64 a.val) ⦄
   step with hf.f64_ceil a as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_integral 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_integral 64 (by omega) _ _)
 
 @[step] theorem unary64_floor_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U64) :
@@ -228,7 +228,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change (ops.f64_floor a >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ ffloor_ 64 (floatOfBits 64 a.val) ⦄
   step with hf.f64_floor a as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_integral 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_integral 64 (by omega) _ _)
 
 @[step] theorem unary64_trunc_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U64) :
@@ -237,7 +237,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change (ops.f64_trunc a >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ ftrunc_ 64 (floatOfBits 64 a.val) ⦄
   step with hf.f64_trunc a as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_integral 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_integral 64 (by omega) _ _)
 
 @[step] theorem unary64_nearest_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U64) :
@@ -246,7 +246,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change (ops.f64_nearest a >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fnearest_ 64 (floatOfBits 64 a.val) ⦄
   step with hf.f64_nearest a as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_integral 64 (by omega) _ _)
+  exact quiet64_sound raw _ hraw (canonical_closed_integral 64 (by omega) _ _)
 
 @[step] theorem unary64_sqrt_sound {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a : U64) :
@@ -255,7 +255,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change (ops.f64_sqrt a >>= runtime.interp.float.quiet64) ⦃ result => floatOfBits 64 result.val ∈ fsqrt_ 64 (floatOfBits 64 a.val) ⦄
   step with hf.f64_sqrt a as ⟨raw, hraw⟩
-  exact quiet64_sound raw _ hraw (canonicalClosed_sqrt 64 (by omega) _)
+  exact quiet64_sound raw _ hraw (canonical_closed_sqrt 64 (by omega) _)
 
 @[step] theorem scalar_f32_convert_i32_s {F : Type} (ops : runtime.platform.FloatOps F)
     (hf : FloatOpsCorrect ops) (a b : U64) :
@@ -265,7 +265,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.hcast .I32 a) >>= fun arg => ops.f32_convert_i32_s arg >>= fun raw => runtime.interp.float.quiet32 raw >>= fun value => lift (UScalar.cast .U64 value) >>= fun out => Result.ok (core.result.Result.Ok out : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 32 value.val ∈ [convert__ 32 32 .S (.mk_uN (IScalar.hcast .U32 (UScalar.hcast .I32 a)).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f32_convert_i32_s (UScalar.hcast .I32 a) as ⟨raw, hraw⟩
-  step with quiet32_sound raw _ hraw (canonicalClosed_convert 32 32 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet32_sound raw _ hraw (canonical_closed_convert 32 32 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   simpa only [U32.cast_U64_val_eq] using hvalue
 
@@ -277,7 +277,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.cast .U32 a) >>= fun arg => ops.f32_convert_i32_u arg >>= fun raw => runtime.interp.float.quiet32 raw >>= fun value => lift (UScalar.cast .U64 value) >>= fun out => Result.ok (core.result.Result.Ok out : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 32 value.val ∈ [convert__ 32 32 .U (.mk_uN (UScalar.cast .U32 a).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f32_convert_i32_u (UScalar.cast .U32 a) as ⟨raw, hraw⟩
-  step with quiet32_sound raw _ hraw (canonicalClosed_convert 32 32 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet32_sound raw _ hraw (canonical_closed_convert 32 32 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   simpa only [U32.cast_U64_val_eq] using hvalue
 
@@ -289,7 +289,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.hcast .I64 a) >>= fun arg => ops.f32_convert_i64_s arg >>= fun raw => runtime.interp.float.quiet32 raw >>= fun value => lift (UScalar.cast .U64 value) >>= fun out => Result.ok (core.result.Result.Ok out : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 32 value.val ∈ [convert__ 64 32 .S (.mk_uN (IScalar.hcast .U64 (UScalar.hcast .I64 a)).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f32_convert_i64_s (UScalar.hcast .I64 a) as ⟨raw, hraw⟩
-  step with quiet32_sound raw _ hraw (canonicalClosed_convert 64 32 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet32_sound raw _ hraw (canonical_closed_convert 64 32 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   simpa only [U32.cast_U64_val_eq] using hvalue
 
@@ -301,7 +301,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (ops.f32_convert_i64_u a >>= fun raw => runtime.interp.float.quiet32 raw >>= fun value => lift (UScalar.cast .U64 value) >>= fun out => Result.ok (core.result.Result.Ok out : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 32 value.val ∈ [convert__ 64 32 .U (.mk_uN a.val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f32_convert_i64_u a as ⟨raw, hraw⟩
-  step with quiet32_sound raw _ hraw (canonicalClosed_convert 64 32 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet32_sound raw _ hraw (canonical_closed_convert 64 32 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   simpa only [U32.cast_U64_val_eq] using hvalue
 
@@ -313,7 +313,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.hcast .I32 a) >>= fun arg => ops.f64_convert_i32_s arg >>= fun raw => runtime.interp.float.quiet64 raw >>= fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 64 value.val ∈ [convert__ 32 64 .S (.mk_uN (IScalar.hcast .U32 (UScalar.hcast .I32 a)).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f64_convert_i32_s (UScalar.hcast .I32 a) as ⟨raw, hraw⟩
-  step with quiet64_sound raw _ hraw (canonicalClosed_convert 32 64 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet64_sound raw _ hraw (canonical_closed_convert 32 64 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
@@ -325,7 +325,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.cast .U32 a) >>= fun arg => ops.f64_convert_i32_u arg >>= fun raw => runtime.interp.float.quiet64 raw >>= fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 64 value.val ∈ [convert__ 32 64 .U (.mk_uN (UScalar.cast .U32 a).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f64_convert_i32_u (UScalar.cast .U32 a) as ⟨raw, hraw⟩
-  step with quiet64_sound raw _ hraw (canonicalClosed_convert 32 64 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet64_sound raw _ hraw (canonical_closed_convert 32 64 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
@@ -337,7 +337,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (lift (UScalar.hcast .I64 a) >>= fun arg => ops.f64_convert_i64_s arg >>= fun raw => runtime.interp.float.quiet64 raw >>= fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 64 value.val ∈ [convert__ 64 64 .S (.mk_uN (IScalar.hcast .U64 (UScalar.hcast .I64 a)).val)] ⦄
   simp only [lift, bind_ok]
   step with hf.f64_convert_i64_s (UScalar.hcast .I64 a) as ⟨raw, hraw⟩
-  step with quiet64_sound raw _ hraw (canonicalClosed_convert 64 64 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet64_sound raw _ hraw (canonical_closed_convert 64 64 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
@@ -348,7 +348,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.scalar
   with_unfolding_all change (ops.f64_convert_i64_u a >>= fun raw => runtime.interp.float.quiet64 raw >>= fun value => Result.ok (core.result.Result.Ok value : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 64 value.val ∈ [convert__ 64 64 .U (.mk_uN a.val)] ⦄
   step with hf.f64_convert_i64_u a as ⟨raw, hraw⟩
-  step with quiet64_sound raw _ hraw (canonicalClosed_convert 64 64 (by omega) _ _) as ⟨value, hvalue⟩
+  step with quiet64_sound raw _ hraw (canonical_closed_convert 64 64 (by omega) _ _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   exact hvalue
 
@@ -360,7 +360,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (ops.f32_demote_f64 a >>= fun raw => runtime.interp.float.quiet32 raw >>= fun value => lift (UScalar.cast .U64 value) >>= fun out => Result.ok (core.result.Result.Ok out : core.result.Result U64 runtime.ExecError)) ⦃ result => ∃ value, result = .Ok value ∧ floatOfBits 32 value.val ∈ demote__ 64 32 (floatOfBits 64 a.val) ⦄
   simp only [lift, bind_ok]
   step with hf.f32_demote_f64 a as ⟨raw, hraw⟩
-  step with quiet32_sound raw _ hraw (canonicalClosed_demote 64 32 (by omega) _) as ⟨value, hvalue⟩
+  step with quiet32_sound raw _ hraw (canonical_closed_demote 64 32 (by omega) _) as ⟨value, hvalue⟩
   refine ⟨_, rfl, ?_⟩
   simpa only [U32.cast_U64_val_eq] using hvalue
 
@@ -616,7 +616,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   simp only [WP.spec_ok, fabs_, List.mem_singleton, UScalar.val_and]
   change floatOfBits 32 (bits.val &&& (2 ^ 31 - 1)) = _
   rw [Nat.and_two_pow_sub_one_eq_mod]
-  exact floatOfBits_abs32 bits.val
+  exact float_of_bits_abs32 bits.val
 
 /-- Bitwise sign operations preserve payloads and require no FloatOps law. -/
 @[step] theorem unary32_neg_sound {F : Type} (ops : runtime.platform.FloatOps F) (bits : U32) :
@@ -625,7 +625,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary32
   with_unfolding_all change Result.ok (bits ^^^ 2147483648#u32) ⦃ result => floatOfBits 32 result.val ∈ fneg_ 32 (floatOfBits 32 bits.val) ⦄
   simp only [WP.spec_ok, fneg_, List.mem_singleton, UScalar.val_xor]
-  exact floatOfBits_neg32 bits.val
+  exact float_of_bits_neg32 bits.val
 
 /-- Bitwise sign operations preserve payloads and require no FloatOps law. -/
 @[step] theorem unary64_abs_sound {F : Type} (ops : runtime.platform.FloatOps F) (bits : U64) :
@@ -636,7 +636,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   simp only [WP.spec_ok, fabs_, List.mem_singleton, UScalar.val_and]
   change floatOfBits 64 (bits.val &&& (2 ^ 63 - 1)) = _
   rw [Nat.and_two_pow_sub_one_eq_mod]
-  exact floatOfBits_abs64 bits.val
+  exact float_of_bits_abs64 bits.val
 
 /-- Bitwise sign operations preserve payloads and require no FloatOps law. -/
 @[step] theorem unary64_neg_sound {F : Type} (ops : runtime.platform.FloatOps F) (bits : U64) :
@@ -645,7 +645,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   unfold runtime.interp.float.unary64
   with_unfolding_all change Result.ok (bits ^^^ 9223372036854775808#u64) ⦃ result => floatOfBits 64 result.val ∈ fneg_ 64 (floatOfBits 64 bits.val) ⦄
   simp only [WP.spec_ok, fneg_, List.mem_singleton, UScalar.val_xor]
-  exact floatOfBits_neg64 bits.val
+  exact float_of_bits_neg64 bits.val
 
 @[step] theorem binary32_copysign_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U32) :
     runtime.interp.float.binary32 ops 6#u16 a b ⦃ result =>
@@ -654,7 +654,7 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (Aeneas.Std.bind (lift (a &&& 2147483647#u32)) (fun x => Aeneas.Std.bind (lift (b &&& 2147483648#u32)) (fun y => Result.ok (x ||| y)))) ⦃ result => floatOfBits 32 result.val ∈ fcopysign_ 32 (floatOfBits 32 a.val) (floatOfBits 32 b.val) ⦄
   rw [lift, bind_ok, lift, bind_ok]
   simp only [WP.spec_ok, fcopysign_, List.mem_singleton, UScalar.val_or, UScalar.val_and]
-  exact floatOfBits_copysign32 a.val b.val
+  exact float_of_bits_copysign32 a.val b.val
 
 @[step] theorem binary64_copysign_sound {F : Type} (ops : runtime.platform.FloatOps F) (a b : U64) :
     runtime.interp.float.binary64 ops 6#u16 a b ⦃ result =>
@@ -663,6 +663,6 @@ theorem quiet64_sound (bits : U64) (allowed : List fN)
   with_unfolding_all change (Aeneas.Std.bind (lift (a &&& 9223372036854775807#u64)) (fun x => Aeneas.Std.bind (lift (b &&& 9223372036854775808#u64)) (fun y => Result.ok (x ||| y)))) ⦃ result => floatOfBits 64 result.val ∈ fcopysign_ 64 (floatOfBits 64 a.val) (floatOfBits 64 b.val) ⦄
   rw [lift, bind_ok, lift, bind_ok]
   simp only [WP.spec_ok, fcopysign_, List.mem_singleton, UScalar.val_or, UScalar.val_and]
-  exact floatOfBits_copysign64 a.val b.val
+  exact float_of_bits_copysign64 a.val b.val
 
-end Itasca.Runtime.Interp
+end Itasca.Interp

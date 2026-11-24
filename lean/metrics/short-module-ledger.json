@@ -1,0 +1,14 @@
+[
+  {
+    "path": "Itasca/Results/Definitions.lean",
+    "reason": "Narrow public subject entry point"
+  },
+  {
+    "path": "Itasca/Runtime/Integration/Execution/Resources/SourceCauses.lean",
+    "reason": "Residual implementation shortened by split to Itasca.Results.Definitions.Integration.Execution.Resources.SourceCauses"
+  },
+  {
+    "path": "Itasca/Results/Definitions/Compiler/Source.lean",
+    "reason": "Source function interpretation is shared by lower compiler proofs and instantiation; merging it into compilation eligibility would violate the compiler stage boundary."
+  }
+]
