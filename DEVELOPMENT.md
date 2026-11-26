@@ -147,7 +147,7 @@ opcode/section constants represent wire bytes; resource constants represent
 bounds. Keep raw-byte dispatch where it avoids a second decoding layer. Enum
 changes should improve the representation, not merely rename byte constants.
 
-Charon reads Cargo metadata; the Makefile supplies `cfg(charon)`, Clone/Copy
+Charon reads Cargo metadata. [lean/justfile](lean/justfile) supplies `cfg(charon)`, Clone/Copy
 exclusions, and `--sysroot=default` explicitly. Debug and convenience derives
 are disabled during extraction when their implementations are outside the model.
 

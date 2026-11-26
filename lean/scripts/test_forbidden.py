@@ -7,12 +7,8 @@ import unittest
 
 
 class ForbiddenSourceTests(unittest.TestCase):
-    def rule(self):
-        root = Path(__file__).resolve().parents[2]
-        return next(line.strip() for line in (root / 'Makefile').read_text().splitlines()
-                    if line.strip().startswith('cd lean && python3 scripts/check_forbidden.py'))
-
     def check_source(self, source, generated=False):
+        justfile = Path(__file__).resolve().parents[1] / 'justfile'
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             (root / 'lean/Itasca').mkdir(parents=True)
@@ -26,9 +22,11 @@ class ForbiddenSourceTests(unittest.TestCase):
                 folder = folder / 'Generated'
                 folder.mkdir()
             (folder / 'Fixture.lean').write_text(source)
-            return subprocess.run(self.rule(), cwd=root, shell=True,
-                                  executable='/bin/sh', stdout=subprocess.PIPE,
-                                  stderr=subprocess.STDOUT, text=True).returncode
+            return subprocess.run(
+                ['just', '--justfile', str(justfile), '--working-directory', str(root / 'lean'),
+                 '_lint-forbidden'],
+                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
+            ).returncode
 
     def test_inline_private_and_unproved_specification_references_are_rejected(self):
         for source in ['private axiom bad : True',

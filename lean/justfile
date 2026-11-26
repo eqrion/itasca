@@ -1,0 +1,126 @@
+# Rust extraction, specification generation and Lean verification.
+
+# Keep the Aeneas revision in sync with lakefile.lean and lake-manifest.json.
+aeneas_rev := "557eff83ecef5083b98a52a94ca7fae63d6c1dab"
+rust_toolchain := "nightly-2026-09-17"
+opam_switch := env("OPAM_SWITCH", "itasca-lean")
+xdg_cache := env("XDG_CACHE_HOME", "")
+cache_dir := if xdg_cache == "" { env("HOME", "") + "/.cache" } else { xdg_cache }
+tools_cache := absolute_path(env("TOOLS_CACHE", cache_dir + "/itasca"))
+tools_dir := tools_cache + "/aeneas-" + aeneas_rev
+aeneas := tools_dir + "/bin/aeneas"
+charon := tools_dir + "/bin/charon"
+spectec_dir := "../vendor/spectec/spectec"
+
+default:
+    @just --list
+
+tools:
+    @sh install-tools.sh {{ quote(tools_dir) }} {{ aeneas_rev }} {{ rust_toolchain }} {{ quote(opam_switch) }}
+
+check-tools:
+    @test -x {{ quote(aeneas) }} && test -x {{ quote(charon) }} && test -x {{ quote(charon + "-driver") }} || { echo "Run just tools to install the pinned extraction tools."; exit 1; }
+
+# Keep extraction outputs separate from ordinary Rust tests and release builds.
+[working-directory("..")]
+llbc: check-tools
+    @mkdir -p lean/.build
+    @RUSTUP_TOOLCHAIN={{ rust_toolchain }} CARGO_TARGET_DIR="$PWD/lean/.build/cargo" \
+        {{ quote(charon) }} cargo --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
+        --exclude='{impl core::clone::Clone for _}' \
+        --exclude='{impl core::marker::Copy for _}' \
+        --include='core::marker::{impl core::marker::Copy for u8}' \
+        --include='core::clone::impls::{impl core::clone::Clone for u8}' \
+        --dest-file="$PWD/lean/.build/itasca.llbc"
+
+_extract-to destination: llbc
+    @mkdir -p {{ quote(destination) }}
+    @{{ quote(aeneas) }} -backend lean .build/itasca.llbc -dest {{ quote(destination) }} -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
+    @python3 scripts/strip_source_lines.py {{ quote(destination + "/Itasca/Generated/Types.lean") }} {{ quote(destination + "/Itasca/Generated/Funs.lean") }}
+    @python3 scripts/split_funs.py {{ quote(destination + "/Itasca/Generated/Funs.lean") }}
+
+extract: (_extract-to ".")
+
+# Regenerate into a separate directory and reject stale committed models.
+extract-check: (_extract-to ".build/extract-check")
+    @for file in Types Funs FunsValidator FunsRuntimeCommon FunsCompiler FunsStore FunsInterp FunsInstantiate; do \
+        cmp ".build/extract-check/Itasca/Generated/$file.lean" "Itasca/Generated/$file.lean" || exit 1; \
+    done
+
+prove:
+    @lake build Itasca SpecExt
+
+# Check the spec and concrete external models independently of the Rust model.
+checkpoint:
+    @lake build Itasca.Spec.Typing Itasca.Generated.FunsExternal
+
+# Proof-health metrics. See lean/PROOF_ENGINEERING.md.
+metrics:
+    @python3 scripts/metrics.py
+
+# Static checks: layering, metric ratchet, links, and forbidden constructs.
+lint: _lint-source _lint-forbidden
+    @python3 scripts/check_namespaces.py
+
+_lint-source:
+    @python3 scripts/architecture.py
+    @python3 scripts/metrics.py --check metrics/baseline.json
+    @python3 scripts/check_links.py
+
+_lint-forbidden:
+    @python3 scripts/check_forbidden.py
+
+# Check handwritten warning counts using the completed build's cached traces.
+warnings:
+    @python3 scripts/lean_warnings.py --check
+
+# Check the public surface and all artifacts; --update refreshes them explicitly.
+[positional-arguments]
+audit *args:
+    @python3 scripts/run_audit.py "$@"
+
+tooling-test:
+    @python3 -m unittest discover -s scripts -p 'test_*.py'
+
+check +modules:
+    @lake build {{ modules }}
+
+# Build imports, then report elaboration/type-checking costs for one module.
+profile module:
+    @lake lean {{ quote(replace(module, ".", "/") + ".lean") }} -- --profile
+
+# Source patches are repeatable and fail if the checkout has incompatible edits.
+patch-spectec:
+    @for patch_name in \
+        global-mutability module hostfunc integer-domains memory-boundary lane-store host-typing \
+        memory-write-bounds export-membership table-write-bounds load-value-bounds; do \
+        patch_path="$PWD/../patches/spectec-wasm2-$patch_name.patch"; \
+        git -C ../vendor/spectec apply --reverse --check "$patch_path" 2>/dev/null \
+            || git -C ../vendor/spectec apply "$patch_path" || exit 1; \
+    done
+
+spec-build: patch-spectec
+    @make -C {{ spectec_dir }} src/backend-interpreter/reference-interpreter
+    @cd {{ spectec_dir }} && opam exec --switch={{ quote(opam_switch) }} -- dune build src/exe-spectec/main.exe
+
+# Generate the local specification in scratch space before comparing or updating it.
+spec-generate: spec-build
+    @mkdir -p .build/spec
+    @spec_output="$PWD/.build/spec/wasm2.0.lean"; cd {{ spectec_dir }} && \
+        _build/default/src/exe-spectec/main.exe ../specification/wasm-2.0/*.spectec \
+        --lean --single-pattern-match --wf-state all -o "$spec_output"
+    @patch -f -F 0 -p1 -d .build/spec < ../patches/spectec-wasm2-builtins.patch
+
+spec-compare: spec-generate
+    @cmp .build/spec/wasm2.0.lean SpecTec/wasm2.0.lean
+
+spec-check: spec-compare
+    @lake build SpecTecGenerated Itasca.Spec.Typing
+
+spec-update: spec-generate
+    @mkdir -p SpecTec
+    @cp .build/spec/wasm2.0.lean SpecTec/
+
+# Preserve dependency caches and remove only this project's compiled artifacts.
+clean:
+    @rm -rf .lake/build

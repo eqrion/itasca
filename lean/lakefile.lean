@@ -3,7 +3,7 @@ open Lake DSL
 
 package itascaLean
 
--- Keep this revision in sync with toolchain.mk.
+-- Keep this revision in sync with lean/justfile.
 require aeneas from git "https://github.com/AeneasVerif/aeneas.git" @
   "557eff83ecef5083b98a52a94ca7fae63d6c1dab" / "backends/lean"
 

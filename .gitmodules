@@ -9,5 +9,5 @@
 	path = vendor/spectec
 	url = https://github.com/zilinc/spectec.git
 	branch = lean-backend
-	# lean/Makefile applies versioned source patches in place.
+	# lean/justfile applies versioned source patches in place.
 	ignore = dirty

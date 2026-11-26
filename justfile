@@ -1,65 +1,33 @@
 # Rust -> Charon -> Aeneas -> Lean. See DEVELOPMENT.md.
 
+mod lean 'lean/justfile'
+
 default:
     @just --list
+
+alias all := lean::prove
+alias audit := lean::audit
+alias check := lean::check
+alias clean := lean::clean
+alias extract := lean::extract
+alias extract-check := lean::extract-check
+alias lean-spec := lean::spec-generate
+alias lint := lean::lint
+alias metrics := lean::metrics
+alias profile := lean::profile
+alias prove := lean::prove
+alias spec-check := lean::spec-check
+alias spec-update := lean::spec-update
+alias tooling-test := lean::tooling-test
+alias tools := lean::tools
+alias warnings := lean::warnings
 
 build:
     @cargo build
 
 test:
-    @make test
+    @cargo test
+    @cargo test --no-default-features
 
-tools:
-    @make tools
-
-extract:
-    @make extract
-
-# Regenerate into a separate directory and reject stale committed models.
-extract-check:
-    @make extract-check
-
-prove:
-    @make prove
-
-# Proof-health metrics. See lean/PROOF_ENGINEERING.md.
-metrics:
-    @cd lean && python3 scripts/metrics.py
-
-# Static checks: layering, metric ratchet, links, and forbidden constructs.
-lint:
-    @make lint
-
-# Check handwritten warning counts using the completed build's cached traces.
-warnings:
-    @cd lean && python3 scripts/lean_warnings.py --check
-
-# Check the public surface and all artifacts; --update refreshes them explicitly.
-audit *args:
-    @make audit AUDIT_ARGS='{{args}}'
-
-tooling-test:
-    @make tooling-test
-
-check +modules:
-    @cd lean && lake build {{ modules }}
-
-# Build imports, then report elaboration/type-checking costs for one module.
-profile module:
-    @make profile MODULE={{ module }}
-
-spec-check:
-    @make spec-check
-
-spec-update:
-    @make spec-update
-
-verify:
-    @make verify
-
-clean:
-    @make clean
-
-
-lean-spec:
-    @make -C lean spec-generate
+# Compare generated sources before the integrated build and reuse it for audit.
+verify: test lean::tooling-test lean::lint lean::extract-check lean::spec-compare lean::prove lean::warnings (lean::audit "--no-build")

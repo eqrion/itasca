@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Build and audit the public surface; check artifacts unless --update is explicit.
 
---no-build reuses the caller's integrated build (CI and make verify).
+--no-build reuses the caller's integrated build (CI and just verify).
 Both modes enforce the same Lean ownership, root-registry and axiom checks.
 """
 import argparse

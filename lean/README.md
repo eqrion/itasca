@@ -75,12 +75,12 @@ it refuses modified source checkouts. To relocate the installation, use the same
 `TOOLS_CACHE` override for installation and extraction, for example:
 
 ```sh
-make tools TOOLS_CACHE=/absolute/path/to/tool-cache
-make extract-check TOOLS_CACHE=/absolute/path/to/tool-cache
+TOOLS_CACHE=/absolute/path/to/tool-cache just tools
+TOOLS_CACHE=/absolute/path/to/tool-cache just extract-check
 ```
 
-If you already have a compatible opam switch, use it with
-`make tools OPAM_SWITCH=your-switch` instead of creating `itasca-lean`.
+If you already have a compatible opam switch, select it with
+`OPAM_SWITCH=your-switch just tools`.
 
 `opam` manages OCaml packages; a switch is an isolated OCaml compiler and package
 environment. `dune` is the OCaml build tool. `OPAM_SWITCH` selects the switch used
@@ -90,7 +90,7 @@ components even after installation.
 
 Lake fetches Aeneas's Lean library as a Git dependency into `.lake/packages/`.
 Ordinary proof builds use the committed manifest. To intentionally change Aeneas,
-update the matching revisions in [toolchain.mk](toolchain.mk),
+update the matching revisions in [justfile](justfile),
 [lakefile.lean](lakefile.lean), and the table above, check its `charon-pin` and
 Rust toolchain, run `just tools`, then run
 `cd lean && lake update aeneas` and review the manifest diff. Run both Cargo test
@@ -98,6 +98,10 @@ configurations, `just extract`, `just extract-check`, and `just prove` before
 accepting the update. The extractor and Lean library must use the same revision.
 
 ## Commands
+
+The root justfile exposes the Lean recipes from [lean/justfile](justfile).
+Run the Lean commands from either directory and run `just verify` from the
+repository root.
 
 ```sh
 just extract          # Rust -> LLBC -> the validator and runtime Lean model
