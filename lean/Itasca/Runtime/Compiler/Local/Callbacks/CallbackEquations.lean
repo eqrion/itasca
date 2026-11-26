@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 
 /-! Exact equations for callbacks that only marshal operands into the opcode
 dispatcher. Consumer proofs share these equations with no allocator premise. -/

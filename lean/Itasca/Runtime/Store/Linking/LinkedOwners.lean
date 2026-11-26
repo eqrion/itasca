@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Representation.Store

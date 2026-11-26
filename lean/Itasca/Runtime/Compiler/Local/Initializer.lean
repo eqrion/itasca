@@ -1,6 +1,6 @@
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 
 /-! Executable-module view equations and syntactic certificates for synthetic
 constant-expression functions. The certificate records emitted instructions

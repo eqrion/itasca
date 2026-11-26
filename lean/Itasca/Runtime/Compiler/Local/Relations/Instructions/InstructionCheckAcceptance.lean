@@ -1,5 +1,5 @@
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Support.Translation
 import Mathlib.Tactic.IntervalCases
 

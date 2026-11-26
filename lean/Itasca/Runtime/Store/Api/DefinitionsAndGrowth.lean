@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsStore
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Store.Invariant.Typing

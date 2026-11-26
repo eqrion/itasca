@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.FunctionAndTypeStagingCauses
 import Itasca.Runtime.Store.Instantiation.Linked

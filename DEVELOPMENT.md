@@ -19,7 +19,7 @@ to install the pinned tools.
 | `src/runtime/` | Slot compiler, store, synchronous interpreter, and bit-oriented numeric primitives, with conditional execution proofs. |
 | `lean/Itasca/` | Validator and runtime models, proof layers, and checked examples. |
 | `lean/Itasca/Results/Definitions/` | Public semantic definitions, their elaboration prerequisites, and subject reading paths. |
-| `lean/Itasca/Results/` | Public theorem modules and their separate Definitions vocabulary; theorem roots are registered exactly. |
+| `lean/Itasca/Results/` | Public theorem modules and their separate Definitions vocabulary. |
 | `lean/Itasca/Runtime/` | Compiler, interpreter, store, simulation and integration construction proofs. |
 | `lean/SpecExt/` | Handwritten execution extensions and proofs about the patched builtins. |
 | `lean/SpecTec/` | Committed generated specification. |
@@ -60,33 +60,24 @@ just extract-check    # Regenerate separately and compare
 just check Itasca.Results.Validate
 just profile Itasca.Body.Step.ScalarContext  # Re-elaborate one module with timings
 just prove            # Build every proof module
-just lint             # Static proof health checks
-just warnings         # Warning ratchet from the completed build; no rebuild
-just audit            # Check public axioms, ownership and generated artifacts
-just audit --update   # Explicitly refresh audit report and manifest
-just tooling-test     # Source/audit tooling regression tests
+just audit            # Build proofs, reject sorry dependencies and list axioms
 just spec-check       # Regenerate and compare the specification
 just verify           # Run the complete verification sequence
 ```
 
 | Change | Required checks |
 | --- | --- |
-| Handwritten Lean proofs or adapters | `just prove`, `just lint`, and `just audit` |
+| Handwritten Lean proofs or adapters | `just audit` |
 | Rust or extraction inputs, including source documentation | Both Cargo test configurations, `just extract`, `just extract-check`, and `just prove` |
 | Extraction tool installation or pins | Rust/extraction checks |
 | SpecTec source, patch, or pin | `just spec-update`, `just spec-check`, and `just prove` |
 | Documentation outside extraction inputs | Check links and `git diff --check` |
 
-Generated comments retain Rust filenames but omit line ranges, so moving Rust
-lines does not change generated source locations. Rust changes that affect
-extracted definitions still require regeneration. `just extract` generates
-`Types.lean`, the `FunsValidator`, `FunsRuntimeCommon`, `FunsCompiler`,
-`FunsStore`, `FunsInterp`, and `FunsInstantiate` partitions, and the `Funs.lean`
-umbrella. A post-Aeneas splitter runs after `strip_source_lines.py`; it preserves
-declaration text, namespaces and headers, and adds ordered imports. Inspect
-generated diffs; never repair these files by hand. `FunsExternal.lean` is
-handwritten, and the generated external template is ignored and must never be
-imported.
+`just extract` uses Aeneas's built-in split to generate `Types.lean` and
+`Funs.lean`. The recipe strips line ranges from source comments and retains
+Rust filenames. Inspect generated diffs and make any repairs through the
+extraction inputs. `FunsExternal.lean` is handwritten, and the generated
+external template is ignored and must never be imported.
 Specification changes belong in source or generator patches, followed by
 regeneration. Consistency checks write to ignored build directories and fail on
 stale committed output.
@@ -104,18 +95,13 @@ diagnostic command, not an additional verification requirement. Compare timings
 with warm dependencies and without another build competing for resources.
 
 For a proof-only change, use targeted checks until the proof works, then run
-`just prove` once at a completed migration checkpoint, followed by `just lint`
-and `just audit --no-build` against that successful current build. LSP checks and
-source-only architecture checks serve iteration; no full audit is needed between
-edits in the same unfinished unit. After further source changes, rebuild the
-affected environment before reusing it for audit. Extraction and specification regeneration
-are required when their inputs change, as listed above;
-they add no new evidence about an edit confined to handwritten proofs.
+`just audit` at a completed migration checkpoint. It runs `just prove` first
+and checks the resulting environment. Regenerate extraction and specification
+outputs when their respective inputs change.
 `just prove` compiles every module in `Itasca` and `SpecExt`, including examples.
 
-`just verify` runs the Rust tests, tooling tests, lint, extraction/specification
-comparisons, integrated Lean build, warning ratchet and strict audit/artifact checks in order.
-The audit reuses that build; it does not invoke another Lake build.
+`just verify` runs the Rust tests, extraction and specification comparisons,
+the integrated Lean build, and the axiom check in order.
 
 ## Rust extraction constraints
 
@@ -259,35 +245,6 @@ Place new proofs by layer, as described in the
 `Binary/`, per-handler lemmas in `Handler/`, and body proofs in `Body/`. Keep
 imports within the documented dependency layers. Only the
 standard logical axioms `propext`, `Classical.choice`, and `Quot.sound` are
-permitted. `just lint` checks layering and forbidden constructs; `just audit`
-checks the headline theorem axiom allowlist and statement cone. Review
+permitted. Review import layering, public statement dependencies, and
 proof-bearing adapters as well as exported theorems. Report changes to the
 trust boundary explicitly.
-
-## Lint and audit tooling
-
-`just lint` runs the fast source-only import checker in `lean/scripts/architecture.py`,
-then computes proof-health metrics once, checks links and rejects forbidden source
-constructs. `just tooling-test` runs the Python regression suite. CI runs both.
-
-`just audit` builds the public proof environment, enforces the registered Results
-surface, allowed axioms and definition placement, and checks both generated
-artifacts without writing them: `metrics/audit.txt` and
-`metrics/interface-manifest.json`, relative to `lean/`. Stale or missing
-outputs fail. `just audit --update` stages complete outputs before replacing
-changed files; review both diffs. `--no-build` reuses an already completed
-build and is used by CI and `just verify`.
-
-`audit_environment.py` collects the authoritative Lean output;
-`interface_metadata.py` owns shared declaration annotations. Production manifest
-generation does not depend on the optional semantic snapshot comparison
-tools.
-
-`just warnings` checks handwritten warning counts by module and category against
-`lean/metrics/warnings.json`, using cached traces from the successful current
-build. It never elaborates proofs or includes generated/upstream warnings. Fix
-warnings without suppressing linters. After reviewed reductions, run
-`python3 scripts/lean_warnings.py --update` from `lean/` and inspect the baseline
-diff. Module moves require explicit baseline attribution updates. For mechanical
-refactors, `just audit --no-build --snapshot .build/current.json` exports semantic
-identities during the same strict audit, avoiding a second environment traversal.

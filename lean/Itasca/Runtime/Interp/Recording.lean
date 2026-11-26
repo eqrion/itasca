@@ -1,6 +1,6 @@
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Equations.Interp
-import Itasca.Generated.FunsInterp
+import Itasca.Generated.Funs
 import Itasca.Results.Definitions.Host
 import Itasca.Runtime.Platform.Observation
 import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions

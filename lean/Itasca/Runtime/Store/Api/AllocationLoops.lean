@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Initialization.SegmentSyntheticPreservation
 import Itasca.Runtime.Compiler.Local.Initializer.SegmentEmissionContracts

@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.ResourceBounds
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Invariant.CoreInstantiationSource
 import Itasca.Module.Env.Externals
 import Itasca.Runtime.Store.Invariant.FunctionStaging

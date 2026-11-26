@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.ResourceBounds
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Api.AllocationLoops
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops

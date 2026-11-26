@@ -1,5 +1,5 @@
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Body.Trace.BytesDispatch
 import Itasca.CodeEntry.Validation
 import Itasca.Stream.WorkersAndSource

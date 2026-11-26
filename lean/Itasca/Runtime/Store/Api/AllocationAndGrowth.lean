@@ -1,7 +1,7 @@
 import Itasca.Runtime.Store.Preparation.ResourceBounds
 import Itasca.Runtime.Store.Definitions
 import Itasca.Runtime.Store.Invariant.SemanticApi
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.Store.Api.GlobalStagingAndCopy

@@ -12,5 +12,5 @@ Independent encoding, elaboration, restrictions and returned accessor types must
 all describe the same raw module.
 
 Module proofs use body/entry certificates and foundations. Stream consumes the
-assembled regions. Runtime may consume validation results, but validation never
-imports runtime implementation proofs or extracted execution partitions.
+assembled regions. Runtime may consume validation results. Validation depends
+on validator functions and remains independent of runtime implementation proofs.

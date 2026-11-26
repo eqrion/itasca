@@ -1,6 +1,6 @@
 import Itasca.Binary.Definitions
 import Itasca.Results.Definitions.Binary
-import Itasca.Generated.FunsValidator
+import Itasca.Generated.Funs
 import Mathlib.Tactic.IntervalCases
 import Aeneas
 import «wasm2.0»

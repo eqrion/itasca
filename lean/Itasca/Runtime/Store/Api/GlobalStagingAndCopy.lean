@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Api.ObjectStaging
 import Itasca.Runtime.Store.Initialization.DataEffects

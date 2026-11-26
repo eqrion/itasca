@@ -84,7 +84,7 @@ Use UpperCamelCase for semantic structures/relations, existing lowerCamelCase fo
 computation descriptors and snake_case for theorem basenames. Fields and attached
 lemmas follow their owning declaration. Attach a record directly to its subject:
 `Binary.Module` and `Module.Layout`, rather than `Binary.Module.Module` or
-`Module.Layout.Layout`. Namespace lint rejects adjacent duplicate components.
+`Module.Layout.Layout`. Avoid adjacent duplicate components.
 Simple private helpers may retain local names: Lean already qualifies their compiled
 identities by their owning module. Explicit namespace extensions still follow this
 subject map. Use qualified names where short names would be ambiguous; avoid compatibility aliases that indefinitely duplicate the

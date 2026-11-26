@@ -9,8 +9,7 @@ Implementation proof bodies are checked by Lean; they need not be read to determ
 Definition modules are independent of implementation proofs. Theorem modules
 import those proofs to establish the claims. Keeping the modules separate lets
 implementation proofs use public vocabulary without importing the final theorems.
-Import and semantic-closure checks enforce this distinction even though both
-kinds of module live under Results.
+Review imports and statement dependencies against this distinction.
 
 Arrows below mean “may import.” A theorem's meaning follows the definitions;
 its proof may use the implementation layer.
@@ -39,9 +38,7 @@ flowchart TD
 
 `Main` joins these results and checked examples. Theorem modules do not import
 one another, and implementation modules cannot import those theorem modules. This keeps each
-claim independently discoverable rather than making publication depend on which
-umbrella happens to import it. The exact registry is
-[public-results.txt](../../scripts/public-results.txt).
+claim independently discoverable in its theorem module.
 
 ## Read a Lean statement
 

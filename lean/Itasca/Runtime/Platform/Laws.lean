@@ -3,7 +3,7 @@ import Itasca.Results.Definitions.Platform
 import Itasca.Generated.Types
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsRuntimeCommon
+import Itasca.Generated.Funs
 import SpecExt.Builtins.Float.Representation
 
 /-! ## Alloc -/

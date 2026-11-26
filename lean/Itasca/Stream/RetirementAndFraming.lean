@@ -4,7 +4,7 @@ import Itasca.Support.Translation
 import Itasca.Stream.WorkersAndSource
 import Itasca.Module.CustomTrace
 import Itasca.Module.Code.Framing
-import Itasca.Generated.FunsValidator
+import Itasca.Generated.Funs
 import Itasca.Module.Code.FuncTyping
 
 /-!

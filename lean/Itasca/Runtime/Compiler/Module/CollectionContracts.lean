@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Binary.LebReaders
 import Itasca.Module.Readers.Syntax
 import Itasca.Support.Translation

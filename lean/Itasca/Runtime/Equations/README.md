@@ -1,7 +1,7 @@
 # Equations for extracted operations
 
-These modules expose selected defining equations from narrow extracted runtime
-partitions. Instruction-family proofs use them to avoid repeatedly splitting the
+These modules expose selected defining equations for extracted runtime functions.
+Instruction-family proofs use them to avoid repeatedly splitting the
 entire bytecode enumeration or depending on incidental generated match names.
 
 [Bytecode](Bytecode.lean) provides bytecode equations and [Interp](Interp.lean)

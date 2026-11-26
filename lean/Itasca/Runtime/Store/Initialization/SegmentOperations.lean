@@ -1,5 +1,5 @@
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.SlotsAndDefaults

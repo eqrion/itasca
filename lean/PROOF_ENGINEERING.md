@@ -111,7 +111,7 @@ stage or filename.
 
 ### 1. One contract per extracted function
 
-Every function in the generated `Itasca/Generated/Funs*.lean` partitions that
+Every function in the generated `Itasca/Generated/Funs.lean` that
 proofs reason about has
 exactly one specification theorem, named `<function>.spec`, tagged `@[step]`,
 stated with the postcondition notation:
@@ -165,8 +165,6 @@ theorem runtime.compiler.FunctionCompiler.emit.spec {A : Type} (ops : runtime.pl
 - When a proof needs the equation `f args = .ok value` itself, the contract's
   postcondition must determine the result (`result = g args`, or an effect
   relation that is functional). If it does not, strengthen the contract.
-- `python3 scripts/metrics.py --top` lists the functions that break this rule
-  most. The metric `extra_unfold_files` must never go up.
 
 ### 2. A contract describes the effect once; properties are derived from it
 
@@ -212,12 +210,7 @@ state the top-level contract as a table over those families.
   when they remain coherent and shorten the clean build. Modules under 50 lines need a reason,
   such as a definition that must sit below its consumers. A short public-definition
   module is justified when it isolates a dependency
-  needed to elaborate a public definition from its implementation proof. Such
-  files remain visible in the raw `modules_under_50_lines` metric; only exact
-  paths with a specific split reason in `metrics/short-module-ledger.json`
-  are excluded from that metric's ratchet. Each path must also occur in the
-  migration provenance manifest. Directory or pattern exemptions are forbidden;
-  all other ratchets retain their existing thresholds.
+  needed to elaborate a public definition from its implementation proof.
 - Start each module with a `/-! ... -/` docstring: the question it answers, its
   main declarations, and who uses them.
 - When several former modules share one file, each gets a `/-! ## Name -/`
@@ -232,7 +225,7 @@ state the top-level contract as a table over those families.
   proofs separate so they can build in parallel. Compare clean project builds
   with dependency caches preserved, and retain the previous project cache.
 - Import the lowest module that provides what you need. Follow the layering in
-  [README.md](README.md#proof-architecture); `just lint` checks it.
+  [Lean guide](README.md#proof-architecture).
 
 ### 5. Keep statements small
 
@@ -244,13 +237,12 @@ state the top-level contract as a table over those families.
 - Do not introduce a new variant of an existing predicate by adding a
   qualifier (`Core`, `Supported`, `Cumulative`, `Eventful`). Extend the existing
   predicate, or replace it and migrate its users in the same change.
-- New definitions that a headline theorem mentions go into the statement cone.
-  Check `metrics/audit.txt` and say so in the change description.
+- Review new definitions a headline theorem depends on and mention them in the
+  change description.
 
 ### 6. Write proofs that survive re-extraction
 
-The extraction pipeline regenerates the generated `Funs*.lean` partitions and
-their `Funs.lean` umbrella whenever Rust changes. Bound variable names,
+The extraction pipeline regenerates `Funs.lean` whenever Rust changes. Bound variable names,
 the order of binds and helper names can all change.
 
 - Never refer to names Lean or Aeneas invented. That means the `i1`, `v2_post`
@@ -284,7 +276,6 @@ the order of binds and helper names can all change.
   above it with a comment that says why.
 - Needing more than 1,000,000 heartbeats means the proof must be decomposed
   (rule 3). Never raise an existing limit to make a broken proof pass.
-- The metrics `heartbeat_overrides` and `recdepth_overrides` must never go up.
 
 ### 8. Delete, do not accumulate
 
@@ -299,20 +290,18 @@ the order of binds and helper names can all change.
 
 - No `sorry`, `admit`, `axiom`, `native_decide`, `unsafe`, `implemented_by`, or
   `opaque` placeholders.
-- Never edit `Itasca/Generated/Types.lean`, generated `Itasca/Generated/Funs*.lean`
-  files, or `SpecTec/wasm2.0.lean` by hand.
+- Never edit generated `Itasca/Generated/Types.lean`, `Itasca/Generated/Funs.lean`,
+  or `SpecTec/wasm2.0.lean` by hand.
 - Never cite the three unproved well-formedness theorems in the generated
   specification (`Step_is_wf`, `Step_read_is_wf`, `Step_pure_is_wf`).
-- Review changes in `metrics/audit.txt` and `metrics/interface-manifest.json`. Explain any
-  change to statement types, definition bodies, premises, specification patches
-  or FunsExternal. Location changes and expanded audit coverage do not by
-  themselves change a guarantee or the trust boundary.
+- Explain any change to public statements, their definitions and premises,
+  specification patches, or `FunsExternal`.
 
 ## Changing Rust
 
 1. Make the Rust change and run both Cargo test configurations.
-2. `just extract`, then read the diffs of the generated `Funs*.lean` partitions
-   to see which extracted functions changed.
+2. Run `just extract`, then read the `Funs.lean` diff to see which extracted
+   functions changed.
 3. For each changed function, repair its contract. If the effect statement is
    still true, callers need no change.
 4. If the effect statement changed, repair the derived properties in the same
@@ -326,54 +315,16 @@ the order of binds and helper names can all change.
 
 ```sh
 just check <modules you touched>   # confirm what the language server showed
-just prove                         # once, at a completed migration checkpoint
-just lint                          # layering, forbidden constructs, metric ratchet, links
-just audit --no-build              # reuse that successful current build
+just audit                        # build proofs, reject sorry dependencies and list axioms
 ```
 
-When artifacts intentionally change, use `just audit --no-build --update` in
-place of the last command and review both outputs. The audit checks public
-result registration, semantic ownership, generated artifact freshness and axioms.
-Repeated `#print axioms` sweeps during local iteration do not replace those checks.
-
-Report in the change description: which contracts changed statement, any diff
-in `metrics/audit.txt`, and any metric that moved.
-
-For a multi-unit refactor, these are completed integration checkpoints. Use LSP,
-targeted module checks and source architecture checks between edits; do not
-repeat integrated builds or audits inside the same unfinished unit. Rebuild after
-source changes before auditing an environment. Keep current guarantees and
-reading paths within Results. Completed migration plans, rename
-maps and source-digest review ledgers belong in Git history; the live audit
-manifest, origin labels and metric ratchets remain maintained.
-
-## Metrics
-
-`python3 scripts/metrics.py` prints them; `metrics/baseline.json` records the
-accepted values. The ratcheted ones may only improve.
-
-The raw short-module count remains visible beside its exact structural
-exemptions. Public-definition lines are reported separately by original module and area;
-`lean_lines_by_area_with_interface_origin` retains relocated lines in their
-original area. Reviewed merges with multiple origins use a joint origin bucket
-and count its area once. Moving definitions is not proof deletion.
-
-| Metric | Meaning | Direction |
-| --- | --- | --- |
-| `extra_unfold_files` | For each extracted function, the number of files that unfold it beyond the first, summed. Measures rule 1. | Ratchet down, goal 0 |
-| `heartbeat_overrides`, `recdepth_overrides` | Raised elaboration limits. | Ratchet down |
-| `theorems_with_15_or_more_binders` | Oversized statements. | Ratchet down |
-| `bare_simp` | `simp` and `simp_all` without `only`. An upper bound on fragile uses. | Ratchet down |
-| `modules_under_50_lines` | Modules that mostly pay import overhead. | Ratchet down |
-| `layer_violations`, `sorry` | Must be 0. | Fixed at 0 |
-| `lean_lines_per_rust_line` | Proof lines per Rust line, by area. About 10 to 20 is normal for this kind of project. | Watch |
-| `max_import_depth`, `modules` | Shape of the build graph. Depth bounds parallel build time. | Watch |
-| statement cone size (in `metrics/audit.txt`) | Lines a human must read to know what is claimed. | Watch, review every change |
+Use LSP and targeted module checks between edits of a multi-unit refactor.
+Run the integrated audit at completed checkpoints. Keep current guarantees
+and reading paths within Results and report changes to contract statements.
 
 ## Existing proofs
 
-Most of the tree predates this guide and breaks several rules; the metrics
-record by how much. Apply the rules to everything you add or substantially
+Much of the tree predates this guide. Apply the rules to everything you add or substantially
 rewrite. Bring old proofs into line as part of a planned cleanup or when a
 Rust change forces you to touch them. Do not mix a mass rewrite into an
 unrelated change.

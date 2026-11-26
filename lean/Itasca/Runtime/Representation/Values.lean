@@ -1,7 +1,7 @@
 import Itasca.Runtime.Representation.Definitions
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsRuntimeCommon
+import Itasca.Generated.Funs
 import Itasca.Support.Translation
 import SpecExt.Builtins.Float.Representation
 

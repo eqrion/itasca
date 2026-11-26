@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Spec.Typing
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty

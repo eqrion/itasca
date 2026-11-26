@@ -12,7 +12,7 @@ premise merely because they share a namespace with a definition.
 | --- | --- |
 | [Spec](Spec/README.md) | Source typing, numeric operations, memory and segment algebra over the pinned rules. |
 | [SourceMachine](SourceMachine/README.md) | Flat source transitions, invariants, simulation and progress. |
-| [Equations](Equations/README.md) | Equations over narrow extracted function partitions. |
+| [Equations](Equations/README.md) | Equations over extracted runtime functions. |
 | [Platform](Platform/README.md) | Law preservation, recording erasure and satisfiable example implementations. |
 | [Representation](Representation/README.md) | Concrete/source value, slot, store and capacity correspondence. |
 | [Compiler](Compiler/README.md) | Local emission, body traversal and complete-module constructions. |
@@ -22,11 +22,11 @@ premise merely because they share a namespace with a definition.
 
 The extracted program and independent source semantics are named foundations.
 [SpecExt](../../SpecExt/README.md) supplies host-aware source reduction independently
-of extracted runtime code. public definitions may use these foundations but
-cannot import handwritten implementation modules. Compiler Local → Body → Module
-stages apply to definitions and proofs; no compiler owner may transitively import
-FunsInterp. Validator proofs remain independent of runtime implementations,
-execution partitions and SpecExt.
+of extracted runtime code. Public definitions may use these foundations and
+remain independent of handwritten implementation modules. Compiler Local → Body
+→ Module stages apply to definitions and proofs. Compiler declarations stay
+independent of interpreter operations, and validator declarations stay independent
+of runtime operations, runtime implementation proofs and SpecExt.
 
 ## Compiler stages
 
@@ -171,18 +171,6 @@ with instantiation. Their client proofs do not name the internal executable
 invariant. Host soundness uses the protocol's explicit source typing and
 well-formedness fields; native/platform laws remain separate obligations.
 
-After the integrated build, check the protocol's transitive reading surface:
-
-```sh
-cd lean
-lake env lean scripts/RuntimeContract.lean
-```
-
-The regression follows definition bodies and constructors, just as the audit
-does, and rejects the retired executable, emission, initializer-layout and
-representation-shape certificates. The full audit independently enforces closure
-ownership and the axiom allowlist.
-
 ## Naming and iteration
 
 Module paths identify dependency owners; namespaces identify semantic subjects.
@@ -193,5 +181,5 @@ The scalar decomposition is internal and no runtime profile is modeled.
 Follow the [proof engineering guide](../../PROOF_ENGINEERING.md) for naming,
 contracts and validation. Iterate with the language server or a targeted command,
 for example `just check Itasca.Runtime.Store.Api.MemoryCopyAndFill`. Bundle source
-changes before integration, preserve caches, and reuse the successful integrated
-build for the final audit.
+changes before integration, preserve caches, and run `just audit` at the
+completed checkpoint.

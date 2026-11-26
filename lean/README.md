@@ -109,10 +109,7 @@ just extract-check    # Regenerate separately and reject stale models
 just check Itasca.Results.Validate  # Build specific modules
 just profile Itasca.Body.Step.ScalarContext  # Profile one file's elaboration
 just prove            # Build every proof module
-just lint             # Layering, forbidden constructs, metric ratchet, and links
-just audit            # Check public axioms, ownership and generated artifacts
-just audit --update   # Explicitly refresh audit report and manifest
-just tooling-test     # Source/audit tooling regression tests
+just audit            # Build proofs, reject sorry dependencies and list axioms
 just spec-update      # Copy a regenerated specification into the source tree
 just spec-check       # Regenerate, compare, and compile the specification
 just verify           # Rust tests and all verification checks
@@ -122,15 +119,10 @@ Preserve the `.lake/` and `.build/` caches.
 
 ## Generated sources
 
-[Generated/Types.lean](Itasca/Generated/Types.lean) and
-[Funs.lean](Itasca/Generated/Funs.lean) and its generated partitions
-`FunsValidator`, `FunsRuntimeCommon`, `FunsCompiler`, `FunsStore`, `FunsInterp`,
-and `FunsInstantiate` come from `just extract`; never edit them by hand. One
-Charon and Aeneas pass extracts the validator and runtime, then `scripts/split_funs.py` runs
-after `strip_source_lines.py`. This second post-Aeneas transformation distributes
-declarations while preserving their text, namespaces and headers and adding
-ordered imports. The runtime calls the
-validator's definitions directly. Charon runs with
+`just extract` uses Aeneas's built-in split to generate
+[Types.lean](Itasca/Generated/Types.lean) and
+[Funs.lean](Itasca/Generated/Funs.lean) for both the validator and runtime.
+Regenerate them from the extraction inputs. Charon runs with
 `--cfg=charon`, which excludes only the native platform wrappers.
 [FunsExternal.lean](Itasca/Generated/FunsExternal.lean) is the handwritten
 model of `Vec.pop`, `Vec.is_empty`, `count_ones` and `trailing_zeros`. The
@@ -212,17 +204,16 @@ and implementation proofs, but their statement vocabulary must stay within the
 definition layer and named foundations. Implementation proofs may import narrow
 definition modules; they cannot import public theorem modules or Main. Theorem
 modules do not import one another. Only Main, examples and external consumers
-use the full `Itasca.Results.Definitions` umbrella. Sharing a directory does not
-relax these module boundaries: lint checks imports and audit checks the complete
-semantic closure of each theorem statement.
+use the full `Itasca.Results.Definitions` umbrella. Review import changes and
+transitive theorem statement dependencies against these boundaries.
 
 Support, Spec and Binary retain their foundation proof restrictions and may use
 narrow public definitions. Handler additionally uses Visitor and narrow
 public definitions. Validator implementations and the Validation, Streaming
-and Callbacks entries cannot transitively import extracted execution partitions
-or SpecExt. Compiler stages are Local → Body → Module for implementation and
-definition owners, and compiler proofs cannot transitively import FunsInterp.
-`just lint` enforces these boundaries and the metric ratchets.
+and Callbacks entries must stay independent of Runtime proof modules and
+SpecExt, and may depend only on validator functions in the shared `Funs.lean`.
+Compiler stages are Local → Body → Module for implementation and definition
+owners. Keep compiler declarations independent of interpreter operations.
 
 | Directory | Contents |
 | --- | --- |
@@ -269,8 +260,8 @@ The proofs supplement the pinned specification without editing it:
   SpecTec typing, not its binary decoding, so no assumption is needed.
 - The generated specification contains three unproved well-formedness theorems:
   `Step_is_wf`, `Step_read_is_wf`, and `Step_pure_is_wf`. No handwritten
-  declaration may use them; `just audit` fails if a declaration in `Itasca/` or
-  `SpecExt/` refers to one.
+  declaration may use them. `just audit` fails when a declaration in `Itasca` or
+  `SpecExt` inherits their dependency on `sorryAx`.
 - SpecTec's Lean output contains abstract syntax and typing judgments, but no
   binary byte encoding or decoding grammar. The handwritten grammar in
   [public binary grammar](Itasca/Results/Definitions/README.md) therefore has no generated binary grammar to
@@ -278,10 +269,8 @@ The proofs supplement the pinned specification without editing it:
 
 ### Source patches
 
-Aeneas runs unmodified at the pinned revision. After extraction,
-`scripts/strip_source_lines.py` removes Rust line ranges from generated comments,
-retaining source filenames and changing no definitions; the generated-file
-splitter then partitions the extracted functions without rewriting declarations.
+Aeneas runs unmodified at the pinned revision. After extraction, the recipe
+strips Rust line ranges from generated comments and retains source filenames.
 Private Rust modules use
 `metadata` and `wasm_types` to avoid Lean namespace collisions with fields
 named `module` and `types`; their files remain `src/module.rs` and `src/types.rs`.
@@ -361,11 +350,10 @@ touch
 ## Proof checking
 
 `just prove` compiles every module in `Itasca` and `SpecExt`, including examples.
-Lean checks the proof terms. `just lint` checks dependency layering and
-forbidden constructs. `just audit` checks every registered Results theorem, its allowed axioms and
-semantic closure location, and checks the generated audit report and interface manifest.
-Use `just audit --update` to refresh the report and manifest explicitly. Only `propext`, `Classical.choice`, and
-`Quot.sound` are permitted by the project's proof policy.
+Lean checks the proof terms. `just audit` builds those modules, rejects any
+declaration in `Itasca` or `SpecExt` that depends on `sorryAx`, and prints the
+axioms those declarations use. The project's proof policy permits only
+`propext`, `Classical.choice`, and `Quot.sound`.
 
 ## Execution boundary
 
@@ -516,8 +504,8 @@ map and concrete [compilation](Itasca/Runtime/README.md#compilation),
 [instantiation](Itasca/Runtime/README.md#instantiation) reading paths.
 All public statement vocabulary lives in Results/Definitions; Runtime remains an internal
 implementation directory. Validator proofs must not import Runtime implementation
-modules, extracted execution partitions or SpecExt, including through public definitions.
-Runtime proofs use narrow generated partitions. Itasca.Runtime.Equations.Bytecode
-and .Interp provide their equation lemmas. Compiler proofs and their public-definition
-owners remain transitively independent of FunsInterp. No handwritten
-implementation module may occur below public definitions, regardless of its namespace.
+modules or SpecExt, including through public definitions. `Itasca.Runtime.Equations.Bytecode`
+and `.Interp` provide equation lemmas for runtime proofs. Compiler proofs and
+their public-definition owners stay independent of interpreter operations. No
+handwritten implementation module may occur below public definitions, regardless
+of its namespace.

@@ -227,9 +227,8 @@ separate resource-completeness premises hold.
 
 The named foundations are:
 
-- The extracted [Types](../../Generated/Types.lean),
-  [FunsValidator](../../Generated/FunsValidator.lean), and narrow runtime partitions
-  `FunsRuntimeCommon`, `FunsCompiler`, `FunsStore`, `FunsInterp`, `FunsInstantiate`.
+- The extracted [Types](../../Generated/Types.lean) and
+  [Funs](../../Generated/Funs.lean).
 - The handwritten trusted [FunsExternal model](../../Generated/FunsExternal.lean).
 - Generated [SpecTec judgments](../../../SpecTec/wasm2.0.lean), the pinned builtin
   patches and SpecTecSupport.
@@ -243,11 +242,8 @@ generic platform laws. Host callbacks retain their own obligations. The Lean
 execution model is sequential; worker provenance and concurrent Rust use remain
 part of the embedding contract.
 
-`just audit` checks every registered result, allowed axioms, semantic ownership
-and generated audit artifacts. It checks artifacts without rewriting them;
-`just audit --update` explicitly refreshes them. `just lint` checks import isolation,
-links and proof-health metrics. The migration manifest retains definition provenance separately from the
-reader-facing layout. File moves do not count as removing proof obligations.
+`just audit` builds the proofs, rejects dependencies on `sorryAx`, and reports
+the axioms used by project declarations.
 
 For construction proofs, see the [Lean guide](../../../README.md#proof-architecture)
 and [runtime guide](../../Runtime/README.md). Those proofs are required for verification

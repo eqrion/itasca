@@ -1,5 +1,5 @@
 import Mathlib.Tactic.IntervalCases
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 
 /-!
 Low-level equations for the compiler opcode dispatcher. This leaf imports only

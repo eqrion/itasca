@@ -1,5 +1,5 @@
 import Aeneas
-import Itasca.Generated.FunsValidator
+import Itasca.Generated.Funs
 import Itasca.Results.Definitions.Binary
 import «wasm2.0»
 

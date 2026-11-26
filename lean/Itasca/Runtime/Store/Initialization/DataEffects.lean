@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Initializer.ModuleMappings
 import Itasca.Runtime.Store.Initialization.SegmentOperations
 import Itasca.Module.Elab.SegmentTyping
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Api.ObjectStaging
 
 /-!

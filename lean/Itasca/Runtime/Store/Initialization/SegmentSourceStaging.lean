@@ -4,7 +4,7 @@ import Itasca.Runtime.Store.Api.ObjectStaging
 import Itasca.Runtime.Store.Invariant.HostSignature
 import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Spec.TypingAndNumericOperations
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Initialization.SegmentOperations
 import Itasca.Runtime.Store.Api.GlobalStagingAndCopy

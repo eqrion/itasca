@@ -20,6 +20,6 @@ observations and exact byte/callback correspondence. `Complete/ScalarBase` holds
 shared concrete-frame and scalar completeness lemmas used by the unified proof;
 it is proof decomposition, not a supported language subset or profile.
 
-Code-entry proofs consume the finished body certificate. Body validation must
-never import runtime implementation proofs, extracted execution partitions or
-SpecExt, including through public definitions definitions.
+Code-entry proofs consume the finished body certificate. Body validation uses
+validator functions and stays independent of runtime implementation proofs and
+SpecExt, including through public definitions.

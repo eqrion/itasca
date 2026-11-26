@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Instantiation.PreparedRunTableMemory
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Linking.LinkLoop

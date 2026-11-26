@@ -2,7 +2,7 @@ import Aeneas
 import Itasca.Generated.Types
 import Itasca.Results.Definitions.Binary
 import Itasca.Results.Definitions.Platform
-import Itasca.Generated.FunsStore
+import Itasca.Generated.Funs
 import Itasca.Results.Definitions.Representation
 import «wasm2.0»
 

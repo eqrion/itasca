@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop

@@ -3,7 +3,7 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Body.LoopDispatch
 import Itasca.CodeEntry.Encoding
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsRuntimeCommon
+import Itasca.Generated.Funs
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Binary.ModuleUnique

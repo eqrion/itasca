@@ -1,5 +1,5 @@
 import Aeneas
-import Itasca.Generated.FunsValidator
+import Itasca.Generated.Funs
 import Itasca.Generated.Types
 import Itasca.Results.Definitions.Binary
 import Itasca.Results.Definitions.Compiler.Source

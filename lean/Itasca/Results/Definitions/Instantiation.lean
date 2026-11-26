@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Results.Definitions.Store.State
 import Itasca.Results.Definitions.Compiler.Source
 

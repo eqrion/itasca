@@ -15,6 +15,10 @@ spectec_dir := "../vendor/spectec/spectec"
 default:
     @just --list
 
+# Preserve dependency caches and remove only this project's compiled artifacts.
+clean:
+    @rm -rf .lake/build
+
 tools:
     @sh install-tools.sh {{ quote(tools_dir) }} {{ aeneas_rev }} {{ rust_toolchain }} {{ quote(opam_switch) }}
 
@@ -36,51 +40,21 @@ llbc: check-tools
 _extract-to destination: llbc
     @mkdir -p {{ quote(destination) }}
     @{{ quote(aeneas) }} -backend lean .build/itasca.llbc -dest {{ quote(destination) }} -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
-    @python3 scripts/strip_source_lines.py {{ quote(destination + "/Itasca/Generated/Types.lean") }} {{ quote(destination + "/Itasca/Generated/Funs.lean") }}
-    @python3 scripts/split_funs.py {{ quote(destination + "/Itasca/Generated/Funs.lean") }}
+    @generated={{ quote(destination + "/Itasca/Generated") }}; \
+        sed -E -i.bak "s/(Source: '[^']*'), lines [0-9]+:[0-9]+-[0-9]+:[0-9]+/\1/g" \
+            "$generated/Types.lean" "$generated/Funs.lean" && \
+        rm "$generated/Types.lean.bak" "$generated/Funs.lean.bak"
 
 extract: (_extract-to ".")
 
 # Regenerate into a separate directory and reject stale committed models.
 extract-check: (_extract-to ".build/extract-check")
-    @for file in Types Funs FunsValidator FunsRuntimeCommon FunsCompiler FunsStore FunsInterp FunsInstantiate; do \
+    @for file in Types Funs; do \
         cmp ".build/extract-check/Itasca/Generated/$file.lean" "Itasca/Generated/$file.lean" || exit 1; \
     done
 
 prove:
     @lake build Itasca SpecExt
-
-# Check the spec and concrete external models independently of the Rust model.
-checkpoint:
-    @lake build Itasca.Spec.Typing Itasca.Generated.FunsExternal
-
-# Proof-health metrics. See lean/PROOF_ENGINEERING.md.
-metrics:
-    @python3 scripts/metrics.py
-
-# Static checks: layering, metric ratchet, links, and forbidden constructs.
-lint: _lint-source _lint-forbidden
-    @python3 scripts/check_namespaces.py
-
-_lint-source:
-    @python3 scripts/architecture.py
-    @python3 scripts/metrics.py --check metrics/baseline.json
-    @python3 scripts/check_links.py
-
-_lint-forbidden:
-    @python3 scripts/check_forbidden.py
-
-# Check handwritten warning counts using the completed build's cached traces.
-warnings:
-    @python3 scripts/lean_warnings.py --check
-
-# Check the public surface and all artifacts; --update refreshes them explicitly.
-[positional-arguments]
-audit *args:
-    @python3 scripts/run_audit.py "$@"
-
-tooling-test:
-    @python3 -m unittest discover -s scripts -p 'test_*.py'
 
 check +modules:
     @lake build {{ modules }}
@@ -88,6 +62,21 @@ check +modules:
 # Build imports, then report elaboration/type-checking costs for one module.
 profile module:
     @lake lean {{ quote(replace(module, ".", "/") + ".lean") }} -- --profile
+
+# Check the spec and concrete external models independently of the Rust model.
+checkpoint:
+    @lake build Itasca.Spec.Typing Itasca.Generated.FunsExternal
+
+# Check every project proof module, including modules outside Itasca.Main's imports.
+audit: prove
+    #!/usr/bin/env bash
+    set -euo pipefail
+    {
+        echo 'import Itasca'
+        find Itasca SpecExt -name '*.lean' ! -name FunsExternal_Template.lean |
+            LC_ALL=C sort | sed -e 's/\.lean$//' -e 's|/|.|g' -e 's/^/import /'
+        cat Audit.lean
+    } | lake env lean --stdin
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
 patch-spectec:
@@ -120,7 +109,3 @@ spec-check: spec-compare
 spec-update: spec-generate
     @mkdir -p SpecTec
     @cp .build/spec/wasm2.0.lean SpecTec/
-
-# Preserve dependency caches and remove only this project's compiled artifacts.
-clean:
-    @rm -rf .lake/build

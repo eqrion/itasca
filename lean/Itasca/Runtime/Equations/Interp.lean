@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInterp
+import Itasca.Generated.Funs
 import Itasca.Runtime.Equations.Bytecode
 
 /-! Equation lemmas for interpreter dispatch. Runtime execution proofs use these

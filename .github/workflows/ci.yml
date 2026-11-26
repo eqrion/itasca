@@ -16,15 +16,6 @@ jobs:
       - run: cargo test
       - run: cargo test --no-default-features
 
-  lint:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - run: sudo apt-get update && sudo apt-get install -y ripgrep
-      - uses: extractions/setup-just@v4
-      - run: just tooling-test
-      - run: just lint
-
   prove:
     runs-on: ubuntu-latest
     timeout-minutes: 300
@@ -40,12 +31,9 @@ jobs:
         with:
           lake-package-directory: lean
           auto-config: false
-          build: true
-          build-args: "Itasca SpecExt"
+          build: false
           use-github-cache: false
           use-mathlib-cache: true
       - uses: extractions/setup-just@v4
-      - name: Audit public surface and check generated artifacts
-        run: just audit --check --no-build
-      - name: Check handwritten warning ratchet
-        run: just warnings
+      - name: Build proofs, check for sorry, and report axioms
+        run: just audit

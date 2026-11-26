@@ -5,7 +5,7 @@ import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Spec.PrimitiveOperations
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 import Itasca.Runtime.Compiler.Local.Initializer
 

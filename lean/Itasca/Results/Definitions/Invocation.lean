@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInterp
+import Itasca.Generated.Funs
 import Itasca.Results.Definitions.Host
 import Itasca.Results.Definitions.Resources
 

@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsValidator
+import Itasca.Generated.Funs
 
 /-!
 # Scalar context independence

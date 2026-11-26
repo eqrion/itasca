@@ -12,12 +12,9 @@ consumer API and checked theorem premises.
 ## Coupled sources
 
 - `src/` and `lean/Itasca/Generated/` are coupled. Regenerate committed
-  `Types.lean`, the six `Funs{Validator,RuntimeCommon,Compiler,Store,Interp,Instantiate}.lean`
-  partitions, and the `Funs.lean` umbrella with `just extract`; never edit them
-  by hand. Rust changes still require regeneration. Generated comments retain
-  Rust filenames but omit line ranges, so moving lines no longer changes those
-  comments. After comment normalization, `lean/scripts/split_funs.py` partitions
-  the generated functions without rewriting declaration text.
+  `Types.lean` and `Funs.lean` with `just extract`; never edit them by hand.
+  Rust changes still require regeneration. Aeneas separates types and
+  functions, and the extraction recipe removes line ranges from source comments.
 - `FunsExternal.lean` is handwritten. The generated external template is ignored
   and must never be imported by a proof.
 - `lean/SpecTec/wasm2.0.lean` is generated from pinned sources and versioned
@@ -38,10 +35,10 @@ consumer API and checked theorem premises.
   specification and upstream foundations, never handwritten implementation modules. Public vocabulary
   placement overrides the general rule that proof files mirror Rust.
 - `lean/Itasca/Runtime/` holds runtime implementation proofs. Validator proofs
-  must never import Runtime implementation modules, extracted execution
-  partitions or `SpecExt`, including transitively through public definitions. Validation,
-  Streaming and Callbacks subject entries obey the same isolation. Compiler
-  proofs and their definition owners must not import `FunsInterp` transitively;
+  and the Validation, Streaming and Callbacks definitions must remain transitively
+  independent of Runtime implementation modules and `SpecExt`. In the shared
+  `Funs.lean`, their declarations may depend only on validator functions. Keep
+  compiler proofs and definitions independent of interpreter operations and
   preserve Local → Body → Module stages. Runtime changes must preserve the
   validator's extracted definitions and theorem statements.
 - Keep specification regeneration reproducible through the pinned sources and patches.
@@ -68,12 +65,11 @@ Do not add axioms, `sorry`, `admit`, `native_decide`, unsafe proof shortcuts, or
 kernel bypasses. Use only the standard logical axioms `propext`, `Classical.choice`,
 and `Quot.sound`. Keep `Support/`, `Spec/`, `Binary/`, and `Handler/` free of
 imports from higher implementation layers. They may import narrow public
-definitions without gaining forbidden execution dependencies. `just lint` checks
-layering, forbidden constructs and transitive definition imports; `just audit`
-checks every registered Results theorem, the axiom allowlist and semantic closure
-location, and checks the generated audit report and interface manifest. Use
-`just audit --update` to refresh artifacts explicitly and review the changes. Review proof-bearing
-adapters and generated match-helper emitters as well as exported theorems.
+definitions without gaining forbidden execution dependencies. Review import
+changes for layering and transitive definition imports. `just audit` builds the
+proofs, fails on dependencies on `sorryAx`, and reports the axioms in use. Review
+proof-bearing adapters and generated match-helper emitters as well as exported
+theorems.
 
 Iterate with the Lean language server tools, confirm with
 `just check Itasca.ModuleName`, and use `just prove` for integration.
@@ -83,14 +79,11 @@ the proof source tree. Report any trust-boundary change explicitly.
 ## Required checks
 
 These are integration checkpoints, not commands to repeat after each edit.
-During a coherent unfinished migration, use LSP and targeted `just check` calls;
-run source architecture checks after import changes. At a completed checkpoint,
-run the required checks once. After a successful current `just prove`, use
-`just audit --no-build` to reuse that build. Never reuse a build after subsequent
-source edits affecting the audited environment. Refresh artifacts intentionally
-with `just audit --no-build --update` and review the diffs.
+During a coherent unfinished migration, use LSP and targeted `just check` calls.
+At a completed checkpoint, run the required checks once. `just audit` runs
+`just prove` first and Lake reuses up-to-date build outputs.
 
-- Handwritten Lean proofs or adapters: `just prove`, `just lint`, and `just audit`.
+- Handwritten Lean proofs or adapters: `just audit`.
 - Rust or extraction inputs: `cargo test`, `cargo test --no-default-features`,
   `just extract`, `just extract-check`, and `just prove`.
 - Extraction tool installation or pins: the Rust/extraction checks.
@@ -99,6 +92,5 @@ with `just audit --no-build --update` and review the diffs.
 - Documentation outside extraction inputs: check links and `git diff --check`.
 
 `just verify` runs both Rust test configurations, Rust/specification regeneration
-checks, tooling regression tests, lint, the integrated Lean build and strict
-audit/artifact checks. The audit reuses the integrated build. The Rocq implementation is archived under
+checks, the integrated Lean build and the axiom check. The Rocq implementation is archived under
 `rocq-baseline`; the active branch has no Rocq build requirement.

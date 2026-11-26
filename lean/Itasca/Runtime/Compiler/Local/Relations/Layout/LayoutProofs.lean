@@ -1,7 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Platform.Laws
 import Itasca.Support.Translation

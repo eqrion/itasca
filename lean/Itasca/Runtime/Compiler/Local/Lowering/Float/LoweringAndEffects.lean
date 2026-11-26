@@ -2,7 +2,7 @@ import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.SourceMachine.Float.Descriptors
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.Lowering
 import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Runtime.Compiler.Local.Source.SourceTactics

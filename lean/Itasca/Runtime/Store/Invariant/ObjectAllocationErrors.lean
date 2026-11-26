@@ -1,4 +1,4 @@
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 import Itasca.Runtime.Store.Preparation.PreparationSuccess
 import Itasca.Runtime.Store.Preparation.PreparationErrorLoops

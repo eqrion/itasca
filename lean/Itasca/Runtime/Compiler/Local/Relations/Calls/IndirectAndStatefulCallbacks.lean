@@ -3,7 +3,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 
 open Itasca.Representation
 

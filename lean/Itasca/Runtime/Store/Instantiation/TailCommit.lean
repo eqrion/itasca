@@ -1,6 +1,6 @@
 import Itasca.Runtime.Store.Preparation.ResourceBounds
 import Itasca.Runtime.Store.Definitions
-import Itasca.Generated.FunsInstantiate
+import Itasca.Generated.Funs
 import Itasca.Runtime.Store.Initialization.SegmentOperations
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Compiler.Local.Initializer.SegmentEmissionContracts

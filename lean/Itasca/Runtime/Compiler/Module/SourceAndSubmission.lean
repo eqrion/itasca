@@ -4,7 +4,7 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.FinishContracts
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Equations.Bytecode
-import Itasca.Generated.FunsCompiler
+import Itasca.Generated.Funs
 import Itasca.Stream.WorkersAndSource
 import Itasca.Binary.LebReaders
 import Mathlib.Tactic.IntervalCases
