@@ -1,0 +1,18 @@
+name = "WebAssembly"
+defaultTargets = ["WebAssembly"]
+
+[[require]]
+name = "mathlib"
+git = "https://github.com/leanprover-community/mathlib4.git"
+# Keep this version in sync with the Mathlib dependency of the pinned Aeneas.
+rev = "v4.31.0"
+
+# The equality helper comes from the pinned SpecTec submodule.
+[[lean_lib]]
+name = "SpecTecSupport"
+srcDir = "../../vendor/spectec/spectec/src/test-lean-claude"
+globs = ["ExtendedDeriveDecEq"]
+
+[[lean_lib]]
+name = "WebAssembly"
+globs = ["WebAssembly.*"]

@@ -1,6 +1,6 @@
 # Rust extraction, specification generation and Lean verification.
 
-# Keep the Aeneas revision in sync with lakefile.lean and lake-manifest.json.
+# Keep the Aeneas revision in sync with ItascaRust/lakefile.toml and the manifests.
 aeneas_rev := "557eff83ecef5083b98a52a94ca7fae63d6c1dab"
 rust_toolchain := "nightly-2026-09-17"
 opam_switch := env("OPAM_SWITCH", "itasca-lean")
@@ -11,15 +11,16 @@ tools_dir := tools_cache + "/aeneas-" + aeneas_rev
 aeneas := tools_dir + "/bin/aeneas"
 charon := tools_dir + "/bin/charon"
 spectec_dir := "../vendor/spectec/spectec"
+rust_model_dir := "ItascaRust"
+spec_model := "WebAssembly/WebAssembly.lean"
 
 default:
     @just --list
 
-# Preserve dependency caches and remove only this project's compiled artifacts.
 clean:
-    @rm -rf .lake/build
+    @rm -rf Itasca/.lake/build ItascaRust/.lake/build WebAssembly/.lake/build
 
-tools:
+install-tools:
     @sh install-tools.sh {{ quote(tools_dir) }} {{ aeneas_rev }} {{ rust_toolchain }} {{ quote(opam_switch) }}
 
 check-tools:
@@ -27,7 +28,7 @@ check-tools:
 
 # Keep extraction outputs separate from ordinary Rust tests and release builds.
 [working-directory("..")]
-llbc: check-tools
+_llbc: check-tools
     @mkdir -p lean/.build
     @RUSTUP_TOOLCHAIN={{ rust_toolchain }} CARGO_TARGET_DIR="$PWD/lean/.build/cargo" \
         {{ quote(charon) }} cargo --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
@@ -37,49 +38,30 @@ llbc: check-tools
         --include='core::clone::impls::{impl core::clone::Clone for u8}' \
         --dest-file="$PWD/lean/.build/itasca.llbc"
 
-_extract-to destination: llbc
+_extract-to destination: _llbc
     @mkdir -p {{ quote(destination) }}
-    @{{ quote(aeneas) }} -backend lean .build/itasca.llbc -dest {{ quote(destination) }} -subdir /Itasca/Generated -split-files -namespace Itasca -no-progress-bar
-    @generated={{ quote(destination + "/Itasca/Generated") }}; \
+    @{{ quote(aeneas) }} -backend lean .build/itasca.llbc -dest {{ quote(destination) }} -subdir {{ rust_model_dir }} -split-files -namespace Itasca -no-progress-bar
+    @generated={{ quote(destination + "/" + rust_model_dir) }}; \
         sed -E -i.bak "s/(Source: '[^']*'), lines [0-9]+:[0-9]+-[0-9]+:[0-9]+/\1/g" \
             "$generated/Types.lean" "$generated/Funs.lean" && \
         rm "$generated/Types.lean.bak" "$generated/Funs.lean.bak"
 
-extract: (_extract-to ".")
+extract: (_extract-to rust_model_dir)
 
 # Regenerate into a separate directory and reject stale committed models.
 extract-check: (_extract-to ".build/extract-check")
     @for file in Types Funs; do \
-        cmp ".build/extract-check/Itasca/Generated/$file.lean" "Itasca/Generated/$file.lean" || exit 1; \
+        cmp ".build/extract-check/{{ rust_model_dir }}/$file.lean" "{{ rust_model_dir }}/{{ rust_model_dir }}/$file.lean" || exit 1; \
     done
 
 prove:
-    @lake build Itasca SpecExt
+    @lake -d Itasca build Itasca ItascaRust WebAssembly
 
-check +modules:
-    @lake build {{ modules }}
-
-# Build imports, then report elaboration/type-checking costs for one module.
-profile module:
-    @lake lean {{ quote(replace(module, ".", "/") + ".lean") }} -- --profile
-
-# Check the spec and concrete external models independently of the Rust model.
-checkpoint:
-    @lake build Itasca.Spec.Typing Itasca.Generated.FunsExternal
-
-# Check every project proof module, including modules outside Itasca.Main's imports.
-audit: prove
-    #!/usr/bin/env bash
-    set -euo pipefail
-    {
-        echo 'import Itasca'
-        find Itasca SpecExt -name '*.lean' ! -name FunsExternal_Template.lean |
-            LC_ALL=C sort | sed -e 's/\.lean$//' -e 's|/|.|g' -e 's/^/import /'
-        cat Audit.lean
-    } | lake env lean --stdin
+audit:
+    @lake -d Itasca build audit
 
 # Source patches are repeatable and fail if the checkout has incompatible edits.
-patch-spectec:
+spec-patch:
     @for patch_name in \
         global-mutability module hostfunc integer-domains memory-boundary lane-store host-typing \
         memory-write-bounds export-membership table-write-bounds load-value-bounds; do \
@@ -88,24 +70,18 @@ patch-spectec:
             || git -C ../vendor/spectec apply "$patch_path" || exit 1; \
     done
 
-spec-build: patch-spectec
+# Generate the local specification in scratch space before comparing or updating it.
+_spec-generate:
     @make -C {{ spectec_dir }} src/backend-interpreter/reference-interpreter
     @cd {{ spectec_dir }} && opam exec --switch={{ quote(opam_switch) }} -- dune build src/exe-spectec/main.exe
-
-# Generate the local specification in scratch space before comparing or updating it.
-spec-generate: spec-build
     @mkdir -p .build/spec
     @spec_output="$PWD/.build/spec/wasm2.0.lean"; cd {{ spectec_dir }} && \
         _build/default/src/exe-spectec/main.exe ../specification/wasm-2.0/*.spectec \
         --lean --single-pattern-match --wf-state all -o "$spec_output"
     @patch -f -F 0 -p1 -d .build/spec < ../patches/spectec-wasm2-builtins.patch
 
-spec-compare: spec-generate
-    @cmp .build/spec/wasm2.0.lean SpecTec/wasm2.0.lean
+spec-check: _spec-generate
+    @cmp .build/spec/wasm2.0.lean {{ spec_model }}
 
-spec-check: spec-compare
-    @lake build SpecTecGenerated Itasca.Spec.Typing
-
-spec-update: spec-generate
-    @mkdir -p SpecTec
-    @cp .build/spec/wasm2.0.lean SpecTec/
+spec-update: _spec-generate
+    @cp .build/spec/wasm2.0.lean {{ spec_model }}

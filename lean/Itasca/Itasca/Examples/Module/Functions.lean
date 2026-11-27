@@ -1,0 +1,395 @@
+import Itasca
+import Itasca.Examples.Module.Basic
+import Itasca.Examples.Module.SliceLayout
+
+/-!
+Proofs for Examples / Module.
+
+This module collects Functions, Sections.
+Each section documents its contracts and consumers.
+-/
+
+/-! ## Functions -/
+
+section
+
+/-!
+# A module with an import, a function, an export and a start function
+
+A 47-byte Wasm 2.0 module: an imported `() -> ()` function `m.f`, one defined function with an
+`i32` local whose body is `call 0`, an export `r` of function 1, and function 1 as the start
+function. `functions_accepted` shows that `metadata.validate_module` accepts it, with the call
+resolved in the function space that puts imports first. `functions_validated` adds the soundness
+certificate, and `environment` exposes the validated prefix for the visitor trace examples.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Examples.Module.Functions
+
+open Itasca.Examples.Module.Support (leb one padded omitted)
+
+open Binary Module.Environment
+
+/-- The function type `[] -> []`. -/
+def functionType : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
+/-- The import of function `m.f` with type index 0. -/
+def imported : Binary.Import := ⟨[0x6D#u8], [0x66#u8], .Func 0#u32⟩
+/-- An export named `r` of function 1. -/
+def exported : Binary.Export := ⟨[0x72#u8], .Func 1#u32⟩
+/-- The code entry with one `i32` local and the body `call 0`. -/
+def entry : Binary.Code := ⟨[(1#u32, .I32)], [.CALL (.mk_uN 0)]⟩
+/-- The type, import, function, export and start declarations of the module. -/
+def declarations : Declarations :=
+  { types := [functionType], imports := [imported], functions := [0#u32],
+    exports := [exported], start := some 1#u32 }
+/-- The decoded module: `declarations` and the code entry. -/
+def raw : Binary.Module := declarations.module [entry] []
+/-- The bytes of the sections before the code section. -/
+def layout : Layout :=
+  { types := [1#u8,4#u8,1#u8,0x60#u8,0#u8,0#u8]
+    imports := [2#u8,7#u8,1#u8,1#u8,0x6D#u8,1#u8,0x66#u8,0#u8,0#u8]
+    functions := [3#u8,2#u8,1#u8,0#u8]
+    exports := [7#u8,5#u8,1#u8,1#u8,0x72#u8,0#u8,1#u8]
+    start := [8#u8,1#u8,1#u8] }
+/-- The code section bytes. -/
+def codeBytes : List U8 := [10#u8,8#u8,1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8]
+/-- The full module bytes: header, `layout` and `codeBytes`. -/
+def input : Slice U8 := Examples.Module.Support.bytes (magicVersion ++ layout.bytes ++ codeBytes)
+  (by simp [magicVersion, layout, Layout.bytes, codeBytes]; scalar_tac)
+
+private theorem ascii (b : U8) (hb : b.val ≤ 127) : NameEncoding [b] [1#u8,b] :=
+  ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, .cons (.one _ hb) .nil⟩
+
+/-- `layout` encodes `declarations`. -/
+theorem layout_valid : Layout.Valid 9 declarations layout := by
+  constructor
+  · exact padded _ 4#u8 _ (one ⟨[0#u8], [0#u8],
+      ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
+  · exact padded _ 7#u8 _ (one ⟨[1#u8,0x6D#u8], [1#u8,0x66#u8], [0#u8,0#u8],
+      ascii _ (by decide), ascii _ (by decide), .func _ (leb 0#u8), rfl⟩) rfl
+  · exact padded _ 2#u8 _ (one (leb 0#u8)) rfl
+  · exact omitted _ _ _
+  · exact omitted _ _ _
+  · exact omitted _ _ _
+  · exact padded _ 5#u8 _ (one ⟨[1#u8,0x72#u8], [0#u8,1#u8], ascii _ (by decide), .func _ (leb 1#u8), rfl⟩) rfl
+  · exact padded _ 1#u8 _ ⟨1#u32, rfl, leb 1#u8⟩ rfl
+  · exact omitted _ _ _
+  · exact omitted _ _ _
+  · exact .nil
+  · simp [Layout.Future, layout]
+
+private theorem functions_context {last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
+    env.func_types.val.map Translation.Environment.funcType =
+      [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] := by
+  simpa [Module.Elaboration.contextOf, raw, declarations, Declarations.module, imported,
+    Module.Elaboration.importType, Module.Elaboration.functionType, Module.Translation.funcs,
+    functionType, Translation.Environment.funcType] using (h.funcs_context hn).symm
+
+/-- The declarations of `raw` satisfy the per-section validation requirements. -/
+theorem requirements : Requirements raw := by
+  intro id decls env hlo hhi hr
+  interval_cases id
+  · simp [SectionValid, CodeEntry.FuncTypeWithinLimits, raw, declarations, Declarations.module, functionType]
+  · constructor
+    · intro e he
+      have he : e = imported := by simpa [raw, declarations, Declarations.module] using he
+      subst e
+      simp [imported, hr.types_eq (by decide), raw, declarations, Declarations.module]
+    · simp [hr.empty_memories (by decide), Module.Sections.rawMemories, raw, declarations, Declarations.module, imported]
+  · simp [SectionValid, hr.types_eq (by decide), raw, declarations, Declarations.module]
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · constructor
+    · simp [raw, declarations, Declarations.module]
+    · rw [hr.memories_count (by decide) (by decide)]
+      simp [raw, declarations, Declarations.module, imported, Module.Elaboration.importType, Module.Translation.mems]
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · constructor
+    · simp [raw, declarations, Declarations.module]
+    · intro e he
+      have he : e = exported := by simpa [raw, declarations, Declarations.module] using he
+      subst e
+      have hlen := congrArg List.length (functions_context hr (by decide))
+      simp only [List.length_map, List.length_cons, List.length_nil] at hlen
+      change 1 < env.func_types.val.length
+      omega
+  · intro idx hi
+    have he : idx = 1#u32 := by simpa [raw, declarations, Declarations.module] using hi.symm
+    subst idx
+    apply Module.Elaboration.start_valid_of_typing (hr.module_context (by decide))
+    apply Start_ok.mk_Start_ok
+    · simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
+        Module.Translation.funcs, Module.Elaboration.importType, imported, proj_uN_0]
+    · rfl
+    · exact (hr.module_context (by decide)).wf
+    · exact .start_case_0 _ (Translation.Environment.index_wf 1#u32)
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · trivial
+
+/-- `codeBytes` encodes the single code entry. -/
+theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.CodeEntry.CodeEncodingWithinLimits )) [entry] codeBytes := by
+  refine ⟨[8#u8], [1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8], leb 8#u8, one ?_, rfl⟩
+  refine ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [1#u8,1#u8,0x7F#u8],
+    [0x10#u8,0#u8,0x0B#u8], leb 6#u8, one ⟨[1#u8], leb 1#u8, rfl⟩, ?_, by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
+  refine ⟨[.plain (.CALL (.mk_uN 0)), .end_], ?_, ?_⟩
+  · exact Rep.cons (show Body.TokenEncoding (.plain (.CALL (.mk_uN 0))) [0x10#u8,0#u8] from
+      ⟨0x10#u8, [0#u8], rfl, .plain (.call 0#u32 (leb 0#u8))⟩)
+      (Rep.cons (show Body.TokenEncoding .end_ [0x0B#u8] from ⟨0x0B#u8, [], rfl, .end_⟩) Rep.nil)
+  · exact ⟨[.plain (.CALL (.mk_uN 0))], rfl,
+      .simple .nil (.plain _ (.instr_case_10 _ (Translation.Environment.index_wf 0#u32)))⟩
+
+/-- The code entry has the type of function 1: `call 0` typechecks against the imported
+function. -/
+theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry := by
+  have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
+  refine ⟨by simp [htypes], ?_, ?_⟩
+  · let C := CodeEntry.bodyContext env [] entry.declared []
+    have hf : C.FUNCS = [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] :=
+      functions_context hr (by decide)
+    have hw : wf_context C := by
+      constructor <;> simp only [Forall, List.mem_map]
+      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.table_type_wf tt
+      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.mem_type_wf tt
+    have hi : Instr_ok C (.CALL (.mk_uN 0)) (.mk_functype (.mk_list []) (.mk_list [])) :=
+      .call C _ [] [] (by simp [hf, proj_uN_0]) (by simp [hf, proj_uN_0]) hw
+        (.instr_case_10 _ (Translation.Environment.index_wf 0#u32))
+    simpa [htypes, functionType, entry, CodeEntry.instructionType, C] using
+      Instrs_ok.instr C _ _ _ hi hw (.instr_case_10 _ (Translation.Environment.index_wf 0#u32))
+  · simp [entry, Spec.DeclaredReferences.Instructions, Spec.DeclaredReferences.instructionsIndices,
+      Spec.DeclaredReferences.instructionIndices]
+
+/-- The first 37 bytes of `input` encode the header and `declarations`. -/
+theorem prefix_encoding : At (fun ds bs => PrefixEncoding ds bs ) input 0#usize declarations 37#usize := by
+  refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
+  constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+    magicVersion, layout, Layout.bytes, codeBytes]
+
+/-- The bytes from offset 37 to 47 are the code section. -/
+theorem code_at : At (SectionEncoding 10#u8 (VecEncoding (Itasca.CodeEntry.CodeEncodingWithinLimits )))
+    input 37#usize [entry] 47#usize := by
+  refine ⟨codeBytes, code_encoding, ?_⟩
+  constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+    magicVersion, layout, Layout.bytes, codeBytes]
+
+/-- `metadata.validate_env` on `input` consumes exactly the 37 bytes before the code section and
+produces an environment with one imported and one defined function. -/
+theorem environment : ∃ env decls, metadata.validate_env input = .ok (.Ok (env, 37#usize)) ∧
+    Ready raw 10 decls env := by
+  obtain ⟨first, hh, _⟩ := code_at.section_split
+  exact metadata.validate_env.complete input raw declarations 37#usize prefix_encoding rfl
+    (.inr ⟨10#u8, first, 47#usize, hh, by decide⟩) requirements
+
+/-- `metadata.validate_module` accepts `input` under Wasm 2.0, checking the local declarations, a
+`call` of the imported function, the export and the start declaration. -/
+theorem functions_accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) := by
+  let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
+  have ht : At (fun ds bs => Module.Tail.Encoding ds bs ) input 47#usize raw.data (Slice.len input) := by
+    refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
+    constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+      magicVersion, layout, Layout.bytes, codeBytes]
+  obtain ⟨first, hh, _⟩ := code_at.section_split
+  have hl : Module.Layout input raw declarations 37#usize 47#usize :=
+    ⟨rfl, prefix_encoding, .inl code_at, ht, .inr ⟨10#u8, first, 47#usize, hh, by decide⟩⟩
+  obtain ⟨env, ha⟩ := Examples.Stream.SliceSupport.accepted_layout input raw declarations
+    37#usize 47#usize hl (by
+      simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+        magicVersion, layout, Layout.bytes, codeBytes, limits.MAX_MODULE_BYTES])
+    requirements rfl tail rfl (by
+      intro decls env hr
+      rw [hr.functions_eq (by decide)]
+      exact .cons (entry_typed hr) .nil) (by
+      intro decls env hr
+      simp [tail])
+  exact ⟨⟨env, tail⟩, ha⟩
+
+/-- The accepted module has a `Module.Sound.Validated` certificate for the bytes of `input`. -/
+theorem functions_validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
+    Module.Sound.Validated input decoded := by
+  obtain ⟨decoded, ha⟩ := functions_accepted
+  exact ⟨decoded, ha, metadata.validate_module.sound _ _ ha⟩
+
+end Itasca.Examples.Module.Functions
+
+end
+
+/-! ## Sections -/
+
+section
+
+/-!
+# A module with tables, memories, globals, exports and segments
+
+A 51-byte Wasm 2.0 module with one table, one memory, one immutable `i32` global, an export of
+that global, an active element segment and an active data segment, and no functions.
+`sections_accepted` shows that `metadata.validate_module` accepts it using the section-layout
+completeness theorems, and `sections_validated` adds the soundness certificate.
+-/
+
+open Aeneas Aeneas.Std
+
+namespace Itasca.Examples.Module.Sections
+
+open Itasca.Examples.Module.Support (leb one padded omitted)
+
+open Binary Module.Environment
+
+/-- A `funcref` table with minimum size 0 and no maximum. -/
+def tableType : wasm_types.TableType := ⟨⟨0#u32, none⟩, .FuncRef⟩
+/-- A memory with minimum size 0 pages and no maximum. -/
+def memoryType : wasm_types.MemType := ⟨⟨0#u32, none⟩⟩
+/-- An immutable `i32` global initialized to `i32.const 0`. -/
+def global : metadata.Global := ⟨⟨.Const, .I32⟩, .I32 0#i32⟩
+/-- An export named `g` of global 0. -/
+def globalExport : Binary.Export := ⟨[0x67#u8], .Global 0#u32⟩
+/-- An active element segment for table 0 at offset `i32.const 0`, with no entries. -/
+def element : Binary.Element := ⟨.FuncRef, .Active 0#u32 (.I32 0#i32), []⟩
+/-- An active data segment for memory 0 at offset `i32.const 0`, holding the byte `0x2a`. -/
+def segment : metadata.Data := ⟨.Active 0#u32 (.I32 0#i32), alloc.vec.Vec.from [42#u8] (by simp; scalar_tac)⟩
+
+/-- The table, memory, global, export and element declarations of the module. -/
+def declarations : Declarations :=
+  { tables := [tableType], memories := [memoryType], globals := [global],
+    exports := [globalExport], elements := [element] }
+
+/-- The decoded module: `declarations` and the data segment. -/
+def raw : Binary.Module := declarations.module [] [Module.Data.raw segment]
+
+/-- The bytes of the table, memory, global, export and element sections. -/
+def layout : Layout :=
+  { tables := [4#u8,4#u8,1#u8,0x70#u8,0#u8,0#u8]
+    memories := [5#u8,3#u8,1#u8,0#u8,0#u8]
+    globals := [6#u8,6#u8,1#u8,0x7F#u8,0#u8,0x41#u8,0#u8,0x0B#u8]
+    exports := [7#u8,5#u8,1#u8,1#u8,0x67#u8,3#u8,0#u8]
+    elements := [9#u8,6#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,0#u8] }
+
+/-- The bytes of the data section. -/
+def dataBytes : List U8 := [11#u8,7#u8,1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8]
+/-- The full module bytes: header, `layout` and `dataBytes`. -/
+def input : Slice U8 := Examples.Module.Support.bytes (magicVersion ++ layout.bytes ++ dataBytes)
+  (by simp [magicVersion, layout, Layout.bytes, dataBytes]; scalar_tac)
+
+private theorem zero_const : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
+  .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
+
+private theorem layout_valid : Layout.Valid 9 declarations layout := by
+  constructor
+  · exact omitted _ _ _
+  · exact omitted _ _ _
+  · exact omitted _ _ _
+  · exact padded _ 4#u8 _ (one ⟨[0#u8,0#u8], .noMax _ (leb 0#u8), rfl⟩) rfl
+  · exact padded _ 3#u8 _ (one (.noMax _ (leb 0#u8))) rfl
+  · exact padded _ 6#u8 _ (one ⟨[0x7F#u8,0#u8], [0x41#u8,0#u8,0x0B#u8], rfl, zero_const, rfl⟩) rfl
+  · exact padded _ 5#u8 _ (one ⟨[1#u8,0x67#u8], [3#u8,0#u8],
+      ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩,
+        .cons (.one _ (by decide)) .nil⟩, .global _ (leb 0#u8), rfl⟩) rfl
+  · exact omitted _ _ _
+  · exact padded _ 6#u8 _ (one (ElementEncoding.activeIndices
+      (leb 0#u8) zero_const (show VecEncoding IndexEncoding [] [0#u8] from
+        ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩))) rfl
+  · exact omitted _ _ _
+  · exact .nil
+  · simp [Layout.Future, layout]
+
+private theorem requirements : Requirements raw := by
+  intro id decls env hlo hhi hr
+  interval_cases id
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · refine ⟨?_, ?_⟩
+    · simp [raw, declarations, Declarations.module]
+    · simp [hr.empty_memories (by decide), Module.Sections.rawMemories, raw, declarations, Declarations.module]
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · simp [SectionValid, raw, declarations, Declarations.module, tableType, LimitsValid, limits.MAX_TABLE_ELEMS]
+  · constructor
+    · simp [raw, declarations, Declarations.module, memoryType, LimitsValid, limits.MAX_MEMORY_PAGES]
+    · rw [hr.memories_count (by decide) (by decide)]
+      simp [raw, declarations, Declarations.module, Module.Translation.mems]
+  · intro g hg
+    have hg : g = global := by simpa [raw, declarations, Declarations.module] using hg
+    subst g
+    exact .i32 _
+  · constructor
+    · simp [raw, declarations, Declarations.module]
+    · intro e he
+      have heq : e = globalExport := by simpa [raw, declarations, Declarations.module] using he
+      subst e
+      have hlen := congrArg List.length (hr.globals_context (by decide))
+      simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
+        Module.Translation.globals] at hlen
+      change 0 < env.global_types.val.length
+      omega
+  · simp [SectionValid, raw, declarations, Declarations.module]
+  · intro e he
+    have heq : e = element := by simpa [raw, declarations, Declarations.module] using he
+    subst e
+    refine ⟨?_, by simp [element]⟩
+    have hlen := congrArg List.length (hr.tables_context (by decide))
+    simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
+      Module.Translation.tables] at hlen
+    have hi : 0 < env.table_types.val.length := by omega
+    refine ⟨hi, ?_, .i32 _⟩
+    have ht := hr.tables_context (by decide)
+    have he := congrArg (fun ts => ts[0]!) ht
+    simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
+      Module.Translation.tables, hi, tableType,
+      Translation.Environment.tableType] at he
+    have href := he.2
+    cases ht : env.table_types.val[0].elem <;> simp_all [Translation.referenceType, element]
+  · trivial
+
+private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
+    [Module.Data.raw segment] dataBytes := by
+  refine ⟨[7#u8], [1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8], leb 7#u8, ?_, rfl⟩
+  exact one (DataEncoding.active (.implicit (leb 0#u8)) zero_const
+    (ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩))
+
+/-- `metadata.validate_module` accepts the 51-byte module `input` under Wasm 2.0, with sections in
+order, a constant global initializer, a named global export, and both kinds of active segment. -/
+theorem sections_accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) := by
+  have hp : At (fun ds bs => PrefixEncoding ds bs ) input 0#usize declarations 42#usize := by
+    refine ⟨magicVersion ++ layout.bytes, layout_valid.encoding, ?_⟩
+    constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+      magicVersion, layout, Layout.bytes, dataBytes]
+  have hd : At (SectionEncoding 11#u8 (VecEncoding DataEncoding)) input 42#usize
+      [Module.Data.raw segment] 51#usize := by
+    refine ⟨dataBytes, data_encoding, ?_⟩
+    constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+      magicVersion, layout, Layout.bytes, dataBytes]
+  obtain ⟨first, hh, _⟩ := hd.section_split
+  let tail : metadata.Tail := ⟨alloc.vec.Vec.from [segment] (by simp; scalar_tac)⟩
+  have ht : At (fun ds bs => Module.Tail.Encoding ds bs ) input 42#usize (tail.data.val.map Module.Data.raw) (Slice.len input) := by
+    refine ⟨dataBytes, ⟨dataBytes, [], ⟨[], dataBytes, .nil, .present data_encoding, rfl⟩, .nil, rfl⟩, ?_⟩
+    constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+      magicVersion, layout, Layout.bytes, dataBytes]
+  have hl : Module.Layout input raw declarations 42#usize 42#usize :=
+    ⟨rfl, hp, .inr ⟨rfl, rfl, .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩,
+      by simpa [tail, raw, declarations, Declarations.module] using ht,
+      .inr ⟨11#u8, first, 51#usize, hh, by decide⟩⟩
+  obtain ⟨env, ha⟩ := Examples.Stream.SliceSupport.accepted_layout input raw declarations
+    42#usize 42#usize hl (by
+      simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
+        magicVersion, layout, Layout.bytes, dataBytes, limits.MAX_MODULE_BYTES])
+    requirements rfl tail rfl (by
+      intro decls env hr
+      rw [hr.functions_eq (by decide)]
+      exact .nil) (by
+      intro decls env hr s hs
+      have heq : s = segment := by simpa [tail] using hs
+      subst s
+      refine ⟨?_, .i32 _⟩
+      have hlen := congrArg List.length (hr.memories_context (by decide))
+      simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
+        Module.Translation.mems] at hlen
+      change 0 < env.mem_types.val.length
+      omega)
+  exact ⟨⟨env, tail⟩, ha⟩
+
+/-- The accepted module has a `Module.Sound.Validated` certificate for the bytes of `input`, which
+covers generated module typing, the Wasm 2.0 restrictions and ordered external metadata. -/
+theorem sections_validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
+    Module.Sound.Validated input decoded := by
+  obtain ⟨decoded, ha⟩ := sections_accepted
+  exact ⟨decoded, ha, metadata.validate_module.sound _ _ ha⟩
+
+end Itasca.Examples.Module.Sections
+
+end
