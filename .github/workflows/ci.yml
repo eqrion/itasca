@@ -36,4 +36,5 @@ jobs:
           use-mathlib-cache: true
       - uses: extractions/setup-just@v4
       - name: Build proofs, check for sorry, and report axioms
+        working-directory: lean
         run: just audit
