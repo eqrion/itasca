@@ -511,9 +511,9 @@ end
 section
 
 /-!
-Shared metadata decoding, fixed-stack effects, and exact source-prefix advancement.
-Reference, table, and bulk-memory preservation and compiler inversion use the same
-reader specification, with explicit declared-reference evidence.
+The reader specification for references, tables, and bulk memory records decoded
+metadata, fixed stack effects, and exact source-prefix advancement. It includes
+declared-reference evidence.
 -/
 namespace Itasca.Body
 open Aeneas Aeneas.Std Itasca
@@ -593,27 +593,6 @@ theorem Pending.metadata_reader {data env locals index st}
       · exact p.append_reader_context C outer spine header base final (operation a)
           p.current.ctrl.polymorphic_base values (wellFormed a) sourceEncoding finalTyped
           controlEq newBlocks afterValues (declared a ⟨middle,read⟩)
-
-theorem Pending.metadata_reader_accepted {data env locals index st}
-    (p : Pending data env locals index st) {A B : Type}
-    (decode : Result (core.result.Result A error.OpError × code.OpIterState))
-    (pops : A → List wasm_types.ValueType) (output : A → Option wasm_types.ValueType)
-    (metadata : A → B) (operation : A → instr)
-    (decoded : decode ⦃ r => r.2.vals = st.core.vals ∧ r.2.ctrls = st.core.ctrls ∧
-      ∀ a, r.1 = .Ok a → At data p.start (.plain (operation a)) r.2.pos ⦄)
-    (wellFormed : ∀ a, wf_instr (operation a))
-    (typing : ∀ a, (∃ state, decode = .ok (.Ok a,state)) → ∀ C,
-      Translation.Environment.Matches env ⟨locals,p.ft.results⟩ C →
-      Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
-        (.mk_list (Simd.outputTypes (output a)))))
-    (declared : ∀ a, (∃ state, decode = .ok (.Ok a,state)) → Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a))
-    (size : st.core.vals.val.length < Usize.max) (value : B) (out : code.OpIterState)
-    (accepted : metadataOperands decode pops output metadata = .ok (.Ok value,out)) :
-    MetadataReaderPost p decode pops output metadata operation value out := by
-  have effect := p.metadata_reader decode pops output metadata operation decoded wellFormed typing declared size
-  rw [accepted, WP.spec_ok] at effect
-  exact effect value rfl
 
 end Itasca.Body
 

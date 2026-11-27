@@ -1357,8 +1357,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
         results: copy_value_types(&env.types[t].results),
     };
 
-    // The consumer sees the frame it is about to compile before the first
-    // operator of it, which is why this is a hook and not a return value.
+    // Report the function frame to the visitor before dispatching its first operator.
     match v.on_function_start(&ctx, type_idx, p1, end) {
         Ok(()) => {}
         Err(e) => return Err(Error::Body(OpError::Visitor(e))),

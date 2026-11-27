@@ -4,16 +4,13 @@
 
 Define Wasm binary syntax and exact byte encodings in `WebAssembly.Binary`. Keep reader spans, scalar conversions, and implementation limits in Itasca. For each grammar change, check reader soundness and completeness against the canonical production. Use the byte round trips to transport the original span, including nonminimal LEB spellings. Prove prefix uniqueness in WebAssembly so the module uniqueness proof builds independently of Itasca. Put Itasca-specific public semantic vocabulary in `Itasca/Itasca/Results/Definitions/` and public theorem statements in `Results/*.lean`. A reader should be able to inspect the premises of a completeness theorem without following the validator's control flow. In particular, state acceptance premises using the independent encoding and typing relations.
 
-Keep implementation proofs out of the transitive imports of public definitions. Validator proofs also stay independent of runtime internals and the handwritten execution extensions to WebAssembly. The generated specification contains three unproved lemmas: `Step_is_wf`, `Step_read_is_wf`, and `Step_pure_is_wf`. Never use them, even indirectly.
+Keep implementation proofs out of the transitive imports of public definitions.
 
 ## Layer proofs by dependency
 
-Each layer proves facts that the next layer can use through named lemmas or certificates. The import graph, including transitive imports, determines the boundary. Two examples show where to draw it:
+Each layer proves facts that the next layer can use through named lemmas or certificates. The import graph, including transitive imports, determines the boundary. Body proofs compose handler effects with decoding and typing facts. Entry validation uses body correctness and code framing. The streaming driver combines entry, environment, and tail evidence. A fact about an entry's size prefix should therefore be usable before importing the driver.
 
-- **Validation.** Body proofs compose handler effects with decoding and typing facts. Entry validation uses body correctness and code framing. The streaming driver combines entry, environment, and tail evidence. A fact about an entry's size prefix should therefore be usable before importing the driver.
-- **Execution.** Within the compiler, `Local` proves callback effects, `Body` composes them over one function, and `Module` assembles the compiled entries. The interpreter can rely on the meaning of emitted code. Compiler proofs must stay independent of interpreter execution, including through shared imports.
-
-Put a new lemma with the definitions and contracts that suffice to prove it. If two layers need the same fact, import its narrowest owner in both. If a proof needs facts from two independent branches, place their composition above both branches. For example, slot decoding belongs in shared representation, while the proof that execution preserves the store protocol belongs in runtime integration.
+Put a new lemma with the definitions and contracts that suffice to prove it. If two layers need the same fact, import its narrowest owner in both. If a proof needs facts from two independent branches, place their composition above both branches.
 
 ## Put the Rust body behind one contract
 

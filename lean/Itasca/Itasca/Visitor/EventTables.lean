@@ -271,8 +271,7 @@ section
 # Callback tables against extracted dispatch
 
 Connects the callback tables of `Visitor/EventTables` to the binary opcode meaning tables and to
-the extracted `code.visit_numeric`, `code.visit_memory`, `code.visit_sign_extension` and
-`code.visit_saturating`. `visit_numeric` and `visit_memory` show the extracted dispatch calls
+the extracted dispatch. `visit_numeric` and `visit_memory` show the extracted dispatch calls
 exactly the hook that `ofOpcode` names, and `ExtendedNumericHook.meaning` ties the Wasm 2.0 scalar
 callbacks to their binary rows.
 -/
@@ -280,14 +279,6 @@ callbacks to their binary rows.
 open Aeneas Aeneas.Std
 
 namespace Itasca.Visitor.Trace
-
-@[simp] theorem NumericHook.of_opcode_opcode (hook : NumericHook) :
-    NumericHook.ofOpcode hook.opcode = some hook := by
-  cases hook <;> rfl
-
-@[simp] theorem MemoryHook.of_opcode_opcode (hook : MemoryHook) :
-    MemoryHook.ofOpcode hook.opcode = some hook := by
-  cases hook <;> rfl
 
 set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
@@ -381,26 +372,6 @@ theorem visit_memory {V : Type} (visitor : code.OpVisitor V) (v : V)
   rcases opcode with ⟨⟨n, hn⟩⟩
   change n < 256 at hn
   interval_cases n <;> with_unfolding_all rfl
-
-theorem MemoryHook.dispatch {V : Type} (visitor : code.OpVisitor V) (v : V)
-    (st : code.OpIterState) (hook : MemoryHook) (arg : code.MemArg) :
-    code.visit_memory visitor v st hook.opcode arg =
-      invoke visitor v (.op st (.memory hook arg)) := by
-  simp only [visit_memory, MemoryHook.of_opcode_opcode]
-
-end Itasca.Visitor.Trace
-
-namespace Itasca.Visitor.Trace
-
-/-- The extracted sign-extension and saturating-truncation dispatch calls the callback that
-`ExtendedNumericHook.encoding` names. -/
-theorem ExtendedNumericHook.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (v : V) (st : code.OpIterState) (hook : ExtendedNumericHook) :
-    (match hook.encoding.2 with
-    | none => code.visit_sign_extension visitor v st hook.encoding.1
-    | some subopcode => code.visit_saturating visitor v st subopcode) =
-      invoke visitor v (.op st (.extendedNumeric hook)) := by
-  cases hook <;> rfl
 
 end Itasca.Visitor.Trace
 

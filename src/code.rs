@@ -1908,7 +1908,7 @@ fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()
     Ok(())
 }
 
-// --- Shared body execution and validation entry points ---
+// --- Function body validation entry points ---
 
 /// Opens the function-body frame with the signature of `type_index`.
 fn initial_state(env: &Env, type_index: u32) -> Result<BodyState> {

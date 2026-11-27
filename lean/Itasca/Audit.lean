@@ -12,13 +12,11 @@ run_cmd do
     let some index := env.getModuleIdxFor? declName | continue
     let mod := env.header.modules[index.toNat]!.module
     let root := mod.getRoot
-    -- Check the generated specification through dependencies of project proofs.
-    unless root == `Itasca || root == `ItascaRust ||
-        (root == `WebAssembly && mod != `WebAssembly) do continue
+    unless root == `Itasca || root == `ItascaRust || root == `WebAssembly do continue
     for axiomName in ← collectAxioms declName do
       unless allowed.contains axiomName do
         logError m!"{declName} depends on disallowed axiom {axiomName}"
       usedAxioms := usedAxioms.insert axiomName
-  IO.println "Axioms used by Itasca, ItascaRust, and the WebAssembly extensions:"
+  IO.println "Axioms used by Itasca, ItascaRust, and WebAssembly:"
   for axiomName in usedAxioms.toArray.qsort Name.lt do
     IO.println s!"  {axiomName}"

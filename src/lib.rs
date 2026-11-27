@@ -13,7 +13,7 @@
 //! ```
 //!
 //! [`validate_streaming`] supports separate input regions, parallel workers,
-//! and compiler callbacks. Its guarantees require coherent source bytes and
+//! and validation callbacks. Its guarantees require coherent source bytes and
 //! workers that preserve issued batch identities. Callbacks must return for
 //! termination and accept for completeness. Only a successful driver result
 //! certifies the complete module.
@@ -22,10 +22,6 @@
 //! [`ModuleVisitor`] observes custom sections. Callback errors can reject valid
 //! input; callbacks cannot bypass validation. See [`validate_streaming`] for
 //! source, worker, and storage obligations.
-//!
-//! [`runtime`] compiles validated modules, instantiates them, and invokes their
-//! functions. Its Lean proofs relate each step to the source semantics under
-//! explicit platform and host-callback contracts.
 
 #![cfg_attr(not(feature = "std"), no_std)]
 // Aeneas requires explicit Vec::new() + push() instead of vec![] macro
@@ -68,6 +64,3 @@ pub use wasm_types::{
 };
 
 mod stream;
-
-/// Instantiation and execution.
-pub mod runtime;

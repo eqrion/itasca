@@ -76,7 +76,7 @@ def Program (data : Slice U8) (env : metadata.Env)
     Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
     Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops →
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
       Bounds data s
 
 /-- The normalized head instruction has a primitive generated typing rule
@@ -90,7 +90,7 @@ def AtomProgram (data : Slice U8) (env : metadata.Env)
     Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
     Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
 /-- `Program` holds for every emitted token list shorter than `n`. -/
@@ -250,7 +250,7 @@ theorem atom_of_leaf (data : Slice U8) (env : metadata.Env)
     hstep C decoded g opcode op bytes next front input output hmatch hlabels hcap
       himmediate hspan hreal htyped hdecl
   have hout' : f.Output (front ++ output) s := hout
-  refine ⟨s, .single hbounds f.nonempty hread hrun, hcursor, hout', ?_⟩
+  refine ⟨s, .single f.nonempty hread hrun, hcursor, hout', ?_⟩
   apply bounds_after hbounds hat hcursor
   · have hlenbytes : bytes.length + 1 = next.val - st.core.pos.val := by
       have := hspan.length
@@ -365,13 +365,13 @@ theorem labels_push {env : metadata.Env} {C : context} {st s : code.BodyState}
 estimate; callers derive bounds from the enclosing entry. -/
 theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32) (next : Usize)
-    (ins outs : List wasm_types.ValueType) (bound : Bounds data st)
+    (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .end_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
     (hthen : f.core.current.kind = .Then → ins = outs)
     (ht : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (outs.map Translation.valueType))
     (hcap : f.core.outer.length + outs.length ≤ Usize.max) :
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       s.core.ctrls.val = f.core.parents ∧ s.blocks.val = f.parents ∧
       s.core.vals.val = if f.parents = [] then f.core.outer else f.core.outer ++ outs.map code.StackType.Val := by
   have hs := hat.span
@@ -388,19 +388,19 @@ theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
   subst r
   have hstep : step { st with core := { st.core with pos := pos } } data env ctx index 0x0B#u8 =
       .ok (.Ok (), s) := by simpa [step] using hr
-  exact ⟨s, .single bound f.nonempty (by rw [hbyte] at hread; exact hread)
+  exact ⟨s, .single f.nonempty (by rw [hbyte] at hread; exact hread)
     hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
 theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (env : metadata.Env) (ctx : code.Context) (index : U32) (next : Usize)
-    (ins outs : List wasm_types.ValueType) (bound : Bounds data st)
+    (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .else_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
     (hthen : f.core.current.kind = .Then)
     (ht : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (outs.map Translation.valueType))
     (hcap : f.core.outer.length + ins.length ≤ Usize.max) :
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       s.core.ctrls.val = f.core.parents ++ [{ f.core.current with kind := .Else, polymorphic_base := false }] ∧
       s.blocks = st.blocks ∧ s.core.vals.val = f.core.outer ++ ins.map code.StackType.Val := by
   have hs := hat.span
@@ -417,7 +417,7 @@ theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
   subst r
   have hstep : step { st with core := { st.core with pos := pos } } data env ctx index 0x05#u8 =
       .ok (.Ok (), s) := by simpa [step] using hr
-  exact ⟨s, .single bound f.nonempty (by rw [hbyte] at hread; exact hread)
+  exact ⟨s, .single f.nonempty (by rw [hbyte] at hread; exact hread)
     hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
@@ -429,7 +429,7 @@ theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
     (hat : At data st.core.pos (form.token bt) next)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (ht : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ form.args ins)) :
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       EnterForward st s form bt ins outs f.core.outer f.core.operands front ∧ Bounds data s := by
   have hs := hat.span
   have hinbounds : st.core.pos.val < data.length := by omega
@@ -450,7 +450,7 @@ theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
       .ok (.Ok (), s) := by
     rw [hop.1]
     rcases initial with rfl | rfl | rfl <;> simpa [step, Frames.Form.opcode, Frames.Form.kind] using hr
-  refine ⟨s, .single hb f.nonempty (by rw [hbyte] at hread; exact hread) hstep, hp, heffect, ?_⟩
+  refine ⟨s, .single f.nonempty (by rw [hbyte] at hread; exact hread) hstep, hp, heffect, ?_⟩
   obtain ⟨remaining, base, hlen, hbase, hreal, hctrls, hblocks, hvals⟩ := heffect
   apply bounds_after hb hat hp
   · have htwo := hd.span.1
@@ -483,14 +483,14 @@ theorem execute_body {data : Slice U8} {env : metadata.Env}
     (hthen : f.core.current.kind = .Then → ins = outs)
     (hcap : f.core.outer.length + outs.length ≤ Usize.max)
     (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       s.core.ctrls.val = f.core.parents ∧ s.blocks.val = f.parents ∧
       s.core.vals.val = if f.parents = [] then f.core.outer else f.core.outer ++ outs.map code.StackType.Val := by
   obtain ⟨middle, hinner, hend⟩ := hbytes.split
-  obtain ⟨mid, hrun, hpos, hout', hbounds⟩ :=
+  obtain ⟨mid, hrun, hpos, hout', _⟩ :=
     program C st f middle _ _ hm hl hb hinner ht hbody hdecl
   obtain ⟨g, hgp, hgc, hp, ho, hk, hbase, hreal⟩ := hout'.next
-  obtain ⟨s, hclose, hp', hc', hb', hv'⟩ := execute_end g data env ctx index next ins outs hbounds
+  obtain ⟨s, hclose, hp', hc', hb', hv'⟩ := execute_end g data env ctx index next ins outs
     (by simpa [hpos] using hend.single) (by simpa [hgc] using hin) (by simpa [hgc] using hout)
     (by simpa [hk] using hthen) hreal (by simpa [ho] using hcap)
   exact ⟨s, hrun.append hclose, hp', by simpa [hp] using hc', by simpa [hgp] using hb',
@@ -545,7 +545,7 @@ theorem run_closed_child {data : Slice U8} {env : metadata.Env}
       (.mk_functype (.mk_list (ins.map Translation.valueType)) (.mk_list (outs.map Translation.valueType))))
     (hthen : form = .then_ → ins = outs)
     (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
-    ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
+    ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ outs.map Translation.valueType) s ∧ Bounds data s := by
   obtain ⟨header, hheadc, hrest⟩ :=
     (show Consumed data st.core.pos ([form.token bt] ++ (tokens ++ [WebAssembly.Binary.TokenWith.end_])) next by
@@ -695,7 +695,7 @@ theorem atom_if_else {data : Slice U8} {env : metadata.Env}
       (show Consumed data entered.core.pos
           (yesTokens ++ ([.else_] ++ noTokens ++ [.end_])) next by
         simpa [hpos, List.append_assoc] using hrest)
-    obtain ⟨yesState, hyesRun, hyesPos, hyesOut, hyesBounds⟩ :=
+    obtain ⟨yesState, hyesRun, hyesPos, hyesOut, _⟩ :=
       smaller yesTokens yes (by simp) hyes _ entered child yesEnd
         (ins.map Translation.valueType) (outs.map Translation.valueType) (hm.enter _) hlabel hbounds
         hybytes (concrete_realizes ins) hyesBody (Spec.DeclaredReferences.Instruction.if_else_iff.mp hdecl).1
@@ -717,7 +717,7 @@ theorem atom_if_else {data : Slice U8} {env : metadata.Env}
       rw [f.core.vals, List.length_append] at hvc
       simp only [List.length_append]; omega
     obtain ⟨elseState, helseRun, helsePos, hec, heb, hev⟩ :=
-      execute_else yesFrame data env ctx index elseStart ins outs hyesBounds hatElse hin hout rfl hyr hcapIns
+      execute_else yesFrame data env ctx index elseStart ins outs hatElse hin hout rfl hyr hcapIns
     let elseFrame : Frame elseState :=
       ⟨⟨yesFrame.core.parents, {yesFrame.core.current with kind := .Else, polymorphic_base := false},
         yesFrame.core.outer, ins.map code.StackType.Val, hec, hev, yesFrame.core.base⟩,

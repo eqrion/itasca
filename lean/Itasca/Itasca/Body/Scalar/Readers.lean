@@ -93,7 +93,7 @@ section
 section
 
 /-!
-Exact source-prefix advancement shared by validator preservation and compiler replay.
+Exact source-prefix advancement for validator preservation.
 `ReaderPost` retains the decoded instruction and the original frame zipper as well
 as the ordinary `Pending.After` invariant.
 -/
@@ -220,10 +220,8 @@ end
 section
 
 /-!
-Reader facts for constants and terminal scalar instructions, shared by validator
-preservation and compiler inversion. Each successful read retains the exact byte
-encoding, stack effect, and advancement of the original source prefix. These
-results make no assumption about visitor callbacks.
+A successful read of a constant or terminal scalar instruction records its exact
+byte encoding, stack effect, and advancement of the original source prefix.
 -/
 
 namespace Itasca.Body
@@ -378,9 +376,8 @@ end
 section
 
 /-!
-Shared exact source-prefix advancement for local and global index readers.
-The operand-reader certificate supplies typing and bytes; both validator forward
-preservation and compiler inversion use this construction.
+Local and global index readers advance the exact source prefix using the typing
+and bytes supplied by the operand-reader certificate.
 -/
 namespace Itasca.Body
 open Aeneas Aeneas.Std Itasca
@@ -429,9 +426,8 @@ end
 section
 
 /-!
-Shared exact source-prefix and operand facts for drop and untyped select.
-Validator preservation and compiler inversion project the same reader result,
-including polymorphic operands and the concrete/bottom select result.
+Exact source-prefix and operand facts for drop and untyped select, including
+polymorphic operands and the concrete or bottom result of select.
 -/
 namespace Itasca.Body
 open Aeneas Aeneas.Std Itasca
@@ -746,9 +742,8 @@ end
 section
 
 /-!
-Shared scalar load/store source-prefix construction from exact memory-reader facts.
-Both validator preservation and compiler inversion retain the same decoded memarg,
-byte encoding, and typed operand effect.
+Scalar loads and stores advance the exact source prefix while recording the decoded
+memarg, byte encoding, and typed operand effect.
 -/
 namespace Itasca.Body
 open Aeneas Aeneas.Std Itasca

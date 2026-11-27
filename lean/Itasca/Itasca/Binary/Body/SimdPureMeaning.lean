@@ -21,10 +21,9 @@ section
 /-!
 # Implementation classifications for pure SIMD
 
-Implementation proofs classify pure SIMD instructions by stack shape. Public
-grammar and compiler relations use SpecTec syntax and judgments directly. This
-finite vocabulary supports case analysis and is connected to those relations by
-checked correspondence and principal-signature theorems.
+The validator proofs classify pure SIMD instructions by stack shape.
+Correspondence and principal-signature theorems connect those classifications
+to the SpecTec syntax and typing judgments used by the binary grammar.
 -/
 
 namespace Itasca.Body.Simd
@@ -250,7 +249,7 @@ inductive Operation where
   | pure254
   | pure255
 
-/-- Binary subopcode of each compiler classification. -/
+/-- Binary subopcode of each pure SIMD instruction. -/
 def Operation.opcode : Operation → Nat
   | .pure14 => 14
   | .pure15 => 15
@@ -872,7 +871,7 @@ section
 # Correctness of pure SIMD classifications
 
 The public grammar maps bytes to SpecTec instructions without carrying proofs.
-This module proves that the compiler classifications agree with that mapping and
+This module proves that the validator classifications agree with that mapping and
 have the stated signatures. The private certificates are a construction device;
 no public semantic definition depends on them.
 -/

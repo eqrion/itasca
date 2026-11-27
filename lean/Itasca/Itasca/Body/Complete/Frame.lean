@@ -142,58 +142,5 @@ theorem bounds_after {data st s token next} (h : Bounds data st)
   have := h.ctrls
   refine ⟨h.size, by simpa [hp] using hs.2, ?_, ?_⟩ <;> rw [hp] <;> omega
 
-
-/-- A successful reader prefix whose pre-dispatch operand stacks satisfy the
-source-size estimate. Keeping this evidence through composition lets the compiler
-use completeness without exposing validator states in its public budget. The
-terminal state is accounted for separately, since an inner `end` can restore a
-polymorphic result stack. -/
-inductive BoundedExecution (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32) : code.BodyState → code.BodyState → Prop where
-  | nil (st) : BoundedExecution data env ctx index st st
-  | cons (st next last : code.BodyState) (opcode : U8) (pos : Usize) :
-      st.core.vals.val.length ≤ 500 * data.length →
-      st.blocks.val ≠ [] →
-      reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)) →
-      step { st with core := { st.core with pos := pos } } data env ctx index opcode =
-        .ok (.Ok (), next) →
-      BoundedExecution data env ctx index next last →
-      BoundedExecution data env ctx index st last
-
-theorem BoundedExecution.append {data env ctx index a b c}
-    (ab : BoundedExecution data env ctx index a b)
-    (bc : BoundedExecution data env ctx index b c) :
-    BoundedExecution data env ctx index a c := by
-  induction ab with
-  | nil => exact bc
-  | cons st next last opcode pos bound nonempty read step rest ih =>
-    exact .cons st next c opcode pos bound nonempty read step (ih bc)
-
-theorem BoundedExecution.single {data env ctx index st next opcode pos}
-    (bound : Bounds data st) (nonempty : st.blocks.val ≠ [])
-    (read : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
-    (step : Body.step { st with core := { st.core with pos := pos } }
-      data env ctx index opcode = .ok (.Ok (), next)) :
-    BoundedExecution data env ctx index st next :=
-  .cons st next next opcode pos (by have := bound.vals; have := bound.pos; omega)
-    nonempty read step (.nil next)
-
-theorem BoundedExecution.forget {data env ctx index st last}
-    (run : BoundedExecution data env ctx index st last) :
-    Execution data env ctx index st last := by
-  induction run with
-  | nil => exact .nil _
-  | cons st next last opcode pos bound nonempty read step rest ih =>
-    exact .cons st next last opcode pos nonempty read step ih
-
-theorem BoundedExecution.change_context {data env ctx index st last}
-    (run : BoundedExecution data env ctx index st last) (ctx' : code.Context)
-    (locals : ctx.locals = ctx'.locals) : BoundedExecution data env ctx' index st last := by
-  induction run with
-  | nil => exact .nil _
-  | cons st next last opcode pos bound nonempty read step rest ih =>
-    exact .cons st next last opcode pos bound nonempty read
-      ((step_context _ data env ctx ctx' index opcode locals).symm.trans step) ih
-
 end Completeness
 end Itasca.Body

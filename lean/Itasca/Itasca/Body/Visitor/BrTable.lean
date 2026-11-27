@@ -287,60 +287,6 @@ namespace Itasca
 
 open Body.Visitor
 
-/-- One branch-table iteration exposes the shared callback body, then either
-returns or resumes the loop. Clients use this equation without unfolding the
-extracted implementation again. -/
-theorem code.branch_table_with_loop.step_eq {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (v : V)
-    (count : U32) (arity : Option Usize) (i : U32) :
-    code.branch_table_with_loop visitor st.core data env v count arity i = (do
-      let cf ← tableBody visitor data env count st v arity i
-      match cf with
-      | .done result => .ok result
-      | .cont (core, next, arity', j) =>
-        code.branch_table_with_loop visitor core data env next count arity' j) := by
-  unfold code.branch_table_with_loop
-  rw [loop]
-  simp only [table_body_eq visitor data env count st v arity i]
-  congr 1
-  funext cf
-  cases cf with
-  | cont next => rcases next with ⟨core, next, arity, j⟩; rfl
-  | done result => rfl
-
-/-- An accepted callback continues validation without an error. -/
-theorem code.visit.accepted : code.visit (.Ok ()) = .ok (.Ok ()) := rfl
-
-/-- Successful selector decoding supplies the exact stack and count passed to
-the label loop. The wrapper has no callbacks of its own. -/
-theorem code.branch_table_with.accepted_entry {V : Type} (visitor : code.OpVisitor V) (st final : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (before after : V)
-    (run : code.branch_table_with visitor st data env before = .ok (.Ok (), final, after)) :
-    ∃ count first popped value,
-      reader.read_u32_leb data st.core.pos = .ok (.Ok (count, first)) ∧
-      code.pop_with_type {st.core with pos := first} .I32 = .ok (.Ok value, popped) ∧
-      code.branch_table_with_loop visitor popped data env before count none 0#u32 =
-        .ok (.Ok (), final, after) := by
-  unfold code.branch_table_with at run
-  obtain ⟨result, read, run⟩ := Computation.bind_ok_inv _ _ _ run
-  cases result with
-  | Err error =>
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      Std.uncurry, core.convert.FromSame.from, bind_tc_ok, Result.ok.injEq,
-      Prod.mk.injEq, reduceCtorEq, false_and] at run
-  | Ok pair =>
-    obtain ⟨count, first⟩ := pair
-    simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at run
-    obtain ⟨⟨result, popped⟩, pop, run⟩ := Computation.bind_ok_inv _ _ _ run
-    cases result with
-    | Err error =>
-      simp only [bind_ok,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        Std.uncurry, core.convert.FromSame.from, bind_tc_ok, Result.ok.injEq,
-      Prod.mk.injEq, reduceCtorEq, false_and] at run
-      | Ok value => exact ⟨count, first, popped, value, read, pop, by simpa only [Std.uncurry, bind_ok] using run⟩
-
 /-- Successful branch-table execution transfers to every accepting replacement,
 with exactly the same validation state. -/
 theorem code.branch_table_with_loop.accepted_transfer {V W : Type}

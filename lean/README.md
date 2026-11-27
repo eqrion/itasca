@@ -13,15 +13,9 @@ Run these commands from `lean/`. The Lake project for proof development is `Itas
 | Check proofs for placeholders and report axioms | `just audit` |
 | Install the pinned Charon and Aeneas for extraction | `just install-tools` |
 | Regenerate the Rust model or compare it with the committed copy | `just extract` or `just extract-check` |
-| Apply source patches to the pinned SpecTec checkout | `just spec-patch` |
+| Prepare patched SpecTec inputs in scratch space | `just spec-patch` |
 | Regenerate the Wasm model or compare it with the committed copy | `just spec-update` or `just spec-check` |
 
-Ordinary proof builds use the checked-in models. For SpecTec regeneration, initialize the `vendor/spectec` submodule and apply the source patches first. The generation recipe also applies the [builtin definitions patch](../patches/spectec-wasm2-builtins.patch) to the Lean output. Those definitions are part of the trusted specification.
+Ordinary proof builds use the checked-in models. For SpecTec regeneration, initialize the `vendor/spectec` submodule and run `just spec-update`. This stages the four syntax and typing inputs at the pinned revision under `.build/spec`, applies the source patches there, and applies the [Lean output patch](../patches/spectec-wasm2-lean.patch). The patches preserve the existing validation judgments, including the UTF-8 relation used by name well-formedness.
 
 The generated syntax and judgments are in the `WebAssembly` namespace. For example, `import WebAssembly` provides `WebAssembly.instr` and `WebAssembly.Module_ok`. Import `WebAssembly.Binary` for `WebAssembly.Binary.ModuleEncoding`, whose arguments are a raw module and a `List UInt8`.
-
-## Execution boundary
-
-Runtime guarantees depend on the embedder's allocator, memory, floating-point operations, interrupts, and host callbacks. For example, host callbacks must preserve the required store invariants even when they trap after committing effects. Native allocation, floating-point behavior, and issuance of fresh store identities sit on the Rust side of this boundary.
-
-Read the [public definitions](Itasca/Itasca/Results/Definitions/README.md) for the precise obligations and the [runtime example](Itasca/Itasca/Examples/Runtime.lean) for a host that satisfies them. The [runtime proof guide](Itasca/Itasca/Runtime/README.md) traces the proofs of compilation, invocation, and instantiation.

@@ -869,11 +869,6 @@ theorem instrument_records {V : Type} (visitor : code.OpVisitor V) :
   rintro ⟨v, log⟩ event reply ⟨v', log'⟩ h
   exact ((record_ok_iff log event _ reply v' log').mp (by simpa using h)).2
 
-/-- Every event can be invoked on an accepting visitor, and the reply is `.Ok ()`. -/
-theorem accepts_invoke {V : Type} {visitor : code.OpVisitor V}
-    (h : Visitor.Accepts visitor) (v : V) (event : Event) :
-    ∃ v', invoke visitor v event = .ok (.Ok (), v') := h v event
-
 /-- Event-wise acceptance is exactly the public accepting-visitor contract. -/
 theorem accepts_of_invoke {V : Type} (visitor : code.OpVisitor V)
     (h : ∀ v event, ∃ v', invoke visitor v event = .ok (.Ok (), v')) : Visitor.Accepts visitor := h

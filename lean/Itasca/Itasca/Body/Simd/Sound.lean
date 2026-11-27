@@ -308,9 +308,8 @@ end
 section
 
 /-!
-Shared exact source-prefix and operand effects for all fixed-operand SIMD readers.
-Validator preservation projects the total reader specification; compiler inversion
-retains the same read state and stack effect without any visitor premise.
+The fixed-operand SIMD reader specification retains the exact source prefix,
+reader state, and stack effect.
 -/
 namespace Itasca.Body
 open Aeneas Aeneas.Std Itasca
@@ -365,26 +364,6 @@ theorem Pending.fixed_reader {data env locals index st}
   exact p.append_reader_context C outer spine header base out source
     p.current.ctrl.polymorphic_base values wf finalEncoded finalTyped finalControls finalBlocks valuesEq
     declared
-
-theorem Pending.fixed_reader_accepted {data env locals index st}
-    (p : Body.Pending data env locals index st)
-    (position : Usize) (out : code.OpIterState)
-    (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (source : instr)
-    (capacity : st.core.vals.val.length < Usize.max)
-    (wf : wf_instr source)
-    (declared : Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) source)
-    (typed : ∀ C, wf_context C → Translation.Environment.Matches env ⟨locals,p.ft.results⟩ C →
-      Instr_ok C source (.mk_functype (.mk_list (Body.Simd.inputTypes inputs))
-        (.mk_list (Body.Simd.outputTypes output))))
-    (encoded : Body.At data p.start (.plain source) position)
-    (read : Body.Simd.readFixed {st.core with pos := position} inputs output = .ok (.Ok (),out)) :
-    out.ctrls = st.core.ctrls ∧ out.pos = position ∧
-      ∃ values, Body.Simd.FixedEffect p.current.ctrl.polymorphic_base p.current.vals
-        inputs output values ∧ Body.ReaderPost p out source p.current.ctrl.polymorphic_base values := by
-  have effect := p.fixed_reader position inputs output source capacity wf declared typed encoded
-  rw [read, WP.spec_ok] at effect
-  exact ⟨effect.1, effect.2.1, effect.2.2 () rfl⟩
 
 end Itasca.Body
 

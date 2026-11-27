@@ -276,68 +276,6 @@ end
 
 section
 
-/-! ## CodeEntry / Prepared -/
-
-section CodeEntryPrepared
-
-/-!
-### Prepared entry state
-
-`Prepared` describes the framed body, local declarations and initial validator state supplied to body validation.
--/
-
-open Aeneas Aeneas.Std
-
-namespace Itasca.CodeEntry
-
-/-- Decoded entry metadata before the function-start callback. No body or callback acceptance is assumed. -/
-structure Prepared (data : Slice U8) (env : metadata.Env) (index start : Usize) where
-  /-- Exclusive entry end in the supplied code-region coordinates. -/
-  finish : Usize
-  /-- Type-table index assigned to this defined function. -/
-  typeIdx : U32
-  /-- Function signature selected by typeIdx. -/
-  ft : wasm_types.FuncType
-  /-- Decoded count/type groups of local declarations. -/
-  groups : List (U32 × wasm_types.ValueType)
-  /-- Initial validator context containing parameters, locals and results. -/
-  ctx : code.Context
-  /-- Code-region cursor immediately after the size prefix. -/
-  content : Usize
-  /-- Code-region cursor immediately after the local declaration vector. -/
-  bodyStart : Usize
-  /-- Exact instruction bytes, including the final end opcode. -/
-  body : Slice U8
-  /-- Encoded content size, including local declarations and instruction bytes. -/
-  size : U32
-  /-- The defined-function index is within its type-index table. -/
-  index_lt : index.val < env.func_type_indices.val.length
-  /-- The function-index table selects this typeIdx. -/
-  index_type : env.func_type_indices.val[index.val] = typeIdx
-  /-- The selected type index is within the signature table. -/
-  type_lt : typeIdx.val < env.types.val.length
-  /-- That table entry is exactly ft. -/
-  function_type : env.types.val[typeIdx.val] = ft
-  /-- The size prefix occupies the span from start to content. -/
-  header : Binary.Leb128.Decoded data start size content
-  /-- The exclusive entry end is content plus the decoded size. -/
-  extent : finish.val = content.val + size.val
-  /-- The grouped locals occupy the exact content-to-bodyStart span. -/
-  locals_bytes : Binary.At (Binary.VecEncoding Binary.LocalEncoding)
-    data content groups bodyStart
-  /-- Expanded declared locals fit the implementation cap; parameters are separate. -/
-  locals_bound : (CodeEntry.Locals.declared groups).length ≤ limits.MAX_LOCALS.val
-  /-- Validator locals are the function parameters followed by expanded declarations. -/
-  context_locals : ctx.locals.val = ft.params.val ++ CodeEntry.Locals.declared groups
-  /-- Validator results are the selected function results. -/
-  context_results : ctx.results.val = ft.results.val
-  /-- The code-region bodyStart-to-finish span contains exactly body.val. -/
-  body_bytes : Body.Scalar.BytesAt data bodyStart body.val finish
-
-end Itasca.CodeEntry
-
-end CodeEntryPrepared
-
 /-! ## Entry -/
 
 section
@@ -633,119 +571,6 @@ end Itasca
 
 end
 
-/-! ## ReachedEntry -/
-
-section
-
-namespace Itasca
-open Aeneas Aeneas.Std
-
-/-- Entry parsing and local-vector construction return on malformed bytes.
-Only the actual prepared function-start and body calls need normal-return proofs. -/
-theorem metadata.validate_code_entry_with.total_on {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index : Usize) (v : V)
-    (hbound : CodeEntry.Bounds env)
-    (start : ∀ prepared : CodeEntry.Prepared data env index pos ,
-      visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish ⦃ _ => True ⦄)
-    (bodyTotal : ∀ (prepared : CodeEntry.Prepared data env index pos ) started,
-      visitor.on_function_start v prepared.ctx prepared.typeIdx prepared.bodyStart prepared.finish = .ok (.Ok (),started) →
-      code.validate_body_with visitor prepared.body env prepared.ctx prepared.typeIdx started ⦃ _ => True ⦄) :
-    metadata.validate_code_entry_with visitor data pos env index v ⦃ _ => True ⦄ := by
-  unfold metadata.validate_code_entry_with
-  dsimp only
-  split
-  · simp
-  · rename_i hindex
-    have hi : index.val < env.func_type_indices.val.length := by scalar_tac
-    obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
-    rw [hr]
-    cases r with
-    | Err e =>
-        simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          error.Error.Insts.CoreConvertFromOpError.from]
-    | Ok pair =>
-        obtain ⟨size, content⟩ := pair
-        have hs := hp.span
-        simp [core.result.Result.Insts.CoreOpsTry.branch]
-        step
-        obtain ⟨r, hh, hhpost⟩ := WP.spec_imp_exists (metadata.have_bytes.spec data content n hs.2.2)
-        rw [hh]
-        cases r with
-        | Err e =>
-            simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-        | Ok u =>
-            cases u
-            have hbytes := hhpost.1.mp rfl
-            simp
-            step
-            obtain ⟨r, hl, hlpost⟩ := WP.spec_imp_exists (metadata.decode_locals.spec data content )
-            rw [hl]
-            cases r with
-            | Err e =>
-                simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok pair =>
-                obtain ⟨declared, bodyStart⟩ := pair
-                obtain ⟨groups, hg, hd, hcap⟩ := hlpost
-                simp
-                split
-                · simp
-                · rename_i hbodyStart
-                  step
-                  step
-                  split
-                  · simp
-                  · rename_i htype
-                    have hti : type_idx.val < env.types.val.length := by scalar_tac
-                    step
-                    have hftmem : ft ∈ env.types.val := by
-                      rw [ft_post]
-                      exact List.getElem_mem _
-                    have hparams := hbound ft hftmem
-                    have hroom : ft.params.val.length + declared.val.length ≤ Usize.max := by omega
-                    obtain ⟨v1, hv1, v1_post⟩ := WP.spec_imp_exists
-                      (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
-                        (alloc.vec.Vec.deref declared) (by simpa [alloc.vec.Vec.deref] using hroom))
-                    obtain ⟨v2, hv2, v2_post⟩ := WP.spec_imp_exists
-                      (metadata.copy_value_types.spec (alloc.vec.Vec.deref ft.results))
-                    rw [hv1]
-                    simp only [bind_ok]
-                    rw [hv2]
-                    simp only [bind_ok]
-                    have hslice : core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice U8)
-                        data ⟨bodyStart, «end»⟩ ⦃ body => body.val = data.val.slice bodyStart.val «end».val ⦄ := by
-                      step*
-                    obtain ⟨body,sliced,bodyValue⟩ := WP.spec_imp_exists hslice
-                    have sliced : core.slice.index.SliceIndexRangeUsizeSlice.index
-                        ⟨bodyStart,«end»⟩ data = .ok body := by simpa using sliced
-                    let prepared : CodeEntry.Prepared data env index pos := {
-                      finish := «end», typeIdx := type_idx, ft := ft, groups := groups, ctx := ⟨v1,v2⟩
-                      content := content, bodyStart := bodyStart, body := body, size := size
-                      index_lt := hi, index_type := type_idx_post.symm, type_lt := hti
-                      function_type := by simpa [t_post] using ft_post.symm
-                      header := hp, extent := by scalar_tac, locals_bytes := hg
-                      locals_bound := by simpa [hd] using hcap
-                      context_locals := by simpa [alloc.vec.Vec.deref,hd] using v1_post
-                      context_results := by simpa [alloc.vec.Vec.deref] using v2_post
-                      body_bytes := Binary.slice_bytes (by scalar_tac) (by scalar_tac) bodyValue }
-                    obtain ⟨⟨reply,started⟩,hstart,_⟩ := WP.spec_imp_exists (start prepared)
-                    dsimp only [prepared] at hstart
-                    rw [hstart]
-                    cases reply with
-                    | Err error => simp
-                    | Ok acceptedUnit =>
-                      cases acceptedUnit
-                      obtain ⟨⟨reply,ended⟩,run,_⟩ := WP.spec_imp_exists (bodyTotal prepared started hstart)
-                      dsimp only [prepared] at run
-                      simp only [bind_ok,sliced]
-                      simp only [Std.bind_assoc,Std.uncurry,bind_ok]
-                      rw [run]
-                      cases reply <;> simp
-
-end Itasca
-
-end
-
 /-! ## Framing -/
 
 section
@@ -753,11 +578,8 @@ section
 /-!
 # Code entry framing
 
-Specification of `metadata.code_entry_extent`, which reads a code entry's declared size and returns
-the content start and entry end. `metadata.code_entry_extent.spec` gives `Module.Code.Extent` on
-success, `metadata.code_entry_extent.complete` shows it accepts any entry with such an extent, and
-`metadata.code_entry_extent.frames` shows a successful `metadata.validate_code_entry` ends at the
-same boundary.
+`metadata.code_entry_extent.spec` gives the `Module.Code.Extent` corresponding to the declared size,
+content start, and entry end on success.
 -/
 
 open Aeneas Aeneas.Std
@@ -793,23 +615,6 @@ theorem metadata.code_entry_extent.spec (data : Slice U8) (pos : Usize) :
           step
           exact ⟨size, hp, by scalar_tac, by scalar_tac⟩
 
-/-- `metadata.code_entry_extent` returns the content start and end of any entry with that `Extent`. -/
-theorem metadata.code_entry_extent.complete (data : Slice U8) (pos first next : Usize)
-    (h : Module.Code.Extent data pos first next) :
-    metadata.code_entry_extent data pos = .ok (.Ok (first, next)) := by
-  obtain ⟨count, hc, hn, hb⟩ := h
-  have hs : metadata.code_entry_extent data pos ⦃ r => r = .Ok (first, next) ⦄ := by
-    simp [metadata.code_entry_extent, reader.read_u32_leb.complete data pos count first hc,
-      core.result.Result.Insts.CoreOpsTry.branch]
-    step
-    rw [metadata.have_bytes.complete data first n (by scalar_tac)]
-    simp only [bind_ok]
-    step*
-    congr 3
-    apply UScalar.eq_of_val_eq
-    scalar_tac
-  obtain ⟨r, hr, rfl⟩ := WP.spec_imp_exists hs
-  exact hr
 
 end Itasca
 

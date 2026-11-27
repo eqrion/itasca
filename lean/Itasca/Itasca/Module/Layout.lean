@@ -142,68 +142,6 @@ end Itasca.Module.Sound
 
 end
 
-/-! ## Limits -/
-
-section
-
-/-!
-# Resource bounds on module encodings
-
-Strengthens the independent module grammar with the implementation caps that completeness needs:
-`CodeEncodingWithinLimits` bounds one code entry, `ModuleEncodingWithinLimits` bounds the whole
-encoding and every entry, and `ModuleSignaturesWithinLimits` bounds signature sizes. The caps
-are `limits.MAX_*` constants and are separate from language validity. The file also lifts
-relation weakening (`.imp`) through the grammar combinators.
--/
-
-open Aeneas Aeneas.Std
-
-namespace Itasca.Binary
-
-theorem Rep.imp {α : Type} {R S : α → List U8 → Prop} {values bytes}
-    (h : Rep R values bytes) (hs : ∀ value bs, R value bs → S value bs) : Rep S values bytes := by
-  induction h with
-  | nil => exact .nil
-  | cons hp _ ih => exact .cons (hs _ _ hp) ih
-
-theorem VecEncoding.imp {α : Type} {R S : α → List U8 → Prop} {values bytes}
-    (h : VecEncoding R values bytes) (hs : ∀ value bs, R value bs → S value bs) :
-    VecEncoding S values bytes := by
-  obtain ⟨count, entries, hn, he, hb⟩ := h
-  exact ⟨count, entries, hn, Rep.imp he hs, hb⟩
-
-theorem PaddedEncoding.imp {α : Type} {R S : α → List U8 → Prop} {id absent value bytes}
-    (h : PaddedEncoding id R absent value bytes) (hs : ∀ value bs, R value bs → S value bs) :
-    PaddedEncoding id S absent value bytes := by
-  obtain ⟨customs, sec, hc, hr, he⟩ := h
-  refine ⟨customs, sec, hc, ?_, he⟩
-  cases hr with
-  | absent => exact .absent
-  | present hp =>
-    obtain ⟨size, payload, hn, hval, hb⟩ := hp
-    exact .present ⟨size, payload, hn, hs _ _ hval, hb⟩
-
-theorem ModuleEncodingWith.imp {R S : Code → List U8 → Prop} {raw bytes}
-    (h : ModuleEncodingWith R raw bytes) (hs : ∀ code bs, R code bs → S code bs) :
-    ModuleEncodingWith S raw bytes := by
-  obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, hv⟩ := h
-  exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount,
-    PaddedEncoding.imp hc (fun _ _ hv => VecEncoding.imp hv hs), hd, hcs, hb, hv⟩
-
-/-- Forgetting the caps leaves a `ModuleEncodingWith` the plain code encoding. -/
-theorem ModuleEncodingWithinLimits.encoding {raw bytes}
-    (h : ModuleEncodingWithinLimits raw bytes) :
-    ModuleEncodingWith (CodeEntry.CodeEncoding) raw bytes := by
-  have spans := Source.limitedReaderSpans h.2
-  rw [Source.readerBytes_bytes] at spans
-  exact ModuleEncodingWith.imp spans (fun _ _ hc => hc.encoding)
-
-end Itasca.Binary
-
-end
-
 /-! ## Layout -/
 
 section

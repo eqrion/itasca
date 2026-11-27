@@ -443,65 +443,6 @@ theorem stream.frame_entry.spec (data : Slice U8) (pos index offset : Usize) :
           simp only [bind_ok, WP.spec_ok]
           exact ⟨content, finish, hp, rfl, hsp.1, hcp.1, hfp.1, hfp.2⟩
 
-/-- A declared extent within the module offset cap can always be framed. -/
-theorem stream.frame_entry.complete (data : Slice U8) (pos index offset content finish : Usize)
-    (hext : Module.Code.Extent data pos content finish)
-    (hbound : offset.val + finish.val ≤ limits.MAX_MODULE_BYTES.val) :
-    ∃ entry, stream.frame_entry data pos index offset = .ok (.Ok entry) ∧
-      Stream.Framing.EntryFrame data pos index offset entry := by
-  have hp := hext.span
-  obtain ⟨start, hs, hsp⟩ := limits.add_offset.complete offset pos (by omega)
-  obtain ⟨contents, hc, hcp⟩ := limits.add_offset.complete offset content (by omega)
-  obtain ⟨last, hf, hfp⟩ := limits.add_offset.complete offset finish hbound
-  refine ⟨⟨index, start, contents, last⟩, ?_,
-    content, finish, hext, rfl, hsp, hcp, hfp, by change last.val ≤ _; omega⟩
-  simp [stream.frame_entry, metadata.code_entry_extent.complete data pos content finish hext,
-    hs, hc, hf, core.result.Result.Insts.CoreOpsTry.branch]
-
-end Itasca
-
-end
-
-/-! ## BatchBounds -/
-
-section
-
-/-!
-# Worker cursor bounds
-
-`stream.StreamingBatch.next_entry.total` proves normal return when the batch's
-function-index interval fits in `Usize`. It permits malformed bytes and an
-exhausted dispatch cursor. Actual successful worker histories and their
-validation evidence are handled in `Stream/WorkersAndSource`.
--/
-
-open Aeneas Aeneas.Std
-
-namespace Itasca
-
-/-- Dispatch returns an ordinary result when function indices fit in `Usize`, including on
-malformed bytes and when the dispatch cursor is already exhausted. -/
-theorem stream.StreamingBatch.next_entry.total (batch : stream.StreamingBatch)
-    (hindex : batch.first_func.val + batch.num_funcs.val ≤ Usize.max) :
-    ∃ r, stream.StreamingBatch.next_entry batch = .ok r := by
-  have ht : stream.StreamingBatch.next_entry batch ⦃ _ => True ⦄ := by
-    unfold stream.StreamingBatch.next_entry
-    split
-    · simp
-    · rename_i hcount
-      step
-      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists
-        (stream.frame_entry.spec batch.code batch.dispatch_end index batch.code_offset)
-      rw [hr]
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok entry =>
-        obtain ⟨content, finish, _, _, _, _, hend, _⟩ := hp
-        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-        step*
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists ht
-  exact ⟨r, hr⟩
 
 end Itasca
 

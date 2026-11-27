@@ -109,8 +109,8 @@ theorem body_execution_of_programs (data : Slice U8) (env : metadata.Env)
       next.val = data.length ∧ BodyTokens tokens ops)
     (htyped : FunctionTyped env locals ft ops)
     (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
-    ∃ last, BoundedExecution data env ⟨locals, results⟩ index (initial index) last ∧
-      last.blocks.val = [] ∧ last.core.pos.val = data.length ∧ last.core.vals.val = [] := by
+    ∃ last, Execution data env ⟨locals, results⟩ index (initial index) last ∧
+      last.blocks.val = [] ∧ last.core.pos.val = data.length := by
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
   subst tokens
   obtain ⟨middle, hinner, hend⟩ := hbytes.split
@@ -129,18 +129,17 @@ theorem body_execution_of_programs (data : Slice U8) (env : metadata.Env)
         Translation.Environment.context, labelTypes, labelAt]
   have hbounds : Bounds data st := by
     constructor <;> simp [st, initial, hsize]
-  obtain ⟨s, hrun, hp, hout, hbound⟩ := hprograms inner ops hemits C st f middle []
+  obtain ⟨s, hrun, hp, hout, _⟩ := hprograms inner ops hemits C st f middle []
     (ft.results.val.map Translation.valueType) hmatch hlabels hbounds hinner
       (Body.Stack.realizes_default false []) htyped hdecl
   obtain ⟨g, hgp, hgc, hcp, hco, hck, hcbase, hreal⟩ := hout.next
-  obtain ⟨last, hclose, hp', hc', hb', hv'⟩ := execute_end g data env ⟨locals, ft.results⟩
-    index next ft.params.val ft.results.val hbound (by simpa [hp] using hend.single)
+  obtain ⟨last, hclose, hp', _, hb', _⟩ := execute_end g data env ⟨locals, ft.results⟩
+    index next ft.params.val ft.results.val (by simpa [hp] using hend.single)
     (by simp [hgc, f, inputs, resolve, hi]) (by simp [hgc, f, outputs, resolve, hi])
     (by simp [hck, f]) hreal (by simp [hco, f])
-  refine ⟨last, (hrun.append hclose).change_context ⟨locals, results⟩ rfl, ?_, ?_, ?_⟩
+  refine ⟨last, (hrun.append hclose).change_context ⟨locals, results⟩ rfl, ?_, ?_⟩
   · simpa [hgp, f] using hb'
   · simpa [hp'] using hfinish
-  · simpa [hgp, hco, f] using hv'
 
 theorem body_of_programs (data : Slice U8) (env : metadata.Env)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
@@ -155,9 +154,9 @@ theorem body_of_programs (data : Slice U8) (env : metadata.Env)
     (htyped : FunctionTyped env locals ft ops)
     (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
     code.bodyCore data env locals results index = .ok (.Ok ()) := by
-  obtain ⟨last, run, closed, finished, _⟩ := body_execution_of_programs data env locals results
+  obtain ⟨last, run, closed, finished⟩ := body_execution_of_programs data env locals results
     index ft hi hsize hprograms ops hencoding htyped hdecl
-  exact run.forget.public hi hparams hresults hsize closed finished
+  exact run.public hi hparams hresults hsize closed finished
 
 end Itasca.Body.Completeness
 
@@ -188,24 +187,6 @@ theorem programs (data : Slice U8) (env : metadata.Env)
   case loop => exact atom_loop henv _ (by assumption) smaller
   case ifElse => exact atom_if_else henv _ (by assumption) (by assumption) smaller
   case ifEnd => exact atom_if_end henv _ (by assumption) smaller
-
-end Itasca.Body.Completeness
-
-namespace Itasca.Body.Completeness
-
-/-- Independent body validity supplies a complete reader execution with the
-uniform byte-based operand bound at every dispatch boundary. -/
-theorem bounded_execution (data : Slice U8) (env : metadata.Env)
-    (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
-    (limits : CodeEntry.EnvironmentWithinLimits env)
-    (size : data.length ≤ Itasca.limits.MAX_FUNCTION_BYTES.val)
-    (valid : Body.Validated data env locals index) :
-    ∃ last, BoundedExecution data env ⟨locals, results⟩ index (initial index) last ∧
-      last.blocks.val = [] ∧ last.core.pos.val = data.length ∧ last.core.vals.val = [] := by
-  obtain ⟨ft, ops, lookup, bytes, typed, declared⟩ := valid
-  exact body_execution_of_programs data env locals results index ft lookup size
-    (programs data env ⟨locals, ft.results⟩ index limits (by simp [Body.resolve, lookup]))
-    ops bytes typed declared
 
 end Itasca.Body.Completeness
 

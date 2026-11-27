@@ -11,6 +11,8 @@ tools_dir := tools_cache + "/aeneas-" + aeneas_rev
 aeneas := tools_dir + "/bin/aeneas"
 charon := tools_dir + "/bin/charon"
 spectec_dir := "../vendor/spectec/spectec"
+spec_sources := "specification/wasm-2.0"
+spec_inputs := "0-aux.spectec 1-syntax.spectec 2-syntax-aux.spectec 6-typing.spectec"
 rust_model_dir := "ItascaRust"
 spec_model := "WebAssembly/WebAssembly.lean"
 
@@ -27,8 +29,7 @@ check-tools:
     @test -x {{ quote(aeneas) }} && test -x {{ quote(charon) }} && test -x {{ quote(charon + "-driver") }} || { echo "Run just tools to install the pinned extraction tools."; exit 1; }
 
 # Keep extraction outputs separate from ordinary Rust tests and release builds.
-# The extraction build omits native entry points that call the modeled runtime.
-# Pass the cfg to Cargo as well so it omits native dependencies.
+# The extraction cfg omits unsupported trait implementations.
 [working-directory("..")]
 _llbc: check-tools
     @mkdir -p lean/.build
@@ -64,25 +65,29 @@ prove:
 audit:
     @lake -d Itasca build audit
 
-# Source patches are repeatable and fail if the checkout has incompatible edits.
+# Prepare the selected sources from the pinned submodule in scratch space.
 spec-patch:
-    @for patch_name in \
-        global-mutability module hostfunc integer-domains memory-boundary lane-store host-typing \
-        memory-write-bounds export-membership table-write-bounds load-value-bounds; do \
-        patch_path="$PWD/../patches/spectec-wasm2-$patch_name.patch"; \
-        git -C ../vendor/spectec apply --reverse --check "$patch_path" 2>/dev/null \
-            || git -C ../vendor/spectec apply "$patch_path" || exit 1; \
+    @mkdir -p .build/spec/spectec .build/spec/{{ spec_sources }}
+    @revision=$(git rev-parse HEAD:vendor/spectec) && \
+        for input in {{ spec_inputs }}; do \
+            git -C ../vendor/spectec show "$revision:{{ spec_sources }}/$input" \
+                > ".build/spec/{{ spec_sources }}/$input" || exit 1; \
+        done
+    @for patch_name in global-mutability validation; do \
+        patch -f -F 0 -p1 -d .build/spec < "../patches/spectec-wasm2-$patch_name.patch" || exit 1; \
     done
 
 # Generate the local specification in scratch space before comparing or updating it.
-_spec-generate:
+_spec-generate: spec-patch
+    # SpecTec's executable links the reference-interpreter backend.
     @make -C {{ spectec_dir }} src/backend-interpreter/reference-interpreter
     @cd {{ spectec_dir }} && opam exec --switch={{ quote(opam_switch) }} -- dune build src/exe-spectec/main.exe
-    @mkdir -p .build/spec
-    @spec_output="$PWD/.build/spec/wasm2.0.lean"; cd {{ spectec_dir }} && \
-        _build/default/src/exe-spectec/main.exe ../specification/wasm-2.0/*.spectec \
-        --lean --single-pattern-match --wf-state all -o "$spec_output"
-    @patch -f -F 0 -p1 -d .build/spec < ../patches/spectec-wasm2-builtins.patch
+    @spectec="$PWD/{{ spectec_dir }}/_build/default/src/exe-spectec/main.exe"; \
+        cd .build/spec/spectec && \
+        set -- && \
+        for input in {{ spec_inputs }}; do set -- "$@" "../{{ spec_sources }}/$input"; done && \
+        "$spectec" "$@" --lean --single-pattern-match --wf-state all -o ../wasm2.0.lean
+    @patch -f -F 0 -p1 -d .build/spec < ../patches/spectec-wasm2-lean.patch
 
 spec-check: _spec-generate
     @cmp .build/spec/wasm2.0.lean {{ spec_model }}

@@ -23,16 +23,6 @@ The frozen full-suite totals are 1716 accepted modules, 2875 rejected binaries,
 registration directives counted by the validation-only gate. These counts describe
 modules and WAST assertions, not individual operators.
 
-`cargo test --test runtime_wast` executes the pinned Wasm 2.0 corpus, with zero
-unsupported directives. The Core 2.0 execution gate freezes 1599 successful
-module declarations, 22 registrations, 155 standalone invocations, 45734 return
-assertions, 2442 trap assertions, 83 unlinkable assertions, and 15 stack-exhaustion
-assertions. It also checks 2146 invalid modules, 729 malformed binaries, and the
-same 1081 malformed-text cases. The difference from the validation-only counts
-is explicit: its 1716 accepted modules include the 1599 declarations, 83
-unlinkable modules, and 34 modules whose instantiation traps. All 48334 formerly
-counted runtime directives and those 117 instantiation failures are executed.
-
 The full itasca gate, `wasm2_complete_corpus`, runs by default and checks the
 same assertions against itasca's Wasm 2.0 validator:
 
