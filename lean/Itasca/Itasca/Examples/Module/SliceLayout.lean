@@ -1,5 +1,7 @@
 import Itasca
 
+open WebAssembly
+
 /-!
 Proofs for Examples / Module.
 
@@ -25,7 +27,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Stream.SliceSupport
 
-open Binary Module.Elaboration Module.Environment Stream.CompleteRegions
+open Itasca.Binary Module.Elaboration Module.Environment Stream.CompleteRegions
 
 private theorem slice_spec (data : Slice U8) (first last : Usize)
     (hfirst : first.val ≤ last.val) (hlast : last.val ≤ data.length) :
@@ -86,7 +88,7 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
         apply List.eq_nil_of_length_eq_zero
         simpa [hempty] using hcount.symm
       refine ⟨0#usize, .inl ⟨hzero, rfl, hfuncs⟩, [], ?_, ?_⟩
-      · simpa [hempty] using (Rep.nil : Rep (Itasca.CodeEntry.CodeEncodingWithinLimits ) [] [])
+      · simpa [hempty] using (WebAssembly.Binary.Rep.nil : Rep (Itasca.CodeEntry.CodeEncodingWithinLimits ) [] [])
       · exact ⟨by simp [hzero], by simp [hzero], by simp⟩
   have htyped : Module.Code.EntriesTyped env 0 raw.codes := by
     obtain ⟨_, _, bytes, henc, _⟩ := hcode
@@ -124,7 +126,7 @@ theorem accepted_certificate (data : Slice U8) (raw : Binary.Module)
   obtain ⟨first, last, hsplit, he, hcode, ht⟩ := hc.split
   obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨after, run, hrun, htail, _⟩ := complete_certificate
-    stream.SliceSource.Insts.ItascaStreamSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
+    stream.SliceSource.Insts.ItascaStreamStreamingSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } Stream.Sync.Queued Stream.Sync.accepts
     0#u64 regions data raw regions env tail hc (stream.SliceSource.available regions)
     ⟨none, none⟩ storage rfl
@@ -210,7 +212,7 @@ theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
       by simp [empty, alloc.vec.Vec.deref], hsize, henv, ⟨decls, hready⟩,
       (Module.Environment.accepted_entry_conditions data env (Slice.len data) hsize henv).1,
       hv.environment_within_limits hrep.cache,
-      ⟨0#usize, .inl ⟨rfl, rfl, hfuncs⟩, [], Rep.nil, ?_⟩,
+      ⟨0#usize, .inl ⟨rfl, rfl, hfuncs⟩, [], WebAssembly.Binary.Rep.nil, ?_⟩,
       .nil _, by simp [raw, Declarations.module, hfuncs], htail, hm, hmeta⟩
     constructor <;> simp [empty, alloc.vec.Vec.deref]
   exact accepted_certificate data raw ⟨data, empty, empty⟩ env tail hc
@@ -235,7 +237,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Examples.Module.Support
 
-open Binary
+open Itasca.Binary
 
 /-- A bounded slice literal. Fixtures are checked by the kernel, with no external evaluator. -/
 def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice U8 :=
@@ -243,12 +245,12 @@ def bytes (xs : List U8) (h : xs.length ≤ Usize.max := by scalar_tac) : Slice 
 
 /-- A byte below 128 is its own one-byte unsigned LEB128 encoding. -/
 theorem leb (b : U8) (h : b.val < 128 := by decide) : Binary.Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload, Nat.mod_eq_of_lt h]⟩
+  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, Nat.mod_eq_of_lt h]⟩
 
 /-- A one-element vector is the count byte 1 followed by its element. -/
 theorem one {α : Type} {R : α → List U8 → Prop} {x bs}
     (h : R x bs) : VecEncoding R [x] (1#u8 :: bs) :=
-  ⟨[1#u8], bs, leb 1#u8, by simpa using Rep.cons h Rep.nil, rfl⟩
+  ⟨[1#u8], bs, leb 1#u8, by simpa using WebAssembly.Binary.Rep.cons h WebAssembly.Binary.Rep.nil, rfl⟩
 
 /-- A present section with a one-byte size and no leading custom sections. -/
 theorem padded {α : Type} {R : α → List U8 → Prop} (id size : U8)

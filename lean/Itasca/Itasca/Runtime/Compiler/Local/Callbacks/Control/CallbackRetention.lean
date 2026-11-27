@@ -18,6 +18,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.EnvironmentContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EntryAndElseFrames
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Callbacks / Control.
 

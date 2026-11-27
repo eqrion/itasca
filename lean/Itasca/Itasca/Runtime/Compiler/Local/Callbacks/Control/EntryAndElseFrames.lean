@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 import Itasca.Support.Translation
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterContracts
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Callbacks / Control.
 

@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeEffects
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Relations / Control.
 

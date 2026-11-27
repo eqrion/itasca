@@ -5,6 +5,8 @@ import Itasca.Results.Definitions.Foundations
 import Itasca.Results.Definitions.Visitor
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Meaning of callback observations
 

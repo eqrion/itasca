@@ -4,6 +4,8 @@ import Itasca.Body.References.Reader
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Body.Bulk.Step
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Stateful.
 

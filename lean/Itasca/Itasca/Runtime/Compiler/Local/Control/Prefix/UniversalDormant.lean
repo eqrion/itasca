@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.ResolvedGuards
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## UniversalInitial -/

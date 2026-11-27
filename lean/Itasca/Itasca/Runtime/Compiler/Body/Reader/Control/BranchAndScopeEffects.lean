@@ -32,6 +32,8 @@ import Itasca.Body.LoopDispatch
 import Itasca.Body.Trace.BytesDispatch
 import Itasca.Body.Trace.ControlRecords
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -524,7 +526,7 @@ theorem reader_table_targets {V : Type} (visitor : code.OpVisitor V)
       all.length=count.val+1 ∧ Body.BrTable.LabelsDecoded data first all final.core.pos ∧
       Body.TableTargets env ⟨popped⟩ all (some arity) := by
   obtain ⟨unit,erased⟩ := code.branch_table_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
   cases unit
   unfold code.branch_table_with at erased
   obtain ⟨read,readCall,readSpec⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.core.pos)
@@ -693,7 +695,7 @@ theorem reader_table_post {V : Type} (visitor : code.OpVisitor V)
     (accepted : code.branch_table_with visitor st data env before=.ok (.Ok (),final,after)) :
     Body.ReaderPost p final.core (Body.BrTable.instruction depths fallback) true [] := by
   obtain ⟨unit,empty⟩ := code.branch_table_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
   cases unit
   have erased : code.branch_table st data env =.ok (.Ok (),final) := by
     simp only [code.branch_table,empty,bind_ok,uncurry_apply_pair]
@@ -722,7 +724,7 @@ open Aeneas Aeneas.Std Itasca Itasca.Visitor.Trace
 theorem reader_block_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 2#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_block] at accepted
@@ -732,7 +734,7 @@ theorem reader_block_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_loop_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 3#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_loop] at accepted
@@ -742,7 +744,7 @@ theorem reader_loop_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_if_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 4#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_if] at accepted
@@ -752,7 +754,7 @@ theorem reader_if_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_else_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 5#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_else] at accepted
@@ -762,7 +764,7 @@ theorem reader_else_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_end_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 11#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_end] at accepted
@@ -772,7 +774,7 @@ theorem reader_end_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_br_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_br] at accepted
@@ -782,7 +784,7 @@ theorem reader_br_effects {A : Type} (ops : runtime.platform.Alloc A)
 theorem reader_br_if_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_br_if] at accepted
@@ -793,7 +795,7 @@ theorem reader_control_effects {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (control : ScopeOpcode opcode ∨ opcode = 5#u8 ∨ opcode = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     ControlEffects before after out.core := by
   rcases control with scope | rfl | rfl
@@ -1306,7 +1308,7 @@ def action : (kind : ControlReaderKind) → kind.Parameter → Action
 /-- Every inventory entry agrees with actual complete dispatch. -/
 theorem dispatch {V : Type} (kind : ControlReaderKind) (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (before : V) :
-    code.step_profile visitor st data env ctx index kind.opcode before =
+    code.step_body visitor st data env ctx index kind.opcode before =
       Body.CallbackTrace.bodyRun (kind.read st data env index) visitor kind.action before := by
   cases kind
   · exact Body.CallbackTrace.dispatch_block visitor st data env ctx index before

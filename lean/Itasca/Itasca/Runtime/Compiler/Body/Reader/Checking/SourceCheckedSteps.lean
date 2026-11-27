@@ -10,6 +10,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Checking.CheckedPrefix
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.SourceBoundAcceptance
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Checking.
 
@@ -58,27 +60,27 @@ theorem reader_publication {jumpTables : List U32}
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (coordinates : SourceCoordinates before) (maps : ControlMapPublication before)
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     SourceCoordinates after ∧ ControlMapPublication after := by
   let opcode := data.val[p.start.val]'p.inbounds
   by_cases h2 : opcode = 2#u8
-  · have call : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  · have call : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         st data env ctx index 2#u8 before = .ok (.Ok (),out,after) := by simpa only [← h2] using accepted
     exact reader_enter_publication p ops law initial before after out ctx types functions returns locals parents current
       invariant reach signatures coordinates maps extent .block (.inl rfl) h2 call
   by_cases h3 : opcode = 3#u8
-  · have call : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  · have call : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         st data env ctx index 3#u8 before = .ok (.Ok (),out,after) := by simpa only [← h3] using accepted
     exact reader_enter_publication p ops law initial before after out ctx types functions returns locals parents current
       invariant reach signatures coordinates maps extent .loop (.inr (.inl rfl)) h3 call
   by_cases h4 : opcode = 4#u8
-  · have call : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  · have call : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         st data env ctx index 4#u8 before = .ok (.Ok (),out,after) := by simpa only [← h4] using accepted
     exact reader_enter_publication p ops law initial before after out ctx types functions returns locals parents current
       invariant reach signatures coordinates maps extent .then_ (.inr (.inr rfl)) h4 call
   by_cases h11 : opcode = 11#u8
-  · have call : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  · have call : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         st data env ctx index 11#u8 before = .ok (.Ok (),out,after) := by simpa only [← h11] using accepted
     exact reader_end_publication p ops law initial before after out ctx types functions returns locals parents current
       invariant coordinates maps extent h11 call
@@ -93,7 +95,7 @@ theorem reader_publication {jumpTables : List U32}
     change st.core.ctrls.val ≠ []
     rw [controls]
     simp
-  have progress := code.step_profile.accepted_progress
+  have progress := code.step_body.accepted_progress
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index sourceState out before after
     p.size ⟨p.opened.shape.core.ordered,p.opened.shape.core.bounded⟩ (by simp [sourceState]) p.ctrls nonempty p.inbounds st.core.pos p.pos accepted
   have forward : before.next_source.val ≤ out.core.pos.val := by
@@ -101,7 +103,7 @@ theorem reader_publication {jumpTables : List U32}
     have position := p.pos
     omega
   by_cases h14 : opcode = 14#u8
-  · have call : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  · have call : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         st data env ctx index 14#u8 before = .ok (.Ok (),out,after) := by simpa only [← h14] using accepted
     rw [CallbackTrace.dispatch_br_table] at call
     exact reader_table_publication ops law before after st out data env coordinates maps inside forward call
@@ -167,14 +169,14 @@ theorem source_publication_reader_advance {A} (ops : runtime.platform.Alloc A) (
     (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
-    (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (acceptance : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄)
     (coordinates : SourceCoordinates compiler) (maps : ControlMapPublication compiler)
     (targets : JumpTableBounds compiler)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourcePublicationReachedBody initial C locals data env sourceLocals index ft result.2.2 out ∧
@@ -199,7 +201,7 @@ theorem source_publication_reader_advance {A} (ops : runtime.platform.Alloc A) (
     intro closed
     rcases point.advance_or_closing ops law C layout localsMatch metadata matched contextLocals signatures
       bodyBound next advance inbounds out called with ⟨ended,_⟩ | fresh
-    · have callEnd : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    · have callEnd : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
           {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index 11#u8 compiler =
             .ok (.Ok (),out,after) := by simpa only [ended] using called
       exact reader_root_map_publication pending ops law _ compiler after out ⟨sourceLocals,ft.results⟩
@@ -257,7 +259,7 @@ theorem source_checked_reader_advance {A} (ops : runtime.platform.Alloc A) (law 
     (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
-    (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (acceptance : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄)
@@ -267,7 +269,7 @@ theorem source_checked_reader_advance {A} (ops : runtime.platform.Alloc A) (law 
     (initialCapacity : initial.function.local_slots.val ≤ initial.function.slot_count.val)
     (instructions : CompilerInstructionPrefix compiler) (exits : FrameExitSlotBounds compiler)
     (extent : initial.function.body_end.val = initial.function.body_start.val+data.length) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourceCheckedReachedBody initial C locals data env sourceLocals index ft result.2.2 out ∧
@@ -289,7 +291,7 @@ theorem source_checked_reader_advance {A} (ops : runtime.platform.Alloc A) (law 
     intro closed
     rcases point.advance_or_closing ops law C layout localsMatch metadata matched contextLocals signatures
       bodyBound next advance inbounds out called with ⟨ended,_⟩ | fresh
-    · have callEnd : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    · have callEnd : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
           {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index 11#u8 compiler =
             .ok (.Ok (),out,after) := by simpa only [ended] using called
       exact state.closed_checked_instructions (ctx := ⟨sourceLocals,ft.results⟩) ops law layout initialLocals initialCapacity extentBefore maps

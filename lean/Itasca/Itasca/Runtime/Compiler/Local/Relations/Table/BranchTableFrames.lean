@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.CallbackRetention
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Relations / Table.
 

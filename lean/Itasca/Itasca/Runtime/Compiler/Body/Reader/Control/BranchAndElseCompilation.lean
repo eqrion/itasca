@@ -29,6 +29,8 @@ import Itasca.Runtime.Compiler.Body.Relations.Table.BranchTableTables
 import Itasca.Runtime.Compiler.Body.Control.CompiledBody
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -133,7 +135,7 @@ theorem structured_reader_prefix_else_dormant {jumpTables : List U32} {emit : Li
     (fronts : ReaderScopeFronts parents current (p.parents.map Body.Frames.Saved.vals))
     (unentered : current.entered = false)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0x05#u8 before = .ok (.Ok (), out, after)) :
     ∃ condition noEntry,
       current.form = .then_ (Body.blockType p.current.bt) condition ∧
@@ -278,7 +280,7 @@ theorem structured_reader_prefix_else_entered {jumpTables : List U32} {emit : Li
     (savedKnown : ReaderKnownFronts parents current (p.parents.map Body.Frames.Saved.vals))
     (initialLocals : LocalLayout initial) (entered : current.entered = true)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0x05#u8 before = .ok (.Ok (), out, after)) :
     ∃ condition noEntry,
       current.form = .then_ (Body.blockType p.current.bt) condition ∧
@@ -380,7 +382,7 @@ theorem StructuredReaderCompilerState.begin_else {jumpTables : List U32} {A : Ty
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_ELSE)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_ELSE before = .ok (.Ok (), out, after)) :
     ∃ condition noEntry, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.begin_else (Body.blockType savedCurrent.bt) condition before.function.code.val.length noEntry before.reachable)
@@ -416,7 +418,7 @@ theorem StructuredReaderCompilerState.else_ {jumpTables : List U32} {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_ELSE)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_ELSE before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨condition, noEntry, nextState⟩ := state.begin_else ops law initialLocals next advance inbounds out byte accepted
@@ -669,7 +671,7 @@ theorem structured_reader_prefix_br {jumpTables : List U32} {data env sourceLoca
     (fronts : ReaderScopeFronts parents current (p.parents.map Body.Frames.Saved.vals))
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (byte : data.val[p.start.val]'p.inbounds = 12#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ∃ depth : U32, Body.ReaderPost p out.core (.BR (.mk_uN depth.val)) true [] ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance (.BR (.mk_uN depth.val)))
@@ -706,7 +708,7 @@ theorem structured_reader_prefix_br_if {jumpTables : List U32} {data env sourceL
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (byte : data.val[p.start.val]'p.inbounds = 13#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ∃ (depth : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.BR_IF (.mk_uN depth.val)) p.current.ctrl.polymorphic_base values ∧
@@ -742,7 +744,7 @@ theorem StructuredReaderCompilerState.br {jumpTables : List U32} {A : Type}
       parents current savedParents savedCurrent)
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (byte : data.val[st.core.pos.val]'inbounds = 12#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 12#u8 before = .ok (.Ok (), out, after)) :
     ∃ depth : U32, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance (.BR (.mk_uN depth.val))) savedParents
@@ -762,7 +764,7 @@ theorem StructuredReaderCompilerState.br_if {jumpTables : List U32} {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (byte : data.val[st.core.pos.val]'inbounds = 13#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 13#u8 before = .ok (.Ok (), out, after)) :
     ∃ (depth : U32) (values : List code.StackType), StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance (.BR_IF (.mk_uN depth.val))) savedParents
@@ -801,7 +803,7 @@ open Aeneas Aeneas.Std Itasca
 theorem reader_table_capacity {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (before after : runtime.compiler.FunctionCompiler A)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0x0e#u8 before=.ok (.Ok (),out,after)) : CapacityStep before after out.core := by
   rw [Body.CallbackTrace.dispatch_br_table] at accepted
   obtain ⟨count,first,selector,popped,depths,fallback,types,defaultStart,readState,budget,buffer,
@@ -953,7 +955,7 @@ theorem reader_table_decoded {V : Type} (visitor : code.OpVisitor V)
     (accepted : code.branch_table_with visitor st data env before=.ok (.Ok (),final,after)) :
     ∃ depths fallback, Body.BrTable.Decoded data st.core.pos depths fallback final.core.pos := by
   obtain ⟨unit,empty⟩ := code.branch_table_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts st data env before () final after accepted
   cases unit
   have erased : code.branch_table st data env =.ok (.Ok (),final) := by
     simp only [code.branch_table,empty,bind_ok,uncurry_apply_pair]
@@ -1059,7 +1061,7 @@ theorem StructuredReaderCompilerState.br_table {A : Type}
     (gate : ∀ stack selector start len, emit (stack++[.I32]) (Body.BrTable.instruction depths fallback)
       [.JumpTable selector start len] stack)
     (byte : data.val[st.core.pos.val]'inbounds=0x0e#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core:={st.core with pos:=next}} data env ctx index 0x0e#u8 before=.ok (.Ok (),out,after)) :
     StructuredReaderCompilerState jumpTables emit initial after types functions returns locals
       data env ctx.locals index ft out parents (current.advance (Body.BrTable.instruction depths fallback)) savedParents
@@ -1094,7 +1096,7 @@ theorem IndexedTableReaderCompilerPoint.br_table {A : Type}
     (gate : ∀ tables depths fallback stack selector start len,
       emit tables (stack++[.I32]) (Body.BrTable.instruction depths fallback) [.JumpTable selector start len] stack)
     (byte : data.val[st.core.pos.val]'inbounds=0x0e#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core:={st.core with pos:=next}} data env ctx index 0x0e#u8 before=.ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -1144,7 +1146,7 @@ theorem StructuredReaderCompilerState.finish_root {jumpTables : List U32} {A : T
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (encodedBody : Body.BodyEncoding data source)
     (byte : data.val[st.core.pos.val]'inbounds = 0x0b#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after))
     (rest : TypedRun (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out after final) :
     StructuredCompiledBody jumpTables emit initial final types functions (ft.results.val.map Translation.valueType) locals source := by

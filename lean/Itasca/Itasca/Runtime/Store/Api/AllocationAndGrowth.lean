@@ -15,6 +15,8 @@ import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

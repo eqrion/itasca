@@ -23,6 +23,8 @@ import Itasca.Runtime.Compiler.Local.Source.ModuleSourceAndSubmission
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Body.Complete.Control
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Module.
 
@@ -68,7 +70,7 @@ open Itasca Itasca.Computation
 /-- Environment preparation does not alter queued workers, the source origin,
 or the tail handoff. This statement follows from actual successful callbacks. -/
 theorem compiler_environment_frame {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.Config)
+    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.StreamingConfig)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
       allocator before env = .ok (.Ok config, after)) : schedulerFrame after = schedulerFrame before := by
   exact runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready.inv allocator before after env config accepted
@@ -137,12 +139,12 @@ def schedulerStatic {A : Type} (scheduler : runtime.compiler.CompileScheduler A)
   (scheduler.signatures, scheduler.func_param_slots, scheduler.code_start)
 
 theorem CompileEntryWitness.static {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness allocator before after batch finalBatch) :
     schedulerStatic after = schedulerStatic before := by rw [w.published]; rfl
 
 theorem CompileEntries.static {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (run : CompileEntries allocator before batch after finalBatch) :
     schedulerStatic after = schedulerStatic before := by
   induction run with
@@ -233,16 +235,16 @@ open runtime.compiler
 publication return normally. The remaining body obligation names only the
 fresh compiler reached by this actual issued entry. -/
 theorem compiler_entry_total_of_validation {A : Type} (ops : runtime.platform.Alloc A)
-    (before : CompileScheduler A) (issued : Stream.Batch.Issued) (batch : stream.CodeBatch)
+    (before : CompileScheduler A) (issued : Stream.Batch.Issued) (batch : stream.StreamingBatch)
     (bounded : issued.Bounded) (reachable : Stream.Batch.Reachable issued batch)
     (origin : before.code_start.val ≤ limits.MAX_MODULE_BYTES.val)
-    (validation : ∀ (entry : stream.CodeEntry) (dispatched : stream.CodeBatch)
+    (validation : ∀ (entry : stream.StreamingEntry) (dispatched : stream.StreamingBatch)
       (batchStart : Usize) (initial : FunctionCompiler A),
-      stream.CodeBatch.next_entry batch = .ok (.Ok entry,dispatched) →
+      stream.StreamingBatch.next_entry batch = .ok (.Ok entry,dispatched) →
       (before.code_start + dispatched.code_offset : Result Usize) = .ok batchStart →
       FunctionCompiler.new ops (alloc.vec.Vec.deref before.signatures)
         (alloc.vec.Vec.deref before.func_param_slots) {before.budget with marker := ()} batchStart = .ok initial →
-      stream.CodeBatch.validate_func (FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+      stream.StreamingBatch.validate_func (FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         dispatched entry.index initial ⦃ _ => True ⦄) :
     runtime.compiler.CompileScheduler.compile_entry ops before batch ⦃ _ => True ⦄  := by
   exact runtime.compiler.CompileScheduler.compile_entry.total ops before issued batch
@@ -283,7 +285,7 @@ structure CompileWitness {A : Type} (allocator : runtime.platform.Alloc A)
   finalBudget : runtime.compiler.Budget A
   region : runtime.compiler.code_region bytes = .ok (codeStart, codeEnd)
   initialized : metadata.Env.new = .ok initialEnv
-  validated : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource
+  validated : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := codeStart, code_end := codeEnd}
     (initialScheduler A limits codeStart) initialEnv = .ok (.Ok (), scheduler, env)
@@ -339,7 +341,7 @@ theorem _root_.Itasca.runtime.compiler.compile_with.total {A : Type} (ops : runt
     (limits : CompileLimits)
     (streaming : ∀ (codeStart codeEnd : Usize) (storage : metadata.Env),
       codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
-      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+      stream.validate_streaming CompileSource.Insts.ItascaStreamStreamingSource
         (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
         {bytes,code_start := codeStart,code_end := codeEnd}
         (initialScheduler A limits codeStart) storage ⦃ out =>
@@ -349,7 +351,7 @@ theorem _root_.Itasca.runtime.compiler.compile_with.total {A : Type} (ops : runt
       (functions : alloc.vec.Vec runtime.bytecode.CompiledFunction)
       (budget : Budget A) (pending : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)),
       codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
-      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+      stream.validate_streaming CompileSource.Insts.ItascaStreamStreamingSource
         (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
         {bytes,code_start := codeStart,code_end := codeEnd}
         (initialScheduler A limits codeStart) storage = .ok (.Ok (), scheduler, env) →
@@ -618,7 +620,7 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
   obtain ⟨code, _, hc⟩ := available.code_read 0#usize len (by scalar_tac) (by omega)
   have hc' : code.val = sourceCode source := by
     simpa [List.slice, hl] using hc
-  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamSource source
+  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource source
       environment.val code.val tail.val := by
     rw [he, hc', ht]
     exact source_coherent source bounded
@@ -630,7 +632,7 @@ theorem CompileWitness.source_validated {A : Type} {allocator : runtime.platform
     · simp
     · simp [initialScheduler]
   obtain ⟨run, validated, size⟩ := stream.validate_streaming.sound_core
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     SchedulerTracks (compiler_provenance allocator law) 0#u64 source
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env bytes environment code tail
@@ -667,7 +669,7 @@ end
 section
 
 namespace Itasca.Compiler
-open Aeneas Aeneas.Std Itasca Binary
+open Aeneas Aeneas.Std Itasca Itasca.Binary
 set_option maxRecDepth 4096
 
 private def compilerScan (data : Slice U8) (pos : Usize) :=
@@ -862,7 +864,7 @@ theorem CompileWitness.semantic_input {A : Type} {allocator : runtime.platform.A
     Module.Environment.Valid w.env ∧
       (∀ segment ∈ w.tail.data.val, Module.Data.Valid w.env segment) := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
@@ -942,12 +944,12 @@ theorem segment_validated_pc_bound {module function bytes}
     (validated : Itasca.Module.Sound.Validated bytes module.module)
     (bounded : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val) :
     function.code.length < U32.max := by
-  obtain ⟨raw, encoded, _, matched, _⟩ := validated
+  obtain ⟨raw, encoded, _, matched, _⟩  := validated
   have elements := congrArg (fun raw : Itasca.Binary.Module => raw.elements.length) matched.1
   have datas := congrArg (fun raw : Itasca.Binary.Module => raw.data.length) matched.1
-  apply certificate.pc_bound encoded bounded
-  · simpa [Itasca.Module.Elaboration.fromEnv] using elements.symm
-  · simpa [Itasca.Module.Elaboration.fromEnv] using datas.symm
+  apply certificate.pc_bound encoded (by simpa [Binary.Source.bytes] using bounded)
+  · simpa [Binary.Source.rawModule, Itasca.Module.Elaboration.fromEnv] using elements.symm
+  · simpa [Binary.Source.rawModule, Itasca.Module.Elaboration.fromEnv] using datas.symm
 
 /-- No extra runtime limit premise is required for the initializer PC: the
 successful public compiler already checked the fixed module-byte cap. -/
@@ -1183,11 +1185,11 @@ structure CompileSourceCertificate {A : Type} {ops : runtime.platform.Alloc A}
   environment : Slice U8
   code : Slice U8
   tail : Slice U8
-  run : Stream.Run.Accepted runtime.compiler.CompileSource.Insts.ItascaStreamSource
+  run : Stream.Run.Accepted runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.env
-  coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamSource
+  coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} environment.val code.val tail.val
   recombined : bytes.val = environment.val ++ code.val ++ tail.val
   raw : Binary.Module
@@ -1216,7 +1218,7 @@ theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.All
   obtain ⟨len, _, hl⟩ := available.code_len_read
   obtain ⟨code, _, hc⟩ := available.code_read 0#usize len (by scalar_tac) (by omega)
   have hc' : code.val = sourceCode source := by simpa [List.slice, hl] using hc
-  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamSource source
+  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource source
       environment.val code.val tail.val := by
     rw [he, hc', ht]
     exact source_coherent source bounded
@@ -1228,12 +1230,12 @@ theorem CompileWitness.source_certificate {A : Type} {ops : runtime.platform.All
     · simp
     · simp [initialScheduler]
   obtain ⟨run⟩ := stream.validate_streaming.accepted
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 source (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
   obtain ⟨raw, encoded, matched, valid, entryBounds, functions, types, codeCount,
     header, entries, codeBound, moduleBound⟩ := stream_run_source
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     SchedulerTracks (compiler_provenance ops law) 0#u64 source
     (initialScheduler A limits w.codeStart) w.scheduler w.env bytes environment code tail coherent recombine initial run
@@ -1259,7 +1261,7 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
     (tail : metadata.Tail)
     (bounds : codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length)
     (tailReady : scheduler.tail = some tail)
-    (accepted : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    (accepted : stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
       {bytes,code_start := codeStart,code_end := codeEnd}
       (initialScheduler A limits codeStart) storage = .ok (.Ok (),scheduler,env)) :
@@ -1274,7 +1276,7 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨len,_,hl⟩ := available.code_len_read
   obtain ⟨code,_,hc⟩ := available.code_read 0#usize len (by scalar_tac) (by omega)
   have hc' : code.val = sourceCode source := by simpa [List.slice,hl] using hc
-  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamSource
+  have coherent : Stream.Source.Coherent runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
       source environment.val code.val tailBytes.val := by
     rw [he,hc',ht]
     exact source_coherent source bounded
@@ -1286,12 +1288,12 @@ theorem compiler_stream_source {A : Type} (ops : runtime.platform.Alloc A)
     · simp
     · simp [initialScheduler]
   obtain ⟨run⟩ := stream.validate_streaming.accepted
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     0#u64 source (initialScheduler A limits codeStart) scheduler storage env accepted
   obtain ⟨raw,encoded,matched,valid,entryBounds,functions,types,codeCount,
     header,entries,codeBound,moduleBound⟩ := stream_run_source
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
     SchedulerTracks (compiler_provenance ops law) 0#u64 source
     (initialScheduler A limits codeStart) scheduler env bytes environment code tailBytes coherent recombine initial run
@@ -1322,7 +1324,7 @@ theorem compiler_stream_large_environment {V : Type} (visitor : stream.Streaming
      (source : runtime.compiler.CompileSource)
     (bounds : SourceBounds source) (large : limits.MAX_MODULE_BYTES.val < source.code_start.val)
     (state : V) (storage : metadata.Env) :
-    stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamSource visitor
+    stream.validate_streaming runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource visitor
       0#u64 source state storage = .ok (.Err .ModuleTooLarge,state,storage) := by
   obtain ⟨_,environment,bytes,rfl,decoded⟩ := WP.spec_imp_exists (source_environment_spec source bounds)
   have length : bytes.length = source.code_start.val := by
@@ -1506,7 +1508,7 @@ theorem CompileWitness.cache_input {A : Type} {allocator : runtime.platform.Allo
     {bytes limits executable} (w : CompileWitness allocator bytes limits executable) :
     ∃ tables memories, Module.Environment.Cache w.env tables memories := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
@@ -1536,26 +1538,23 @@ section
 namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca.Binary
 
-private theorem vector_length_bound {α : Type} {R : α → List U8 → Prop} {values bytes}
-    (encoded : VecEncoding R values bytes) : values.length < 2^32 := by
+private theorem vector_length_bound {α : Type} {R : α → List UInt8 → Prop} {values bytes}
+    (encoded : WebAssembly.Binary.VecEncoding R values bytes) : values.length < 2^32 := by
   obtain ⟨count, entries, bounded, _, _⟩ := encoded
-  exact bounded.value_lt
+  exact (Itasca.Binary.Source.readerLeb bounded).value_lt
 
 private theorem element_payload_bound {entry bytes}
-    (encoded : ElementEncoding entry bytes) : entry.init.length < 2^32 := by
-  cases encoded with
-  | activeIndices _ _ encoded | passiveIndices _ encoded | explicitIndices _ _ _ encoded
-  | declarativeIndices _ encoded | activeExpressions _ _ encoded | passiveExpressions _ encoded
-  | explicitExpressions _ _ _ encoded | declarativeExpressions _ encoded =>
-    simpa using vector_length_bound encoded
+    (encoded : WebAssembly.Binary.ElementEncoding entry bytes) : entry.init.length < 2^32 := by
+  obtain ⟨_, _, _, _, hi, _⟩ := encoded
+  exact vector_length_bound hi
 
 private theorem data_payload_bound {entry bytes}
-    (encoded : DataEncoding entry bytes) : entry.init.length < 2^32 := by
-  cases encoded with
-  | active _ _ encoded | passive _ encoded => exact vector_length_bound encoded
+    (encoded : WebAssembly.Binary.DataEncoding entry bytes) : entry.init.length < 2^32 := by
+  obtain ⟨_, h⟩ := WebAssembly.Binary.DataEncoding.init_vector encoded
+  exact vector_length_bound h
 
-private theorem rep_property {α : Type} {R : α → List U8 → Prop} {Q : α → Prop} {values bytes}
-    (encoded : Rep R values bytes) (property : ∀ value bytes, R value bytes → Q value) :
+private theorem rep_property {α : Type} {R : α → List UInt8 → Prop} {Q : α → Prop} {values bytes}
+    (encoded : WebAssembly.Binary.Rep R values bytes) (property : ∀ value bytes, R value bytes → Q value) :
     ∀ value ∈ values, Q value := by
   induction encoded with
   | nil => simp
@@ -1565,8 +1564,8 @@ private theorem rep_property {α : Type} {R : α → List U8 → Prop} {Q : α �
     · exact property _ _ head
     · exact ih value member
 
-private theorem padded_property {α : Type} {R : α → List U8 → Prop} {Q : α → Prop} {id values bytes}
-    (encoded : PaddedEncoding id (VecEncoding R) [] values bytes)
+private theorem padded_property {α : Type} {R : α → List UInt8 → Prop} {Q : α → Prop} {id values bytes}
+    (encoded : WebAssembly.Binary.PaddedEncoding id (WebAssembly.Binary.VecEncoding R) [] values bytes)
     (property : ∀ value bytes, R value bytes → Q value) : ∀ value ∈ values, Q value := by
   obtain ⟨customs, sec, _, secProof, _⟩ := encoded
   cases secProof with
@@ -1577,8 +1576,8 @@ private theorem padded_property {α : Type} {R : α → List U8 → Prop} {Q : �
 
 /-- Binary vector prefixes bound every element and data payload, independently
 of semantic typing and of the compiler's chosen instruction representation. -/
-theorem module_segment_payload_bounds {R raw bytes}
-    (encoded : ModuleEncodingWith R raw bytes) :
+private theorem native_segment_payload_bounds {R raw bytes}
+    (encoded : WebAssembly.Binary.ModuleEncodingWith R raw bytes) :
     (∀ element ∈ raw.elements, element.init.length < 2^32) ∧
     (∀ segment ∈ raw.data, segment.init.length < 2^32) := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
@@ -1586,13 +1585,21 @@ theorem module_segment_payload_bounds {R raw bytes}
   exact ⟨padded_property hel (fun _ _ h => element_payload_bound h),
     padded_property hd (fun _ _ h => data_payload_bound h)⟩
 
+theorem module_segment_payload_bounds {R raw bytes} (encoded : ModuleEncodingWith R raw bytes) :
+    (∀ element ∈ raw.elements, element.init.length < 2^32) ∧
+    (∀ segment ∈ raw.data, segment.init.length < 2^32) := by
+  have native := Source.moduleEncodingWith (S := fun _ _ => True) (fun _ => trivial) encoded
+  simpa [Source.rawModule, Source.element, Source.dataEntry, Source.bytes] using native_segment_payload_bounds native
+
 /-- Payload bounds for the actual metadata retained by an accepted validator. -/
 theorem validated_segment_payload_bounds {bytes module}
     (validated : Itasca.Module.Sound.Validated bytes module) :
     (∀ element ∈ module.env.elements.val, element.init.length < 2^32) ∧
     (∀ segment ∈ module.tail.data.val, segment.init.length < 2^32) := by
-  obtain ⟨raw, encoded, _, matched, _⟩ := validated
-  obtain ⟨elements, datas⟩ := module_segment_payload_bounds encoded
+  obtain ⟨raw, encoded, _, matched, _⟩  := validated
+  have bounds : (∀ e ∈ raw.elements, e.init.length < 2^32) ∧ (∀ d ∈ raw.data, d.init.length < 2^32) := by
+    simpa [Source.rawModule, Source.element, Source.dataEntry, Source.bytes] using native_segment_payload_bounds encoded
+  obtain ⟨elements, datas⟩ := bounds
   have he := congrArg Itasca.Binary.Module.elements matched.1
   have hd := congrArg Itasca.Binary.Module.data matched.1
   constructor
@@ -1628,14 +1635,14 @@ private theorem mapped_two {α β γ δ : Type} (xs : List α) (f : α → β) (
     (h : β → γ → δ) : Map₂ h (xs.map f) (xs.map g) = xs.map (fun x => h (f x) (g x)) := by
   induction xs with
   | nil => rfl
-  | cons x xs ih => simpa only [Map₂, List.map_cons, List.ap, List.zipWith_cons_cons] using congrArg (h (f x) (g x) :: ·) ih
+  | cons x xs ih => simpa only [Map₂, List.map_cons, WebAssembly.List.ap, List.zipWith_cons_cons] using congrArg (h (f x) (g x) :: ·) ih
 
 private theorem mapped_three {α β γ δ ε : Type} (xs : List α) (f : α → β) (g : α → γ)
     (h : α → δ) (combine : β → γ → δ → ε) :
     Map₃ combine (xs.map f) (xs.map g) (xs.map h) = xs.map (fun x => combine (f x) (g x) (h x)) := by
   induction xs with
   | nil => rfl
-  | cons x xs ih => simpa only [Map₃, List.map_cons, List.ap, List.zipWith_cons_cons] using congrArg (combine (f x) (g x) (h x) :: ·) ih
+  | cons x xs ih => simpa only [Map₃, List.map_cons, WebAssembly.List.ap, List.zipWith_cons_cons] using congrArg (combine (f x) (g x) (h x) :: ·) ih
 
 private theorem forall_three {α β γ δ : Type} (xs : List α) (f : α → β) (g : α → γ) (h : α → δ)
     (P : β → γ → δ → Prop) (checked : ∀ x ∈ xs, P (f x) (g x) (h x)) :
@@ -1826,7 +1833,7 @@ theorem CompileWitness.data_count_input {A : Type} {allocator : runtime.platform
     {bytes limits executable} (w : CompileWitness allocator bytes limits executable) :
     ∀ count, w.env.data_count = some count → count.val = w.tail.data.val.length := by
   obtain ⟨run⟩ := stream.validate_streaming.accepted
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor allocator)
     0#u64 {bytes, code_start := w.codeStart, code_end := w.codeEnd}
     (initialScheduler A limits w.codeStart) w.scheduler w.initialEnv w.env w.validated
@@ -1875,7 +1882,7 @@ preparation witnesses, reservation categories and initializer bookkeeping.
 -/
 
 namespace Itasca.Compiler
-open Aeneas Aeneas.Std Itasca Binary Module.Environment
+open Aeneas Aeneas.Std Itasca Itasca.Binary Module.Environment
 
 private theorem member_le_max {values : List Nat} {value : Nat} (member : value ∈ values) :
     value ≤ values.foldr max 0 := by
@@ -1967,8 +1974,8 @@ theorem CompileEligible.internal {bytes : Slice U8} {raw : Binary.Module}
       signatureSlots signature.params.val ≤ U32.max ∧ signatureSlots signature.results.val ≤ U32.max := by
     intro signature member
     exact signature_widths (valid.signatures signature (types ▸ member))
-  have countBounds := segment_counts valid.encoding.2
-  have payloadBounds := module_segment_payload_bounds valid.encoding.2
+  have countBounds := segment_counts valid.encoding.encoding
+  have payloadBounds := module_segment_payload_bounds valid.encoding.encoding
   refine ⟨b, l, p, ?_⟩
   constructor
   · refine ⟨?_, ?_, widths, ?_, ?_, ?_, ?_⟩

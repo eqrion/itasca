@@ -24,7 +24,7 @@ namespace Itasca.Integration
 open Aeneas Aeneas.Std WebAssembly Itasca.Interp Itasca.Spec
 
 /-- The arguments of a source invocation have the parameter types of its callee. -/
-def InvocationArgumentsTyped (store : _root_.store) (address : funcaddr) (args : List val) : Prop :=
+def InvocationArgumentsTyped (store : WebAssembly.store) (address : funcaddr) (args : List val) : Prop :=
   ∀ function params results,store.FUNCS[address]?=some function →
     function.TYPE=.mk_functype (.mk_list params) (.mk_list results) → ResultsTyped store params args
 

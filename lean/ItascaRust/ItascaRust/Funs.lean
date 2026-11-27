@@ -35,865 +35,937 @@ def code.visit
   | core.result.Result.Err e =>
     ok (core.result.Result.Err (error.OpError.Visitor e))
 
-/-- [itasca::code::OP_UNREACHABLE]
+/-- [itasca::code::{itasca::code::Opcode}::from_byte]:
     Source: 'src/code.rs'
     Visibility: public -/
+def code.Opcode.from_byte (byte : Std.U8) : Result (Option code.Opcode) := do
+  match byte with
+  | 0#uscalar => ok (some code.Opcode.Unreachable)
+  | 1#uscalar => ok (some code.Opcode.Nop)
+  | 2#uscalar => ok (some code.Opcode.Block)
+  | 3#uscalar => ok (some code.Opcode.Loop)
+  | 4#uscalar => ok (some code.Opcode.If)
+  | 5#uscalar => ok (some code.Opcode.Else)
+  | 11#uscalar => ok (some code.Opcode.End)
+  | 12#uscalar => ok (some code.Opcode.Br)
+  | 13#uscalar => ok (some code.Opcode.BrIf)
+  | 14#uscalar => ok (some code.Opcode.BrTable)
+  | 15#uscalar => ok (some code.Opcode.Return)
+  | 16#uscalar => ok (some code.Opcode.Call)
+  | 17#uscalar => ok (some code.Opcode.CallIndirect)
+  | 26#uscalar => ok (some code.Opcode.Drop)
+  | 27#uscalar => ok (some code.Opcode.Select)
+  | 28#uscalar => ok (some code.Opcode.SelectTyped)
+  | 32#uscalar => ok (some code.Opcode.LocalGet)
+  | 33#uscalar => ok (some code.Opcode.LocalSet)
+  | 34#uscalar => ok (some code.Opcode.LocalTee)
+  | 35#uscalar => ok (some code.Opcode.GlobalGet)
+  | 36#uscalar => ok (some code.Opcode.GlobalSet)
+  | 37#uscalar => ok (some code.Opcode.TableGet)
+  | 38#uscalar => ok (some code.Opcode.TableSet)
+  | 40#uscalar => ok (some code.Opcode.I32Load)
+  | 41#uscalar => ok (some code.Opcode.I64Load)
+  | 42#uscalar => ok (some code.Opcode.F32Load)
+  | 43#uscalar => ok (some code.Opcode.F64Load)
+  | 44#uscalar => ok (some code.Opcode.I32Load8S)
+  | 45#uscalar => ok (some code.Opcode.I32Load8U)
+  | 46#uscalar => ok (some code.Opcode.I32Load16S)
+  | 47#uscalar => ok (some code.Opcode.I32Load16U)
+  | 48#uscalar => ok (some code.Opcode.I64Load8S)
+  | 49#uscalar => ok (some code.Opcode.I64Load8U)
+  | 50#uscalar => ok (some code.Opcode.I64Load16S)
+  | 51#uscalar => ok (some code.Opcode.I64Load16U)
+  | 52#uscalar => ok (some code.Opcode.I64Load32S)
+  | 53#uscalar => ok (some code.Opcode.I64Load32U)
+  | 54#uscalar => ok (some code.Opcode.I32Store)
+  | 55#uscalar => ok (some code.Opcode.I64Store)
+  | 56#uscalar => ok (some code.Opcode.F32Store)
+  | 57#uscalar => ok (some code.Opcode.F64Store)
+  | 58#uscalar => ok (some code.Opcode.I32Store8)
+  | 59#uscalar => ok (some code.Opcode.I32Store16)
+  | 60#uscalar => ok (some code.Opcode.I64Store8)
+  | 61#uscalar => ok (some code.Opcode.I64Store16)
+  | 62#uscalar => ok (some code.Opcode.I64Store32)
+  | 63#uscalar => ok (some code.Opcode.MemorySize)
+  | 64#uscalar => ok (some code.Opcode.MemoryGrow)
+  | 65#uscalar => ok (some code.Opcode.I32Const)
+  | 66#uscalar => ok (some code.Opcode.I64Const)
+  | 67#uscalar => ok (some code.Opcode.F32Const)
+  | 68#uscalar => ok (some code.Opcode.F64Const)
+  | 69#uscalar => ok (some code.Opcode.I32Eqz)
+  | 70#uscalar => ok (some code.Opcode.I32Eq)
+  | 71#uscalar => ok (some code.Opcode.I32Ne)
+  | 72#uscalar => ok (some code.Opcode.I32LtS)
+  | 73#uscalar => ok (some code.Opcode.I32LtU)
+  | 74#uscalar => ok (some code.Opcode.I32GtS)
+  | 75#uscalar => ok (some code.Opcode.I32GtU)
+  | 76#uscalar => ok (some code.Opcode.I32LeS)
+  | 77#uscalar => ok (some code.Opcode.I32LeU)
+  | 78#uscalar => ok (some code.Opcode.I32GeS)
+  | 79#uscalar => ok (some code.Opcode.I32GeU)
+  | 80#uscalar => ok (some code.Opcode.I64Eqz)
+  | 81#uscalar => ok (some code.Opcode.I64Eq)
+  | 82#uscalar => ok (some code.Opcode.I64Ne)
+  | 83#uscalar => ok (some code.Opcode.I64LtS)
+  | 84#uscalar => ok (some code.Opcode.I64LtU)
+  | 85#uscalar => ok (some code.Opcode.I64GtS)
+  | 86#uscalar => ok (some code.Opcode.I64GtU)
+  | 87#uscalar => ok (some code.Opcode.I64LeS)
+  | 88#uscalar => ok (some code.Opcode.I64LeU)
+  | 89#uscalar => ok (some code.Opcode.I64GeS)
+  | 90#uscalar => ok (some code.Opcode.I64GeU)
+  | 91#uscalar => ok (some code.Opcode.F32Eq)
+  | 92#uscalar => ok (some code.Opcode.F32Ne)
+  | 93#uscalar => ok (some code.Opcode.F32Lt)
+  | 94#uscalar => ok (some code.Opcode.F32Gt)
+  | 95#uscalar => ok (some code.Opcode.F32Le)
+  | 96#uscalar => ok (some code.Opcode.F32Ge)
+  | 97#uscalar => ok (some code.Opcode.F64Eq)
+  | 98#uscalar => ok (some code.Opcode.F64Ne)
+  | 99#uscalar => ok (some code.Opcode.F64Lt)
+  | 100#uscalar => ok (some code.Opcode.F64Gt)
+  | 101#uscalar => ok (some code.Opcode.F64Le)
+  | 102#uscalar => ok (some code.Opcode.F64Ge)
+  | 103#uscalar => ok (some code.Opcode.I32Clz)
+  | 104#uscalar => ok (some code.Opcode.I32Ctz)
+  | 105#uscalar => ok (some code.Opcode.I32Popcnt)
+  | 106#uscalar => ok (some code.Opcode.I32Add)
+  | 107#uscalar => ok (some code.Opcode.I32Sub)
+  | 108#uscalar => ok (some code.Opcode.I32Mul)
+  | 109#uscalar => ok (some code.Opcode.I32DivS)
+  | 110#uscalar => ok (some code.Opcode.I32DivU)
+  | 111#uscalar => ok (some code.Opcode.I32RemS)
+  | 112#uscalar => ok (some code.Opcode.I32RemU)
+  | 113#uscalar => ok (some code.Opcode.I32And)
+  | 114#uscalar => ok (some code.Opcode.I32Or)
+  | 115#uscalar => ok (some code.Opcode.I32Xor)
+  | 116#uscalar => ok (some code.Opcode.I32Shl)
+  | 117#uscalar => ok (some code.Opcode.I32ShrS)
+  | 118#uscalar => ok (some code.Opcode.I32ShrU)
+  | 119#uscalar => ok (some code.Opcode.I32Rotl)
+  | 120#uscalar => ok (some code.Opcode.I32Rotr)
+  | 121#uscalar => ok (some code.Opcode.I64Clz)
+  | 122#uscalar => ok (some code.Opcode.I64Ctz)
+  | 123#uscalar => ok (some code.Opcode.I64Popcnt)
+  | 124#uscalar => ok (some code.Opcode.I64Add)
+  | 125#uscalar => ok (some code.Opcode.I64Sub)
+  | 126#uscalar => ok (some code.Opcode.I64Mul)
+  | 127#uscalar => ok (some code.Opcode.I64DivS)
+  | 128#uscalar => ok (some code.Opcode.I64DivU)
+  | 129#uscalar => ok (some code.Opcode.I64RemS)
+  | 130#uscalar => ok (some code.Opcode.I64RemU)
+  | 131#uscalar => ok (some code.Opcode.I64And)
+  | 132#uscalar => ok (some code.Opcode.I64Or)
+  | 133#uscalar => ok (some code.Opcode.I64Xor)
+  | 134#uscalar => ok (some code.Opcode.I64Shl)
+  | 135#uscalar => ok (some code.Opcode.I64ShrS)
+  | 136#uscalar => ok (some code.Opcode.I64ShrU)
+  | 137#uscalar => ok (some code.Opcode.I64Rotl)
+  | 138#uscalar => ok (some code.Opcode.I64Rotr)
+  | 139#uscalar => ok (some code.Opcode.F32Abs)
+  | 140#uscalar => ok (some code.Opcode.F32Neg)
+  | 141#uscalar => ok (some code.Opcode.F32Ceil)
+  | 142#uscalar => ok (some code.Opcode.F32Floor)
+  | 143#uscalar => ok (some code.Opcode.F32Trunc)
+  | 144#uscalar => ok (some code.Opcode.F32Nearest)
+  | 145#uscalar => ok (some code.Opcode.F32Sqrt)
+  | 146#uscalar => ok (some code.Opcode.F32Add)
+  | 147#uscalar => ok (some code.Opcode.F32Sub)
+  | 148#uscalar => ok (some code.Opcode.F32Mul)
+  | 149#uscalar => ok (some code.Opcode.F32Div)
+  | 150#uscalar => ok (some code.Opcode.F32Min)
+  | 151#uscalar => ok (some code.Opcode.F32Max)
+  | 152#uscalar => ok (some code.Opcode.F32Copysign)
+  | 153#uscalar => ok (some code.Opcode.F64Abs)
+  | 154#uscalar => ok (some code.Opcode.F64Neg)
+  | 155#uscalar => ok (some code.Opcode.F64Ceil)
+  | 156#uscalar => ok (some code.Opcode.F64Floor)
+  | 157#uscalar => ok (some code.Opcode.F64Trunc)
+  | 158#uscalar => ok (some code.Opcode.F64Nearest)
+  | 159#uscalar => ok (some code.Opcode.F64Sqrt)
+  | 160#uscalar => ok (some code.Opcode.F64Add)
+  | 161#uscalar => ok (some code.Opcode.F64Sub)
+  | 162#uscalar => ok (some code.Opcode.F64Mul)
+  | 163#uscalar => ok (some code.Opcode.F64Div)
+  | 164#uscalar => ok (some code.Opcode.F64Min)
+  | 165#uscalar => ok (some code.Opcode.F64Max)
+  | 166#uscalar => ok (some code.Opcode.F64Copysign)
+  | 167#uscalar => ok (some code.Opcode.I32WrapI64)
+  | 168#uscalar => ok (some code.Opcode.I32TruncF32S)
+  | 169#uscalar => ok (some code.Opcode.I32TruncF32U)
+  | 170#uscalar => ok (some code.Opcode.I32TruncF64S)
+  | 171#uscalar => ok (some code.Opcode.I32TruncF64U)
+  | 172#uscalar => ok (some code.Opcode.I64ExtendI32S)
+  | 173#uscalar => ok (some code.Opcode.I64ExtendI32U)
+  | 174#uscalar => ok (some code.Opcode.I64TruncF32S)
+  | 175#uscalar => ok (some code.Opcode.I64TruncF32U)
+  | 176#uscalar => ok (some code.Opcode.I64TruncF64S)
+  | 177#uscalar => ok (some code.Opcode.I64TruncF64U)
+  | 178#uscalar => ok (some code.Opcode.F32ConvertI32S)
+  | 179#uscalar => ok (some code.Opcode.F32ConvertI32U)
+  | 180#uscalar => ok (some code.Opcode.F32ConvertI64S)
+  | 181#uscalar => ok (some code.Opcode.F32ConvertI64U)
+  | 182#uscalar => ok (some code.Opcode.F32DemoteF64)
+  | 183#uscalar => ok (some code.Opcode.F64ConvertI32S)
+  | 184#uscalar => ok (some code.Opcode.F64ConvertI32U)
+  | 185#uscalar => ok (some code.Opcode.F64ConvertI64S)
+  | 186#uscalar => ok (some code.Opcode.F64ConvertI64U)
+  | 187#uscalar => ok (some code.Opcode.F64PromoteF32)
+  | 188#uscalar => ok (some code.Opcode.I32ReinterpretF32)
+  | 189#uscalar => ok (some code.Opcode.I64ReinterpretF64)
+  | 190#uscalar => ok (some code.Opcode.F32ReinterpretI32)
+  | 191#uscalar => ok (some code.Opcode.F64ReinterpretI64)
+  | 192#uscalar => ok (some code.Opcode.I32Extend8S)
+  | 193#uscalar => ok (some code.Opcode.I32Extend16S)
+  | 194#uscalar => ok (some code.Opcode.I64Extend8S)
+  | 195#uscalar => ok (some code.Opcode.I64Extend16S)
+  | 196#uscalar => ok (some code.Opcode.I64Extend32S)
+  | 208#uscalar => ok (some code.Opcode.RefNull)
+  | 209#uscalar => ok (some code.Opcode.RefIsNull)
+  | 210#uscalar => ok (some code.Opcode.RefFunc)
+  | 252#uscalar => ok (some code.Opcode.MiscPrefix)
+  | 253#uscalar => ok (some code.Opcode.SimdPrefix)
+  | _ => ok none
+
+/-- [itasca::code::OP_UNREACHABLE]
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_UNREACHABLE : Std.U8 := 0#u8
 
 /-- [itasca::code::OP_NOP]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_NOP : Std.U8 := 1#u8
 
 /-- [itasca::code::OP_BLOCK]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_BLOCK : Std.U8 := 2#u8
 
 /-- [itasca::code::OP_LOOP]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_LOOP : Std.U8 := 3#u8
 
 /-- [itasca::code::OP_IF]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_IF : Std.U8 := 4#u8
 
 /-- [itasca::code::OP_ELSE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_ELSE : Std.U8 := 5#u8
 
 /-- [itasca::code::OP_END]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_END : Std.U8 := 11#u8
 
 /-- [itasca::code::OP_BR]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_BR : Std.U8 := 12#u8
 
 /-- [itasca::code::OP_BR_IF]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_BR_IF : Std.U8 := 13#u8
 
 /-- [itasca::code::OP_BR_TABLE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_BR_TABLE : Std.U8 := 14#u8
 
 /-- [itasca::code::OP_RETURN]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_RETURN : Std.U8 := 15#u8
 
 /-- [itasca::code::OP_CALL]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_CALL : Std.U8 := 16#u8
 
 /-- [itasca::code::OP_CALL_INDIRECT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_CALL_INDIRECT : Std.U8 := 17#u8
 
 /-- [itasca::code::OP_DROP]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_DROP : Std.U8 := 26#u8
 
 /-- [itasca::code::OP_SELECT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_SELECT : Std.U8 := 27#u8
 
+/-- [itasca::code::OP_SELECT_TYPED]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_SELECT_TYPED : Std.U8 := 28#u8
+
 /-- [itasca::code::OP_LOCAL_GET]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_LOCAL_GET : Std.U8 := 32#u8
 
 /-- [itasca::code::OP_LOCAL_SET]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_LOCAL_SET : Std.U8 := 33#u8
 
 /-- [itasca::code::OP_LOCAL_TEE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_LOCAL_TEE : Std.U8 := 34#u8
 
 /-- [itasca::code::OP_GLOBAL_GET]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_GLOBAL_GET : Std.U8 := 35#u8
 
 /-- [itasca::code::OP_GLOBAL_SET]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_GLOBAL_SET : Std.U8 := 36#u8
 
+/-- [itasca::code::OP_TABLE_GET]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_TABLE_GET : Std.U8 := 37#u8
+
+/-- [itasca::code::OP_TABLE_SET]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_TABLE_SET : Std.U8 := 38#u8
+
 /-- [itasca::code::OP_I32_LOAD]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LOAD : Std.U8 := 40#u8
 
 /-- [itasca::code::OP_I64_LOAD]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD : Std.U8 := 41#u8
 
 /-- [itasca::code::OP_F32_LOAD]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_LOAD : Std.U8 := 42#u8
 
 /-- [itasca::code::OP_F64_LOAD]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_LOAD : Std.U8 := 43#u8
 
 /-- [itasca::code::OP_I32_LOAD8_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_S : Std.U8 := 44#u8
 
 /-- [itasca::code::OP_I32_LOAD8_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LOAD8_U : Std.U8 := 45#u8
 
 /-- [itasca::code::OP_I32_LOAD16_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_S : Std.U8 := 46#u8
 
 /-- [itasca::code::OP_I32_LOAD16_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LOAD16_U : Std.U8 := 47#u8
 
 /-- [itasca::code::OP_I64_LOAD8_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_S : Std.U8 := 48#u8
 
 /-- [itasca::code::OP_I64_LOAD8_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD8_U : Std.U8 := 49#u8
 
 /-- [itasca::code::OP_I64_LOAD16_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_S : Std.U8 := 50#u8
 
 /-- [itasca::code::OP_I64_LOAD16_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD16_U : Std.U8 := 51#u8
 
 /-- [itasca::code::OP_I64_LOAD32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_S : Std.U8 := 52#u8
 
 /-- [itasca::code::OP_I64_LOAD32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LOAD32_U : Std.U8 := 53#u8
 
 /-- [itasca::code::OP_I32_STORE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_STORE : Std.U8 := 54#u8
 
 /-- [itasca::code::OP_I64_STORE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_STORE : Std.U8 := 55#u8
 
 /-- [itasca::code::OP_F32_STORE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_STORE : Std.U8 := 56#u8
 
 /-- [itasca::code::OP_F64_STORE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_STORE : Std.U8 := 57#u8
 
 /-- [itasca::code::OP_I32_STORE8]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_STORE8 : Std.U8 := 58#u8
 
 /-- [itasca::code::OP_I32_STORE16]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_STORE16 : Std.U8 := 59#u8
 
 /-- [itasca::code::OP_I64_STORE8]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_STORE8 : Std.U8 := 60#u8
 
 /-- [itasca::code::OP_I64_STORE16]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_STORE16 : Std.U8 := 61#u8
 
 /-- [itasca::code::OP_I64_STORE32]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_STORE32 : Std.U8 := 62#u8
 
 /-- [itasca::code::OP_MEMORY_SIZE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_MEMORY_SIZE : Std.U8 := 63#u8
 
 /-- [itasca::code::OP_MEMORY_GROW]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_MEMORY_GROW : Std.U8 := 64#u8
 
 /-- [itasca::code::OP_I32_CONST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_CONST : Std.U8 := 65#u8
 
 /-- [itasca::code::OP_I64_CONST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_CONST : Std.U8 := 66#u8
 
 /-- [itasca::code::OP_F32_CONST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CONST : Std.U8 := 67#u8
 
 /-- [itasca::code::OP_F64_CONST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CONST : Std.U8 := 68#u8
 
 /-- [itasca::code::OP_I32_EQZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_EQZ : Std.U8 := 69#u8
 
 /-- [itasca::code::OP_I32_EQ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_EQ : Std.U8 := 70#u8
 
 /-- [itasca::code::OP_I32_NE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_NE : Std.U8 := 71#u8
 
 /-- [itasca::code::OP_I32_LT_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LT_S : Std.U8 := 72#u8
 
 /-- [itasca::code::OP_I32_LT_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LT_U : Std.U8 := 73#u8
 
 /-- [itasca::code::OP_I32_GT_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_GT_S : Std.U8 := 74#u8
 
 /-- [itasca::code::OP_I32_GT_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_GT_U : Std.U8 := 75#u8
 
 /-- [itasca::code::OP_I32_LE_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LE_S : Std.U8 := 76#u8
 
 /-- [itasca::code::OP_I32_LE_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_LE_U : Std.U8 := 77#u8
 
 /-- [itasca::code::OP_I32_GE_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_GE_S : Std.U8 := 78#u8
 
 /-- [itasca::code::OP_I32_GE_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_GE_U : Std.U8 := 79#u8
 
 /-- [itasca::code::OP_I64_EQZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EQZ : Std.U8 := 80#u8
 
 /-- [itasca::code::OP_I64_EQ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EQ : Std.U8 := 81#u8
 
 /-- [itasca::code::OP_I64_NE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_NE : Std.U8 := 82#u8
 
 /-- [itasca::code::OP_I64_LT_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LT_S : Std.U8 := 83#u8
 
 /-- [itasca::code::OP_I64_LT_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LT_U : Std.U8 := 84#u8
 
 /-- [itasca::code::OP_I64_GT_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_GT_S : Std.U8 := 85#u8
 
 /-- [itasca::code::OP_I64_GT_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_GT_U : Std.U8 := 86#u8
 
 /-- [itasca::code::OP_I64_LE_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LE_S : Std.U8 := 87#u8
 
 /-- [itasca::code::OP_I64_LE_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_LE_U : Std.U8 := 88#u8
 
 /-- [itasca::code::OP_I64_GE_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_GE_S : Std.U8 := 89#u8
 
 /-- [itasca::code::OP_I64_GE_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_GE_U : Std.U8 := 90#u8
 
 /-- [itasca::code::OP_F32_EQ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_EQ : Std.U8 := 91#u8
 
 /-- [itasca::code::OP_F32_NE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_NE : Std.U8 := 92#u8
 
 /-- [itasca::code::OP_F32_LT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_LT : Std.U8 := 93#u8
 
 /-- [itasca::code::OP_F32_GT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_GT : Std.U8 := 94#u8
 
 /-- [itasca::code::OP_F32_LE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_LE : Std.U8 := 95#u8
 
 /-- [itasca::code::OP_F32_GE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_GE : Std.U8 := 96#u8
 
 /-- [itasca::code::OP_F64_EQ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_EQ : Std.U8 := 97#u8
 
 /-- [itasca::code::OP_F64_NE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_NE : Std.U8 := 98#u8
 
 /-- [itasca::code::OP_F64_LT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_LT : Std.U8 := 99#u8
 
 /-- [itasca::code::OP_F64_GT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_GT : Std.U8 := 100#u8
 
 /-- [itasca::code::OP_F64_LE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_LE : Std.U8 := 101#u8
 
 /-- [itasca::code::OP_F64_GE]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_GE : Std.U8 := 102#u8
 
-/-- [itasca::code::OP_I32_SUB]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_SUB : Std.U8 := 107#u8
-
-/-- [itasca::code::OP_I32_MUL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_MUL : Std.U8 := 108#u8
-
-/-- [itasca::code::OP_I32_DIV_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_DIV_S : Std.U8 := 109#u8
-
-/-- [itasca::code::OP_I32_DIV_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_DIV_U : Std.U8 := 110#u8
-
-/-- [itasca::code::OP_I32_REM_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_REM_S : Std.U8 := 111#u8
-
-/-- [itasca::code::OP_I32_REM_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_REM_U : Std.U8 := 112#u8
-
-/-- [itasca::code::OP_I32_AND]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_AND : Std.U8 := 113#u8
-
-/-- [itasca::code::OP_I32_OR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_OR : Std.U8 := 114#u8
-
-/-- [itasca::code::OP_I32_XOR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_XOR : Std.U8 := 115#u8
-
-/-- [itasca::code::OP_I32_SHL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_SHL : Std.U8 := 116#u8
-
-/-- [itasca::code::OP_I32_SHR_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_SHR_S : Std.U8 := 117#u8
-
-/-- [itasca::code::OP_I32_SHR_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_SHR_U : Std.U8 := 118#u8
-
-/-- [itasca::code::OP_I32_ROTL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_ROTL : Std.U8 := 119#u8
-
-/-- [itasca::code::OP_I32_ROTR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I32_ROTR : Std.U8 := 120#u8
-
-/-- [itasca::code::OP_I64_ADD]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_ADD : Std.U8 := 124#u8
-
-/-- [itasca::code::OP_I64_SUB]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_SUB : Std.U8 := 125#u8
-
-/-- [itasca::code::OP_I64_MUL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_MUL : Std.U8 := 126#u8
-
-/-- [itasca::code::OP_I64_DIV_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_DIV_S : Std.U8 := 127#u8
-
-/-- [itasca::code::OP_I64_DIV_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_DIV_U : Std.U8 := 128#u8
-
-/-- [itasca::code::OP_I64_REM_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_REM_S : Std.U8 := 129#u8
-
-/-- [itasca::code::OP_I64_REM_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_REM_U : Std.U8 := 130#u8
-
-/-- [itasca::code::OP_I64_AND]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_AND : Std.U8 := 131#u8
-
-/-- [itasca::code::OP_I64_OR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_OR : Std.U8 := 132#u8
-
-/-- [itasca::code::OP_I64_XOR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_XOR : Std.U8 := 133#u8
-
-/-- [itasca::code::OP_I64_SHL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_SHL : Std.U8 := 134#u8
-
-/-- [itasca::code::OP_I64_SHR_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_SHR_S : Std.U8 := 135#u8
-
-/-- [itasca::code::OP_I64_SHR_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_SHR_U : Std.U8 := 136#u8
-
-/-- [itasca::code::OP_I64_ROTL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_ROTL : Std.U8 := 137#u8
-
-/-- [itasca::code::OP_I64_ROTR]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_I64_ROTR : Std.U8 := 138#u8
-
-/-- [itasca::code::OP_F32_ADD]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_ADD : Std.U8 := 146#u8
-
-/-- [itasca::code::OP_F32_SUB]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_SUB : Std.U8 := 147#u8
-
-/-- [itasca::code::OP_F32_MUL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_MUL : Std.U8 := 148#u8
-
-/-- [itasca::code::OP_F32_DIV]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_DIV : Std.U8 := 149#u8
-
-/-- [itasca::code::OP_F32_MIN]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_MIN : Std.U8 := 150#u8
-
-/-- [itasca::code::OP_F32_MAX]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_MAX : Std.U8 := 151#u8
-
-/-- [itasca::code::OP_F32_COPYSIGN]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F32_COPYSIGN : Std.U8 := 152#u8
-
-/-- [itasca::code::OP_F64_ADD]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_ADD : Std.U8 := 160#u8
-
-/-- [itasca::code::OP_F64_SUB]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_SUB : Std.U8 := 161#u8
-
-/-- [itasca::code::OP_F64_MUL]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_MUL : Std.U8 := 162#u8
-
-/-- [itasca::code::OP_F64_DIV]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_DIV : Std.U8 := 163#u8
-
-/-- [itasca::code::OP_F64_MIN]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_MIN : Std.U8 := 164#u8
-
-/-- [itasca::code::OP_F64_MAX]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_MAX : Std.U8 := 165#u8
-
-/-- [itasca::code::OP_F64_COPYSIGN]
-    Source: 'src/code.rs'
-    Visibility: public -/
-@[global_simps, irreducible] def code.OP_F64_COPYSIGN : Std.U8 := 166#u8
-
 /-- [itasca::code::OP_I32_CLZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_CLZ : Std.U8 := 103#u8
 
 /-- [itasca::code::OP_I32_CTZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_CTZ : Std.U8 := 104#u8
 
 /-- [itasca::code::OP_I32_POPCNT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_POPCNT : Std.U8 := 105#u8
 
 /-- [itasca::code::OP_I32_ADD]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_ADD : Std.U8 := 106#u8
 
+/-- [itasca::code::OP_I32_SUB]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_SUB : Std.U8 := 107#u8
+
+/-- [itasca::code::OP_I32_MUL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_MUL : Std.U8 := 108#u8
+
+/-- [itasca::code::OP_I32_DIV_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_DIV_S : Std.U8 := 109#u8
+
+/-- [itasca::code::OP_I32_DIV_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_DIV_U : Std.U8 := 110#u8
+
+/-- [itasca::code::OP_I32_REM_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_REM_S : Std.U8 := 111#u8
+
+/-- [itasca::code::OP_I32_REM_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_REM_U : Std.U8 := 112#u8
+
+/-- [itasca::code::OP_I32_AND]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_AND : Std.U8 := 113#u8
+
+/-- [itasca::code::OP_I32_OR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_OR : Std.U8 := 114#u8
+
+/-- [itasca::code::OP_I32_XOR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_XOR : Std.U8 := 115#u8
+
+/-- [itasca::code::OP_I32_SHL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_SHL : Std.U8 := 116#u8
+
+/-- [itasca::code::OP_I32_SHR_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_SHR_S : Std.U8 := 117#u8
+
+/-- [itasca::code::OP_I32_SHR_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_SHR_U : Std.U8 := 118#u8
+
+/-- [itasca::code::OP_I32_ROTL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_ROTL : Std.U8 := 119#u8
+
+/-- [itasca::code::OP_I32_ROTR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_ROTR : Std.U8 := 120#u8
+
 /-- [itasca::code::OP_I64_CLZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_CLZ : Std.U8 := 121#u8
 
 /-- [itasca::code::OP_I64_CTZ]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_CTZ : Std.U8 := 122#u8
 
 /-- [itasca::code::OP_I64_POPCNT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_POPCNT : Std.U8 := 123#u8
 
+/-- [itasca::code::OP_I64_ADD]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_ADD : Std.U8 := 124#u8
+
+/-- [itasca::code::OP_I64_SUB]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_SUB : Std.U8 := 125#u8
+
+/-- [itasca::code::OP_I64_MUL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_MUL : Std.U8 := 126#u8
+
+/-- [itasca::code::OP_I64_DIV_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_DIV_S : Std.U8 := 127#u8
+
+/-- [itasca::code::OP_I64_DIV_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_DIV_U : Std.U8 := 128#u8
+
+/-- [itasca::code::OP_I64_REM_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_REM_S : Std.U8 := 129#u8
+
+/-- [itasca::code::OP_I64_REM_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_REM_U : Std.U8 := 130#u8
+
+/-- [itasca::code::OP_I64_AND]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_AND : Std.U8 := 131#u8
+
+/-- [itasca::code::OP_I64_OR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_OR : Std.U8 := 132#u8
+
+/-- [itasca::code::OP_I64_XOR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_XOR : Std.U8 := 133#u8
+
+/-- [itasca::code::OP_I64_SHL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_SHL : Std.U8 := 134#u8
+
+/-- [itasca::code::OP_I64_SHR_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_SHR_S : Std.U8 := 135#u8
+
+/-- [itasca::code::OP_I64_SHR_U]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_SHR_U : Std.U8 := 136#u8
+
+/-- [itasca::code::OP_I64_ROTL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_ROTL : Std.U8 := 137#u8
+
+/-- [itasca::code::OP_I64_ROTR]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_ROTR : Std.U8 := 138#u8
+
 /-- [itasca::code::OP_F32_ABS]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_ABS : Std.U8 := 139#u8
 
 /-- [itasca::code::OP_F32_NEG]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_NEG : Std.U8 := 140#u8
 
 /-- [itasca::code::OP_F32_CEIL]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CEIL : Std.U8 := 141#u8
 
 /-- [itasca::code::OP_F32_FLOOR]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_FLOOR : Std.U8 := 142#u8
 
 /-- [itasca::code::OP_F32_TRUNC]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_TRUNC : Std.U8 := 143#u8
 
 /-- [itasca::code::OP_F32_NEAREST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_NEAREST : Std.U8 := 144#u8
 
 /-- [itasca::code::OP_F32_SQRT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_SQRT : Std.U8 := 145#u8
 
+/-- [itasca::code::OP_F32_ADD]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_ADD : Std.U8 := 146#u8
+
+/-- [itasca::code::OP_F32_SUB]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_SUB : Std.U8 := 147#u8
+
+/-- [itasca::code::OP_F32_MUL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_MUL : Std.U8 := 148#u8
+
+/-- [itasca::code::OP_F32_DIV]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_DIV : Std.U8 := 149#u8
+
+/-- [itasca::code::OP_F32_MIN]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_MIN : Std.U8 := 150#u8
+
+/-- [itasca::code::OP_F32_MAX]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_MAX : Std.U8 := 151#u8
+
+/-- [itasca::code::OP_F32_COPYSIGN]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F32_COPYSIGN : Std.U8 := 152#u8
+
 /-- [itasca::code::OP_F64_ABS]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_ABS : Std.U8 := 153#u8
 
 /-- [itasca::code::OP_F64_NEG]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_NEG : Std.U8 := 154#u8
 
 /-- [itasca::code::OP_F64_CEIL]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CEIL : Std.U8 := 155#u8
 
 /-- [itasca::code::OP_F64_FLOOR]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_FLOOR : Std.U8 := 156#u8
 
 /-- [itasca::code::OP_F64_TRUNC]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_TRUNC : Std.U8 := 157#u8
 
 /-- [itasca::code::OP_F64_NEAREST]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_NEAREST : Std.U8 := 158#u8
 
 /-- [itasca::code::OP_F64_SQRT]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_SQRT : Std.U8 := 159#u8
 
+/-- [itasca::code::OP_F64_ADD]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_ADD : Std.U8 := 160#u8
+
+/-- [itasca::code::OP_F64_SUB]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_SUB : Std.U8 := 161#u8
+
+/-- [itasca::code::OP_F64_MUL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_MUL : Std.U8 := 162#u8
+
+/-- [itasca::code::OP_F64_DIV]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_DIV : Std.U8 := 163#u8
+
+/-- [itasca::code::OP_F64_MIN]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_MIN : Std.U8 := 164#u8
+
+/-- [itasca::code::OP_F64_MAX]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_MAX : Std.U8 := 165#u8
+
+/-- [itasca::code::OP_F64_COPYSIGN]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_F64_COPYSIGN : Std.U8 := 166#u8
+
 /-- [itasca::code::OP_I32_WRAP_I64]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_WRAP_I64 : Std.U8 := 167#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_S : Std.U8 := 168#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F32_U : Std.U8 := 169#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_S : Std.U8 := 170#u8
 
 /-- [itasca::code::OP_I32_TRUNC_F64_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_TRUNC_F64_U : Std.U8 := 171#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_S : Std.U8 := 172#u8
 
 /-- [itasca::code::OP_I64_EXTEND_I32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_EXTEND_I32_U : Std.U8 := 173#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_S : Std.U8 := 174#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F32_U : Std.U8 := 175#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_S : Std.U8 := 176#u8
 
 /-- [itasca::code::OP_I64_TRUNC_F64_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_TRUNC_F64_U : Std.U8 := 177#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_S : Std.U8 := 178#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I32_U : Std.U8 := 179#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_S : Std.U8 := 180#u8
 
 /-- [itasca::code::OP_F32_CONVERT_I64_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_CONVERT_I64_U : Std.U8 := 181#u8
 
 /-- [itasca::code::OP_F32_DEMOTE_F64]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_DEMOTE_F64 : Std.U8 := 182#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_S : Std.U8 := 183#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I32_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I32_U : Std.U8 := 184#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_S]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_S : Std.U8 := 185#u8
 
 /-- [itasca::code::OP_F64_CONVERT_I64_U]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_CONVERT_I64_U : Std.U8 := 186#u8
 
 /-- [itasca::code::OP_F64_PROMOTE_F32]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_PROMOTE_F32 : Std.U8 := 187#u8
 
 /-- [itasca::code::OP_I32_REINTERPRET_F32]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I32_REINTERPRET_F32 : Std.U8 := 188#u8
 
 /-- [itasca::code::OP_I64_REINTERPRET_F64]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_I64_REINTERPRET_F64 : Std.U8 := 189#u8
 
 /-- [itasca::code::OP_F32_REINTERPRET_I32]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F32_REINTERPRET_I32 : Std.U8 := 190#u8
 
 /-- [itasca::code::OP_F64_REINTERPRET_I64]
-    Source: 'src/code.rs'
-    Visibility: public -/
+    Source: 'src/code.rs' -/
 @[global_simps, irreducible] def code.OP_F64_REINTERPRET_I64 : Std.U8 := 191#u8
+
+/-- [itasca::code::OP_I32_EXTEND8_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_EXTEND8_S : Std.U8 := 192#u8
+
+/-- [itasca::code::OP_I32_EXTEND16_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I32_EXTEND16_S : Std.U8 := 193#u8
+
+/-- [itasca::code::OP_I64_EXTEND8_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_EXTEND8_S : Std.U8 := 194#u8
+
+/-- [itasca::code::OP_I64_EXTEND16_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_EXTEND16_S : Std.U8 := 195#u8
+
+/-- [itasca::code::OP_I64_EXTEND32_S]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_I64_EXTEND32_S : Std.U8 := 196#u8
+
+/-- [itasca::code::OP_REF_NULL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_REF_NULL : Std.U8 := 208#u8
+
+/-- [itasca::code::OP_REF_IS_NULL]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_REF_IS_NULL : Std.U8 := 209#u8
+
+/-- [itasca::code::OP_REF_FUNC]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_REF_FUNC : Std.U8 := 210#u8
+
+/-- [itasca::code::OP_MISC_PREFIX]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_MISC_PREFIX : Std.U8 := 252#u8
+
+/-- [itasca::code::OP_SIMD_PREFIX]
+    Source: 'src/code.rs' -/
+@[global_simps, irreducible] def code.OP_SIMD_PREFIX : Std.U8 := 253#u8
 
 /-- [itasca::code::cur_base]:
     Source: 'src/code.rs' -/
@@ -3477,10 +3549,6 @@ def code.saturating_types
   | 6#uscalar => ok (some (wasm_types.ValueType.F64, wasm_types.ValueType.I64))
   | 7#uscalar => ok (some (wasm_types.ValueType.F64, wasm_types.ValueType.I64))
   | _ => ok none
-
-/-- [itasca::code::OP_MISC_PREFIX]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_MISC_PREFIX : Std.U8 := 252#u8
 
 /-- [itasca::code::visit_saturating]:
     Source: 'src/code.rs' -/
@@ -9231,11 +9299,11 @@ def code.OpVisitor.on_i32_eqz.default
   := do
   ok (core.result.Result.Ok (), self)
 
-/-- Trait implementation: [itasca::code::{impl itasca::code::OpVisitor for itasca::code::EmptyOpVisitor}]
+/-- Trait implementation: [itasca::code::{impl itasca::code::OpVisitor for itasca::code::DefaultOpVisitor}]
     Source: 'src/code.rs' -/
 @[reducible]
-def code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
-  code.EmptyOpVisitor := {
+def code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
+  code.DefaultOpVisitor := {
   on_ref_null := code.OpVisitor.on_ref_null.default
   on_ref_is_null := code.OpVisitor.on_ref_is_null.default
   on_ref_func := code.OpVisitor.on_ref_func.default
@@ -9454,7 +9522,7 @@ def code.branch_table
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
   let (r, st1, _) ←
-    code.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st
+    code.branch_table_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st
       data env ()
   ok (r, st1)
 
@@ -9668,9 +9736,9 @@ def code.initial_state
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
         code.BodyState (core.convert.FromSame error.OpError) residual
 
-/-- [itasca::code::step_profile]:
+/-- [itasca::code::step_body]:
     Source: 'src/code.rs' -/
-def code.step_profile
+def code.step_body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
   (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
   (type_index : Std.U32) (op : Std.U8) (visitor : V) :
@@ -9950,7 +10018,7 @@ def code.body_loop_loop.body
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (op, «end») := val
       let (r1, st1, visitor1) ←
-        code.step_profile OpVisitorInst
+        code.step_body OpVisitorInst
           { core := { st.core with pos := «end» } } data env ctx type_index
           op visitor
       let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -10021,26 +10089,6 @@ def code.validate_body_with
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           Unit (core.convert.FromSame error.OpError) residual
       ok (r1, visitor)
-
-/-- [itasca::code::OP_I32_EXTEND8_S]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_I32_EXTEND8_S : Std.U8 := 192#u8
-
-/-- [itasca::code::OP_I32_EXTEND16_S]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_I32_EXTEND16_S : Std.U8 := 193#u8
-
-/-- [itasca::code::OP_I64_EXTEND8_S]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_I64_EXTEND8_S : Std.U8 := 194#u8
-
-/-- [itasca::code::OP_I64_EXTEND16_S]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_I64_EXTEND16_S : Std.U8 := 195#u8
-
-/-- [itasca::code::OP_I64_EXTEND32_S]
-    Source: 'src/code.rs' -/
-@[global_simps, irreducible] def code.OP_I64_EXTEND32_S : Std.U8 := 196#u8
 
 /-- [itasca::error::{impl core::convert::From<itasca::error::OpError> for itasca::error::Error}::from]:
     Source: 'src/error.rs'
@@ -10341,14 +10389,14 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   (self : stream.SyncVisitor) :
-  Result ((core.result.Result stream.CodeBatch error.Error) ×
+  Result ((core.result.Result stream.StreamingBatch error.Error) ×
     stream.SyncVisitor)
   := do
   let (o, o1) := core.option.Option.take self.completed
   match o with
   | none =>
     ok (core.result.Result.Err error.Error.Host, { self with completed := o1 })
-  | some cb => ok (core.result.Result.Ok cb, { self with completed := o1 })
+  | some sb => ok (core.result.Result.Ok sb, { self with completed := o1 })
 
 /-- [itasca::metadata::copy_value_types]: loop body 0:
     Source: 'src/module.rs' -/
@@ -10669,11 +10717,11 @@ def metadata.validate_code_entry_with
           Std.Usize error.Error.Insts.CoreConvertFromOpError residual
       ok (r1, v)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_next]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_next]:
     Source: 'src/stream.rs' -/
-def stream.CodeBatch.validate_next
-  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (self : stream.CodeBatch)
-  (index : Std.Usize) (visitor : V) :
+def stream.StreamingBatch.validate_next
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (self : stream.StreamingBatch) (index : Std.Usize) (visitor : V) :
   Result ((core.result.Result Std.Usize error.Error) × V)
   := do
   if self.num_validated >= self.num_funcs
@@ -10686,13 +10734,13 @@ def stream.CodeBatch.validate_next
       metadata.validate_code_entry_with codeOpVisitorInst self.code
         self.validated_end self.env index visitor
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_func]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_func]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.validate_func
-  {V : Type} (codeOpVisitorInst : code.OpVisitor V) (self : stream.CodeBatch)
-  (index : Std.Usize) (visitor : V) :
-  Result ((core.result.Result Unit error.Error) × stream.CodeBatch × V)
+def stream.StreamingBatch.validate_func
+  {V : Type} (codeOpVisitorInst : code.OpVisitor V)
+  (self : stream.StreamingBatch) (index : Std.Usize) (visitor : V) :
+  Result ((core.result.Result Unit error.Error) × stream.StreamingBatch × V)
   := do
   let b := core.option.Option.is_none self.error
   let (i, i1, o, visitor1) ←
@@ -10700,7 +10748,8 @@ def stream.CodeBatch.validate_func
     then
       do
       let (r, visitor2) ←
-        stream.CodeBatch.validate_next codeOpVisitorInst self index visitor
+        stream.StreamingBatch.validate_next codeOpVisitorInst self index
+          visitor
       let (i2, i3, o1) ←
         match r with
         | core.result.Result.Ok «end» =>
@@ -10721,12 +10770,12 @@ def stream.CodeBatch.validate_func
       { self with num_validated := i, validated_end := i1, error := o },
       visitor1)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop body 0:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_all]: loop body 0:
     Source: 'src/stream.rs' -/
 @[rust_loop_body]
-def stream.CodeBatch.validate_all_loop.body
-  (self : stream.CodeBatch) (ok1 : Bool) :
-  Result (ControlFlow (stream.CodeBatch × Bool) (Std.U64 × Std.Usize ×
+def stream.StreamingBatch.validate_all_loop.body
+  (self : stream.StreamingBatch) (ok1 : Bool) :
+  Result (ControlFlow (stream.StreamingBatch × Bool) (Std.U64 × Std.Usize ×
     metadata.Env × (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize ×
     Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option error.Error)))
   := do
@@ -10736,8 +10785,8 @@ def stream.CodeBatch.validate_all_loop.body
     then
       let index ← self.first_func + self.num_validated
       let (r, self1, _) ←
-        stream.CodeBatch.validate_func
-          code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor self index ()
+        stream.StreamingBatch.validate_func
+          code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor self index ()
       let ok2 ← core.result.Result.is_ok r
       ok (cont (self1, ok2))
     else
@@ -10749,25 +10798,26 @@ def stream.CodeBatch.validate_all_loop.body
       self.code_offset, self.first_func, self.num_funcs, self.num_dispatched,
       self.dispatch_end, self.num_validated, self.validated_end, self.error))
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]: loop 0:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_all]: loop 0:
     Source: 'src/stream.rs' -/
 @[rust_loop]
-def stream.CodeBatch.validate_all_loop
-  (self : stream.CodeBatch) (ok1 : Bool) :
+def stream.StreamingBatch.validate_all_loop
+  (self : stream.StreamingBatch) (ok1 : Bool) :
   Result (Std.U64 × Std.Usize × metadata.Env × (Slice Std.U8) × Std.Usize
     × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
     Std.Usize × (Option error.Error))
   := do
   loop
-    (fun (self1, ok2) => stream.CodeBatch.validate_all_loop.body self1 ok2)
+    (fun (self1, ok2) => stream.StreamingBatch.validate_all_loop.body self1
+      ok2)
     (self, ok1)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::validate_all]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_all]:
     Source: 'src/stream.rs' -/
-def stream.CodeBatch.validate_all
-  (self : stream.CodeBatch) : Result stream.CodeBatch := do
+def stream.StreamingBatch.validate_all
+  (self : stream.StreamingBatch) : Result stream.StreamingBatch := do
   let (i, i1, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
-    stream.CodeBatch.validate_all_loop self true
+    stream.StreamingBatch.validate_all_loop self true
   ok
     {
       module_id := i,
@@ -10788,10 +10838,10 @@ def stream.CodeBatch.validate_all
     Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
-  (self : stream.SyncVisitor) (batch : stream.CodeBatch) :
+  (self : stream.SyncVisitor) (batch : stream.StreamingBatch) :
   Result ((core.result.Result Unit error.Error) × stream.SyncVisitor)
   := do
-  let batch1 ← stream.CodeBatch.validate_all batch
+  let batch1 ← stream.StreamingBatch.validate_all batch
   ok (core.result.Result.Ok (), { self with completed := (some batch1) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
@@ -10799,7 +10849,8 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
   (self : stream.SyncVisitor) (_env : metadata.Env) :
-  Result ((core.result.Result stream.Config error.Error) × stream.SyncVisitor)
+  Result ((core.result.Result stream.StreamingConfig error.Error) ×
+    stream.SyncVisitor)
   := do
   ok (core.result.Result.Ok
     { batch_bytes := 25000#usize, max_batches := 1#usize }, self)
@@ -10808,7 +10859,7 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
     Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region
-  (self : stream.SyncVisitor) (_region : stream.Region) :
+  (self : stream.SyncVisitor) (_region : stream.StreamingRegion) :
   Result stream.SyncVisitor
   := do
   ok self
@@ -10851,19 +10902,19 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
     stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
 }
 
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::tail]:
+/-- [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}::tail]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.tail
+def stream.SliceSource.Insts.ItascaStreamStreamingSource.tail
   (self : stream.SliceSource) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
   ok (core.result.Result.Ok self.tail)
 
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code]:
+/-- [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}::code]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.code
+def stream.SliceSource.Insts.ItascaStreamStreamingSource.code
   (self : stream.SliceSource) (start : Std.Usize) («end» : Std.Usize) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
@@ -10880,31 +10931,32 @@ def stream.SliceSource.Insts.ItascaStreamSource.code
           { start, «end» }
       ok (core.result.Result.Ok s)
 
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::code_len]:
+/-- [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}::code_len]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.code_len
+def stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len
   (self : stream.SliceSource) : Result Std.Usize := do
   ok (Slice.len self.code)
 
-/-- [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}::environment]:
+/-- [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}::environment]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.SliceSource.Insts.ItascaStreamSource.environment
+def stream.SliceSource.Insts.ItascaStreamStreamingSource.environment
   (self : stream.SliceSource) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
   ok (core.result.Result.Ok self.env)
 
-/-- Trait implementation: [itasca::stream::{impl itasca::stream::Source for itasca::stream::SliceSource<'_0>}]
+/-- Trait implementation: [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}]
     Source: 'src/stream.rs' -/
 @[reducible]
-def stream.SliceSource.Insts.ItascaStreamSource : stream.Source
-  stream.SliceSource := {
-  environment := stream.SliceSource.Insts.ItascaStreamSource.environment
-  code_len := stream.SliceSource.Insts.ItascaStreamSource.code_len
-  code := stream.SliceSource.Insts.ItascaStreamSource.code
-  tail := stream.SliceSource.Insts.ItascaStreamSource.tail
+def stream.SliceSource.Insts.ItascaStreamStreamingSource :
+  stream.StreamingSource stream.SliceSource := {
+  environment :=
+    stream.SliceSource.Insts.ItascaStreamStreamingSource.environment
+  code_len := stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len
+  code := stream.SliceSource.Insts.ItascaStreamStreamingSource.code
+  tail := stream.SliceSource.Insts.ItascaStreamStreamingSource.tail
 }
 
 /-- [itasca::stream::read_len]:
@@ -11055,10 +11107,10 @@ def stream.find_code_region
   let len := Slice.len bytes
   stream.find_code_region_loop bytes len 8#usize
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::finish]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::finish]:
     Source: 'src/stream.rs' -/
-def stream.CodeBatch.finish
-  (self : stream.CodeBatch) :
+def stream.StreamingBatch.finish
+  (self : stream.StreamingBatch) :
   Result (core.result.Result Unit error.Error)
   := do
   match self.error with
@@ -11113,11 +11165,11 @@ def stream.retire_code_batch
   let (r, visitor1) ← StreamingVisitorInst.poll_code_batch visitor
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
-  | core.ops.control_flow.ControlFlow.Continue cb =>
-    if cb.module_id != module_id
+  | core.ops.control_flow.ControlFlow.Continue sb =>
+    if sb.module_id != module_id
     then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
     else
-      let i ← stream.retire_code_batch_loop pending cb.batch_id 0#usize
+      let i ← stream.retire_code_batch_loop pending sb.batch_id 0#usize
       let i1 := alloc.vec.Vec.len pending
       if i = i1
       then ok (core.result.Result.Err error.Error.Host, visitor1, pending)
@@ -11132,7 +11184,7 @@ def stream.retire_code_batch
             Std.Usize) pending i
         let pending1 := index_mut_back i3
         let (_, pending2) ← alloc.vec.Vec.pop Global pending1
-        let r1 ← stream.CodeBatch.finish cb
+        let r1 ← stream.StreamingBatch.finish sb
         ok (r1, visitor1, pending2)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
@@ -11194,11 +11246,11 @@ def stream.retire_all_code_batches
 /-- [itasca::stream::read_exact]:
     Source: 'src/stream.rs' -/
 def stream.read_exact
-  {S : Type} (SourceInst : stream.Source S) (source : S) (start : Std.Usize)
-  («end» : Std.Usize) :
+  {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
+  (start : Std.Usize) («end» : Std.Usize) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
-  let r ← SourceInst.code source start «end»
+  let r ← StreamingSourceInst.code source start «end»
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -11215,10 +11267,10 @@ def stream.read_exact
     Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.get_next_batch_loop.body
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
-  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
-  :
+  {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
+  (code_len : Std.Usize) (first_func : Std.Usize) (num_funcs : Std.Usize)
+  (threshold : Std.Usize) (pos : Std.Usize) (func : Std.Usize)
+  (batch_bytes : Std.Usize) (done1 : Bool) :
   Result (ControlFlow (Std.Usize × Std.Usize × Std.Usize × Bool)
     (core.result.Result (Std.Usize × Std.Usize) error.Error))
   := do
@@ -11229,7 +11281,7 @@ def stream.get_next_batch_loop.body
     else
       let i ← pos + limits.MAX_LEB_BYTES
       let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
-      let r ← stream.read_exact SourceInst source pos i1
+      let r ← stream.read_exact StreamingSourceInst source pos i1
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | core.ops.control_flow.ControlFlow.Continue val =>
@@ -11320,47 +11372,47 @@ def stream.get_next_batch_loop.body
     Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.get_next_batch_loop
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (first_func : Std.Usize) (num_funcs : Std.Usize) (threshold : Std.Usize)
-  (pos : Std.Usize) (func : Std.Usize) (batch_bytes : Std.Usize) (done1 : Bool)
-  :
+  {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
+  (code_len : Std.Usize) (first_func : Std.Usize) (num_funcs : Std.Usize)
+  (threshold : Std.Usize) (pos : Std.Usize) (func : Std.Usize)
+  (batch_bytes : Std.Usize) (done1 : Bool) :
   Result (core.result.Result (Std.Usize × Std.Usize) error.Error)
   := do
   loop
     (fun (pos1, func1, batch_bytes1, done2) => stream.get_next_batch_loop.body
-      SourceInst source code_len first_func num_funcs threshold pos1 func1
-      batch_bytes1 done2)
+      StreamingSourceInst source code_len first_func num_funcs threshold pos1
+      func1 batch_bytes1 done2)
     (pos, func, batch_bytes, done1)
 
 /-- [itasca::stream::get_next_batch]:
     Source: 'src/stream.rs' -/
 @[reducible]
 def stream.get_next_batch
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (start : Std.Usize) (first_func : Std.Usize) (num_funcs : Std.Usize)
-  (threshold : Std.Usize) :
+  {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
+  (code_len : Std.Usize) (start : Std.Usize) (first_func : Std.Usize)
+  (num_funcs : Std.Usize) (threshold : Std.Usize) :
   Result (core.result.Result (Std.Usize × Std.Usize) error.Error)
   := do
-  stream.get_next_batch_loop SourceInst source code_len first_func num_funcs
-    threshold start first_func 0#usize false
+  stream.get_next_batch_loop StreamingSourceInst source code_len first_func
+    num_funcs threshold start first_func 0#usize false
 
 /-- [itasca::stream::submit_code_batches]: loop body 0:
     Source: 'src/stream.rs' -/
 @[rust_loop_body]
 def stream.submit_code_batches_loop.body
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (v : alloc.vec.Vec wasm_types.FuncType) (v1 : alloc.vec.Vec metadata.Import)
-  (v2 : alloc.vec.Vec metadata.Global) (v3 : alloc.vec.Vec metadata.Export)
-  (v4 : alloc.vec.Vec metadata.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
+  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
+  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
+  (source : S) (v : alloc.vec.Vec wasm_types.FuncType)
+  (v1 : alloc.vec.Vec metadata.Import) (v2 : alloc.vec.Vec metadata.Global)
+  (v3 : alloc.vec.Vec metadata.Export) (v4 : alloc.vec.Vec metadata.Element)
+  (o : Option Std.U32) (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
   (v6 : alloc.vec.Vec Std.U32) (v7 : alloc.vec.Vec wasm_types.FuncType)
   (v8 : alloc.vec.Vec wasm_types.TableType)
   (v9 : alloc.vec.Vec wasm_types.MemType)
   (v10 : alloc.vec.Vec wasm_types.GlobalType) (i : Std.Usize) (i1 : Std.Usize)
-  (code_len : Std.Usize) (config : stream.Config) (num_funcs : Std.Usize)
-  (visitor : V) (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize)
-  (func : Std.Usize) (batch_id : Std.Usize) :
+  (code_len : Std.Usize) (config : stream.StreamingConfig)
+  (num_funcs : Std.Usize) (visitor : V) (pending : alloc.vec.Vec Std.Usize)
+  (pos : Std.Usize) (func : Std.Usize) (batch_id : Std.Usize) :
   Result (ControlFlow (V × (alloc.vec.Vec Std.Usize) × Std.Usize × Std.Usize
     × Std.Usize) ((core.result.Result (alloc.vec.Vec Std.Usize) error.Error)
     × V))
@@ -11376,13 +11428,13 @@ def stream.submit_code_batches_loop.body
       match cf with
       | core.ops.control_flow.ControlFlow.Continue _ =>
         let r1 ←
-          stream.get_next_batch SourceInst source code_len pos func num_funcs
-            config.batch_bytes
+          stream.get_next_batch StreamingSourceInst source code_len pos func
+            num_funcs config.batch_bytes
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue val =>
           let («end», next_func) := val
-          let r2 ← stream.read_exact SourceInst source pos «end»
+          let r2 ← stream.read_exact StreamingSourceInst source pos «end»
           let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -11452,13 +11504,13 @@ def stream.submit_code_batches_loop.body
         ok (done (r1, visitor1))
     else
       let r ←
-        stream.get_next_batch SourceInst source code_len pos func num_funcs
-          config.batch_bytes
+        stream.get_next_batch StreamingSourceInst source code_len pos func
+          num_funcs config.batch_bytes
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | core.ops.control_flow.ControlFlow.Continue val =>
         let («end», next_func) := val
-        let r1 ← stream.read_exact SourceInst source pos «end»
+        let r1 ← stream.read_exact StreamingSourceInst source pos «end»
         let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -11531,40 +11583,41 @@ def stream.submit_code_batches_loop.body
     Source: 'src/stream.rs' -/
 @[rust_loop]
 def stream.submit_code_batches_loop
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (v : alloc.vec.Vec wasm_types.FuncType) (v1 : alloc.vec.Vec metadata.Import)
-  (v2 : alloc.vec.Vec metadata.Global) (v3 : alloc.vec.Vec metadata.Export)
-  (v4 : alloc.vec.Vec metadata.Element) (o : Option Std.U32)
-  (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
+  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
+  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
+  (source : S) (v : alloc.vec.Vec wasm_types.FuncType)
+  (v1 : alloc.vec.Vec metadata.Import) (v2 : alloc.vec.Vec metadata.Global)
+  (v3 : alloc.vec.Vec metadata.Export) (v4 : alloc.vec.Vec metadata.Element)
+  (o : Option Std.U32) (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
   (v6 : alloc.vec.Vec Std.U32) (v7 : alloc.vec.Vec wasm_types.FuncType)
   (v8 : alloc.vec.Vec wasm_types.TableType)
   (v9 : alloc.vec.Vec wasm_types.MemType)
   (v10 : alloc.vec.Vec wasm_types.GlobalType) (i : Std.Usize) (i1 : Std.Usize)
-  (code_len : Std.Usize) (config : stream.Config) (visitor : V)
+  (code_len : Std.Usize) (config : stream.StreamingConfig) (visitor : V)
   (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
   (batch_id : Std.Usize) (num_funcs : Std.Usize) :
   Result ((core.result.Result (alloc.vec.Vec Std.Usize) error.Error) × V)
   := do
   loop
     (fun (visitor1, pending1, pos1, func1, batch_id1) =>
-      stream.submit_code_batches_loop.body SourceInst StreamingVisitorInst
-      module_id source v v1 v2 v3 v4 o v5 o1 v6 v7 v8 v9 v10 i i1 code_len
-      config num_funcs visitor1 pending1 pos1 func1 batch_id1)
+      stream.submit_code_batches_loop.body StreamingSourceInst
+      StreamingVisitorInst module_id source v v1 v2 v3 v4 o v5 o1 v6 v7 v8 v9
+      v10 i i1 code_len config num_funcs visitor1 pending1 pos1 func1
+      batch_id1)
     (visitor, pending, pos, func, batch_id)
 
 /-- [itasca::stream::submit_code_batches]:
     Source: 'src/stream.rs' -/
 def stream.submit_code_batches
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (env : metadata.Env) (code_len : Std.Usize) (pos : Std.Usize)
-  (config : stream.Config) (visitor : V) :
+  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
+  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
+  (source : S) (env : metadata.Env) (code_len : Std.Usize) (pos : Std.Usize)
+  (config : stream.StreamingConfig) (visitor : V) :
   Result ((core.result.Result (alloc.vec.Vec Std.Usize) error.Error) × V)
   := do
   let num_funcs := alloc.vec.Vec.len env.func_type_indices
-  stream.submit_code_batches_loop SourceInst StreamingVisitorInst module_id
-    source env.types env.imports env.globals env.exports env.elements
+  stream.submit_code_batches_loop StreamingSourceInst StreamingVisitorInst
+    module_id source env.types env.imports env.globals env.exports env.elements
     env.data_count env.declared_funcs env.start env.func_type_indices
     env.func_types env.table_types env.mem_types env.global_types
     env.num_imported_funcs env.num_imported_globals code_len config visitor
@@ -11573,8 +11626,8 @@ def stream.submit_code_batches
 /-- [itasca::stream::read_code_header]:
     Source: 'src/stream.rs' -/
 def stream.read_code_header
-  {S : Type} (SourceInst : stream.Source S) (source : S) (code_len : Std.Usize)
-  (env : metadata.Env) :
+  {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
+  (code_len : Std.Usize) (env : metadata.Env) :
   Result (core.result.Result Std.Usize error.Error)
   := do
   if code_len = 0#usize
@@ -11586,7 +11639,7 @@ def stream.read_code_header
   else
     let i ← limits.MAX_CODE_HEADER_BYTES
     let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
-    let r ← stream.read_exact SourceInst source 0#usize i1
+    let r ← stream.read_exact StreamingSourceInst source 0#usize i1
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
@@ -12765,17 +12818,17 @@ def metadata.validate_tail_with
 /-- [itasca::stream::validate_remaining]:
     Source: 'src/stream.rs' -/
 def stream.validate_remaining
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S)
-  (env : metadata.Env) (env_len : Std.Usize) (visitor : V) :
+  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
+  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
+  (source : S) (env : metadata.Env) (env_len : Std.Usize) (visitor : V) :
   Result ((core.result.Result Unit error.Error) × V)
   := do
-  let code_len ← SourceInst.code_len source
+  let code_len ← StreamingSourceInst.code_len source
   let r ← limits.add_offset env_len code_len
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← stream.read_code_header SourceInst source code_len env
+    let r1 ← stream.read_code_header StreamingSourceInst source code_len env
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
@@ -12790,8 +12843,9 @@ def stream.validate_remaining
           then ok (core.result.Result.Err error.Error.Host, visitor1)
           else
             let (r3, visitor2) ←
-              stream.submit_code_batches SourceInst StreamingVisitorInst
-                module_id source env code_len val1 val2 visitor1
+              stream.submit_code_batches StreamingSourceInst
+                StreamingVisitorInst module_id source env code_len val1 val2
+                visitor1
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue val3 =>
@@ -12799,7 +12853,7 @@ def stream.validate_remaining
               let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
               match cf4 with
               | core.ops.control_flow.ControlFlow.Continue _ =>
-                let r5 ← SourceInst.tail source
+                let r5 ← StreamingSourceInst.tail source
                 let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
                 match cf5 with
                 | core.ops.control_flow.ControlFlow.Continue val4 =>
@@ -12810,7 +12864,7 @@ def stream.validate_remaining
                   | core.ops.control_flow.ControlFlow.Continue _ =>
                     let visitor4 ←
                       StreamingVisitorInst.custom_region visitor3
-                        stream.Region.Tail
+                        stream.StreamingRegion.Tail
                     let (r7, visitor5) ←
                       metadata.validate_tail_with
                         StreamingVisitorInst.metadataModuleVisitorInst val4
@@ -15062,12 +15116,12 @@ def metadata.validate_env_with
     Source: 'src/stream.rs'
     Visibility: public -/
 def stream.validate_streaming
-  {S : Type} {V : Type} (SourceInst : stream.Source S) (StreamingVisitorInst :
-  stream.StreamingVisitor V) (module_id : Std.U64) (source : S) (visitor : V)
-  (env : metadata.Env) :
+  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
+  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
+  (source : S) (visitor : V) (env : metadata.Env) :
   Result ((core.result.Result Unit error.Error) × V × metadata.Env)
   := do
-  let r ← SourceInst.environment source
+  let r ← StreamingSourceInst.environment source
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
@@ -15077,7 +15131,8 @@ def stream.validate_streaming
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let visitor1 ←
-        StreamingVisitorInst.custom_region visitor stream.Region.Environment
+        StreamingVisitorInst.custom_region visitor
+          stream.StreamingRegion.Environment
       let (r2, visitor2) ←
         metadata.validate_env_with
           StreamingVisitorInst.metadataModuleVisitorInst val visitor1
@@ -15089,8 +15144,8 @@ def stream.validate_streaming
         then ok (core.result.Result.Err error.Error.Host, visitor2, env)
         else
           let (r3, visitor3) ←
-            stream.validate_remaining SourceInst StreamingVisitorInst module_id
-              source decoded val1 visitor2
+            stream.validate_remaining StreamingSourceInst StreamingVisitorInst
+              module_id source decoded val1 visitor2
           ok (r3, visitor3, decoded)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
@@ -15127,7 +15182,8 @@ def stream.validate_module_slice
       Std.U8) bytes { start := code_end, «end» := i }
   let env ← metadata.Env.new
   let (r, visitor, env1) ←
-    stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
+    stream.validate_streaming
+      stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
       { env := s, code := s1, tail := s2 } { completed := none, tail := none }
       env
@@ -15150,26 +15206,26 @@ def metadata.validate_module
   := do
   stream.validate_module_slice data
 
-/-- [itasca::metadata::import_types]: loop body 0:
+/-- [itasca::metadata::{itasca::metadata::Env}::import_types]: loop body 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
-def metadata.import_types_loop.body
-  (env : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
+def metadata.Env.import_types_loop.body
+  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
   (i : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec wasm_types.ExternType) × Std.Usize)
     (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error))
   := do
-  let i1 := alloc.vec.Vec.len env.imports
+  let i1 := alloc.vec.Vec.len self.imports
   if i >= i1
   then ok (done (core.result.Result.Ok out))
   else
     let i2 ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        metadata.Import) env.imports i
+        metadata.Import) self.imports i
     match i2.desc with
     | metadata.ImportDesc.Func idx =>
-      let r ← metadata.lookup_type env idx
+      let r ← metadata.lookup_type self idx
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | core.ops.control_flow.ControlFlow.Continue val =>
@@ -15195,192 +15251,127 @@ def metadata.import_types_loop.body
       let i3 ← i + 1#usize
       ok (cont (out1, i3))
 
-/-- [itasca::metadata::import_types]: loop 0:
+/-- [itasca::metadata::{itasca::metadata::Env}::import_types]: loop 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
-def metadata.import_types_loop
-  (env : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
+def metadata.Env.import_types_loop
+  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
   (i : Std.Usize) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
   loop
-    (fun (out1, i1) => metadata.import_types_loop.body env out1 i1)
+    (fun (out1, i1) => metadata.Env.import_types_loop.body self out1 i1)
     (out, i)
 
-/-- [itasca::metadata::import_types]:
+/-- [itasca::metadata::{itasca::metadata::Env}::import_types]:
     Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
-def metadata.import_types
-  (env : metadata.Env) :
+def metadata.Env.import_types
+  (self : metadata.Env) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
-  metadata.import_types_loop env (alloc.vec.Vec.new wasm_types.ExternType)
+  metadata.Env.import_types_loop self (alloc.vec.Vec.new wasm_types.ExternType)
     0#usize
 
-/-- [itasca::metadata::export_types]: loop body 0:
+/-- [itasca::metadata::{itasca::metadata::Env}::export_types]: loop body 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
-def metadata.export_types_loop.body
-  (env : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
+def metadata.Env.export_types_loop.body
+  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
   (i : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec wasm_types.ExternType) × Std.Usize)
     (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error))
   := do
-  let i1 := alloc.vec.Vec.len env.exports
+  let i1 := alloc.vec.Vec.len self.exports
   if i >= i1
   then ok (done (core.result.Result.Ok out))
   else
     let e ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        metadata.Export) env.exports i
+        metadata.Export) self.exports i
     match e.desc with
     | metadata.ExportDesc.Func idx =>
       let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len env.func_types
+      let i2 := alloc.vec.Vec.len self.func_types
       if j >= i2
       then ok (done (core.result.Result.Err (error.Error.UnknownFunc idx)))
       else
         let ft ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) env.func_types j
+            wasm_types.FuncType) self.func_types j
         let ft1 ← metadata.copy_func_type ft
         let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Func ft1)
         let i3 ← i + 1#usize
         ok (cont (out1, i3))
     | metadata.ExportDesc.Table idx =>
       let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len env.table_types
+      let i2 := alloc.vec.Vec.len self.table_types
       if j >= i2
       then ok (done (core.result.Result.Err (error.Error.UnknownTable idx)))
       else
         let tt ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.TableType) env.table_types j
+            wasm_types.TableType) self.table_types j
         let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Table tt)
         let i3 ← i + 1#usize
         ok (cont (out1, i3))
     | metadata.ExportDesc.Memory idx =>
       let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len env.mem_types
+      let i2 := alloc.vec.Vec.len self.mem_types
       if j >= i2
       then ok (done (core.result.Result.Err (error.Error.UnknownMemory idx)))
       else
         let mt ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.MemType) env.mem_types j
+            wasm_types.MemType) self.mem_types j
         let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Memory mt)
         let i3 ← i + 1#usize
         ok (cont (out1, i3))
     | metadata.ExportDesc.Global idx =>
       let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len env.global_types
+      let i2 := alloc.vec.Vec.len self.global_types
       if j >= i2
       then ok (done (core.result.Result.Err (error.Error.UnknownGlobal idx)))
       else
         let gt ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.GlobalType) env.global_types j
+            wasm_types.GlobalType) self.global_types j
         let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Global gt)
         let i3 ← i + 1#usize
         ok (cont (out1, i3))
 
-/-- [itasca::metadata::export_types]: loop 0:
+/-- [itasca::metadata::{itasca::metadata::Env}::export_types]: loop 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
-def metadata.export_types_loop
-  (env : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
+def metadata.Env.export_types_loop
+  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
   (i : Std.Usize) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
   loop
-    (fun (out1, i1) => metadata.export_types_loop.body env out1 i1)
+    (fun (out1, i1) => metadata.Env.export_types_loop.body self out1 i1)
     (out, i)
 
-/-- [itasca::metadata::export_types]:
+/-- [itasca::metadata::{itasca::metadata::Env}::export_types]:
     Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
-def metadata.export_types
-  (env : metadata.Env) :
+def metadata.Env.export_types
+  (self : metadata.Env) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
-  metadata.export_types_loop env (alloc.vec.Vec.new wasm_types.ExternType)
+  metadata.Env.export_types_loop self (alloc.vec.Vec.new wasm_types.ExternType)
     0#usize
 
-/-- [itasca::metadata::decode_func_indices]: loop body 0:
-    Source: 'src/module.rs' -/
-@[rust_loop_body]
-def metadata.decode_func_indices_loop.body
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
-  (out : alloc.vec.Vec Std.U32) (q : Std.Usize) (i : Std.U32) :
-  Result (ControlFlow ((alloc.vec.Vec Std.U32) × Std.Usize × Std.U32)
-    (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize) error.Error))
-  := do
-  if i >= count
-  then ok (done (core.result.Result.Ok (out, q)))
-  else
-    let r ← reader.read_u32_leb data q
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (idx, q1) := val
-      let i1 ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len env.func_types
-      if i1 >= i2
-      then ok (done (core.result.Result.Err (error.Error.UnknownFunc idx)))
-      else
-        let out1 ← alloc.vec.Vec.push out idx
-        let i3 ← i + 1#u32
-        ok (cont (out1, q1, i3))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r1 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          ((alloc.vec.Vec Std.U32) × Std.Usize)
-          error.Error.Insts.CoreConvertFromOpError residual
-      ok (done r1)
-
-/-- [itasca::metadata::decode_func_indices]: loop 0:
-    Source: 'src/module.rs' -/
-@[rust_loop]
-def metadata.decode_func_indices_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
-  (out : alloc.vec.Vec Std.U32) (q : Std.Usize) (i : Std.U32) :
-  Result (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize)
-    error.Error)
-  := do
-  loop
-    (fun (out1, q1, i1) => metadata.decode_func_indices_loop.body data env
-      count out1 q1 i1)
-    (out, q, i)
-
-/-- [itasca::metadata::decode_func_indices]:
-    Source: 'src/module.rs' -/
-def metadata.decode_func_indices
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result (core.result.Result ((alloc.vec.Vec Std.U32) × Std.Usize)
-    error.Error)
-  := do
-  let r ← reader.read_u32_leb data pos
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, p) := val
-    metadata.decode_func_indices_loop data env count (alloc.vec.Vec.new
-      Std.U32) p 0#u32
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      ((alloc.vec.Vec Std.U32) × Std.Usize)
-      error.Error.Insts.CoreConvertFromOpError residual
-
-/-- Trait implementation: [itasca::metadata::{impl itasca::metadata::ModuleVisitor for itasca::metadata::EmptyModuleVisitor}]
+/-- Trait implementation: [itasca::metadata::{impl itasca::metadata::ModuleVisitor for itasca::metadata::DefaultModuleVisitor}]
     Source: 'src/module.rs' -/
 @[reducible]
-def metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor :
-  metadata.ModuleVisitor metadata.EmptyModuleVisitor := {
+def metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor :
+  metadata.ModuleVisitor metadata.DefaultModuleVisitor := {
   on_custom_section := metadata.ModuleVisitor.on_custom_section.default
 }
 
@@ -15392,7 +15383,7 @@ def metadata.validate_env
   := do
   let (r, _) ←
     metadata.validate_env_with
-      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data ()
+      metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor data ()
   ok r
 
 /-- [itasca::metadata::validate_code_entry]:
@@ -15404,7 +15395,7 @@ def metadata.validate_code_entry
   := do
   let (r, _) ←
     metadata.validate_code_entry_with
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data pos env index ()
+      code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor data pos env index ()
   ok r
 
 /-- [itasca::metadata::validate_tail]:
@@ -15415,7 +15406,7 @@ def metadata.validate_tail
   := do
   let (r, _) ←
     metadata.validate_tail_with
-      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data pos
+      metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor data pos
       env ()
   ok r
 
@@ -36529,17 +36520,18 @@ def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.CompileScheduler A) :
-  Result ((core.result.Result stream.CodeBatch error.Error) ×
+  Result ((core.result.Result stream.StreamingBatch error.Error) ×
     (runtime.compiler.CompileScheduler A))
   := do
   let (o, v) ← alloc.vec.Vec.pop Global self.completed
   let r ← core.option.Option.ok_or o error.Error.Host
   ok (r, { self with completed := v })
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::len]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::len]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.len (self : stream.CodeBatch) : Result Std.Usize := do
+def stream.StreamingBatch.len
+  (self : stream.StreamingBatch) : Result Std.Usize := do
   ok self.num_funcs
 
 /-- [itasca::stream::frame_entry]:
@@ -36547,7 +36539,7 @@ def stream.CodeBatch.len (self : stream.CodeBatch) : Result Std.Usize := do
 def stream.frame_entry
   (code : Slice Std.U8) (pos : Std.Usize) (index : Std.Usize)
   (code_offset : Std.Usize) :
-  Result (core.result.Result stream.CodeEntry error.Error)
+  Result (core.result.Result stream.StreamingEntry error.Error)
   := do
   let r ← metadata.code_entry_extent code pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -36570,24 +36562,24 @@ def stream.frame_entry
             { index, start := val1, contents := val2, «end» := val3 })
         | core.ops.control_flow.ControlFlow.Break residual =>
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            stream.CodeEntry (core.convert.FromSame error.Error) residual
+            stream.StreamingEntry (core.convert.FromSame error.Error) residual
       | core.ops.control_flow.ControlFlow.Break residual =>
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          stream.CodeEntry (core.convert.FromSame error.Error) residual
+          stream.StreamingEntry (core.convert.FromSame error.Error) residual
     | core.ops.control_flow.ControlFlow.Break residual =>
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        stream.CodeEntry (core.convert.FromSame error.Error) residual
+        stream.StreamingEntry (core.convert.FromSame error.Error) residual
   | core.ops.control_flow.ControlFlow.Break residual =>
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      stream.CodeEntry (core.convert.FromSame error.Error) residual
+      stream.StreamingEntry (core.convert.FromSame error.Error) residual
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::next_entry]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::next_entry]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.next_entry
-  (self : stream.CodeBatch) :
-  Result ((core.result.Result stream.CodeEntry error.Error) ×
-    stream.CodeBatch)
+def stream.StreamingBatch.next_entry
+  (self : stream.StreamingBatch) :
+  Result ((core.result.Result stream.StreamingEntry error.Error) ×
+    stream.StreamingBatch)
   := do
   if self.num_dispatched >= self.num_funcs
   then ok (core.result.Result.Err error.Error.Host, self)
@@ -36605,14 +36597,14 @@ def stream.CodeBatch.next_entry
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          stream.CodeEntry (core.convert.FromSame error.Error) residual
+          stream.StreamingEntry (core.convert.FromSame error.Error) residual
       ok (r1, self)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code_offset]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::code_offset]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.impl.code_offset
-  (self : stream.CodeBatch) : Result Std.Usize := do
+def stream.StreamingBatch.impl.code_offset
+  (self : stream.StreamingBatch) : Result Std.Usize := do
   ok self.code_offset
 
 /-- [itasca::runtime::compiler::{itasca::runtime::compiler::FunctionCompiler<'a, A>}::finish]:
@@ -36683,23 +36675,24 @@ def runtime.compiler.FunctionCompiler.new
     Source: 'src/runtime/compiler/mod.rs' -/
 def runtime.compiler.CompileScheduler.compile_entry
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (self : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch) :
+  (self : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
+  :
   Result ((core.result.Result Unit error.Error) ×
-    (runtime.compiler.CompileScheduler A) × stream.CodeBatch)
+    (runtime.compiler.CompileScheduler A) × stream.StreamingBatch)
   := do
-  let (r, batch1) ← stream.CodeBatch.next_entry batch
+  let (r, batch1) ← stream.StreamingBatch.next_entry batch
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let s := alloc.vec.Vec.deref self.signatures
     let s1 := alloc.vec.Vec.deref self.func_param_slots
     let b ← runtime.compiler.Budget.copy_state platformAllocInst self.budget
-    let i ← stream.CodeBatch.impl.code_offset batch1
+    let i ← stream.StreamingBatch.impl.code_offset batch1
     let i1 ← self.code_start + i
     let compiler ←
       runtime.compiler.FunctionCompiler.new platformAllocInst s s1 b i1
     let (validated, batch2, compiler1) ←
-      stream.CodeBatch.validate_func
+      stream.StreamingBatch.validate_func
         (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor
         platformAllocInst) batch1 val.index compiler
     let (function, budget) ←
@@ -36759,19 +36752,19 @@ def runtime.compiler.visitor_result
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop.body
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (self : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
+  (self : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
   (i : Std.Usize) (result : core.result.Result Unit error.Error) :
   Result (ControlFlow ((runtime.compiler.CompileScheduler A) ×
-    stream.CodeBatch × Std.Usize × (core.result.Result Unit error.Error))
-    ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32) ×
-    (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
+    stream.StreamingBatch × Std.Usize × (core.result.Result Unit
+    error.Error)) ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec
+    Std.U32) × (alloc.vec.Vec stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × metadata.Env ×
     (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
     Std.Usize × Std.Usize × Std.Usize × (Option error.Error) ×
     (core.result.Result Unit error.Error)))
   := do
-  let i1 ← stream.CodeBatch.len batch
+  let i1 ← stream.StreamingBatch.len batch
   if i < i1
   then
     let b ← core.result.Result.is_ok result
@@ -36804,10 +36797,10 @@ def
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch_loop
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (self : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
+  (self : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
   (i : Std.Usize) (result : core.result.Result Unit error.Error) :
   Result ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32)
-    × (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
+    × (alloc.vec.Vec stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × Std.U64 × Std.Usize × metadata.Env ×
     (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
@@ -36826,7 +36819,8 @@ def
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (self : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch) :
+  (self : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
+  :
   Result ((core.result.Result Unit error.Error) ×
     (runtime.compiler.CompileScheduler A))
   := do
@@ -36852,7 +36846,7 @@ def
            num_validated := i8,
            validated_end := i9,
            error := o1
-         } : stream.CodeBatch)
+         } : stream.StreamingBatch)
     let r1 ← runtime.compiler.visitor_result r
     let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
     match cf1 with
@@ -37049,7 +37043,7 @@ def
   Result (ControlFlow ((runtime.compiler.CompileScheduler A) × Std.Usize ×
     (core.result.Result Unit error.Error)) ((alloc.vec.Vec
     runtime.compiler.Signature) × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec
-    stream.CodeBatch) × (alloc.vec.Vec (Option
+    stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × (core.result.Result Unit error.Error)))
   := do
@@ -37082,7 +37076,7 @@ def
   (self : runtime.compiler.CompileScheduler A) (env : metadata.Env)
   (i : Std.Usize) (result : core.result.Result Unit error.Error) :
   Result ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32)
-    × (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
+    × (alloc.vec.Vec stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × (core.result.Result Unit error.Error))
   := do
@@ -37104,7 +37098,7 @@ def
   Result (ControlFlow ((runtime.compiler.CompileScheduler A) × Std.Usize ×
     (core.result.Result Unit error.Error)) ((alloc.vec.Vec
     runtime.compiler.Signature) × (alloc.vec.Vec Std.U32) × (alloc.vec.Vec
-    stream.CodeBatch) × (alloc.vec.Vec (Option
+    stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × (core.result.Result Unit error.Error)))
   := do
@@ -37137,7 +37131,7 @@ def
   (self : runtime.compiler.CompileScheduler A) (env : metadata.Env)
   (i : Std.Usize) (result : core.result.Result Unit error.Error) :
   Result ((alloc.vec.Vec runtime.compiler.Signature) × (alloc.vec.Vec Std.U32)
-    × (alloc.vec.Vec stream.CodeBatch) × (alloc.vec.Vec (Option
+    × (alloc.vec.Vec stream.StreamingBatch) × (alloc.vec.Vec (Option
     runtime.bytecode.CompiledFunction)) × (Option metadata.Tail) × Std.Usize
     × (runtime.compiler.Budget A) × (core.result.Result Unit error.Error))
   := do
@@ -37205,7 +37199,7 @@ def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
   (self : runtime.compiler.CompileScheduler A) (env : metadata.Env) :
-  Result ((core.result.Result stream.Config error.Error) ×
+  Result ((core.result.Result stream.StreamingConfig error.Error) ×
     (runtime.compiler.CompileScheduler A))
   := do
   let s ← metadata.Env.impl.func_type_indices env
@@ -37269,7 +37263,8 @@ def
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                stream.Config (core.convert.FromSame error.Error) residual
+                stream.StreamingConfig (core.convert.FromSame error.Error)
+                residual
             ok (r,
               {
                 signatures := v4,
@@ -37283,7 +37278,8 @@ def
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              stream.Config (core.convert.FromSame error.Error) residual
+              stream.StreamingConfig (core.convert.FromSame error.Error)
+              residual
           ok (r,
             {
               signatures := v4,
@@ -37297,7 +37293,7 @@ def
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            stream.Config (core.convert.FromSame error.Error) residual
+            stream.StreamingConfig (core.convert.FromSame error.Error) residual
         ok (r,
           {
             signatures := v,
@@ -37315,7 +37311,8 @@ def
 def
   runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region
   {A : Type} (platformAllocInst : runtime.platform.Alloc A)
-  (self : runtime.compiler.CompileScheduler A) (_region : stream.Region) :
+  (self : runtime.compiler.CompileScheduler A)
+  (_region : stream.StreamingRegion) :
   Result (runtime.compiler.CompileScheduler A)
   := do
   ok self
@@ -37492,10 +37489,10 @@ def runtime.compiler.collect_functions
         (core.convert.FromSame runtime.compiler.CompileError) residual
     ok (r, budget1, pending1)
 
-/-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::tail]:
+/-- [itasca::runtime::compiler::{impl itasca::stream::StreamingSource for itasca::runtime::compiler::CompileSource<'_0>}::tail]:
     Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
-def runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
+def runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.tail
   (self : runtime.compiler.CompileSource) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
@@ -37505,17 +37502,17 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
       { start := self.code_end }
   ok (core.result.Result.Ok s)
 
-/-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::code_len]:
+/-- [itasca::runtime::compiler::{impl itasca::stream::StreamingSource for itasca::runtime::compiler::CompileSource<'_0>}::code_len]:
     Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
-def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len
+def runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.code_len
   (self : runtime.compiler.CompileSource) : Result Std.Usize := do
   self.code_end - self.code_start
 
-/-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::code]:
+/-- [itasca::runtime::compiler::{impl itasca::stream::StreamingSource for itasca::runtime::compiler::CompileSource<'_0>}::code]:
     Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
-def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
+def runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.code
   (self : runtime.compiler.CompileSource) (start : Std.Usize)
   («end» : Std.Usize) :
   Result (core.result.Result (Slice Std.U8) error.Error)
@@ -37524,7 +37521,8 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
   then ok (core.result.Result.Err error.Error.Host)
   else
     let i ←
-      runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len self
+      runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.code_len
+        self
     if «end» > i
     then ok (core.result.Result.Err error.Error.Host)
     else
@@ -37536,10 +37534,11 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
           { start := i1, «end» := i2 }
       ok (core.result.Result.Ok s)
 
-/-- [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}::environment]:
+/-- [itasca::runtime::compiler::{impl itasca::stream::StreamingSource for itasca::runtime::compiler::CompileSource<'_0>}::environment]:
     Source: 'src/runtime/compiler/mod.rs'
     Visibility: public -/
-def runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
+def
+  runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.environment
   (self : runtime.compiler.CompileSource) :
   Result (core.result.Result (Slice Std.U8) error.Error)
   := do
@@ -37548,16 +37547,17 @@ def runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
       Std.U8) self.bytes { «end» := self.code_start }
   ok (core.result.Result.Ok s)
 
-/-- Trait implementation: [itasca::runtime::compiler::{impl itasca::stream::Source for itasca::runtime::compiler::CompileSource<'_0>}]
+/-- Trait implementation: [itasca::runtime::compiler::{impl itasca::stream::StreamingSource for itasca::runtime::compiler::CompileSource<'_0>}]
     Source: 'src/runtime/compiler/mod.rs' -/
 @[reducible]
-def runtime.compiler.CompileSource.Insts.ItascaStreamSource : stream.Source
-  runtime.compiler.CompileSource := {
+def runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource :
+  stream.StreamingSource runtime.compiler.CompileSource := {
   environment :=
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource.environment
-  code_len := runtime.compiler.CompileSource.Insts.ItascaStreamSource.code_len
-  code := runtime.compiler.CompileSource.Insts.ItascaStreamSource.code
-  tail := runtime.compiler.CompileSource.Insts.ItascaStreamSource.tail
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.environment
+  code_len :=
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.code_len
+  code := runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.code
+  tail := runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource.tail
 }
 
 /-- [itasca::runtime::compiler::code_region]: loop body 0:
@@ -37655,13 +37655,13 @@ def runtime.compiler.compile_with
     let env ← metadata.Env.new
     let (r, scheduler, env1) ←
       stream.validate_streaming
-        runtime.compiler.CompileSource.Insts.ItascaStreamSource
+        runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
         (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor
         platformAllocInst) 0#u64 { bytes, code_start, code_end }
         {
           signatures := (alloc.vec.Vec.new runtime.compiler.Signature),
           func_param_slots := (alloc.vec.Vec.new Std.U32),
-          completed := (alloc.vec.Vec.new stream.CodeBatch),
+          completed := (alloc.vec.Vec.new stream.StreamingBatch),
           functions :=
             (alloc.vec.Vec.new (Option runtime.bytecode.CompiledFunction)),
           tail := none,
@@ -59197,27 +59197,6 @@ def runtime.interp.initialize_segments
         Unit (core.convert.FromSame runtime.ExecError) residual
     ok (r1, store1, platform1)
 
-/-- [itasca::runtime::{itasca::runtime::Value}::i32]:
-    Source: 'src/runtime/mod.rs' -/
-def runtime.Value.i32
-  (self : runtime.Value) :
-  Result (core.result.Result Std.U32 runtime.ExecError)
-  := do
-  match self with
-  | runtime.Value.I32 v => ok (core.result.Result.Ok v)
-  | runtime.Value.I64 _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-  | runtime.Value.F32 _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-  | runtime.Value.F64 _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-  | runtime.Value.V128 _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-  | runtime.Value.FuncRef _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-  | runtime.Value.ExternRef _ =>
-    ok (core.result.Result.Err runtime.ExecError.Internal)
-
 /-- [itasca::runtime::copy_type]: loop body 0:
     Source: 'src/runtime/mod.rs' -/
 @[rust_loop_body]
@@ -62644,25 +62623,27 @@ def runtime.store.Store.grow_table_with
         Std.U32 (core.convert.FromSame runtime.ExecError) residual
     ok (r1, self)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_empty]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::is_empty]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.is_empty (self : stream.CodeBatch) : Result Bool := do
+def stream.StreamingBatch.is_empty
+  (self : stream.StreamingBatch) : Result Bool := do
   ok (self.num_funcs = 0#usize)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::is_last]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::is_last]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.is_last (self : stream.CodeBatch) : Result Bool := do
+def stream.StreamingBatch.is_last
+  (self : stream.StreamingBatch) : Result Bool := do
   let i ← self.first_func + self.num_funcs
   let i1 := alloc.vec.Vec.len self.env.func_type_indices
   ok (i = i1)
 
-/-- [itasca::stream::{itasca::stream::CodeBatch<'_0>}::code]:
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::code]:
     Source: 'src/stream.rs'
     Visibility: public -/
-def stream.CodeBatch.impl.code
-  (self : stream.CodeBatch) : Result (Slice Std.U8) := do
+def stream.StreamingBatch.impl.code
+  (self : stream.StreamingBatch) : Result (Slice Std.U8) := do
   ok self.code
 
 /-- Trait implementation: [itasca::wasm_types::{impl core::cmp::Eq for itasca::wasm_types::ValueType}]

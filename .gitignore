@@ -2,6 +2,6 @@
 *.llbc
 .DS_Store
 __pycache__/
-lean/.lake/
+lean/**/.lake/
 lean/.build/
-lean/Itasca/Generated/*_Template.lean
+lean/ItascaRust/ItascaRust/*_Template.lean

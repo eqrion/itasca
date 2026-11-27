@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.LoweringLocal
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## SelectLowering -/

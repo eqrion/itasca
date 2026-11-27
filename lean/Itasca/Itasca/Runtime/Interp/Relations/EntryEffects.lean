@@ -10,6 +10,8 @@ import Itasca.Runtime.Interp.Relations.SourceClosure
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -31,7 +33,7 @@ def resultLabel (types : List valtype) : SourceMachine.Label := ⟨types, types,
 
 /-- Falling off an unlabeled function body returns exactly its declared values,
 with a generated FRAME reduction and preservation of caller typing. -/
-theorem frame_end_source (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem frame_end_source (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := [], labels := [] } :: rest, []⟩) :
     f.vals.map SourceMachine.valueType = f.resultTypes ∧
@@ -52,7 +54,7 @@ theorem frame_end_source (s : _root_.store) (ambient : frame) (f : SourceMachine
 
 /-- The ordinary function epilogue fuses root-label completion and frame
 completion. Both source transitions are proved from the generated typing rules. -/
-theorem epilogue_source (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem epilogue_source (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame)
     (labels : f.labels = [] ∨ f.labels = [resultLabel f.resultTypes])
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := [] } :: rest, []⟩) :
@@ -87,7 +89,7 @@ theorem dispatch_epilogue_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (src count : U32)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (labels : f.labels = [] ∨ f.labels = [resultLabel f.resultTypes])
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := [] } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
@@ -133,7 +135,7 @@ theorem step_epilogue_refines {M P F A : Type}
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (fetched : compiled.code.val[raw.pc.val]? = some (.Return src count))
     (pcBound : raw.pc.val < U32.max)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (labels : f.labels = [] ∨ f.labels = [resultLabel f.resultTypes])
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := [] } :: rest, []⟩)
     (slots : FrameSlots exec raw f)
@@ -226,7 +228,7 @@ theorem dispatch_local_get_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (index src dst : U32)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front : List val) (value : val)
     (lookup : f.locals[index.val]? = some value)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .LOCAL_GET (.mk_uN index.val) :: after, vals := front } :: rest, []⟩)
@@ -353,7 +355,7 @@ theorem dispatch_local_write_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (index src dst : U32) (keep : Bool)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front : List val) (value old : val)
     (lookup : f.locals[index.val]? = some old)
     (compatible : Representation.valueType value = Representation.valueType old)
@@ -535,7 +537,7 @@ theorem _root_.Itasca.Representation.ValueOwnedFits.owned {id : Usize} {value : 
 
 /-- Source-typed arguments with issued identities satisfy the concrete checker.
 This is independent of the subsequent call and interpreter execution. -/
-theorem typed_arguments_match {s : _root_.store} {id : Usize}
+theorem typed_arguments_match {s : WebAssembly.store} {id : Usize}
     {args : List runtime.Value} {types : List Itasca.wasm_types.ValueType}
     (typed : ResultsTyped s (types.map Itasca.Translation.valueType) (args.map sourceValue))
     (owned : ∀ value ∈ args, ValueOwnedFits id value) :
@@ -561,7 +563,7 @@ theorem typed_arguments_match {s : _root_.store} {id : Usize}
 
 /-- The actual argument-checking function accepts source-typed owned inputs. -/
 theorem typed_arguments_accepted {M : Type} (memory : runtime.platform.MemoryBuffer M)
-    (store : runtime.store.Store M) (sourceStore : _root_.store)
+    (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (args : Slice runtime.Value) (types : alloc.vec.Vec Itasca.wasm_types.ValueType)
     (typed : ResultsTyped sourceStore (types.val.map Itasca.Translation.valueType) (args.val.map sourceValue))
     (owned : ∀ value ∈ args.val, ValueOwnedFits store.id value) :

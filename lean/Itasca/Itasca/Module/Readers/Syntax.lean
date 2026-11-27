@@ -126,7 +126,7 @@ theorem metadata.decode_value_type.spec (data : Slice U8) (pos : Usize) :
         Binary.ParserPost]
       all_goals split
       all_goals first
-        | exact ⟨_, rfl, by with_unfolding_all exact hs⟩
+        | exact ⟨_, Binary.ValueTypeEncoding.reader_bytes.mpr rfl, by with_unfolding_all exact hs⟩
         | simp
 
 /-- `metadata.decode_elem_type` returns an element type with its exact encoding. -/
@@ -283,7 +283,7 @@ theorem metadata.decode_limits.spec (data : Slice U8) (start : Usize) :
             obtain ⟨min, next⟩ := pair
             simp [metadata.decode_limits, hr, hu, hzero, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
             obtain ⟨bytes, hs, hl, hb, he⟩ := hd
-            refine ⟨0#u8 :: bytes, .noMax min he, ?_⟩
+            refine ⟨0#u8 :: bytes, .noMax min.val ((Leb128.encoding_iff _ _).mp he), ?_⟩
             simpa [hzero] using (At.byte hp).append ⟨hs, hl, hb⟩
       · by_cases hone : flag = 1#u8
         · obtain ⟨r, hu, hd⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
@@ -306,7 +306,9 @@ theorem metadata.decode_limits.spec (data : Slice U8) (start : Usize) :
                     core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
                   obtain ⟨first, hs, hl, hb, he⟩ := hd
                   obtain ⟨rest, hs', hl', hb', he'⟩ := hd'
-                  refine ⟨1#u8 :: (first ++ rest), .max min max he he', ?_⟩
+                  refine ⟨1#u8 :: (first ++ rest), by
+                    simp only [LimitsEncoding, Source.bytes, List.map_cons, List.map_append]
+                    exact .max min.val max.val ((Leb128.encoding_iff _ _).mp he) ((Leb128.encoding_iff _ _).mp he'), ?_⟩
                   simpa [hone] using (At.byte hp).append
                     ((show Body.Scalar.BytesAt data pos first middle from ⟨hs, hl, hb⟩).append ⟨hs', hl', hb'⟩)
         · simp [metadata.decode_limits, hr, core.result.Result.Insts.CoreOpsTry.branch, ParserPost]
@@ -378,7 +380,7 @@ theorem metadata.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
       | Ok pair =>
           obtain ⟨ty, next⟩ := pair
           obtain ⟨bytes, hbytes, hs⟩ := hd
-          have hbts : bytes = [Itasca.Binary.valueByte ty] := hbytes
+          have hbts : bytes = [Itasca.Binary.valueByte ty] := ValueTypeEncoding.reader_bytes.mp hbytes
           subst bytes
           have hn : next.val = pos.val + 1 := by simpa using hs.length
           have hb' := hs.bound
@@ -389,7 +391,7 @@ theorem metadata.decode_value_types_loop.spec (data : Slice U8) (start : Usize)
           · simp only [out1_post, List.length_append, List.length_singleton]
             scalar_tac
           · rw [out1_post]
-            exact hrep.rep_snoc ⟨_, rfl, hs⟩
+            exact hrep.rep_snoc ⟨_, hbytes, hs⟩
   · exact ⟨by scalar_tac, rfl, by simp, ⟨[], .nil, Body.Scalar.BytesAt.nil data start hb⟩⟩
 
 /-- `metadata.decode_value_types` returns a `VecEncoding ValueTypeEncoding` span within the length
@@ -468,7 +470,7 @@ theorem metadata.decode_func_type.spec (data : Slice U8) (start : Usize) :
                 obtain ⟨resultsBytes, he2, hs2⟩ := hd'.1
                 have hat : At FuncTypeEncoding data start {params, results} next :=
                   ⟨0x60#u8 :: (paramsBytes ++ resultsBytes),
-                    ⟨paramsBytes, resultsBytes, he1, he2, rfl⟩,
+                    FuncTypeEncoding.reader_parts.mpr ⟨paramsBytes, resultsBytes, he1, he2, rfl⟩,
                     by simpa [he] using (At.byte hp).append (hs1.append hs2)⟩
                 have hlimits : CodeEntry.FuncTypeWithinLimits {params, results} :=
                   ⟨hd.2, hd'.2⟩
@@ -501,14 +503,14 @@ theorem metadata.decode_global_type.spec (data : Slice U8) (start : Usize) :
       | Ok pair =>
           obtain ⟨mutability, next⟩ := pair
           obtain ⟨bytes, he, hs⟩ := hd
-          have heq : bytes = [Itasca.Binary.valueByte ty] := he
+          have heq : bytes = [Itasca.Binary.valueByte ty] := ValueTypeEncoding.reader_bytes.mp he
           subst bytes
           by_cases hzero : mutability = 0#u8
           · simp [metadata.decode_global_type, ht, hr, hzero, core.result.Result.Insts.CoreOpsTry.branch]
-            exact ⟨_, rfl, by simpa [hzero, mutByte] using hs.append (At.byte hp)⟩
+            exact ⟨_, GlobalTypeEncoding.reader_bytes.mpr rfl, by simpa [hzero] using hs.append (At.byte hp)⟩
           · by_cases hone : mutability = 1#u8
             · simp [metadata.decode_global_type, ht, hr, hone, core.result.Result.Insts.CoreOpsTry.branch]
-              exact ⟨_, rfl, by simpa [hone, mutByte] using hs.append (At.byte hp)⟩
+              exact ⟨_, GlobalTypeEncoding.reader_bytes.mpr rfl, by simpa [hone] using hs.append (At.byte hp)⟩
             · simp [metadata.decode_global_type, ht, hr, core.result.Result.Insts.CoreOpsTry.branch]
               split <;> simp_all [U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
 
@@ -546,7 +548,7 @@ theorem metadata.decode_table_type.spec (data : Slice U8) (start : Usize) :
               simp only [WP.spec_ok]
               obtain ⟨bytes, hc, hs⟩ := hd
               obtain ⟨eb, rfl, hes⟩ := hp
-              refine ⟨⟨elemByte elem :: bytes, ⟨bytes, hc, rfl⟩, ?_⟩, hvalid rfl⟩
+              refine ⟨⟨elemByte elem :: bytes, ⟨Source.bytes bytes, hc, by cases elem <;> rfl⟩, ?_⟩, hvalid rfl⟩
               exact hes.append hs
 
 end Itasca
@@ -637,10 +639,11 @@ open Binary
 theorem metadata.decode_value_type.complete (data : Slice U8) (pos : Usize)
     (ty : wasm_types.ValueType) (next : Usize) (h : At ValueTypeEncoding data pos ty next) :
     metadata.decode_value_type data pos = .ok (.Ok (ty, next)) := by
-  obtain ⟨bytes, rfl, hs⟩ := h
+  obtain ⟨bytes, hb, hs⟩ := h
+  obtain rfl := ValueTypeEncoding.reader_bytes.mp hb
   have hr := hs.read_byte
   cases ty <;>
-    simp_all [metadata.decode_value_type, Itasca.Binary.valueByte,
+    simp_all [metadata.decode_value_type, Itasca.Binary.valueByte, Itasca.Binary.Source.valueType, WebAssembly.Binary.valueByte, Itasca.Binary.Source.readerByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `metadata.decode_elem_type` accepts an independently encoded element type. -/
@@ -650,7 +653,8 @@ theorem metadata.decode_elem_type.complete (data : Slice U8) (pos : Usize)
   obtain ⟨bytes, rfl, hs⟩ := h
   have hr := hs.read_byte
   cases ty <;>
-    simp_all [metadata.decode_elem_type, elemByte,
+    simp_all [metadata.decode_elem_type, elemByte, Body.ReferencesBinary.referenceByte, Translation.referenceType,
+      WebAssembly.Binary.ReferencesBinary.referenceByte, Source.readerByte,
       core.result.Result.Insts.CoreOpsTry.branch]
 
 end Itasca
@@ -752,8 +756,8 @@ theorem metadata.read_header.spec (data : Slice U8) :
                                   split_ifs <;> simp_all
                                   have hbytes := ((((((((At.byte hb1).append (At.byte hb2)).append (At.byte hb3)).append (At.byte hb4)).append (At.byte hb5)).append (At.byte hb6)).append (At.byte hb7)).append (At.byte hb8))
                                   have heq : [b1, b2, b3, b4, b5, b6, b7, b8] = magicVersion := by
-                                    simp only [magicVersion, List.cons.injEq]
-                                    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, trivial⟩ <;> apply UScalar.eq_of_val_eq <;> scalar_tac
+                                    simp only [magicVersion, List.cons.injEq, Source.readerByte]
+                                    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, trivial⟩ <;> apply UScalar.eq_of_val_eq <;> assumption
                                   simpa [heq] using hbytes
 
 end Itasca
@@ -849,14 +853,14 @@ theorem metadata.read_header.complete (data : Slice U8) (next : Usize)
   subst next
   have hdata : data.val = magicVersion ++ data.val.drop 8 := by simpa using h.suffix
   generalize hrest : data.val.drop 8 = rest at hdata
-  have h0 := read_at data 0#usize 1#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h1 := read_at data 1#usize 2#usize 0x61#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h2 := read_at data 2#usize 3#usize 0x73#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h3 := read_at data 3#usize 4#usize 0x6D#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h4 := read_at data 4#usize 5#usize 1#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h5 := read_at data 5#usize 6#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h6 := read_at data 6#usize 7#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
-  have h7 := read_at data 7#usize 8#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion])
+  have h0 := read_at data 0#usize 1#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h1 := read_at data 1#usize 2#usize 0x61#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h2 := read_at data 2#usize 3#usize 0x73#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h3 := read_at data 3#usize 4#usize 0x6D#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h4 := read_at data 4#usize 5#usize 1#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h5 := read_at data 5#usize 6#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h6 := read_at data 6#usize 7#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
+  have h7 := read_at data 7#usize 8#usize 0#u8 (by simp [hdata, magicVersion]) rfl (by simp [hdata, magicVersion] <;> rfl)
   simp [metadata.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 
@@ -1048,7 +1052,7 @@ def Utf8Sequence (bytes : Slice U8) (pos count : Usize) : Prop :=
 theorem Utf8.append {first rest} (h : Utf8 first) (h' : Utf8 rest) : Utf8 (first ++ rest) := by
   induction h with
   | nil => simpa using h'
-  | cons hc _ ih => simpa [List.append_assoc] using Utf8.cons hc ih
+  | cons hc _ ih => simpa [List.append_assoc] using WebAssembly.Binary.Utf8With.cons hc ih
 
 end Itasca.Binary
 
@@ -1109,10 +1113,10 @@ theorem metadata.utf8_sequence_len.spec (bytes : Slice U8) (pos : Usize)
   all_goals refine ⟨by scalar_tac, by scalar_tac, ?_⟩
   all_goals simp only [UScalar.ofNatCore_val_eq]
   all_goals first
-    | (rw [take_one bytes.val pos.val (by scalar_tac)]; apply Utf8Char.one; scalar_tac)
-    | (rw [take_two bytes.val pos.val (by scalar_tac)]; apply Utf8Char.two <;> scalar_tac)
-    | (rw [take_three bytes.val pos.val (by scalar_tac)]; apply Utf8Char.three <;> scalar_tac)
-    | (rw [take_four bytes.val pos.val (by scalar_tac)]; apply Utf8Char.four <;> scalar_tac)
+    | (rw [take_one bytes.val pos.val (by scalar_tac)]; apply WebAssembly.Binary.Utf8CharWith.one; scalar_tac)
+    | (rw [take_two bytes.val pos.val (by scalar_tac)]; apply WebAssembly.Binary.Utf8CharWith.two <;> scalar_tac)
+    | (rw [take_three bytes.val pos.val (by scalar_tac)]; apply WebAssembly.Binary.Utf8CharWith.three <;> scalar_tac)
+    | (rw [take_four bytes.val pos.val (by scalar_tac)]; apply WebAssembly.Binary.Utf8CharWith.four <;> scalar_tac)
 
 /-- `metadata.validate_utf8` returns normally, and acceptance implies `Utf8`. -/
 @[step]
@@ -1143,8 +1147,8 @@ theorem metadata.validate_utf8.spec (bytes : Slice U8) :
           step*
           refine ⟨by scalar_tac, ?_, by scalar_tac⟩
           rw [i2_post, List.take_add]
-          exact hprefix.append (by simpa using Utf8.cons hchar Utf8.nil)
-  · exact ⟨by simp, by simpa using Utf8.nil⟩
+          exact hprefix.append (by simpa using WebAssembly.Binary.Utf8With.cons hchar WebAssembly.Binary.Utf8With.nil)
+  · exact ⟨by simp, by simpa using WebAssembly.Binary.Utf8With.nil⟩
 
 end Itasca
 

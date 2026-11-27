@@ -10,6 +10,8 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.State.OperandSlots
 import Itasca.Runtime.Representation.Store
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -31,7 +33,7 @@ def callCallee (address : Nat) (moduleInst : moduleinst) (results : List valtype
 
 /-- Source address resolution and declaration metadata determine the next
 abstract call state; no abstract-step equality is required from callers. -/
-theorem call_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem call_next (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame) (after : List instr) (index address : Nat)
     (moduleInst : moduleinst) (params results localTypes : List valtype)
     (typeIndex : idx) (body : List instr) (front args defaults : List val)
@@ -101,7 +103,7 @@ section
 namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
-theorem return_invocation_result (s : _root_.store) (ambient : frame)
+theorem return_invocation_result (s : WebAssembly.store) (ambient : frame)
     (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (front results : List val)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .RETURN :: after } :: rest, []⟩)
@@ -115,7 +117,7 @@ theorem return_invocation_result (s : _root_.store) (ambient : frame)
     simpa only [← split] using return_next s ambient f rest after front results types
   exact SourceMachine.instruction_result s ambient f rest .RETURN after _ expected .ret typed invariant step
 
-theorem function_end_invocation_result (s : _root_.store) (ambient : frame)
+theorem function_end_invocation_result (s : WebAssembly.store) (ambient : frame)
     (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := [], labels := [] } :: rest, []⟩)
     (types : f.vals.map SourceMachine.valueType = f.resultTypes)
@@ -128,7 +130,7 @@ theorem function_end_invocation_result (s : _root_.store) (ambient : frame)
 
 /-- Returning changes only the caller's operand values, so the fixed source
 code bound is retained independently of the returned value contents. -/
-theorem returned_state_code_bound {bound : Nat} {s : _root_.store} {ambient : frame}
+theorem returned_state_code_bound {bound : Nat} {s : WebAssembly.store} {ambient : frame}
     {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (bounded : SourceMachine.CodeBound bound ⟨s, ambient, f :: rest, []⟩) (results : List val) :
     SourceMachine.CodeBound bound (returnedState s ambient rest results) := by
@@ -436,7 +438,7 @@ section
 namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
-theorem indirect_call_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem indirect_call_next (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame) (after : List instr) (table type position address : Nat)
     (moduleInst : moduleinst) (params results localTypes : List valtype)
     (typeIndex : idx) (body : List instr) (front args defaults : List val)

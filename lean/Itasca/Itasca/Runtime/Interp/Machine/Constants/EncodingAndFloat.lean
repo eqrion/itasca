@@ -18,6 +18,8 @@ import Itasca.Runtime.SourceMachine.Core.ProgressAndBounds
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Constants.
 
@@ -453,7 +455,7 @@ theorem step_float32_core_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : fN) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -522,7 +524,7 @@ theorem step_float64_core_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : fN) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -601,7 +603,7 @@ theorem step_float32_core_bounded_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : fN) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -647,7 +649,7 @@ theorem step_float64_core_bounded_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : fN) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -1053,7 +1055,7 @@ theorem step_integer32_core_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : U32) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -1122,7 +1124,7 @@ theorem step_integer64_core_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : U64) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -1201,7 +1203,7 @@ theorem step_integer32_core_bounded_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : U32) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)
@@ -1247,7 +1249,7 @@ theorem step_integer64_core_bounded_forward {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (value : U64) (after : List instr)
     (last : index.val+1 = exec.frames.length)
     (frameFound : exec.frames.val[index.val]? = some raw)

@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SingleCallback
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackBudgets
 
+open WebAssembly
+
 /-!
 # Source-paid compiler budgets
 
@@ -40,11 +42,11 @@ theorem source_budget_reader_advance {A} (ops : runtime.platform.Alloc A) (law :
     (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (allowance : ChargeCounter → Nat)
     (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter * (out.core.pos.val-st.core.pos.val))
-    (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (acceptance : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         SourceBudgetReachedBody initial C locals data env sourceLocals index ft result.2.2 out ∧

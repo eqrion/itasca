@@ -16,6 +16,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
 import Itasca.Runtime.Compiler.Local.Relations.Control.BranchSkipSafety
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.Safety
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Relations / Table.
 

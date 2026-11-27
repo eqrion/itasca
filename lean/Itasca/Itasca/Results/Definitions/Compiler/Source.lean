@@ -7,6 +7,8 @@ import Itasca.Results.Definitions.Representation
 import Itasca.Results.Definitions.Validation
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Source function interpretation
 

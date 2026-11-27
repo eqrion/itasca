@@ -1,5 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 
+open WebAssembly
+
 /-!
 A monomorphic realization of concrete validator operands contains no bottom type. This extracts the needed fact from actual handler postconditions.
 

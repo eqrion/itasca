@@ -5,6 +5,8 @@ import Itasca.Runtime.Integration.Execution.MemoryOperations
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Select.TypedSelect
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / Dispatch.
 

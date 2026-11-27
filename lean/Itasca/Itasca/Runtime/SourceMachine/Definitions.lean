@@ -1,6 +1,8 @@
 import Itasca.Results.Definitions.SourceMachine
 import Itasca.Results.Definitions.Resources
 
+open WebAssembly
+
 
 section SourceMachineState
 
@@ -47,7 +49,7 @@ structure AFrame where
 /-- The complete flat source state decoded to one specification configuration. -/
 structure AState where
   /-- Current source object store, including committed mutations. -/
-  store : _root_.store
+  store : WebAssembly.store
   /-- The external invocation's ambient frame. -/
   ambient : frame
   /-- Current function activation first, followed by suspended callers. -/

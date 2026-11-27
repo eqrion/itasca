@@ -16,6 +16,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.TerminalAndPairSafety
 import Itasca.Body.Scalar.Env
 import Itasca.Visitor.BodyReplay
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Safety.
 

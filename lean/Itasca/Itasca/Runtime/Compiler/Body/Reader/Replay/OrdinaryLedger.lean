@@ -47,6 +47,8 @@ import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Relations.Control.ReachedControlSafety
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndElseCompilation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Replay.
 
@@ -94,7 +96,7 @@ theorem structured_reader_prefix_block {jumpTables : List U32} {emit : List valt
     (reachable : before.reachable = true)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BLOCK)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BLOCK before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterBlock (Body.blockType bt) front (ins.map Translation.valueType)
@@ -218,7 +220,7 @@ theorem structured_reader_prefix_block_dead {jumpTables : List U32} {emit : List
     (dead : before.reachable = false)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BLOCK)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BLOCK before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterBlock (Body.blockType bt) front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length false
@@ -363,7 +365,7 @@ theorem structured_reader_prefix_if {jumpTables : List U32} {emit : List valtype
     (reachable : before.reachable = true)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_IF)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front condition,
       let child := SourceScope.enterIf (Body.blockType bt) condition front (ins.map Translation.valueType)
@@ -489,7 +491,7 @@ theorem structured_reader_prefix_if_dead {jumpTables : List U32} {emit : List va
     (dead : before.reachable = false)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_IF)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterIf (Body.blockType bt) 0#u32 front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length false
@@ -615,7 +617,7 @@ theorem structured_reader_prefix_loop_dead {jumpTables : List U32} {emit : List 
     (dead : before.reachable = false)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_LOOP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_LOOP before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterLoop (Body.blockType bt) front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length false
@@ -689,7 +691,7 @@ theorem StructuredReaderCompilerState.enter_block {jumpTables : List U32} {A : T
     (out : code.BodyState)
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_BLOCK)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_BLOCK before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterBlock (Body.blockType bt) front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length before.reachable)
@@ -748,7 +750,7 @@ theorem StructuredReaderCompilerState.enter_if {jumpTables : List U32} {A : Type
     (out : code.BodyState)
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_IF)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_IF before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front condition, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterIf (Body.blockType bt) condition front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length before.reachable)
@@ -807,7 +809,7 @@ theorem StructuredReaderCompilerState.enter_loop {jumpTables : List U32} {A : Ty
     (out : code.BodyState)
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_LOOP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_LOOP before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       (parents ++ [current]) (SourceScope.enterLoop (Body.blockType bt) front (ins.map Translation.valueType) (outs.map Translation.valueType) before.function.code.val.length before.reachable)
@@ -886,7 +888,7 @@ theorem reader_stateful_base_auxiliary_growth {data env locals index st}
     (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     AuxiliaryGrowth before after := by
   obtain ⟨op,a,b,arguments,callback,_⟩ := reader_stateful_base p
@@ -902,7 +904,7 @@ theorem reader_stateful_bulk_auxiliary_growth {data env locals index st}
     (member : subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17])
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     AuxiliaryGrowth before after := by
   obtain ⟨op,a,b,arguments,callback,_⟩ := reader_stateful_bulk p
@@ -916,7 +918,7 @@ theorem reader_indirect_call_auxiliary_growth {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     AuxiliaryGrowth before after := by
   obtain ⟨idx,table,values,callback,rest⟩ := reader_indirect_call p
@@ -941,7 +943,7 @@ theorem reader_typed_select_auxiliary_growth {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     AuxiliaryGrowth before after := by
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select p
@@ -967,7 +969,7 @@ theorem reader_stateful_base_fixup_budget {data env locals index st}
     (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     FixupBudget before.frames.val before.function.code.val.length →
     FixupBudget after.frames.val after.function.code.val.length := by
@@ -986,7 +988,7 @@ theorem reader_stateful_bulk_fixup_budget {data env locals index st}
     (member : subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17])
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     FixupBudget before.frames.val before.function.code.val.length →
     FixupBudget after.frames.val after.function.code.val.length := by
@@ -1003,7 +1005,7 @@ theorem reader_indirect_call_fixup_budget {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     FixupBudget before.frames.val before.function.code.val.length →
     FixupBudget after.frames.val after.function.code.val.length := by
@@ -1019,7 +1021,7 @@ theorem reader_typed_select_fixup_budget {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     FixupBudget before.frames.val before.function.code.val.length →
     FixupBudget after.frames.val after.function.code.val.length := by
@@ -1078,7 +1080,7 @@ theorem reader_ordinary_ledger {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (opcode : U8) (excluded : opcode.val ∉ [2,3,4,5,11,12,13,14,15])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     ReaderAllocationLedger before after := by
   have known := reader_accepted_opcode
@@ -1146,7 +1148,7 @@ theorem StructuredReaderCompilerPoint.scope_step {jumpTables : List U32} {A : Ty
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (opcode : U8) (supported : ScopeOpcode opcode)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents, current, savedParents, savedCurrent, state⟩ := point

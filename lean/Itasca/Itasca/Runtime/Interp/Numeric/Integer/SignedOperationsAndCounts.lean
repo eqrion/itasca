@@ -9,6 +9,8 @@ import Itasca.Runtime.Interp.Numeric.Integer.ArithmeticAndBitwise
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

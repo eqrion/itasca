@@ -2,6 +2,8 @@ import Itasca
 import Itasca.Examples.Module.Basic
 import Itasca.Examples.Module.SliceLayout
 
+open WebAssembly
+
 /-!
 Proofs for Examples / Module.
 
@@ -29,7 +31,7 @@ namespace Itasca.Examples.Module.Functions
 
 open Itasca.Examples.Module.Support (leb one padded omitted)
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- The function type `[] -> []`. -/
 def functionType : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
@@ -64,15 +66,15 @@ private theorem ascii (b : U8) (hb : b.val ≤ 127) : NameEncoding [b] [1#u8,b] 
 /-- `layout` encodes `declarations`. -/
 theorem layout_valid : Layout.Valid 9 declarations layout := by
   constructor
-  · exact padded _ 4#u8 _ (one ⟨[0#u8], [0#u8],
-      ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩) rfl
-  · exact padded _ 7#u8 _ (one ⟨[1#u8,0x6D#u8], [1#u8,0x66#u8], [0#u8,0#u8],
-      ascii _ (by decide), ascii _ (by decide), .func _ (leb 0#u8), rfl⟩) rfl
+  · exact padded _ 4#u8 _ (one (FuncTypeEncoding.reader_parts.mpr ⟨[0#u8], [0#u8],
+      ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩)) rfl
+  · exact padded _ 7#u8 _ (one (ImportEncoding.reader_parts.mpr ⟨[1#u8,0x6D#u8], [1#u8,0x66#u8], [0#u8,0#u8],
+      ascii _ (by decide), ascii _ (by decide), .func _ ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)), rfl⟩)) rfl
   · exact padded _ 2#u8 _ (one (leb 0#u8)) rfl
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
-  · exact padded _ 5#u8 _ (one ⟨[1#u8,0x72#u8], [0#u8,1#u8], ascii _ (by decide), .func _ (leb 1#u8), rfl⟩) rfl
+  · exact padded _ 5#u8 _ (one (ExportEncoding.reader_parts.mpr ⟨[1#u8,0x72#u8], [0#u8,1#u8], ascii _ (by decide), .func _ ((Binary.Leb128.encoding_iff _ _).mp (leb 1#u8)), rfl⟩)) rfl
   · exact padded _ 1#u8 _ ⟨1#u32, rfl, leb 1#u8⟩ rfl
   · exact omitted _ _ _
   · exact omitted _ _ _
@@ -130,11 +132,11 @@ theorem requirements : Requirements raw := by
 theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.CodeEntry.CodeEncodingWithinLimits )) [entry] codeBytes := by
   refine ⟨[8#u8], [1#u8,6#u8,1#u8,1#u8,0x7F#u8,0x10#u8,0#u8,0x0B#u8], leb 8#u8, one ?_, rfl⟩
   refine ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [1#u8,1#u8,0x7F#u8],
-    [0x10#u8,0#u8,0x0B#u8], leb 6#u8, one ⟨[1#u8], leb 1#u8, rfl⟩, ?_, by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
+    [0x10#u8,0#u8,0x0B#u8], leb 6#u8, one (LocalEncoding.reader_parts.mpr ⟨[1#u8], leb 1#u8, rfl⟩), ⟨?_, by simp [limits.MAX_FUNCTION_BYTES]⟩, rfl⟩
   refine ⟨[.plain (.CALL (.mk_uN 0)), .end_], ?_, ?_⟩
-  · exact Rep.cons (show Body.TokenEncoding (.plain (.CALL (.mk_uN 0))) [0x10#u8,0#u8] from
+  · exact WebAssembly.Binary.Rep.cons (show Body.TokenEncoding (.plain (.CALL (.mk_uN 0))) [0x10#u8,0#u8] from
       ⟨0x10#u8, [0#u8], rfl, .plain (.call 0#u32 (leb 0#u8))⟩)
-      (Rep.cons (show Body.TokenEncoding .end_ [0x0B#u8] from ⟨0x0B#u8, [], rfl, .end_⟩) Rep.nil)
+      (WebAssembly.Binary.Rep.cons (show Body.TokenEncoding .end_ [0x0B#u8] from ⟨0x0B#u8, [], rfl, .end_⟩) WebAssembly.Binary.Rep.nil)
   · exact ⟨[.plain (.CALL (.mk_uN 0))], rfl,
       .simple .nil (.plain _ (.instr_case_10 _ (Translation.Environment.index_wf 0#u32)))⟩
 
@@ -231,7 +233,7 @@ namespace Itasca.Examples.Module.Sections
 
 open Itasca.Examples.Module.Support (leb one padded omitted)
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- A `funcref` table with minimum size 0 and no maximum. -/
 def tableType : wasm_types.TableType := ⟨⟨0#u32, none⟩, .FuncRef⟩
@@ -269,23 +271,25 @@ def input : Slice U8 := Examples.Module.Support.bytes (magicVersion ++ layout.by
   (by simp [magicVersion, layout, Layout.bytes, dataBytes]; scalar_tac)
 
 private theorem zero_const : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
-  .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
+  .i32 _ ⟨[], 0, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
 
 private theorem layout_valid : Layout.Valid 9 declarations layout := by
   constructor
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
-  · exact padded _ 4#u8 _ (one ⟨[0#u8,0#u8], .noMax _ (leb 0#u8), rfl⟩) rfl
-  · exact padded _ 3#u8 _ (one (.noMax _ (leb 0#u8))) rfl
-  · exact padded _ 6#u8 _ (one ⟨[0x7F#u8,0#u8], [0x41#u8,0#u8,0x0B#u8], rfl, zero_const, rfl⟩) rfl
-  · exact padded _ 5#u8 _ (one ⟨[1#u8,0x67#u8], [3#u8,0#u8],
+  · exact padded _ 4#u8 _ (one (show TableTypeEncoding tableType [0x70#u8,0#u8,0#u8] from
+      ⟨[0,0], .noMax _ ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)), rfl⟩)) rfl
+  · exact padded _ 3#u8 _ (one (show MemTypeEncoding memoryType [0#u8,0#u8] from .noMax _ ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)))) rfl
+  · exact padded _ 6#u8 _ (one (GlobalEncoding.reader_parts.mpr ⟨[0x7F#u8,0#u8], [0x41#u8,0#u8,0x0B#u8], GlobalTypeEncoding.reader_bytes.mpr rfl, zero_const, rfl⟩)) rfl
+  · exact padded _ 5#u8 _ (one (ExportEncoding.reader_parts.mpr ⟨[1#u8,0x67#u8], [3#u8,0#u8],
       ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩,
-        .cons (.one _ (by decide)) .nil⟩, .global _ (leb 0#u8), rfl⟩) rfl
+        .cons (.one _ (by decide)) .nil⟩, .global _ ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)), rfl⟩)) rfl
   · exact omitted _ _ _
-  · exact padded _ 6#u8 _ (one (ElementEncoding.activeIndices
-      (leb 0#u8) zero_const (show VecEncoding IndexEncoding [] [0#u8] from
-        ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩))) rfl
+  · exact padded _ 6#u8 _ (one (ElementEncoding.reader_parts.mpr
+      ⟨false, [0#u8,0x41#u8,0#u8,0x0B#u8], [0#u8],
+        WebAssembly.Binary.ElementHeaderEncoding.activeIndices ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)) zero_const,
+        ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, rfl⟩)) rfl
   · exact omitted _ _ _
   · exact .nil
   · simp [Layout.Future, layout]
@@ -339,7 +343,8 @@ private theorem requirements : Requirements raw := by
 private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
     [Module.Data.raw segment] dataBytes := by
   refine ⟨[7#u8], [1#u8,0#u8,0x41#u8,0#u8,0x0B#u8,1#u8,42#u8], leb 7#u8, ?_, rfl⟩
-  exact one (DataEncoding.active (.implicit (leb 0#u8)) zero_const
+  exact one (DataEncoding.of_parts (flags := 0#u32) (mb := []) (explicit := false)
+    (leb 0#u8) (Or.inl ⟨rfl, rfl, rfl, rfl⟩) zero_const
     (ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩))
 
 /-- `metadata.validate_module` accepts the 51-byte module `input` under Wasm 2.0, with sections in

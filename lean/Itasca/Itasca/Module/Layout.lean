@@ -1,5 +1,5 @@
 import Itasca.Module.Definitions
-import Itasca.Results.Definitions.Validation
+import Itasca.Binary.ReadModule
 import Itasca.Module.Env.Declarations
 import Itasca.Module.Sections.EnvironmentAndTail
 import Itasca.Module.Elab.ToTyping
@@ -10,6 +10,8 @@ import Itasca.Module.Code.Framing
 import Itasca.Module.Env.Requirements
 import Itasca.Module.Env.Complete
 import Itasca.Module.Code.FuncTyping
+
+open WebAssembly
 
 /-! ## Composition -/
 
@@ -28,7 +30,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module.Composition
 
-open Binary
+open Itasca.Binary
 
 /-- Custom sections can be prepended to a padded section. -/
 theorem padded_prepend_custom {α : Type} {id : U8} {R : α → List U8 → Prop}
@@ -56,6 +58,7 @@ theorem encoding {codeRel : Code → List U8 → Prop} {decls : Module.Environme
     htables, hmemories, hglobals, hexports, hstart, helements, hdataCount,
     padded_prepend_custom hcustoms hcode, hdatas, htrailing, ?_, hcount⟩
   simp only [he, ht, List.append_assoc]
+  rfl
 
 end Itasca.Module.Composition
 
@@ -96,10 +99,7 @@ private theorem assembly_guards {env decls codes} {segments : List metadata.Data
     (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
     Binary.DataCountValid (decls.module codes (segments.map Module.Data.raw)) := by
-  unfold Binary.DataCountValid
-  change (match decls.dataCount with
-    | none => ∀ entry ∈ codes, Binary.instructionsUseData entry.body = false
-    | some count => count.val = (segments.map Module.Data.raw).length)
+  simp only [Binary.DataCountValid, WebAssembly.Binary.DataCountValidWith, Module.Environment.Declarations.module]
   rw [hr.dataCount]
   cases he : env.data_count with
   | none => exact code_guards hcodes he
@@ -136,7 +136,7 @@ theorem assembled_regions {data : Slice U8} {env : metadata.Env} {tail : metadat
     restrictions hrep.cache hv hcodes, accessor_types hrep.cache hv heNames⟩
   rw [hbytes, ← represents_module hrep]
   have hg := assembly_guards hrep hcodes hdataCount
-  exact Module.Composition.encoding henv hcode htail hg
+  exact Binary.Source.moduleEncoding (Module.Composition.encoding henv hcode htail hg)
 
 end Itasca.Module.Sound
 
@@ -170,7 +170,7 @@ theorem VecEncoding.imp {α : Type} {R S : α → List U8 → Prop} {values byte
     (h : VecEncoding R values bytes) (hs : ∀ value bs, R value bs → S value bs) :
     VecEncoding S values bytes := by
   obtain ⟨count, entries, hn, he, hb⟩ := h
-  exact ⟨count, entries, hn, he.imp hs, hb⟩
+  exact ⟨count, entries, hn, Rep.imp he hs, hb⟩
 
 theorem PaddedEncoding.imp {α : Type} {R S : α → List U8 → Prop} {id absent value bytes}
     (h : PaddedEncoding id R absent value bytes) (hs : ∀ value bs, R value bs → S value bs) :
@@ -190,19 +190,15 @@ theorem ModuleEncodingWith.imp {R S : Code → List U8 → Prop} {raw bytes}
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount, hc, hd, hcs, hb, hv⟩ := h
   exact ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, ht, hi, hf, htt, hm, hg, he, hst, hel, hcount,
-    hc.imp (fun _ _ hv => hv.imp hs), hd, hcs, hb, hv⟩
-
-theorem ModuleEncodingWith.guards {R raw bytes}
-    (h : ModuleEncodingWith R raw bytes) :
-    DataCountValid raw := by
-  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, _, hc⟩ := h
-  exact hc
+    PaddedEncoding.imp hc (fun _ _ hv => VecEncoding.imp hv hs), hd, hcs, hb, hv⟩
 
 /-- Forgetting the caps leaves a `ModuleEncodingWith` the plain code encoding. -/
 theorem ModuleEncodingWithinLimits.encoding {raw bytes}
     (h : ModuleEncodingWithinLimits raw bytes) :
-    ModuleEncodingWith (CodeEntry.CodeEncoding) raw bytes :=
-  h.2.imp (fun _ _ hc => hc.encoding)
+    ModuleEncodingWith (CodeEntry.CodeEncoding) raw bytes := by
+  have spans := Source.limitedReaderSpans h.2
+  rw [Source.readerBytes_bytes] at spans
+  exact ModuleEncodingWith.imp spans (fun _ _ hc => hc.encoding)
 
 end Itasca.Binary
 
@@ -225,7 +221,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module
 
-open Binary
+open Itasca.Binary
 
 /-- The code section occupies `start` to `finish` with entries `entries`, or it is absent and
 `Module.Code.AbsentAt` holds at `start`. The absence case carries the lookahead that the parser
@@ -271,8 +267,12 @@ belong to the environment scan, which stops at the next data section header or a
 theorem normalize (data : Slice U8) (raw : Module)
     (h : ModuleEncodingWithinLimits raw data.val) :
     ∃ decls codePos tailPos, Layout data raw decls codePos tailPos := by
+  have spans := Source.limitedReaderSpans h.2
+  rw [Source.readerBytes_bytes] at spans
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
-    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hc, hd, hcustom, hbytes, hcountValid⟩ := h.2
+    codes, datas, customs, ht, hi, hf, hta, hm, hg, he, hst, hel, hcount, hc, hd, hcustom, hbytes, hcountValid⟩ := spans
+  change data.val = magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++ globals ++
+    exports ++ start ++ elements ++ dataCount ++ codes ++ datas ++ customs at hbytes
   let decls : Module.Environment.Declarations :=
     ⟨raw.types, raw.imports, raw.functions, raw.tables, raw.memories, raw.globals,
       raw.exports, raw.start, raw.elements, raw.dataCount⟩
@@ -295,6 +295,7 @@ theorem normalize (data : Slice U8) (raw : Module)
       · exact ⟨_, hprefix, by simpa [hb] using whole data⟩
       · exact .inr ⟨hnoCode, rfl, .inl (by simp)⟩
       · refine ⟨[], ?_, Body.Scalar.BytesAt.nil data (Slice.len data) (by simp)⟩
+        change raw.data = [] at hnoData
         rw [hnoData]
         exact ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩
     · have hprefix := hp (codeCustoms ++ dataCustoms) (Module.Tail.customs_append hcc hdc)
@@ -330,7 +331,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module
 
-open Binary Module.Elaboration
+open Itasca.Binary Module.Elaboration
 
 /-- Generated function typing and the independent declaration condition give `CodeEntry.Typed`
 for every code entry against the decoded environment. No premise about entry validation is

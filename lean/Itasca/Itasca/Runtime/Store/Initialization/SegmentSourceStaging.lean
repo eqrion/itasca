@@ -14,6 +14,8 @@ import Itasca.Runtime.Store.Definitions
 import ItascaRust.Types
 import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Initialization.
 
@@ -1565,7 +1567,7 @@ section
 namespace Itasca.Store
 open Aeneas Aeneas.Std
 
-def ElementSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
+def ElementSourceValues (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (ty : Itasca.wasm_types.ElemType) (expressions : List Itasca.wasm_types.ConstExpr) (words : List U64) : Prop :=
   List.Forall₂ (fun expr word => Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩
     (Itasca.Module.Constants.expression expr) ⟨sourceStore, ⟨[], sourceInstance⟩⟩
@@ -1583,7 +1585,7 @@ theorem eval_const_source {M P F A : Type}
     (compiled : Compiler.InitializerCode code expr ty)
     (resolved : Interp.InitializerResolution store inst expr ty words)
     (bindings : InitializerBindings store inst)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (context : InitializerSourceContext sourceStore sourceInstance store inst)
     (valid : Itasca.Module.Constants.Valid inst.module.module.env expr ty) :
@@ -1610,7 +1612,7 @@ theorem encode_push_source {M : Type} (store : runtime.store.Store M)
     (typed : elementValueType ty = Representation.rawType value) (owned : ValueInStore store value)
     (previous : ∀ word ∈ values.val, ReferenceShape store ty word)
     (room : values.length < Usize.max)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (expressions : List Itasca.wasm_types.ConstExpr) (expr : Itasca.wasm_types.ConstExpr)
     (matched : ElementSourceValues sourceStore sourceInstance ty expressions values.val)
     (evaluated : Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (Itasca.Module.Constants.expression expr)
@@ -1663,7 +1665,7 @@ theorem element_initializers_source_loop {M P F A : Type}
     (values : alloc.vec.Vec U64) (j : Usize) (status : core.result.Result Unit runtime.ExecError)
     (hvalues : values.length ≤ j.val) (hj : j.val ≤ length.val)
     (shaped : ∀ word ∈ values.val, ReferenceShape store segment.elem word)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (context : InitializerSourceContext sourceStore sourceInstance store inst)
     (valid : ∀ expr ∈ segment.init.val,
@@ -1774,7 +1776,7 @@ section
 namespace Itasca.Store
 open Aeneas Aeneas.Std
 
-inductive ElementValueEffect {M : Type} (sourceStore : _root_.store) (sourceInstance : moduleinst)
+inductive ElementValueEffect {M : Type} (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (store : runtime.store.Store M) (instIndex : Usize) (inst : runtime.store.ModuleInst)
     (source : Itasca.metadata.Element) : core.result.Result Unit runtime.ExecError → runtime.store.Store M → Prop where
   | failed (error : runtime.ExecError) : ElementValueEffect sourceStore sourceInstance store instIndex inst source (.Err error) store
@@ -1807,7 +1809,7 @@ theorem add_instance_element_value_effect {M P F A : Type}
     (certificates : ElementInitializers store inst index segment)
     (bindings : InitializerBindings store inst)
     (room : store.elems.length < Usize.max) (mapRoom : inst.elems.length < Usize.max)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (context : InitializerSourceContext sourceStore sourceInstance store inst)
     (valid : ∀ expr ∈ segment.init.val,
@@ -1883,7 +1885,7 @@ section
 namespace Itasca.Store
 open Aeneas Aeneas.Std
 
-def ElementSourceSegments (sourceStore : _root_.store) (sourceInstance : moduleinst)
+def ElementSourceSegments (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (source : List Itasca.metadata.Element) (values : List runtime.store.ElemInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.elem ∧
     ElementSourceValues sourceStore sourceInstance original.elem original.init.val actual.refs.val) source values
@@ -1952,7 +1954,7 @@ theorem element_source_staging_loop {M P F A : Type}
     (startBound : start.val ≤ inst.module.module.env.elements.val.length)
     (storeCapacity : store.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
     (mapCapacity : inst.elems.length + (inst.module.module.env.elements.val.length - start.val) ≤ Usize.max)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (sourceContext : InitializerSourceContext sourceStore sourceInstance store inst)
     (baseElements : List runtime.store.ElemInst)

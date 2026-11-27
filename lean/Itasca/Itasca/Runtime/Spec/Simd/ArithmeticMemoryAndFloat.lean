@@ -5,6 +5,8 @@ import WebAssembly.Builtins.Float.Comparison
 import Itasca.Runtime.Spec.PrimitiveOperations
 import WebAssembly.Builtins.Float.Representation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Spec / Simd.
 
@@ -743,7 +745,7 @@ theorem map2_map {I A B C : Type} (items : List I) (f : I → A) (g : I → B) (
     Map₂ h (items.map f) (items.map g) = items.map (fun i => h (f i) (g i)) := by
   induction items with
   | nil => rfl
-  | cons head tail ih => simpa [Map₂,List.ap] using congrArg (List.cons (h (f head) (g head))) ih
+  | cons head tail ih => simpa [Map₂,WebAssembly.List.ap] using congrArg (List.cons (h (f head) (g head))) ih
 
 def floatComparisonMasks (ty : Fnn) (op : vrelop_Fnn_N) (x y : BitVec 128) : List uN :=
   Map₂ (fun a b => extend__ 1 (lsize (lanetype_Fnn ty)) .S

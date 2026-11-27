@@ -109,7 +109,7 @@ theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateU
   have hmem : At (VecEncoding MemTypeEncoding) data 10#usize [mt] 13#usize := by
     refine ⟨[1#u8,0#u8,0#u8], ⟨[1#u8], [0#u8,0#u8], leb 1#u8, ?_, rfl⟩, ?_⟩
     · exact .cons (show MemTypeEncoding mt [0#u8,0#u8] from
-        LimitsEncoding.noMax 0#u32 (leb 0#u8)) .nil
+        WebAssembly.Binary.LimitsEncoding.noMax 0 ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8))) .nil
     · constructor <;> simp [data, duplicateUnicodeExports, Examples.Module.Support.bytes,
         alloc.vec.Vec.deref, magicVersion]
   obtain ⟨env, hread, hadded⟩ := metadata.decode_memory_section.complete data 10#usize
@@ -414,7 +414,7 @@ theorem truncated_code_count_rejected : metadata.validate_module (emptySection 1
   apply Examples.Stream.SliceRejection.code_header_error data regions Examples.Module.Basic.emptyEnv .UnexpectedEof
     (by simp [data, emptySection, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]) hsplit Examples.Module.Basic.empty_env
-  have hview : stream.read_exact stream.SliceSource.Insts.ItascaStreamSource regions 0#usize 2#usize =
+  have hview : stream.read_exact stream.SliceSource.Insts.ItascaStreamStreamingSource regions 0#usize 2#usize =
       .ok (.Ok code) := by
     obtain ⟨view, hr, hv⟩ := (stream.SliceSource.available regions).code_read
       0#usize 2#usize (by decide) (by rfl)
@@ -441,7 +441,7 @@ theorem truncated_code_count_rejected : metadata.validate_module (emptySection 1
   have hmin : core.cmp.impls.OrdUsize.min 2#usize 11#usize = 2#usize := by
     simp [core.cmp.impls.OrdUsize.min]
   have hlen : Slice.len regions.code = 2#usize := rfl
-  have hs : stream.read_code_header stream.SliceSource.Insts.ItascaStreamSource
+  have hs : stream.read_code_header stream.SliceSource.Insts.ItascaStreamStreamingSource
       regions (Slice.len regions.code) Examples.Module.Basic.emptyEnv ⦃ r => r = .Err .UnexpectedEof ⦄ := by
     simp only [stream.read_code_header, hlen, show (2#usize ≠ 0#usize) by decide,
       ↓reduceIte, Stream.Framing.header_limit, bind_ok, lift, hmin, hview,

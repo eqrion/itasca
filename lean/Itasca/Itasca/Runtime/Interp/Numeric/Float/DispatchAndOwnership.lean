@@ -7,6 +7,8 @@ import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.Float.Transition
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -443,7 +445,7 @@ section
 namespace Itasca.Interp
 open SourceMachine.Ownership
 
-theorem float_transition_frame_ownership (s : _root_.store) (ambient : frame)
+theorem float_transition_frame_ownership (s : WebAssembly.store) (ambient : frame)
     (f g : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr) (op : SourceMachine.Float.Instruction)
     (step : SourceMachine.Float.Transition ⟨s,ambient,{f with code := op.source :: after}::rest,[]⟩
       {f with code := op.source :: after} rest after op (.next ⟨s,ambient,g::rest,[]⟩)) :

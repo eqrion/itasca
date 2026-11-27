@@ -155,7 +155,7 @@ namespace Itasca
 visitors; it has no separate termination induction. -/
 theorem Body.emptyVisitorLoop.total (data : Slice U8) (env : metadata.Env)
      (locals results : alloc.vec.Vec wasm_types.ValueType)
-    (type_index : U32) (st : code.BodyState) (visitor : code.EmptyOpVisitor)
+    (type_index : U32) (st : code.BodyState) (visitor : code.DefaultOpVisitor)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
     (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -164,7 +164,7 @@ theorem Body.emptyVisitorLoop.total (data : Slice U8) (env : metadata.Env)
   cases visitor
   obtain ⟨⟨r, v⟩, hr, _⟩ := WP.spec_imp_exists
     (code.body_loop_loop.total
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+      code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
       data env ⟨locals, results⟩ type_index st () hdata hs ha hb)
   simp [Body.emptyVisitorLoop, hr]
 

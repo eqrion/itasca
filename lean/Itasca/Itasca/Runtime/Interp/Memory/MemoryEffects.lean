@@ -14,6 +14,8 @@ import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 import Itasca.Runtime.SourceMachine.Core.ProgressAndBounds
 import Itasca.Runtime.Interp.State.TableOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Memory.
 

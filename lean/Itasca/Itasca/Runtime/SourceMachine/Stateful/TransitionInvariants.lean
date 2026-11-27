@@ -10,6 +10,8 @@ import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.SourceMachine.Stateful.Signature
 import Itasca.Runtime.SourceMachine.Bound
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / SourceMachine / Stateful.
 

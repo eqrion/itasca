@@ -5,6 +5,8 @@ import ItascaRust.Funs
 import Itasca.Support.Translation
 import WebAssembly.Builtins.Float.Representation
 
+open WebAssembly
+
 /-! ## StackLayout -/
 
 section

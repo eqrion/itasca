@@ -16,6 +16,8 @@ import Itasca.Runtime.Compiler.Local.Coordinates.InstructionTargetEffects
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Visitor.RunTrace
 
+open WebAssembly
+
 /-!
 # Simd Callback Publication
 
@@ -223,7 +225,7 @@ theorem StructuredReaderCompilerState.simd {jumpTables : List U32} {A : Type}
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 0xfd#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     ∃ extra, CompilerTables.ofFunction after.function = (CompilerTables.ofFunction before.function).append extra ∧
       StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
@@ -259,7 +261,7 @@ theorem IndexedTableReaderCompilerPoint.simd {A : Type}
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 0xfd#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -421,7 +423,7 @@ theorem simd_sub_success_of_decoded {V : Type} (source : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V) (sub : U32) (next : Usize)
     (decoded : Binary.Leb128.Decoded data st.core.pos sub next)
-    (reference : code.step_profile source st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_body source st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
     st.core.vals.val.length < Usize.max ∧
       Body.Simd.subStep source {st.core with pos := next} data env sub before = .ok (.Ok (),out.core,after) := by
   obtain ⟨capacity,actual,position,bytes,called⟩ := simd_prefix_success source st out data env ctx index before after reference
@@ -437,7 +439,7 @@ theorem simd_prefix_available {W : Type} (target : code.OpVisitor W)
     (capacity : st.core.vals.val.length < Usize.max)
     (acceptance : Body.Simd.subStep target {st.core with pos := next} data env sub compiler
       ⦃ result => result.1 = .Ok () ∧ result.2.1 = out.core ∧ post result.2.2 ⦄) :
-    code.step_profile target st data env ctx index 253#u8 compiler
+    code.step_body target st data env ctx index 253#u8 compiler
       ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧ post result.2.2 ⦄ := by
   apply scalar_available target st out.core data env ctx index 253#u8 compiler post capacity (by decide)
   rw [code.step_wasm2.simd,code.step_simd.eq_runs]

@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
 import Itasca.Runtime.SourceMachine.Simulation
 import Itasca.Runtime.Interp.Definitions
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp.
 
@@ -666,7 +668,7 @@ namespace Itasca.Interp.Machine
 
 open Aeneas.Std
 
-structure FramePoint (sourceStore : _root_.store) (raw : runtime.interp.Frame)
+structure FramePoint (sourceStore : WebAssembly.store) (raw : runtime.interp.Frame)
     (frame : SourceMachine.AFrame) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype) : Prop where
   bindings : SourceMachine.ModuleBindings sourceStore frame.module C
@@ -677,7 +679,7 @@ structure FramePoint (sourceStore : _root_.store) (raw : runtime.interp.Frame)
 
 /-- A mutable caller retains its module context and its typed continuation
 while its child's results have not yet been written into the operand area. -/
-structure SuspendedFramePoint (sourceStore : _root_.store) (raw : runtime.interp.Frame)
+structure SuspendedFramePoint (sourceStore : WebAssembly.store) (raw : runtime.interp.Frame)
     (source : SourceMachine.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (targets : List Compiler.LabelTarget) (next : Nat) (output waiting : List valtype) : Prop where
   bindings : SourceMachine.ModuleBindings sourceStore source.module C
@@ -688,7 +690,7 @@ structure SuspendedFramePoint (sourceStore : _root_.store) (raw : runtime.interp
 
 /-- The second dispatch of a compiled branch is represented explicitly; its
 operand transfer has already occurred in the abstract machine. -/
-inductive ControlPoint (sourceStore : _root_.store) (raw : runtime.interp.Frame)
+inductive ControlPoint (sourceStore : WebAssembly.store) (raw : runtime.interp.Frame)
     (source : SourceMachine.AFrame) (compiled : runtime.bytecode.CompiledFunction) (C : context)
     (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype) : Bool → Prop where
   | ready (point : FramePoint sourceStore raw source compiled C targets next output) :
@@ -768,7 +770,7 @@ namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
 /-- One suspended caller, waiting for the child result types at `childBase`. -/
-structure SavedFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+structure SavedFrame {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) (raw : runtime.interp.Frame)
     (source : SourceMachine.AFrame) (waiting : List valtype) (childBase : Nat) : Prop where
   /-- The concrete frame resolves to this source activation and its bindings. -/
@@ -783,7 +785,7 @@ structure SavedFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _
     SuspendedFramePoint sourceStore raw source compiled C targets next output waiting
 
 /-- Suspended concrete/source callers paired from the innermost caller outward. -/
-inductive SavedFrames {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+inductive SavedFrames {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) :
     List runtime.interp.Frame → List SourceMachine.AFrame → List valtype → Nat → Prop where
   | nil (waiting) : SavedFrames store sourceStore exec [] [] waiting 0
@@ -793,7 +795,7 @@ inductive SavedFrames {M : Type} (store : runtime.store.Store M) (sourceStore : 
       SavedFrames store sourceStore exec (raw :: raws) (source :: sources) waiting base
 
 /-- The currently executing concrete/source function activation. -/
-structure ActiveFrame {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+structure ActiveFrame {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) (raw : runtime.interp.Frame) (source : SourceMachine.AFrame) : Prop where
   /-- The concrete frame resolves to this source activation and its bindings. -/
   binding : FrameBinding store exec raw source
@@ -806,7 +808,7 @@ structure ActiveFrame {M : Type} (store : runtime.store.Store M) (sourceStore : 
 
 /-- The concrete frame vector ends in the active frame; source frames are
 listed active first, followed by the paired suspended callers. -/
-inductive FrameStackRel {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+inductive FrameStackRel {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) : List SourceMachine.AFrame → Prop where
   | empty (frames : exec.frames.val = []) : FrameStackRel store sourceStore exec []
   | active {raw source raws sources}
@@ -835,7 +837,7 @@ namespace Itasca.Interp.Machine
 
 open Aeneas Aeneas.Std
 
-def ControlTop {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+def ControlTop {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) (source : SourceMachine.AFrame) (pc : Nat) (pending : Bool) : Prop :=
   ∃ raw compiled C targets next output,
     exec.frames.val.getLast? = some raw ∧ raw.pc.val = pc ∧

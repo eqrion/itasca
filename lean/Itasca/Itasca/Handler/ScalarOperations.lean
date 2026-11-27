@@ -6,6 +6,8 @@ import Itasca.Handler.Environment
 import Itasca.Binary.LebReaders
 import Itasca.Spec.Typing
 
+open WebAssembly
+
 /-!
 # Scalar instruction contracts
 

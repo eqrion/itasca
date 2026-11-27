@@ -16,6 +16,8 @@ import Itasca.Runtime.Interp.Simd.Memory.SourceEffectsAndErrors
 import Itasca.Runtime.Compiler.Local.Capacity.SimdAuxiliaryGrowth
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Simd.
 

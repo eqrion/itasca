@@ -1,6 +1,8 @@
 import Itasca.Handler.Environment
 import Itasca.Support.Translation
 
+open WebAssembly
+
 /-!
 # Table Adapters
 
@@ -554,7 +556,7 @@ def Body.branchTableLoop
   (count : U32) (arity : Option Usize) (i : U32) :
   Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, s, _) ← code.branch_table_with_loop
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor ois data env () count arity i
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor ois data env () count arity i
   .ok (r, s)
 
 /-- `code.branch_table_with` with the empty visitor, unfolded to `Body.branchTableLoop`. -/
@@ -609,7 +611,7 @@ visitor component. -/
 theorem table_body_eq (data : Slice U8) (env : metadata.Env)
     (count : U32) (ois : code.OpIterState) (arity : Option Usize)
     (i : U32) :
-    code.branch_table_with_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    code.branch_table_with_loop.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       data env count ois () arity i =
       (do let cf ← Body.branchTableLoop.body data env count ois arity i
           .ok (tableFlow cf)) := by
@@ -644,7 +646,7 @@ end Body
 /-- The extracted `code.branch_table_with` with the empty visitor equals `Body.tableCore`. -/
 theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
      :
-    (do let (r, s, _) ← code.branch_table_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (do let (r, s, _) ← code.branch_table_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
           st data env (); .ok (r, s)) = Body.tableCore st data env := by
   simp only [code.branch_table_with, Body.tableCore,
     Body.branchTableLoop, Std.bind_assoc]

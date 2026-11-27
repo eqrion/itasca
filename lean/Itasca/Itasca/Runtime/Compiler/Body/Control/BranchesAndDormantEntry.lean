@@ -15,6 +15,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Control.
 

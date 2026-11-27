@@ -21,6 +21,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Operations.CoreBasicEmissions
 import Itasca.Runtime.Compiler.Local.Relations.LoweringEffects
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -58,7 +60,7 @@ theorem reader_emit_const32 {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -107,7 +109,7 @@ theorem reader_emit_const64 {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -240,7 +242,7 @@ theorem reader_integer_sign {data env locals index st}
     (ctx : code.Context) (op : SourceMachine.Numeric.Instruction)
     (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ operation : Body.Numeric.Operation,
       operation.instruction = op.source ∧
@@ -382,7 +384,7 @@ theorem reader_float_saturating {data env locals index st}
     (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0xfc#u8 before = .ok (.Ok (),out,after)) :
     ∃ operation : Body.Numeric.Operation,
       operation.instruction = op.source ∧
@@ -445,7 +447,7 @@ theorem reader_emit_saturating {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (0xfc#u8) before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -530,7 +532,7 @@ theorem reader_emit_nop {data env locals index st}
     (types : List wasm_types.ValueType) (concrete : st.core.vals.val = types.map code.StackType.Val)
     (layout : CompilerLayout before (types.map Translation.valueType))
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_NOP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -575,7 +577,7 @@ theorem reader_emit_drop {data env locals index st}
     (known : ConcreteStack st.core.vals.val) (monomorphic : p.current.ctrl.polymorphic_base = false)
     (layout : CompilerLayout before (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_DROP before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -703,7 +705,7 @@ theorem reader_emit_numeric {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -837,7 +839,7 @@ theorem reader_emit_select {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_SELECT before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (ty : Itasca.wasm_types.ValueType) (front : List valtype) (values : List code.StackType),
@@ -899,7 +901,7 @@ theorem reader_emit_sign {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧

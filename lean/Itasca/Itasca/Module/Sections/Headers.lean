@@ -49,7 +49,8 @@ theorem At.vector {α : Type} {R : α → List U8 → Prop} {data start pos next
 /-- A function type encoding consumes at least one byte. -/
 theorem At.func_type_progress {data start ty next} (h : At FuncTypeEncoding data start ty next) :
     start.val < next.val := by
-  obtain ⟨bytes, ⟨params, results, _, _, rfl⟩, hs⟩ := h
+  obtain ⟨bytes, he, hs⟩ := h
+  obtain ⟨params, results, _, _, rfl⟩ := FuncTypeEncoding.reader_parts.mp he
   have := hs.length
   simp only [List.length_cons, List.length_append] at this
   omega
@@ -284,9 +285,7 @@ namespace Itasca.Module.Elements
 
 /-- One initializer: either a function index standing for `ref.func`, or, when `expressions` is
 set, a whole constant expression including its terminating `end`. -/
-def InitializerEncoding (expressions : Bool) (value : wasm_types.ConstExpr) (bytes : List U8) : Prop :=
-  if expressions then Binary.ConstEncoding value bytes
-  else ∃ index, value = .RefFunc index ∧ Binary.IndexEncoding index bytes
+abbrev InitializerEncoding := Binary.ElementInitializerEncoding
 
 /-- The value type of an initializer: the element type for expressions, and `funcref` for
 function indices. -/
@@ -297,9 +296,12 @@ def initializerType (elem : wasm_types.ElemType) (expressions : Bool) : wasm_typ
 theorem InitializerEncoding.nonempty {expressions value bytes}
     (h : InitializerEncoding expressions value bytes) : 0 < bytes.length := by
   cases expressions with
-  | true => cases h <;> simp
+  | true =>
+    apply List.length_pos_iff.mpr
+    rintro rfl
+    exact WebAssembly.Binary.ConstEncoding.nonempty h rfl
   | false =>
-    obtain ⟨_, _, _, _, rfl, _⟩ := h
+    obtain ⟨_, _, _, _, rfl, _⟩ := Binary.ElementInitializerEncoding.index_parts.mp h
     simp
 
 end Itasca.Module.Elements
@@ -378,7 +380,7 @@ theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
       · simp
       · have hi : idx.val < env.func_types.val.length := by scalar_tac
         obtain ⟨bytes, he, hs⟩ := Binary.At.of_u32 hb
-        exact ⟨⟨bytes, ⟨idx, rfl, he⟩, hs⟩, .refFunc idx hi⟩
+        exact ⟨⟨bytes, Binary.ElementInitializerEncoding.index_parts.mpr ⟨idx, rfl, he⟩, hs⟩, .refFunc idx hi⟩
 
 /-- The initializer loop returns `count` initializers forming a `Rep` span, all valid, and extends
 only the declared functions, by their references. -/
@@ -517,25 +519,7 @@ open Binary
 
 /-- The bytes of an element segment header for a mode, element type and initializer
 form (`true` for expressions). The first argument of each constructor is the flag word. -/
-inductive HeaderEncoding : metadata.ElementMode → wasm_types.ElemType → Bool → List U8 → Prop where
-  | activeIndices {offset fb ob} : IndexEncoding 0#u32 fb → ConstEncoding offset ob →
-      HeaderEncoding (.Active 0#u32 offset) .FuncRef false (fb ++ ob)
-  | passiveIndices {fb} : IndexEncoding 1#u32 fb →
-      HeaderEncoding .Passive .FuncRef false (fb ++ [0#u8])
-  | explicitIndices {index offset fb ib ob} : IndexEncoding 2#u32 fb →
-      IndexEncoding index ib → ConstEncoding offset ob →
-      HeaderEncoding (.Active index offset) .FuncRef false (fb ++ ib ++ ob ++ [0#u8])
-  | declarativeIndices {fb} : IndexEncoding 3#u32 fb →
-      HeaderEncoding .Declarative .FuncRef false (fb ++ [0#u8])
-  | activeExpressions {offset fb ob} : IndexEncoding 4#u32 fb → ConstEncoding offset ob →
-      HeaderEncoding (.Active 0#u32 offset) .FuncRef true (fb ++ ob)
-  | passiveExpressions {elem fb} : IndexEncoding 5#u32 fb →
-      HeaderEncoding .Passive elem true (fb ++ [elemByte elem])
-  | explicitExpressions {elem index offset fb ib ob} : IndexEncoding 6#u32 fb →
-      IndexEncoding index ib → ConstEncoding offset ob →
-      HeaderEncoding (.Active index offset) elem true (fb ++ ib ++ ob ++ [elemByte elem])
-  | declarativeExpressions {elem fb} : IndexEncoding 7#u32 fb →
-      HeaderEncoding .Declarative elem true (fb ++ [elemByte elem])
+abbrev HeaderEncoding := Binary.ElementHeaderEncoding
 
 /-- An active segment names an in-range table of the segment's element type with a valid `i32`
 offset. Passive and declarative segments have no condition. -/
@@ -545,76 +529,24 @@ def HeaderValid (env : metadata.Env) (mode : metadata.ElementMode) (elem : wasm_
       env.table_types.val[index.val].elem = elem ∧ Module.Constants.Valid env offset .I32
   | .Passive | .Declarative => True
 
-private theorem indices_rep {values bytes}
-    (h : Rep (InitializerEncoding false) values bytes) :
-    ∃ indices, values = indices.map wasm_types.ConstExpr.RefFunc ∧ Rep IndexEncoding indices bytes := by
-  induction h with
-  | nil => exact ⟨[], rfl, .nil⟩
-  | cons hv hs ih =>
-    obtain ⟨index, rfl, hi⟩ := hv
-    obtain ⟨indices, rfl, hrep⟩ := ih
-    exact ⟨index :: indices, rfl, .cons hi hrep⟩
-
-/-- A vector of index initializers is a vector of function indices. -/
-theorem indices_vector {values bytes}
-    (h : VecEncoding (InitializerEncoding false) values bytes) :
-    ∃ indices, values = indices.map wasm_types.ConstExpr.RefFunc ∧ VecEncoding IndexEncoding indices bytes := by
-  obtain ⟨count, encoded, hc, hr, rfl⟩ := h
-  obtain ⟨indices, rfl, hi⟩ := indices_rep hr
-  exact ⟨indices, rfl, count, encoded, by simpa using hc, hi, rfl⟩
-
-/-- A header followed by an initializer vector is an `ElementEncoding` entry. -/
 theorem HeaderEncoding.append {mode elem expressions header init bytes}
     (h : HeaderEncoding mode elem expressions header)
     (hi : VecEncoding (InitializerEncoding expressions) init bytes) :
-    ElementEncoding ⟨elem, mode, init⟩ (header ++ bytes) := by
-  cases h with
-  | activeIndices hf ho =>
-    obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
-    exact .activeIndices hf ho hindices
-  | passiveIndices hf =>
-    obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
-    exact .passiveIndices hf hindices
-  | explicitIndices hf ht ho =>
-    obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
-    exact .explicitIndices hf ht ho hindices
-  | declarativeIndices hf =>
-    obtain ⟨indices, rfl, hindices⟩ := indices_vector hi
-    exact .declarativeIndices hf hindices
-  | activeExpressions hf ho => exact .activeExpressions hf ho hi
-  | passiveExpressions hf => exact .passiveExpressions hf hi
-  | explicitExpressions hf ht ho => exact .explicitExpressions hf ht ho hi
-  | declarativeExpressions hf => exact .declarativeExpressions hf hi
+    ElementEncoding ⟨elem, mode, init⟩ (header ++ bytes) :=
+  ElementEncoding.reader_parts.mpr ⟨_, _, _, h, hi, rfl⟩
 
 /-- The initializer type of a header is the reference type of its element type. -/
 theorem HeaderEncoding.initializer_type {mode elem expressions bytes}
     (h : HeaderEncoding mode elem expressions bytes) :
     initializerType elem expressions = Module.Constants.referenceValueType elem := by
-  cases h <;> rfl
-
-/-- A vector of function indices is a vector of index initializers. -/
-theorem indices_vector_intro {indices bytes} (h : VecEncoding IndexEncoding indices bytes) :
-    VecEncoding (InitializerEncoding false) (indices.map wasm_types.ConstExpr.RefFunc) bytes := by
-  obtain ⟨count, encoded, hc, hr, rfl⟩ := h
-  refine ⟨count, encoded, by simpa using hc, ?_, rfl⟩
-  clear hc
-  induction hr with
-  | nil => exact .nil
-  | cons hv hs ih => exact .cons ⟨_, rfl, hv⟩ ih
-
-/-- An `ElementEncoding` entry splits into a header and an initializer vector. -/
-theorem header_parts {entry bytes} (h : ElementEncoding entry bytes) :
-    ∃ expressions header encoded, HeaderEncoding entry.mode entry.elem expressions header ∧
-      VecEncoding (InitializerEncoding expressions) entry.init encoded ∧ bytes = header ++ encoded := by
-  cases h with
-  | activeIndices hf ho hi => exact ⟨false, _, _, .activeIndices hf ho, indices_vector_intro hi, rfl⟩
-  | passiveIndices hf hi => exact ⟨false, _, _, .passiveIndices hf, indices_vector_intro hi, rfl⟩
-  | explicitIndices hf ht ho hi => exact ⟨false, _, _, .explicitIndices hf ht ho, indices_vector_intro hi, rfl⟩
-  | declarativeIndices hf hi => exact ⟨false, _, _, .declarativeIndices hf, indices_vector_intro hi, rfl⟩
-  | activeExpressions hf ho hi => exact ⟨true, _, _, .activeExpressions hf ho, hi, rfl⟩
-  | passiveExpressions hf hi => exact ⟨true, _, _, .passiveExpressions hf, hi, rfl⟩
-  | explicitExpressions hf ht ho hi => exact ⟨true, _, _, .explicitExpressions hf ht ho, hi, rfl⟩
-  | declarativeExpressions hf hi => exact ⟨true, _, _, .declarativeExpressions hf, hi, rfl⟩
+  cases expressions with
+  | true => rfl
+  | false =>
+    change WebAssembly.Binary.ElementHeaderEncoding _ _ _ _ at h
+    generalize Source.elementMode mode = m at h
+    generalize eq : Translation.referenceType elem = t at h
+    generalize Source.bytes bytes = bs at h
+    cases h <;> cases elem <;> first | rfl | contradiction
 
 end Itasca.Module.Elements
 
@@ -681,7 +613,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
               all_goals
-                exact ⟨⟨fb ++ ob, .activeIndices hf ho, hfs.append hos⟩,
+                exact ⟨⟨fb ++ ob, by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.activeIndices ((Leb128.encoding_iff _ _).mp hf) ho, hfs.append hos⟩,
                   hi, (by
                     have hrval : r.val = (0#u32).val := by scalar_tac
                     simpa [tt_post, hrval] using ht), hv⟩
@@ -698,7 +632,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
           · subst kind
             have hks := At.byte hk
             simp
-            exact ⟨⟨fb ++ [0#u8], .passiveIndices hf, hfs.append hks⟩, trivial⟩
+            exact ⟨⟨fb ++ [0#u8], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.passiveIndices ((Leb128.encoding_iff _ _).mp hf), hfs.append hks⟩, trivial⟩
           · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
             simp [hn]
       · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
@@ -748,7 +684,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                       simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                     all_goals
-                      exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], .explicitIndices hf hindexEnc ho, ((hfs.append his).append hos).append hks⟩,
+                      exact ⟨⟨fb ++ ib ++ ob ++ [0#u8], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.explicitIndices ((Leb128.encoding_iff _ _).mp hf) ((Leb128.encoding_iff _ _).mp hindexEnc) ho, ((hfs.append his).append hos).append hks⟩,
                         hi, (by
                           have hentry : tt = env.table_types.val[index.val] := by
                             rw [tt_post]
@@ -770,7 +708,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
           · subst kind
             have hks := At.byte hk
             simp
-            exact ⟨⟨fb ++ [0#u8], .declarativeIndices hf, hfs.append hks⟩, trivial⟩
+            exact ⟨⟨fb ++ [0#u8], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.declarativeIndices ((Leb128.encoding_iff _ _).mp hf), hfs.append hks⟩, trivial⟩
           · have hn : kind.val ≠ 0 := fun h => hz (UScalar.eq_of_val_eq h)
             simp [hn]
       · step
@@ -796,7 +736,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
               all_goals
-                exact ⟨⟨fb ++ ob, .activeExpressions hf ho, hfs.append hos⟩,
+                exact ⟨⟨fb ++ ob, by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.activeExpressions ((Leb128.encoding_iff _ _).mp hf) ho, hfs.append hos⟩,
                   hi, (by
                     have hrval : r.val = (0#u32).val := by scalar_tac
                     simpa [tt_post, hrval] using ht), hv⟩
@@ -811,7 +753,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
           have heq : eb = [elemByte elem] := he
           subst eb
           simp only [bind_ok]
-          exact ⟨⟨fb ++ [elemByte elem], .passiveExpressions hf, hfs.append hes⟩, trivial⟩
+          exact ⟨⟨fb ++ [elemByte elem], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.passiveExpressions ((Leb128.encoding_iff _ _).mp hf), hfs.append hes⟩, trivial⟩
       · obtain ⟨r, hindex, hi⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data first)
         rw [hindex]
         cases r with
@@ -868,7 +812,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                       core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                       wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                   all_goals
-                    exact ⟨⟨_, .explicitExpressions hf hindexEnc ho, ((hfs.append his).append hos).append hes⟩,
+                    exact ⟨⟨fb ++ ib ++ ob ++ [_], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.explicitExpressions ((Leb128.encoding_iff _ _).mp hf) ((Leb128.encoding_iff _ _).mp hindexEnc) ho, ((hfs.append his).append hos).append hes⟩,
                       hi, (by
                         have hentry : tt = env.table_types.val[index.val] := by
                           rw [tt_post]
@@ -886,7 +832,9 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
           have heq : eb = [elemByte elem] := he
           subst eb
           simp only [bind_ok]
-          exact ⟨⟨fb ++ [elemByte elem], .declarativeExpressions hf, hfs.append hes⟩, trivial⟩
+          exact ⟨⟨fb ++ [elemByte elem], by
+                      simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
+                      exact WebAssembly.Binary.ElementHeaderEncoding.declarativeExpressions ((Leb128.encoding_iff _ _).mp hf), hfs.append hes⟩, trivial⟩
 
 end Itasca
 
@@ -926,14 +874,14 @@ theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
       obtain ⟨hib, hadded, hiv, hbound⟩ := hp
       simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch]
       obtain ⟨fb, hf, hfs⟩ := hheader
-      have hty := hf.initializer_type
+      have hty := HeaderEncoding.initializer_type hf
       have hprogress : middle.val < next.val := by
         obtain ⟨count, content, hn, hc, hi⟩ := hib.vector_split
         have := hc.span
         have := hi.span
         omega
       obtain ⟨ib, hi, his⟩ := hib
-      exact ⟨⟨fb ++ ib, hf.append hi, hfs.append his⟩, hadded,
+      exact ⟨⟨fb ++ ib, HeaderEncoding.append hf hi, hfs.append his⟩, hadded,
         ⟨hvalid, (by simpa only [hty] using hiv)⟩, hbound, by omega⟩
 
 end Itasca

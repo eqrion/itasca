@@ -180,10 +180,10 @@ theorem export_desc_encoded (desc : metadata.ExportDesc) {bytes}
     (h : Binary.IndexEncoding (descIndex desc) bytes) :
     Binary.ExportDescEncoding desc (descByte desc :: bytes) := by
   cases desc with
-  | Func idx => exact .func idx h
-  | Table idx => exact .table idx h
-  | Memory idx => exact .memory idx h
-  | Global idx => exact .global idx h
+  | Func idx => exact .func idx.val ((Binary.Leb128.encoding_iff _ _).mp h)
+  | Table idx => exact .table idx.val ((Binary.Leb128.encoding_iff _ _).mp h)
+  | Memory idx => exact .memory idx.val ((Binary.Leb128.encoding_iff _ _).mp h)
+  | Global idx => exact .global idx.val ((Binary.Leb128.encoding_iff _ _).mp h)
 
 /-- A name, a kind byte and an index in sequence form an `ExportEncoding`. -/
 theorem export_encoded {data start p1 p2 next nm kind idx desc}
@@ -198,7 +198,7 @@ theorem export_encoded {data start p1 p2 next nm kind idx desc}
     rw [hkind]
     exact export_desc_encoded desc (by simpa [Binary.IndexEncoding, hindex] using hidx)
   exact ⟨nameBytes ++ (kind :: indexBytes),
-    ⟨nameBytes, kind :: indexBytes, hname, he, rfl⟩,
+    Binary.ExportEncoding.reader_parts.mpr ⟨nameBytes, kind :: indexBytes, hname, he, rfl⟩,
     hs.append (by simpa using (Binary.At.byte hk).append ⟨hs', hl', hb'⟩)⟩
 
 end Itasca.Module.Sections
@@ -403,8 +403,12 @@ theorem At.mem_type_progress {data start ty next} (h : At MemTypeEncoding data s
     start.val < next.val := by
   obtain ⟨bytes, he, hs⟩ := h
   change LimitsEncoding ty.limits bytes at he
-  generalize ty.limits = lim at he
-  cases he <;> have := hs.length <;> simp only [List.length_cons, List.length_append] at this <;> omega
+  have hn : bytes ≠ [] := by
+    rintro rfl
+    exact WebAssembly.Binary.LimitsEncoding.nonempty he rfl
+  have := hs.length
+  have := List.length_pos_iff.mpr hn
+  omega
 
 end Itasca.Binary
 
@@ -536,7 +540,7 @@ namespace Itasca.Binary
 theorem At.table_type_progress {data start ty next} (h : At TableTypeEncoding data start ty next) :
     start.val < next.val := by
   obtain ⟨bytes, he, hs⟩ := h
-  obtain ⟨limits, _, rfl⟩ := he
+  obtain ⟨limits, _, rfl⟩ := tableType_reader_span he
   have := hs.length
   simp only [List.length_cons] at this
   omega
@@ -699,7 +703,7 @@ theorem passive_encoded {data start first content next count init}
   obtain ⟨fb, hf, hfs⟩ := Binary.At.of_u32 hf
   obtain ⟨cb, hcs, hcl, hcb, hc⟩ := hc
   have hcount : Body.Scalar.BytesAt data first cb content := ⟨hcs, hcl, hcb⟩
-  exact ⟨fb ++ (cb ++ init), .passive hf
+  exact ⟨fb ++ (cb ++ init), Binary.DataEncoding.of_passive hf
     (Binary.ByteVecEncoding.iff.mpr ⟨cb, by simpa [hlen] using hc, rfl⟩),
     hfs.append (hcount.append hi)⟩
 
@@ -961,7 +965,7 @@ theorem global_encoded {data start pos next gt init}
     Binary.At Binary.GlobalEncoding data start ⟨gt, init⟩ next := by
   obtain ⟨gbytes, hg, hs⟩ := hg
   obtain ⟨ibytes, hi, his⟩ := hi
-  exact ⟨gbytes ++ ibytes, ⟨gbytes, ibytes, hg, hi, rfl⟩, hs.append his⟩
+  exact ⟨gbytes ++ ibytes, Binary.GlobalEncoding.reader_parts.mpr ⟨gbytes, ibytes, hg, hi, rfl⟩, hs.append his⟩
 
 end Itasca.Module.Sections
 
@@ -1008,7 +1012,8 @@ theorem metadata.decode_global_section_loop.spec (data : Slice U8) (env : metada
       | Ok pair =>
         obtain ⟨gt, middle⟩ := pair
         have hprogress : pos.val < middle.val := by
-          obtain ⟨bytes, rfl, hs⟩ := hp
+          obtain ⟨bytes, he, hs⟩ := hp
+          obtain rfl := GlobalTypeEncoding.reader_bytes.mp he
           have := hs.length
           simp only [List.length_cons, List.length_nil] at this
           omega
@@ -1275,7 +1280,7 @@ theorem import_encoded {data start p1 p2 next moduleName nm desc}
   obtain ⟨mb, hm, hs⟩ := hm
   obtain ⟨nb, hn, hns⟩ := hn
   obtain ⟨db, hd, hds⟩ := hd
-  exact ⟨mb ++ nb ++ db, ⟨mb, nb, db, hm, hn, hd, rfl⟩, (hs.append hns).append hds⟩
+  exact ⟨mb ++ nb ++ db, Binary.ImportEncoding.reader_parts.mpr ⟨mb, nb, db, hm, hn, hd, rfl⟩, (hs.append hns).append hds⟩
 
 end Itasca.Module.Sections
 
@@ -1346,7 +1351,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
               · apply import_encoded hm hname
                 apply At.prepend (by with_unfolding_all exact hkind) (At.of_u32 hdesc)
                 intro bytes hbytes
-                exact .func value hbytes
+                exact .func value.val ((Leb128.encoding_iff _ _).mp hbytes)
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
         · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_table_type.spec data p3)
           cases r with
@@ -1368,7 +1373,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
             · apply import_encoded hm hname
               apply At.prepend (by with_unfolding_all exact hkind) hdesc
               intro bytes hbytes
-              exact .table value hbytes
+              exact .table _ hbytes
             · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
         · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_mem_type.spec data p3)
           cases r with
@@ -1394,7 +1399,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
               · apply import_encoded hm hname
                 apply At.prepend (by with_unfolding_all exact hkind) hdesc
                 intro bytes hbytes
-                exact .memory value hbytes
+                exact .memory _ hbytes
               · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
         · obtain ⟨r, hd, hdesc⟩ := WP.spec_imp_exists (metadata.decode_global_type.spec data p3)
           cases r with
@@ -1416,7 +1421,7 @@ theorem metadata.decode_import.spec (data : Slice U8) (pos : Usize) (env : metad
             · apply import_encoded hm hname
               apply At.prepend (by with_unfolding_all exact hkind) hdesc
               intro bytes hbytes
-              exact .global value hbytes
+              exact .global _ hbytes
             · constructor <;> simp only [v_post, v1_post, List.length_append, List.length_singleton] <;> scalar_tac
         · simp
 
@@ -1703,7 +1708,7 @@ theorem customs_append {xs ys} (hx : CustomsEncoding xs) (hy : CustomsEncoding y
     CustomsEncoding (xs ++ ys) := by
   induction hx with
   | nil => simpa using hy
-  | cons h _ ih => simpa [List.append_assoc] using CustomsEncoding.cons h ih
+  | cons h _ ih => simpa [List.append_assoc] using WebAssembly.Binary.CustomsEncodingWith.cons h ih
 
 /-- The loop invariant: the bytes so far are custom sections plus at most one data section whose
 segments are listed. The flag records whether the data section has occurred. -/
@@ -1792,7 +1797,7 @@ theorem append_data {old segments data start pos next}
   exact ⟨before ++ bytes, .data hp hd, hs.append ht⟩
 
 /-- The empty module visitor has total hooks. -/
-theorem empty_hooks_total : HooksTotal metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor := by
+theorem empty_hooks_total : HooksTotal metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor := by
   intro v chunk
   exact ⟨(.Ok (), v), rfl⟩
 
@@ -1908,7 +1913,7 @@ theorem metadata.validate_tail.spec (data : Slice U8) (start : Usize) (env : met
           ∀ count, env.data_count = some count → count.val = tail.data.val.length
       | .Err _ => True ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
-    (metadata.validate_tail_with.spec metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
+    (metadata.validate_tail_with.spec metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
       Module.Tail.empty_hooks_total data start env () hstart)
   simpa [metadata.validate_tail, hr] using hp
 

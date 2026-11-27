@@ -3,6 +3,8 @@ import Itasca.Runtime.Spec.Simd.ArithmeticMemoryAndFloat
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Spec / Simd.
 

@@ -5,6 +5,8 @@ import Itasca.Body.Scalar.Env
 import Itasca.Handler.ScalarOperations
 import Itasca.Binary.Scalar.MemoryMeaning
 
+open WebAssembly
+
 /-!
 Proofs for Body / Scalar.
 
@@ -62,6 +64,7 @@ theorem scalar_complete (data : Slice U8) (env : metadata.Env) (ctx : code.Conte
   | f32Const value he => exact f.step_f32_const data env ctx value _ next C front input output he hb hsize ht hr
   | f64Const value he => exact f.step_f64_const data env ctx value _ next C front input output he hb hsize ht hr
   | numericInstruction opcode source hmap =>
+    change Body.Numeric.opcodeInstruction opcode = _ at hmap
     rw [Body.Numeric.opcodeInstruction_eq] at hmap
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
     exact f.step_numeric data env ctx opcode operation next C front input output decoded hb hsize ht hr
@@ -233,7 +236,7 @@ theorem Pending.nop_reader {data env locals index st}
     ReaderPost p st.core .NOP p.current.ctrl.polymorphic_base p.current.vals := by
   obtain ⟨_, outer, _, _, base, _, controls, _, vals⟩ := p.opened
   have encoded : Body.Scalar.At data p.start (.plain .NOP) st.core.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using byte) p.pos .nop
+    .no_immediate p.inbounds (by simp [global_simps] at byte; exact byte) p.pos .nop
   apply p.append_reader st.core .NOP p.current.ctrl.polymorphic_base p.current.vals .instr_case_0
     (.plain encoded) (fun C wf priorTyped => priorTyped.nop wf) ?_ ?_ ?_
   · simpa using controls
@@ -358,7 +361,7 @@ theorem Pending.read_unreachable {data env locals index st}
   simp only [code.read_unreachable, markedEq, bind_ok, WP.spec_ok]
   refine ⟨trivial, markedVals, ?_⟩
   have encoded : Body.Scalar.At data p.start (.plain .UNREACHABLE) marked.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using byte)
+    .no_immediate p.inbounds (by simp [global_simps] at byte; exact byte)
       (by simpa [markedPos] using p.pos) .unreachable
   refine p.append_reader marked .UNREACHABLE true [] .instr_case_1 (.plain encoded)
     (fun C wf priorTyped => priorTyped.unreachable wf) markedControls ?_ ?_
@@ -451,7 +454,7 @@ theorem Pending.read_drop {data env locals index st}
   rw [polymorphic] at effect
   refine ⟨values, effect, ?_⟩
   have encoded : Body.Scalar.At data p.start (.plain .DROP) out.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using byte)
+    .no_immediate p.inbounds (by simp [global_simps] at byte; exact byte)
       (by simpa [position] using p.pos) .drop
   refine p.append_reader out .DROP p.current.ctrl.polymorphic_base values .instr_case_2 (.plain encoded)
     (fun C wf prior => effect.prefix_drop C wf p.current.ops prior) ?_ ?_ (encoded.declared _)
@@ -478,7 +481,7 @@ theorem Pending.read_select {data env locals index st}
   rw [polymorphic] at effect
   refine ⟨values, effect, ?_⟩
   have encoded : Body.Scalar.At data p.start (.plain (.SELECT none)) out.pos :=
-    .no_immediate p.inbounds (by simpa [global_simps] using byte)
+    .no_immediate p.inbounds (by simp [global_simps] at byte; exact byte)
       (by simpa [position] using p.pos) .select
   refine p.append_reader out (.SELECT none) p.current.ctrl.polymorphic_base values (.instr_case_3 _) (.plain encoded)
     (fun C wf prior => effect.prefix C wf p.current.ops prior) ?_ ?_ (encoded.declared _)

@@ -2,6 +2,8 @@ import Itasca.Body.Trace.Refinement
 import Itasca.Body.Visitor.ReachedTableLoop
 import Itasca.Body.Control.BranchComplete
 
+open WebAssembly
+
 /-!
 # Control Records
 
@@ -72,7 +74,7 @@ theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
       obtain ⟨opcode, pos⟩ := pair
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at h ⊢
       obtain ⟨⟨r, s, v1⟩, hs, h⟩ := Computation.bind_ok_inv _ _ _ h
-      obtain ⟨w1, hw, hr1⟩ := code.step_profile.refines visitor replacement related hrefines
+      obtain ⟨w1, hw, hr1⟩ := code.step_body.refines visitor replacement related hrefines
         { core := {st.core with pos} } data env ctx index opcode v w hrelated r s v1 hs
       rw [hw]
       cases r <;> simp [
@@ -124,10 +126,10 @@ theorem code.body_loop_loop.refines {V W : Type}
         exact ⟨w', by simp, hr⟩
     | cont pair =>
       obtain ⟨v1, s⟩ := pair
-      obtain ⟨emptyCf, he, heo⟩ := body.transfer visitor code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+      obtain ⟨emptyCf, he, heo⟩ := body.transfer visitor code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
         Visitor.empty_accepts data env ctx ctx rfl index st v () _ hb trivial
       have hp := code.body_loop_loop.body.total
-        code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+        code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
         data env ctx index st () hdata hs halign hbound
       simp only [Body.Visitor.body] at he
       rw [he, WP.spec_ok] at hp
@@ -381,9 +383,9 @@ open Visitor.Trace
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x02#u8 v =
+    code.step_body visitor st data env ctx index 0x02#u8 v =
       bodyRun (code.enter_info st data env .Block) visitor (Action.block) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -398,9 +400,9 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x03#u8 v =
+    code.step_body visitor st data env ctx index 0x03#u8 v =
       bodyRun (code.enter_info st data env .Loop) visitor (Action.loop) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -415,9 +417,9 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x04#u8 v =
+    code.step_body visitor st data env ctx index 0x04#u8 v =
       bodyRun (code.enter_info st data env .Then) visitor (Action.if_) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -432,9 +434,9 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x05#u8 v =
+    code.step_body visitor st data env ctx index 0x05#u8 v =
       bodyRun (code.end_frame_info st env true) visitor (fun a => Action.else_ a.2) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -452,9 +454,9 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x0b#u8 v =
+    code.step_body visitor st data env ctx index 0x0b#u8 v =
       bodyRun (code.end_frame_info st env false) visitor (fun a => Action.end_ a.1 a.2) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -472,9 +474,9 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x0c#u8 v =
+    code.step_body visitor st data env ctx index 0x0c#u8 v =
       bodyRun (code.branch_info st data env false) visitor (fun a => Action.br a.1 a.2) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -492,9 +494,9 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x0d#u8 v =
+    code.step_body visitor st data env ctx index 0x0d#u8 v =
       bodyRun (code.branch_info st data env true) visitor (fun a => Action.br_if a.1 a.2) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -512,9 +514,9 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x10#u8 v =
+    code.step_body visitor st data env ctx index 0x10#u8 v =
       bodyRun (code.call_info st data env) visitor (Action.call) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -529,9 +531,9 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
 theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x11#u8 v =
+    code.step_body visitor st data env ctx index 0x11#u8 v =
       bodyRun (code.call_indirect_info st data env ) visitor (fun a => Action.call_indirect a.1 a.2) v := by
-  simp [code.step_profile, global_simps, bodyRun, invoke,
+  simp [code.step_body, global_simps, bodyRun, invoke,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1
@@ -557,7 +559,7 @@ section
 /-!
 # Callback byte provenance for control instructions
 
-`StepRecords` states the exact callback trace of one control step of `code.step_profile`. `step_block`, `step_loop`, `step_if`, `step_else`, `step_end`, `step_br`,
+`StepRecords` states the exact callback trace of one control step of `code.step_body`. `step_block`, `step_loop`, `step_if`, `step_else`, `step_end`, `step_br`,
 `step_br_if`, `step_return`, `step_call` and `step_call_indirect` prove it for each control
 opcode except `br_table`, which is in `Body/Trace/TableBytes`.
 -/
@@ -627,7 +629,7 @@ open Visitor.Trace
 def StepRecords {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
     (ctx : code.Context) (opcode : U8) : Prop :=
-  ∀ v result final v', code.step_profile visitor st data env ctx index opcode v =
+  ∀ v result final v', code.step_body visitor st data env ctx index opcode v =
       .ok (result, final, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result final.core
@@ -728,7 +730,7 @@ theorem step_br {data env locals index st} (p : Pending data env locals index st
   have spec := code.branch_info.bytes st data env false p.opened.shape.core p.opened.shape.aligned
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.BR (.mk_uN depth.val)), rfl, by simp [Action.opcode],
-    At.plain (Body.Scalar.At.of_u32 depth p.inbounds byte p.pos (fun _ => .br depth) (spec depth types rfl))⟩
+    At.plain (Body.Scalar.At.of_u32 depth p.inbounds byte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.br (r := Body.Scalar.operands) depth h) (spec depth types rfl))⟩
 
 theorem step_br_if {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -743,7 +745,7 @@ theorem step_br_if {data env locals index st} (p : Pending data env locals index
   have spec := code.branch_info.bytes st data env true p.opened.shape.core p.opened.shape.aligned
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.BR_IF (.mk_uN depth.val)), rfl, by simp [Action.opcode],
-    At.plain (Body.Scalar.At.of_u32 depth p.inbounds byte p.pos (fun _ => .brIf depth) (spec depth types rfl))⟩
+    At.plain (Body.Scalar.At.of_u32 depth p.inbounds byte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.brIf (r := Body.Scalar.operands) depth h) (spec depth types rfl))⟩
 
 theorem step_call {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -757,7 +759,7 @@ theorem step_call {data env locals index st} (p : Pending data env locals index 
   have spec := code.call_info.bytes st data env p.opened.shape.core
   rw [hr, WP.spec_ok] at spec
   exact ⟨.plain (.CALL (.mk_uN idx.val)), rfl, by simp [Action.opcode],
-    At.plain (Body.Scalar.At.of_u32 idx p.inbounds byte p.pos (fun _ => .call idx) (spec idx rfl))⟩
+    At.plain (Body.Scalar.At.of_u32 idx p.inbounds byte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.call (r := Body.Scalar.operands) idx h) (spec idx rfl))⟩
 
 theorem step_call_indirect {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -789,9 +791,9 @@ open Visitor.Trace
 theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x0f#u8 v =
+    code.step_body visitor st data env ctx index 0x0f#u8 v =
       bodyRun (returnStep st env index) visitor (fun _ => .return_) v := by
-  simp [code.step_profile, global_simps, bodyRun, returnStep, Std.bind_assoc, Std.uncurry,
+  simp [code.step_body, global_simps, bodyRun, returnStep, Std.bind_assoc, Std.uncurry,
     core.result.Result.Insts.CoreOpsTry.branch, code.visit,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   congr 1

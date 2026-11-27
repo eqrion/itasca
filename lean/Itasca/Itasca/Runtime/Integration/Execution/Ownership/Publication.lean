@@ -8,6 +8,8 @@ import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Contents -/

@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Checking.ScopeInstructionPrefixes
 import Itasca.Runtime.Compiler.Body.Reader.Replay.SingleCallbackExtended
 import Itasca.Body.Trace.Refinement
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Simd.
 
@@ -126,8 +128,8 @@ theorem reached_simd_memory_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -181,8 +183,8 @@ theorem reached_simd_memory_lane_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -244,8 +246,8 @@ theorem reached_simd_pure_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -293,8 +295,8 @@ theorem reached_simd_lane_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -351,8 +353,8 @@ theorem reached_simd_constant_available {data env locals index st}
     (demand : CallbackDemand compiler out.core bound)
     (poolBound : compiler.function.v128_pool.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -383,8 +385,8 @@ theorem reached_simd_shuffle_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -444,8 +446,8 @@ theorem reached_simd_available {data env locals index st}
     (simdBound : compiler.function.simd.length ≤ compiler.function.code.length)
     (poolBound : compiler.function.v128_pool.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 253#u8)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 253#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -501,7 +503,7 @@ private theorem reader_source_event {R : Type}
 the final reader state. Unsupported subopcodes cannot supply this premise. -/
 theorem source_simd_callback (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : List Observation)
-    (reference : code.step_profile recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_body recorder st data env ctx index 253#u8 before = .ok (.Ok (),out,after)) :
     ∃ action, invoke recorder before (.op out.core action) = .ok (.Ok (),after) := by
   obtain ⟨capacity,sub,next,decoded,raw⟩ := simd_prefix_success recorder st out data env ctx index before after reference
   cases pure : Body.Simd.pureMeaning sub.val with
@@ -557,11 +559,11 @@ theorem IndexedTableReaderCompilerPoint.simd_available_from_source {A : Type}
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (byte : data.val[st.core.pos.val] = 253#u8)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget

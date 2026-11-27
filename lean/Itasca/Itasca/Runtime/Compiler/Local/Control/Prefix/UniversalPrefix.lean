@@ -2,6 +2,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
+open WebAssembly
+
 /-!
 Append one source instruction to the current open scope. Its saved entry, control signature, and physical branch coordinates do not change.
 

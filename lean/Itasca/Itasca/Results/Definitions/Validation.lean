@@ -1,10 +1,12 @@
 import Aeneas
 import ItascaRust.Funs
-import Itasca.Results.Definitions.Binary
+import Itasca.Binary.Source
 import Itasca.Results.Definitions.Foundations
 import Itasca.Results.Definitions.Observations
 import Itasca.Results.Definitions.Visitor
 import WebAssembly
+
+open WebAssembly
 
 /-!
 # From bytes to validated modules
@@ -174,27 +176,16 @@ namespace Itasca.CodeEntry
 open Aeneas Aeneas.Std
 
 /-- The bytes of a body for the Wasm 2.0 instruction grammar. -/
-def BodyBytes (ops : List instr) (bytes : List U8) : Prop :=
-  ∃ tokens, Binary.Rep Body.TokenEncoding tokens bytes ∧
-    Body.BodyTokens tokens ops
+abbrev BodyBytes := WebAssembly.Binary.BodyBytesWith Body.TokenEncoding Body.BodyTokens
 
-/-- The bytes of a code entry: size prefix, local declarations and body. The body grammar
-is the Wasm 2.0 grammar. -/
-def CodeEncoding (entry : Binary.Code)
-    (bytes : List U8) : Prop :=
-  ∃ size locals body, Binary.Leb128.Encoding size (locals.length + body.length) ∧
-    Binary.VecEncoding Binary.LocalEncoding entry.locals locals ∧
-    BodyBytes entry.body body ∧ bytes = size ++ locals ++ body
+abbrev CodeEncoding (entry : Binary.Code) :=
+  WebAssembly.Binary.CodeEntryWith Binary.Leb128.Encoding Binary.LocalEncoding BodyBytes entry.locals entry.body
 
-/-- `CodeEncoding` with bounds on the declared locals and the body bytes. Function parameters and
-the size prefix are not counted. -/
-def CodeEncodingWithinLimits (entry : Binary.Code)
-    (bytes : List U8) : Prop :=
+/-- Both implementation bounds apply to the same local groups and body span used by the grammar. -/
+def CodeEncodingWithinLimits (entry : Binary.Code) (bs : List U8) : Prop :=
   entry.declared.length ≤ limits.MAX_LOCALS.val ∧
-  ∃ size locals body, Binary.Leb128.Encoding size (locals.length + body.length) ∧
-    Binary.VecEncoding Binary.LocalEncoding entry.locals locals ∧
-    BodyBytes entry.body body ∧ body.length ≤ limits.MAX_FUNCTION_BYTES.val ∧
-    bytes = size ++ locals ++ body
+    WebAssembly.Binary.CodeEntryWith Binary.Leb128.Encoding Binary.LocalEncoding
+      (fun ops body => BodyBytes ops body ∧ body.length ≤ limits.MAX_FUNCTION_BYTES.val) entry.locals entry.body bs
 
 end Itasca.CodeEntry
 
@@ -475,7 +466,7 @@ def instruction : wasm_types.ConstExpr → instr
 def expression (e : wasm_types.ConstExpr) : expr := [instruction e]
 
 /-- The SpecTec global of a decoded global. -/
-def global (g : metadata.Global) : _root_.global :=
+def global (g : metadata.Global) : WebAssembly.global :=
   .GLOBAL (Translation.globalType g.gtype) (expression g.init)
 
 end Itasca.Module.Constants
@@ -558,7 +549,7 @@ namespace Itasca.Module.Data
 def raw (segment : metadata.Data) : Binary.Data := ⟨segment.mode, segment.init.val⟩
 
 /-- The SpecTec data segment of a raw data segment. -/
-def translate (segment : Binary.Data) : _root_.data :=
+def translate (segment : Binary.Data) : WebAssembly.data :=
   .DATA (segment.init.map (fun b => .mk_byte b.val)) (Module.Segments.dataMode segment.mode)
 
 end Itasca.Module.Data
@@ -609,17 +600,17 @@ def element (entry : Binary.Element) : elem :=
     (Module.Segments.elementMode entry.mode)
 
 /-- The SpecTec table of a table type. -/
-def table (tt : wasm_types.TableType) : _root_.table := .TABLE (Translation.Environment.tableType tt)
+def table (tt : wasm_types.TableType) : WebAssembly.table := .TABLE (Translation.Environment.tableType tt)
 
 /-- The SpecTec memory of a memory type. -/
 def memory (mt : wasm_types.MemType) : mem := .MEMORY (Translation.Environment.memType mt)
 
 /-- The SpecTec start function of a function index. -/
-def start (idx : U32) : _root_.start := .START (.mk_uN idx.val)
+def start (idx : U32) : WebAssembly.start := .START (.mk_uN idx.val)
 
 /-- The SpecTec module of a raw module. It keeps the decoded declarations, the ordered exports and
 the exact function bodies, and only expands the binary representation's indexed forms. -/
-def moduleOf (raw : Binary.Module) : _root_.module :=
+def moduleOf (raw : Binary.Module) : WebAssembly.module :=
   .MODULE (raw.types.map (fun ft => .TYPE (Translation.Environment.funcType ft)))
     (raw.imports.map (importDecl raw.types))
     (List.zipWith CodeEntry.function raw.functions raw.codes)
@@ -629,7 +620,7 @@ def moduleOf (raw : Binary.Module) : _root_.module :=
 
 /-- `spec` is the elaboration of `raw`. No validator call occurs in elaboration. The index bounds
 exclude fallback lookups, and the count equality excludes truncation by `zipWith`. -/
-structure Elaborates (raw : Binary.Module) (spec : _root_.module) : Prop where
+structure Elaborates (raw : Binary.Module) (spec : WebAssembly.module) : Prop where
   module_eq : spec = moduleOf raw
   imports : ∀ entry ∈ raw.imports, ∀ idx, entry.desc = .Func idx → idx.val < raw.types.length
   functions : ∀ idx ∈ raw.functions, idx.val < raw.types.length
@@ -715,8 +706,8 @@ types are equal, and the exports are typed by `Export_ok` pointwise, which prese
 count. -/
 def AccessorTypes (env : metadata.Env) (raw : Binary.Module) : Prop :=
   ∃ imports exports,
-    metadata.import_types env = .ok (.Ok imports) ∧
-    metadata.export_types env = .ok (.Ok exports) ∧
+    metadata.Env.import_types env = .ok (.Ok imports) ∧
+    metadata.Env.export_types env = .ok (.Ok exports) ∧
     imports.val.map Module.Externals.externalType = raw.imports.map (fun e => importType raw.types e.desc) ∧
     List.Forall₂ (Export_ok (contextOf raw)) (raw.exports.map exportDecl)
       (exports.val.map Module.Externals.externalType)
@@ -749,7 +740,7 @@ code encoding, elaborates to `moduleOf raw`, matches the returned environment an
 the generated `Module_ok`, meets the module restrictions, and has the types returned by the
 public external-type accessors. -/
 def Validated (data : Slice U8) (decoded : metadata.Module) : Prop :=
-  ∃ raw, Binary.ModuleEncodingWith (Itasca.CodeEntry.CodeEncoding) raw data.val ∧
+  ∃ raw, WebAssembly.Binary.ModuleEncoding (Binary.Source.rawModule raw) (Binary.Source.bytes data.val) ∧
     Elaborates raw (moduleOf raw) ∧ Matches decoded.env decoded.tail raw ∧
     Module_ok (moduleOf raw) ∧ Restrictions raw ∧ AccessorTypes decoded.env raw
 
@@ -757,12 +748,16 @@ end Itasca.Module.Sound
 
 namespace Itasca.Binary
 
-/-- A module encoding of at most `limits.MAX_MODULE_BYTES` bytes whose code entries satisfy
-`CodeEncodingWithinLimits`. Only the code entries' encoding witnesses are strengthened. Padded
-LEB encodings stay admitted, and the caps constrain the actual encoded body bytes. -/
-def ModuleEncodingWithinLimits (raw : Module) (bytes : List U8) : Prop :=
-  bytes.length ≤ limits.MAX_MODULE_BYTES.val ∧
-    ModuleEncodingWith (CodeEntry.CodeEncodingWithinLimits) raw bytes
+/-- Local and byte limits on the same body witness used by the Wasm code entry grammar. -/
+def CodeWithinLimits (entry : WebAssembly.Binary.Code) (bs : List UInt8) : Prop :=
+  entry.declared.length ≤ limits.MAX_LOCALS.val ∧
+    WebAssembly.Binary.CodeEncodingWith (fun ops body =>
+      WebAssembly.Binary.BodyBytes ops body ∧ body.length ≤ limits.MAX_FUNCTION_BYTES.val) entry bs
+
+/-- The independent module grammar with the module and code-entry size limits. -/
+def ModuleEncodingWithinLimits (raw : Module) (bs : List U8) : Prop :=
+  bs.length ≤ limits.MAX_MODULE_BYTES.val ∧
+    WebAssembly.Binary.ModuleEncodingWith CodeWithinLimits (Source.rawModule raw) (Source.bytes bs)
 
 /-- Every signature in the type section satisfies `CodeEntry.FuncTypeWithinLimits`. This is an
 implementation cap on parameters and results, required for

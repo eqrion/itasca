@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 import Itasca.Runtime.Compiler.Body.Control.IndexedEntryCompilerInitial
 import Itasca.Runtime.Compiler.Body.Reader.Replay.FoldAndStatefulReplay
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ExecutableEntryCompilerFinish -/

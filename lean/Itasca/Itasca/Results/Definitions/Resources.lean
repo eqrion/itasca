@@ -2,6 +2,8 @@ import Itasca.Results.Definitions.Binary
 import Itasca.Results.Definitions.Representation
 import WebAssembly.Host
 
+open WebAssembly
+
 /-!
 # Sufficient source execution budgets
 
@@ -52,7 +54,7 @@ end
 functions. Defined bodies use two words per parameter/local plus 1000 words per
 encoded instruction-body byte (excluding local declarations). Every permitted
 encoding must fit; neither parser acceptance nor a chosen compiler artifact is assumed. -/
-structure FunctionsFit (store : _root_.store) (calleeWords : Nat) : Prop where
+structure FunctionsFit (store : WebAssembly.store) (calleeWords : Nat) : Prop where
   signatures : ∀ function ∈ store.FUNCS, ∀ params results,
     function.TYPE = .mk_functype (.mk_list params) (.mk_list results) →
     max (slots params) (slots results) ≤ calleeWords
@@ -67,7 +69,7 @@ One common callee allowance covers the initial store and every reachable store,
 including newly published host code. Every reachable configuration leaves that
 allowance beyond its source storage charge and stays below the frame limit.
 All source runs and host replies are covered, not just one terminating run. -/
-structure Fits (store : _root_.store) (initial : config)
+structure Fits (store : WebAssembly.store) (initial : config)
     (calleeWords valueLimit frameLimit : Nat) : Prop where
   initialFunctions : FunctionsFit store calleeWords
   reachable : ∀ events source ambient body,

@@ -4,6 +4,8 @@ import Itasca.Runtime.Interp.Simd.Integer.ArithmeticAndReductions
 import Itasca.Runtime.Interp.Simd.Float.ComparisonAndConversion
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

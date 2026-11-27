@@ -13,6 +13,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.Callbacks
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ClosingContracts
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Capacity.
 
@@ -40,59 +42,28 @@ section
 namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca.Binary
 
-private theorem leb_positive {bytes value} (h : Itasca.Binary.Leb128.Encoding bytes value) :
+private theorem leb_positive {bytes value} (h : WebAssembly.Binary.Leb128.U32Encoding bytes value) :
     1 ≤ bytes.length := by
   obtain ⟨before, last, rfl, _⟩ := h
   simp
 
-private theorem vec_positive {α : Type} {R : α → List U8 → Prop} {values bytes}
-    (h : VecEncoding R values bytes) : 1 ≤ bytes.length := by
+private theorem vec_positive {α : Type} {R : α → List UInt8 → Prop} {values bytes}
+    (h : WebAssembly.Binary.VecEncoding R values bytes) : 1 ≤ bytes.length := by
   obtain ⟨count, entries, hc, _, rfl⟩ := h
   have := leb_positive hc
   simp only [List.length_append]
   omega
 
 private theorem element_bytes {entry bytes}
-    (h : ElementEncoding entry bytes) : 2 ≤ bytes.length := by
-  cases h with
-  | activeIndices hf _ he | activeExpressions hf _ he =>
-    have := leb_positive hf
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
-  | passiveIndices hf he | declarativeIndices hf he | passiveExpressions hf he | declarativeExpressions hf he =>
-    have := leb_positive hf
-    have := vec_positive he
-    simp only [List.length_append, List.length_singleton]
-    omega
-  | explicitIndices hf _ _ he | explicitExpressions hf _ _ he =>
-    have := leb_positive hf
-    have := vec_positive he
-    simp only [List.length_append, List.length_singleton]
-    omega
+    (h : WebAssembly.Binary.ElementEncoding entry bytes) : 2 ≤ bytes.length := by
+  obtain ⟨_, _, _, hh, hi, rfl⟩ := h
+  have := WebAssembly.Binary.ElementHeaderEncoding.nonempty hh
+  have := vec_positive hi
+  simp only [List.length_append]
+  omega
 
-private theorem active_positive {index explicit bytes}
-    (h : ActiveIndexEncoding index explicit bytes) : 1 ≤ bytes.length := by
-  cases h with
-  | implicit hf => exact leb_positive hf
-  | explicit hf _ => have := leb_positive hf; simp only [List.length_append]; omega
-
-private theorem data_bytes {entry bytes}
-    (h : DataEncoding entry bytes) : 2 ≤ bytes.length := by
-  cases h with
-  | active hi _ he =>
-    have := active_positive hi
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
-  | passive hf he =>
-    have := leb_positive hf
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
-
-private theorem rep_size {α : Type} {R : α → List U8 → Prop} {values bytes}
-    (h : Rep R values bytes) (minimum : ∀ value bytes, R value bytes → 2 ≤ bytes.length) :
+private theorem rep_size {α : Type} {R : α → List UInt8 → Prop} {values bytes}
+    (h : WebAssembly.Binary.Rep R values bytes) (minimum : ∀ value bytes, R value bytes → 2 ≤ bytes.length) :
     2 * values.length ≤ bytes.length := by
   induction h with
   | nil => simp
@@ -101,8 +72,8 @@ private theorem rep_size {α : Type} {R : α → List U8 → Prop} {values bytes
     simp only [List.length_cons, List.length_append]
     omega
 
-private theorem padded_size {α : Type} {R : α → List U8 → Prop} {id values bytes}
-    (h : PaddedEncoding id (VecEncoding R) [] values bytes)
+private theorem padded_size {α : Type} {R : α → List UInt8 → Prop} {id values bytes}
+    (h : WebAssembly.Binary.PaddedEncoding id (WebAssembly.Binary.VecEncoding R) [] values bytes)
     (minimum : ∀ value bytes, R value bytes → 2 ≤ bytes.length) :
     2 * values.length ≤ bytes.length := by
   obtain ⟨customs, sec, _, hs, rfl⟩ := h
@@ -116,15 +87,21 @@ private theorem padded_size {α : Type} {R : α → List U8 → Prop} {id values
 
 /-- Segment vectors consume at least two bytes per entry, including empty
 passive segments. This holds for Wasm 2.0 and non-minimal LEBs. -/
-theorem segment_count_bytes {R raw bytes}
-    (h : ModuleEncodingWith R raw bytes) :
+theorem segment_count_source_bytes {R raw bytes}
+    (h : WebAssembly.Binary.ModuleEncodingWith R raw bytes) :
     2 * (raw.elements.length + raw.data.length) ≤ bytes.length := by
   obtain ⟨types, imports, functions, tables, memories, globals, exports, start, elements, dataCount,
     codes, datas, customs, _, _, _, _, _, _, _, _, hel, _, _, hd, _, rfl, _⟩ := h
   have he := padded_size hel (fun _ _ h => element_bytes h)
-  have hd := padded_size hd (fun _ _ h => data_bytes h)
+  have hd := padded_size hd (fun _ _ h => WebAssembly.Binary.DataEncoding.length_ge_two h)
+  dsimp only [WebAssembly.Binary.SectionField.vector] at he hd
   simp only [List.length_append]
   omega
+
+theorem segment_count_bytes {R raw bytes} (h : ModuleEncodingWith R raw bytes) :
+    2 * (raw.elements.length + raw.data.length) ≤ bytes.length := by
+  have native := Source.moduleEncodingWith (S := fun _ _ => True) (fun _ => trivial) h
+  simpa only [Source.rawModule, Source.bytes, List.length_map] using segment_count_source_bytes native
 
 private theorem flatten_bound {α : Type} (blocks : List (List α))
     (bounded : ∀ block ∈ blocks, block.length ≤ 5) :
@@ -183,13 +160,13 @@ room below the interpreter's 32-bit program counter. The two count equalities
 are source/metadata coherence, not execution-correctness premises. -/
 theorem SegmentProgram.pc_bound {module function raw bytes R}
     (certificate : SegmentProgram module function)
-    (encoding : ModuleEncodingWith R raw bytes)
+    (encoding : WebAssembly.Binary.ModuleEncodingWith R raw bytes)
     (moduleBound : bytes.length ≤ Itasca.limits.MAX_MODULE_BYTES.val)
     (elements : module.module.env.elements.length = raw.elements.length)
     (datas : module.module.tail.data.length = raw.data.length) :
     function.code.length < U32.max := by
   have codeBound := certificate.length_bound
-  have sourceBound := segment_count_bytes encoding
+  have sourceBound := segment_count_source_bytes encoding
   simp only [Itasca.limits.MAX_MODULE_BYTES] at moduleBound
   rw [elements, datas] at codeBound
   norm_num [U32.max_eq] at *

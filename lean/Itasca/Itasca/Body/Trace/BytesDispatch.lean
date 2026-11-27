@@ -6,6 +6,8 @@ import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Body.Visitor.ReachedTableLoop
 
+open WebAssembly
+
 /-!
 Proofs for Body / Trace.
 
@@ -933,9 +935,9 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
 theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (v : V) :
-    code.step_profile visitor st data env ctx index 0x0e#u8 v =
+    code.step_body visitor st data env ctx index 0x0e#u8 v =
       code.branch_table_with visitor st data env v := by
-  simp [code.step_profile, global_simps,
+  simp [code.step_body, global_simps,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   conv => rhs; rw [← Std.bind_pure (code.branch_table_with visitor st data env v)]
@@ -974,7 +976,7 @@ section
 /-!
 # Step-level callback byte provenance
 
-`steps` shows that the extracted `code.step_profile` satisfies `StepContract`: every
+`steps` shows that the extracted `code.step_body` satisfies `StepContract`: every
 ordinary return has an exact independent callback byte trace, without a total-visitor premise.
 `step_contract_of_table` assembles the scalar, control and non-control leaf traces once the
 `br_table` case is supplied.
@@ -984,19 +986,19 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.CallbackTrace
 open Visitor.Trace
 
-/-- Factors the capacity-guarded scalar arm of `code.step_profile` without changing error
+/-- Factors the capacity-guarded scalar arm of `code.step_body` without changing error
 outcomes. -/
 theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (opcode : U8) (v : V)
     (hscalar : opcode.val ∉ controlOpcodes) :
-    code.step_profile visitor st data env ctx index opcode v =
+    code.step_body visitor st data env ctx index opcode v =
       if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st, v)
       else (do
         let (r, s, v') ← code.step_wasm2 visitor st.core data env ctx opcode v
         .ok (r, {st with core := s}, v')) := by
-  unfold code.step_profile
+  unfold code.step_body
   split
   case h_1 | h_2 | h_3 | h_4 | h_5 | h_6 | h_7 | h_8 | h_9 | h_10 | h_11 =>
     exact False.elim (hscalar (by decide))
@@ -1043,7 +1045,7 @@ theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
   intro st p v result out v' run
   let opcode := data.val[p.start.val]'p.inbounds
   have byte : data.val[p.start.val]'p.inbounds = opcode := rfl
-  change code.step_profile visitor st data env ctx index opcode v = _ at run
+  change code.step_body visitor st data env ctx index opcode v = _ at run
   by_cases hs : opcode.val ∉ controlOpcodes
   · exact step_scalar p visitor observe records ctx hlocals opcode hs byte v result out v' run
   · have hm := Classical.not_not.mp hs

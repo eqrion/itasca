@@ -30,7 +30,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Module.Tail
 
 /-- The empty module visitor accepts every custom section. -/
-theorem empty_hooks_accept : HooksAccept metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor := by
+theorem empty_hooks_accept : HooksAccept metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor := by
   intro v chunk
   exact ⟨v, rfl⟩
 
@@ -163,7 +163,7 @@ theorem metadata.validate_env_with.accepted_erase {V : Type}
     (h : metadata.validate_env_with visitor data v = .ok (.Ok (result, next), v')) :
     metadata.validate_env data = .ok (.Ok (result, next)) := by
   obtain ⟨w', hw⟩ := metadata.validate_env_with.accepted_transfer visitor
-    metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor Module.Tail.empty_hooks_accept
+    metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor Module.Tail.empty_hooks_accept
     data v () result next v' h
   simp [metadata.validate_env, hw]
 
@@ -178,7 +178,7 @@ theorem metadata.validate_env_with.accepted_lift {V : Type}
   have ht : read = .Ok (result, next) := by simpa using ht
   subst read
   exact metadata.validate_env_with.accepted_transfer
-    metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor visitor haccept data
+    metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor visitor haccept data
     () v result next w hr
 
 /-- A successful run of the tail loop with one visitor gives a successful run with the same result
@@ -292,7 +292,7 @@ theorem metadata.validate_tail_with.accepted_erase {V : Type}
     (h : metadata.validate_tail_with visitor data start env v = .ok (.Ok result, v')) :
     metadata.validate_tail data start env = .ok (.Ok result) := by
   obtain ⟨w', hw⟩ := metadata.validate_tail_with.accepted_transfer visitor
-    metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor Module.Tail.empty_hooks_accept
+    metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor Module.Tail.empty_hooks_accept
     data start env v () result v' h
   simp [metadata.validate_tail, hw]
 
@@ -307,7 +307,7 @@ theorem metadata.validate_tail_with.accepted_lift {V : Type}
   have ht : read = .Ok result := by simpa using ht
   subst read
   exact metadata.validate_tail_with.accepted_transfer
-    metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor visitor haccept data start env
+    metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor visitor haccept data start env
     () v result w hr
 
 end Itasca

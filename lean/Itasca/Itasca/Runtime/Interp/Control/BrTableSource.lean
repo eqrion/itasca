@@ -5,6 +5,8 @@ import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## SkipStack -/
@@ -194,7 +196,7 @@ theorem step_br_table_refines {M P F A : Type}
     (frameIndex : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (selector start len target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (labels : List labelidx) (fallback : labelidx) (front : List val)
     (frameLookup : exec.frames.val[frameIndex.val]? = some raw)
     (instanceLookup : store.instances.val[raw.instance.val]? = some inst)

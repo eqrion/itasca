@@ -1,0 +1,1 @@
+import WebAssembly.Binary.Module

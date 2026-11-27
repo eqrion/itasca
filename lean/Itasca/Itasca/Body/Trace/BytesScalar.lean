@@ -4,6 +4,8 @@ import Itasca.Body.Scalar.Readers
 import Itasca.Body.NumericExt.Total
 import Itasca.Visitor.BodyReplay
 
+open WebAssembly
+
 /-!
 # Bytes Scalar
 
@@ -18,7 +20,7 @@ section
 # Body-level callback byte provenance
 
 `StepContract` assigns an exact `StepTrace` to every ordinary returning
-`code.step_profile` step. `code.body_loop_loop.trace_of_contract` lifts it
+`code.step_body` step. `code.body_loop_loop.trace_of_contract` lifts it
 through the body loop, and `code.validate_body_with.trace_of_contract` through
 initialization, giving a `BodyTrace` for every ordinary outcome of the extracted validator.
 -/
@@ -34,7 +36,7 @@ def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List O
     (data : Slice U8) (env : metadata.Env)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env locals index st) v result out v',
-    code.step_profile visitor st data env ctx index
+    code.step_body visitor st data env ctx index
       (data.val[p.start.val]'p.inbounds) v = .ok (result, out, v') →
     ∃ observations, observe v' = observe v ++ observations ∧
       StepTrace data p.start observations result out.core
@@ -116,7 +118,7 @@ theorem code.body_loop_loop.trace_of_contract {V : Type}
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at hb
         obtain ⟨⟨res, out, w⟩, hs, htail⟩ := Computation.bind_ok_inv _ _ _ hb
         obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
-        have hs' : code.step_profile visitor {core := {st.core with pos := next}}
+        have hs' : code.step_body visitor {core := {st.core with pos := next}}
             data env ctx index (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs
         obtain ⟨first, hfirst, hchunk⟩ := htrace _ p v res out w hs'
@@ -133,12 +135,12 @@ theorem code.body_loop_loop.trace_of_contract {V : Type}
           simp at htail
           subst cf
           obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
-            code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+            code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
             data env ctx ctx rfl index st v () _ hb0 trivial
           obtain ⟨⟨res, s⟩, hs0, hafter⟩ :=
             WP.spec_imp_exists (steps data env locals ctx index hlocals _ p)
           simp only [hstart] at hs0
-          have heval : Visitor.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+          have heval : Visitor.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
               data env ctx index () st =
               .ok (match continueStep (res, s) with
                 | .cont (s, _) => .cont ((), s)
@@ -281,7 +283,7 @@ theorem step_nop {data env locals index st} (p : Pending data env locals index s
   have heq : st.core = s := by simpa using hr
   subst s
   exact ⟨.plain .NOP, rfl, by simp only [Action.opcode]; decide,
-    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos .nop)⟩
+    .plain (.no_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos .nop)⟩
 
 theorem step_i32_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -297,7 +299,7 @@ theorem step_i32_const {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain (Spec.i32Const a), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_s32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+    .plain (.of_s32 a p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos hs.2.1)⟩
 
 theorem step_i64_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -313,7 +315,7 @@ theorem step_i64_const {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain (Spec.Constants.i64 a), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_s64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+    .plain (.of_s64 a p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos hs.2.1)⟩
 
 theorem step_f32_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -329,7 +331,7 @@ theorem step_f32_const {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain (Spec.Constants.f32 a), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_f32 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+    .plain (.of_f32 a p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos hs.2.1)⟩
 
 theorem step_f64_const {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -345,7 +347,7 @@ theorem step_f64_const {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain (Spec.Constants.f64 a), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_f64 a p.inbounds (by simpa [global_simps] using hbyte) p.pos hs.2.1)⟩
+    .plain (.of_f64 a p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos hs.2.1)⟩
 
 theorem step_drop {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -364,7 +366,7 @@ theorem step_drop {data env locals index st} (p : Pending data env locals index 
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain .DROP, rfl, by simp only [Action.opcode]; decide,
-    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+    .plain (.no_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte)
       (by simpa [hs.2.1] using p.pos) .drop)⟩
 
 theorem step_select {data env locals index st} (p : Pending data env locals index st)
@@ -383,7 +385,7 @@ theorem step_select {data env locals index st} (p : Pending data env locals inde
   rw [hr, WP.spec_ok] at hs
   dsimp only at hs
   exact ⟨.plain (.SELECT none), rfl, by simp only [Action.opcode]; decide,
-    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+    .plain (.no_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte)
       (by simpa [hs.2.1] using p.pos) .select)⟩
 
 theorem step_unreachable {data env locals index st} (p : Pending data env locals index st)
@@ -404,7 +406,7 @@ theorem step_unreachable {data env locals index st} (p : Pending data env locals
   have heq : s' = s := by simpa [code.read_unreachable, hm] using hr
   subst s
   exact ⟨.plain .UNREACHABLE, rfl, by simp only [Action.opcode]; decide,
-    .plain (.no_immediate p.inbounds (by simpa [global_simps] using hbyte)
+    .plain (.no_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte)
       (by simpa [hp] using p.pos) .unreachable)⟩
 
 theorem step_local_get {data env locals index st} (p : Pending data env locals index st)
@@ -429,7 +431,7 @@ theorem step_local_get {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
   exact ⟨.plain (.LOCAL_GET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+    .plain (.of_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos
       (.localGet a encoding) ⟨suffix, length, bound⟩)⟩
 
 theorem step_local_set {data env locals index st} (p : Pending data env locals index st)
@@ -454,7 +456,7 @@ theorem step_local_set {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
   exact ⟨.plain (.LOCAL_SET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+    .plain (.of_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos
       (.localSet a encoding) ⟨suffix, length, bound⟩)⟩
 
 theorem step_local_tee {data env locals index st} (p : Pending data env locals index st)
@@ -480,7 +482,7 @@ theorem step_local_tee {data env locals index st} (p : Pending data env locals i
   rw [hr, WP.spec_ok] at hs
   obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
   exact ⟨.plain (.LOCAL_TEE (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+    .plain (.of_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos
       (.localTee a encoding) ⟨suffix, length, bound⟩)⟩
 
 theorem step_global_get {data env locals index st} (p : Pending data env locals index st)
@@ -505,7 +507,7 @@ theorem step_global_get {data env locals index st} (p : Pending data env locals 
   rw [hr, WP.spec_ok] at hs
   obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
   exact ⟨.plain (.GLOBAL_GET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+    .plain (.of_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos
       (.globalGet a encoding) ⟨suffix, length, bound⟩)⟩
 
 theorem step_global_set {data env locals index st} (p : Pending data env locals index st)
@@ -530,7 +532,7 @@ theorem step_global_set {data env locals index st} (p : Pending data env locals 
   rw [hr, WP.spec_ok] at hs
   obtain ⟨bytes, suffix, length, bound, encoding⟩ := (hs a rfl).1
   exact ⟨.plain (.GLOBAL_SET (.mk_uN a.val)), rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_immediate p.inbounds (by simpa [global_simps] using hbyte) p.pos
+    .plain (.of_immediate p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos
       (.globalSet a encoding) ⟨suffix, length, bound⟩)⟩
 
 theorem step_memory_size {data env locals index st} (p : Pending data env locals index st)
@@ -556,7 +558,7 @@ theorem step_memory_size {data env locals index st} (p : Pending data env locals
   rw [hr, WP.spec_ok] at hs
   obtain ⟨hb, hv, hn⟩ := (hs rfl).1
   exact ⟨.plain .MEMORY_SIZE, rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memorySize hb hv hn)⟩
+    .plain (.of_byte 0#u8 p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos .memorySize hb hv hn)⟩
 
 theorem step_memory_grow {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
@@ -582,7 +584,7 @@ theorem step_memory_grow {data env locals index st} (p : Pending data env locals
   rw [hr, WP.spec_ok] at hs
   obtain ⟨hb, hv, hn⟩ := (hs rfl).1
   exact ⟨.plain .MEMORY_GROW, rfl, by simp only [Action.opcode]; decide,
-    .plain (.of_byte 0#u8 p.inbounds (by simpa [global_simps] using hbyte) p.pos .memoryGrow hb hv hn)⟩
+    .plain (.of_byte 0#u8 p.inbounds (by simp [global_simps] at hbyte; exact hbyte) p.pos .memoryGrow hb hv hn)⟩
 
 theorem step_numeric {data env locals index st} (p : Pending data env locals index st)
     {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)

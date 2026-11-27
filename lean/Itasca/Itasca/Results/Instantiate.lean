@@ -40,7 +40,7 @@ theorem Store.Instantantiation.instantiate_with.spec {M P F A : Type}
     (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
     (compilation_accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (raw : Binary.Module)
-    (source_encoding : Binary.ModuleEncodingWith CodeEntry.CodeEncoding raw bytes.val) :
+    (source_encoding : WebAssembly.Binary.ModuleEncoding (Binary.Source.rawModule raw) (Binary.Source.bytes bytes.val)) :
     Module_ok (Module.Elaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
         ⦃ (result, after, nextPlatform) => Inv (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧

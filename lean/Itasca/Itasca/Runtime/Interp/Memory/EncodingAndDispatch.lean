@@ -7,6 +7,8 @@ import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 import Itasca.Runtime.Interp.State.TableOperations
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

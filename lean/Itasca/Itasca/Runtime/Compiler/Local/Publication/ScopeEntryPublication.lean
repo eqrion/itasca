@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.CallbackRetention
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCoordinates
 import Itasca.Runtime.Compiler.Local.Coordinates.SourceCoordinates
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

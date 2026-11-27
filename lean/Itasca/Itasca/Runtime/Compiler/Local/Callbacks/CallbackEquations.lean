@@ -248,7 +248,7 @@ theorem runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.cod
 /-- The `custom_region` callback succeeds without changing the scheduler. -/
 theorem runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region.eq {A : Type}
     (platformAllocInst : runtime.platform.Alloc A)
-    (self : runtime.compiler.CompileScheduler A) (region : stream.Region) :
+    (self : runtime.compiler.CompileScheduler A) (region : stream.StreamingRegion) :
     runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.custom_region platformAllocInst self region =
       .ok self := rfl
 

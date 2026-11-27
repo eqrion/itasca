@@ -460,7 +460,7 @@ namespace Itasca
 theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) :
     (do
-      let (r, _) ← code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+      let (r, _) ← code.validate_body_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
         data env ctx index ()
       .ok r) = code.bodyCore data env ctx.locals ctx.results index := by
   unfold code.validate_body_with code.initial_state code.bodyCore
@@ -494,7 +494,7 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
     (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     code.bodyCore data env ctx.locals results index = .ok (.Ok ()) := by
   obtain ⟨w, hw⟩ := code.validate_body_with.accepted_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts data env ctx
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts data env ctx
     ⟨ctx.locals, results⟩ rfl index v () v' h
   cases w
   rw [← code.validate_body_with.eq_core data env ⟨ctx.locals, results⟩]
@@ -514,7 +514,7 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
   simp [Std.uncurry] at h
   subst r
   exact code.validate_body_with.accepted_transfer
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor visitor ha data env
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor visitor ha data env
     ⟨ctx.locals, results⟩ ctx rfl index () v () hr
 
 /-- Arbitrary accepted visitors establish `Body.Validated` for the instruction grammar, without a callback

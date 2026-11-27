@@ -40,6 +40,8 @@ import Itasca.Runtime.Compiler.Local.Capacity.ConditionalAndSimdAvailability
 import Itasca.Runtime.Compiler.Local.Capacity.ControlAvailability
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Acceptance
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -80,7 +82,7 @@ theorem IndexedTableReaderCompilerPoint.control_capacity_from_source {A : Type}
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (kind : ControlReaderKind) (byte : data.val[st.core.pos.val] = kind.opcode)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
@@ -142,7 +144,7 @@ theorem reader_return_open_instructions {jumpTables : List U32} {data env source
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨callback, read, values, post⟩ := reader_return p
@@ -188,7 +190,7 @@ theorem reader_unreachable_open_instructions {jumpTables : List U32} {data env s
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_UNREACHABLE)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_UNREACHABLE before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨capacity, run⟩ := base_success
@@ -575,7 +577,7 @@ theorem reader_enter_open_instructions {jumpTables : List U32}
     (held : CompilerInstructionPrefix before)
     (form : Body.Frames.Form) (initialForm : form.Initial)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after := by
   obtain ⟨bt,ins,outs,remaining,base,callback,_,post⟩ := reader_enter p form initialForm
@@ -733,7 +735,7 @@ theorem StructuredReaderCompilerState.root_checked_instructions {jumpTables : Li
     (maps : ControlMapPublication before) (held : CompilerInstructionPrefix before)
     (exits : FrameExitSlotBounds before)
     (byte : data.val[st.core.pos.val]'inbounds = 0x0b#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after)) :
     CheckedInstructionPrefix after.function ∧ after.frames.val = [] := by
   let p := state.boundary.pending next advance inbounds
@@ -816,7 +818,7 @@ theorem StructuredReaderCompilerState.control_checked_prefix
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (kind : ControlReaderKind)
     (byte : data.val[st.core.pos.val]'inbounds = kind.opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index kind.opcode before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   let p := state.boundary.pending next advance inbounds
@@ -931,7 +933,7 @@ theorem StructuredReaderCompilerState.closed_checked_instructions
     (next : Usize) (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (closed : out.core.ctrls.val = [])
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     CheckedInstructionPrefix after.function := by
   let p := state.boundary.pending next advance inbounds
@@ -1407,8 +1409,8 @@ theorem reached_br_table_available {jumpTables : List U32} {data env sourceLocal
     (depthCount : depths.length+1 ≤ U32.max)
     (boundary : CompilerTableBoundary compiler)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
-    (reference : code.step_profile source st data env ctx index 14#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 14#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 14#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => match counter with
@@ -1515,11 +1517,11 @@ theorem IndexedTableReaderCompilerPoint.table_available_from_source {A : Type}
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (byte : data.val[st.core.pos.val] = 14#u8)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
@@ -1617,8 +1619,8 @@ theorem reached_br_available {jumpTables : List U32} {data env sourceLocals inde
     (capacity : CallbackCapacity compiler out.core bound 2)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (byte : data.val[p.start.val]'p.inbounds = 12#u8)
-    (reference : code.step_profile source st data env ctx index 12#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 12#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 12#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 2 else 0) ⦄ := by
@@ -1688,8 +1690,8 @@ theorem reached_br_if_available {jumpTables : List U32} {data env sourceLocals i
     (capacity : CallbackCapacity compiler out.core bound 3)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (byte : data.val[p.start.val]'p.inbounds = 13#u8)
-    (reference : code.step_profile source st data env ctx index 13#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 13#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 13#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 3 else 0) ⦄ := by
@@ -1798,8 +1800,8 @@ theorem reached_else_available {jumpTables : List U32} {data env sourceLocals in
     (capacity : CallbackCapacity compiler out.core bound 1)
     (fixups : FixupBudget compiler.frames.val compiler.function.code.val.length)
     (byte : data.val[p.start.val]'p.inbounds = 5#u8)
-    (reference : code.step_profile source st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 5#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -1872,8 +1874,8 @@ theorem reached_end_available {A V : Type}
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (capacity : CallbackCapacity compiler out.core bound 1)
     (coordinate : compiler.function.body_start.val+out.core.pos.val ≤ Usize.max)
-    (reference : code.step_profile source st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 11#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -1913,8 +1915,8 @@ theorem reached_enter_available {jumpTables : List U32} {data env sourceLocals i
     (demand : CallbackDemand compiler out.core bound) (scope : ScopeDemand compiler out.core bound)
     (pcRoom : compiler.function.code.length+1 ≤ U32.max)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (reference : code.step_profile source st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index form.opcode compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
@@ -1944,7 +1946,7 @@ theorem reached_enter_available {jumpTables : List U32} {data env sourceLocals i
         CompilationBudgetEffect compiler.budget result.2.budget
           (fun counter => if counter = .instructions ∨ counter = .controls then 1 else 0) ⦄ := by
     rcases initialForm with rfl | rfl | rfl <;> exact callback
-  have dispatch : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  have dispatch : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index form.opcode compiler =
       CallbackTrace.bodyRun (code.enter_info st data env form.kind)
         (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) (enterAction form) compiler := by
@@ -1996,11 +1998,11 @@ theorem IndexedTableReaderCompilerPoint.control_available_from_source {A : Type}
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (kind : ControlReaderKind) (byte : data.val[st.core.pos.val] = kind.opcode)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
@@ -2015,11 +2017,11 @@ theorem IndexedTableReaderCompilerPoint.control_available_from_source {A : Type}
     simpa only [state.compiled.metadata.fields.1] using signatures
   rw [byte] at reference ⊢
   have liftEffect (allowance : ChargeCounter → Nat) (paid : ∀ counter, allowance counter ≤ bodyResourceRate counter)
-      (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+      (acceptance : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index kind.opcode compiler
         ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
-      code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+      code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index kind.opcode compiler
         ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
           CompilationBudgetEffect compiler.budget result.2.2.budget

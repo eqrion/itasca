@@ -10,6 +10,8 @@ import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Interp.Numeric.Integer.SignedOperationsAndCounts
 import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -144,7 +146,7 @@ theorem dispatch_branch_transfer_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (dst src count : U32)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (target : SourceMachine.Label)
     (front discarded results : List val)
     (lookup : f.labels[depth]? = some target)
@@ -236,7 +238,7 @@ theorem ValuesAt.elide_transfer {words : List U64} {base : Nat} {front discarded
     subst discarded
     simpa only [List.append_nil] using live
 
-theorem branch_source_step (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+theorem branch_source_step (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (target : SourceMachine.Label) (front discarded results : List val)
     (lookup : f.labels[depth]? = some target) (height : target.height = front.length)
     (arity : target.arity = results.length) (types : results.map SourceMachine.valueType = target.branchTypes) :
@@ -259,7 +261,7 @@ theorem step_branch_no_copy_refines {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (targetPC : U32)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (target : SourceMachine.Label) (front discarded results : List val)
     (last : frameIndex.val + 1 = exec.frames.length)
     (frameLookup : exec.frames.val[frameIndex.val]? = some raw)
@@ -307,7 +309,7 @@ section
 namespace Itasca.Interp
 open Aeneas Aeneas.Std
 
-theorem branch_if_source_step (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+theorem branch_if_source_step (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (front : List val) (value : Nat) (bound : value < 2 ^ 32) :
     SourceMachine.astep
       ⟨s, ambient, { f with code := .BR_IF (.mk_uN depth) :: after, vals := front ++ [SourceMachine.integerVal .I32 value] } :: rest, []⟩ = .next
@@ -322,7 +324,7 @@ def branchIfFrame (f : SourceMachine.AFrame) (after : List instr) (depth : Nat) 
 
 /-- A direct conditional branch may fuse the source BR_IF test and BR transfer.
 Both reductions are derived from the generated source typing invariant. -/
-theorem branch_if_source_refines (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+theorem branch_if_source_refines (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (label : SourceMachine.Label) (front discarded results : List val) (value : Nat)
     (bound : value < 2 ^ 32) (lookup : f.labels[depth]? = some label)
     (height : label.height = front.length) (arity : label.arity = results.length)
@@ -356,7 +358,7 @@ theorem dispatch_branch_if_no_copy_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (cond target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (label : SourceMachine.Label) (front discarded results : List val)
     (frameLookup : exec.frames.val[index.val]? = some raw)
     (bound : value < 2 ^ 32) (lookup : f.labels[depth]? = some label)
@@ -419,7 +421,7 @@ theorem step_branch_guard_refines {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (cond target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (front : List val)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -461,7 +463,7 @@ theorem step_branch_if_no_copy_refines {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (cond target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (label : SourceMachine.Label) (front discarded results : List val)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

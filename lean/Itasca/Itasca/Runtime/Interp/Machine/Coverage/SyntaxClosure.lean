@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Machine.Frames.FrameAndReturnStacks
 import Itasca.Runtime.Interp.Machine.Retention.ReturnedOwnership
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 
+open WebAssembly
+
 /-! ## SupportedBoundarySemantics -/
 
 section

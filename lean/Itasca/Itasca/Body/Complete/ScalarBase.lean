@@ -7,10 +7,12 @@ import Itasca.Binary.Scalar.MemoryMeaning
 import Itasca.Visitor.RunTrace
 import Itasca.Visitor.Total
 
+open WebAssembly
+
 /-!
 # Scalar Base
 
-Concrete frame and environment facts supply scalar instruction completeness. These shared cases are reused by the complete instruction proof without defining a language profile.
+Concrete frame and environment facts supply scalar instruction completeness. The complete instruction proof reuses these cases.
 -/
 
 /-! ## Frame -/
@@ -97,7 +99,7 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
 `Ok` at the cursor `next` and the resulting state realizes the output types. -/
 def StepResult {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype) : Prop :=
-  ∃ s, code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
+  ∃ s, code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), s, ()) ∧ s.pos = next ∧ f.Output out s ∧
     s.vals.val.length ≤ st.vals.val.length + 1
 
@@ -128,7 +130,7 @@ private theorem finish {st : code.OpIterState} (f : Frame st)
     {α : Type} (value : α) (s : code.OpIterState)
     (hp : Handler.Environment.Post st f.outer f.operands before outputs next value (.Ok value, s))
     (houtputs : outputs.length ≤ 1)
-    (hs : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
+    (hs : code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), s, ())) :
     StepResult f data env ctx opcode next (before ++ outputs.map Translation.valueType) := by
   obtain ⟨_, hc, hpos, rest, hv, hlen, hr⟩ := hp
@@ -297,7 +299,7 @@ theorem memory {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx :
         f.outer f.operands front f.vals f.base_eq hsize
         (by simpa [f.poly_eq, hins, Body.MemoryMeaning.Operation.inputs, hstore, Translation.valueType] using hr))
     obtain ⟨rfl, hp⟩ := hpost
-    have hstep := code.step_memory.dispatch code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    have hstep := code.step_memory.dispatch code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       st data env ctx () opcode operation hrow
     have result := finish f data env ctx opcode front [operation.ty] next arg s ⟨rfl, hp⟩
       (by simp) (by simpa [hstore, hread, Visitor.Core.run, code.visit, Visitor.Erasure.visit_memory_empty,
@@ -309,7 +311,7 @@ theorem memory {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx :
         f.outer f.operands front f.vals f.base_eq
         (by simpa [f.poly_eq, hins, Body.MemoryMeaning.Operation.inputs, hstore, Translation.valueType] using hr))
     obtain ⟨rfl, hp⟩ := hpost
-    have hstep := code.step_memory.dispatch code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    have hstep := code.step_memory.dispatch code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       st data env ctx () opcode operation hrow
     have result := finish f data env ctx opcode front [] next arg s ⟨rfl, hp⟩
       (by simp) (by simpa [hstore, hread, Visitor.Core.run, code.visit, Visitor.Erasure.visit_memory_empty,
@@ -357,7 +359,7 @@ namespace Itasca.Body.Scalar.Completeness
 private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype)
     (s : code.OpIterState) (after : List code.StackType)
-    (hs : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
+    (hs : code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), s, ()))
     (hp : s.pos = next) (hc : s.ctrls = st.ctrls) (hv : s.vals.val = f.outer ++ after)
     (hl : after.length ≤ f.operands.length + 1)

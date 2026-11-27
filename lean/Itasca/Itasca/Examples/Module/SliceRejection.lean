@@ -22,7 +22,7 @@ theorem environment_loop_noop {V : Type} (visitor : metadata.ModuleVisitor V)
     (data : Slice U8) (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
     (result : core.result.Result (metadata.Env × Usize) error.Error)
     (h : metadata.validate_env_with_loop
-      metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor data () env pos lastId =
+      metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor data () env pos lastId =
       .ok (result, ())) :
     metadata.validate_env_with_loop visitor data v env pos lastId = .ok (result, v) := by
   generalize hn : data.length - pos.val = n
@@ -149,10 +149,10 @@ theorem environment_error (data : Slice U8) (e : error.Error)
   subst total
   have hparse := environment_noop stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor
     (fun _ _ => rfl) data (⟨none, none⟩ : stream.SyncVisitor) (.Err e) herror
-  have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
+  have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
       ⟨data, code, code⟩ ⟨none, none⟩ storage = .ok (.Err e, ⟨none, none⟩, storage) := by
-    simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamSource.environment,
+    simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamStreamingSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, hadd, hparse,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
@@ -169,7 +169,7 @@ theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : Stream.CompleteRegions.Split data regions)
     (henv : metadata.validate_env regions.env = .ok (.Ok (env, Slice.len regions.env)))
-    (herror : stream.read_code_header stream.SliceSource.Insts.ItascaStreamSource
+    (herror : stream.read_code_header stream.SliceSource.Insts.ItascaStreamStreamingSource
       regions (Slice.len regions.code) env = .ok (.Err e)) :
     metadata.validate_module data = .ok (.Err e) := by
   obtain ⟨first, last, hsplit, he, hc, ht⟩ := hsplit.computed
@@ -191,16 +191,16 @@ theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
   have hparse := environment_noop stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor
     (fun _ _ => rfl) regions.env (⟨none, none⟩ : stream.SyncVisitor)
     (.Ok (env, Slice.len regions.env)) henv
-  have hremaining : stream.validate_remaining stream.SliceSource.Insts.ItascaStreamSource
+  have hremaining : stream.validate_remaining stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions env (Slice.len regions.env)
       ⟨none, none⟩ = .ok (.Err e, ⟨none, none⟩) := by
-    simp [stream.validate_remaining, stream.SliceSource.Insts.ItascaStreamSource.code_len,
+    simp [stream.validate_remaining, stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len,
       hcodeadd, herror, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamSource
+  have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions ⟨none, none⟩ storage =
       .ok (.Err e, ⟨none, none⟩, env) := by
-    simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamSource.environment,
+    simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamStreamingSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, henvadd, hparse,
       hremaining, core.result.Result.Insts.CoreOpsTry.branch]
   unfold metadata.validate_module stream.validate_module_slice

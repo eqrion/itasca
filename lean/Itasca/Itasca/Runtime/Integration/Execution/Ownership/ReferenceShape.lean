@@ -20,6 +20,8 @@ import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Integration.Execution.Ownership.Publication
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## CertifiedStore -/

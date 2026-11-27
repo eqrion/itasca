@@ -13,6 +13,8 @@ import Itasca.Runtime.Integration.Execution.Certificates
 import Itasca.Runtime.Integration.Execution.History.RecordedPrefix
 import Itasca.Runtime.Platform.Laws
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / World.
 

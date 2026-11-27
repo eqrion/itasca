@@ -27,7 +27,7 @@ inductive TypedRun {V : Type} (visitor : code.OpVisitor V)
       (pending : Pending data env ctx.locals index {core := {st.core with pos := next}})
       (start : pending.start = st.core.pos)
       (advance : next.val = st.core.pos.val + 1)
-      (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx index
+      (called : code.step_body visitor {core := {st.core with pos := next}} data env ctx index
         (data.val[pending.start.val]'pending.inbounds) v = .ok (.Ok (), out, middle))
       (rest : TypedRun visitor data env ctx index out middle final) :
       TypedRun visitor data env ctx index st v final
@@ -70,7 +70,7 @@ theorem typed_loop {V : Type} (visitor : code.OpVisitor V)
         simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry] at hb
         obtain ⟨⟨res, out, w⟩, hs, htail⟩ := Computation.bind_ok_inv _ _ _ hb
         obtain ⟨p, hstart⟩ := hi.pending hc hp next hnext
-        have hs' : code.step_profile visitor {core := {st.core with pos := next}}
+        have hs' : code.step_body visitor {core := {st.core with pos := next}}
             data env ctx index (data.val[p.start.val]'p.inbounds) v =
             .ok (res, out, w) := by simpa [hstart] using hs
         cases res with
@@ -84,12 +84,12 @@ theorem typed_loop {V : Type} (visitor : code.OpVisitor V)
           simp at htail
           subst cf
           obtain ⟨emptyCf, hempty, hobs⟩ := Visitor.body.transfer visitor
-            code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+            code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
             data env ctx ctx rfl index st v () _ hb0 trivial
           obtain ⟨⟨res, s⟩, hs0, hafter⟩ :=
             WP.spec_imp_exists (steps data env ctx.locals ctx index rfl _ p)
           simp only [hstart] at hs0
-          have heval : Visitor.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+          have heval : Visitor.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
               data env ctx index () st =
               .ok (match continueStep (res, s) with
                 | .cont (s, _) => .cont ((), s)

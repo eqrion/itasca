@@ -1,5 +1,7 @@
 import Itasca.Results.Definitions.Binary
 
+open WebAssembly
+
 /-! Proof helpers for intermediate states; public results use the semantic
 vocabulary in Interface. Keeping these here avoids exposing parser progress
 and implementation accounting as part of the public contract. -/

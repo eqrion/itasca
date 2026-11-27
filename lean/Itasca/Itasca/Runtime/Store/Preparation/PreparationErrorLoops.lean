@@ -9,6 +9,8 @@ import ItascaRust.Funs
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Preparation.
 

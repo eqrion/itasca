@@ -6,6 +6,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.PrefixZipper
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalPrefix
 import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

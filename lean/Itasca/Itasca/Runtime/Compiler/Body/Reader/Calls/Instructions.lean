@@ -4,6 +4,8 @@ import Itasca.Body.Trace.ControlRecords
 import Itasca.Body.Control.BranchComplete
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Calls.
 
@@ -30,7 +32,7 @@ theorem reader_call {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x10#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x10#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x10#u8 before =
       .ok (.Ok (), out, after)) :
     ∃ idx values, visitor.on_call before out.core idx = .ok (.Ok (), after) ∧
       code.call_info st data env = .ok (.Ok idx, out) ∧
@@ -65,7 +67,7 @@ theorem reader_indirect_call {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x11#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body visitor st data env ctx index 0x11#u8 before = .ok (.Ok (),out,after)) :
     ∃ idx table values, visitor.on_call_indirect before out.core idx table = .ok (.Ok (),after) ∧
       code.call_indirect_info st data env = .ok (.Ok (idx,table),out) ∧
       Body.ReaderPost p out.core (.CALL_INDIRECT (.mk_uN table.val) (.mk_uN idx.val))

@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 import Itasca.Runtime.Compiler.Local.Definitions
 
+open WebAssembly
+
 /-! ## PairSuccess -/
 
 section

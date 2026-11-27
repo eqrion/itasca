@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
 
+open WebAssembly
+
 /-! ## ResolvedPrefix -/
 
 section

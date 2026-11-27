@@ -27,11 +27,15 @@ check-tools:
     @test -x {{ quote(aeneas) }} && test -x {{ quote(charon) }} && test -x {{ quote(charon + "-driver") }} || { echo "Run just tools to install the pinned extraction tools."; exit 1; }
 
 # Keep extraction outputs separate from ordinary Rust tests and release builds.
+# The extraction build omits native entry points that call the modeled runtime.
+# Pass the cfg to Cargo as well so it omits native dependencies.
 [working-directory("..")]
 _llbc: check-tools
     @mkdir -p lean/.build
     @RUSTUP_TOOLCHAIN={{ rust_toolchain }} CARGO_TARGET_DIR="$PWD/lean/.build/cargo" \
+        RUSTFLAGS=--cfg=charon \
         {{ quote(charon) }} cargo --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
+        --rustc-arg=-Adead_code \
         --exclude='{impl core::clone::Clone for _}' \
         --exclude='{impl core::marker::Copy for _}' \
         --include='core::marker::{impl core::marker::Copy for u8}' \

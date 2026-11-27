@@ -27,7 +27,7 @@ theorem compile_accepted_certificate {A} (ops : runtime.platform.Alloc A)
     Compiler.compile_executable_functions ops law bytes limits executable accepted
   obtain ⟨other,otherEncoded,_,_,_,_,_,capacities⟩ :=
     Compiler.compile_executable_capacities ops law bytes limits executable accepted
-  have same := Binary.ModuleEncodingWith.unique CodeEntry.code_prefix_unique encoded otherEncoded
+  have same := Binary.module_unique encoded otherEncoded
   subst other
   exact ⟨raw,encoded,elaborated,typed,restrictions,⟨metadata,accessors,functions,initializers,capacities⟩⟩
 end Itasca.Integration
@@ -77,6 +77,6 @@ metadata association that public clients use. -/
 theorem CompilationCertificate.source {bytes : Slice U8} {executable : runtime.compiler.ExecutableModule}
     (certificate : CompilationCertificate bytes executable) : CompilationSource bytes executable := by
   obtain ⟨raw, encoded, elaborated, typed, restrictions, relation⟩ := certificate
-  exact ⟨raw, encoded, elaborated, typed, restrictions, relation.metadata, relation.accessors⟩
+  exact ⟨raw, Binary.Source.moduleEncoding encoded, elaborated, typed, restrictions, relation.metadata, relation.accessors⟩
 
 end Itasca.Integration

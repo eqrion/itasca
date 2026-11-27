@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.LoweringLocal
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Lowering / Integer.
 

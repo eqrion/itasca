@@ -8,6 +8,8 @@ import Itasca.Runtime.Store.Initialization.SegmentOperations
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -514,7 +516,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- Every appended runtime global has its declared type and its source
 initializer's value in the unchanged initial source state. -/
-def GlobalSourceValues (sourceStore : _root_.store) (sourceInstance : moduleinst)
+def GlobalSourceValues (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (source : List Itasca.metadata.Global) (values : List runtime.store.GlobalInst) : Prop :=
   List.Forall₂ (fun original actual => actual.ty = original.gtype ∧
     Eval_expr ⟨sourceStore, ⟨[], sourceInstance⟩⟩ (Module.Constants.expression original.init)

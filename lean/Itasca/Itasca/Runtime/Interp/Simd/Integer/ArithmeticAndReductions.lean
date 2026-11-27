@@ -7,6 +7,8 @@ import Itasca.Runtime.Spec.Simd.ArithmeticMemoryAndFloat
 import Itasca.Runtime.Interp.Numeric.Integer.SignedOperationsAndCounts
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Simd / Integer.
 

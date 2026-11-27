@@ -1,6 +1,8 @@
 import Itasca.Runtime.SourceMachine.Definitions
 import WebAssembly.Host
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / SourceMachine.
 
@@ -79,7 +81,7 @@ namespace Itasca.SourceMachine.Ownership
 
 open WebAssembly
 
-def GlobalsOwned (bounds : Bounds) (s : _root_.store) : Prop :=
+def GlobalsOwned (bounds : Bounds) (s : WebAssembly.store) : Prop :=
   ∀ object ∈ s.GLOBALS, ValueOwned bounds object.VALUE
 
 end Itasca.SourceMachine.Ownership

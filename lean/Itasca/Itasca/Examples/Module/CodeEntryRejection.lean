@@ -131,7 +131,7 @@ section
 A code entry `02 00 ff` has a well-formed size and local declarations but an unknown opcode in its
 body. `bad_body_entry_rejected` shows `metadata.validate_code_entry` reports `UnrecognizedOpcode`.
 `bad_batch_validation_rejected` and `bad_batch_finish_rejected` show the streaming worker
-`stream.CodeBatch.validate_func` records that error so `stream.CodeBatch.finish` rejects the batch,
+`stream.StreamingBatch.validate_func` records that error so `stream.StreamingBatch.finish` rejects the batch,
 and `tail_custom_preserves_work` shows a trailing custom section leaves the outstanding batch list
 intact.
 -/
@@ -170,11 +170,11 @@ private theorem bad_locals : metadata.decode_locals badBytes 1#usize =
   have he : locals = alloc.vec.Vec.new _ := alloc.vec.Vec.ext _ _ (by simpa [CodeEntry.Locals.declared] using hv)
   simpa [he] using hl
 
-private theorem bad_body_with : code.validate_body_with code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+private theorem bad_body_with : code.validate_body_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
     (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 () =
       .ok (.Err .UnrecognizedOpcode, ()) := by
   obtain ⟨⟨r, v⟩, hr⟩ := code.validate_body_with.total
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
     (Examples.BodySupport.bytes [0xFF#u8]) badEnv Examples.BodySupport.emptyContext 0#u32 ()
   have he := code.validate_body_with.eq_core (Examples.BodySupport.bytes [0xFF#u8]) badEnv
     Examples.BodySupport.emptyContext 0#u32
@@ -246,14 +246,14 @@ private theorem bad_bounds : CodeEntry.Bounds badEnv := by
   simp [Examples.BodySupport.voidFunction, limits.MAX_LOCALS]
   scalar_tac
 
-/-- The batch worker `stream.CodeBatch.validate_func` rejects the well-framed entry with
+/-- The batch worker `stream.StreamingBatch.validate_func` rejects the well-framed entry with
 `Body UnrecognizedOpcode` and stores the error in the batch. -/
 theorem bad_batch_validation_rejected : ∃ after,
-    stream.CodeBatch.validate_func code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    stream.StreamingBatch.validate_func code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       badIssued.seed 0#usize () = .ok (.Err (.Body .UnrecognizedOpcode), after, ()) ∧
     after.error = some (.Body .UnrecognizedOpcode) := by
   obtain ⟨⟨r, v⟩, hr⟩ := metadata.validate_code_entry_with.total
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
     badBytes 0#usize badEnv 0#usize () bad_bounds
   cases v
   have he : r = .Err (.Body .UnrecognizedOpcode) := by
@@ -265,17 +265,17 @@ theorem bad_batch_validation_rejected : ∃ after,
     have he : n = 0#usize := by apply UScalar.eq_of_val_eq; simpa using hv
     simpa [he] using hn
   refine ⟨{ badIssued.seed with error := some (.Body .UnrecognizedOpcode) }, ?_, rfl⟩
-  simp [stream.CodeBatch.validate_func, stream.CodeBatch.validate_next,
+  simp [stream.StreamingBatch.validate_func, stream.StreamingBatch.validate_next,
     badIssued, Stream.Batch.Issued.seed, hr, hz, core.option.Option.is_none]
 
-/-- After the worker fails, `stream.CodeBatch.finish` on the resulting batch returns the same
+/-- After the worker fails, `stream.StreamingBatch.finish` on the resulting batch returns the same
 error. -/
 theorem bad_batch_finish_rejected : ∃ after,
-    stream.CodeBatch.validate_func code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    stream.StreamingBatch.validate_func code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       badIssued.seed 0#usize () = .ok (.Err (.Body .UnrecognizedOpcode), after, ()) ∧
-    stream.CodeBatch.finish after = .ok (.Err (.Body .UnrecognizedOpcode)) := by
+    stream.StreamingBatch.finish after = .ok (.Err (.Body .UnrecognizedOpcode)) := by
   obtain ⟨after, hr, he⟩ := bad_batch_validation_rejected
-  exact ⟨after, hr, by simp [stream.CodeBatch.finish, he]⟩
+  exact ⟨after, hr, by simp [stream.StreamingBatch.finish, he]⟩
 
 /-- A trailing custom section with an empty name and no payload: `00 01 00`. -/
 def tailBuffer : Slice U8 := Examples.Module.Support.bytes [0#u8,1#u8,0#u8]
@@ -291,7 +291,7 @@ private theorem good_tail (env : metadata.Env) (hcount : env.data_count = none) 
         refine ⟨[], [], [0#u8], ?_, ?_⟩
         · exact ⟨ByteVecEncoding.iff.mpr ⟨[0#u8], leb 0#u8, rfl⟩, .nil⟩
         · exact ⟨[1#u8], [0#u8], leb 1#u8, rfl, rfl⟩
-      simpa using CustomsEncoding.cons hc CustomsEncoding.nil
+      simpa using WebAssembly.Binary.CustomsEncodingWith.cons hc WebAssembly.Binary.CustomsEncodingWith.nil
     · constructor <;> simp [tailBuffer, Examples.Module.Support.bytes, alloc.vec.Vec.deref]
   · simp [emptyTail]
   · simp [hcount]

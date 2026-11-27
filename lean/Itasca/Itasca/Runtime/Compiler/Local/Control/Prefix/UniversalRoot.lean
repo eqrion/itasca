@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.FunctionStartContracts
 import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## UniversalConditional -/

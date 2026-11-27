@@ -4,6 +4,8 @@ import Itasca.Body.Control.BranchComplete
 import Itasca.Body.Control.EnterSound
 import Itasca.Body.Complete.Control
 
+open WebAssembly
+
 /-!
 Proofs for Body.
 
@@ -172,16 +174,20 @@ theorem programs (data : Slice U8) (env : metadata.Env)
     Program data env ctx index tokens ops := by
   apply program_of_atoms data env ctx index ?_ tokens ops he
   intro tokens op ha smaller
-  cases ha with
-  | simple hs =>
-    cases hs with
-    | plain op _ =>
-      exact atom_of_leaf data env ctx index
-        (leaf_contract data env ctx index henv hret) op
-  | block bt hb => exact atom_block henv bt hb smaller
-  | loop bt hb => exact atom_loop henv bt hb smaller
-  | ifElse bt hy hn => exact atom_if_else henv bt hy hn smaller
-  | ifEnd bt hb => exact atom_if_end henv bt hb smaller
+  change Emits tokens [op] at ha
+  generalize eq : [op] = ops at ha
+  cases ha <;> simp only [List.singleton_eq_append_iff, List.cons.injEq,
+    List.cons_ne_nil, and_true, and_false, or_false] at eq
+  all_goals obtain ⟨rfl, rfl⟩ := eq
+  all_goals have prior := Emits.empty_iff.mp (by assumption)
+  all_goals subst_vars
+  case simple =>
+    casesm WebAssembly.Binary.SimpleWith _ _
+    exact atom_of_leaf data env ctx index (leaf_contract data env ctx index henv hret) _
+  case block => exact atom_block henv _ (by assumption) smaller
+  case loop => exact atom_loop henv _ (by assumption) smaller
+  case ifElse => exact atom_if_else henv _ (by assumption) (by assumption) smaller
+  case ifEnd => exact atom_if_end henv _ (by assumption) smaller
 
 end Itasca.Body.Completeness
 

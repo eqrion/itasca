@@ -17,6 +17,8 @@ import Itasca.Body.Scalar.Env
 import Itasca.Runtime.Compiler.Body.Relations.CallbackReadiness
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallSafety
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Calls.
 
@@ -55,7 +57,7 @@ theorem reader_call_open_instructions {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 16#u8 before = .ok (.Ok (), out, after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,ft,values,front,base,found,input,post,baseAt,lowered⟩ :=
@@ -97,7 +99,7 @@ theorem reader_indirect_call_open_instructions {data env locals typeIndex st}
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   obtain ⟨stable,_,_,index,table,values,emitted,output,pairs,post,lowered,emission⟩ :=
@@ -137,7 +139,7 @@ theorem reader_call_checked_prefix {jumpTables : List U32} {data env sourceLocal
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
@@ -170,7 +172,7 @@ theorem reader_indirect_call_checked_prefix {jumpTables : List U32} {data env so
     (bodyBound : before.function.body_start.val+data.length ≤ Usize.max)
     (held : CompilerInstructionPrefix before) (exits : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after ∧ FrameExitSlotBounds after := by
   by_cases live : before.reachable = true
@@ -224,7 +226,7 @@ theorem structured_reader_prefix_call {jumpTables : List U32} {data env sourceLo
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (ft : Itasca.wasm_types.FuncType) (values : List code.StackType),
       env.func_types.val[callee.val]? = some ft ∧
@@ -270,7 +272,7 @@ theorem structured_reader_prefix_dead_call {jumpTables : List U32} {data env sou
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_CALL)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.CALL (.mk_uN callee.val)) p.current.ctrl.polymorphic_base values ∧
@@ -305,7 +307,7 @@ theorem StructuredReaderCompilerState.call {jumpTables : List U32} {A : Type}
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_CALL)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_CALL before = .ok (.Ok (), out, after)) :
     ∃ (callee : U32) (values : List code.StackType), StructuredReaderCompilerState jumpTables emit initial after types (env.func_types.val.map Translation.Environment.funcType) returns locals data env ctx.locals index ft out
       parents (current.advance (.CALL (.mk_uN callee.val))) savedParents
@@ -428,7 +430,7 @@ theorem compiler_reader_call_total {A} (ops : runtime.platform.Alloc A)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Body.Control.Shape st.core) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 16#u8 compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   rw [Body.CallbackTrace.dispatch_call]
@@ -447,7 +449,7 @@ theorem compiler_reader_call_indirect_total {A} (ops : runtime.platform.Alloc A)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Body.Control.Shape st.core) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 17#u8 compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   rw [Body.CallbackTrace.dispatch_call_indirect]

@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.CopyContracts
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

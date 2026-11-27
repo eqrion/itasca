@@ -22,6 +22,8 @@ import Itasca.Runtime.Interp.HostCalls
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Runtime.Integration.Host.HostCallContext
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Failure -/
@@ -66,7 +68,7 @@ open Aeneas Aeneas.Std Itasca.Interp
 theorem CumulativeFailure.prepend_normalization {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
     {store : runtime.store.Store M} {platform : P} {error : runtime.ExecError}
-    {count : Nat} {before middle : SourceMachine.AFrame} {s : _root_.store} {ambient : frame} {rest : List SourceMachine.AFrame}
+    {count : Nat} {before middle : SourceMachine.AFrame} {s : WebAssembly.store} {ambient : frame} {rest : List SourceMachine.AFrame}
     (chain : ErasedSteps count before middle)
     (typed : SourceMachine.ATyped ⟨s, ambient, before :: rest, []⟩)
     (failure : CumulativeFailure allocator hooks exec store platform ⟨s, ambient, middle :: rest, []⟩ error) :
@@ -152,7 +154,7 @@ namespace Itasca.Integration
 open Aeneas Aeneas.Std WebAssembly Itasca.Interp
 
 theorem EventfulInvocationError.prepend {initial middle : config} {events rest : List HostEvent}
-    {store : _root_.store} {ambient : frame} {error : runtime.ExecError}
+    {store : WebAssembly.store} {ambient : frame} {error : runtime.ExecError}
     (outcome : EventfulInvocationError middle rest store ambient error)
     (prefixSteps : StepsH initial events middle) :
     EventfulInvocationError initial (events++rest) store ambient error := by
@@ -164,7 +166,7 @@ theorem EventfulInvocationError.prepend {initial middle : config} {events rest :
     exact ⟨body,Spec.steps_h_trans prefixSteps steps⟩
 
 theorem EventfulInvocationError.reachable {initial : config} {events : List HostEvent}
-    {store : _root_.store} {ambient : frame} {error : runtime.ExecError}
+    {store : WebAssembly.store} {ambient : frame} {error : runtime.ExecError}
     (outcome : EventfulInvocationError initial events store ambient error) :
     ∃ body, StepsH initial events ⟨⟨store,ambient⟩,body⟩ := by
   cases error <;> simp only [EventfulInvocationError] at outcome

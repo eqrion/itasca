@@ -1,7 +1,7 @@
 //! Slot-based execution of validated WebAssembly modules.
 //!
 //! The generic compiler, store, and interpreter are extracted to Lean, where
-//! `lean/Itasca/Runtime` proves their correctness under explicit platform contracts. The
+//! `lean/Itasca/Itasca/Runtime` proves their correctness under explicit platform contracts. The
 //! `native` module instantiates them with the standard allocator and IEEE
 //! operations and is excluded from extraction.
 //!
@@ -91,12 +91,6 @@ impl Value {
             ValueType::V128 => Self::V128(0),
             ValueType::FuncRef => Self::FuncRef(None),
             ValueType::ExternRef => Self::ExternRef(None),
-        }
-    }
-    pub(super) fn i32(self) -> Result<u32, ExecError> {
-        match self {
-            Self::I32(v) => Ok(v),
-            _ => Err(ExecError::Internal),
         }
     }
 }

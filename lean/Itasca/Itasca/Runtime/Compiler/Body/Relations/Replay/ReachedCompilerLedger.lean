@@ -32,7 +32,7 @@ theorem ReachedCompilerLedger.reader {A} (ops : runtime.platform.Alloc A)
     {data env locals index st} (p : Body.Pending data env locals index st)
     (out : code.BodyState) (ctx : code.Context)
     (held : ReachedCompilerLedger before st.core.vals.val) (observed : ObservedStack after out.core.vals.val)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     ReachedCompilerLedger after out.core.vals.val := by
   by_cases control : (data.val[p.start.val]'p.inbounds).val ∈ [2,3,4,5,11,12,13,14,15]

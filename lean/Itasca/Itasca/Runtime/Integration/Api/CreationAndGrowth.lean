@@ -49,6 +49,8 @@ import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 import Itasca.Runtime.Interp.Calls.OutcomesAndResolution
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Api.
 
@@ -179,7 +181,7 @@ theorem InvocationResourceCause.canonical {M P A : Type}
     {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M}
     {signature : Itasca.wasm_types.FuncType} {results : alloc.vec.Vec runtime.Value}
-    {error : runtime.ExecError} (initial : config) (sourceStore : _root_.store) (address : funcaddr)
+    {error : runtime.ExecError} (initial : config) (sourceStore : WebAssembly.store) (address : funcaddr)
     (cause : InvocationResourceCause allocator exec store signature results error) :
     CanonicalInvocationResourceCause allocator hooks initial sourceStore (Itasca.Translation.Environment.funcType signature) address
       store.limits.max_values.val store.limits.max_frames.val error := by

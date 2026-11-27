@@ -10,6 +10,8 @@ import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Runtime.Compiler.Local.Lowering.LoweringLocal
 import Itasca.Spec.Typing
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Lowering / Float.
 

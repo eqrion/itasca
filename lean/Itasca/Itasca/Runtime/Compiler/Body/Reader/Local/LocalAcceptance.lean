@@ -10,6 +10,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Prefix.SuspendedPrefix
 import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackBudgets
 
+open WebAssembly
+
 /-! ## LocalEmissions -/
 
 section
@@ -36,7 +38,7 @@ theorem reader_emit_local_get {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 32#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_LOCAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -85,7 +87,7 @@ theorem reader_emit_local_set {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 33#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_LOCAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -142,7 +144,7 @@ theorem reader_emit_local_tee {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 34#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_LOCAL_TEE before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧

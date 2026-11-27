@@ -4,6 +4,8 @@ import Itasca.Runtime.Interp.Numeric.Float.SourceRelations
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.SourceMachine.Float.Descriptors
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Numeric / Float.
 

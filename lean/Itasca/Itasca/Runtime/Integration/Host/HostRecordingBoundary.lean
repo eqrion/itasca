@@ -8,6 +8,8 @@ import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
 import Itasca.Runtime.Integration.Execution.History.State
 import Itasca.Runtime.Integration.Execution.Ownership.Publication
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Host.
 

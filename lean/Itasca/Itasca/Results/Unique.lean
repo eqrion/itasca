@@ -1,6 +1,6 @@
-import Itasca.Module.Definitions
-import Itasca.Results.Definitions.Validation
-import Itasca.CodeEntry.Validation
+import WebAssembly.Binary.Unique
+import Itasca.Binary.ModuleSource
+import Itasca.Binary.SourceInjective
 
 /-!
 # Decoding uniqueness
@@ -19,6 +19,7 @@ theorem Binary.module_unique {x y : Binary.Module}
     {bytes : List U8}
     (left_encoding : Binary.ModuleEncodingWith (CodeEntry.CodeEncoding) x bytes)
     (right_encoding : Binary.ModuleEncodingWith (CodeEntry.CodeEncoding) y bytes) : x = y :=
-  Binary.ModuleEncodingWith.unique (CodeEntry.code_prefix_unique) left_encoding right_encoding
+  Binary.Source.rawModuleInjective (WebAssembly.Binary.ModuleEncoding.unique
+    (Binary.Source.moduleEncoding left_encoding) (Binary.Source.moduleEncoding right_encoding))
 
 end Itasca

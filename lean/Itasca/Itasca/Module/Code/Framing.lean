@@ -216,11 +216,12 @@ theorem metadata.decode_locals_loop.complete (data : Slice U8) (groups : U32)
   | cons group rest ih =>
     obtain ⟨count, ty⟩ := group
     obtain ⟨middle, hlocal, hrest⟩ := hbytes.rep_cons
-    obtain ⟨bytes, ⟨countBytes, hcountBytes, rfl⟩, hlocal⟩ := hlocal
+    obtain ⟨bytes, he, hlocal⟩ := hlocal
+    obtain ⟨countBytes, hcountBytes, rfl⟩ := LocalEncoding.reader_parts.mp he
     obtain ⟨valuePos, hcountSpan, htypeSpan⟩ := hlocal.split
     have hread := hcountSpan.read_u32 count hcountBytes
     have htype := metadata.decode_value_type.complete data valuePos ty middle
-      ⟨[Itasca.Binary.valueByte ty], rfl, htypeSpan⟩
+      ⟨_, ValueTypeEncoding.reader_bytes.mpr rfl, htypeSpan⟩
     have hlt : i.val < groups.val := by simp only [List.length_cons] at hcount; omega
     have hstop : ¬ i ≥ groups := by scalar_tac
     have hdecl : CodeEntry.Locals.declared ((count, ty) :: rest) =

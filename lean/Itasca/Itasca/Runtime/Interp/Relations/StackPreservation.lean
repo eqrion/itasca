@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Numeric.Integer.ConversionsAndBinaryContracts
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

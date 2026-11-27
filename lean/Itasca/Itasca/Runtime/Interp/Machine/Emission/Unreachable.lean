@@ -15,6 +15,8 @@ import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 Exclusion of unreachable from ordinary scalar emission.
 

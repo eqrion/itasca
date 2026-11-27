@@ -4,6 +4,8 @@ import Itasca.Body.NumericExt.Total
 import Itasca.Handler.ScalarCompleteness
 import Itasca.Body.Scalar.Readers
 
+open WebAssembly
+
 /-! ## Complete -/
 
 section
@@ -22,13 +24,13 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.Completeness
 
 private theorem empty_sign (st : code.OpIterState) (opcode : U8) :
-    code.visit_sign_extension code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
+    code.visit_sign_extension code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
       .ok (.Ok (), ()) := by
   unfold code.visit_sign_extension
   split <;> rfl
 
 private theorem empty_saturating (st : code.OpIterState) (opcode : U32) :
-    code.visit_saturating code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
+    code.visit_saturating code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
       .ok (.Ok (), ()) := by
   unfold code.visit_saturating
   split <;> rfl
@@ -105,11 +107,13 @@ theorem scalar_excludes_numeric_extensions {opcode op bytes} (hi : Body.Scalar.I
   have hb : opcode.val < 192 := by
     cases hi with
     | numericInstruction opcode source hmap =>
+      change Body.Numeric.opcodeInstruction opcode = _ at hmap
       rw [Body.Numeric.opcodeInstruction_eq] at hmap
       obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
       have := Body.Numeric.NumericOp.bounds decoded
       omega
     | memory opcode operation arg hmap ha ho =>
+      change Body.MemoryMeaning.opcodeMeaning opcode = _ at hmap
       unfold Body.MemoryMeaning.opcodeMeaning at hmap
       split at hmap <;> simp_all
     | _ => decide
@@ -128,12 +132,14 @@ theorem scalar_excludes_extended_opcodes {opcode op bytes} (hi : Body.Scalar.Imm
     opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253] := by
   cases hi with
   | numericInstruction opcode source hmap =>
+    change Body.Numeric.opcodeInstruction opcode = _ at hmap
     rw [Body.Numeric.opcodeInstruction_eq] at hmap
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
     have := Body.Numeric.NumericOp.bounds decoded
     simp only [List.mem_cons, List.not_mem_nil, or_false, not_or]
     omega
   | memory opcode operation arg hmap ha ho =>
+    change Body.MemoryMeaning.opcodeMeaning opcode = _ at hmap
     unfold Body.MemoryMeaning.opcodeMeaning at hmap
     split at hmap <;> simp_all
   | _ => decide

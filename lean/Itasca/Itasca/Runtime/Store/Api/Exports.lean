@@ -2,6 +2,8 @@ import Itasca.Runtime.Store.Definitions
 import Itasca.Runtime.Store.Api.ObjectStaging
 import Itasca.Runtime.Store.Linking.LinkLoop
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! Exact byte-name comparison and export search, without decoding query bytes. -/

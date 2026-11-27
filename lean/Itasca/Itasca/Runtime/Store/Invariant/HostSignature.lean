@@ -9,6 +9,8 @@ import Itasca.Runtime.Store.Api.TableOperationsAndMetadata
 import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Invariant.
 

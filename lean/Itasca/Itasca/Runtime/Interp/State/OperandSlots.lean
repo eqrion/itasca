@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Relations.ReferenceSource
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.Interp.Relations.Regions
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -571,7 +573,7 @@ section
 namespace Itasca.Interp.Stateful
 open Aeneas Aeneas.Std WebAssembly
 
-theorem three_i32_operands (store : _root_.store) (operands : List val)
+theorem three_i32_operands (store : WebAssembly.store) (operands : List val)
     (types : operands.map Representation.valueType=[.I32,.I32,.I32])
     (typed : ∀ value∈operands,Val_ok store value (Representation.valueType value)) :
     ∃ x y z : U32,operands=[SourceMachine.integerVal .I32 x.val,SourceMachine.integerVal .I32 y.val,SourceMachine.integerVal .I32 z.val] := by

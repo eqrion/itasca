@@ -2,6 +2,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Relations / Entry.
 

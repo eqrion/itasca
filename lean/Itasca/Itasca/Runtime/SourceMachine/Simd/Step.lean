@@ -187,7 +187,7 @@ theorem MemoryChange.heap_owned {before frame after bounds}
     StatefulHeapOwned bounds after := by
   cases change <;> exact ⟨owned.globals,owned.tables,owned.elements,owned.functions⟩
 
-theorem memory_transition_owned {s : _root_.store} {ambient : frame} {f : AFrame}
+theorem memory_transition_owned {s : WebAssembly.store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {source inputs outputs} {next : AState} {bounds}
     (signature : MemorySignature source inputs outputs)
     (owned : StatefulOwned bounds ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩)
@@ -209,7 +209,7 @@ theorem memory_transition_owned {s : _root_.store} {ambient : frame} {f : AFrame
       exact (values_owned_append.mp before).1
     · exact owned.values.2 item (List.mem_cons_of_mem _ member)
 
-theorem memory_transition_bound {s : _root_.store} {ambient : frame} {f : AFrame}
+theorem memory_transition_bound {s : WebAssembly.store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {source inputs outputs} {next : AState} {bound}
     (bounded : CodeBound bound ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩)
     (step : MemoryTransition ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩

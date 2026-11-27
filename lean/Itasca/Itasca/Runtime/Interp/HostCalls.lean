@@ -7,6 +7,8 @@ import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 import Itasca.Runtime.Interp.Relations.StackPreservation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

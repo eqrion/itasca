@@ -432,7 +432,7 @@ section
 /-!
 # Visitor transfer for one Wasm 2.0 step
 
-`step_transfer` shows that a successful `code.step_profile` under one visitor succeeds under any
+`step_transfer` shows that a successful `code.step_body` under one visitor succeeds under any
 replacement visitor with accepting callbacks, ending in the same validator state.
 -/
 
@@ -448,11 +448,11 @@ theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (opcode : U8)
     (st final : code.BodyState) (v : V) (w : W) (v' : V)
-    (h : code.step_profile visitor st data env ctx index opcode v =
+    (h : code.step_body visitor st data env ctx index opcode v =
       .ok (.Ok (), final, v')) :
-    ∃ w', code.step_profile replacement st data env ctx' index opcode w =
+    ∃ w', code.step_body replacement st data env ctx' index opcode w =
       .ok (.Ok (), final, w') := by
-  unfold code.step_profile at h ⊢
+  unfold code.step_body at h ⊢
   split at h
   case h_1 | h_2 | h_3 | h_4 | h_5 | h_6 | h_7 | h_10 | h_11 =>
     try simp_all only [↓reduceIte]
@@ -809,7 +809,7 @@ theorem code.body_loop_loop.body.total {V : Type}
           p.2.blocks.val.length = p.2.core.ctrls.val.length ∧
           p.2.blocks.val.length ≤ p.2.core.pos.val + 1) ∧
           Usize.max - p.2.core.pos.val < Usize.max - s.core.pos.val ⦄ := by
-  unfold code.body_loop_loop.body code.step_profile
+  unfold code.body_loop_loop.body code.step_body
   simp only [alloc.vec.Vec.is_empty, bind_ok]
   split
   · split <;> simp

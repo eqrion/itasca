@@ -5,6 +5,8 @@ import Itasca.Runtime.Interp.Numeric.Float.SourceRelations
 import Itasca.Runtime.Interp.Numeric.Float
 import Itasca.Runtime.Interp.Simd.Relations.PureRelation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

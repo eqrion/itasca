@@ -4,6 +4,8 @@ import Itasca.Module.Elab.SegmentTyping
 import ItascaRust.Funs
 import Itasca.Runtime.Store.Api.ObjectStaging
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Initialization.
 

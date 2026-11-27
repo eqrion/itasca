@@ -3,6 +3,8 @@ import Itasca.Runtime.Store.Api.Exports
 import Itasca.Runtime.Compiler.Module.Compilation
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! Public store reads agree with the retained objects and their decoded source

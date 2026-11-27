@@ -1,6 +1,8 @@
 import Itasca.Body.Control.Frame
 import Itasca.Body.LoopDispatch
 
+open WebAssembly
+
 /-!
 # Enter Sound
 
@@ -619,7 +621,7 @@ theorem Pending.end_reader {data env locals index st} (p : Pending data env loca
     rw [vals, base, List.take_left]
   cases isElse
   · have encoded : At data p.start .end_ r.2.core.pos := by
-      apply At.of_immediate p.inbounds (by simpa [hop] using hbyte) p.pos Immediate.end_
+      apply At.of_immediate p.inbounds (by simp [hop] at hbyte; exact hbyte) p.pos (.end_ (r := Itasca.Body.instructionOperands))
       exact ⟨by simp [hpos], by simp [hpos], by have hp := p.pos; have hi := p.inbounds; rw [hpos]; omega⟩
     obtain ⟨hc, hb, hv⟩ := effect
     have hthen : p.current.form = .then_ → p.current.ins = p.current.outs := by
@@ -653,7 +655,7 @@ theorem Pending.end_reader {data env locals index st} (p : Pending data env loca
       cases hf : p.current.form <;> simp_all [Frames.Form.kind]
     obtain ⟨hc, hb, hv⟩ := effect
     have encoded : At data p.start .else_ r.2.core.pos := by
-      apply At.of_immediate p.inbounds (by simpa [hop] using hbyte) p.pos Immediate.else_
+      apply At.of_immediate p.inbounds (by simp [hop] at hbyte; exact hbyte) p.pos (.else_ (r := Itasca.Body.instructionOperands))
       exact ⟨by simp [hpos], by simp [hpos], by have hp := p.pos; have hi := p.inbounds; rw [hpos]; omega⟩
     obtain ⟨ho, ht⟩ := p.opened.else_ hroot hform hres (by simpa [Frames.Saved.nextElse] using hc)
       hb (by simpa [htake] using hv)

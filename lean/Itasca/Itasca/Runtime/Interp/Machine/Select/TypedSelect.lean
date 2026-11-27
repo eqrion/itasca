@@ -11,6 +11,8 @@ import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -72,7 +74,7 @@ theorem step_select {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (C : context) (targets : List Compiler.LabelTarget)
-    (next : Nat) (output : List valtype) (sourceStore : _root_.store) (ambient : frame)
+    (next : Nat) (output : List valtype) (sourceStore : WebAssembly.store) (ambient : frame)
     (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (declared : valtype) (after : List instr)
     (last : index.val+1 = exec.frames.length) (frameFound : exec.frames.val[index.val]? = some raw)
     (instanceFound : store.instances.val[raw.instance.val]? = some inst)

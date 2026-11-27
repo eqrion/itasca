@@ -8,6 +8,8 @@ import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 
+open WebAssembly
+
 /-!
 # Operations And Memory Typing
 
@@ -652,7 +654,7 @@ namespace Itasca.SourceMachine.Core
 
 /-- Execute a scalar Core instruction. Pure integer/control instructions reuse
 the established transition; mutable instructions resolve their own store maps. -/
-def instruction (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+def instruction (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (op : instr) (after : List instr) : AResult :=
   let state : AState := ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩
   match op with
@@ -680,13 +682,13 @@ def step (s : AState) : AResult :=
     | [] => astep s
     | op :: after => instruction s.store s.ambient f rest op after
 
-theorem instruction_load (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem instruction_load (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Load) (argument : memarg) :
     instruction s ambient f rest (op.source argument) after =
       load ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after op argument := by
   simp only [instruction,Memory.Load.source,Memory.decode_load_descriptor]
 
-theorem instruction_store (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem instruction_store (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Store) (argument : memarg) :
     instruction s ambient f rest (op.source argument) after =
       store ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩ f rest after op argument := by
@@ -703,7 +705,7 @@ section
 namespace Itasca.SourceMachine.Core
 open WebAssembly Itasca.Spec
 
-theorem instruction_slice (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_slice (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr)
     (covered : PureHead op)
     (typed : FrameTyped s {f with code := op :: after} []) :
@@ -728,7 +730,7 @@ theorem instruction_slice (s : _root_.store) (ambient : frame) (f : AFrame)
 
 /-- All numeric constants, including floating encodings, are administrative
 moves with identical source decoding and a strictly decreasing potential. -/
-theorem constant_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem constant_progress (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (ty : numtype) (value : num_)
     (typed : CoreTyped ⟨s,ambient,{f with code := .CONST ty value :: after} :: rest,[]⟩) :
     ∃ next, instruction s ambient f rest (.CONST ty value) after = .next next ∧ CoreTyped next ∧

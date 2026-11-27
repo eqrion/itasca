@@ -2,6 +2,8 @@ import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Module.Const.Parser
 
+open WebAssembly
+
 /-! ## SegmentSyntax -/
 
 section

@@ -399,9 +399,8 @@ fn measure_pair(
             if let Some(csv) = &mut options.csv {
                 writeln!(
                     csv,
-                    "{},{:?},{},{},{},{},{},{:.3}",
+                    "{},{},{},{},{},{},{:.3}",
                     case.name,
-                    "Wasm2",
                     stage,
                     ["itasca", "wasmi"][engine],
                     sample + 1,
@@ -440,7 +439,7 @@ fn main() {
     if let Some(csv) = &mut options.csv {
         writeln!(
             csv,
-            "workload,profile,stage,engine,sample,iterations,elapsed_ns,ns_per_operation"
+            "workload,stage,engine,sample,iterations,elapsed_ns,ns_per_operation"
         )
         .unwrap();
     }

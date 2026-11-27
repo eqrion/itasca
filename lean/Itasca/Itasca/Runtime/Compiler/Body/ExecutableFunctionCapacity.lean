@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.MiscOpcodes
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndElseCompilation
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Bounds
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## CapacityFold -/
@@ -81,7 +83,7 @@ theorem reader_executable_capacity {data env ctx index st source}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (encoded : Body.BodyEncoding data source)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (data.val[p.start.val]'p.inbounds) before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   have allowed := encoded.next_reader_opcode p.consumed p.inbounds
@@ -134,7 +136,7 @@ theorem TypedRun.executable_capacity_bound {A : Type}
     have capacity := reader_executable_capacity pending ops law before middle out encoded called
     obtain ⟨reply, erased⟩ := Body.Visitor.step_transfer
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
-      code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+      code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
       data env ctx ctx rfl index _ {core := {st.core with pos := next}} out before () middle called
     cases reply
     refine ⟨st.core.vals.val :: samples, .step typed pending start advance erased trace,

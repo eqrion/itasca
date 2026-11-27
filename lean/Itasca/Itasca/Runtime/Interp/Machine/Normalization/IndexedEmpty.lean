@@ -1,6 +1,8 @@
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Interp.Machine.Emission.Local
 
+open WebAssembly
+
 /-! ## IndexedLinear -/
 
 section

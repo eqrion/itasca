@@ -11,6 +11,8 @@ import Itasca.Runtime.Interp.HostCalls
 import Itasca.Runtime.Interp.Relations.TypedOperands
 import Itasca.Support.Translation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## SourceIndirectCallCause -/
@@ -103,7 +105,7 @@ section
 namespace Itasca.Interp.TypedSelect
 open Aeneas Aeneas.Std
 
-theorem select_typed_operands {annotation : Option (List valtype)} {s : _root_.store} {f : SourceMachine.AFrame} {after : List instr}
+theorem select_typed_operands {annotation : Option (List valtype)} {s : WebAssembly.store} {f : SourceMachine.AFrame} {after : List instr}
     (typed : SourceMachine.FrameTyped s {f with code := .SELECT annotation::after} []) :
     ∃ front left right bits ty,
       f.vals = front ++ [left,right,SourceMachine.integerVal .I32 bits] ∧ bits < 2^32 ∧
@@ -125,7 +127,7 @@ theorem select_typed_operands {annotation : Option (List valtype)} {s : _root_.s
           (value_type_eq_abs left).trans (SourceMachine.value_type_of_typed leftTyped),
           (value_type_eq_abs right).trans (SourceMachine.value_type_of_typed rightTyped),heights⟩
 
-theorem select_source_next {annotation : Option (List valtype)} {s : _root_.store} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
+theorem select_source_next {annotation : Option (List valtype)} {s : WebAssembly.store} {ambient : frame} {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     {after : List instr} {front : List val} {left right : val} {bits : Nat}
     (values : f.vals = front ++ [left,right,SourceMachine.integerVal .I32 bits])
     (matching : Representation.valueType left = Representation.valueType right) (bounded : bits < 2^32) :

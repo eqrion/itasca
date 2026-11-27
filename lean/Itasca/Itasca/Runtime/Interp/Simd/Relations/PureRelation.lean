@@ -5,6 +5,8 @@ import Itasca.Runtime.Spec.Simd.LaneOperations
 import Itasca.Runtime.Interp.Simd.Bitwise
 import Itasca.Runtime.Interp.Simd.Lanes.Permutation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Slots -/

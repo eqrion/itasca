@@ -3,6 +3,8 @@ import Itasca.Examples.Module.Basic
 import Itasca.Examples.Module.SliceLayout
 import Itasca.Module.CustomTrace
 
+open WebAssembly
+
 /-!
 Proofs for Examples / Module.
 
@@ -127,7 +129,7 @@ def fourByteCustom (a b c d : U8) : Slice U8 :=
     (by simp [Binary.magicVersion]; scalar_tac)
 
 private theorem small_leb (b : U8) (h : b.val < 128) : Binary.Leb128.Encoding [b] b.val := by
-  exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload, Nat.mod_eq_of_lt h]⟩
+  exact ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, Nat.mod_eq_of_lt h]⟩
 
 /-- `metadata.validate_module` on `fourByteCustom a b c d` returns the empty module when
 `metadata.validate_utf8` accepts the name, and returns its error otherwise. -/
@@ -223,7 +225,7 @@ namespace Itasca.Examples.Module.CustomTrace
 
 open Itasca.Examples.Module.Support (leb)
 
-open Module.Trace Binary
+open Module.Trace Itasca.Binary
 
 /-- A 15-byte module whose only section is a custom section with the four-byte UTF-8 name U+10FFFF
 (bytes 11 to 14) and an empty payload. -/

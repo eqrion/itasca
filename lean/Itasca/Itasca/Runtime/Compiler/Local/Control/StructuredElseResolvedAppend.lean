@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupBudget
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCoordinates
 import Itasca.Runtime.Compiler.Local.Control.Structured.Prefixes
 
+open WebAssembly
+
 /-!
 # Structured Else Resolved Append
 

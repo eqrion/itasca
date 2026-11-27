@@ -6,6 +6,8 @@ import Itasca.Body.Complete.Frame
 import Itasca.Body.Scalar.Readers
 import Itasca.Body.LoopDispatch
 
+open WebAssembly
+
 /-!
 # Sound
 

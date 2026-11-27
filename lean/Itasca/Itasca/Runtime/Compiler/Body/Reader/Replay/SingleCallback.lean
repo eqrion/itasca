@@ -6,6 +6,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Body.Trace.ControlRecords
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Replay.
 
@@ -45,11 +47,11 @@ theorem accepted_reader_advance {A} (ops : runtime.platform.Alloc A) (law : Plat
     (nonempty : st.core.ctrls.val ≠ []) (next : Usize)
     (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (allowance : ChargeCounter → Nat)
-    (acceptance : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (acceptance : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget allowance ⦄) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         Itasca.Compiler.ReachedBody initial C locals data env sourceLocals index ft result.2.2 out ∧
@@ -69,7 +71,7 @@ theorem accepted_reader_advance {A} (ops : runtime.platform.Alloc A) (law : Plat
     (by simpa only [pending,ReaderBoundary.pending] using called)
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out called
-  have cursor := code.step_profile.accepted_progress
+  have cursor := code.step_body.accepted_progress
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance called
@@ -172,7 +174,7 @@ theorem reader_single_body_callback {V : Type} (visitor : code.OpVisitor V)
     (index : U32) (opcode : U8) (before after : V)
     (blocked : opcode ≠ code.OP_BLOCK ∧ opcode ≠ code.OP_LOOP ∧ opcode ≠ code.OP_IF ∧
       opcode ≠ code.OP_END ∧ opcode ≠ code.OP_BR_TABLE)
-    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     ∃ action, NoScopeBoundary action ∧ PublicationActionRange action ∧
       invoke visitor before (.op out.core action) = .ok (.Ok (),after) := by
   by_cases h5 : opcode = 5#u8

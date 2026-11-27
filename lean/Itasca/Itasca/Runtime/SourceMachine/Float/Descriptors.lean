@@ -3,6 +3,8 @@ import WebAssembly.Builtins.Float.Representation
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.SourceMachine.Typing
 
+open WebAssembly
+
 /-!
 # Descriptors
 

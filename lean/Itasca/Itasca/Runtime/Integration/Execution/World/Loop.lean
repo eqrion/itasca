@@ -5,6 +5,8 @@ import Itasca.Runtime.Integration.Execution.Resources.SourceDemand
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / World.
 
@@ -354,7 +356,7 @@ theorem WorldSourceStepResult.prepend_normalization {M P F A : Type}
     {view : M → Slice U8} {expected : List valtype}
     {Inv : Representation.CodeInterpretation → runtime.store.Store M → Prop} {code : Representation.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P}
-    {count pc : Nat} {s : _root_.store} {ambient : frame} {before middle : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
+    {count pc : Nat} {s : WebAssembly.store} {ambient : frame} {before middle : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     {out : EventfulDispatchResult M P}
     (chain : ErasedSteps count before middle)
     (typed : SourceMachine.ATyped ⟨s,ambient,before::rest,[]⟩)

@@ -15,6 +15,8 @@ import Itasca.Runtime.SourceMachine.OwnershipExtension
 import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.SourceMachine.Stateful.TransitionInvariants
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Certificate -/

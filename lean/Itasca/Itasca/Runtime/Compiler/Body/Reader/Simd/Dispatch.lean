@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -209,7 +211,7 @@ theorem reader_simd_memory {data env locals index st}
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Body.Simd.memoryMeaning subopcode.val = some op) (full : op.laneCount = 0)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ arg middle position, Binary.Leb128.Decoded data next arg.align middle ∧
       Binary.Leb128.Decoded data middle arg.offset position ∧
@@ -287,7 +289,7 @@ theorem reader_simd_memory_lane {data env locals index st}
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Body.Simd.memoryMeaning subopcode.val = some op) (laned : op.laneCount ≠ 0)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ arg middle ending lane position, Binary.Leb128.Decoded data next arg.align middle ∧
       Binary.Leb128.Decoded data middle arg.offset ending ∧
@@ -386,7 +388,7 @@ variable {data env locals index st} (p : Body.Pending data env locals index st) 
   (out : code.BodyState) (ctx : code.Context) (C : context)
   (sub : U32) (next : Usize) (decoded : Binary.Leb128.Decoded data st.core.pos sub next)
   (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-  (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
     st data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after))
 include decoded byte accepted
 
@@ -534,7 +536,7 @@ theorem reader_simd_event {data env locals index st}
     (out : code.BodyState) (ctx : code.Context) (C : context)
     (contextMemories : C.MEMS = env.mem_types.val.map Translation.Environment.memType)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0xfd#u8 before = .ok (.Ok (),out,after)) :
     Nonempty (SimdReaderEvent ops p before after out.core C) := by
   obtain ⟨capacity,sub,next,decoded,called⟩ := simd_prefix_success

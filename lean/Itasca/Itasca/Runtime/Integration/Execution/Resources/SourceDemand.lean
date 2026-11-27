@@ -75,6 +75,8 @@ import Itasca.Runtime.Store.Invariant.FunctionCapacities
 import Itasca.Runtime.Integration.Execution.Dispatch.EntryOutcomes
 import Itasca.Runtime.Integration.Host.HostDispatchCauses
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / Resources.
 
@@ -100,7 +102,7 @@ source FRAME_ nesting at the actual failure site. -/
 theorem CumulativeFailure.frame_depth
     {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {exec : runtime.interp.Execution}
-    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {sourceStore : _root_.store}
+    {store : runtime.store.Store M} {platform : P} {source : SourceMachine.AState} {sourceStore : WebAssembly.store}
     (stack : Machine.FrameStackRel store sourceStore exec source.frames)
     (failure : CumulativeFailure allocator hooks exec store platform source (.Exhausted .CallStack)) :
     store.limits.max_frames.val ≤ Spec.frameDepth (SourceMachine.decode source) := by

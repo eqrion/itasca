@@ -20,13 +20,13 @@ section
 /-!
 # Worker batches
 
-Properties of the `stream.CodeBatch` workers that the driver issues. `Stream.Batch.Issued`, the
+Properties of the `stream.StreamingBatch` workers that the driver issues. `Stream.Batch.Issued`, the
 immutable state of an issued batch, and `Stream.Batch.Reachable`, the workers obtainable from its
 seed through actual batch operations, are defined in `Itasca/Results/Definitions/Streaming`.
 `Stream.Batch.Reachable.validation` extracts a `Stream.Batch.Prefix` of successful entry
 validations from any reachable worker, `Stream.Batch.Reachable.finished` shows that a worker
-accepted by `stream.CodeBatch.finish` has validated every entry in order and consumed exactly its
-bytes, and `stream.CodeBatch.validate_func.cases` gives the complete case split of one validation
+accepted by `stream.StreamingBatch.finish` has validated every entry in order and consumed exactly its
+bytes, and `stream.StreamingBatch.validate_func.cases` gives the complete case split of one validation
 call.
 -/
 
@@ -45,7 +45,7 @@ inductive Prefix (issued : Issued) : Nat → Usize → Prop where
       Prefix issued (count + 1) finish
 
 /-- The part of a worker record that operations cannot change. -/
-def Identity (issued : Issued) (batch : stream.CodeBatch) : Prop :=
+def Identity (issued : Issued) (batch : stream.StreamingBatch) : Prop :=
   batch.module_id = issued.module_id ∧ batch.batch_id = issued.batch_id ∧
   batch.env = issued.env ∧ batch.code = issued.code ∧
   batch.code_offset = issued.code_offset ∧ batch.first_func = issued.first_func ∧
@@ -55,13 +55,13 @@ end Itasca.Stream.Batch
 
 namespace Itasca
 
-/-- `stream.CodeBatch.finish` succeeds exactly when no error is stored, every function was
+/-- `stream.StreamingBatch.finish` succeeds exactly when no error is stored, every function was
 validated, and validation consumed the whole code view. -/
-@[simp] theorem stream.CodeBatch.finish.accepted_iff (batch : stream.CodeBatch) :
-    stream.CodeBatch.finish batch = .ok (.Ok ()) ↔
+@[simp] theorem stream.StreamingBatch.finish.accepted_iff (batch : stream.StreamingBatch) :
+    stream.StreamingBatch.finish batch = .ok (.Ok ()) ↔
       batch.error = none ∧ batch.num_validated = batch.num_funcs ∧
       batch.validated_end = Slice.len batch.code := by
-  simp only [stream.CodeBatch.finish]
+  simp only [stream.StreamingBatch.finish]
   cases he : batch.error <;> simp
   split <;> simp_all
   constructor
@@ -69,24 +69,24 @@ validated, and validation consumed the whole code view. -/
   · intro h; simpa using congrArg UScalar.val h
 
 /-- A stored error returns verbatim and neither cursor nor visitor changes. -/
-theorem stream.CodeBatch.validate_func.sticky {V : Type} (visitor : code.OpVisitor V)
-    (batch : stream.CodeBatch) (index : Usize) (v : V) (e : error.Error)
+theorem stream.StreamingBatch.validate_func.sticky {V : Type} (visitor : code.OpVisitor V)
+    (batch : stream.StreamingBatch) (index : Usize) (v : V) (e : error.Error)
     (h : batch.error = some e) :
-    stream.CodeBatch.validate_func visitor batch index v = .ok (.Err e, batch, v) := by
-  simp [stream.CodeBatch.validate_func, h, core.option.Option.is_none]
+    stream.StreamingBatch.validate_func visitor batch index v = .ok (.Err e, batch, v) := by
+  simp [stream.StreamingBatch.validate_func, h, core.option.Option.is_none]
   cases batch
   simp_all
 
 /-- A successful next-function check identifies the actual entry call and
 its index, without assumptions about unrelated visitor executions. -/
-theorem stream.CodeBatch.validate_next.accepted {V : Type} (visitor : code.OpVisitor V)
-    (batch : stream.CodeBatch) (index finish : Usize) (v v' : V)
-    (h : stream.CodeBatch.validate_next visitor batch index v = .ok (.Ok finish, v')) :
+theorem stream.StreamingBatch.validate_next.accepted {V : Type} (visitor : code.OpVisitor V)
+    (batch : stream.StreamingBatch) (index finish : Usize) (v v' : V)
+    (h : stream.StreamingBatch.validate_next visitor batch index v = .ok (.Ok finish, v')) :
     batch.num_validated.val < batch.num_funcs.val ∧
     index.val = batch.first_func.val + batch.num_validated.val ∧
     metadata.validate_code_entry_with visitor batch.code batch.validated_end batch.env index v =
       .ok (.Ok finish, v') := by
-  unfold stream.CodeBatch.validate_next at h
+  unfold stream.StreamingBatch.validate_next at h
   split at h
   · simp at h
   · rename_i hcount
@@ -103,25 +103,25 @@ theorem stream.CodeBatch.validate_next.accepted {V : Type} (visitor : code.OpVis
 
 /-- Complete ordinary-call cases: the first error is stored; only successful
 entry validation increments the validation count. -/
-theorem stream.CodeBatch.validate_func.cases {V : Type} (visitor : code.OpVisitor V)
-    (batch after : stream.CodeBatch) (index : Usize) (v v' : V)
+theorem stream.StreamingBatch.validate_func.cases {V : Type} (visitor : code.OpVisitor V)
+    (batch after : stream.StreamingBatch) (index : Usize) (v v' : V)
     (r : core.result.Result Unit error.Error)
-    (h : stream.CodeBatch.validate_func visitor batch index v = .ok (r, after, v')) :
+    (h : stream.StreamingBatch.validate_func visitor batch index v = .ok (r, after, v')) :
     (∃ e, batch.error = some e ∧ r = .Err e ∧ after = batch ∧ v' = v) ∨
     (batch.error = none ∧ ∃ e,
-      stream.CodeBatch.validate_next visitor batch index v = .ok (.Err e, v') ∧
+      stream.StreamingBatch.validate_next visitor batch index v = .ok (.Err e, v') ∧
       r = .Err e ∧ after = { batch with error := some e }) ∨
     (batch.error = none ∧ ∃ finish count,
-      stream.CodeBatch.validate_next visitor batch index v = .ok (.Ok finish, v') ∧
+      stream.StreamingBatch.validate_next visitor batch index v = .ok (.Ok finish, v') ∧
       count.val = batch.num_validated.val + 1 ∧ r = .Ok () ∧
       after = { batch with num_validated := count, validated_end := finish }) := by
   cases he : batch.error with
   | some e =>
-    rw [stream.CodeBatch.validate_func.sticky visitor batch index v e he] at h
+    rw [stream.StreamingBatch.validate_func.sticky visitor batch index v e he] at h
     have hh : r = .Err e ∧ after = batch ∧ v' = v := by simpa [eq_comm] using h
     exact Or.inl ⟨e, rfl, hh⟩
   | none =>
-    unfold stream.CodeBatch.validate_func at h
+    unfold stream.StreamingBatch.validate_func at h
     simp [he, core.option.Option.is_none] at h
     obtain ⟨⟨reply, w⟩, hnext, h⟩ := Computation.bind_ok_inv _ _ _ h
     cases reply with
@@ -143,16 +143,16 @@ theorem stream.CodeBatch.validate_func.cases {V : Type} (visitor : code.OpVisito
         by simpa using hadd.2.1, hh.1, by simpa [he] using hh.2.1⟩)
 
 /-- Dispatch can change only its own count and byte cursor. -/
-theorem stream.CodeBatch.next_entry.cases
-    (batch after : stream.CodeBatch) (r : core.result.Result stream.CodeEntry error.Error)
-    (h : stream.CodeBatch.next_entry batch = .ok (r, after)) :
+theorem stream.StreamingBatch.next_entry.cases
+    (batch after : stream.StreamingBatch) (r : core.result.Result stream.StreamingEntry error.Error)
+    (h : stream.StreamingBatch.next_entry batch = .ok (r, after)) :
     after = batch ∨ ∃ index entry count cursor,
       batch.num_dispatched.val < batch.num_funcs.val ∧
       stream.frame_entry batch.code batch.dispatch_end index batch.code_offset = .ok (.Ok entry) ∧
       count.val = batch.num_dispatched.val + 1 ∧
       cursor.val + batch.code_offset.val = entry.end.val ∧
       after = { batch with num_dispatched := count, dispatch_end := cursor } := by
-  unfold stream.CodeBatch.next_entry at h
+  unfold stream.StreamingBatch.next_entry at h
   split at h
   · simp only [Result.ok.injEq, Prod.mk.injEq] at h
     exact Or.inl h.2.symm
@@ -182,19 +182,19 @@ namespace Itasca.Stream.Batch
 
 /-- A reachable worker has the issued identity and its validated bytes form a successful
 validation prefix, including after dispatch or a worker error. -/
-theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
+theorem Reachable.validation {issued : Issued} {batch : stream.StreamingBatch}
     (h : Reachable issued batch) :
     Identity issued batch ∧ Prefix issued batch.num_validated.val batch.validated_end ∧
       batch.num_validated.val ≤ issued.num_funcs.val := by
   induction h with
   | seed => exact ⟨by simp [Identity, Issued.seed], .nil, by simp [Issued.seed]⟩
   | @dispatch before after result previous run ih =>
-    rcases stream.CodeBatch.next_entry.cases before after result run with rfl | hcase
+    rcases stream.StreamingBatch.next_entry.cases before after result run with rfl | hcase
     · exact ih
     · obtain ⟨_, _, count, cursor, _, _, _, _, rfl⟩ := hcase
       exact ih
   | @validate V visitor before after index v v' result previous run ih =>
-    rcases stream.CodeBatch.validate_func.cases visitor before after index v v' result run with
+    rcases stream.StreamingBatch.validate_func.cases visitor before after index v v' result run with
       sticky | failure | success
     · obtain ⟨_, _, _, rfl, _⟩ := sticky
       exact ih
@@ -202,7 +202,7 @@ theorem Reachable.validation {issued : Issued} {batch : stream.CodeBatch}
       exact ih
     · obtain ⟨_, finish, count, hnext, hn, _, rfl⟩ := success
       obtain ⟨hcount, hindex, hentry⟩ :=
-        stream.CodeBatch.validate_next.accepted visitor before index finish v v' hnext
+        stream.StreamingBatch.validate_next.accepted visitor before index finish v v' hnext
       have hid := ih.1
       obtain ⟨_, _, henv, hcode, _, hfirst, hnum⟩ := hid
       refine ⟨ih.1, ?_, ?_⟩
@@ -237,15 +237,15 @@ theorem Prefix.typed {issued : Issued} {count : Nat} {finish : Usize}
 
 /-- Finishing a reachable batch implies validation of every entry, in order,
 and consumption of exactly its issued bytes. No premise prevalidates workers. -/
-theorem Reachable.finished {issued : Issued} {batch : stream.CodeBatch}
+theorem Reachable.finished {issued : Issued} {batch : stream.StreamingBatch}
     (h : Reachable issued batch) (hbound : CodeEntry.Bounds issued.env)
 
-    (hfinish : stream.CodeBatch.finish batch = .ok (.Ok ())) :
+    (hfinish : stream.StreamingBatch.finish batch = .ok (.Ok ())) :
     ∃ entries, entries.length = issued.num_funcs.val ∧
       Binary.Rep (CodeEntry.CodeEncoding) entries issued.code.val ∧
       Module.Code.EntriesTyped issued.env issued.first_func.val entries := by
   obtain ⟨hid, hp, _⟩ := h.validation
-  have hf := (stream.CodeBatch.finish.accepted_iff batch).mp hfinish
+  have hf := (stream.StreamingBatch.finish.accepted_iff batch).mp hfinish
   obtain ⟨entries, hn, hbytes, ht⟩ := hp.typed hbound
   obtain ⟨_, _, _, hcode, _, _, hnum⟩ := hid
   have hn' : entries.length = issued.num_funcs.val := by rw [hn, hf.2.1, hnum]
@@ -265,23 +265,23 @@ section
 /-!
 # Worker termination
 
-Termination of `stream.CodeBatch.validate_next`, `stream.CodeBatch.validate_func` and the
-whole-batch loop `stream.CodeBatch.validate_all` on arbitrary bytes, given a total visitor
-(`Visitor.Total`). `stream.CodeBatch.validate_all.reachable` also shows that the final state is
+Termination of `stream.StreamingBatch.validate_next`, `stream.StreamingBatch.validate_func` and the
+whole-batch loop `stream.StreamingBatch.validate_all` on arbitrary bytes, given a total visitor
+(`Visitor.Total`). `stream.StreamingBatch.validate_all.reachable` also shows that the final state is
 reachable from the issued seed by actual batch operations.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca
-/-- `stream.CodeBatch.validate_next` returns an ordinary result for arbitrary indices and
+/-- `stream.StreamingBatch.validate_next` returns an ordinary result for arbitrary indices and
 malformed entry bytes. The declared function interval gives room to compute the expected index. -/
-theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisitor V)
-    (htotal : Visitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
+theorem stream.StreamingBatch.validate_next.total {V : Type} (visitor : code.OpVisitor V)
+    (htotal : Visitor.Total visitor) (batch : stream.StreamingBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
     (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
-    ∃ r, stream.CodeBatch.validate_next visitor batch index v = .ok r := by
-  unfold stream.CodeBatch.validate_next
+    ∃ r, stream.StreamingBatch.validate_next visitor batch index v = .ok r := by
+  unfold stream.StreamingBatch.validate_next
   split
   · exact ⟨_, rfl⟩
   · rename_i hcount
@@ -294,37 +294,37 @@ theorem stream.CodeBatch.validate_next.total {V : Type} (visitor : code.OpVisito
     · exact metadata.validate_code_entry_with.total visitor htotal batch.code
         batch.validated_end batch.env index v hbound
 
-/-- `stream.CodeBatch.validate_func` returns an ordinary result, stores worker errors, and cannot
+/-- `stream.StreamingBatch.validate_func` returns an ordinary result, stores worker errors, and cannot
 overflow its counter because a successful entry validation occurs only before the batch end. -/
-theorem stream.CodeBatch.validate_func.returns {V : Type} (visitor : code.OpVisitor V)
-    (htotal : Visitor.Total visitor) (batch : stream.CodeBatch) (index : Usize) (v : V)
+theorem stream.StreamingBatch.validate_func.returns {V : Type} (visitor : code.OpVisitor V)
+    (htotal : Visitor.Total visitor) (batch : stream.StreamingBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
     (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
-    ∃ r, stream.CodeBatch.validate_func visitor batch index v = .ok r := by
+    ∃ r, stream.StreamingBatch.validate_func visitor batch index v = .ok r := by
   cases he : batch.error with
-  | some e => exact ⟨_, stream.CodeBatch.validate_func.sticky visitor batch index v e he⟩
+  | some e => exact ⟨_, stream.StreamingBatch.validate_func.sticky visitor batch index v e he⟩
   | none =>
     obtain ⟨⟨r, v'⟩, hr⟩ :=
-      stream.CodeBatch.validate_next.total visitor htotal batch index v hbound hrange
+      stream.StreamingBatch.validate_next.total visitor htotal batch index v hbound hrange
     cases r with
     | Err e =>
       exact ⟨(.Err e, { batch with error := some e }, v'), by
-        simp [stream.CodeBatch.validate_func, he, core.option.Option.is_none, hr]⟩
+        simp [stream.StreamingBatch.validate_func, he, core.option.Option.is_none, hr]⟩
     | Ok finish =>
-      have hc := (stream.CodeBatch.validate_next.accepted visitor batch index finish v v' hr).1
+      have hc := (stream.StreamingBatch.validate_next.accepted visitor batch index finish v v' hr).1
       obtain ⟨count, hadd, _⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := batch.num_validated) (y := 1#usize) (by scalar_tac))
       exact ⟨(.Ok (), { batch with num_validated := count, validated_end := finish, error := none }, v'), by
-        simp [stream.CodeBatch.validate_func, he, core.option.Option.is_none, hr, hadd]⟩
+        simp [stream.StreamingBatch.validate_func, he, core.option.Option.is_none, hr, hadd]⟩
 
 private theorem validate_func_count {V : Type} (visitor : code.OpVisitor V)
-    (batch after : stream.CodeBatch) (index : Usize) (v v' : V)
+    (batch after : stream.StreamingBatch) (index : Usize) (v v' : V)
     (r : core.result.Result Unit error.Error)
-    (h : stream.CodeBatch.validate_func visitor batch index v = .ok (r, after, v')) :
+    (h : stream.StreamingBatch.validate_func visitor batch index v = .ok (r, after, v')) :
     match r with
       | .Ok () => after.num_validated.val = batch.num_validated.val + 1
       | .Err _ => after.num_validated = batch.num_validated := by
-  rcases stream.CodeBatch.validate_func.cases visitor batch after index v v' r h with
+  rcases stream.StreamingBatch.validate_func.cases visitor batch after index v v' r h with
     sticky | failure | success
   · obtain ⟨_, _, rfl, rfl, _⟩ := sticky
     rfl
@@ -336,16 +336,16 @@ private theorem validate_func_count {V : Type} (visitor : code.OpVisitor V)
 /-- Every iteration of the `validate_all` loop calls the extracted `validate_func`, so the state
 after each iteration is reachable. The loop terminates because an error clears the running flag
 and a successful iteration decreases the number of remaining functions. -/
-theorem stream.CodeBatch.validate_all_loop.spec (issued : Stream.Batch.Issued)
-    (batch : stream.CodeBatch) (running : Bool)
+theorem stream.StreamingBatch.validate_all_loop.spec (issued : Stream.Batch.Issued)
+    (batch : stream.StreamingBatch) (running : Bool)
     (hissued : issued.Bounded) (hbound : CodeEntry.Bounds issued.env)
     (hreach : Stream.Batch.Reachable issued batch) :
-    stream.CodeBatch.validate_all_loop batch running ⦃ result =>
-      ∃ after : stream.CodeBatch, Stream.Batch.Reachable issued after ∧
+    stream.StreamingBatch.validate_all_loop batch running ⦃ result =>
+      ∃ after : stream.StreamingBatch, Stream.Batch.Reachable issued after ∧
         result = (after.module_id, after.batch_id, after.env, after.code,
           after.code_offset, after.first_func, after.num_funcs, after.num_dispatched,
           after.dispatch_end, after.num_validated, after.validated_end, after.error) ⦄ := by
-  unfold stream.CodeBatch.validate_all_loop
+  unfold stream.StreamingBatch.validate_all_loop
   apply loop.spec_decr_nat
     (fun s => issued.num_funcs.val - s.1.num_validated.val + if s.2 then 1 else 0)
     (fun s => Stream.Batch.Reachable issued s.1)
@@ -358,18 +358,18 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : Stream.Batch.Issued)
         current.env.func_type_indices.val.length := by
       rw [henv, hfirst, hnum]
       exact hissued.2.1
-    unfold stream.CodeBatch.validate_all_loop.body
+    unfold stream.StreamingBatch.validate_all_loop.body
     split
     · rename_i hcount
       split
       · step
-        obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.CodeBatch.validate_func.returns
-          code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+        obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.StreamingBatch.validate_func.returns
+          code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
           current index () (by simpa [henv] using hbound) hrange
         cases v
         have hafter : Stream.Batch.Reachable issued after :=
-          .validate code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor hcurrent hr
-        have hc := validate_func_count code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+          .validate code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor hcurrent hr
+        have hc := validate_func_count code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
           current after index () () reply hr
         rw [hr]
         cases reply with
@@ -389,16 +389,16 @@ theorem stream.CodeBatch.validate_all_loop.spec (issued : Stream.Batch.Issued)
     · exact ⟨current, hcurrent, rfl⟩
   · exact hreach
 
-/-- Running `stream.CodeBatch.validate_all` terminates in a reachable state, including on invalid
+/-- Running `stream.StreamingBatch.validate_all` terminates in a reachable state, including on invalid
 bytes and stored errors. -/
 @[step]
-theorem stream.CodeBatch.validate_all.reachable (issued : Stream.Batch.Issued)
-    (batch : stream.CodeBatch) (hissued : issued.Bounded)
+theorem stream.StreamingBatch.validate_all.reachable (issued : Stream.Batch.Issued)
+    (batch : stream.StreamingBatch) (hissued : issued.Bounded)
     (hbound : CodeEntry.Bounds issued.env) (hreach : Stream.Batch.Reachable issued batch) :
-    stream.CodeBatch.validate_all batch ⦃ after => Stream.Batch.Reachable issued after ⦄ := by
+    stream.StreamingBatch.validate_all batch ⦃ after => Stream.Batch.Reachable issued after ⦄ := by
   obtain ⟨result, hr, after, hafter, rfl⟩ := WP.spec_imp_exists
-    (stream.CodeBatch.validate_all_loop.spec issued batch true hissued hbound hreach)
-  simpa [stream.CodeBatch.validate_all, hr] using hafter
+    (stream.StreamingBatch.validate_all_loop.spec issued batch true hissued hbound hreach)
+  simpa [stream.StreamingBatch.validate_all, hr] using hafter
 
 end Itasca
 
@@ -411,10 +411,10 @@ section
 /-!
 # Worker completeness
 
-Completeness of `stream.CodeBatch.validate_func` and `stream.CodeBatch.validate_all`. Independently
+Completeness of `stream.StreamingBatch.validate_func` and `stream.StreamingBatch.validate_all`. Independently
 encoded and typed entries, together with an accepting visitor (`Visitor.Accepts`), make the
-actual worker loop succeed. `stream.CodeBatch.validate_all.complete_at_seed` runs an issued batch from
-its seed to a reachable state accepted by `stream.CodeBatch.finish`. The premises are about the
+actual worker loop succeed. `stream.StreamingBatch.validate_all.complete_at_seed` runs an issued batch from
+its seed to a reachable state accepted by `stream.StreamingBatch.finish`. The premises are about the
 module and the visitor, not about a worker that is assumed to succeed.
 -/
 
@@ -425,8 +425,8 @@ open Binary
 
 /-- An accepting worker validates the independently encoded next entry and
 advances exactly one function, without requiring prior dispatch. -/
-theorem stream.CodeBatch.validate_func.complete_at {V : Type} (visitor : code.OpVisitor V)
-    (haccept : Visitor.Accepts visitor) (batch : stream.CodeBatch) (index : Usize)
+theorem stream.StreamingBatch.validate_func.complete_at {V : Type} (visitor : code.OpVisitor V)
+    (haccept : Visitor.Accepts visitor) (batch : stream.StreamingBatch) (index : Usize)
     (entry : Code) (finish : Usize) (v : V)
     (herror : batch.error = none) (hcount : batch.num_validated.val < batch.num_funcs.val)
     (hindex : index.val = batch.first_func.val + batch.num_validated.val)
@@ -435,7 +435,7 @@ theorem stream.CodeBatch.validate_func.complete_at {V : Type} (visitor : code.Op
     (hlimits : CodeEntry.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (CodeEntry.CodeEncodingWithinLimits) batch.code batch.validated_end entry finish) :
     ∃ count v', count.val = batch.num_validated.val + 1 ∧
-      stream.CodeBatch.validate_func visitor batch index v = .ok (.Ok (),
+      stream.StreamingBatch.validate_func visitor batch index v = .ok (.Ok (),
         { batch with num_validated := count, validated_end := finish }, v') := by
   obtain ⟨v', hentry⟩ := metadata.validate_code_entry_with.complete visitor haccept
     batch.code batch.validated_end batch.env index entry finish v hi htyped hlimits hbound hbytes
@@ -444,16 +444,16 @@ theorem stream.CodeBatch.validate_func.complete_at {V : Type} (visitor : code.Op
   have heq : expected = index := by apply UScalar.eq_of_val_eq; omega
   subst expected
   have hn : ¬ batch.num_validated ≥ batch.num_funcs := by scalar_tac
-  have hnext : stream.CodeBatch.validate_next visitor batch index v = .ok (.Ok finish, v') := by
-    simp [stream.CodeBatch.validate_next, hn, hadd, hentry]
+  have hnext : stream.StreamingBatch.validate_next visitor batch index v = .ok (.Ok finish, v') := by
+    simp [stream.StreamingBatch.validate_next, hn, hadd, hentry]
   obtain ⟨count, hinc, hcountval⟩ := WP.spec_imp_exists
     (UScalar.add_spec (x := batch.num_validated) (y := 1#usize) (by scalar_tac))
   refine ⟨count, v', by simpa using hcountval, ?_⟩
-  simp [stream.CodeBatch.validate_func, herror, core.option.Option.is_none, hnext, hinc]
+  simp [stream.StreamingBatch.validate_func, herror, core.option.Option.is_none, hnext, hinc]
 
 /-- Repeated actual validation consumes the independently encoded remaining
 entries, in order, and reaches the exact declared function and byte boundary. -/
-theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
+theorem stream.StreamingBatch.validate_all_loop.complete (batch : stream.StreamingBatch)
     (entries : List Code) (finish : Usize)
     (herror : batch.error = none)
     (hcount : batch.num_validated.val + entries.length = batch.num_funcs.val)
@@ -461,7 +461,7 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
       (batch.first_func.val + batch.num_validated.val) entries)
     (hlimits : CodeEntry.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Rep (CodeEntry.CodeEncodingWithinLimits)) batch.code batch.validated_end entries finish) :
-    stream.CodeBatch.validate_all_loop batch true = .ok
+    stream.StreamingBatch.validate_all_loop batch true = .ok
       (batch.module_id, batch.batch_id, batch.env, batch.code, batch.code_offset,
         batch.first_func, batch.num_funcs, batch.num_dispatched, batch.dispatch_end,
         batch.num_funcs, finish, none) := by
@@ -471,8 +471,8 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
       apply UScalar.eq_of_val_eq
       simpa using hcount
     have hp := hbytes.rep_nil
-    rw [stream.CodeBatch.validate_all_loop, loop]
-    simp [stream.CodeBatch.validate_all_loop.body, hc, hp, herror]
+    rw [stream.StreamingBatch.validate_all_loop, loop]
+    simp [stream.StreamingBatch.validate_all_loop.body, hc, hp, herror]
   | cons entry entries ih =>
     have hc : batch.num_validated.val < batch.num_funcs.val := by
       simp only [List.length_cons] at hcount
@@ -483,8 +483,8 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
       obtain ⟨index, hadd, hindex⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := batch.first_func) (y := batch.num_validated) (by scalar_tac))
       obtain ⟨next, hentry, hremaining⟩ := hbytes.rep_cons
-      obtain ⟨count, v', hcountval, hstep⟩ := stream.CodeBatch.validate_func.complete_at
-        code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+      obtain ⟨count, v', hcountval, hstep⟩ := stream.StreamingBatch.validate_func.complete_at
+        code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
         batch index entry next () herror hc hindex (by simpa [hindex] using hi)
         (by simpa [hindex] using ht) hlimits hbound hentry
       cases v'
@@ -496,13 +496,13 @@ theorem stream.CodeBatch.validate_all_loop.complete (batch : stream.CodeBatch)
         herror (by simp only [List.length_cons] at hcount; dsimp only; omega)
         hrest' hlimits hbound hremaining
       have hlt : batch.num_validated < batch.num_funcs := by scalar_tac
-      rw [stream.CodeBatch.validate_all_loop, loop]
-      simpa [stream.CodeBatch.validate_all_loop.body, hlt, hadd, hstep,
-        core.result.Result.is_ok, stream.CodeBatch.validate_all_loop] using hrec
+      rw [stream.StreamingBatch.validate_all_loop, loop]
+      simpa [stream.StreamingBatch.validate_all_loop.body, hlt, hadd, hstep,
+        core.result.Result.is_ok, stream.StreamingBatch.validate_all_loop] using hrec
 
 /-- Independently encoded and typed batch contents are accepted by running the extracted worker
 loop, which ends with every function validated and `error = none`. -/
-theorem stream.CodeBatch.validate_all.complete_at (batch : stream.CodeBatch)
+theorem stream.StreamingBatch.validate_all.complete_at (batch : stream.StreamingBatch)
     (entries : List Code) (finish : Usize)
     (herror : batch.error = none)
     (hcount : batch.num_validated.val + entries.length = batch.num_funcs.val)
@@ -510,31 +510,31 @@ theorem stream.CodeBatch.validate_all.complete_at (batch : stream.CodeBatch)
       (batch.first_func.val + batch.num_validated.val) entries)
     (hlimits : CodeEntry.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (Rep (CodeEntry.CodeEncodingWithinLimits)) batch.code batch.validated_end entries finish) :
-    stream.CodeBatch.validate_all batch = .ok
+    stream.StreamingBatch.validate_all batch = .ok
       { batch with num_validated := batch.num_funcs, validated_end := finish, error := none } := by
-  simp [stream.CodeBatch.validate_all,
-    stream.CodeBatch.validate_all_loop.complete batch entries finish herror hcount htyped hlimits hbound hbytes ]
+  simp [stream.StreamingBatch.validate_all,
+    stream.StreamingBatch.validate_all_loop.complete batch entries finish herror hcount htyped hlimits hbound hbytes ]
 
 /-- A bounded issued batch whose contents are independently valid runs from its seed to a
-reachable state that `stream.CodeBatch.finish` accepts. -/
-theorem stream.CodeBatch.validate_all.complete_at_seed (issued : Stream.Batch.Issued)
+reachable state that `stream.StreamingBatch.finish` accepts. -/
+theorem stream.StreamingBatch.validate_all.complete_at_seed (issued : Stream.Batch.Issued)
     (entries : List Code) (hissued : issued.Bounded)
     (hcount : entries.length = issued.num_funcs.val)
     (htyped : Module.Code.EntriesTyped issued.env issued.first_func.val entries)
     (hlimits : CodeEntry.EnvironmentWithinLimits issued.env) (hbound : CodeEntry.Bounds issued.env)
     (hbytes : Rep (CodeEntry.CodeEncodingWithinLimits) entries issued.code.val) :
-    ∃ after, stream.CodeBatch.validate_all issued.seed = .ok after ∧
-      Stream.Batch.Reachable issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) := by
+    ∃ after, stream.StreamingBatch.validate_all issued.seed = .ok after ∧
+      Stream.Batch.Reachable issued after ∧ stream.StreamingBatch.finish after = .ok (.Ok ()) := by
   have hb : At (Rep (CodeEntry.CodeEncodingWithinLimits)) issued.code 0#usize entries
       (Slice.len issued.code) := ⟨issued.code.val, hbytes, by constructor <;> simp⟩
-  have hr := stream.CodeBatch.validate_all.complete_at issued.seed entries (Slice.len issued.code)
+  have hr := stream.StreamingBatch.validate_all.complete_at issued.seed entries (Slice.len issued.code)
     rfl (by simpa [Stream.Batch.Issued.seed] using hcount)
     (by simpa [Stream.Batch.Issued.seed] using htyped) hlimits hbound hb
-  have hs := stream.CodeBatch.validate_all.reachable issued issued.seed hissued hbound .seed
+  have hs := stream.StreamingBatch.validate_all.reachable issued issued.seed hissued hbound .seed
   rw [hr] at hs
   simp only [WP.spec_ok] at hs
   refine ⟨_, hr, hs, ?_⟩
-  apply (stream.CodeBatch.finish.accepted_iff _).mpr
+  apply (stream.StreamingBatch.finish.accepted_iff _).mpr
   simp [Stream.Batch.Issued.seed]
 
 end Itasca
@@ -548,7 +548,7 @@ section
 /-!
 # Streaming sources
 
-Lemmas for the helpers that read from a `stream.Source`. The source premises
+Lemmas for the helpers that read from a `stream.StreamingSource`. The source premises
 `Stream.Source.Coherent`, `Stream.Source.Available` and `Stream.Source.CallbacksTotal` are defined in
 `Itasca/Results/Definitions/Streaming`, and `stream.SliceSource` satisfies all three. The file also covers `limits.add_offset`, `stream.read_len` and `stream.read_exact`, and
 the transport of encoded intervals between a bounded view and its parent region.
@@ -621,7 +621,7 @@ theorem stream.read_len.complete (data : Slice U8) (start next : Usize)
 /-- Exact reads need only the reached code callback to return, and permit its
 ordinary error result. The ordering premise prevents subtraction underflow. -/
 @[step]
-theorem stream.read_exact.spec {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_exact.spec {S : Type} (source : stream.StreamingSource S) (state : S)
     (first last : Usize) (horder : first.val ≤ last.val)
     (hreturn : ∃ r, source.code state first last = .ok r) :
     stream.read_exact source state first last ⦃ r => match r with
@@ -642,7 +642,7 @@ theorem stream.read_exact.spec {S : Type} (source : stream.Source S) (state : S)
 
 /-- Acceptance reveals the actual successful source call, without a callback
 termination premise for this or any other read. -/
-theorem stream.read_exact.accepted {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_exact.accepted {S : Type} (source : stream.StreamingSource S) (state : S)
     (first last : Usize) (bytes : Slice U8) (horder : first.val ≤ last.val)
     (h : stream.read_exact source state first last = .ok (.Ok bytes)) :
     source.code state first last = .ok (.Ok bytes) ∧ bytes.length = last.val - first.val := by
@@ -655,7 +655,7 @@ theorem stream.read_exact.accepted {S : Type} (source : stream.Source S) (state 
 
 /-- Over a coherent source, a successful exact read returns the requested slice of the code
 region. -/
-theorem stream.read_exact.sound {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_exact.sound {S : Type} (source : stream.StreamingSource S) (state : S)
     (environment code tail : List U8) (hc : Stream.Source.Coherent source state environment code tail)
     (first last : Usize) (bytes : Slice U8) (horder : first.val ≤ last.val)
     (hbound : last.val ≤ code.length)
@@ -665,7 +665,7 @@ theorem stream.read_exact.sound {S : Type} (source : stream.Source S) (state : S
   exact ⟨hc.code_eq first last bytes horder hbound hr, hn⟩
 
 /-- A successful code read of the right length is returned by `stream.read_exact`. -/
-theorem stream.read_exact.complete {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_exact.complete {S : Type} (source : stream.StreamingSource S) (state : S)
     (first last : Usize) (bytes : Slice U8) (horder : first.val ≤ last.val)
     (hread : source.code state first last = .ok (.Ok bytes))
     (hlen : bytes.length = last.val - first.val) :
@@ -680,42 +680,42 @@ theorem stream.read_exact.complete {S : Type} (source : stream.Source S) (state 
 ranges with an ordinary host error. -/
 @[step]
 theorem stream.SliceSource.code_spec (state : stream.SliceSource) (first last : Usize) :
-    stream.SliceSource.Insts.ItascaStreamSource.code state first last ⦃ r => match r with
+    stream.SliceSource.Insts.ItascaStreamStreamingSource.code state first last ⦃ r => match r with
       | .Ok bytes => first.val ≤ last.val ∧ last.val ≤ state.code.length ∧
           bytes.val = state.code.val.slice first.val last.val
       | .Err e => e = .Host ∧ (last.val < first.val ∨ state.code.length < last.val) ⦄ := by
-  unfold stream.SliceSource.Insts.ItascaStreamSource.code
+  unfold stream.SliceSource.Insts.ItascaStreamStreamingSource.code
   step*
 
 /-- `stream.SliceSource` is coherent with its own environment, code and tail slices. -/
 theorem stream.SliceSource.coherent (state : stream.SliceSource) :
-    Stream.Source.Coherent stream.SliceSource.Insts.ItascaStreamSource state
+    Stream.Source.Coherent stream.SliceSource.Insts.ItascaStreamStreamingSource state
       state.env.val state.code.val state.tail.val := by
   constructor
   · intro bytes h
     have he : state.env = bytes := by
-      simpa [stream.SliceSource.Insts.ItascaStreamSource,
-        stream.SliceSource.Insts.ItascaStreamSource.environment] using h
+      simpa [stream.SliceSource.Insts.ItascaStreamStreamingSource,
+        stream.SliceSource.Insts.ItascaStreamStreamingSource.environment] using h
     exact congrArg Slice.val he.symm
   · intro len h
     have he : Slice.len state.code = len := by
-      simpa [stream.SliceSource.Insts.ItascaStreamSource,
-        stream.SliceSource.Insts.ItascaStreamSource.code_len] using h
+      simpa [stream.SliceSource.Insts.ItascaStreamStreamingSource,
+        stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len] using h
     simp [← he]
   · intro first last bytes _ _ h
     have hs := stream.SliceSource.code_spec state first last
-    change stream.SliceSource.Insts.ItascaStreamSource.code state first last = _ at h
+    change stream.SliceSource.Insts.ItascaStreamStreamingSource.code state first last = _ at h
     simp only [h, WP.spec_ok] at hs
     exact hs.2.2
   · intro bytes h
     have he : state.tail = bytes := by
-      simpa [stream.SliceSource.Insts.ItascaStreamSource,
-        stream.SliceSource.Insts.ItascaStreamSource.tail] using h
+      simpa [stream.SliceSource.Insts.ItascaStreamStreamingSource,
+        stream.SliceSource.Insts.ItascaStreamStreamingSource.tail] using h
     exact congrArg Slice.val he.symm
 
 /-- `stream.SliceSource` makes every in-range read available. -/
 theorem stream.SliceSource.available (state : stream.SliceSource) :
-    Stream.Source.Available stream.SliceSource.Insts.ItascaStreamSource state
+    Stream.Source.Available stream.SliceSource.Insts.ItascaStreamStreamingSource state
       state.env.val state.code.val state.tail.val := by
   constructor
   · exact ⟨state.env, rfl, rfl⟩
@@ -729,7 +729,7 @@ theorem stream.SliceSource.available (state : stream.SliceSource) :
 
 /-- Every `stream.SliceSource` callback returns. -/
 theorem stream.SliceSource.callbacks_total (state : stream.SliceSource) :
-    Stream.Source.CallbacksTotal stream.SliceSource.Insts.ItascaStreamSource state := by
+    Stream.Source.CallbacksTotal stream.SliceSource.Insts.ItascaStreamStreamingSource state := by
   constructor
   · exact ⟨.Ok state.env, rfl⟩
   · exact ⟨Slice.len state.code, rfl⟩

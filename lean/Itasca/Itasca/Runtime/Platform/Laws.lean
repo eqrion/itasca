@@ -6,6 +6,8 @@ import Itasca.Runtime.Equations.Bytecode
 import ItascaRust.Funs
 import WebAssembly.Builtins.Float.Representation
 
+open WebAssembly
+
 /-! ## Alloc -/
 
 section

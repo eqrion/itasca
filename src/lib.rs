@@ -8,7 +8,7 @@
 //! ```
 //! let bytes = b"\x00asm\x01\x00\x00\x00";
 //! let module = itasca::validate_module(bytes)?;
-//! let imports = itasca::import_types(module.env())?;
+//! let imports = module.env().import_types()?;
 //! # Ok::<(), itasca::Error>(())
 //! ```
 //!
@@ -49,17 +49,18 @@ mod limits;
 mod reader;
 
 pub use code::{
-    Context, Ctrl, EmptyOpVisitor, LabelKind, MemArg, OpIterState, OpVisitor, StackType,
+    Context, Ctrl, DefaultOpVisitor, LabelKind, MemArg, OpIterState, OpVisitor, Opcode, StackType,
     VisitResult,
 };
 pub use error::{Error, OpError, VisitError};
 pub use metadata::{
-    export_types, import_types, validate_module, Data, DataMode, Element, ElementMode, Env, Export,
+    validate_module, Data, DataMode, DefaultModuleVisitor, Element, ElementMode, Env, Export,
     ExportDesc, Global, Import, ImportDesc, Module, ModuleVisitor, Tail,
 };
 pub use signature::{BlockType, ResultType, TypePart};
 pub use stream::{
-    validate_streaming, CodeBatch, CodeEntry, Config, Region, Result, Source, StreamingVisitor,
+    validate_streaming, Result, StreamingBatch, StreamingConfig, StreamingEntry, StreamingRegion,
+    StreamingSource, StreamingVisitor,
 };
 pub use wasm_types::{
     ConstExpr, CustomSection, ElemType, ExternType, FuncType, GlobalType, Limits, MemType, Mut,

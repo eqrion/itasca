@@ -24,12 +24,12 @@ theorem Rep.value_types_length {values bytes} (h : Rep ValueTypeEncoding values 
     bytes.length = values.length := by
   induction h with
   | nil => rfl
-  | cons he _ ih => simp_all [ValueTypeEncoding]
+  | cons he _ ih => simp_all [ValueTypeEncoding.reader_bytes]
 
 theorem FuncTypeEncoding.params_bound {ty bytes} (h : FuncTypeEncoding ty bytes) :
     ty.params.val.length ≤ bytes.length := by
-  obtain ⟨params, results, ⟨count, entries, _, hp, rfl⟩, _, rfl⟩ := h
-  have he := hp.value_types_length
+  obtain ⟨params, results, ⟨count, entries, _, hp, rfl⟩, _, rfl⟩ := FuncTypeEncoding.reader_parts.mp h
+  have he := Rep.value_types_length hp
   simp only [List.length_cons, List.length_append]
   omega
 
@@ -54,7 +54,7 @@ theorem At.func_type_vector_params_bound {data start types next}
     ∀ ty ∈ types, ty.params.val.length ≤ next.val := by
   obtain ⟨bytes, ⟨count, entries, _, he, rfl⟩, hs⟩ := h
   intro ty hm
-  have := he.func_types_params_bound ty hm
+  have := Rep.func_types_params_bound he ty hm
   have := hs.length
   simp only [List.length_append] at this
   omega

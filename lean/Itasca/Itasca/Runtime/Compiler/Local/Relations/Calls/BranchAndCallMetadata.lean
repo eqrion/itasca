@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Runtime.Compiler.Local.Source.SourceTactics
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 
+open WebAssembly
+
 /-!
 # Branch And Call Metadata
 

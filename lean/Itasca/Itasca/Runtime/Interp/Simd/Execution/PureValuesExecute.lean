@@ -11,6 +11,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 import Itasca.Runtime.Interp.Simd.Relations.PureResultSlots
 import Itasca.Runtime.Interp.Simd.Execution.PureSound
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ConstValues -/

@@ -56,7 +56,8 @@ theorem metadata.decode_element_initializer.complete {data : Slice U8} {pos next
     simp only [metadata.decode_element_initializer, ↓reduceIte, hty, bind_ok]
     exact metadata.decode_const_expr.complete hb hv
   | false =>
-    obtain ⟨bytes, ⟨index, rfl, hi⟩, hs⟩ := hb
+    obtain ⟨bytes, he, hs⟩ := hb
+    obtain ⟨index, rfl, hi⟩ := Binary.ElementInitializerEncoding.index_parts.mp he
     have hread := hs.read_u32 index hi
     have hvalid : index.val < env.func_types.val.length := by cases hv; assumption
     have hx : metadata.decode_element_initializer data pos env elem false ⦃ r => r = .Ok (.RefFunc index, next) ⦄ := by
@@ -169,12 +170,24 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
     metadata.decode_element_header data pos env = .ok (.Ok (mode, elem, expressions, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   have hx : metadata.decode_element_header data pos env ⦃ r => r = .Ok (mode, elem, expressions, next) ⦄ := by
+    change WebAssembly.Binary.ElementHeaderEncoding _ _ _ _ at he
+    rw [← Source.readerBytes_bytes bytes] at hs
+    generalize hmode : Source.elementMode mode = m at he
+    generalize htype : Translation.referenceType elem = t at he
+    generalize hbytes : Source.bytes bytes = raw at he
+    rw [hbytes] at hs
     cases he with
     | @activeIndices offset fb ob hf ho =>
+      obtain ⟨off, rfl, hconst⟩ := Source.readConstant ho
+      have hm : mode = .Active 0#u32 off := Source.elementModeInjective hmode
+      subst mode
+      have ht : elem = .FuncRef := Source.referenceType htype
+      subst elem
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
-      have hrf := hflags.read_u32 0#u32 hf
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
+      have hrf := hflags.read_u32 0#u32 (Source.readerLeb hf)
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨_, hconst, hoffset⟩ hv
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (0#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -195,10 +208,16 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @activeExpressions offset fb ob hf ho =>
+      obtain ⟨off, rfl, hconst⟩ := Source.readConstant ho
+      have hm : mode = .Active 0#u32 off := Source.elementModeInjective hmode
+      subst mode
+      have ht : elem = .FuncRef := Source.referenceType htype
+      subst elem
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨middle, hflags, hoffset⟩ := hs.split
-      have hrf := hflags.read_u32 4#u32 hf
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
+      have hrf := hflags.read_u32 4#u32 (Source.readerLeb hf)
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨_, hconst, hoffset⟩ hv
       simp [metadata.decode_element_header, hrf, hro, core.result.Result.Insts.CoreOpsTry.branch,
         show (4#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl]
       step as ⟨cast1, hcast1⟩
@@ -219,26 +238,43 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
     | @passiveIndices fb hf =>
+      have hm : mode = .Passive := Source.elementModeInjective hmode
+      subst mode
+      have ht : elem = .FuncRef := Source.referenceType htype
+      subst elem
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨middle, hflags, hkind⟩ := hs.split
-      have hrf := hflags.read_u32 1#u32 hf
-      simp [metadata.decode_element_header, hrf, hkind.read_byte,
+      have hrf := hflags.read_u32 1#u32 (Source.readerLeb hf)
+      simp [metadata.decode_element_header, hrf, hkind.read_byte, show (Source.readerByte 0).val = 0 from rfl,
         show (1#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
     | @declarativeIndices fb hf =>
+      have hm : mode = .Declarative := Source.elementModeInjective hmode
+      subst mode
+      have ht : elem = .FuncRef := Source.referenceType htype
+      subst elem
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨middle, hflags, hkind⟩ := hs.split
-      have hrf := hflags.read_u32 3#u32 hf
-      simp [metadata.decode_element_header, hrf, hkind.read_byte,
+      have hrf := hflags.read_u32 3#u32 (Source.readerLeb hf)
+      simp [metadata.decode_element_header, hrf, hkind.read_byte, show (Source.readerByte 0).val = 0 from rfl,
         show (3#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
     | @explicitIndices index offset fb ib ob hf hindexEnc ho =>
+      obtain ⟨off, rfl, hconst⟩ := Source.readConstant ho
+      obtain ⟨idx, rfl, idxEncoding⟩ := Source.readerIndex hindexEnc
+      have hm : mode = .Active idx off := Source.elementModeInjective hmode
+      subst mode
+      have ht : elem = .FuncRef := Source.referenceType htype
+      subst elem
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨kindPos, hprefix, hkind⟩ := hs.split
       obtain ⟨offsetPos, hprefix, hoffset⟩ := hprefix.split
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
-      have hrf := hflags.read_u32 2#u32 hf
-      have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
-      simp [metadata.decode_element_header, hrf, hri, hro, hkind.read_byte,
+      have hrf := hflags.read_u32 2#u32 (Source.readerLeb hf)
+      have hri := hindex.read_u32 idx idxEncoding
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨_, hconst, hoffset⟩ hv
+      simp [metadata.decode_element_header, hrf, hri, hro, hkind.read_byte, show (Source.readerByte 0).val = 0 from rfl,
         show (2#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
       step as ⟨cast1, hcast1⟩
@@ -252,34 +288,48 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       simp only [bind_ok]
       step as ⟨table, htable⟩
       have hte : table.elem = wasm_types.ElemType.FuncRef := by
-        have hval : cast2.val = (index).val := by scalar_tac
+        have hval : cast2.val = idx.val := by scalar_tac
         simpa only [htable, hval] using ht
       rw [hte]
       simp [Module.Constants.referenceValueType, wasm_types.ElemType.value_type,
         core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
-    | @passiveExpressions elem fb hf =>
+    | @passiveExpressions nativeElem fb hf =>
+      have hm : mode = .Passive := Source.elementModeInjective hmode
+      subst mode
+      subst t
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨middle, hflags, helem⟩ := hs.split
-      have hrf := hflags.read_u32 5#u32 hf
+      have hrf := hflags.read_u32 5#u32 (Source.readerLeb hf)
       have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hre,
         show (5#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
-    | @declarativeExpressions elem fb hf =>
+    | @declarativeExpressions nativeElem fb hf =>
+      have hm : mode = .Declarative := Source.elementModeInjective hmode
+      subst mode
+      subst t
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨middle, hflags, helem⟩ := hs.split
-      have hrf := hflags.read_u32 7#u32 hf
+      have hrf := hflags.read_u32 7#u32 (Source.readerLeb hf)
       have hre := metadata.decode_elem_type.complete data middle elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hre,
         show (7#u32 % 2#u32 : Result U32) = .ok 1#u32 from rfl,
         core.result.Result.Insts.CoreOpsTry.branch]
-    | @explicitExpressions elem index offset fb ib ob hf hindexEnc ho =>
+    | @explicitExpressions nativeElem index offset fb ib ob hf hindexEnc ho =>
+      obtain ⟨off, rfl, hconst⟩ := Source.readConstant ho
+      obtain ⟨idx, rfl, idxEncoding⟩ := Source.readerIndex hindexEnc
+      have hm : mode = .Active idx off := Source.elementModeInjective hmode
+      subst mode
+      subst t
+      simp only [Source.readerBytes, List.map_append, List.map_cons, List.map_nil] at hs
       obtain ⟨hi, ht, hv⟩ := hv
       obtain ⟨elemPos, hprefix, helem⟩ := hs.split
       obtain ⟨offsetPos, hprefix, hoffset⟩ := hprefix.split
       obtain ⟨indexPos, hflags, hindex⟩ := hprefix.split
-      have hrf := hflags.read_u32 6#u32 hf
-      have hri := hindex.read_u32 index hindexEnc
-      have hro := metadata.decode_const_expr.complete (env := env) ⟨ob, ho, hoffset⟩ hv
+      have hrf := hflags.read_u32 6#u32 (Source.readerLeb hf)
+      have hri := hindex.read_u32 idx idxEncoding
+      have hro := metadata.decode_const_expr.complete (env := env) ⟨_, hconst, hoffset⟩ hv
       have hre := metadata.decode_elem_type.complete data elemPos elem next ⟨_, rfl, helem⟩
       simp [metadata.decode_element_header, hrf, hri, hro, hre,
         show (6#u32 % 2#u32 : Result U32) = .ok 0#u32 from rfl,
@@ -295,7 +345,7 @@ theorem metadata.decode_element_header.complete {data : Slice U8} {pos next : Us
       simp only [bind_ok]
       step as ⟨table, htable⟩
       have hte : table.elem = elem := by
-        have hval : cast2.val = (index).val := by scalar_tac
+        have hval : cast2.val = idx.val := by scalar_tac
         simpa only [htable, hval] using ht
       rw [hte]
       cases elem <;> simp [Module.Constants.referenceValueType, wasm_types.ElemType.value_type,
@@ -320,12 +370,12 @@ theorem metadata.decode_element.complete (data : Slice U8) (env : metadata.Env)
     ∃ result actual, metadata.decode_element data pos env = .ok (.Ok (actual, next), result) ∧
       Module.Environment.rawElement actual = entry ∧ Module.References.Added env result (Module.References.element actual) := by
   obtain ⟨bytes, he, hs⟩ := hb
-  obtain ⟨expressions, header, encoded, hhead, hvalues, rfl⟩ := header_parts he
+  obtain ⟨expressions, header, encoded, hhead, hvalues, rfl⟩ := ElementEncoding.reader_parts.mp he
   obtain ⟨middle, hheader, hentries⟩ := hs.split
   have hreadheader := metadata.decode_element_header.complete (env := env)
     ⟨header, hhead, hheader⟩ hv.1
   have hspan := hheader.length
-  have hty := hhead.initializer_type
+  have hty := HeaderEncoding.initializer_type hhead
   obtain ⟨result, init, hreadinit, hinit, hadded⟩ := metadata.decode_element_initializers.complete
     data env entry.elem expressions middle next entry.init ⟨encoded, hvalues, hentries⟩
     (by omega) (by simpa only [hty] using hv.2)
@@ -350,8 +400,7 @@ section
 
 `metadata.decode_element_section.complete` (and the scalar `.complete`): an independently
 encoded vector of elements that are `ElementValidRaw` in the environment is accepted, and the
-environment gains them (`ElementsAdded`). `metadata.decode_func_indices.complete` covers the index
-vectors. Soundness is in `Module/Sections/EnvironmentAndTail`.
+environment gains them (`ElementsAdded`). Soundness is in `Module/Sections/EnvironmentAndTail`.
 -/
 
 open Aeneas Aeneas.Std
@@ -487,11 +536,15 @@ theorem At.export_desc_split {data pos desc next}
     ∃ middle, At ByteEncoding data pos (descByte desc) middle ∧
       At IndexEncoding data middle (descIndex desc) next := by
   obtain ⟨bytes, he, hs⟩ := h
-  cases he <;> rename_i idx indexBytes hi
+  unfold ExportDescEncoding at he
+  rw [← Source.readerBytes_bytes bytes] at hs
+  generalize Source.bytes bytes = raw at he hs
+  cases desc <;> cases he
   all_goals
+    rename_i rawIndex hi
     obtain ⟨middle, htag, hindex⟩ :=
-      (show Body.Scalar.BytesAt data pos ([_] ++ indexBytes) next from hs).split
-    exact ⟨middle, ⟨_, rfl, htag⟩, ⟨indexBytes, hi, hindex⟩⟩
+      (show Body.Scalar.BytesAt data pos ([_] ++ Source.readerBytes rawIndex) next from hs).split
+    exact ⟨middle, ⟨_, rfl, htag⟩, ⟨_, Source.readerLeb hi, hindex⟩⟩
 
 /-- An export encoding splits into its name, kind byte and index. -/
 theorem At.export_split {data pos entry next}
@@ -499,7 +552,8 @@ theorem At.export_split {data pos entry next}
     ∃ first middle, At NameEncoding data pos entry.name first ∧
       At ByteEncoding data first (descByte entry.desc) middle ∧
       At IndexEncoding data middle (descIndex entry.desc) next := by
-  obtain ⟨bytes, ⟨nameBytes, descBytes, hn, hd, rfl⟩, hs⟩ := h
+  obtain ⟨bytes, encoded, hs⟩ := h
+  obtain ⟨nameBytes, descBytes, hn, hd, rfl⟩ := ExportEncoding.reader_parts.mp encoded
   obtain ⟨first, hname, hdesc⟩ := hs.split
   obtain ⟨middle, htag, hindex⟩ :=
     (show At ExportDescEncoding data first entry.desc next from ⟨descBytes, hd, hdesc⟩).export_desc_split
@@ -798,14 +852,16 @@ namespace Itasca.Binary
 theorem At.global_split {data pos entry next} (h : At GlobalEncoding data pos entry next) :
     ∃ middle, At GlobalTypeEncoding data pos entry.gtype middle ∧
       At ConstEncoding data middle entry.init next := by
-  obtain ⟨bytes, ⟨gb, ib, hg, hi, rfl⟩, hs⟩ := h
+  obtain ⟨bytes, encoded, hs⟩ := h
+  obtain ⟨gb, ib, hg, hi, rfl⟩ := GlobalEncoding.reader_parts.mp encoded
   obtain ⟨middle, hfirst, hrest⟩ := hs.split
   exact ⟨middle, ⟨_, hg, hfirst⟩, ⟨_, hi, hrest⟩⟩
 
 /-- A global type encoding consumes at least one byte. -/
 theorem At.global_type_progress {data pos ty next} (h : At GlobalTypeEncoding data pos ty next) :
     pos.val < next.val := by
-  obtain ⟨bytes, rfl, hs⟩ := h
+  obtain ⟨bytes, he, hs⟩ := h
+  obtain rfl := GlobalTypeEncoding.reader_bytes.mp he
   have := hs.length
   simp only [List.length_cons, List.length_nil] at this
   omega
@@ -954,7 +1010,8 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
     ∃ result actual, metadata.decode_import data pos env = .ok (.Ok next, result) ∧
       Module.Environment.rawImport actual = entry ∧ ImportAdded env result actual := by
   rcases entry with ⟨moduleName, rawName, desc⟩
-  obtain ⟨bs, ⟨modBytes, nameBytes, descBytes, hm, hn, hd, rfl⟩, hs⟩ := hb
+  obtain ⟨bs, encoded, hs⟩ := hb
+  obtain ⟨modBytes, nameBytes, descBytes, hm, hn, hd, rfl⟩ := ImportEncoding.reader_parts.mp encoded
   obtain ⟨p1, hmbytes, hremain⟩ :=
     (show Body.Scalar.BytesAt data pos (modBytes ++ (nameBytes ++ descBytes)) next from
       by simpa [List.append_assoc] using hs).split
@@ -963,8 +1020,14 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
   obtain ⟨nm, hname, hnameval⟩ := metadata.decode_name.complete_raw data p1 rawName p2 ⟨_, hn, hnbytes⟩
   have hpos1 := hmbytes.length
   have hpos2 := hnbytes.length
-  cases hd with
-  | func idx he =>
+  change ImportDescEncoding desc descBytes at hd
+  unfold ImportDescEncoding at hd
+  rw [← Source.readerBytes_bytes descBytes] at hdbytes
+  generalize Source.bytes descBytes = raw at hd hdbytes
+  cases desc <;> cases hd
+  case Func.func =>
+    rename_i idx rawPayload encoded
+    have he := Source.readerLeb encoded
     obtain ⟨p3, htag, hidx⟩ := (show Body.Scalar.BytesAt data p2 ([0#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hspan := hidx.u32_decoded idx he |>.span
@@ -983,7 +1046,10 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
         hlookup, hpush, hnum, hpushimport, actual, result, core.result.Result.Insts.CoreOpsTry.branch]
     · simp_all [Module.Environment.rawImport, actual]
     · exact ⟨env.types.val[idx.val], ⟨hidxvalid, rfl⟩, rfl, hfuncs, hnumval⟩
-  | table tt he =>
+  case Table.table =>
+    rename_i tt rawPayload encoded
+    have he : TableTypeEncoding tt (Source.readerBytes rawPayload) := by
+      simpa only [TableTypeEncoding, Source.bytes_readerBytes] using encoded
     obtain ⟨p3, htag, hty⟩ := (show Body.Scalar.BytesAt data p2 ([1#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
@@ -1001,7 +1067,10 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
     · simp_all [Module.Environment.rawImport, actual]
     · simpa [Module.Translation.LimitsValid, Binary.LimitsValid,
         Option.mem_def, global_simps, U32.rMax] using hv'
-  | memory mt he =>
+  case Memory.memory =>
+    rename_i mt rawPayload encoded
+    have he : MemTypeEncoding mt (Source.readerBytes rawPayload) := by
+      simpa only [MemTypeEncoding, Source.bytes_readerBytes] using encoded
     obtain ⟨p3, htag, hty⟩ := (show Body.Scalar.BytesAt data p2 ([2#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound
@@ -1024,7 +1093,10 @@ theorem metadata.decode_import.complete (data : Slice U8) (pos : Usize)
     · simpa [result, hmemories] using hv'.2
     · simpa [Module.Translation.LimitsValid, Binary.LimitsValid,
         Option.mem_def, global_simps] using hv'.1
-  | global gt he =>
+  case Global.global =>
+    rename_i gt rawPayload encoded
+    have he : GlobalTypeEncoding gt (Source.readerBytes rawPayload) := by
+      simpa only [GlobalTypeEncoding, Source.bytes_readerBytes] using encoded
     obtain ⟨p3, htag, hty⟩ := (show Body.Scalar.BytesAt data p2 ([3#u8] ++ _) next from hdbytes).split
     have hprogress := htag.length
     have hnext := hty.bound

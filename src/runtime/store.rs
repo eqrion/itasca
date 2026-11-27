@@ -5,8 +5,7 @@ use super::interp::{eval_const, initialize_segments};
 use super::platform::Alloc;
 use super::*;
 use crate::{
-    DataMode, ElemType, ElementMode, ExportDesc, FuncType, GlobalType, ImportDesc, Limits, MemType,
-    Mut, TableType,
+    ElemType, ExportDesc, FuncType, GlobalType, ImportDesc, Limits, MemType, Mut, TableType,
 };
 use alloc::vec::Vec;
 
@@ -76,6 +75,8 @@ pub(super) struct GlobalInst {
 }
 /// An element segment's references in slot encoding, emptied by `elem.drop`.
 pub(super) struct ElemInst {
+    // The Lean store invariants track the segment type.
+    #[allow(dead_code)]
     pub ty: ElemType,
     pub refs: Vec<u64>,
 }

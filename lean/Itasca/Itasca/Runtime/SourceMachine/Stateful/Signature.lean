@@ -1,5 +1,7 @@
 import Itasca.Runtime.SourceMachine.Simulation
 
+open WebAssembly
+
 /-! ## Descriptor -/
 
 section

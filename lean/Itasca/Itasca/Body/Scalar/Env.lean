@@ -5,6 +5,8 @@ import Itasca.Body.Step.ScalarContext
 import Itasca.Visitor.RunTrace
 import Itasca.Body.EmptyVisitorLoop
 
+open WebAssembly
+
 /-!
 # Env
 

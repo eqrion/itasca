@@ -5,6 +5,8 @@ import Mathlib.Tactic.IntervalCases
 import Aeneas
 import WebAssembly
 
+open WebAssembly
+
 /-!
 Proofs for Binary / Body.
 

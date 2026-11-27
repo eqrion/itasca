@@ -7,6 +7,8 @@ import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ValueSlots -/

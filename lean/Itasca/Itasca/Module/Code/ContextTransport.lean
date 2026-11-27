@@ -6,6 +6,8 @@ import Itasca.Results.Definitions.Validation
 import Itasca.Module.Readers.Syntax
 import Itasca.Binary.Scalar.Encoding
 
+open WebAssembly
+
 /-!
 Proofs for Module / Code.
 
@@ -1197,8 +1199,9 @@ theorem local_at {data start pos next count ty}
     (ht : Binary.At Binary.ValueTypeEncoding data pos ty next) :
     Binary.At Binary.LocalEncoding data start (count, ty) next := by
   obtain ⟨cs, hs, hl, hb, he⟩ := hc
-  obtain ⟨ts, rfl, ht⟩ := ht
-  exact ⟨cs ++ [Binary.valueByte ty], ⟨cs, he, rfl⟩, (⟨hs, hl, hb⟩ : Body.Scalar.BytesAt data start cs pos).append ht⟩
+  obtain ⟨ts, heTy, ht⟩ := ht
+  obtain rfl := Binary.ValueTypeEncoding.reader_bytes.mp heTy
+  exact ⟨cs ++ [Binary.valueByte ty], Binary.LocalEncoding.reader_parts.mpr ⟨cs, he, rfl⟩, (⟨hs, hl, hb⟩ : Body.Scalar.BytesAt data start cs pos).append ht⟩
 
 end CodeEntry.Locals
 

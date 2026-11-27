@@ -7,6 +7,8 @@ import Mathlib.Tactic.IntervalCases
 import Itasca.Binary.LebReaders
 import Itasca.Spec.Typing
 
+open WebAssembly
+
 /-!
 Proofs for Binary / Scalar.
 
@@ -33,7 +35,7 @@ namespace Itasca.Body.Scalar
 /-- A byte spells at most one block type, and a block type has at most one spelling. -/
 theorem ScalarBlockByte.unique {bt bt' b b'} (h : ScalarBlockByte bt b) (h' : ScalarBlockByte bt' b')
     (he : b = b' ∨ bt = bt') : bt = bt' ∧ b = b' := by
-  cases h <;> cases h' <;> simp_all
+  cases h <;> cases h' <;> simp_all [Binary.Source.readerValueType] <;> exact (by decide : ¬ _) he
 
 end Itasca.Body.Scalar
 
@@ -195,7 +197,7 @@ theorem IndicesEncoding.append {first rest bs cs}
     IndicesEncoding (first ++ rest) (bs ++ cs) := by
   induction hfirst with
   | nil => simpa using hrest
-  | cons hb _ ih => simpa [List.append_assoc] using IndicesEncoding.cons hb ih
+  | cons hb _ ih => simpa [List.append_assoc] using WebAssembly.Binary.Scalar.IndicesEncodingWith.cons hb ih
 
 /-- Appending one entry to an index vector. -/
 theorem IndicesEncoding.snoc {indices bytes idx last}

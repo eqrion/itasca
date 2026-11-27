@@ -14,6 +14,8 @@ import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Compiler.Local.Source.ModuleSourceAndSubmission
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -913,14 +915,14 @@ private theorem maps_two {α β γ δ : Type} (values : List α) (f : α → β)
     Map₂ pair (values.map f) (values.map g) = values.map (fun x => pair (f x) (g x)) := by
   induction values with
   | nil => rfl
-  | cons head tail ih => simpa only [Map₂, List.map_cons, List.ap, List.zipWith_cons_cons] using congrArg (pair (f head) (g head) :: ·) ih
+  | cons head tail ih => simpa only [Map₂, List.map_cons, WebAssembly.List.ap, List.zipWith_cons_cons] using congrArg (pair (f head) (g head) :: ·) ih
 
 private theorem maps_three {α β γ δ ε : Type} (values : List α) (f : α → β) (g : α → γ) (h : α → δ)
     (triple : β → γ → δ → ε) :
     Map₃ triple (values.map f) (values.map g) (values.map h) = values.map (fun x => triple (f x) (g x) (h x)) := by
   induction values with
   | nil => rfl
-  | cons head tail ih => simpa only [Map₃, List.map_cons, List.ap, List.zipWith_cons_cons] using congrArg (triple (f head) (g head) (h head) :: ·) ih
+  | cons head tail ih => simpa only [Map₃, List.map_cons, WebAssembly.List.ap, List.zipWith_cons_cons] using congrArg (triple (f head) (g head) (h head) :: ·) ih
 
 theorem GlobalSourceValues.types {s inst sources values}
     (related : GlobalSourceValues s inst sources values) :

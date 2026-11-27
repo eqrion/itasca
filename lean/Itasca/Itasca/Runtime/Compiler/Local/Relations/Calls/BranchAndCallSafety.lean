@@ -10,6 +10,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectAndStatefulCallback
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallMetadata
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

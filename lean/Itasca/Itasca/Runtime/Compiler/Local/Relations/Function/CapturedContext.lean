@@ -11,6 +11,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Support.Translation
 import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

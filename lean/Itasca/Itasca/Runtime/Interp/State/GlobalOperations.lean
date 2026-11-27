@@ -14,6 +14,8 @@ import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

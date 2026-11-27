@@ -3,6 +3,8 @@ import Itasca.Results.Definitions.Foundations
 import WebAssembly
 import Aeneas
 
+open WebAssembly
+
 /-!
 Proofs for Support.
 
@@ -171,7 +173,7 @@ theorem context_wf (env : metadata.Env) (ctx : code.Context) :
 
 /-- A context `C` agrees with `context env ctx` in every field except the labels, which change as
 structured control adds and removes them. -/
-structure Matches (env : metadata.Env) (ctx : code.Context) (C : _root_.context) : Prop where
+structure Matches (env : metadata.Env) (ctx : code.Context) (C : WebAssembly.context) : Prop where
   types : C.TYPES = env.types.val.map funcType
   funcs : C.FUNCS = env.func_types.val.map funcType
   globals : C.GLOBALS = env.global_types.val.map Translation.globalType

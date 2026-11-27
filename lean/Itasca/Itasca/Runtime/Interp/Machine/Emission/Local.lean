@@ -7,6 +7,8 @@ import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 import Itasca.Runtime.SourceMachine.Sim.Structured
 import Itasca.Runtime.Interp.Relations.StackPreservation
 
+open WebAssembly
+
 /-! ## Integer -/
 
 section

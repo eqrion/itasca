@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Control.
 

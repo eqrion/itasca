@@ -2,6 +2,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Syntax.ReaderOpcode
 import Itasca.Runtime.Compiler.Local.Lowering.Float.LoweringAndEffects
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -37,10 +39,13 @@ theorem scalar_misc_immediate_false {token bytes}
     (encoded : Body.Scalar.Immediate 252#u8 token bytes) : False := by
   cases encoded with
   | numericInstruction opcode source meaning =>
+    change Body.Numeric.opcodeInstruction 252#u8 = some source at meaning
     rw [Body.Numeric.opcodeInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     simp [Body.Numeric.opcodeMeaning] at decoded
-  | memory opcode operation arg meaning => simp [Body.MemoryMeaning.opcodeMeaning] at meaning
+  | memory opcode operation arg meaning =>
+    change Body.MemoryMeaning.opcodeMeaning 252#u8 = some operation at meaning
+    simp [Body.MemoryMeaning.opcodeMeaning] at meaning
 
 end Itasca.Compiler
 

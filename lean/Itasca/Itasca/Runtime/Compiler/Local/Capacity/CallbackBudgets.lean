@@ -17,6 +17,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCoordinates
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectAndStatefulCallbacks
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Capacity.
 

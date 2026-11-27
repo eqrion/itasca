@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Control.Prefix.UniversalDormant
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EntryAndElseFrames
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.EnterContracts
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Callbacks / Control.
 

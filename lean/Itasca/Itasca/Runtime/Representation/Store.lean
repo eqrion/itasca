@@ -8,6 +8,8 @@ import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Binary.ModuleUnique
 
+open WebAssembly
+
 /-! ## Store -/
 
 section

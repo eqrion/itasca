@@ -12,6 +12,8 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Store.Invariant.Typing
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Initialization.
 
@@ -857,7 +859,7 @@ section
 namespace Itasca.Store
 open Aeneas Aeneas.Std Itasca
 
-private theorem eval_literal (s : _root_.store) (f : frame) (instruction : instr) (value : val)
+private theorem eval_literal (s : WebAssembly.store) (f : frame) (instruction : instr) (value : val)
     (storeWf : wf_store s) (frameWf : wf_frame f)
     (valueWf : wf_val value) (same : admininstr_instr instruction = admininstr_val value) :
     Eval_expr ⟨s, f⟩ [instruction] ⟨s, f⟩ [value] := by
@@ -868,7 +870,7 @@ private theorem eval_literal (s : _root_.store) (f : frame) (instruction : instr
   · simpa only [Map, List.map_cons, List.map_nil, same] using wf
   · exact wf
 
-private theorem eval_read (s : _root_.store) (f : frame) (instruction : instr) (value : val)
+private theorem eval_read (s : WebAssembly.store) (f : frame) (instruction : instr) (value : val)
     (storeWf : wf_store s) (frameWf : wf_frame f)
     (instructionWf : wf_instr instruction) (valueWf : wf_val value)
     (read : Step_read ⟨⟨s, f⟩, [admininstr_instr instruction]⟩ [admininstr_val value]) :
@@ -905,7 +907,7 @@ theorem initializer_resolution_source_in_state {M : Type}
     (store : runtime.store.Store M) (inst : runtime.store.ModuleInst)
     (expression : wasm_types.ConstExpr) (ty : wasm_types.ValueType) (words : List U64)
     (resolved : Interp.InitializerResolution store inst expression ty words)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (functions : sourceInstance.FUNCS = inst.funcs.val.map (fun address => address.index.val))
     (globals : ∀ index address global, expression = .GlobalGet index →
       inst.globals.val[index.val]? = some address → store.globals.val[address.index.val]? = some global →
@@ -1005,7 +1007,7 @@ open Aeneas Aeneas.Std Itasca
 /-- The source initial frame reads the same imported globals and function
 addresses as the staged runtime instance. Defined globals are not in the
 constant-expression typing context. -/
-structure InitializerSourceContext {M : Type} (sourceStore : _root_.store)
+structure InitializerSourceContext {M : Type} (sourceStore : WebAssembly.store)
     (sourceInstance : moduleinst) (store : runtime.store.Store M)
     (inst : runtime.store.ModuleInst) : Prop where
   functions : sourceInstance.FUNCS = inst.funcs.val.map (fun address => address.index.val)

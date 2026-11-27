@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
 import Itasca.Body.Control.BranchComplete
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -44,13 +46,13 @@ theorem reader_enter {data env locals index st}
     {V : Type} (visitor : code.OpVisitor V) (before after : V)
     (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (accepted : code.step_profile visitor st data env ctx index form.opcode before =
+    (accepted : code.step_body visitor st data env ctx index form.opcode before =
       .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base,
       invoke visitor before (.op out.core (enterAction form bt)) = .ok (.Ok (), after) ∧
       code.enter_info st data env form.kind = .ok (.Ok bt, out) ∧
       Body.ReaderEnterPost p out form bt ins outs remaining base := by
-  have dispatch : code.step_profile visitor st data env ctx index form.opcode before =
+  have dispatch : code.step_body visitor st data env ctx index form.opcode before =
       CallbackTrace.bodyRun (code.enter_info st data env form.kind) visitor (enterAction form) before := by
     rcases initial with rfl | rfl | rfl
     · exact CallbackTrace.dispatch_block visitor st data env ctx index before
@@ -139,7 +141,7 @@ theorem reader_end {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0b#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x0b#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x0b#u8 before =
       .ok (.Ok (), out, after)) :
     visitor.on_end before out.core p.current.ctrl.kind p.current.bt = .ok (.Ok (), after) ∧
       code.end_frame_info st env false = .ok (.Ok (p.current.ctrl.kind, p.current.bt), out) ∧
@@ -167,7 +169,7 @@ theorem reader_else {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x05#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x05#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x05#u8 before =
       .ok (.Ok (), out, after)) :
     visitor.on_else before out.core p.current.bt = .ok (.Ok (), after) ∧
       code.end_frame_info st env true = .ok (.Ok (p.current.ctrl.kind, p.current.bt), out) ∧
@@ -1111,7 +1113,7 @@ theorem reader_return {data env locals index st}
     (p : Body.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 15#u8)
-    (accepted : code.step_profile visitor st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_body visitor st data env ctx index 15#u8 before = .ok (.Ok (), out, after)) :
     visitor.on_return before out.core = .ok (.Ok (), after) ∧
       Body.returnStep st env index = .ok (.Ok (), out) ∧
       out.core.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ∧

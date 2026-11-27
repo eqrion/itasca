@@ -10,6 +10,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.SourceMachine.Sim.Structured
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Relations.
 

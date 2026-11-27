@@ -11,6 +11,8 @@ import Itasca.Runtime.Compiler.Local.Initializer.SegmentEmissionContracts
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

@@ -70,7 +70,7 @@ private theorem base_bound (frame : SourceMachine.AFrame) (rest : List SourceMac
   omega
 
 /-- A source function's coarse public allowance bounds any internal capacity witness. -/
-theorem FunctionsFit.capacity {store : _root_.store} {allowance address words : Nat}
+theorem FunctionsFit.capacity {store : WebAssembly.store} {allowance address words : Nat}
     (fits : FunctionsFit store allowance)
     (capacity : SourceCanonicalFunctionCapacity store address words) : words ≤ allowance := by
   obtain ⟨function, env, typeIndex, _, found, correspondence, _, _,
@@ -93,7 +93,7 @@ private theorem steps_trans {first middle last : config} {events more : List Hos
   | refl _ => simpa using after
   | cons step _ ih => simpa [List.append_assoc] using StepsH.cons step (ih after)
 
-private theorem Fits.site {store : _root_.store} {initial : config} {allowance values frames : Nat}
+private theorem Fits.site {store : WebAssembly.store} {initial : config} {allowance values frames : Nat}
     (fits : Fits store initial allowance values frames) {events source address base}
     (reached : StepsH initial events (SourceMachine.decode source))
     (site : SourceInvocationSite source address base) :
@@ -114,7 +114,7 @@ private theorem Fits.site {store : _root_.store} {initial : config} {allowance v
     exact ⟨all.1, by dsimp only [vals, List.map_nil] at bound storage ⊢; omega⟩
 
 /-- Public source bounds suffice for the existing internal resource-exclusion proof. -/
-theorem Fits.internal {store : _root_.store} {address : funcaddr} {initial : config}
+theorem Fits.internal {store : WebAssembly.store} {address : funcaddr} {initial : config}
     {allowance values frames : Nat} (fits : Fits store initial allowance values frames)
     (initialWf : wf_config initial) : SourceResourcesFit store address initial values frames := by
   have allowanceFits : allowance ≤ values := by

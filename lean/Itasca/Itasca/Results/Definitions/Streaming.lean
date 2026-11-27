@@ -40,7 +40,7 @@ inductive TailDelivery {V : Type} (visitor : stream.StreamingVisitor V)
   | ready {before after : V}
       (called : visitor.tail_ready before tail = .ok (.Ok (), after)) :
       TailDelivery visitor tail after
-  | poll {before after : V} {batch : stream.CodeBatch}
+  | poll {before after : V} {batch : stream.StreamingBatch}
       (delivered : TailDelivery visitor tail before)
       (called : visitor.poll_code_batch before = .ok (.Ok batch, after)) :
       TailDelivery visitor tail after
@@ -57,7 +57,7 @@ section StreamingContracts
 ## Embedding contracts
 
 The obligations that the streaming headline theorems in `Itasca/Results/` place on an embedding:
-the `stream.Source` implementation, the `stream.StreamingVisitor` scheduling code batches, and
+the `stream.StreamingSource` implementation, the `stream.StreamingVisitor` scheduling code batches, and
 the custom-section hooks of its module visitor.
 
 | Claim | Requires |
@@ -111,7 +111,7 @@ namespace Itasca.Stream.Source
 /-- Soundness premise on the source: successful views agree with fixed logical environment, code
 and tail bytes. Read errors are permitted; neither availability nor a canonical module split is
 assumed. -/
-structure Coherent {S : Type} (source : stream.Source S) (state : S)
+structure Coherent {S : Type} (source : stream.StreamingSource S) (state : S)
     (environment code tail : List U8) : Prop where
   /-- Every successful environment view contains the fixed environment bytes. -/
   environment_eq : ∀ bytes, source.environment state = .ok (.Ok bytes) →
@@ -128,14 +128,14 @@ structure Coherent {S : Type} (source : stream.Source S) (state : S)
 /-- Successful source views describe one fixed module byte string. The split need
 not be canonical and reads may fail; the driver checks framing before accepting.
 All successful overlapping code reads agree with these same logical bytes. -/
-def Describes {S : Type} (source : stream.Source S) (state : S) (data : Slice U8) : Prop :=
+def Describes {S : Type} (source : stream.StreamingSource S) (state : S) (data : Slice U8) : Prop :=
   ∃ regions : stream.SliceSource,
     data.val = regions.env.val ++ regions.code.val ++ regions.tail.val ∧
     Coherent source state regions.env.val regions.code.val regions.tail.val
 
 /-- Successful reads of the given regions. It prescribes successful reads without identifying the
 regions with a valid module or requiring canonical splitting. -/
-structure Available {S : Type} (source : stream.Source S) (state : S)
+structure Available {S : Type} (source : stream.StreamingSource S) (state : S)
     (environment code tail : List U8) : Prop where
   /-- The source supplies the specified environment view successfully. -/
   environment_read : ∃ bytes, source.environment state = .ok (.Ok bytes) ∧
@@ -151,7 +151,7 @@ structure Available {S : Type} (source : stream.Source S) (state : S)
 
 /-- Termination premise on the source: its callbacks return ordinary modeled results. This allows
 Rust errors and says nothing about the bytes. -/
-structure CallbacksTotal {S : Type} (source : stream.Source S) (state : S) : Prop where
+structure CallbacksTotal {S : Type} (source : stream.StreamingSource S) (state : S) : Prop where
   /-- Environment access returns normally, including a possible Rust read error. -/
   environment_returns : ∃ r, source.environment state = .ok r
   /-- Code-length access returns normally. -/
@@ -197,7 +197,7 @@ namespace Itasca.Stream.Source
 /-- Completeness premise on the source: it makes the canonical regions of `data` readable, that
 is the independent section-boundary relation `CompleteRegions.Split`. This says nothing
 about parser success or worker validation. -/
-def CanonicalAvailable {S : Type} (source : stream.Source S) (state : S) (data : Slice U8) : Prop :=
+def CanonicalAvailable {S : Type} (source : stream.StreamingSource S) (state : S) (data : Slice U8) : Prop :=
   ∃ regions : stream.SliceSource, Stream.CompleteRegions.Split data regions ∧
     Available source state regions.env.val regions.code.val regions.tail.val
 
@@ -223,7 +223,7 @@ structure Issued where
   num_funcs : Usize
 
 /-- Workers begin with independent zeroed dispatch and validation cursors. -/
-def Issued.seed (issued : Issued) : stream.CodeBatch :=
+def Issued.seed (issued : Issued) : stream.StreamingBatch :=
   { module_id := issued.module_id, batch_id := issued.batch_id,
     env := issued.env, code := issued.code, code_offset := issued.code_offset,
     first_func := issued.first_func, num_funcs := issued.num_funcs,
@@ -237,16 +237,16 @@ def Issued.Bounded (issued : Issued) : Prop :=
   issued.first_func.val + issued.num_funcs.val ≤ issued.env.func_type_indices.val.length ∧
   issued.code_offset.val + issued.code.length ≤ limits.MAX_MODULE_BYTES.val
 
-/-- Workers obtainable from the seed of `issued` through actual `stream.CodeBatch.next_entry` and
-`stream.CodeBatch.validate_func` executions. No constructor can assign a validation cursor or
+/-- Workers obtainable from the seed of `issued` through actual `stream.StreamingBatch.next_entry` and
+`stream.StreamingBatch.validate_func` executions. No constructor can assign a validation cursor or
 assert successful finishing. -/
-inductive Reachable (issued : Issued) : stream.CodeBatch → Prop where
+inductive Reachable (issued : Issued) : stream.StreamingBatch → Prop where
   | seed : Reachable issued issued.seed
   | dispatch {before after result} : Reachable issued before →
-      stream.CodeBatch.next_entry before = .ok (result, after) → Reachable issued after
+      stream.StreamingBatch.next_entry before = .ok (result, after) → Reachable issued after
   | validate {V : Type} (visitor : code.OpVisitor V) {before after index v v' result} :
       Reachable issued before →
-      stream.CodeBatch.validate_func visitor before index v = .ok (result, after, v') →
+      stream.StreamingBatch.validate_func visitor before index v = .ok (result, after, v') →
       Reachable issued after
 
 end Itasca.Stream.Batch
@@ -322,13 +322,13 @@ structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
     visitor.tail_ready v tail = .ok (.Ok (), v') → Tracks id history v'
 
 /-- Completeness premise on the scheduler: positive batch settings, accepting callbacks, and
-actual `stream.CodeBatch.validate_all` results in any order. Each returned worker is the actual
+actual `stream.StreamingBatch.validate_all` results in any order. Each returned worker is the actual
 result of `validate_all` on an issued seed, including its possible validation error.
 The scheduler does not assume valid Wasm or successful finishing. This is one
 sufficient policy, not a characterization of every possible worker strategy. The visitor state is tracked by `Queued`, which lists the issued batches not yet
 polled. -/
 structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List Stream.Batch.Issued → V → Prop) : Prop where
+    (config : stream.StreamingConfig) (Queued : U64 → List Stream.Batch.Issued → V → Prop) : Prop where
   /-- Framing can make progress with a positive configured batch size. -/
   batch_positive : 0 < config.batch_bytes.val
   /-- The scheduler can retain at least one outstanding batch. -/
@@ -355,7 +355,7 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
   poll : ∀ id queue v, Queued id queue v → queue ≠ [] →
     ∃ issued rest after v', (issued :: rest).Perm queue ∧
       visitor.poll_code_batch v = .ok (.Ok after, v') ∧
-      stream.CodeBatch.validate_all issued.seed = .ok after ∧ Queued id rest v'
+      stream.StreamingBatch.validate_all issued.seed = .ok after ∧ Queued id rest v'
   /-- End-of-code notification accepts and retains the queue. -/
   code_end : ∀ id queue v, Queued id queue v →
     ∃ v', visitor.code_end v = .ok (.Ok (), v') ∧ Queued id queue v'

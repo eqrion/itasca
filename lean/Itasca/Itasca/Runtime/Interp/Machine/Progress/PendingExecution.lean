@@ -20,6 +20,8 @@ import Itasca.Runtime.Interp.Machine.ScalarExecution
 import Itasca.Runtime.Interp.Machine.Constants.EncodingAndFloat
 import Itasca.Runtime.Interp.Machine.Emission.Local
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Progress.
 
@@ -59,7 +61,7 @@ theorem step_branch_if_owned_uniform {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (depth : Nat) (after : List instr) (branchAllowed : SourceMachine.BinaryInstr (.BR (.mk_uN depth)))
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -276,7 +278,7 @@ theorem step_branch_owned_uniform {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (depth : Nat) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -423,7 +425,7 @@ theorem step_if {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (bt : blocktype) (yes no after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -565,7 +567,7 @@ theorem step_loop {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (bt : blocktype) (body after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

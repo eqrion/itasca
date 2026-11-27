@@ -5,6 +5,8 @@ import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 import Itasca.Runtime.Interp.Memory.MemoryEffects
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Simd / Relations.
 

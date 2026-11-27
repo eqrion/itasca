@@ -9,6 +9,8 @@ import Itasca.Runtime.Store.Invariant.Typing
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Invariant.
 

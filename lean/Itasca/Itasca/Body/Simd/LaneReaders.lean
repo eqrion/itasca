@@ -7,6 +7,8 @@ import Itasca.Body.LoopDispatch
 import Itasca.Binary.Scalar.MemoryMeaning
 import Itasca.Visitor.RunTrace
 
+open WebAssembly
+
 /-!
 Proofs for Body / Simd.
 
@@ -1089,7 +1091,8 @@ theorem MemoryOperation.conditions (op : MemoryOperation) (C : context)
       (op.laneCount ≠ 0 → lane.val < op.laneCount) := by
     cases op <;> simp only [instruction] at ht <;> cases ht
     all_goals refine ⟨by assumption, ?_, ?_⟩
-    all_goals norm_num [naturalAlign, laneCount, Body.MemoryMeaning.memArg, proj_uN_0, size] at *
+    all_goals norm_num [naturalAlign, laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount,
+      Body.MemoryMeaning.memArg, proj_uN_0, size] at *
     all_goals norm_cast at *
   exact ⟨hp.1, (pow_le_pow_iff_right₀ (a := (2 : Rat)) (by norm_num)).mp hp.2.1, hp.2.2⟩
 

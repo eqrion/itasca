@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Equations.Bytecode
 import ItascaRust.Funs
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

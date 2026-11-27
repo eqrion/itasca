@@ -6,6 +6,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 import Itasca.Runtime.Compiler.Local.Relations.Instructions.InstructionCheckAcceptance
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

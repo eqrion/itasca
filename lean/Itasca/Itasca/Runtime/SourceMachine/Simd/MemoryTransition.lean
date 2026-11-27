@@ -5,6 +5,8 @@ import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 
+open WebAssembly
+
 /-! ## Exclusion -/
 
 section
@@ -194,7 +196,7 @@ theorem MemorySignature.memory_present {source inputs outputs C signature}
     0 < C.MEMS.length := by cases shape <;> cases typed <;> assumption
 
 theorem MemorySignature.typed_operands {source inputs outputs}
-    (signature : MemorySignature source inputs outputs) {s : _root_.store} {f : AFrame} {after : List instr}
+    (signature : MemorySignature source inputs outputs) {s : WebAssembly.store} {f : AFrame} {after : List instr}
     (typed : FrameTyped s {f with code := source :: after} []) :
     ∃ front operands address object, f.vals = front ++ operands ∧ ResultsTyped s inputs operands ∧
       f.module.MEMS[0]? = some address ∧ s.MEMS[address]? = some object ∧
@@ -210,7 +212,7 @@ theorem MemorySignature.typed_operands {source inputs outputs}
   exact ⟨front,operands,address,object,values,operandTypes,mapped,found,valid,heights⟩
 
 theorem MemorySignature.results_typed {source inputs outputs}
-    (signature : MemorySignature source inputs outputs) {s : _root_.store} {values : List val}
+    (signature : MemorySignature source inputs outputs) {s : WebAssembly.store} {values : List val}
     (storeWf : wf_store s) (valid : Forall wf_val values) (types : values.map valueType = outputs) :
     ResultsTyped s outputs values := by
   have vectorResults {values : List val} (valid : Forall wf_val values)
@@ -228,7 +230,7 @@ theorem MemorySignature.results_typed {source inputs outputs}
     | have empty := List.map_eq_nil_iff.mp types; subst values; exact .nil
 
 theorem MemorySignature.frame_preservation {source inputs outputs}
-    (signature : MemorySignature source inputs outputs) {s : _root_.store} {f : AFrame} {after : List instr}
+    (signature : MemorySignature source inputs outputs) {s : WebAssembly.store} {f : AFrame} {after : List instr}
     (front operands results : List val) (types : operands.map valueType = inputs)
     (resultTyped : ResultsTyped s outputs results)
     (typed : FrameTyped s {f with code := source :: after, vals := front ++ operands} []) :
@@ -252,7 +254,7 @@ theorem MemorySignature.frame_preservation {source inputs outputs}
 
 /-- Pure source description of the only SIMD store mutation: one memory byte
 payload. The source reduction itself checks addressing and trap behavior. -/
-inductive MemoryChange (before : _root_.store) (frame : frame) : _root_.store → Prop where
+inductive MemoryChange (before : WebAssembly.store) (frame : frame) : WebAssembly.store → Prop where
   | same : MemoryChange before frame before
   | write (start : Nat) (payload : List byte) (valid : Forall wf_byte payload) :
       MemoryChange before frame (Spec.memoryPayloadWrite before frame start payload)
@@ -286,7 +288,7 @@ open WebAssembly Itasca.Spec
 exact payload update. No frame typing or preservation conclusion is assumed. -/
 inductive MemoryTransition (s : AState) (f : AFrame) (rest : List AFrame)
     (after : List instr) (source : instr) (inputs outputs : List valtype) : AResult → Prop where
-  | next (front operands results : List val) (store : _root_.store)
+  | next (front operands results : List val) (store : WebAssembly.store)
       (values : f.vals = front ++ operands) (types : operands.map valueType = inputs)
       (resultTypes : results.map valueType = outputs)
       (change : MemoryChange s.store f.toFrame store)
@@ -300,7 +302,7 @@ inductive MemoryTransition (s : AState) (f : AFrame) (rest : List AFrame)
         ⟨⟨s.store,f.toFrame⟩,[.TRAP]⟩) :
       MemoryTransition s f rest after source inputs outputs .trap
 
-theorem memory_transition_preservation {s : _root_.store} {ambient : frame} {f : AFrame}
+theorem memory_transition_preservation {s : WebAssembly.store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {source inputs outputs} {next : AState}
     (signature : MemorySignature source inputs outputs)
     (typed : CoreTyped ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩)
@@ -324,7 +326,7 @@ theorem memory_transition_preservation {s : _root_.store} {ambient : frame} {f :
     exact ⟨⟨active_frame_preservation whole frameNext rfl,contents⟩,extension⟩
 
 theorem MemorySignature.prefix_bounds {source inputs outputs}
-    (signature : MemorySignature source inputs outputs) {s : _root_.store} {f : AFrame} {after : List instr}
+    (signature : MemorySignature source inputs outputs) {s : WebAssembly.store} {f : AFrame} {after : List instr}
     (typed : FrameTyped s {f with code := source :: after} [])
     {front operands : List val} (values : f.vals = front ++ operands)
     (types : operands.map valueType = inputs) :
@@ -342,7 +344,7 @@ theorem MemorySignature.prefix_bounds {source inputs outputs}
   rw [values] at valid
   exact ⟨fun v hv => valid v (List.mem_append_left _ hv),by simpa only [equal] using heights⟩
 
-theorem memory_transition_simulation {s : _root_.store} {ambient : frame} {f : AFrame}
+theorem memory_transition_simulation {s : WebAssembly.store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {source inputs outputs} {next : AState}
     (signature : MemorySignature source inputs outputs)
     (typed : ATyped ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩)
@@ -363,7 +365,7 @@ theorem memory_transition_simulation {s : _root_.store} {ambient : frame} {f : A
       typed.ambient labelsWf frontWf (fun op member => codeWf op (by simp [member])) hr heights effect
     simpa only [values] using simulated
 
-theorem memory_transition_trap_simulation {s : _root_.store} {ambient : frame} {f : AFrame}
+theorem memory_transition_trap_simulation {s : WebAssembly.store} {ambient : frame} {f : AFrame}
     {rest : List AFrame} {after : List instr} {source inputs outputs}
     (signature : MemorySignature source inputs outputs)
     (typed : ATyped ⟨s,ambient,{f with code := source :: after} :: rest,[]⟩)

@@ -1,11 +1,13 @@
 import Itasca.Results.Definitions.Representation
 
+open WebAssembly
+
 namespace Itasca.Representation
 open Aeneas Aeneas.Std
 
 /-- Source function signatures use the same address/type relation as the
 abstract machine's module typing context. -/
-abbrev FunctionsMatch (store : _root_.store) (moduleInst : moduleinst)
+abbrev FunctionsMatch (store : WebAssembly.store) (moduleInst : moduleinst)
     (functions : List functype) : Prop :=
   List.Forall₂ (fun address ty => ∃ fn, store.FUNCS[address]? = some fn ∧ fn.TYPE = ty)
     moduleInst.FUNCS functions

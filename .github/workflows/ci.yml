@@ -25,11 +25,11 @@ jobs:
       # Cache dependencies only. Every run builds this project's proofs afresh.
       - uses: actions/cache@v6
         with:
-          path: lean/.lake/packages
-          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean/lake-manifest.json', 'lean/lean-toolchain') }}
+          path: lean/Itasca/.lake/packages
+          key: lake-packages-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('lean/Itasca/lake-manifest.json', 'lean/ItascaRust/lake-manifest.json', 'lean/WebAssembly/lake-manifest.json', 'lean/lean-toolchain') }}
       - uses: leanprover/lean-action@v1
         with:
-          lake-package-directory: lean
+          lake-package-directory: lean/Itasca
           auto-config: false
           build: false
           use-github-cache: false

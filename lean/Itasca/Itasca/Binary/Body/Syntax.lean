@@ -3,6 +3,8 @@ import Itasca.Results.Definitions.Binary
 import Itasca.Support.Translation
 import Itasca.Binary.LebReaders
 
+open WebAssembly
+
 /-!
 Proofs for Binary / Body.
 
@@ -38,19 +40,19 @@ theorem Emits.append {xs ys : List Token} {is js : List instr}
     (hx : Emits xs is) (hy : Emits ys js) : Emits (xs ++ ys) (is ++ js) := by
   induction hy with
   | nil => simpa using hx
-  | simple _ hop ih => simpa [List.append_assoc] using Emits.simple ih hop
-  | block bt _ hb ih _ => simpa [List.append_assoc] using Emits.block bt ih hb
-  | loop bt _ hb ih _ => simpa [List.append_assoc] using Emits.loop bt ih hb
+  | simple _ hop ih => simpa [List.append_assoc] using WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) ih hop
+  | block bt _ hb ih _ => simpa [List.append_assoc] using WebAssembly.Binary.EmitsWith.block (toSpec := Itasca.Body.blockType) bt ih hb
+  | loop bt _ hb ih _ => simpa [List.append_assoc] using WebAssembly.Binary.EmitsWith.loop (toSpec := Itasca.Body.blockType) bt ih hb
   | ifElse bt _ ht he ih _ _ =>
-      simpa [List.append_assoc] using Emits.ifElse bt ih ht he
-  | ifEnd bt _ hb ih _ => simpa [List.append_assoc] using Emits.ifEnd bt ih hb
+      simpa [List.append_assoc] using WebAssembly.Binary.EmitsWith.ifElse (toSpec := Itasca.Body.blockType) bt ih ht he
+  | ifEnd bt _ hb ih _ => simpa [List.append_assoc] using WebAssembly.Binary.EmitsWith.ifEnd (toSpec := Itasca.Body.blockType) bt ih hb
 
 /-- Emitted instructions are well formed. -/
 theorem Emits.well_formed {tokens : List Token} {ops : List instr}
     (h : Emits tokens ops) : Forall wf_instr ops := by
   induction h with
   | nil => simp [Forall]
-  | simple _ hs ih => simpa [Forall, or_imp, forall_and] using And.intro ih hs.well_formed
+  | simple _ hs ih => simpa [Forall, or_imp, forall_and] using And.intro ih (Simple.well_formed hs)
   | block bt _ _ ih hb =>
       simpa [Forall, or_imp, forall_and] using And.intro ih (wf_instr.instr_case_4 _ _ (block_type_wf bt) hb)
   | loop bt _ _ ih hb =>
@@ -84,7 +86,7 @@ namespace Itasca.Body
 /-- Distinct value types have distinct bytes. -/
 theorem value_byte_injective : Function.Injective Itasca.Binary.valueByte := by
   intro a b h
-  cases a <;> cases b <;> simp_all [Itasca.Binary.valueByte]
+  cases a <;> cases b <;> first | rfl | contradiction
 
 /-- Value type bytes are negative one-byte signed integers, so they cannot be confused with a
 nonnegative type index. -/
@@ -125,7 +127,7 @@ private theorem indexed_first_not_negative_tag (data : Slice U8) (pos : Usize)
     simp only [List.drop_eq_getElem_cons hp, List.nil_append, List.singleton_append,
       List.head?_cons, Option.some.injEq] at hh
     subst last
-    simp [Binary.SignedLeb.finalValue, Binary.Leb128.payload, hlo] at hv
+    simp [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, hlo] at hv
     omega
   | cons b bs =>
     simp only [List.drop_eq_getElem_cons hp, List.cons_append,
@@ -149,7 +151,7 @@ theorem signature.read_block_type.spec (data : Slice U8) (pos : Usize) :
   · obtain ⟨_, hr, next, rfl, hn⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hp)
     rw [signature.read_block_type, hr]
     simp [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
-    split <;> try solve | simp_all [Body.BlockDecoded, Itasca.Binary.valueByte,
+    split <;> try solve | simp_all [Body.BlockDecoded, Itasca.Binary.valueByte, Itasca.Binary.Source.valueType, WebAssembly.Binary.valueByte, Itasca.Binary.Source.readerByte,
       U8.ofNat, UScalar.ofNat, UScalar.ofNatCore]
     obtain ⟨r, hs, hd⟩ := WP.spec_imp_exists (reader.read_s33_leb.spec data pos)
     rw [hs]
@@ -184,7 +186,7 @@ theorem signature.read_block_type.complete (data : Slice U8) (pos : Usize)
     obtain ⟨hp, hb, hn⟩ := h
     obtain ⟨_, hr, q, rfl, hq⟩ := WP.spec_imp_exists (reader.read_byte.spec data pos hp)
     have heq : q = next := by scalar_tac
-    cases t <;> simp [signature.read_block_type, hr, hb, heq, Itasca.Binary.valueByte,
+    cases t <;> simp [signature.read_block_type, hr, hb, heq, Itasca.Binary.valueByte, Itasca.Binary.Source.valueType, WebAssembly.Binary.valueByte, Itasca.Binary.Source.readerByte,
       core.result.Result.Insts.CoreOpsTry.branch]
   | TypeIndex index =>
     have hspan := Binary.SignedLeb33.Decoded.span data pos (index.val : Int) next h

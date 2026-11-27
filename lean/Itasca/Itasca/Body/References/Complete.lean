@@ -4,6 +4,8 @@ import Itasca.Support.Translation
 import Itasca.Body.Complete.Frame
 import Itasca.Body.Step.Context
 
+open WebAssembly
+
 /-! ## ReadersComplete -/
 
 section
@@ -27,7 +29,8 @@ theorem code.take_reference_type.complete (st : code.OpIterState) (data : Slice 
     (hb : Body.Scalar.BytesAt data st.pos [Body.ReferencesBinary.referenceByte rt] next) :
     code.take_reference_type st data = .ok (.Ok rt, {st with pos := next}) := by
   have hr := hb.read_byte
-  cases rt <;> simp [code.take_reference_type, hr, Body.ReferencesBinary.referenceByte,
+  cases rt <;> simp [code.take_reference_type, hr, Body.ReferencesBinary.referenceByte, Translation.referenceType,
+    WebAssembly.Binary.ReferencesBinary.referenceByte, Binary.Source.readerByte,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem code.take_value_type.complete (st : code.OpIterState) (data : Slice U8)
@@ -35,7 +38,7 @@ theorem code.take_value_type.complete (st : code.OpIterState) (data : Slice U8)
     (hb : Body.Scalar.BytesAt data st.pos [Itasca.Binary.valueByte ty] next) :
     code.take_value_type st data = .ok (.Ok ty, {st with pos := next}) := by
   have hr := hb.read_byte
-  cases ty <;> simp [code.take_value_type, hr, Itasca.Binary.valueByte,
+  cases ty <;> simp [code.take_value_type, hr, Itasca.Binary.valueByte, Itasca.Binary.Source.valueType, WebAssembly.Binary.valueByte, Itasca.Binary.Source.readerByte,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
@@ -186,7 +189,7 @@ theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : metadata.
     (hook : Unit → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × Unit))
     (a : A) (s : code.OpIterState) (next : Usize) (out : List valtype)
     (hscalar : opcode.val ∉ controlOpcodes)
-    (hdispatch : code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st.core data env ctx opcode () =
+    (hdispatch : code.step_wasm2 code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st.core data env ctx opcode () =
       Visitor.Core.run read hook ())
     (hread : read = .ok (.Ok a, s)) (hhook : hook () s a = .ok (.Ok (), ()))
     (hpos : s.pos = next) (hout : f.Output out {st with core := s})

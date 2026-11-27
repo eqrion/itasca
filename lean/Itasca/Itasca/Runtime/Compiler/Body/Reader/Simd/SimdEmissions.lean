@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Body.Relations.KnownFixedStack
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 import Itasca.Runtime.Compiler.Body.CapacityTrace
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -33,7 +35,7 @@ selected independent subopcode dispatch. -/
 theorem simd_prefix_success {V : Type} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     st.core.vals.val.length < Usize.max ∧ ∃ subopcode next,
       Binary.Leb128.Decoded data st.core.pos subopcode next ∧
@@ -58,7 +60,7 @@ theorem reader_simd_pure {data env locals index st}
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Body.Simd.pureMeaning subopcode.val = some op)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     visitor.on_simd before out.core subopcode = .ok (.Ok (),after) ∧
       Body.Simd.readFixed {st.core with pos := next} op.signature.popTypes (some op.signature.output) =
@@ -134,7 +136,7 @@ theorem reader_simd_lane {data env locals index st}
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (meaning : Body.Simd.laneMeaning subopcode.val = some op)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ lane position, lane.val < op.count ∧ Body.Scalar.BytesAt data next [lane] position ∧
       visitor.on_simd_lane before out.core subopcode lane = .ok (.Ok (),after) ∧
@@ -199,7 +201,7 @@ theorem reader_simd_constant {data env locals index st}
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (next : Usize) (decoded : Binary.Leb128.Decoded data st.core.pos 12#u32 next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ low high position, Body.Simd.BitsDecoded data next low high position ∧
       visitor.on_simd_const before out.core low high = .ok (.Ok (),after) ∧
@@ -261,7 +263,7 @@ theorem reader_simd_shuffle {data env locals index st}
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (next : Usize) (decoded : Binary.Leb128.Decoded data st.core.pos 13#u32 next)
     (byte : data.val[p.start.val]'p.inbounds = 0xfd#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0xfd#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0xfd#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ low high, Body.Simd.BitsDecoded data next low high out.core.pos ∧
       (∀ lane ∈ Body.Simd.shuffleIndices low high, proj_uN_0 lane < 32) ∧

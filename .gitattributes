@@ -1,4 +1,5 @@
 # Unified patches contain meaningful space-prefixed blank context lines.
 patches/*.patch -whitespace
 # Preserve exact extractor output; regeneration checks enforce its contents.
-lean/Itasca/Generated/*.lean whitespace=-blank-at-eol
+lean/ItascaRust/ItascaRust/Types.lean whitespace=-blank-at-eol
+lean/ItascaRust/ItascaRust/Funs.lean whitespace=-blank-at-eol

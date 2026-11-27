@@ -3,6 +3,8 @@ import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.StructureAndTyping
 
+open WebAssembly
+
 /-! ## StepSafety -/
 
 section

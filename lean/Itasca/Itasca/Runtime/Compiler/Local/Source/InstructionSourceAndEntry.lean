@@ -9,6 +9,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Select.SelectOperands
 import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -263,6 +265,7 @@ theorem immediate_scalar {opcode token bytes} (encoded : Body.Scalar.Immediate o
   | f32Const => exact .const _ _
   | f64Const => exact .const _ _
   | numericInstruction opcode source meaning =>
+    change Body.Numeric.opcodeInstruction _ = _ at meaning
     rw [Body.Numeric.opcodeInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     exact numeric decoded
@@ -311,10 +314,12 @@ theorem immediate {opcode token bytes} (encoded : Body.Immediate opcode token by
   cases encoded with
   | plain old => exact immediate_scalar old
   | signExtensionInstruction _ source meaning =>
+    change Body.NumericExtensions.signInstruction _ = _ at meaning
     rw [Body.NumericExtensions.signInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     exact sign decoded
   | saturatingInstruction _ source meaning _ =>
+    change Body.NumericExtensions.saturatingInstruction _ = _ at meaning
     rw [Body.NumericExtensions.saturatingInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     exact saturating decoded

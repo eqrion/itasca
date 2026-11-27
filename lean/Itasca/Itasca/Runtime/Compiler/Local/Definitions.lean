@@ -4,6 +4,8 @@ import Itasca.Runtime.SourceMachine.Definitions
 import Itasca.Runtime.Representation.Definitions
 import Itasca.Results.Definitions.Compiler.Source
 
+open WebAssembly
+
 /-! ## Compiler / Local / EnvironmentDemand -/
 
 section CompilerLocalEnvironmentDemand

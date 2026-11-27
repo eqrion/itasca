@@ -8,6 +8,8 @@ import Itasca.Support.Translation
 import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Interp.Relations.StackPreservation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Invocation.
 

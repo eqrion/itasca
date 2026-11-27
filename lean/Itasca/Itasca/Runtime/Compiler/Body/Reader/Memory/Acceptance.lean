@@ -7,6 +7,8 @@ import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackBudgets
 import Itasca.Runtime.Compiler.Body.Reader.Acceptance.ReachedReferenceDemand
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Memory.
 
@@ -249,9 +251,9 @@ theorem reached_memory_load_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryLoadOpcode op))
-    (reference : code.step_profile source st data env ctx index
+    (reference : code.step_body source st data env ctx index
       (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -279,9 +281,9 @@ theorem reached_memory_store_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (memoryStoreOpcode op))
-    (reference : code.step_profile source st data env ctx index
+    (reference : code.step_body source st data env ctx index
       (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by

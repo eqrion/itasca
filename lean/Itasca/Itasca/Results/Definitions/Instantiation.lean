@@ -58,7 +58,7 @@ def StartResolved {M : Type} (store : runtime.store.Store M) (inst : runtime.sto
 
 /-- Initialization follows the source instantiation configuration: success reaches the call of
 the start function, if any, and a trap or resource error is a reachable source configuration. -/
-def InitializedSource (initial : config) (store : _root_.store) (ambient : frame) :
+def InitializedSource (initial : config) (store : WebAssembly.store) (ambient : frame) :
     core.result.Result runtime.Instantiated runtime.ExecError → Prop
   | .Ok out => StepsH initial [] ⟨⟨store,ambient⟩,out.start.toList.map (fun address => .CALL_ADDR address.index.val)⟩
   | .Err (.Trap _) => StepsH initial [] ⟨⟨store,ambient⟩,[.TRAP]⟩
@@ -109,7 +109,7 @@ def InstantiationLaw {M : Type} (view : M → Slice U8)
   (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
   (_compilation_accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
   (raw : Binary.Module)
-  (_source_encoding : Binary.ModuleEncodingWith (CodeEntry.CodeEncoding) raw bytes.val) ,
+  (_source_encoding : WebAssembly.Binary.ModuleEncoding (Binary.Source.rawModule raw) (Binary.Source.bytes bytes.val)) ,
   Module_ok (Module.Elaboration.moduleOf raw) ∧
     runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
       ⦃ (result, after, nextPlatform) => Inv (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧

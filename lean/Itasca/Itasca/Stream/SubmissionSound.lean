@@ -41,7 +41,7 @@ namespace Itasca.Stream.Framing
 
 /-- A continuing framing step either does not take another entry, or
 records the exact returned view, decoded length and consecutive boundaries. -/
-def FrameStep {S : Type} (source : stream.Source S) (state : S) (codeLen q i : Usize) :
+def FrameStep {S : Type} (source : stream.StreamingSource S) (state : S) (codeLen q i : Usize) :
     ControlFlow (Usize × Usize × Usize × Bool)
       (core.result.Result (Usize × Usize) error.Error) → Prop
   | .done (.Ok (finish, next)) => finish = q ∧ next = i
@@ -57,7 +57,7 @@ def FrameStep {S : Type} (source : stream.Source S) (state : S) (codeLen q i : U
           finish.val ≤ codeLen.val ∧ next.val = i.val + 1
 
 /-- Arithmetic preservation and the observed extent of one extracted step. -/
-def BatchStepPost {S : Type} (source : stream.Source S) (state : S)
+def BatchStepPost {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold q i : Usize) (stopped : Bool)
     (r : ControlFlow (Usize × Usize × Usize × Bool)
       (core.result.Result (Usize × Usize) error.Error)) : Prop :=
@@ -97,7 +97,7 @@ namespace Itasca
 
 /-- The extracted loop body preserves the arithmetic invariant and records each consumed declared
 extent, under a return premise only for the code read it reaches. -/
-theorem stream.get_next_batch_loop.body.spec {S : Type} (source : stream.Source S) (state : S)
+theorem stream.get_next_batch_loop.body.spec {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold q i b : Usize) (stopped : Bool)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hmore : first.val < num.val)
@@ -250,7 +250,7 @@ theorem stream.get_next_batch_loop.body.spec {S : Type} (source : stream.Source 
 /-- An ordinary return of the loop body reveals the reached source callback;
 no return assumption is imposed on any unexecuted source operation. -/
 theorem stream.get_next_batch_loop.body.accepted {S : Type}
-    (source : stream.Source S) (state : S)
+    (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold q i b : Usize) (stopped : Bool)
     (reply : ControlFlow (Usize × Usize × Usize × Bool)
       (core.result.Result (Usize × Usize) error.Error))
@@ -313,7 +313,7 @@ namespace Itasca.Stream.Framing
 
 /-- Coherence transports each actually read length prefix into the fixed code
 region, yielding an independent extent without requiring source availability. -/
-theorem FrameStep.extent {S : Type} (source : stream.Source S) (state : S)
+theorem FrameStep.extent {S : Type} (source : stream.StreamingSource S) (state : S)
     (environment tail : List U8) (code : Slice U8)
     (hc : Stream.Source.Coherent source state environment code.val tail)
     (codeLen q i finish next bytes : Usize) (stopped : Bool)
@@ -341,7 +341,7 @@ namespace Itasca
 /-- Fold an invariant over the prefix reads actually reached by an accepted
 batch loop. Source callback totality is deliberately unnecessary. -/
 theorem stream.get_next_batch_loop.accepted_induction {S : Type}
-    (source : stream.Source S) (state : S)
+    (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold : Usize)
     (P : Usize → Usize → Prop)
     (hstep : ∀ q i finish next bytes stopped, P q i →
@@ -382,7 +382,7 @@ theorem stream.get_next_batch_loop.accepted_induction {S : Type}
 
 /-- Every accepted batch makes strict byte and function progress and stays inside the bounds
 established by the driver. No premise is placed on source calls that the run did not reach. -/
-theorem stream.get_next_batch.sound {S : Type} (source : stream.Source S) (state : S)
+theorem stream.get_next_batch.sound {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold finish next : Usize)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hstart : start.val ≤ codeLen.val) (hmore : first.val < num.val)
@@ -665,11 +665,11 @@ private def BodyPost {V : Type} (Tracks : U64 → List Stream.Batch.Issued → V
 end Itasca.Stream.Submission
 
 namespace Itasca.Stream.Submission
-private theorem resume_sound {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
-    (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
+    (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -780,11 +780,11 @@ private theorem resume_sound {S V : Type} (source : stream.Source S) (visitor : 
 end Itasca.Stream.Submission
 
 namespace Itasca.Stream.Submission
-private theorem body_sound {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+private theorem body_sound {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
-    (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
+    (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
@@ -856,11 +856,11 @@ namespace Itasca
 /-- Following an accepted submission run, each successful iteration appends its seed to the
 history and may retire one batch, which then has a completion certificate. -/
 theorem stream.submit_code_batches_loop.sound {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
-    (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize)
+    (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
@@ -907,11 +907,11 @@ identities, bounded distinct pending IDs, and certificates for retired work. Sou
 scheduler provenance are the only embedding premises. Callbacks that the run did not reach need
 not return. -/
 theorem stream.submit_code_batches.sound {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
-    (config : stream.Config) (v : V) (pending : alloc.vec.Vec Usize) (v' : V)
+    (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize) (v' : V)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val) (hstart : start.val ≤ code.length)
@@ -945,7 +945,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Stream.Source
 
 /-- Available immutable views determine every successful source observation. -/
-theorem Available.coherent {S : Type} {source : stream.Source S} {state : S}
+theorem Available.coherent {S : Type} {source : stream.StreamingSource S} {state : S}
     {environment code tail : List U8} (h : Available source state environment code tail) :
     Coherent source state environment code tail := by
   constructor
@@ -969,7 +969,7 @@ theorem Available.coherent {S : Type} {source : stream.Source S} {state : S}
 end Itasca.Stream.Source
 
 namespace Itasca
-private theorem batch_prefix_read {S : Type} (source : stream.Source S) (state : S)
+private theorem batch_prefix_read {S : Type} (source : stream.StreamingSource S) (state : S)
     (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (codeLen q content finish : Usize) (hlen : codeLen.val = code.length)
@@ -1023,7 +1023,7 @@ private theorem batch_prefix_read {S : Type} (source : stream.Source S) (state :
 /-- An independently framed next entry prevents every Rust error branch of
 the batching body. The threshold may be zero and never counts size-prefix bytes. -/
 theorem stream.get_next_batch_loop.body.complete_spec {S : Type}
-    (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
+    (source : stream.StreamingSource S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (codeLen start first num threshold q i b : Usize) (stopped : Bool)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -1068,7 +1068,7 @@ open Binary
 the remaining suffix. The prefix and suffix satisfy the same entry relation `R` as the input, so
 a relation that carries body and local limits is preserved through framing. -/
 theorem stream.get_next_batch.complete_spec {S : Type}
-    (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
+    (source : stream.StreamingSource S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (R : Code → List U8 → Prop) (hencoding : ∀ entry bytes, R entry bytes → CodeEntry.CodeEncoding entry bytes)
     (codeLen start first num threshold : Usize) (entries : List Code)
@@ -1171,7 +1171,7 @@ theorem stream.get_next_batch.complete_spec {S : Type}
 /-- Independently encoded entries within the implementation limits are batched successfully, returning
 the nonempty encoded prefix and the unconsumed suffix. -/
 theorem stream.get_next_batch.complete {S : Type}
-    (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
+    (source : stream.StreamingSource S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (codeLen start first num threshold : Usize) (entries : List Code)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -1192,7 +1192,7 @@ theorem stream.get_next_batch.complete {S : Type}
 /-- An available exact source view carries precisely the independently
 encoded entries in the corresponding interval of the logical code region. -/
 theorem stream.read_exact.complete_rep {S A : Type}
-    (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
+    (source : stream.StreamingSource S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (R : A → List U8 → Prop) (start finish : Usize) (entries : List A)
     (hbytes : At (Rep R) code start entries finish) :
@@ -1216,7 +1216,7 @@ theorem stream.read_exact.complete_rep {S A : Type}
 /-- Batching and the following exact read produce the worker's byte view, which encodes the taken
 entries within the implementation limits. The entry counts of the batch and the suffix are tracked. -/
 theorem stream.get_next_batch.complete_view {S : Type}
-    (source : stream.Source S) (state : S) (environment tail : List U8) (code : Slice U8)
+    (source : stream.StreamingSource S) (state : S) (environment tail : List U8) (code : Slice U8)
     (ha : Stream.Source.Available source state environment code.val tail)
     (codeLen start first num threshold : Usize) (entries : List Code)
     (hlen : codeLen.val = code.length) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -1277,7 +1277,7 @@ namespace Itasca
 environment, and the tail it actually received. Soundness requires coherent source views and
 worker provenance, and does not require callback termination or prevalidated bodies. -/
 theorem stream.validate_streaming.sound_core {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
     (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)

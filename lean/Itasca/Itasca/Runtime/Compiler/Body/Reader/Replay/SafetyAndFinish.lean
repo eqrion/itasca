@@ -13,6 +13,8 @@ import Itasca.Runtime.Compiler.Body.Control.ControlPointsAndInitialPrefixes
 import Itasca.Runtime.Compiler.Body.Control.CompiledBody
 import Itasca.Runtime.Compiler.Local.Control.FunctionAssembly
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Replay.
 
@@ -213,7 +215,7 @@ theorem compiler_reader_ordinary_total {A} (ops : runtime.platform.Alloc A)
     (ready : OrdinaryCallbackReady compiler env ctx st.core.vals.val)
     (shape : Body.Control.Shape st.core)
     (ordinary : opcode.val ∉ [2,3,4,5,11,12,13,14,15]) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode compiler ⦃ out =>
       out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val ⦄ := by
   by_cases call : opcode = 16#u8
@@ -273,7 +275,7 @@ theorem IndexedTableReaderCompilerPoint.reader_total {A} (ops : runtime.platform
     (bodyBound : initial.function.body_start.val+data.length ≤ Usize.max)
     (next : Usize) (advance : next.val=st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (opcode : U8) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       ⟨{st.core with pos:=next}⟩ data env ⟨sourceLocals,ft.results⟩ index opcode compiler
       ⦃out => out.1 = .Ok () → ObservedStack out.2.2 out.2.1.core.vals.val⦄ := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty

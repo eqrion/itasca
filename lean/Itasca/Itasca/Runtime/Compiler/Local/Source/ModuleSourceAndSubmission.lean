@@ -9,6 +9,8 @@ import Itasca.Module.Elab.ToTyping
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Module.Elab.SectionInversion
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -64,10 +66,7 @@ private theorem assembly_guards {env decls codes} {segments : List metadata.Data
     (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
     Binary.DataCountValid (decls.module codes (segments.map Module.Data.raw)) := by
   have hg := code_guards hcodes
-  unfold Binary.DataCountValid
-  change (match decls.dataCount with
-    | none => ∀ entry ∈ codes, Binary.instructionsUseData entry.body = false
-    | some count => count.val = (segments.map Module.Data.raw).length)
+  simp only [Binary.DataCountValid, WebAssembly.Binary.DataCountValidWith, Module.Environment.Declarations.module]
   rw [hr.dataCount]
   cases he : env.data_count with
   | none => exact hg he
@@ -76,7 +75,7 @@ private theorem assembly_guards {env decls codes} {segments : List metadata.Data
 /-- Accepted driver phases recover the independent code section in the exact
 buffer used for batching. This is source framing, not compiler correctness. -/
 theorem stream_run_source {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks)
     (id : U64) (state : S) (v v' : V) (env : metadata.Env)
@@ -91,7 +90,7 @@ theorem stream_run_source {S V : Type}
       raw.functions = env.func_type_indices.val ∧ raw.types = env.types.val ∧
       raw.codes.length = env.func_type_indices.val.length ∧
       Stream.Framing.HeaderAt code env run.remaining.entries ∧
-      Binary.At (Binary.Rep (CodeEntry.CodeEncoding)) code run.remaining.entries raw.codes (Slice.len code) ∧
+      Binary.At (Binary.Rep CodeEntry.CodeEncoding) code run.remaining.entries raw.codes (Slice.len code) ∧
       code.length ≤ limits.MAX_MODULE_BYTES.val ∧ data.length ≤ limits.MAX_MODULE_BYTES.val := by
   have heq := hsource.environment_eq run.environment run.environment_call
   have hteq := hsource.tail_eq run.remaining.tailBytes run.remaining.tail_call
@@ -245,8 +244,8 @@ theorem witness_source_lookup {V : Type} {visitor : code.OpVisitor V}
     {data env index start finish before after}
     (w : CodeEntry.Witness visitor data env index start finish before after)
     {entries prior : List Binary.Code}
-    (whole : Binary.Rep (CodeEntry.CodeEncoding) entries data.val)
-    (previous : Binary.At (Binary.Rep (CodeEntry.CodeEncoding)) data 0#usize prior start)
+    (whole : Binary.Rep CodeEntry.CodeEncoding entries data.val)
+    (previous : Binary.At (Binary.Rep CodeEntry.CodeEncoding) data 0#usize prior start)
     (bound : prior.length < entries.length) :
     ∃ entry, entries[prior.length]? = some entry ∧ w.groups = entry.locals ∧
       Body.BodyEncoding w.body entry.body := by
@@ -280,13 +279,13 @@ open Aeneas Aeneas.Std Itasca
 /-- The reachable worker's validated prefix identifies its next exact entry
 inside the independently encoded issued code view. -/
 theorem witness_batch_source_lookup {V : Type} {visitor : code.OpVisitor V}
-    {issued : Stream.Batch.Issued} {batch : stream.CodeBatch}
+    {issued : Stream.Batch.Issued} {batch : stream.StreamingBatch}
     {index finish before after}
     (w : CodeEntry.Witness visitor batch.code batch.env index batch.validated_end finish before after)
     (reachable : Stream.Batch.Reachable issued batch)
     (bounds : CodeEntry.Bounds batch.env)
     {entries : List Binary.Code}
-    (whole : Binary.Rep (CodeEntry.CodeEncoding) entries issued.code.val)
+    (whole : Binary.Rep CodeEntry.CodeEncoding entries issued.code.val)
     (count : batch.num_validated.val < entries.length) :
     ∃ entry, entries[batch.num_validated.val]? = some entry ∧ w.groups = entry.locals ∧
       Body.BodyEncoding w.body entry.body := by
@@ -294,9 +293,9 @@ theorem witness_batch_source_lookup {V : Type} {visitor : code.OpVisitor V}
   obtain ⟨_, _, envEq, codeEq, _, _, _⟩ := identity
   have bound : CodeEntry.Bounds issued.env := by simpa only [envEq] using bounds
   obtain ⟨prior, length, encoded, _⟩ := previous.typed bound
-  have priorBytes : Binary.At (Binary.Rep (CodeEntry.CodeEncoding))
+  have priorBytes : Binary.At (Binary.Rep CodeEntry.CodeEncoding)
       batch.code 0#usize prior batch.validated_end := by simpa only [codeEq] using encoded
-  have complete : Binary.Rep (CodeEntry.CodeEncoding) entries batch.code.val := by
+  have complete : Binary.Rep CodeEntry.CodeEncoding entries batch.code.val := by
     simpa only [ codeEq] using whole
   obtain ⟨entry, found, groups, body⟩ := witness_source_lookup w complete priorBytes (by omega)
   exact ⟨entry, by simpa only [length] using found, groups, body⟩
@@ -428,9 +427,9 @@ open Aeneas Aeneas.Std Itasca
 /-- Local accepted submission preserves a source-position-indexed invariant.
 The obligation includes the exact framing and byte-read calls, so a decoded
 source split can be retained without assuming a callback certificate. -/
-def Submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+def Submit {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (P : Usize → Usize → V → Prop) : Prop :=
+     (config : stream.StreamingConfig) (P : Usize → Usize → V → Prop) : Prop :=
   ∀ (v v' : V) (pos func batchId finish next count : Usize) (bytes : Slice U8),
     P pos func v → pos.val ≤ code.length → func.val < env.func_type_indices.val.length →
     stream.get_next_batch source state (Slice.len code) pos func (alloc.vec.Vec.len env.func_type_indices)
@@ -465,9 +464,9 @@ private def BodyPost {V : Type} (P : Usize → Usize → V → Prop)
       pos.val ≤ code.length ∧ next.val ≤ env.func_type_indices.val.length ∧
       P pos next v ∧ func.val < next.val
 
-private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+private theorem resume {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (P : Usize → Usize → V → Prop)
+     (config : stream.StreamingConfig) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code config P)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
@@ -553,9 +552,9 @@ private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream
         subst out
         exact ⟨by simpa using hfinish, by simpa using hnextbound, hv', by simpa using hnext⟩
 
-private theorem body {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+private theorem body {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (P : Usize → Usize → V → Prop)
+     (config : stream.StreamingConfig) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code config P)
     (retired : Retire visitor moduleId P)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -609,9 +608,9 @@ private theorem body {S V : Type} (source : stream.Source S) (visitor : stream.S
 
 /-- Accepted execution of the actual submission loop transports a retained
 source/compiler invariant through framing, submissions and retirements. -/
-theorem loop {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+theorem loop {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (P : Usize → Usize → V → Prop)
+     (config : stream.StreamingConfig) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code config P)
     (retired : Retire visitor moduleId P)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
@@ -653,9 +652,9 @@ theorem loop {S V : Type} (source : stream.Source S) (visitor : stream.Streaming
 /-- The public submission phase starts from the decoded code-header cursor
 and source function zero. No callback correctness premise survives once the
 local source-split and compiler-entry lemmas instantiate this transport. -/
-theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+theorem submit {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (P : Usize → Usize → V → Prop)
+     (config : stream.StreamingConfig) (P : Usize → Usize → V → Prop)
     (submitted : Submit source visitor state moduleId env code config P)
     (retired : Retire visitor moduleId P)
     (v finalV : V) (start : Usize) (pending : alloc.vec.Vec Usize)
@@ -695,7 +694,7 @@ def Progress {V : Type} (code : Slice U8)
     (position first : Usize) (visitor : V) : Prop :=
   ∃ processed remaining, entries = processed ++ remaining ∧
     processed.length = first.val ∧ first.val + remaining.length = env.func_type_indices.val.length ∧
-    At (Rep (CodeEntry.CodeEncoding)) code position remaining (Slice.len code) ∧ Q visitor
+    At (Binary.Rep CodeEntry.CodeEncoding) code position remaining (Slice.len code) ∧ Q visitor
 
 /-- A local batch proof receives its exact decoded source slice and issued
 function offset. This contract is instantiated by the concrete entry fold. -/
@@ -704,12 +703,12 @@ def Batch {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
   ∀ (before after : V) (issued : Stream.Batch.Issued) (processed taken remaining : List Binary.Code),
     entries = processed ++ taken ++ remaining → issued.module_id = moduleId →
     issued.env = env → issued.first_func.val = processed.length → issued.num_funcs.val = taken.length →
-    Rep (CodeEntry.CodeEncoding) taken issued.code.val → issued.Bounded → Q before →
+    Binary.Rep CodeEntry.CodeEncoding taken issued.code.val → issued.Bounded → Q before →
     visitor.submit_code_batch before issued.seed = .ok (.Ok (), after) → Q after
 
-theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+theorem progress_submit {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (entries : List Binary.Code) (Q : V → Prop)
+     (config : stream.StreamingConfig) (entries : List Binary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : Stream.Source.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (batch : Batch visitor moduleId env entries Q) :
@@ -750,12 +749,12 @@ theorem progress_submit {S V : Type} (source : stream.Source S) (visitor : strea
 
 /-- Actual submission preserves a concrete compiler invariant for a fixed
 independently encoded source list, provided each real issued batch is checked. -/
-theorem submit {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+theorem submit {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
-     (config : stream.Config) (entries : List Binary.Code) (Q : V → Prop)
+     (config : stream.StreamingConfig) (entries : List Binary.Code) (Q : V → Prop)
     (environment tail : List U8) (available : Stream.Source.Available source state environment code.val tail)
     (capacity : code.length ≤ limits.MAX_MODULE_BYTES.val)
-    (start : Usize) (sourceBytes : At (Rep (CodeEntry.CodeEncoding)) code start entries (Slice.len code))
+    (start : Usize) (sourceBytes : At (Binary.Rep CodeEntry.CodeEncoding) code start entries (Slice.len code))
     (count : entries.length = env.func_type_indices.val.length)
     (batch : Batch visitor moduleId env entries Q)
     (polled : ∀ before after worker, Q before → visitor.poll_code_batch before = .ok (.Ok worker, after) → Q after)

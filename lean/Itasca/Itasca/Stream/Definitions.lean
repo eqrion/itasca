@@ -10,7 +10,7 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The driver observes either an absent code region or an exact bounded
 header view. Counts and section size are independent of entry validation. -/
-def HeaderChecked {S : Type} (source : stream.Source S) (state : S)
+def HeaderChecked {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen : Usize) (env : metadata.Env) (entries : Usize) : Prop :=
   (codeLen = 0#usize ∧ entries = 0#usize ∧ env.func_type_indices.val = []) ∨
   ∃ header content size count,
@@ -44,7 +44,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Stream.Framing
 
 /-- A checked header declares no more entries than the code region has bytes. -/
-theorem HeaderChecked.entries_le {S : Type} {source : stream.Source S} {state : S}
+theorem HeaderChecked.entries_le {S : Type} {source : stream.StreamingSource S} {state : S}
     {codeLen : Usize} {env : metadata.Env} {entries : Usize}
     (h : HeaderChecked source state codeLen env entries) : entries.val ≤ codeLen.val := by
   rcases h with ⟨rfl, rfl, _⟩ | ⟨_, _, _, _, _, _, _, _, _, hp, _⟩
@@ -61,14 +61,14 @@ namespace Itasca.Stream.Run
 /-- Witnesses of the phases of `stream.validate_remaining` after the environment is decoded,
 including the tail handoff. They describe executions of the extracted driver, not an alternate
 validator. -/
-structure Remaining {S V : Type} (source : stream.Source S)
+structure Remaining {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : metadata.Env) (environmentLength : Usize) (before after : V)
      where
   codeLength : Usize
   codeEnd : Usize
   entries : Usize
-  config : stream.Config
+  config : stream.StreamingConfig
   configured : V
   pending : alloc.vec.Vec Usize
   submitted : V
@@ -99,7 +99,7 @@ structure Remaining {S V : Type} (source : stream.Source S)
 
 /-- Witnesses of an accepted `stream.validate_streaming`: the environment read, its size bound, the
 custom-section region callback, the environment decode, and the `Remaining` phases. -/
-structure Accepted {S V : Type} (source : stream.Source S)
+structure Accepted {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (before after : V) (env : metadata.Env)
      where

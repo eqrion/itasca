@@ -5,6 +5,8 @@ import Itasca.Body.LoopDispatch
 import Itasca.Body.Complete.ScalarBase
 import Itasca.Results.Definitions.Validation
 
+open WebAssembly
+
 /-!
 # Frames for Wasm 2.0 completeness
 

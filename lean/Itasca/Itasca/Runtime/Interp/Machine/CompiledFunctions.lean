@@ -9,6 +9,8 @@ import Itasca.Runtime.SourceMachine.Typing
 import Itasca.Runtime.Interp.Machine.SuspendedPoint
 import Itasca.Runtime.Compiler.Local.Control.Structured.NestedScopes
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine.
 
@@ -29,7 +31,7 @@ Main declarations: `Execution` and `ExecutionCursor`.
 namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
-theorem FrameStackRel.top {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem FrameStackRel.top {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore exec (source :: rest))
     (raw : runtime.interp.Frame) (top : exec.frames.val.getLast? = some raw) :
@@ -41,14 +43,14 @@ theorem FrameStackRel.top {M : Type} {store : runtime.store.Store M} {sourceStor
     subst raw
     exact active
 
-theorem ControlTop.pc {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem ControlTop.pc {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame} {pc : Nat} {pending : Bool}
     (cursor : ControlTop store sourceStore exec source pc pending) :
     (exec.frames.val.getLast?).map (fun raw => raw.pc.val) = some pc := by
   obtain ⟨raw,compiled,C,targets,next,output,top,same,program,point⟩ := cursor
   simp only [top,Option.map_some,same]
 
-theorem ControlTop.updated {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem ControlTop.updated {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame}
     {compiled : runtime.bytecode.CompiledFunction} {C : context}
     {before after : SourceMachine.AFrame} {pc : U32} {pending : Bool}
@@ -60,7 +62,7 @@ theorem ControlTop.updated {M : Type} {store : runtime.store.Store M} {sourceSto
   obtain ⟨targets,next,output,point⟩ := point
   exact ⟨{raw with pc := pc},compiled,C,targets,next,output,top,rfl,program.reposition pc metadata,point⟩
 
-theorem ReadyTop.cursor {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem ReadyTop.cursor {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame}
     (ready : ReadyTop store sourceStore exec source) : ∃ pc, ControlTop store sourceStore exec source pc false := by
   obtain ⟨raw,compiled,C,targets,next,output,top,program,point⟩ := ready

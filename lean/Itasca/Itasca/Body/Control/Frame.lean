@@ -4,6 +4,8 @@ import Itasca.Body.TableAdapters
 import Itasca.Binary.Body.Syntax
 import Itasca.Handler.Environment
 
+open WebAssembly
+
 /-!
 Proofs for Body / Control.
 

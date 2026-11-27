@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 import Itasca.Runtime.Equations.Interp
 import ItascaRust.Types
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Invariant.
 

@@ -2,6 +2,8 @@ import Itasca.Runtime.Integration.Api.CreationAndGrowth
 import Itasca.Runtime.Store.Invariant.FunctionAndTypeStagingCauses
 import Itasca.Runtime.Integration.Execution.Mutation.Operations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Api.
 

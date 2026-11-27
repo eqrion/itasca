@@ -1,6 +1,8 @@
 import Itasca.Runtime.Interp.Simd.Lanes.SplatSound
 import Itasca.Runtime.Spec.Simd.LaneOperations
 
+open WebAssembly
+
 /-!
 Whole-vector bit operations: scalar word calculations, lane iteration, packing and source correspondence. The final handler facts feed SIMD dispatch and machine execution; independently consumed primitives remain below this construction.
 -/

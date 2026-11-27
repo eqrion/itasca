@@ -86,7 +86,7 @@ theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visi
         code.validate_body_with visitor body env ctx typeIdx started = .ok (.Ok (), ended)) :
     metadata.validate_code_entry_with visitor data pos env index v ⦃ r => r.1 = .Ok next ⦄ := by
   obtain ⟨bytes, he, hspan⟩ := hbytes
-  obtain ⟨hcap, sizeBytes, localBytes, bodyBytes, hsize, hlocals, hbody, hbodyCap, rfl⟩ := he
+  obtain ⟨hcap, sizeBytes, localBytes, bodyBytes, hsize, hlocals, ⟨hbody, hbodyCap⟩, rfl⟩ := he
   obtain ⟨bodyStart, hprefix, hbodySpan⟩ := hspan.split
   obtain ⟨content, hhead, hlocalsSpan⟩ := hprefix.split
   let size : U32 := U32.ofNatCore (localBytes.length + bodyBytes.length) (by have := hsize.value_lt; scalar_tac)

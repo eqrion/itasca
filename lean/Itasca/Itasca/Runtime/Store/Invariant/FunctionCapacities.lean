@@ -3,6 +3,8 @@ import Itasca.Runtime.Representation.Values
 import Itasca.Runtime.Store.Invariant.PrecommitError
 import Itasca.Runtime.Representation.Store
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

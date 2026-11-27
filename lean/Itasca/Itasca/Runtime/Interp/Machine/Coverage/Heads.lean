@@ -9,6 +9,8 @@ import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
 import Itasca.Runtime.Compiler.Body.Simd.EmissionTags
 import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 
+open WebAssembly
+
 /-!
 # Emission head projections
 

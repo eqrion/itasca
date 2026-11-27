@@ -12,6 +12,8 @@ import Itasca.Runtime.SourceMachine.Stateful.TransitionInvariants
 import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.SourceMachine.Sim.Control
 
+open WebAssembly
+
 /-!
 # Host Simulation
 

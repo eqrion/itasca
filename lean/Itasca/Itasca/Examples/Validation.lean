@@ -2,6 +2,8 @@ import Itasca
 import Itasca.Examples.Module.Basic
 import Itasca.Examples.Module.SliceLayout
 
+open WebAssembly
+
 /-!
 Proofs for Examples.
 
@@ -28,7 +30,7 @@ namespace Itasca.Examples.Module
 
 open Itasca.Examples.Module.Support (leb one padded omitted)
 
-open Binary Module.Elaboration
+open Itasca.Binary Module.Elaboration
 
 /-- The function type `[] -> [i32, i64]`. -/
 def functionType : wasm_types.FuncType :=
@@ -90,22 +92,22 @@ theorem typed : Module_ok (moduleOf raw) := by
 
 private theorem module_zero32 : Binary.SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload]
+  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
 
 private theorem module_zero64 : Binary.SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload]
+  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
 
 private theorem body_encoding : Itasca.CodeEntry.BodyBytes entry.body
     [0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8] := by
   refine ⟨[.plain (Spec.i32Const 0#i32), .plain (Spec.Constants.i64 0#i64), .end_], ?_, ?_⟩
-  · exact Rep.cons
+  · exact WebAssembly.Binary.Rep.cons
       (show Body.TokenEncoding (.plain (Spec.i32Const 0#i32)) [0x41#u8,0#u8] from
         ⟨0x41#u8, [0#u8], rfl, .plain (.i32Const 0#i32 module_zero32)⟩)
-      (Rep.cons
+      (WebAssembly.Binary.Rep.cons
         (show Body.TokenEncoding (.plain (Spec.Constants.i64 0#i64)) [0x42#u8,0#u8] from
           ⟨0x42#u8, [0#u8], rfl, .plain (.i64Const 0#i64 module_zero64)⟩)
-        (Rep.cons (show Body.TokenEncoding .end_ [0x0B#u8] from
+        (WebAssembly.Binary.Rep.cons (show Body.TokenEncoding .end_ [0x0B#u8] from
           ⟨0x0B#u8, [], rfl, .end_⟩) .nil))
   · exact ⟨_, rfl, .simple (.simple .nil (.plain _ (Spec.i32_const_wf _)))
       (.plain _ (Spec.Constants.i64_wf _))⟩
@@ -115,25 +117,26 @@ lists for Wasm 2.0. No parser execution or canonical re-encoding is assumed. -/
 theorem encoded : ModuleEncodingWithinLimits raw input.val := by
   constructor
   · simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]
-  · refine ⟨[1#u8,6#u8,1#u8,0x60#u8,0#u8,2#u8,0x7F#u8,0x7E#u8], [],
+  · apply Itasca.Binary.Source.moduleEncodingWith @Itasca.Binary.Source.codeWithinLimits
+    refine ⟨[1#u8,6#u8,1#u8,0x60#u8,0#u8,2#u8,0x7F#u8,0x7E#u8], [],
       [3#u8,2#u8,1#u8,0#u8], [], [], [], [], [], [], [],
       [10#u8,8#u8,1#u8,6#u8,0#u8,0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], [], [],
       ?_, omitted _ _ _, ?_, omitted _ _ _, omitted _ _ _, omitted _ _ _,
       omitted _ _ _, omitted _ _ _, omitted _ _ _, ?_, ?_, omitted _ _ _, .nil, rfl, ?_⟩
     · apply padded _ 6#u8 _ (one (x := functionType) ?_) rfl
+      apply FuncTypeEncoding.reader_parts.mpr
       refine ⟨[0#u8], [2#u8,0x7F#u8,0x7E#u8], ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩, ?_, rfl⟩
       exact ⟨[2#u8], [0x7F#u8,0x7E#u8], leb 2#u8,
-        Rep.cons (show ValueTypeEncoding .I32 [0x7F#u8] from rfl)
-          (Rep.cons (show ValueTypeEncoding .I64 [0x7E#u8] from rfl) .nil), rfl⟩
+        WebAssembly.Binary.Rep.cons (show ValueTypeEncoding .I32 [0x7F#u8] from ValueTypeEncoding.reader_bytes.mpr rfl)
+          (WebAssembly.Binary.Rep.cons (show ValueTypeEncoding .I64 [0x7E#u8] from ValueTypeEncoding.reader_bytes.mpr rfl) .nil), rfl⟩
     · exact padded _ 2#u8 _ (one (leb 0#u8)) rfl
     · exact omitted _ _ _
     · apply padded _ 8#u8 _ (one (x := entry) ?_) rfl
       exact ⟨by simp [entry, Code.declared, limits.MAX_LOCALS], [6#u8], [0#u8],
         [0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], leb 6#u8,
         ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩,
-        body_encoding,
-        by simp [limits.MAX_FUNCTION_BYTES], rfl⟩
-    · simp [DataCountValid, raw, fromEnv, env, Examples.Module.Basic.emptyEnv, entry,
+        ⟨body_encoding, by simp [limits.MAX_FUNCTION_BYTES]⟩, rfl⟩
+    · simp [DataCountValid, WebAssembly.Binary.DataCountValidWith, raw, fromEnv, env, Examples.Module.Basic.emptyEnv, entry,
         instructionsUseData, instructionUsesData, Spec.i32Const, Spec.Constants.i64]
 
 /-- `metadata.validate_module` accepts `input` under Wasm 2.0, and the decoded metadata matches
@@ -182,7 +185,7 @@ def referenceType : functype := .mk_functype (.mk_list []) (.mk_list [.FUNCREF])
 def selfReference : func := .FUNC (.mk_uN 0) [] [.REF_FUNC (.mk_uN 0)]
 
 /-- A module containing only `selfReference`, so function 0 is referenced but never declared. -/
-def undeclared : _root_.module :=
+def undeclared : WebAssembly.module :=
   .MODULE [.TYPE referenceType] [] [selfReference] [] [] [] [] [] none []
 
 private def moduleContext : context :=
@@ -297,7 +300,7 @@ theorem generated_typing_missing_premise :
   ⟨generated_module_typed, undeclared_rejected⟩
 
 /-- `undeclared` plus a declarative element segment listing `ref.func 0`. -/
-def declarative : _root_.module :=
+def declarative : WebAssembly.module :=
   .MODULE [.TYPE referenceType] [] [selfReference] [] [] []
     [.ELEM .FUNCREF [[.REF_FUNC (.mk_uN 0)]] .DECLARE] [] none []
 
@@ -307,7 +310,7 @@ theorem declarative_declares : Spec.DeclaredReferences.Module declarative := by
     Instructions, instructionsIndices, instructionIndices, elementIndices, elementModeIndices]
 
 /-- `undeclared` plus an export of function 0. -/
-def exported : _root_.module :=
+def exported : WebAssembly.module :=
   .MODULE [.TYPE referenceType] [] [selfReference] [] [] [] [] [] none
     [.EXPORT (.mk_name []) (.FUNC (.mk_uN 0))]
 
@@ -317,7 +320,7 @@ theorem export_declares : Spec.DeclaredReferences.Module exported := by
     Instructions, instructionsIndices, instructionIndices, exportIndices]
 
 /-- `undeclared` plus a global whose initializer is `ref.func 0`. -/
-def globalReference : _root_.module :=
+def globalReference : WebAssembly.module :=
   .MODULE [.TYPE referenceType] [] [selfReference]
     [.GLOBAL (.mk_globaltype none .FUNCREF) [.REF_FUNC (.mk_uN 0)]] [] [] [] [] none []
 
@@ -374,14 +377,15 @@ open Itasca.Body
 
 /-- A type index uses signed LEB, including nonminimal positive encodings. -/
 theorem padded_index : BlockEncoding (.TypeIndex 0#u32) [128#u8, 0#u8] := by
+  apply BlockEncoding.reader_form.mpr
   refine ⟨[128#u8], 0#u8, rfl, by decide, ?_, by decide, ?_, by decide, by decide⟩
   · simp
-  · norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload]
+  · norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
 
 /-- Padded negative s33 encodings are not inline value-type tags. -/
 theorem padded_negative_not_inline (t : wasm_types.ValueType) :
     ¬ BlockEncoding (.Value t) [255#u8, 127#u8] := by
-  simp [BlockEncoding]
+  simp [BlockEncoding.reader_form]
 
 /-- The body `block (type 0x80 0x00) end end`, with type index 0 in a padded two-byte encoding. -/
 def bytes : Slice U8 := alloc.vec.Vec.deref (alloc.vec.Vec.from
@@ -397,7 +401,7 @@ theorem indexed_body : BodyEncoding bytes [.BLOCK (blockType (.TypeIndex 0#u32))
   have hf : At bytes 4#usize .end_ 5#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   exact ⟨_, 5#usize, (((Consumed.nil 0#usize (by decide)).snoc hb).snoc he).snoc hf,
-    rfl, _, rfl, Emits.block _ .nil .nil⟩
+    rfl, _, rfl, WebAssembly.Binary.EmitsWith.block (toSpec := Itasca.Body.blockType) _ .nil .nil⟩
 
 /-- An `if` without an `else` arm has type `[i32, i64, i32] -> [i32, i64]` when its block type is
 the identity on `[i32, i64]`. scalar frames have no counterpart for this rule. -/
@@ -473,22 +477,23 @@ theorem environment_limits : CodeEntry.EnvironmentWithinLimits env := by
   · simp [env]
 
 private theorem unsigned (b : U8) (h : b.val < 128) : Binary.Leb128.Encoding [b] b.val :=
-  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload, Nat.mod_eq_of_lt h]⟩
+  ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, Nat.mod_eq_of_lt h]⟩
 
 private theorem index_encoding (b : U8) (idx : U32) (hb : b.val < 64) (hi : idx.val = b.val) :
     BlockEncoding (.TypeIndex idx) [b] := by
+  apply BlockEncoding.reader_form.mpr
   refine ⟨[], b, rfl, by simp, by simp, by omega, ?_, ?_, ?_⟩
-  · simp [Binary.SignedLeb.finalValue, Binary.Leb128.payload, Nat.not_le.mpr hb, hi]
+  · simp [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, Nat.not_le.mpr hb, hi]
   · simp [Binary.SignedLeb33.format]
   · have := idx.hmax; simp [Binary.SignedLeb33.format]; scalar_tac
 
 private theorem body_zero32 : Binary.SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload]
+  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
 
 private theorem body_zero64 : Binary.SignedLeb64.Encoding [0#u8] (0#i64).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
-  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload]
+  norm_num [Binary.SignedLeb.finalValue, Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
 
 /-- The instructions `i32.const 0; i64.const 0`. -/
 def pairOps : List instr := [Spec.i32Const 0#i32, Spec.Constants.i64 0#i64]
@@ -601,7 +606,7 @@ theorem block_encoded : BodyEncoding blockBytes blockOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   have h7 : At blockBytes 7#usize (.end_) 8#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
-  exact ⟨_, 8#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h7), rfl, _, rfl, Emits.block (.TypeIndex 1#u32) pair_emits .nil⟩
+  exact ⟨_, 8#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h7), rfl, _, rfl, WebAssembly.Binary.EmitsWith.block (toSpec := Itasca.Body.blockType) (.TypeIndex 1#u32) pair_emits .nil⟩
 
 /-- `ifBytes` decodes to `ifOps`. -/
 theorem if_encoded : BodyEncoding ifBytes ifOps := by
@@ -617,7 +622,7 @@ theorem if_encoded : BodyEncoding ifBytes ifOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   have h9 : At ifBytes 9#usize (.end_) 10#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
-  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.ifEnd (.TypeIndex 1#u32) (Emits.simple pair_emits (.plain _ (Spec.i32_const_wf 0#i32))) .nil⟩
+  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, WebAssembly.Binary.EmitsWith.ifEnd (toSpec := Itasca.Body.blockType) (.TypeIndex 1#u32) (WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) pair_emits (.plain _ (Spec.i32_const_wf 0#i32))) .nil⟩
 
 /-- `loopBytes` decodes to `loopOps`. -/
 theorem loop_encoded : BodyEncoding loopBytes loopOps := by
@@ -633,7 +638,7 @@ theorem loop_encoded : BodyEncoding loopBytes loopOps := by
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
   have h9 : At loopBytes 9#usize (.end_) 10#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
-  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, Emits.loop (.TypeIndex 2#u32) pair_emits (Emits.simple .nil (.plain _ (.instr_case_7 _ (Translation.Environment.index_wf 0#u32))))⟩
+  exact ⟨_, 10#usize, (((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h4).snoc h6).snoc h8).snoc h9), rfl, _, rfl, WebAssembly.Binary.EmitsWith.loop (toSpec := Itasca.Body.blockType) (.TypeIndex 2#u32) pair_emits (WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) .nil (.plain _ (.instr_case_7 _ (Translation.Environment.index_wf 0#u32))))⟩
 
 /-- A `br_table` with targets `[0]` and default `1`. -/
 def heterogeneousTable : instr := Body.BrTable.instruction [0#u32] 1#u32
@@ -695,7 +700,7 @@ theorem table_encoded : BodyEncoding tableBytes tableOps := by
     ⟨_, ⟨0#u8, [], rfl, .plain .unreachable⟩, rfl, rfl, by decide⟩
   have h3 : At tableBytes 3#usize (.plain heterogeneousTable) 7#usize :=
     ⟨_, ⟨0x0E#u8, [1#u8, 0#u8, 1#u8], rfl,
-      .plain (.brTable [0#u32] 1#u32 (unsigned 1#u8 (by decide))
+      .plain (.brTable (r := Body.Scalar.operands) [0#u32] 1#u32 (unsigned 1#u8 (by decide))
         (.cons (unsigned 0#u8 (by decide)) .nil) (unsigned 1#u8 (by decide)))⟩, rfl, rfl, by decide⟩
   have h7 : At tableBytes 7#usize .end_ 8#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
@@ -703,8 +708,8 @@ theorem table_encoded : BodyEncoding tableBytes tableOps := by
     ⟨_, ⟨0#u8, [], rfl, .plain .unreachable⟩, rfl, rfl, by decide⟩
   have h9 : At tableBytes 9#usize .end_ 10#usize :=
     ⟨_, ⟨0x0B#u8, [], rfl, .end_⟩, rfl, rfl, by decide⟩
-  have hi := Emits.simple (Emits.simple .nil (.plain _ .instr_case_1)) (.plain _ table_wf)
-  have ho := Emits.simple (Emits.block (.TypeIndex 4#u32) .nil hi) (.plain _ .instr_case_1)
+  have hi := WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) (WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) .nil (.plain _ .instr_case_1)) (.plain _ table_wf)
+  have ho := WebAssembly.Binary.EmitsWith.simple (toSpec := Itasca.Body.blockType) (WebAssembly.Binary.EmitsWith.block (toSpec := Itasca.Body.blockType) (.TypeIndex 4#u32) .nil hi) (.plain _ .instr_case_1)
   exact ⟨_, 10#usize, ((((((Consumed.nil 0#usize (by decide)).snoc h0).snoc h2).snoc h3).snoc h7).snoc h8).snoc h9,
     rfl, _, rfl, ho⟩
 

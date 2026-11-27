@@ -9,6 +9,8 @@ import Itasca.Handler.ScalarCompleteness
 import Itasca.Spec.Typing
 import Itasca.Handler.ScalarOperations
 
+open WebAssembly
+
 /-!
 Proofs for Body.
 
@@ -142,10 +144,10 @@ theorem Closed.emits {form bt ops op tokens} (closed : Closed form bt ops op)
     (C : context) (ins outs) (hprior : form.Valid C ins outs) (hemits : Emits tokens ops) :
     Emits (form.opening bt ++ tokens ++ [.end_]) [op] := by
   cases closed with
-  | block => simpa [Form.opening] using Emits.block bt .nil hemits
-  | loop => simpa [Form.opening] using Emits.loop bt .nil hemits
-  | then_ => simpa [Form.opening] using Emits.ifEnd bt .nil hemits
-  | else_ => simpa [Form.opening] using Emits.ifElse bt .nil hprior.1 hemits
+  | block => simpa [Form.opening] using WebAssembly.Binary.EmitsWith.block (toSpec := Itasca.Body.blockType) bt .nil hemits
+  | loop => simpa [Form.opening] using WebAssembly.Binary.EmitsWith.loop (toSpec := Itasca.Body.blockType) bt .nil hemits
+  | then_ => simpa [Form.opening] using WebAssembly.Binary.EmitsWith.ifEnd (toSpec := Itasca.Body.blockType) bt .nil hemits
+  | else_ => simpa [Form.opening] using WebAssembly.Binary.EmitsWith.ifElse (toSpec := Itasca.Body.blockType) bt .nil hprior.1 hemits
 
 /-- Closing a child resumes the parent's own input-to-stack derivation. -/
 theorem Open.close {env root st st' parents current}
@@ -666,7 +668,7 @@ def step (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
       .ok (.Err .StackTooLarge, st)
     else do
-      let (r, ois, _) ← code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+      let (r, ois, _) ← code.step_wasm2 code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
         st.core data env ctx opcode ()
       .ok (r, { st with core := ois })
 
@@ -682,7 +684,7 @@ abbrev loopBody (data : Slice U8) (env : metadata.Env)
 
 /-- The loop control flow after one opcode: continue on success and stop with the error otherwise. -/
 def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
-    ControlFlow (code.BodyState × code.EmptyOpVisitor) (core.result.Result Unit error.OpError) :=
+    ControlFlow (code.BodyState × code.DefaultOpVisitor) (core.result.Result Unit error.OpError) :=
   match r.1 with
   | .Ok () => .cont (r.2, ())
   | .Err e => .done (.Err e)

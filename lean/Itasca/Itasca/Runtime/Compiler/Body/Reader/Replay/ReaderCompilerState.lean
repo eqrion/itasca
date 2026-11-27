@@ -17,6 +17,8 @@ import Itasca.Handler.ScalarOperations
 import Itasca.Runtime.Compiler.Body.Reader.Safety.Run
 import Itasca.Runtime.Compiler.Body.Reader.Calls.Instructions
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Replay.
 
@@ -45,7 +47,7 @@ theorem scalar_eq {V : Type} (visitor : code.OpVisitor V)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before : V)
     (ordinary : opcode.val ∉ Body.controlOpcodes) :
-    code.step_profile visitor st data env ctx index opcode before =
+    code.step_body visitor st data env ctx index opcode before =
       (if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st, before)
       else do
@@ -59,7 +61,7 @@ theorem scalar_eq {V : Type} (visitor : code.OpVisitor V)
           .ok (error, {core := state}, after)) := by
   have hok : core.result.Result.Insts.CoreOpsTry.branch
       (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
-  simp only [code.step_profile, bind_ok, hok]
+  simp only [code.step_body, bind_ok, hok]
   split <;> try rfl
   all_goals exact False.elim (ordinary (by decide))
 
@@ -67,7 +69,7 @@ theorem scalar_success {V : Type} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (opcode : U8) (before after : V)
     (ordinary : opcode.val ∉ Body.controlOpcodes)
-    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_body visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     st.core.vals.val.length < Usize.max ∧
       code.step_wasm2 visitor st.core data env ctx opcode before = .ok (.Ok (), out.core, after) := by
   rw [scalar_eq visitor st data env ctx index opcode before ordinary] at accepted
@@ -103,7 +105,7 @@ theorem base_success {V : Type} (visitor : code.OpVisitor V)
     (base : opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253])
     (sign : Body.NumericExtensions.signMeaning opcode = none)
     (misc : opcode ≠ code.OP_MISC_PREFIX) (locals : ctx.locals = ctx'.locals)
-    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
+    (accepted : code.step_body visitor st data env ctx index opcode before = .ok (.Ok (), out, after)) :
     st.core.vals.val.length < Usize.max ∧
       code.step visitor st.core data env ctx' opcode before = .ok (.Ok (), out.core, after) := by
   obtain ⟨capacity, run⟩ := scalar_success visitor st out data env ctx index opcode before after ordinary accepted
@@ -153,7 +155,7 @@ reader; no independent encoding of the unconsumed suffix is assumed. -/
 theorem reader_misc_accepted {V} (visitor : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (before after : V)
-    (accepted : code.step_profile visitor st data env ctx index 252#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 252#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ sub next, Binary.Leb128.Decoded data st.core.pos sub next ∧ MiscOpcode sub := by
   obtain ⟨_,run⟩ := scalar_success visitor st out data env ctx index 252#u8 before after
@@ -539,13 +541,13 @@ theorem reader_opcode {V : Type} (visitor : code.OpVisitor V)
 theorem reader_accepted_opcode {V : Type} (visitor : code.OpVisitor V)
     (st final : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (typeIndex : U32) (opcode : U8) (value after : V)
-    (accepted : code.step_profile visitor st data env ctx typeIndex opcode value =
+    (accepted : code.step_body visitor st data env ctx typeIndex opcode value =
       .ok (.Ok (),final,after)) : ReaderOpcode opcode := by
   by_contra unknown
   have rejected := (reader_opcode visitor st.core data env ctx opcode value).resolve_left unknown
   have hok : core.result.Result.Insts.CoreOpsTry.branch
       (.Ok () : core.result.Result Unit error.OpError) = .ok (.Continue ()) := rfl
-  unfold code.step_profile at accepted
+  unfold code.step_body at accepted
   simp only [bind_ok, hok] at accepted
   split at accepted
   all_goals try { exfalso; apply unknown; reader_opcode }
@@ -618,7 +620,7 @@ theorem reader_scalar_reached {V} (visitor : code.OpVisitor V)
     (step : st.core.vals.val.length < Usize.max →
       code.step_wasm2 visitor st.core data env ctx opcode before ⦃ out =>
         out.1 = .Ok () → post out.2.1 out.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index opcode before ⦃ out =>
+    code.step_body visitor st data env ctx index opcode before ⦃ out =>
       out.1 = .Ok () → post out.2.1.core out.2.2 ⦄ := by
   rw [scalar_eq visitor st data env ctx index opcode before ordinary]
   by_cases full : alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX

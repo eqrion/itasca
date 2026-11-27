@@ -410,7 +410,7 @@ def StepTotalOn {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     (inv : V → code.BodyState → Prop) : Prop :=
   ∀ (st : code.BodyState) (v : V), inv v st → st.core.ctrls.val ≠ [] →
     ∀ (inbounds : st.core.pos.val < data.length) (next : Usize), next.val = st.core.pos.val + 1 →
-      code.step_profile visitor {core := {st.core with pos := next}} data env ctx typeIndex
+      code.step_body visitor {core := {st.core with pos := next}} data env ctx typeIndex
         data.val[st.core.pos.val] v ⦃ out => out.1 = .Ok () →
           inv out.2.2 out.2.1 ∧ next.val ≤ out.2.1.core.pos.val ⦄
 end Visitor.Replay.ReachedBody
@@ -506,7 +506,7 @@ set_option maxHeartbeats 2000000
 
 /-- The accepted reader advances the concrete cursor even when later bytes are malformed. Only
 the reached raw control geometry is needed. -/
-theorem code.step_profile.accepted_progress {V : Type} (visitor : code.OpVisitor V)
+theorem code.step_body.accepted_progress {V : Type} (visitor : code.OpVisitor V)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (typeIndex : U32)
 
     (st final : code.BodyState) (value after : V)
@@ -516,11 +516,11 @@ theorem code.step_profile.accepted_progress {V : Type} (visitor : code.OpVisitor
     (controlBound : st.blocks.val.length ≤ st.core.pos.val+1)
     (nonempty : st.core.ctrls.val ≠ []) (inbounds : st.core.pos.val<data.length)
     (next : Usize) (advance : next.val=st.core.pos.val+1)
-    (accepted : code.step_profile visitor ⟨{st.core with pos:=next}⟩ data env ctx typeIndex
+    (accepted : code.step_body visitor ⟨{st.core with pos:=next}⟩ data env ctx typeIndex
       data.val[st.core.pos.val] value = .ok (.Ok (),final,after)) :
     next.val ≤ final.core.pos.val := by
   obtain ⟨unitValue,erased⟩ := Body.Visitor.step_transfer visitor
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
     data env ctx ctx rfl typeIndex data.val[st.core.pos.val]
     ⟨{st.core with pos:=next}⟩ final value () after accepted
   cases unitValue
@@ -529,13 +529,13 @@ theorem code.step_profile.accepted_progress {V : Type} (visitor : code.OpVisitor
   have same : position=next := UScalar.eq_of_val_eq (by omega)
   subst position
   rw [equal] at read
-  have body : code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have body : code.body_loop_loop.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx typeIndex () st = .ok (.cont ((),final)) := by
     have nonemptyBool : st.core.ctrls.val.isEmpty=false := by simpa using nonempty
     simp [code.body_loop_loop.body,alloc.vec.Vec.is_empty,nonemptyBool,read,
       core.result.Result.Insts.CoreOpsTry.branch,erased]
   have checked := code.body_loop_loop.body.total
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
     data env ctx typeIndex st () dataBound shape blocks controlBound
   rw [body,WP.spec_ok] at checked
   have progress := checked.2
@@ -623,9 +623,9 @@ def AcceptingSuffixRefinement {V W : Type} (source : code.OpVisitor V) (target :
     code.body_loop_loop source data env ctx typeIndex v st = .ok (.Ok (),final) →
     st.core.ctrls.val ≠ [] →
     ∀ (inbounds : st.core.pos.val < data.length) (next : Usize), next.val = st.core.pos.val+1 →
-    ∀ out middle, code.step_profile source {core := {st.core with pos := next}} data env ctx typeIndex
+    ∀ out middle, code.step_body source {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] v = .ok (.Ok (),out,middle) →
-    code.step_profile target {core := {st.core with pos := next}} data env ctx typeIndex
+    code.step_body target {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] w ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         related out middle result.2.2 ∧ next.val ≤ out.core.pos.val ⦄
 end Visitor.Replay.ReachedBody
@@ -638,7 +638,7 @@ theorem code.body_loop_loop.accepted_tail {V : Type}
     (before middle final : V) (nonempty : st.core.ctrls.val ≠ [])
     (inbounds : st.core.pos.val < data.length) (next : Usize)
     (advance : next.val = st.core.pos.val+1)
-    (called : code.step_profile visitor {core := {st.core with pos := next}} data env ctx typeIndex
+    (called : code.step_body visitor {core := {st.core with pos := next}} data env ctx typeIndex
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle))
     (reference : code.body_loop_loop visitor data env ctx typeIndex before st = .ok (.Ok (),final)) :
     code.body_loop_loop visitor data env ctx typeIndex middle out = .ok (.Ok (),final) := by

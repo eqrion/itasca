@@ -10,6 +10,8 @@ import Itasca.Runtime.Interp.Calls.OutcomesAndResolution
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## HeadCoverage -/

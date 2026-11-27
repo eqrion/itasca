@@ -10,6 +10,8 @@ import Itasca.Body.Simd.Sound
 import Itasca.Support.Translation
 import Itasca.Body.References.Complete
 
+open WebAssembly
+
 /-!
 Proofs for Body / Complete.
 
@@ -123,7 +125,7 @@ theorem program_of_atoms (data : Slice U8) (env : metadata.Env)
       subst tokens
       have hfirst_len : first.length ≤ n := by simp only [List.length_append] at hn; omega
       have hrest_len : rest.length < n := by
-        have hnonempty := hfirst.nonempty
+        have hnonempty := Atom.nonempty hfirst
         have hpos : 0 < first.length := List.length_pos_iff.mpr hnonempty
         simp only [List.length_append] at hn
         omega
@@ -160,7 +162,7 @@ section
 `LeafContract` is the interface a leaf instruction family must meet: given an independent
 encoding and a generated typing, `Body.step` accepts with a byte-weighted capacity bound.
 `atom_of_leaf` turns a `LeafContract` into an `AtomProgram`. This file discharges the contract for
-the scalar family (`Frame.scalar`, `scalar_leaf`, `scalar_atom`); `classify_plain` splits plain
+the scalar family (`Frame.scalar`, `scalar_leaf`, `scalar_atom`); `plain_leaf` splits plain
 instructions into scalar and control cases.
 -/
 
@@ -180,49 +182,6 @@ theorem At.read_byte {data start token next} (h : At data start token next) :
   obtain ⟨_, hr, pos, rfl, hpos⟩ := WP.spec_imp_exists (reader.read_byte.spec data start hb)
   obtain ⟨opcode, imm, hi, ⟨hp, hbyte⟩, hs⟩ := h.immediate pos hpos
   exact ⟨opcode, pos, imm, by simpa [hbyte] using hr, hpos, hi, hs, hp, hbyte⟩
-
-/-- The control cases of the leaf grammar are branches, `return` and calls. Structured control
-(`block`, `loop`, `if`) is handled through `Token` in `Body/Complete/Body.Control`. -/
-inductive ControlImmediate : U8 → instr → List U8 → Prop where
-  | br (idx : U32) {bytes} : Binary.Leb128.Encoding bytes idx.val →
-      ControlImmediate 0x0C#u8 (.BR (.mk_uN idx.val)) bytes
-  | brIf (idx : U32) {bytes} : Binary.Leb128.Encoding bytes idx.val →
-      ControlImmediate 0x0D#u8 (.BR_IF (.mk_uN idx.val)) bytes
-  | brTable (indices : List U32) (default : U32) {count entries final} :
-      Binary.Leb128.Encoding count indices.length → Body.Scalar.IndicesEncoding indices entries →
-      Binary.Leb128.Encoding final default.val →
-      ControlImmediate 0x0E#u8 (.BR_TABLE (indices.map (fun i => .mk_uN i.val)) (.mk_uN default.val))
-        (count ++ entries ++ final)
-  | return_ : ControlImmediate 0x0F#u8 .RETURN []
-  | call (idx : U32) {bytes} : Binary.Leb128.Encoding bytes idx.val →
-      ControlImmediate 0x10#u8 (.CALL (.mk_uN idx.val)) bytes
-  | callIndirect (idx : U32) {bytes} : Binary.Leb128.Encoding bytes idx.val →
-      ControlImmediate 0x11#u8 (.CALL_INDIRECT (.mk_uN 0) (.mk_uN idx.val)) (bytes ++ [0#u8])
-
-/-- Exhaustive scalar/control classification of the independent plain grammar. -/
-theorem classify_plain {opcode op bytes} (h : Body.Scalar.Immediate opcode (.plain op) bytes) :
-    opcode.val ∉ controlOpcodes ∨ ControlImmediate opcode op bytes := by
-  cases h with
-  | br idx he => exact .inr (.br idx he)
-  | brIf idx he => exact .inr (.brIf idx he)
-  | brTable ids fallback hc hi hf => exact .inr (.brTable ids fallback hc hi hf)
-  | return_ => exact .inr .return_
-  | call idx he => exact .inr (.call idx he)
-  | callIndirect idx he => exact .inr (.callIndirect idx he)
-  | memory opcode operation arg hmap ha ho =>
-    left
-    intro hm
-    simp only [controlOpcodes, List.mem_cons, List.not_mem_nil, or_false] at hm
-    rcases hm with he | he | he | he | he | he | he | he | he | he | he <;>
-      simp [Body.MemoryMeaning.opcodeMeaning, he] at hmap
-  | numericInstruction opcode source hmap =>
-    rw [Body.Numeric.opcodeInstruction_eq] at hmap
-    obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
-    left
-    have hb := Body.Numeric.NumericOp.bounds decoded
-    simp only [controlOpcodes, List.mem_cons, List.not_mem_nil, or_false, not_or]
-    omega
-  | _ => exact .inl (by decide)
 
 end Itasca.Body
 
@@ -429,7 +388,7 @@ theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
   subst r
   have hstep : step { st with core := { st.core with pos := pos } } data env ctx index 0x0B#u8 =
       .ok (.Ok (), s) := by simpa [step] using hr
-  exact ⟨s, .single bound f.nonempty (by simpa [hbyte] using hread)
+  exact ⟨s, .single bound f.nonempty (by rw [hbyte] at hread; exact hread)
     hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
@@ -458,7 +417,7 @@ theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
   subst r
   have hstep : step { st with core := { st.core with pos := pos } } data env ctx index 0x05#u8 =
       .ok (.Ok (), s) := by simpa [step] using hr
-  exact ⟨s, .single bound f.nonempty (by simpa [hbyte] using hread)
+  exact ⟨s, .single bound f.nonempty (by rw [hbyte] at hread; exact hread)
     hstep,
     hp.trans hnext.symm, hc, hb, hv⟩
 
@@ -491,7 +450,7 @@ theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
       .ok (.Ok (), s) := by
     rw [hop.1]
     rcases initial with rfl | rfl | rfl <;> simpa [step, Frames.Form.opcode, Frames.Form.kind] using hr
-  refine ⟨s, .single hb f.nonempty (by simpa [hbyte] using hread) hstep, hp, heffect, ?_⟩
+  refine ⟨s, .single hb f.nonempty (by rw [hbyte] at hread; exact hread) hstep, hp, heffect, ?_⟩
   obtain ⟨remaining, base, hlen, hbase, hreal, hctrls, hblocks, hvals⟩ := heffect
   apply bounds_after hb hat hp
   · have htwo := hd.span.1
@@ -516,7 +475,7 @@ theorem execute_body {data : Slice U8} {env : metadata.Env}
     (ins outs : List wasm_types.ValueType)
     (hm : Translation.Environment.Matches env ctx C) (hl : Labels env st C)
     (hb : Bounds data st)
-    (hbytes : Consumed data st.core.pos (tokens ++ [Token.end_]) next)
+    (hbytes : Consumed data st.core.pos (tokens ++ [WebAssembly.Binary.TokenWith.end_]) next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
     (ht : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (ins.map Translation.valueType))
     (hbody : Instrs_ok C ops (.mk_functype (.mk_list (ins.map Translation.valueType))
@@ -579,7 +538,7 @@ theorem run_closed_child {data : Slice U8} {env : metadata.Env}
     (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front : List valtype) (ins outs : List wasm_types.ValueType)
     (hm : Translation.Environment.Matches env ctx C) (hl : Labels env st C) (hb : Bounds data st)
-    (hbytes : Consumed data st.core.pos ([form.token bt] ++ tokens ++ [Token.end_]) next)
+    (hbytes : Consumed data st.core.pos ([form.token bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_]) next)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (ht : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ form.args ins))
     (hbody : Instrs_ok (Frames.enter C form ins outs) ops
@@ -589,7 +548,7 @@ theorem run_closed_child {data : Slice U8} {env : metadata.Env}
     ∃ s, BoundedExecution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ outs.map Translation.valueType) s ∧ Bounds data s := by
   obtain ⟨header, hheadc, hrest⟩ :=
-    (show Consumed data st.core.pos ([form.token bt] ++ (tokens ++ [Token.end_])) next by
+    (show Consumed data st.core.pos ([form.token bt] ++ (tokens ++ [WebAssembly.Binary.TokenWith.end_])) next by
       simpa [List.append_assoc] using hbytes).split
   have hhead := hheadc.single
   obtain ⟨entered, henter, hpos, heffect, hbounds⟩ :=
@@ -659,8 +618,8 @@ theorem atom_block {data : Slice U8} {env : metadata.Env}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index
-      ([Token.block bt] ++ tokens ++ [Token.end_]).length) :
-    AtomProgram data env ctx index ([.block bt] ++ tokens ++ [Token.end_])
+      ([WebAssembly.Binary.TokenWith.block bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_]).length) :
+    AtomProgram data env ctx index ([.block bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_])
       (.BLOCK (blockType bt) ops) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
@@ -675,8 +634,8 @@ theorem atom_loop {data : Slice U8} {env : metadata.Env}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index
-      ([Token.loop bt] ++ tokens ++ [Token.end_]).length) :
-    AtomProgram data env ctx index ([.loop bt] ++ tokens ++ [Token.end_])
+      ([WebAssembly.Binary.TokenWith.loop bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_]).length) :
+    AtomProgram data env ctx index ([.loop bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_])
       (.LOOP (blockType bt) ops) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
@@ -691,8 +650,8 @@ theorem atom_if_end {data : Slice U8} {env : metadata.Env}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
     (smaller : SmallerPrograms data env ctx index
-      ([Token.if_ bt] ++ tokens ++ [Token.end_]).length) :
-    AtomProgram data env ctx index ([.if_ bt] ++ tokens ++ [Token.end_])
+      ([WebAssembly.Binary.TokenWith.if_ bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_]).length) :
+    AtomProgram data env ctx index ([.if_ bt] ++ tokens ++ [WebAssembly.Binary.TokenWith.end_])
       (.IFELSE (blockType bt) ops []) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hdecl
   cases htyped with
@@ -708,7 +667,7 @@ theorem atom_if_else {data : Slice U8} {env : metadata.Env}
     {yesTokens noTokens : List Token} {yes no : List instr}
     (hyes : Emits yesTokens yes) (hno : Emits noTokens no)
     (smaller : SmallerPrograms data env ctx index
-      ([Token.if_ bt] ++ yesTokens ++ [Token.else_] ++ noTokens ++ [Token.end_]).length) :
+      ([WebAssembly.Binary.TokenWith.if_ bt] ++ yesTokens ++ [WebAssembly.Binary.TokenWith.else_] ++ noTokens ++ [WebAssembly.Binary.TokenWith.end_]).length) :
     AtomProgram data env ctx index ([.if_ bt] ++ yesTokens ++ [.else_] ++ noTokens ++ [.end_])
       (.IFELSE (blockType bt) yes no) := by
   intro C st f next front input output hm hl hb hbytes ht htyped hdecl
@@ -940,7 +899,7 @@ theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : metadat
     LeafResult f data env ctx index 0x11#u8 (bytes ++ [0#u8]) next (front ++ output) := by
   apply f.call_indirect_indexed data env ctx index C hmatch henv idx 0#u32 bytes [0#u8]
     next he _ hb front input output hr ht hcap
-  exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Binary.Leb128.payload]⟩
+  exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]⟩
 
 theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
@@ -1047,30 +1006,6 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : metadata
       ⟨⟨true, [], hc, by simpa using hv, Body.Stack.realizes_polymorphic_empty _⟩, hblocks⟩, ?_⟩
     simp only [hv, f.core.vals, List.length_append]
     omega
-
-/-- All control leaves satisfy the shared byte-weighted execution
-contract directly from independent encodings and generated primitive rules. -/
-theorem control_leaf (data : Slice U8) (env : metadata.Env)
-    (ctx : code.Context) (index : U32)
-    (henv : CodeEntry.EnvironmentWithinLimits env)
-    (hroot : resolve env (.Type index .Results) = some ctx.results.val)
-    (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
-    (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
-    (hmatch : Translation.Environment.Matches env ctx C) (hlabels : Labels env st C)
-    (hcap : st.core.vals.val.length + 1000 < Usize.max)
-    (hi : ControlImmediate opcode op bytes) (hb : Body.Scalar.BytesAt data st.core.pos bytes next)
-    (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
-    (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
-    LeafResult f data env ctx index opcode bytes next (front ++ output) := by
-  cases hi with
-  | br depth he => exact f.branch data env ctx index C hlabels depth _ next he hb front input output hr ht
-  | brIf depth he => exact f.branch_if data env ctx index C hlabels henv depth _ next he hb front input output hr ht hcap
-  | brTable depths default hc he hd =>
-    exact f.branch_table data env ctx index C hlabels
-      depths default _ _ _ next hc he hd hb front input output hr ht
-  | return_ => exact f.return_ data env ctx index C hmatch hroot next hb front input output hr ht
-  | call idx he => exact f.call data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
-  | callIndirect idx he => exact f.call_indirect data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
 
 /-- Reference immediates use ordinary generated typing together with the
 independent declaration condition for `ref.func`. -/
@@ -1237,11 +1172,32 @@ theorem plain_leaf (data : Slice U8) (env : metadata.Env)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output))) :
     LeafResult f data env ctx index opcode bytes next (front ++ output) := by
-  rcases classify_plain hi with hscalar | hcontrol
-  · exact scalar_leaf data env ctx index C st f opcode op bytes next front input output
-      hmatch hcap hscalar hi hb hr ht
-  · exact control_leaf data env ctx index henv hroot C st f opcode op bytes next front
-      input output hmatch hlabels hcap hcontrol hb hr ht
+  by_cases hcontrol : opcode.val ∈ controlOpcodes
+  case neg =>
+    exact scalar_leaf data env ctx index C st f opcode op bytes next front input output
+      hmatch hcap hcontrol hi hb hr ht
+  cases hi with
+  | br depth he => exact f.branch data env ctx index C hlabels depth _ next he hb front input output hr ht
+  | brIf depth he => exact f.branch_if data env ctx index C hlabels henv depth _ next he hb front input output hr ht hcap
+  | brTable depths default hc he hd =>
+    exact f.branch_table data env ctx index C hlabels
+      depths default _ _ _ next hc he hd hb front input output hr ht
+  | return_ => exact f.return_ data env ctx index C hmatch hroot next hb front input output hr ht
+  | call idx he => exact f.call data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
+  | callIndirect idx he => exact f.call_indirect data env ctx index C hmatch henv idx _ next he hb front input output hr ht hcap
+  | memory opcode operation arg hmap _ _ =>
+    change Body.MemoryMeaning.opcodeMeaning opcode = some operation at hmap
+    simp only [controlOpcodes, List.mem_cons, List.not_mem_nil, or_false] at hcontrol
+    rcases hcontrol with h | h | h | h | h | h | h | h | h | h | h <;>
+      simp [Body.MemoryMeaning.opcodeMeaning, h] at hmap
+  | numericInstruction opcode _ hmap =>
+    change Body.Numeric.opcodeInstruction opcode = _ at hmap
+    rw [Body.Numeric.opcodeInstruction_eq] at hmap
+    obtain ⟨operation, decoded, _⟩ := Option.map_eq_some_iff.mp hmap
+    have := Body.Numeric.NumericOp.bounds decoded
+    simp only [controlOpcodes, List.mem_cons, List.not_mem_nil, or_false] at hcontrol
+    omega
+  | _ => simp [controlOpcodes] at hcontrol
 
 theorem leaf_contract (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (henv : CodeEntry.EnvironmentWithinLimits env)
@@ -1256,12 +1212,14 @@ theorem leaf_contract (data : Slice U8) (env : metadata.Env)
     exact reference_leaf data env ctx index henv C st f opcode op bytes next front input
       output hmatch hcap hi hb hr ht hdecl
   | signExtensionInstruction opcode source hmap =>
+    change Body.NumericExtensions.signInstruction opcode = _ at hmap
     rw [Body.NumericExtensions.signInstruction_eq] at hmap
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
     obtain ⟨s, hs, hp, ho, hl⟩ := f.sign_extension data env ctx index opcode operation next C
       front input output decoded hb (by omega) ht hr
     exact ⟨s, hs, hp, ho, by simp; omega⟩
   | saturatingInstruction subopcode source hmap he =>
+    change Body.NumericExtensions.saturatingInstruction subopcode = _ at hmap
     rw [Body.NumericExtensions.saturatingInstruction_eq] at hmap
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
     obtain ⟨s, hs, hp, ho, hl⟩ := f.saturating data env ctx index subopcode operation _ next C

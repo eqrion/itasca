@@ -22,6 +22,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchLiteral
 import Itasca.Runtime.Compiler.Local.Source.StartJumpTableBounds
 import Itasca.Runtime.Compiler.Local.Relations.Table.BranchTableFrames
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Checking.
 

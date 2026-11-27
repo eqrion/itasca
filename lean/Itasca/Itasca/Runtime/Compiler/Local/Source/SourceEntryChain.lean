@@ -1,5 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
 
+open WebAssembly
+
 /-!
 # Entered control-scope ancestry
 

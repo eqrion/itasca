@@ -1,3 +1,4 @@
+import Itasca.Binary.ReaderIndex
 import Itasca.Module.Readers.Syntax
 
 /-!
@@ -375,12 +376,24 @@ theorem metadata.decode_limits.complete (data : Slice U8) (pos : Usize)
     (lim : wasm_types.Limits) (next : Usize) (h : At LimitsEncoding data pos lim next) :
     metadata.decode_limits data pos = .ok (.Ok (lim, next)) := by
   obtain ⟨bytes, he, hs⟩ := h
+  unfold LimitsEncoding at he
+  rw [← Source.readerBytes_bytes bytes] at hs
+  generalize Source.bytes bytes = raw at he hs
+  generalize hlim : Translation.Environment.limitsType lim = ty at he
   cases he with
-  | noMax minimum hb =>
+  | noMax n encoded =>
+      obtain ⟨minimum, rfl, hb⟩ := Source.readerIndex encoded
+      have eq : lim = ⟨minimum, none⟩ := Source.limitsType hlim
+      subst lim
       obtain ⟨middle, htag, hbytes⟩ := (show Body.Scalar.BytesAt data pos ([0#u8] ++ _) next from hs).split
       simp [metadata.decode_limits, htag.read_byte, hbytes.read_u32 minimum hb,
         core.result.Result.Insts.CoreOpsTry.branch]
-  | max minimum maximum hlo hhi =>
+  | max n m loEncoded hiEncoded =>
+      obtain ⟨minimum, rfl, hlo⟩ := Source.readerIndex loEncoded
+      obtain ⟨maximum, rfl, hhi⟩ := Source.readerIndex hiEncoded
+      have eq : lim = ⟨minimum, some maximum⟩ := Source.limitsType hlim
+      subst lim
+      simp only [Source.readerBytes, List.map_cons, List.map_append] at hs
       obtain ⟨first, htag, hbytes⟩ := (show Body.Scalar.BytesAt data pos ([1#u8] ++ _) next from hs).split
       obtain ⟨middle, hl, hh⟩ := hbytes.split
       simp [metadata.decode_limits, htag.read_byte, hl.read_u32 minimum hlo,
@@ -390,14 +403,15 @@ theorem metadata.decode_limits.complete (data : Slice U8) (pos : Usize)
 theorem metadata.decode_global_type.complete (data : Slice U8) (pos : Usize)
     (ty : wasm_types.GlobalType) (next : Usize) (h : At GlobalTypeEncoding data pos ty next) :
     metadata.decode_global_type data pos = .ok (.Ok (ty, next)) := by
-  obtain ⟨bytes, rfl, hs⟩ := h
+  obtain ⟨bytes, he, hs⟩ := h
+  obtain rfl := GlobalTypeEncoding.reader_bytes.mp he
   obtain ⟨middle, hvalue, hmut⟩ :=
     (show Body.Scalar.BytesAt data pos ([Itasca.Binary.valueByte ty.valtype] ++ [mutByte ty.mutability]) next from hs).split
-  have hv := metadata.decode_value_type.complete data pos ty.valtype middle ⟨_, rfl, hvalue⟩
+  have hv := metadata.decode_value_type.complete data pos ty.valtype middle ⟨_, ValueTypeEncoding.reader_bytes.mpr rfl, hvalue⟩
   have hm := hmut.read_byte
   cases ty with
   | mk mutability valtype =>
-      cases mutability <;> simp [metadata.decode_global_type, hv, hm, mutByte,
+      cases mutability <;> simp [metadata.decode_global_type, hv, hm,
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `metadata.decode_mem_type` accepts a `MemTypeEncoding` span with limits within
@@ -417,7 +431,8 @@ theorem metadata.decode_table_type.complete (data : Slice U8) (pos : Usize)
     (ty : wasm_types.TableType) (next : Usize) (h : At TableTypeEncoding data pos ty next)
     (hv : LimitsValid ty.limits limits.MAX_TABLE_ELEMS) :
     metadata.decode_table_type data pos = .ok (.Ok (ty, next)) := by
-  obtain ⟨bytes, ⟨limitBytes, hl, rfl⟩, hs⟩ := h
+  obtain ⟨bytes, he, hs⟩ := h
+  obtain ⟨limitBytes, hl, rfl⟩ := tableType_reader_span he
   obtain ⟨middle, htag, hbytes⟩ := (show Body.Scalar.BytesAt data pos ([elemByte ty.elem] ++ limitBytes) next from hs).split
   have hr := metadata.decode_limits.complete data middle ty.limits next ⟨_, hl, hbytes⟩
   have hc := limits.validate_limits.complete ty.limits limits.MAX_TABLE_ELEMS hv
@@ -489,7 +504,8 @@ theorem metadata.decode_func_type.complete (data : Slice U8) (pos : Usize)
     (h : At FuncTypeEncoding data pos ty next)
     (hlimits : CodeEntry.FuncTypeWithinLimits ty) :
     metadata.decode_func_type data pos = .ok (.Ok (ty, next)) := by
-  obtain ⟨bytes, ⟨params, results, hp, hr, rfl⟩, hs⟩ := h
+  obtain ⟨bytes, he, hs⟩ := h
+  obtain ⟨params, results, hp, hr, rfl⟩ := FuncTypeEncoding.reader_parts.mp he
   obtain ⟨first, htag, hbytes⟩ :=
     (show Body.Scalar.BytesAt data pos ([0x60#u8] ++ (params ++ results)) next from hs).split
   obtain ⟨middle, hparams, hresultsBytes⟩ := hbytes.split

@@ -1,6 +1,8 @@
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.SourceMachine.Sim.Host
 
+open WebAssembly
+
 /-!
 # Typed label completion
 

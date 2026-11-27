@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Runtime.Representation.Values
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ObservationLayout -/

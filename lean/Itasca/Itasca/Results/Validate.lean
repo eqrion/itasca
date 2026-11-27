@@ -2,6 +2,8 @@ import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Stream.Completeness
 
+open WebAssembly
+
 /-!
 # Whole-module validation
 
@@ -53,8 +55,8 @@ theorem metadata.validate_module.complete (data : Slice U8) (raw : Binary.Module
       Matches decoded.env decoded.tail raw :=
   stream.validate_module_slice.complete data raw encoded signatures elaborated typed restricted
 
-/-- `complete` together with `AccessorTypes`: `metadata.import_types` and
-`metadata.export_types` on the returned environment give the types SpecTec assigns to the raw
+/-- `complete` together with `AccessorTypes`: `metadata.Env.import_types` and
+`metadata.Env.export_types` on the returned environment give the types SpecTec assigns to the raw
 module's imports and exports. -/
 theorem metadata.validate_module.complete_with_metadata
     (data : Slice U8) (raw : Binary.Module)

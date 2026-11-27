@@ -22,6 +22,8 @@ import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.SourceMachine.Indirect.HostSimulation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Calls.
 
@@ -154,7 +156,7 @@ open Aeneas Aeneas.Std
 
 /-- The caller's post-fetch continuation and live prefix form the saved frame
 needed for entry. The argument words remain available to the new callee. -/
-theorem prepare_saved_caller {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+theorem prepare_saved_caller {M : Type} {store : runtime.store.Store M} {s : WebAssembly.store}
     {exec : runtime.interp.Execution} {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
     (binding : FrameBinding store exec raw source)
     (slots : FrameSlots exec raw source)
@@ -178,7 +180,7 @@ theorem prepare_saved_caller {M : Type} {store : runtime.store.Store M} {s : _ro
 
 /-- After successful entry, the initialized callee and prepared caller chain
 constitute the complete frame-stack relation. -/
-theorem FrameStackRel.call_enter {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+theorem FrameStackRel.call_enter {M : Type} {store : runtime.store.Store M} {s : WebAssembly.store}
     {before after : runtime.interp.Execution} {raws : List runtime.interp.Frame} {sources : List SourceMachine.AFrame}
     {instanceIndex functionIndex base : Usize} {compiled : runtime.bytecode.CompiledFunction}
     (effect : CallEntryEffect before after instanceIndex functionIndex base compiled)
@@ -214,7 +216,7 @@ open Aeneas Aeneas.Std
 /-- The compiler's complete function certificate supplies the initial callee
 point, including implicit body-label branch and normal continuations. -/
 theorem function_callee_point
-    (s : _root_.store) (moduleInst : moduleinst) (C : context)
+    (s : WebAssembly.store) (moduleInst : moduleinst) (C : context)
     (bindings : SourceMachine.ModuleBindings s moduleInst C)
     (params declared results : List valtype) (body : List instr)
     (compiled : runtime.bytecode.CompiledFunction) (epilogue : U32)
@@ -255,7 +257,7 @@ theorem call_wasm_certified {M P F A : Type}
     (function : runtime.store.FuncInst) (signature : Itasca.wasm_types.FuncType)
     (instanceIndex functionIndex : Usize) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (epilogue : U32)
-    (s : _root_.store) (C : context) (bindings : SourceMachine.ModuleBindings s (Representation.decodeInstance store inst) C)
+    (s : WebAssembly.store) (C : context) (bindings : SourceMachine.ModuleBindings s (Representation.decodeInstance store inst) C)
     (declared : List valtype) (body : List instr)
     (args defaults : List val)
     (certificate : FunctionCode C
@@ -324,7 +326,7 @@ theorem call_wasm_stack {M P F A : Type}
     (function : runtime.store.FuncInst) (signature : Itasca.wasm_types.FuncType)
     (instanceIndex functionIndex : Usize) (inst : runtime.store.ModuleInst)
     (compiled : runtime.bytecode.CompiledFunction) (epilogue : U32)
-    (s : _root_.store) (C : context) (bindings : SourceMachine.ModuleBindings s (Representation.decodeInstance store inst) C)
+    (s : WebAssembly.store) (C : context) (bindings : SourceMachine.ModuleBindings s (Representation.decodeInstance store inst) C)
     (declared : List valtype) (body : List instr)
     (args defaults : List val)
     (certificate : FunctionCode C
@@ -469,7 +471,7 @@ open Aeneas Aeneas.Std
 
 /-- Fetch advances the caller PC and removes argument values from its saved
 live prefix, preparing the complete suspended chain for a defined call. -/
-theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+theorem FrameStackRel.prepare_call {M : Type} {store : runtime.store.Store M} {s : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store s exec (source :: rest))
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
@@ -528,7 +530,7 @@ Main declarations: `saved_source_base` and `step_call_structured`.
 namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
-theorem saved_source_base {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+theorem saved_source_base {M : Type} {store : runtime.store.Store M} {s : WebAssembly.store}
     {exec raws sources waiting base} (saved : SavedFrames store s exec raws sources waiting base) :
     base = suspendedSourceWords sources := by
   induction saved with
@@ -549,7 +551,7 @@ theorem step_call_structured {M P F A : Type}
     (frameIndex : Usize) (raw : runtime.interp.Frame)
     (caller : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (index : U32) (after : List instr)
     (decoded : s = Representation.decodeStore view code store)
     (compiledFunctions : CompiledFunctions code store)
@@ -730,7 +732,7 @@ Main declarations: `indirect_values_head`.
 namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std WebAssembly Itasca.Spec
 
-theorem indirect_values_head {s : _root_.store} {raw : runtime.interp.Frame} {f : SourceMachine.AFrame} {compiled : runtime.bytecode.CompiledFunction} {C targets next output}
+theorem indirect_values_head {s : WebAssembly.store} {raw : runtime.interp.Frame} {f : SourceMachine.AFrame} {compiled : runtime.bytecode.CompiledFunction} {C targets next output}
     [IndirectProjection (emission compiled) compiled.indirect.val]
     (table type : Nat) (after : List instr)
     (point : FramePoint s raw {f with code:=.CALL_INDIRECT (.mk_uN table) (.mk_uN type)::after} compiled C targets next output)

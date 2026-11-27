@@ -2,6 +2,8 @@ import Itasca.Binary.Definitions
 import Itasca.Results.Definitions.Binary
 import Mathlib.Tactic.IntervalCases
 
+open WebAssembly
+
 /-!
 # Scalar numeric implementation certificates
 
@@ -690,7 +692,8 @@ namespace Itasca.Body.Scalar
 theorem Immediate.numeric (opcode : U8) (operation : Body.Numeric.Operation)
     (meaning : Body.Numeric.opcodeMeaning opcode = some operation) :
     Immediate opcode (.plain operation.instruction) [] := by
-  apply Immediate.numericInstruction
+  apply WebAssembly.Binary.Scalar.ImmediateWith.numericInstruction
+  change Body.Numeric.opcodeInstruction opcode = some operation.instruction
   rw [Body.Numeric.opcodeInstruction_eq, meaning]
   rfl
 
@@ -701,7 +704,8 @@ namespace Itasca.Body
 theorem Immediate.signExtension (opcode : U8) (operation : Numeric.Operation)
     (meaning : NumericExtensions.signMeaning opcode = some operation) :
     Immediate opcode (.plain operation.instruction) [] := by
-  apply Immediate.signExtensionInstruction
+  apply WebAssembly.Binary.ImmediateWith.signExtensionInstruction (r := Itasca.Body.instructionOperands)
+  change NumericExtensions.signInstruction opcode = some operation.instruction
   rw [NumericExtensions.signInstruction_eq, meaning]
   rfl
 
@@ -709,7 +713,8 @@ theorem Immediate.saturating (opcode : U32) (operation : Numeric.Operation) {byt
     (meaning : NumericExtensions.saturatingMeaning opcode = some operation)
     (encoded : Binary.Leb128.Encoding bytes opcode.val) :
     Immediate 0xFC#u8 (.plain operation.instruction) bytes := by
-  apply Immediate.saturatingInstruction _ _ _ encoded
+  apply WebAssembly.Binary.ImmediateWith.saturatingInstruction (r := Itasca.Body.instructionOperands) _ _ _ encoded
+  change NumericExtensions.saturatingInstruction opcode = some operation.instruction
   rw [NumericExtensions.saturatingInstruction_eq, meaning]
   rfl
 

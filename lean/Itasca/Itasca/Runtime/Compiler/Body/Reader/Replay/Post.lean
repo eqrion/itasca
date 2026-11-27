@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Visitor.BodyReplay
 import Itasca.Visitor.RunTrace
 
+open WebAssembly
+
 /-! ## BodyTooLarge -/
 
 section

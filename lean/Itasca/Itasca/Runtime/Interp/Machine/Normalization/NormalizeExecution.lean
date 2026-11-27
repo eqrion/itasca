@@ -7,6 +7,8 @@ import Itasca.Runtime.Interp.Machine.Progress.SupportedAdvance
 import Itasca.Runtime.Interp.Machine.Coverage.RecordingHeads
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

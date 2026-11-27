@@ -8,6 +8,8 @@ import Itasca.Runtime.Interp.Machine.Emission.Unreachable
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Compiler.Local.Lowering.Float.SafetyAndEncoding
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ActiveLoop -/

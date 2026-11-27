@@ -3,6 +3,8 @@ import WebAssembly.Builtins.Float.Comparison
 import WebAssembly.Builtins.Float.Conversion
 import Itasca.Runtime.Spec.PrimitiveOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Numeric / Float.
 

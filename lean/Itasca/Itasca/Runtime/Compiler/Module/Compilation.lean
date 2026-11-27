@@ -1,3 +1,4 @@
+import Itasca.Results.Unique
 import Itasca.Runtime.Compiler.Module.DriverAndCodeRegions
 import Itasca.Runtime.Compiler.Local.Capacity.ConditionalAndSimdAvailability
 import Itasca.Module.Elab.ToTyping
@@ -76,6 +77,8 @@ import Itasca.Runtime.Compiler.Local.Capacity.CallbackBudgets
 import Itasca.Runtime.Compiler.Local.Relations.Segments.SegmentTranslation
 import Itasca.Module.Env.Externals
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Module.
 
@@ -118,10 +121,6 @@ private theorem leb_nonempty {bytes value} (h : Itasca.Binary.Leb128.Encoding by
   obtain ⟨before, last, rfl, _⟩ := h
   simp
 
-private theorem const_nonempty {value bytes} (h : ConstEncoding value bytes) :
-    1 ≤ bytes.length := by
-  cases h <;> simp
-
 private theorem rep_count {α : Type} {R : α → List U8 → Prop} {values bytes}
     (h : Rep R values bytes) (positive : ∀ value bytes, R value bytes → 1 ≤ bytes.length) :
     values.length ≤ bytes.length := by
@@ -143,34 +142,21 @@ private theorem vec_count {α : Type} {R : α → List U8 → Prop} {values byte
 
 private theorem element_cost {entry bytes}
     (h : ElementEncoding entry bytes) : entry.init.length + 3 ≤ 3 * bytes.length := by
-  cases h with
-  | activeIndices _ _ he | passiveIndices _ he | explicitIndices _ _ _ he | declarativeIndices _ he =>
-    have := vec_count he (fun _ _ h => leb_nonempty h)
-    simp only [List.length_map, List.length_append, List.length_singleton]
-    omega
-  | activeExpressions _ _ he | passiveExpressions _ he | explicitExpressions _ _ _ he | declarativeExpressions _ he =>
-    have := vec_count he (fun _ _ h => const_nonempty h)
-    simp only [List.length_append, List.length_singleton]
-    omega
+  obtain ⟨ex, header, init, hh, hi, rfl⟩ := ElementEncoding.reader_parts.mp h
+  have := vec_count hi (fun _ _ h => Itasca.Module.Elements.InitializerEncoding.nonempty h)
+  simp only [List.length_append]
+  omega
 
 private theorem global_cost {entry bytes} (h : GlobalEncoding entry bytes) : 2 ≤ 3 * bytes.length := by
-  obtain ⟨ty, expr, rfl, _, rfl⟩ := h
+  obtain ⟨ty, expr, ht, _, rfl⟩ := GlobalEncoding.reader_parts.mp h
+  obtain rfl := GlobalTypeEncoding.reader_bytes.mp ht
   simp only [List.length_append, List.length_cons, List.length_nil]
   omega
 
 private theorem data_cost {entry bytes}
     (h : DataEncoding entry bytes) : 2 ≤ 3 * bytes.length := by
-  have vec_positive {α : Type} {R : α → List U8 → Prop} {values bytes}
-      (h : VecEncoding R values bytes) : 1 ≤ bytes.length := by
-    obtain ⟨count, entries, hc, _, rfl⟩ := h
-    have := leb_nonempty hc
-    simp only [List.length_append]
-    omega
-  cases h with
-  | active _ _ he | passive _ he =>
-    have := vec_positive he
-    simp only [List.length_append]
-    omega
+  have := DataEncoding.length_ge_two h
+  omega
 
 private theorem rep_cost {α : Type} {R : α → List U8 → Prop} {values bytes}
     (cost : α → Nat) (h : Rep R values bytes)
@@ -209,6 +195,7 @@ theorem initializer_cost_bytes {R raw bytes}
   have hg := padded_cost (fun _ => 2) hg (fun _ _ h => global_cost h)
   have he := padded_cost (fun e => e.init.length + 3) he (fun _ _ h => element_cost h)
   have hd := padded_cost (fun _ => 2) hd (fun _ _ h => data_cost h)
+  dsimp only [WebAssembly.Binary.SectionField.vector] at hf hg he hd
   simp only [List.map_const', List.sum_replicate, smul_eq_mul, mul_one] at hf hg hd
   simp only [List.length_append]
   omega
@@ -283,12 +270,12 @@ open runtime.compiler
 headroom. The successful entry invariant is not required after a rejection. -/
 theorem compiler_submit_total_on {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
-    (safe : CompileScheduler A → stream.CodeBatch → Prop)
+    (safe : CompileScheduler A → stream.StreamingBatch → Prop)
     (entries : ∀ scheduler worker, safe scheduler worker →
       CompileScheduler.compile_entry ops scheduler worker ⦃ out =>
         out.1 = .Ok () → safe out.2.1 out.2.2 ⦄)
     (room : ∀ scheduler worker, safe scheduler worker → scheduler.completed.val.length < Usize.max)
-    (scheduler : CompileScheduler A) (worker : stream.CodeBatch)
+    (scheduler : CompileScheduler A) (worker : stream.StreamingBatch)
     (held : safe scheduler worker) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch ops scheduler worker
       ⦃ _ => True ⦄ := by
@@ -307,7 +294,7 @@ open Aeneas Aeneas.Std Itasca
 open runtime.compiler
 
 theorem CompileEntryWitness.scheduler_ready {A : Type} {ops : runtime.platform.Alloc A}
-    {before after : CompileScheduler A} {worker finalWorker : stream.CodeBatch}
+    {before after : CompileScheduler A} {worker finalWorker : stream.StreamingBatch}
     (entry : CompileEntryWitness ops before after worker finalWorker)
     {env : metadata.Env} {cursor : Nat} (ready : SchedulerReady env cursor before) :
     SchedulerReady env cursor after := by
@@ -326,7 +313,7 @@ theorem compiler_submit_safety {A : Type} (ops : runtime.platform.Alloc A)
       Stream.Batch.Reachable issued worker → CompileScheduler.compile_entry ops current worker ⦃ _ => True ⦄) :
     CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch ops scheduler issued.seed ⦃ out =>
       out.1 = .Ok () → SchedulerReady env (issued.first_func.val + issued.num_funcs.val) out.2 ⦄ := by
-  let safe := fun (current : CompileScheduler A) (worker : stream.CodeBatch) => SchedulerReady env issued.first_func.val current ∧
+  let safe := fun (current : CompileScheduler A) (worker : stream.StreamingBatch) => SchedulerReady env issued.first_func.val current ∧
     Stream.Batch.Reachable issued worker
   have entrySafe : ∀ current worker, safe current worker →
       CompileScheduler.compile_entry ops current worker ⦃ out => out.1 = .Ok () → safe out.2.1 out.2.2 ⦄ := by
@@ -391,7 +378,7 @@ theorem compile_with_total_of_streaming {A : Type} (ops : runtime.platform.Alloc
     (limits : CompileLimits)
     (streaming : ∀ (codeStart codeEnd : Usize) (storage : metadata.Env),
       codeStart.val ≤ codeEnd.val ∧ codeEnd.val ≤ bytes.length →
-      stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+      stream.validate_streaming CompileSource.Insts.ItascaStreamStreamingSource
         (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64
         {bytes,code_start := codeStart,code_end := codeEnd}
         (initialScheduler A limits codeStart) storage ⦃ out =>
@@ -428,7 +415,7 @@ open runtime.compiler
 
 def ReachedEntriesTotal {A : Type} (ops : runtime.platform.Alloc A) : Prop :=
   ∀ (env : metadata.Env) (issued : Stream.Batch.Issued) (scheduler : CompileScheduler A)
-    (worker : stream.CodeBatch), issued.env = env → issued.Bounded → CodeEntry.Bounds env →
+    (worker : stream.StreamingBatch), issued.env = env → issued.Bounded → CodeEntry.Bounds env →
     CodeEntry.EnvironmentWithinLimits env →
     SchedulerReady env issued.first_func.val scheduler →
     Stream.Batch.Reachable issued worker → CompileScheduler.compile_entry ops scheduler worker ⦃ _ => True ⦄
@@ -490,10 +477,10 @@ theorem compiler_stream_spec_of_entries {A : Type} (ops : runtime.platform.Alloc
     (entries : ReachedEntriesTotal ops) (source : CompileSource)
     (sourceBounds : SourceBounds source) (scheduler : CompileScheduler A)
     (initial : SchedulerInitial scheduler) (storage : metadata.Env) :
-    stream.validate_streaming CompileSource.Insts.ItascaStreamSource
+    stream.validate_streaming CompileSource.Insts.ItascaStreamStreamingSource
       (CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage ⦃ out =>
         out.1 = .Ok () → SchedulerReady out.2.2 out.2.2.func_type_indices.val.length out.2.1 ⦄ := by
-  apply WP.spec_mono (stream.validate_streaming.spec_on CompileSource.Insts.ItascaStreamSource
+  apply WP.spec_mono (stream.validate_streaming.spec_on CompileSource.Insts.ItascaStreamStreamingSource
     (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops) 0#u64 source scheduler storage
     (source_callbacks_total source sourceBounds) SchedulerInitial
     (fun env cursor scheduler => SchedulerReady env cursor scheduler ∧ CodeEntry.EnvironmentWithinLimits env)
@@ -586,7 +573,7 @@ theorem compiler_entries_total_of_prepared_bodies {A : Type} (ops : runtime.plat
     omega
   have range : dispatched.first_func.val + dispatched.num_funcs.val ≤ dispatched.env.func_type_indices.val.length := by
     simpa only [workerFirst,workerCount,workerEnv] using bounded.2.1
-  apply Itasca.stream.CodeBatch.validate_func.prepared_total _ dispatched entry.index initial
+  apply Itasca.stream.StreamingBatch.validate_func.prepared_total _ dispatched entry.index initial
     (by simpa only [envEq] using envBounds) range
   · intro prepared
     exact prepared_compiler_start_total ops law prepared
@@ -817,14 +804,14 @@ theorem source_entry_prepared (data : Slice U8) (env : metadata.Env) (index star
       w.finish = finish ∧ Body.Validated w.body env w.ctx.locals w.typeIdx ∧
       w.body.length ≤ Itasca.limits.MAX_FUNCTION_BYTES.val := by
   obtain ⟨⟨reply,after⟩,called,accepted⟩ := WP.spec_imp_exists
-    (metadata.validate_code_entry_with.complete_spec_of_body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    (metadata.validate_code_entry_with.complete_spec_of_body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       Visitor.empty_accepts data start env index entry finish () indexBound typed bounds encoded (by
         intro body ctx typeIdx ft signature results size bodyValid started
         exact code.validate_body_with.complete _ Visitor.empty_accepts body env ctx typeIdx
           limits size bodyValid started))
   dsimp only at accepted
   subst reply
-  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  obtain ⟨w⟩ := metadata.validate_code_entry_with.witness code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
     data start env index finish () after bounds called
   refine ⟨preparedOfSourceWitness w,rfl,?_,?_⟩
   · exact code.validate_body_with.sound _ w.body env w.ctx w.typeIdx w.startedState after
@@ -866,7 +853,7 @@ open Aeneas Aeneas.Std Itasca
 cursor. Unlike an unrestricted visitor contract, this permits finite numerical
 module budgets and retains actual completed worker identities and finish checks. -/
 structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env)
+    (config : Itasca.stream.StreamingConfig) (env : metadata.Env)
     (codeBytes : Nat) (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop) : Prop where
   batch_positive : 0 < config.batch_bytes.val
   capacity_positive : 0 < config.max_batches.val
@@ -879,13 +866,13 @@ structure QueuePolicy {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
   poll : ∀ id queue cursor before, Queued id queue cursor before → queue ≠ [] →
     ∃ issued rest worker after, (issued::rest).Perm queue ∧
       visitor.poll_code_batch before = .ok (.Ok worker,after) ∧
-      Stream.Batch.Identity issued worker ∧ Itasca.stream.CodeBatch.finish worker = .ok (.Ok ()) ∧
+      Stream.Batch.Identity issued worker ∧ Itasca.stream.StreamingBatch.finish worker = .ok (.Ok ()) ∧
       Queued id rest cursor after
 
 /-- A real queued worker retires successfully. Its finish proof comes from
 concrete compilation; dispatch cursors need not match an empty visitor run. -/
 theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env)
+    (config : Itasca.stream.StreamingConfig) (env : metadata.Env)
     (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
     {codeBytes : Nat} (policy : QueuePolicy visitor config env codeBytes Queued)
     (id : U64) (queue : List Stream.Batch.Issued) (cursor : Nat) (before : V)
@@ -919,7 +906,7 @@ theorem retire_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
 /-- Draining the actual completed-worker queue preserves the source cursor and
 terminates with every pending worker retired. -/
 theorem drain_complete {V : Type} (visitor : Itasca.stream.StreamingVisitor V)
-    (config : Itasca.stream.Config) (env : metadata.Env)
+    (config : Itasca.stream.StreamingConfig) (env : metadata.Env)
     (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
     {codeBytes : Nat} (policy : QueuePolicy visitor config env codeBytes Queued)
     (id : U64) (queue : List Stream.Batch.Issued) (cursor : Nat) (before : V)
@@ -1344,7 +1331,7 @@ theorem compiler_custom_preserves {A : Type} (ops : runtime.platform.Alloc A)
 /-- Parsing the environment only delivers custom-section notifications, so the
 actual compiler scheduler is unchanged before its environment-ready callback. -/
 theorem compiler_driver_decoded {A S : Type} (ops : runtime.platform.Alloc A)
-    {source : stream.Source S} {id state before after env}
+    {source : stream.StreamingSource S} {id state before after env}
     (run : Stream.Run.Accepted source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
       id state before after env) : run.decoded = before := by
@@ -1358,7 +1345,7 @@ theorem compiler_driver_decoded {A S : Type} (ops : runtime.platform.Alloc A)
 /-- Code-end, tail parsing/delivery and final worker retirement preserve the
 function array and captured tables produced by submission. -/
 theorem compiler_driver_after_submission {A S : Type} (ops : runtime.platform.Alloc A)
-    {source : stream.Source S} {id state env environmentLength before after}
+    {source : stream.StreamingSource S} {id state env environmentLength before after}
     (run : Stream.Run.Remaining source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
       id state env environmentLength before after) :
@@ -1381,7 +1368,7 @@ theorem compiler_driver_after_submission {A S : Type} (ops : runtime.platform.Al
 parameter tables and the empty source-indexed result array. -/
 theorem compiler_driver_configured {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops)
-    {source : stream.Source S} {id state before after env}
+    {source : stream.StreamingSource S} {id state before after env}
     (run : Stream.Run.Accepted source
       (runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor ops)
       id state before after env)
@@ -1483,7 +1470,7 @@ canonical code-section certificate. -/
 theorem CompileSourceCertificate.available {A : Type} {ops : runtime.platform.Alloc A}
     {bytes limits executable} {w : CompileWitness ops bytes limits executable}
     (c : CompileSourceCertificate w) :
-    Stream.Source.Available runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    Stream.Source.Available runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
       {bytes, code_start := w.codeStart, code_end := w.codeEnd} c.environment.val c.code.val c.tail.val := by
   have bounds := code_region_spec bytes
   rw [w.region, WP.spec_ok] at bounds
@@ -1575,7 +1562,7 @@ theorem PartialModuleCapacities.set {env sources pending}
 /-- The accepted entry's actual source-indexed write preserves all earlier
 certificates and installs precisely its newly checked function. -/
 theorem CompileEntryWitness.capacities {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness allocator before after batch finalBatch)
      {env : metadata.Env} {sources : List funccode}
     (certificate : PartialModuleCapacities env sources before.functions.val)
@@ -1704,7 +1691,7 @@ theorem PartialExecutableModuleFunctions.set {env sources pending}
 /-- The accepted entry's actual source-indexed write preserves all earlier
 certificates and installs precisely its newly checked function. -/
 theorem CompileEntryWitness.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness allocator before after batch finalBatch)
     {env : metadata.Env} {sources : List funccode}
     (certificate : PartialExecutableModuleFunctions env sources before.functions.val)
@@ -1758,7 +1745,7 @@ open Aeneas Aeneas.Std Itasca
 finish establish the source-indexed function certificate. All compiler-state
 premises are supplied by the checked entry proof. -/
 theorem CompileEntryWitness.compile_executable {A : Type} {ops : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness ops before after batch finalBatch)
     (law : Platform.AllocCorrect ops)
     {issued : Stream.Batch.Issued} (reachable : Stream.Batch.Reachable issued batch)
@@ -1846,12 +1833,12 @@ section
 namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 theorem CompileEntries.executable_functions {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (run : CompileEntries allocator before batch after finalBatch)
     {env : metadata.Env} {sources : List funccode} {issued : Stream.Batch.Issued}
     (reachable : Stream.Batch.Reachable issued batch)
     (initial : PartialExecutableModuleFunctions env sources before.functions.val)
-    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness allocator current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -1875,7 +1862,7 @@ theorem compiler_submit_executable_functions {A : Type} (allocator : runtime.pla
     (before after : runtime.compiler.CompileScheduler A)
     (issued : Stream.Batch.Issued) (env : metadata.Env) (sources : List funccode)
     (initial : PartialExecutableModuleFunctions env sources before.functions.val)
-    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness allocator current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -1889,7 +1876,7 @@ theorem compiler_submit_executable_functions {A : Type} (allocator : runtime.pla
   exact ⟨certificates, run.static⟩
 
 theorem compiler_poll_executable_functions {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
+    (before after : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
     {env : metadata.Env} {sources : List funccode} (initial : PartialExecutableModuleFunctions env sources before.functions.val)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
       allocator before = .ok (.Ok batch, after)) :
@@ -1910,7 +1897,7 @@ open Aeneas Aeneas.Std Itasca
 /-- A successful scheduler entry is paired with the original module's exact
 source function using only source framing and the actual issued-worker history. -/
 theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness ops before after batch finalBatch)
     (law : Platform.AllocCorrect ops)
     {issued : Stream.Batch.Issued} (reachable : Stream.Batch.Reachable issued batch)
@@ -1935,14 +1922,14 @@ theorem CompileEntryWitness.compile_source_executable {A : Type} {ops : runtime.
   have identity := dispatched.validation.1
   obtain ⟨_, _, envEq, codeEq, _, firstEq, countEq⟩ := identity
   have countBound : w.dispatched.num_validated.val < taken.length := by
-    have cases := stream.CodeBatch.validate_func.cases
+    have cases := stream.StreamingBatch.validate_func.cases
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       w.dispatched finalBatch w.entry.index w.initial w.final (.Ok ()) w.validated
     rcases cases with ⟨error, _, impossible, _⟩ | ⟨_, error, _, impossible, _⟩ |
       ⟨_, finish, n, next, _⟩
     · cases impossible
     · cases impossible
-    · have size := (stream.CodeBatch.validate_next.accepted _ _ _ _ _ _ next).1
+    · have size := (stream.StreamingBatch.validate_next.accepted _ _ _ _ _ _ next).1
       simpa only [countEq, count] using size
   have entryBounds : CodeEntry.Bounds w.dispatched.env := by simpa only [w.metadata.1] using bounds
   obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds encoded countBound
@@ -2012,7 +1999,7 @@ theorem scheduler_batch_executable {A : Type} (ops : runtime.platform.Alloc A) (
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
       ops before issued.seed = .ok (.Ok (), after)) :
     SchedulerExecutable env (sourceFunctions raw) after := by
-  have entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+  have entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness ops current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -2039,8 +2026,8 @@ theorem scheduler_batch_executable {A : Type} (ops : runtime.platform.Alloc A) (
 populated slot of the original module source list. No callback, body relation,
 or independently supplied compiler certificate is a premise. -/
 theorem compiler_submit_source_executable_functions {A S : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (source : stream.Source S) (state : S) (moduleId : U64)
-    (env : metadata.Env) (code : Slice U8) (config : stream.Config)
+    (law : Platform.AllocCorrect ops) (source : stream.StreamingSource S) (state : S) (moduleId : U64)
+    (env : metadata.Env) (code : Slice U8) (config : stream.StreamingConfig)
     (raw : Binary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env)
@@ -2086,7 +2073,7 @@ theorem CompileSourceCertificate.executable_functions {A : Type} {ops : runtime.
   have submitted := c.run.remaining.submit_call
   rw [c.code_length] at submitted
   have certified := compiler_submit_source_executable_functions ops law
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64
     w.env c.code c.run.remaining.config c.raw c.functions c.entryBounds
     c.environment.val c.tail.val c.available c.codeBound
@@ -2110,7 +2097,8 @@ theorem compile_executable_functions {A : Type} (ops : runtime.platform.Alloc A)
   obtain ⟨c⟩ := w.source_certificate law
   have certificates := c.executable_functions law
   obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors⟩ := (w.source_validated law).1
-  have same := Binary.ModuleEncodingWith.unique CodeEntry.code_prefix_unique encoded c.encoded
+  have same := Binary.Source.rawModuleInjective (WebAssembly.Binary.ModuleEncoding.unique encoded
+    (Binary.Source.moduleEncoding c.encoded))
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates.1, certificates.2⟩
@@ -2658,12 +2646,12 @@ open Aeneas Aeneas.Std Itasca
 witnesses have been certified. Reachability and fixed metadata are supplied to
 the entry proof, rather than assumed again for each arbitrary worker. -/
 theorem CompileEntries.capacities {A : Type} {allocator : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (run : CompileEntries allocator before batch after finalBatch)
      {env : metadata.Env} {sources : List funccode} {issued : Stream.Batch.Issued}
     (reachable : Stream.Batch.Reachable issued batch)
     (initial : PartialModuleCapacities env sources before.functions.val)
-    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness allocator current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -2687,7 +2675,7 @@ theorem compiler_submit_capacities {A : Type} (allocator : runtime.platform.Allo
     (before after : runtime.compiler.CompileScheduler A)
     (issued : Stream.Batch.Issued) (env : metadata.Env) (sources : List funccode)
     (initial : PartialModuleCapacities env sources before.functions.val)
-    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+    (entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness allocator current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -2701,7 +2689,7 @@ theorem compiler_submit_capacities {A : Type} (allocator : runtime.platform.Allo
   exact ⟨certificates, run.static⟩
 
 theorem compiler_poll_capacities {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
+    (before after : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
      {env : metadata.Env} {sources : List funccode} (initial : PartialModuleCapacities env sources before.functions.val)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.poll_code_batch
       allocator before = .ok (.Ok batch, after)) :
@@ -2723,7 +2711,7 @@ open Aeneas Aeneas.Std Itasca
 finish establish the source-indexed capacity certificate. All compiler-state
 premises are supplied by the checked entry proof. -/
 theorem CompileEntryWitness.compile_executable_capacity {A : Type} {ops : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness ops before after batch finalBatch)
     (law : Platform.AllocCorrect ops) (envLimits : CodeEntry.EnvironmentWithinLimits batch.env)
     {issued : Stream.Batch.Issued} (reachable : Stream.Batch.Reachable issued batch)
@@ -2750,7 +2738,7 @@ theorem CompileEntryWitness.compile_executable_capacity {A : Type} {ops : runtim
 /-- A successful scheduler entry is paired with the original module's exact
 source function using only source framing and the actual issued-worker history. -/
 theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops : runtime.platform.Alloc A}
-    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.CodeBatch}
+    {before after : runtime.compiler.CompileScheduler A} {batch finalBatch : stream.StreamingBatch}
     (w : CompileEntryWitness ops before after batch finalBatch)
     (law : Platform.AllocCorrect ops)
     {issued : Stream.Batch.Issued} (reachable : Stream.Batch.Reachable issued batch)
@@ -2776,14 +2764,14 @@ theorem CompileEntryWitness.compile_executable_source_capacity {A : Type} {ops :
   have identity := dispatched.validation.1
   obtain ⟨_, _, envEq, codeEq, _, firstEq, countEq⟩ := identity
   have countBound : w.dispatched.num_validated.val < taken.length := by
-    have cases := stream.CodeBatch.validate_func.cases
+    have cases := stream.StreamingBatch.validate_func.cases
       (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       w.dispatched finalBatch w.entry.index w.initial w.final (.Ok ()) w.validated
     rcases cases with ⟨error, _, impossible, _⟩ | ⟨_, error, _, impossible, _⟩ |
       ⟨_, finish, n, next, _⟩
     · cases impossible
     · cases impossible
-    · have size := (stream.CodeBatch.validate_next.accepted _ _ _ _ _ _ next).1
+    · have size := (stream.StreamingBatch.validate_next.accepted _ _ _ _ _ _ next).1
       simpa only [countEq, count] using size
   have entryBounds : CodeEntry.Bounds w.dispatched.env := by simpa only [w.metadata.1] using bounds
   obtain ⟨rawEntry, found, groups, body⟩ := witness_batch_source_lookup entry dispatched entryBounds encoded countBound
@@ -2865,7 +2853,7 @@ theorem scheduler_batch_executable_capacity {A : Type} (ops : runtime.platform.A
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.submit_code_batch
       ops before issued.seed = .ok (.Ok (), after)) :
     SchedulerCapacity env (sourceFunctions raw) after := by
-  have entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.CodeBatch),
+  have entries : ∀ (current next : runtime.compiler.CompileScheduler A) (worker nextWorker : stream.StreamingBatch),
       schedulerStatic current = schedulerStatic before → Stream.Batch.Reachable issued worker →
       ∀ w : CompileEntryWitness ops current next worker nextWorker,
         ∃ typeIndex source, env.func_type_indices.val[w.entry.index.val]? = some typeIndex ∧
@@ -2893,8 +2881,8 @@ theorem scheduler_batch_executable_capacity {A : Type} (ops : runtime.platform.A
 populated slot of the original module source list. No callback, body relation,
 or independently supplied compiler certificate is a premise. -/
 theorem compiler_submit_executable_source_capacities {A S : Type} (ops : runtime.platform.Alloc A)
-    (law : Platform.AllocCorrect ops) (source : stream.Source S) (state : S) (moduleId : U64)
-    (env : metadata.Env) (code : Slice U8) (config : stream.Config)
+    (law : Platform.AllocCorrect ops) (source : stream.StreamingSource S) (state : S) (moduleId : U64)
+    (env : metadata.Env) (code : Slice U8) (config : stream.StreamingConfig)
     (raw : Binary.Module)
     (declarations : raw.functions = env.func_type_indices.val)
     (bounds : CodeEntry.Bounds env) (envLimits : CodeEntry.EnvironmentWithinLimits env)
@@ -2944,7 +2932,7 @@ theorem CompileSourceCertificate.executable_capacities {A : Type} {ops : runtime
   have submitted := c.run.remaining.submit_call
   rw [c.code_length] at submitted
   have certified := compiler_submit_executable_source_capacities ops law
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
     {bytes, code_start := w.codeStart, code_end := w.codeEnd} 0#u64
     w.env c.code c.run.remaining.config c.raw c.functions c.entryBounds (c.valid.environment_within_limits c.matched.2)
     c.environment.val c.tail.val c.available c.codeBound
@@ -2968,7 +2956,8 @@ theorem compile_executable_capacities {A : Type} (ops : runtime.platform.Alloc A
   obtain ⟨c⟩ := w.source_certificate law
   have certificates := c.executable_capacities law
   obtain ⟨raw, encoded, elaborated, matched, typed, restrictions, accessors⟩ := (w.source_validated law).1
-  have same := Binary.ModuleEncodingWith.unique CodeEntry.code_prefix_unique encoded c.encoded
+  have same := Binary.Source.rawModuleInjective (WebAssembly.Binary.ModuleEncoding.unique encoded
+    (Binary.Source.moduleEncoding c.encoded))
   subst raw
   exact ⟨c.raw, c.encoded, elaborated, matched, typed, restrictions, accessors,
     certificates⟩

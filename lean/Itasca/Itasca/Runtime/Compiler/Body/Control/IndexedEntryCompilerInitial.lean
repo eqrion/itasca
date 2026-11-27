@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Body.Control.BranchesAndDormantEntry
 import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndScopeEffects
 import Itasca.Runtime.Compiler.Body.Control.ControlPointsAndInitialPrefixes
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Control.
 
@@ -198,7 +200,7 @@ theorem IndexedTableReaderCompilerPoint.ordinary {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (), out, after)) :
     IndexedTableReaderCompilerPoint emit initial after types (env.func_types.val.map Translation.Environment.funcType) (ft.results.val.map Translation.valueType) locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -234,7 +236,7 @@ theorem IndexedTableReaderCompilerPoint.finish_root {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (encodedBody : Body.BodyEncoding data source)
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after))
     (rest : TypedRun (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out after final) :
     StructuredCompiledBody final.function.jump_tables.val (emit (CompilerTables.ofFunction final.function)) initial final types functions

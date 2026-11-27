@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Spec.Typing
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Lowering / Integer.
 

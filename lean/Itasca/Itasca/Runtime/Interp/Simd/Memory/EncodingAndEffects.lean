@@ -7,6 +7,8 @@ import WebAssembly.Builtins.IntegerRepresentation
 import Itasca.Runtime.Spec.Simd.ArithmeticMemoryAndFloat
 import Itasca.Runtime.Interp.Simd.Lanes.Permutation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

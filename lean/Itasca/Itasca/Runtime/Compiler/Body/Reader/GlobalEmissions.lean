@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Local.Relations.LoweringEffects
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 import Itasca.Runtime.Compiler.Body.CapacityTrace
 
+open WebAssembly
+
 /-! ## GlobalEffects -/
 
 section
@@ -168,7 +170,7 @@ theorem reader_emit_global_get {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (index : U32) (ty : Itasca.wasm_types.GlobalType) (values : List code.StackType),
@@ -215,7 +217,7 @@ theorem reader_emit_global_set {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧

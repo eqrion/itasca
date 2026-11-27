@@ -85,203 +85,236 @@ pub struct OpIterState {
     pub pos: usize,
 }
 
-/// The shared body worker state used by both validation profiles.
+/// The body worker state for instruction validation.
 struct BodyState {
     core: OpIterState,
 }
 
-// --- Opcodes (Wasm 1.0, all single-byte; prefixed opcodes are post-1.0) ---
+// --- Core 2.0 opcode bytes ---
 
-pub const OP_UNREACHABLE: u8 = 0x00;
-pub const OP_NOP: u8 = 0x01;
-pub const OP_BLOCK: u8 = 0x02;
-pub const OP_LOOP: u8 = 0x03;
-pub const OP_IF: u8 = 0x04;
-pub const OP_ELSE: u8 = 0x05;
-pub const OP_END: u8 = 0x0b;
-pub const OP_BR: u8 = 0x0c;
-pub const OP_BR_IF: u8 = 0x0d;
-pub const OP_BR_TABLE: u8 = 0x0e;
-pub const OP_RETURN: u8 = 0x0f;
-pub const OP_CALL: u8 = 0x10;
-pub const OP_CALL_INDIRECT: u8 = 0x11;
-pub const OP_DROP: u8 = 0x1a;
-pub const OP_SELECT: u8 = 0x1b;
+// Define the public enum and internal byte patterns from the same opcode table.
+macro_rules! opcodes {
+    ($($raw:ident => $name:ident = $byte:literal,)*) => {
+        /// The first byte of a WebAssembly Core 2.0 instruction.
+        ///
+        /// The miscellaneous and SIMD prefixes are followed by a separate
+        /// unsigned LEB128 subopcode.
+        #[repr(u8)]
+        #[derive(Clone, Copy)]
+        #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+        pub enum Opcode {
+            $($name = $byte,)*
+        }
 
-pub const OP_LOCAL_GET: u8 = 0x20;
-pub const OP_LOCAL_SET: u8 = 0x21;
-pub const OP_LOCAL_TEE: u8 = 0x22;
-pub const OP_GLOBAL_GET: u8 = 0x23;
-pub const OP_GLOBAL_SET: u8 = 0x24;
+        impl Opcode {
+            /// Recognizes a Core 2.0 opcode byte, including instruction prefixes.
+            ///
+            /// ```
+            /// use itasca::Opcode;
+            ///
+            /// assert_eq!(Opcode::from_byte(0x41), Some(Opcode::I32Const));
+            /// assert_eq!(Opcode::SimdPrefix as u8, 0xfd);
+            /// assert_eq!(Opcode::from_byte(0xff), None);
+            /// ```
+            pub const fn from_byte(byte: u8) -> Option<Self> {
+                match byte {
+                    $($byte => Some(Self::$name),)*
+                    _ => None,
+                }
+            }
+        }
 
-pub const OP_I32_LOAD: u8 = 0x28;
-pub const OP_I64_LOAD: u8 = 0x29;
-pub const OP_F32_LOAD: u8 = 0x2a;
-pub const OP_F64_LOAD: u8 = 0x2b;
-pub const OP_I32_LOAD8_S: u8 = 0x2c;
-pub const OP_I32_LOAD8_U: u8 = 0x2d;
-pub const OP_I32_LOAD16_S: u8 = 0x2e;
-pub const OP_I32_LOAD16_U: u8 = 0x2f;
-pub const OP_I64_LOAD8_S: u8 = 0x30;
-pub const OP_I64_LOAD8_U: u8 = 0x31;
-pub const OP_I64_LOAD16_S: u8 = 0x32;
-pub const OP_I64_LOAD16_U: u8 = 0x33;
-pub const OP_I64_LOAD32_S: u8 = 0x34;
-pub const OP_I64_LOAD32_U: u8 = 0x35;
+        $(pub(crate) const $raw: u8 = $byte;)*
+    };
+}
 
-pub const OP_I32_STORE: u8 = 0x36;
-pub const OP_I64_STORE: u8 = 0x37;
-pub const OP_F32_STORE: u8 = 0x38;
-pub const OP_F64_STORE: u8 = 0x39;
-pub const OP_I32_STORE8: u8 = 0x3a;
-pub const OP_I32_STORE16: u8 = 0x3b;
-pub const OP_I64_STORE8: u8 = 0x3c;
-pub const OP_I64_STORE16: u8 = 0x3d;
-pub const OP_I64_STORE32: u8 = 0x3e;
-
-pub const OP_MEMORY_SIZE: u8 = 0x3f;
-pub const OP_MEMORY_GROW: u8 = 0x40;
-
-pub const OP_I32_CONST: u8 = 0x41;
-pub const OP_I64_CONST: u8 = 0x42;
-pub const OP_F32_CONST: u8 = 0x43;
-pub const OP_F64_CONST: u8 = 0x44;
-
-pub const OP_I32_EQZ: u8 = 0x45;
-pub const OP_I32_EQ: u8 = 0x46;
-pub const OP_I32_NE: u8 = 0x47;
-pub const OP_I32_LT_S: u8 = 0x48;
-pub const OP_I32_LT_U: u8 = 0x49;
-pub const OP_I32_GT_S: u8 = 0x4a;
-pub const OP_I32_GT_U: u8 = 0x4b;
-pub const OP_I32_LE_S: u8 = 0x4c;
-pub const OP_I32_LE_U: u8 = 0x4d;
-pub const OP_I32_GE_S: u8 = 0x4e;
-pub const OP_I32_GE_U: u8 = 0x4f;
-
-pub const OP_I64_EQZ: u8 = 0x50;
-pub const OP_I64_EQ: u8 = 0x51;
-pub const OP_I64_NE: u8 = 0x52;
-pub const OP_I64_LT_S: u8 = 0x53;
-pub const OP_I64_LT_U: u8 = 0x54;
-pub const OP_I64_GT_S: u8 = 0x55;
-pub const OP_I64_GT_U: u8 = 0x56;
-pub const OP_I64_LE_S: u8 = 0x57;
-pub const OP_I64_LE_U: u8 = 0x58;
-pub const OP_I64_GE_S: u8 = 0x59;
-pub const OP_I64_GE_U: u8 = 0x5a;
-
-pub const OP_F32_EQ: u8 = 0x5b;
-pub const OP_F32_NE: u8 = 0x5c;
-pub const OP_F32_LT: u8 = 0x5d;
-pub const OP_F32_GT: u8 = 0x5e;
-pub const OP_F32_LE: u8 = 0x5f;
-pub const OP_F32_GE: u8 = 0x60;
-
-pub const OP_F64_EQ: u8 = 0x61;
-pub const OP_F64_NE: u8 = 0x62;
-pub const OP_F64_LT: u8 = 0x63;
-pub const OP_F64_GT: u8 = 0x64;
-pub const OP_F64_LE: u8 = 0x65;
-pub const OP_F64_GE: u8 = 0x66;
-
-pub const OP_I32_SUB: u8 = 0x6b;
-pub const OP_I32_MUL: u8 = 0x6c;
-pub const OP_I32_DIV_S: u8 = 0x6d;
-pub const OP_I32_DIV_U: u8 = 0x6e;
-pub const OP_I32_REM_S: u8 = 0x6f;
-pub const OP_I32_REM_U: u8 = 0x70;
-pub const OP_I32_AND: u8 = 0x71;
-pub const OP_I32_OR: u8 = 0x72;
-pub const OP_I32_XOR: u8 = 0x73;
-pub const OP_I32_SHL: u8 = 0x74;
-pub const OP_I32_SHR_S: u8 = 0x75;
-pub const OP_I32_SHR_U: u8 = 0x76;
-pub const OP_I32_ROTL: u8 = 0x77;
-pub const OP_I32_ROTR: u8 = 0x78;
-
-pub const OP_I64_ADD: u8 = 0x7c;
-pub const OP_I64_SUB: u8 = 0x7d;
-pub const OP_I64_MUL: u8 = 0x7e;
-pub const OP_I64_DIV_S: u8 = 0x7f;
-pub const OP_I64_DIV_U: u8 = 0x80;
-pub const OP_I64_REM_S: u8 = 0x81;
-pub const OP_I64_REM_U: u8 = 0x82;
-pub const OP_I64_AND: u8 = 0x83;
-pub const OP_I64_OR: u8 = 0x84;
-pub const OP_I64_XOR: u8 = 0x85;
-pub const OP_I64_SHL: u8 = 0x86;
-pub const OP_I64_SHR_S: u8 = 0x87;
-pub const OP_I64_SHR_U: u8 = 0x88;
-pub const OP_I64_ROTL: u8 = 0x89;
-pub const OP_I64_ROTR: u8 = 0x8a;
-
-pub const OP_F32_ADD: u8 = 0x92;
-pub const OP_F32_SUB: u8 = 0x93;
-pub const OP_F32_MUL: u8 = 0x94;
-pub const OP_F32_DIV: u8 = 0x95;
-pub const OP_F32_MIN: u8 = 0x96;
-pub const OP_F32_MAX: u8 = 0x97;
-pub const OP_F32_COPYSIGN: u8 = 0x98;
-
-pub const OP_F64_ADD: u8 = 0xa0;
-pub const OP_F64_SUB: u8 = 0xa1;
-pub const OP_F64_MUL: u8 = 0xa2;
-pub const OP_F64_DIV: u8 = 0xa3;
-pub const OP_F64_MIN: u8 = 0xa4;
-pub const OP_F64_MAX: u8 = 0xa5;
-pub const OP_F64_COPYSIGN: u8 = 0xa6;
-
-pub const OP_I32_CLZ: u8 = 0x67;
-pub const OP_I32_CTZ: u8 = 0x68;
-pub const OP_I32_POPCNT: u8 = 0x69;
-pub const OP_I32_ADD: u8 = 0x6a;
-
-pub const OP_I64_CLZ: u8 = 0x79;
-pub const OP_I64_CTZ: u8 = 0x7a;
-pub const OP_I64_POPCNT: u8 = 0x7b;
-
-pub const OP_F32_ABS: u8 = 0x8b;
-pub const OP_F32_NEG: u8 = 0x8c;
-pub const OP_F32_CEIL: u8 = 0x8d;
-pub const OP_F32_FLOOR: u8 = 0x8e;
-pub const OP_F32_TRUNC: u8 = 0x8f;
-pub const OP_F32_NEAREST: u8 = 0x90;
-pub const OP_F32_SQRT: u8 = 0x91;
-
-pub const OP_F64_ABS: u8 = 0x99;
-pub const OP_F64_NEG: u8 = 0x9a;
-pub const OP_F64_CEIL: u8 = 0x9b;
-pub const OP_F64_FLOOR: u8 = 0x9c;
-pub const OP_F64_TRUNC: u8 = 0x9d;
-pub const OP_F64_NEAREST: u8 = 0x9e;
-pub const OP_F64_SQRT: u8 = 0x9f;
-
-pub const OP_I32_WRAP_I64: u8 = 0xa7;
-pub const OP_I32_TRUNC_F32_S: u8 = 0xa8;
-pub const OP_I32_TRUNC_F32_U: u8 = 0xa9;
-pub const OP_I32_TRUNC_F64_S: u8 = 0xaa;
-pub const OP_I32_TRUNC_F64_U: u8 = 0xab;
-pub const OP_I64_EXTEND_I32_S: u8 = 0xac;
-pub const OP_I64_EXTEND_I32_U: u8 = 0xad;
-pub const OP_I64_TRUNC_F32_S: u8 = 0xae;
-pub const OP_I64_TRUNC_F32_U: u8 = 0xaf;
-pub const OP_I64_TRUNC_F64_S: u8 = 0xb0;
-pub const OP_I64_TRUNC_F64_U: u8 = 0xb1;
-pub const OP_F32_CONVERT_I32_S: u8 = 0xb2;
-pub const OP_F32_CONVERT_I32_U: u8 = 0xb3;
-pub const OP_F32_CONVERT_I64_S: u8 = 0xb4;
-pub const OP_F32_CONVERT_I64_U: u8 = 0xb5;
-pub const OP_F32_DEMOTE_F64: u8 = 0xb6;
-pub const OP_F64_CONVERT_I32_S: u8 = 0xb7;
-pub const OP_F64_CONVERT_I32_U: u8 = 0xb8;
-pub const OP_F64_CONVERT_I64_S: u8 = 0xb9;
-pub const OP_F64_CONVERT_I64_U: u8 = 0xba;
-pub const OP_F64_PROMOTE_F32: u8 = 0xbb;
-pub const OP_I32_REINTERPRET_F32: u8 = 0xbc;
-pub const OP_I64_REINTERPRET_F64: u8 = 0xbd;
-pub const OP_F32_REINTERPRET_I32: u8 = 0xbe;
-pub const OP_F64_REINTERPRET_I64: u8 = 0xbf;
+opcodes! {
+    OP_UNREACHABLE => Unreachable = 0x00,
+    OP_NOP => Nop = 0x01,
+    OP_BLOCK => Block = 0x02,
+    OP_LOOP => Loop = 0x03,
+    OP_IF => If = 0x04,
+    OP_ELSE => Else = 0x05,
+    OP_END => End = 0x0b,
+    OP_BR => Br = 0x0c,
+    OP_BR_IF => BrIf = 0x0d,
+    OP_BR_TABLE => BrTable = 0x0e,
+    OP_RETURN => Return = 0x0f,
+    OP_CALL => Call = 0x10,
+    OP_CALL_INDIRECT => CallIndirect = 0x11,
+    OP_DROP => Drop = 0x1a,
+    OP_SELECT => Select = 0x1b,
+    OP_SELECT_TYPED => SelectTyped = 0x1c,
+    OP_LOCAL_GET => LocalGet = 0x20,
+    OP_LOCAL_SET => LocalSet = 0x21,
+    OP_LOCAL_TEE => LocalTee = 0x22,
+    OP_GLOBAL_GET => GlobalGet = 0x23,
+    OP_GLOBAL_SET => GlobalSet = 0x24,
+    OP_TABLE_GET => TableGet = 0x25,
+    OP_TABLE_SET => TableSet = 0x26,
+    OP_I32_LOAD => I32Load = 0x28,
+    OP_I64_LOAD => I64Load = 0x29,
+    OP_F32_LOAD => F32Load = 0x2a,
+    OP_F64_LOAD => F64Load = 0x2b,
+    OP_I32_LOAD8_S => I32Load8S = 0x2c,
+    OP_I32_LOAD8_U => I32Load8U = 0x2d,
+    OP_I32_LOAD16_S => I32Load16S = 0x2e,
+    OP_I32_LOAD16_U => I32Load16U = 0x2f,
+    OP_I64_LOAD8_S => I64Load8S = 0x30,
+    OP_I64_LOAD8_U => I64Load8U = 0x31,
+    OP_I64_LOAD16_S => I64Load16S = 0x32,
+    OP_I64_LOAD16_U => I64Load16U = 0x33,
+    OP_I64_LOAD32_S => I64Load32S = 0x34,
+    OP_I64_LOAD32_U => I64Load32U = 0x35,
+    OP_I32_STORE => I32Store = 0x36,
+    OP_I64_STORE => I64Store = 0x37,
+    OP_F32_STORE => F32Store = 0x38,
+    OP_F64_STORE => F64Store = 0x39,
+    OP_I32_STORE8 => I32Store8 = 0x3a,
+    OP_I32_STORE16 => I32Store16 = 0x3b,
+    OP_I64_STORE8 => I64Store8 = 0x3c,
+    OP_I64_STORE16 => I64Store16 = 0x3d,
+    OP_I64_STORE32 => I64Store32 = 0x3e,
+    OP_MEMORY_SIZE => MemorySize = 0x3f,
+    OP_MEMORY_GROW => MemoryGrow = 0x40,
+    OP_I32_CONST => I32Const = 0x41,
+    OP_I64_CONST => I64Const = 0x42,
+    OP_F32_CONST => F32Const = 0x43,
+    OP_F64_CONST => F64Const = 0x44,
+    OP_I32_EQZ => I32Eqz = 0x45,
+    OP_I32_EQ => I32Eq = 0x46,
+    OP_I32_NE => I32Ne = 0x47,
+    OP_I32_LT_S => I32LtS = 0x48,
+    OP_I32_LT_U => I32LtU = 0x49,
+    OP_I32_GT_S => I32GtS = 0x4a,
+    OP_I32_GT_U => I32GtU = 0x4b,
+    OP_I32_LE_S => I32LeS = 0x4c,
+    OP_I32_LE_U => I32LeU = 0x4d,
+    OP_I32_GE_S => I32GeS = 0x4e,
+    OP_I32_GE_U => I32GeU = 0x4f,
+    OP_I64_EQZ => I64Eqz = 0x50,
+    OP_I64_EQ => I64Eq = 0x51,
+    OP_I64_NE => I64Ne = 0x52,
+    OP_I64_LT_S => I64LtS = 0x53,
+    OP_I64_LT_U => I64LtU = 0x54,
+    OP_I64_GT_S => I64GtS = 0x55,
+    OP_I64_GT_U => I64GtU = 0x56,
+    OP_I64_LE_S => I64LeS = 0x57,
+    OP_I64_LE_U => I64LeU = 0x58,
+    OP_I64_GE_S => I64GeS = 0x59,
+    OP_I64_GE_U => I64GeU = 0x5a,
+    OP_F32_EQ => F32Eq = 0x5b,
+    OP_F32_NE => F32Ne = 0x5c,
+    OP_F32_LT => F32Lt = 0x5d,
+    OP_F32_GT => F32Gt = 0x5e,
+    OP_F32_LE => F32Le = 0x5f,
+    OP_F32_GE => F32Ge = 0x60,
+    OP_F64_EQ => F64Eq = 0x61,
+    OP_F64_NE => F64Ne = 0x62,
+    OP_F64_LT => F64Lt = 0x63,
+    OP_F64_GT => F64Gt = 0x64,
+    OP_F64_LE => F64Le = 0x65,
+    OP_F64_GE => F64Ge = 0x66,
+    OP_I32_CLZ => I32Clz = 0x67,
+    OP_I32_CTZ => I32Ctz = 0x68,
+    OP_I32_POPCNT => I32Popcnt = 0x69,
+    OP_I32_ADD => I32Add = 0x6a,
+    OP_I32_SUB => I32Sub = 0x6b,
+    OP_I32_MUL => I32Mul = 0x6c,
+    OP_I32_DIV_S => I32DivS = 0x6d,
+    OP_I32_DIV_U => I32DivU = 0x6e,
+    OP_I32_REM_S => I32RemS = 0x6f,
+    OP_I32_REM_U => I32RemU = 0x70,
+    OP_I32_AND => I32And = 0x71,
+    OP_I32_OR => I32Or = 0x72,
+    OP_I32_XOR => I32Xor = 0x73,
+    OP_I32_SHL => I32Shl = 0x74,
+    OP_I32_SHR_S => I32ShrS = 0x75,
+    OP_I32_SHR_U => I32ShrU = 0x76,
+    OP_I32_ROTL => I32Rotl = 0x77,
+    OP_I32_ROTR => I32Rotr = 0x78,
+    OP_I64_CLZ => I64Clz = 0x79,
+    OP_I64_CTZ => I64Ctz = 0x7a,
+    OP_I64_POPCNT => I64Popcnt = 0x7b,
+    OP_I64_ADD => I64Add = 0x7c,
+    OP_I64_SUB => I64Sub = 0x7d,
+    OP_I64_MUL => I64Mul = 0x7e,
+    OP_I64_DIV_S => I64DivS = 0x7f,
+    OP_I64_DIV_U => I64DivU = 0x80,
+    OP_I64_REM_S => I64RemS = 0x81,
+    OP_I64_REM_U => I64RemU = 0x82,
+    OP_I64_AND => I64And = 0x83,
+    OP_I64_OR => I64Or = 0x84,
+    OP_I64_XOR => I64Xor = 0x85,
+    OP_I64_SHL => I64Shl = 0x86,
+    OP_I64_SHR_S => I64ShrS = 0x87,
+    OP_I64_SHR_U => I64ShrU = 0x88,
+    OP_I64_ROTL => I64Rotl = 0x89,
+    OP_I64_ROTR => I64Rotr = 0x8a,
+    OP_F32_ABS => F32Abs = 0x8b,
+    OP_F32_NEG => F32Neg = 0x8c,
+    OP_F32_CEIL => F32Ceil = 0x8d,
+    OP_F32_FLOOR => F32Floor = 0x8e,
+    OP_F32_TRUNC => F32Trunc = 0x8f,
+    OP_F32_NEAREST => F32Nearest = 0x90,
+    OP_F32_SQRT => F32Sqrt = 0x91,
+    OP_F32_ADD => F32Add = 0x92,
+    OP_F32_SUB => F32Sub = 0x93,
+    OP_F32_MUL => F32Mul = 0x94,
+    OP_F32_DIV => F32Div = 0x95,
+    OP_F32_MIN => F32Min = 0x96,
+    OP_F32_MAX => F32Max = 0x97,
+    OP_F32_COPYSIGN => F32Copysign = 0x98,
+    OP_F64_ABS => F64Abs = 0x99,
+    OP_F64_NEG => F64Neg = 0x9a,
+    OP_F64_CEIL => F64Ceil = 0x9b,
+    OP_F64_FLOOR => F64Floor = 0x9c,
+    OP_F64_TRUNC => F64Trunc = 0x9d,
+    OP_F64_NEAREST => F64Nearest = 0x9e,
+    OP_F64_SQRT => F64Sqrt = 0x9f,
+    OP_F64_ADD => F64Add = 0xa0,
+    OP_F64_SUB => F64Sub = 0xa1,
+    OP_F64_MUL => F64Mul = 0xa2,
+    OP_F64_DIV => F64Div = 0xa3,
+    OP_F64_MIN => F64Min = 0xa4,
+    OP_F64_MAX => F64Max = 0xa5,
+    OP_F64_COPYSIGN => F64Copysign = 0xa6,
+    OP_I32_WRAP_I64 => I32WrapI64 = 0xa7,
+    OP_I32_TRUNC_F32_S => I32TruncF32S = 0xa8,
+    OP_I32_TRUNC_F32_U => I32TruncF32U = 0xa9,
+    OP_I32_TRUNC_F64_S => I32TruncF64S = 0xaa,
+    OP_I32_TRUNC_F64_U => I32TruncF64U = 0xab,
+    OP_I64_EXTEND_I32_S => I64ExtendI32S = 0xac,
+    OP_I64_EXTEND_I32_U => I64ExtendI32U = 0xad,
+    OP_I64_TRUNC_F32_S => I64TruncF32S = 0xae,
+    OP_I64_TRUNC_F32_U => I64TruncF32U = 0xaf,
+    OP_I64_TRUNC_F64_S => I64TruncF64S = 0xb0,
+    OP_I64_TRUNC_F64_U => I64TruncF64U = 0xb1,
+    OP_F32_CONVERT_I32_S => F32ConvertI32S = 0xb2,
+    OP_F32_CONVERT_I32_U => F32ConvertI32U = 0xb3,
+    OP_F32_CONVERT_I64_S => F32ConvertI64S = 0xb4,
+    OP_F32_CONVERT_I64_U => F32ConvertI64U = 0xb5,
+    OP_F32_DEMOTE_F64 => F32DemoteF64 = 0xb6,
+    OP_F64_CONVERT_I32_S => F64ConvertI32S = 0xb7,
+    OP_F64_CONVERT_I32_U => F64ConvertI32U = 0xb8,
+    OP_F64_CONVERT_I64_S => F64ConvertI64S = 0xb9,
+    OP_F64_CONVERT_I64_U => F64ConvertI64U = 0xba,
+    OP_F64_PROMOTE_F32 => F64PromoteF32 = 0xbb,
+    OP_I32_REINTERPRET_F32 => I32ReinterpretF32 = 0xbc,
+    OP_I64_REINTERPRET_F64 => I64ReinterpretF64 = 0xbd,
+    OP_F32_REINTERPRET_I32 => F32ReinterpretI32 = 0xbe,
+    OP_F64_REINTERPRET_I64 => F64ReinterpretI64 = 0xbf,
+    OP_I32_EXTEND8_S => I32Extend8S = 0xc0,
+    OP_I32_EXTEND16_S => I32Extend16S = 0xc1,
+    OP_I64_EXTEND8_S => I64Extend8S = 0xc2,
+    OP_I64_EXTEND16_S => I64Extend16S = 0xc3,
+    OP_I64_EXTEND32_S => I64Extend32S = 0xc4,
+    OP_REF_NULL => RefNull = 0xd0,
+    OP_REF_IS_NULL => RefIsNull = 0xd1,
+    OP_REF_FUNC => RefFunc = 0xd2,
+    OP_MISC_PREFIX => MiscPrefix = 0xfc,
+    OP_SIMD_PREFIX => SimdPrefix = 0xfd,
+}
 
 // --- Operand and control stack ---
 
@@ -1274,7 +1307,7 @@ pub(crate) enum SimdSignature {
     SplatF64,
 }
 
-/// Lists exactly the immediate-free SIMD opcodes in the core 2.0 profile.
+/// Lists exactly the immediate-free SIMD opcodes in WebAssembly Core 2.0.
 fn simd_signature(subopcode: u32) -> Option<SimdSignature> {
     if subopcode >= 256 {
         return None;
@@ -1493,28 +1526,28 @@ fn step_wasm2<V: OpVisitor>(
     visitor: &mut V,
 ) -> Result<()> {
     match opcode {
-        0xfd => step_simd(st, data, env, visitor),
-        0x1c => {
+        OP_SIMD_PREFIX => step_simd(st, data, env, visitor),
+        OP_SELECT_TYPED => {
             let ty = read_typed_select(st, data)?;
             visit(visitor.on_select_typed(st, ty))
         }
-        0x25 => {
+        OP_TABLE_GET => {
             let index = read_table_get(st, data, env)?;
             visit(visitor.on_table_get(st, index))
         }
-        0x26 => {
+        OP_TABLE_SET => {
             let index = read_table_set(st, data, env)?;
             visit(visitor.on_table_set(st, index))
         }
-        0xd0 => {
+        OP_REF_NULL => {
             let ty = read_ref_null(st, data)?;
             visit(visitor.on_ref_null(st, ty))
         }
-        0xd1 => {
+        OP_REF_IS_NULL => {
             read_ref_is_null(st)?;
             visit(visitor.on_ref_is_null(st))
         }
-        0xd2 => {
+        OP_REF_FUNC => {
             let index = read_ref_func(st, data, env)?;
             visit(visitor.on_ref_func(st, index))
         }
@@ -1821,7 +1854,7 @@ fn branch_table_with<V: OpVisitor>(
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
 fn branch_table(st: &mut BodyState, data: &[u8], env: &Env) -> Result<()> {
-    let mut visitor = EmptyOpVisitor;
+    let mut visitor = DefaultOpVisitor;
     branch_table_with(st, data, env, &mut visitor)
 }
 
@@ -1917,12 +1950,12 @@ fn body_loop<V: OpVisitor>(
         }
         let (op, end) = read_byte(data, st.core.pos)?;
         st.core.pos = end;
-        step_profile(&mut st, data, env, ctx, type_index, op, visitor)?;
+        step_body(&mut st, data, env, ctx, type_index, op, visitor)?;
     }
 }
 
 /// Dispatches one WebAssembly Core 2.0 opcode.
-fn step_profile<V: OpVisitor>(
+fn step_body<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],
     env: &Env,
@@ -2372,7 +2405,7 @@ pub trait OpVisitor {
     /// Reports the function context before validating its instruction body.
     ///
     /// `_body_begin.._body_end` identifies instruction bytes within
-    /// `CodeBatch::code`, excluding local declarations. Operator-state
+    /// `StreamingBatch::code`, excluding local declarations. Operator-state
     /// cursors are relative to `_body_begin`. `_type_idx` selects the function's
     /// declared signature.
     fn on_function_start(
@@ -2558,9 +2591,9 @@ pub trait OpVisitor {
 }
 
 /// An operator visitor whose default hooks all accept.
-pub struct EmptyOpVisitor;
+pub struct DefaultOpVisitor;
 
-impl OpVisitor for EmptyOpVisitor {}
+impl OpVisitor for DefaultOpVisitor {}
 
 macro_rules! numeric_fanout {
     ($($op:ident => $hook:ident;)*) => {
@@ -2597,11 +2630,3 @@ macro_rules! memory_fanout {
 
 numeric_table!(numeric_fanout);
 memory_table!(memory_fanout);
-
-// Wasm 2.0 scalar extension opcodes.
-const OP_I32_EXTEND8_S: u8 = 0xc0;
-const OP_I32_EXTEND16_S: u8 = 0xc1;
-const OP_I64_EXTEND8_S: u8 = 0xc2;
-const OP_I64_EXTEND16_S: u8 = 0xc3;
-const OP_I64_EXTEND32_S: u8 = 0xc4;
-const OP_MISC_PREFIX: u8 = 0xfc;

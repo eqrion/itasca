@@ -1,6 +1,8 @@
 import Itasca.Module.Env.Complete
 import Mathlib.Tactic.IntervalCases
 
+open WebAssembly
+
 /-!
 # Requirements from typing
 

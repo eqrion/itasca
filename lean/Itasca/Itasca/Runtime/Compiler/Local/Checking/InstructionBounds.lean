@@ -9,6 +9,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Runtime.Compiler.Local.Relations.Table.ControlTablePreservation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Checking.
 

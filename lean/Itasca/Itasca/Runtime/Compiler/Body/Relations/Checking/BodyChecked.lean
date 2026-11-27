@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Reader.Checking.SourceCheckedSteps
 import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 
+open WebAssembly
+
 /-!
 Independent Wasm 2 body validity and source-only resource demand imply actual body acceptance with every final instruction check through the complete loop. Start bounds describe only the prepared prefix.
 

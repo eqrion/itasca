@@ -9,6 +9,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Stateful.StatefulMetadataPosts
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectAndStatefulCallbacks
 import Itasca.Visitor.RunTrace
 
+open WebAssembly
+
 /-!
 # Recorded Acceptance
 

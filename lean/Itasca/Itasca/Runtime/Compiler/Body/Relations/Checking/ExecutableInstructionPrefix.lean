@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Instructions.WellFormedAcceptance
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.InstructionChecks
 import Itasca.Runtime.Compiler.Local.Checking.ScopeInstructionPrefixes
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ExecutableInstructionAcceptance -/

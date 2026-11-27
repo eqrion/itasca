@@ -4,6 +4,8 @@ import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.Store.Api.DefinitionsAndGrowth
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

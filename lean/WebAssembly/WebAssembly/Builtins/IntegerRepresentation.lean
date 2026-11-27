@@ -520,6 +520,8 @@ example : inv_concat_ Nat [] = [] := by decide
 
 end WebAssembly.Builtins.Examples
 
+open WebAssembly
+
 -- The byte order differs from the bit-list order. These vectors include sign,
 -- exponent and payload preservation, rather than only finite positive values.
 example : ibytes_ 32 (.mk_uN 0x12345678) = [.mk_byte 0x78, .mk_byte 0x56, .mk_byte 0x34, .mk_byte 0x12] := by decide

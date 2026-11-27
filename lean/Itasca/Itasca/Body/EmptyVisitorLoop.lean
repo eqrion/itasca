@@ -5,6 +5,8 @@ import Itasca.Body.TableAdapters
 import Itasca.Handler.StackEffects
 import Itasca.Binary.Scalar.Encoding
 
+open WebAssembly
+
 /-!
 Proofs for Body.
 
@@ -716,7 +718,7 @@ section
 # Body loop with the empty visitor
 
 Proof-side views of the extracted visiting loop `code.body_loop_loop` instantiated with
-`code.EmptyOpVisitor`. `Body.emptyVisitorLoop.body` drops the visitor from the loop body,
+`code.DefaultOpVisitor`. `Body.emptyVisitorLoop.body` drops the visitor from the loop body,
 `Body.emptyVisitorLoop.body_eq` relates it to the extracted body, and `code.bodyCore` is the
 visitor-free body validator.
 -/
@@ -732,9 +734,9 @@ def Body.emptyVisitorLoop.body
   (locals : alloc.vec.Vec wasm_types.ValueType)
   (results : alloc.vec.Vec wasm_types.ValueType)
   (st : code.BodyState)
-  (visitor : code.EmptyOpVisitor) :
+  (visitor : code.DefaultOpVisitor) :
   Result (ControlFlow (code.BodyState ×
-    code.EmptyOpVisitor) (core.result.Result Unit
+    code.DefaultOpVisitor) (core.result.Result Unit
     error.OpError))
   := do
   let b ← alloc.vec.Vec.is_empty Global st.blocks
@@ -910,7 +912,7 @@ def Body.emptyVisitorLoop.body
         then ok (done (core.result.Result.Err error.OpError.StackTooLarge))
         else
           let (r1, ois, visitor1) ←
-            code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+            code.step_wasm2 code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
               { st.core with pos := «end» } data
               env { locals, results } op visitor
           let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
@@ -936,10 +938,10 @@ def Body.emptyVisitorLoop
   (st : code.BodyState)
   (locals : alloc.vec.Vec wasm_types.ValueType)
   (results : alloc.vec.Vec wasm_types.ValueType)
-  (visitor : code.EmptyOpVisitor) :
+  (visitor : code.DefaultOpVisitor) :
   Result (core.result.Result Unit error.OpError)
   := do
-  let (r, _) ← code.body_loop_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor data env
+  let (r, _) ← code.body_loop_loop code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor data env
     ⟨locals, results⟩ type_index visitor st
   .ok r
 
@@ -947,11 +949,11 @@ def Body.emptyVisitorLoop
 adapter and the extracted visiting loop. -/
 theorem Body.emptyVisitorLoop.body_eq (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
-    code.body_loop_loop.body code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    code.body_loop_loop.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx index () st = (do
       let r ← Body.emptyVisitorLoop.body data env index ctx.locals ctx.results st ()
       .ok (match r with | .cont (s, _) => .cont ((), s) | .done result => .done (result, ()))) := by
-  unfold code.body_loop_loop.body code.step_profile Body.emptyVisitorLoop.body
+  unfold code.body_loop_loop.body code.step_body Body.emptyVisitorLoop.body
   simp only [code.BodyState.blocks_is_empty, Std.bind_assoc]
   congr 1
   funext b

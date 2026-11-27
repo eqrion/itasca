@@ -113,7 +113,7 @@ open Aeneas Aeneas.Std Itasca Visitor.Trace
 set_option maxRecDepth 4096
 
 private theorem recorder_retains (prior : List Observation) :
-    Refines recorder code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+    Refines recorder code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       (fun log (_ : Unit) => ∃ suffix, log = prior ++ suffix) := by
   rintro log unit event reply after ⟨suffix,held⟩ called
   have appended := recorder_records log event reply after called
@@ -133,10 +133,10 @@ theorem source_step_recorded_prefix (prior before after : List Observation)
     (ctx : code.Context) (index : U32) (opcode : U8)
     (result : core.result.Result Unit error.OpError)
     (held : ∃ suffix, before = prior ++ suffix)
-    (called : code.step_profile recorder st data env ctx index opcode before = .ok (result,final,after)) :
+    (called : code.step_body recorder st data env ctx index opcode before = .ok (result,final,after)) :
     ∃ suffix, after = prior ++ suffix := by
-  obtain ⟨_,_,retained⟩ := code.step_profile.refines recorder
-    code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor _ (recorder_retains prior)
+  obtain ⟨_,_,retained⟩ := code.step_body.refines recorder
+    code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor _ (recorder_retains prior)
     st data env ctx index opcode before () held result final after called
   exact retained
 

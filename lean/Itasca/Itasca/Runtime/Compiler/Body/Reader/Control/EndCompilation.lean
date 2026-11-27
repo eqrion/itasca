@@ -12,6 +12,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCoordinates
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlObservedLayout
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -121,7 +123,7 @@ theorem reader_br {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0c#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x0c#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x0c#u8 before =
       .ok (.Ok (), out, after)) :
     ∃ depth view, visitor.on_br before out.core depth view = .ok (.Ok (), after) ∧
       code.branch_info st data env false = .ok (.Ok (depth, view), out) ∧
@@ -143,7 +145,7 @@ theorem reader_br_if {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 0x0d#u8)
-    (accepted : code.step_profile visitor st data env ctx index 0x0d#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x0d#u8 before =
       .ok (.Ok (), out, after)) :
     ∃ depth view values, visitor.on_br_if before out.core depth view = .ok (.Ok (), after) ∧
       code.branch_info st data env true = .ok (.Ok (depth, view), out) ∧
@@ -626,7 +628,7 @@ theorem structured_reader_prefix_end_entered {jumpTables : List U32} {emit : Lis
     (nonRoot : p.current.form ≠ .body)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 0x0b#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after)) :
     ∃ outer parent savedOuter savedParent instruction,
       parents = outer ++ [parent] ∧ p.parents = savedOuter ++ [savedParent] ∧
@@ -771,7 +773,7 @@ theorem step_end_root {data env locals index st}
     (p : Body.Pending data env locals index st) {V} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (single : st.blocks.val.length = 1)
-    (accepted : code.step_profile visitor st data env ctx index 0x0b#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 0x0b#u8 before =
       .ok (.Ok (),out,after)) : out.core.ctrls.val = [] := by
   rw [Body.CallbackTrace.dispatch_end] at accepted
   obtain ⟨pair,read,_⟩ := Body.CallbackTrace.bodyRun.accepted _ _ _ _ _ _ accepted
@@ -811,7 +813,7 @@ theorem structured_reader_prefix_end_dormant {jumpTables : List U32} {emit : Lis
     (unentered : current.entered = false)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 0x0b#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0x0b#u8 before = .ok (.Ok (), out, after)) :
     ∃ outer parent savedOuter savedParent instruction,
       parents = outer ++ [parent] ∧ p.parents = savedOuter ++ [savedParent] ∧
@@ -891,7 +893,7 @@ theorem StructuredReaderCompilerState.end_nested {jumpTables : List U32} {A : Ty
     (out : code.BodyState) (nonRoot : savedCurrent.form ≠ .body)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = code.OP_END)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index code.OP_END before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds

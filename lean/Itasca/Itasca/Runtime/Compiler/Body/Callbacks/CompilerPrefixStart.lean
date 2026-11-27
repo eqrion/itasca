@@ -12,6 +12,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Emission.LoweringEmpty
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrameStart
 import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## CompilerPrefix -/

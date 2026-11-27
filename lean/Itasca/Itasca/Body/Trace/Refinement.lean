@@ -9,6 +9,8 @@ import Itasca.Binary.Body.EncodingUnique
 import Itasca.Visitor.RunTrace
 import Itasca.Body.References.Reader
 
+open WebAssembly
+
 /-!
 # Refinement
 
@@ -354,7 +356,7 @@ section
 
 Exact visitor refinement for the `br_table` loop (`tableRest.refines`, `tableBody.refines`,
 `code.branch_table_with_loop.refines`, `code.branch_table_with.refines`) and for the whole
-`code.step_profile` (`code.step_profile.refines`), preserving computed signatures, partial tables
+`code.step_body` (`code.step_body.refines`), preserving computed signatures, partial tables
 and callback rejection.
 -/
 
@@ -549,18 +551,18 @@ open Visitor.Trace Body.Visitor
 set_option maxHeartbeats 2000000 in
 /-- Instruction dispatch, including control instructions, preserves every ordinary result under exact
 callback refinement, including computed signatures and partial tables. -/
-theorem code.step_profile.refines {V W : Type}
+theorem code.step_body.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
     (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     (ctx : code.Context) (index : U32) (opcode : U8)
     (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (final : code.BodyState) (v' : V)
-    (h : code.step_profile visitor st data env ctx index opcode v =
+    (h : code.step_body visitor st data env ctx index opcode v =
       .ok (res, final, v')) :
-    ∃ w', code.step_profile replacement st data env ctx index opcode w =
+    ∃ w', code.step_body replacement st data env ctx index opcode w =
       .ok (res, final, w') ∧ related v' w' := by
-  unfold code.step_profile at h ⊢
+  unfold code.step_body at h ⊢
   split at h
   case h_1 | h_2 | h_3 | h_4 | h_5 | h_6 | h_7 | h_10 | h_11 =>
     try simp_all only [↓reduceIte]

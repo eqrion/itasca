@@ -19,6 +19,8 @@ import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Support.Translation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Control / Structured.
 

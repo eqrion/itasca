@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Float.FloatConstantEmissions
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Visitor.RunTrace
 
+open WebAssembly
+
 /-!
 # Reached Reference Demand
 
@@ -36,7 +38,7 @@ theorem scalar_available {V : Type} (visitor : code.OpVisitor V)
     (ordinary : opcode.val ∉ Body.controlOpcodes)
     (accepted : code.step_wasm2 visitor st.core data env ctx opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ post result.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index opcode before ⦃ result =>
+    code.step_body visitor st data env ctx index opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = {core := out} ∧ post result.2.2 ⦄ := by
   rw [scalar_eq visitor st data env ctx index opcode before ordinary]
   have notFull : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by
@@ -64,7 +66,7 @@ theorem base_available {V : Type} (visitor : code.OpVisitor V)
     (misc : opcode ≠ code.OP_MISC_PREFIX) (locals : ctx.locals = sourceCtx.locals)
     (accepted : code.step visitor st.core data env sourceCtx opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ post result.2.2 ⦄) :
-    code.step_profile visitor st data env ctx index opcode before ⦃ result =>
+    code.step_body visitor st data env ctx index opcode before ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = {core := out} ∧ post result.2.2 ⦄ := by
   rw [scalar_eq visitor st data env ctx index opcode before ordinary]
   have notFull : alloc.vec.Vec.len st.core.vals ≠ core.num.Usize.MAX := by
@@ -181,9 +183,9 @@ theorem reached_sign_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile source st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before =
+    (reference : code.step_body source st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before =
       .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -230,8 +232,8 @@ theorem reached_saturating_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = 0xfc#u8)
-    (reference : code.step_profile source st data env ctx index 0xfc#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 0xfc#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 0xfc#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -292,11 +294,11 @@ theorem IndexedTableReaderCompilerPoint.sign_available_from_source {A : Type}
     (advance : next.val = st.core.pos.val+1) (inbounds : st.core.pos.val<data.length)
     (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[st.core.pos.val] = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
@@ -344,11 +346,11 @@ theorem IndexedTableReaderCompilerPoint.saturating_available_from_source {A : Ty
     (subopcode : U32) (prefixEnd : Usize) (subopcodeEq : subopcode.val = (floatOpcode op).val-256)
     (decoded : Binary.Leb128.Decoded data next subopcode prefixEnd)
     (byte : data.val[st.core.pos.val] = 252#u8)
-    (reference : code.step_profile recorder {core := {st.core with pos := next}} data env
+    (reference : code.step_body recorder {core := {st.core with pos := next}} data env
       ⟨sourceLocals,ft.results⟩ index data.val[st.core.pos.val] before = .ok (.Ok (),out,after))
     (suffix : code.body_loop_loop recorder data env ⟨sourceLocals,ft.results⟩ index before st =
       .ok (.Ok (),final)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ⟨sourceLocals,ft.results⟩ index
       data.val[st.core.pos.val] compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
@@ -565,9 +567,9 @@ theorem reached_numeric_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (reference : code.step_profile source st data env ctx index
+    (reference : code.step_body source st data env ctx index
       (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -596,9 +598,9 @@ theorem reached_float_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (reference : code.step_profile source st data env ctx index
+    (reference : code.step_body source st data env ctx index
       (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (floatOpcode op)) compiler ⦃ result =>
       result.1 = .Ok () ∧ result.2.1 = out ∧ CompilationBudgetEffect compiler.budget result.2.2.budget
         (fun counter => if counter = .instructions then 1 else 0) ⦄ := by

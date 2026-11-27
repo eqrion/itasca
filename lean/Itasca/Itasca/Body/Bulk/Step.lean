@@ -3,6 +3,8 @@ import Itasca.Body.References.Readers
 import Itasca.Body.NumericExt.Total
 import Itasca.Body.References.Reader
 
+open WebAssembly
+
 /-!
 Proofs for Body / Bulk.
 

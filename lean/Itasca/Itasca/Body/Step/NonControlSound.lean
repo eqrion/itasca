@@ -169,7 +169,7 @@ theorem Pending.scalar_step {data env locals index st} (p : Pending data env loc
   · rename_i hn
     have hsize : st.core.vals.val.length < Usize.max := by scalar_tac
     obtain ⟨⟨r, s, v⟩, hr, hout⟩ := WP.spec_imp_exists
-      (p.non_control code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () Visitor.empty_total ctx hlocals
+      (p.non_control code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor () Visitor.empty_total ctx hlocals
         opcode hscalar hsize hbyte)
     rw [WP.spec_equiv_exists]
     exact ⟨(r, {st with core := s}), by simp [hr], hout⟩

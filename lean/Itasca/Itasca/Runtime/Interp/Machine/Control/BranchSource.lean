@@ -16,6 +16,8 @@ import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.SourceMachine.Core.ProgressAndBounds
 import Itasca.Runtime.Interp.Control.NormalizeCompose
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Control.
 
@@ -50,7 +52,7 @@ theorem step_forward_jump_flat {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (sourceStore : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (sourceStore : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (target : U32)
     (last : index.val+1 = exec.frames.length)
@@ -294,7 +296,7 @@ theorem FramePoint.target {s raw frame compiled C targets next output}
 
 /-- A typed source branch preserves the surviving dynamic/static label
 correspondence and installs the exact retained target continuation. -/
-theorem FramePoint.branch {s : _root_.store} {raw : runtime.interp.Frame}
+theorem FramePoint.branch {s : WebAssembly.store} {raw : runtime.interp.Frame}
     {f : SourceMachine.AFrame} {compiled : runtime.bytecode.CompiledFunction}
     {C : context} {targets : List Compiler.LabelTarget} {next : Nat} {output : List valtype}
     (front discarded results : List val)
@@ -318,7 +320,7 @@ theorem FramePoint.branch {s : _root_.store} {raw : runtime.interp.Frame}
   refine ⟨target, targetNext, targetOutput, found, matching, ⟨point.bindings,point.locals,labels, ?_⟩⟩
   simpa only [List.map_append, resultTypes, frontTypes] using continuation
 
-theorem branch_target_point {s : _root_.store} {raw : runtime.interp.Frame}
+theorem branch_target_point {s : WebAssembly.store} {raw : runtime.interp.Frame}
     {f : SourceMachine.AFrame} {compiled : runtime.bytecode.CompiledFunction}
     {C : context} {targets : List Compiler.LabelTarget}
     (front discarded results : List val)
@@ -429,7 +431,7 @@ theorem step_br_table_point {M P F A : Type}
     (frameIndex : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (selector start len : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depths : List labelidx) (fallback : labelidx) (front : List val)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
     (frameLookup : exec.frames.val[frameIndex.val]? = some raw)
@@ -715,7 +717,7 @@ open Aeneas.Std WebAssembly Itasca.Spec
 
 /-- A fused conditional branch always performs the source test and, when
 selected, the positive branch transfer. -/
-theorem branch_if_source_positive (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+theorem branch_if_source_positive (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (label : SourceMachine.Label) (front discarded results : List val) (value : Nat)
     (bound : value < 2 ^ 32) (lookup : f.labels[depth]? = some label)
     (height : label.height = front.length) (arity : label.arity = results.length)

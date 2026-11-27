@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Literal.SourceEffects
 import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Spec.Typing
 
+open WebAssembly
+
 /-! ## FloatFacts -/
 
 section
@@ -84,7 +86,7 @@ theorem reader_emit_float {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (floatOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -322,7 +324,7 @@ theorem reader_emit_float32 {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F32_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_F32_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -373,7 +375,7 @@ theorem reader_emit_float64 {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_F64_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_F64_CONST before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧

@@ -1,5 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.OpenPrefix
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## FutureFrames -/

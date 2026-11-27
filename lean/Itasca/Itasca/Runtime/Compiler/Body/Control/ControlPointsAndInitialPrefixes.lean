@@ -35,6 +35,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndElseCompilation
 import Itasca.Runtime.Compiler.Body.Control.StructuredPrefixes
 import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Control.
 
@@ -74,7 +76,7 @@ theorem IndexedTableReaderCompilerPoint.core_extra {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (opcode : U8) (covered : opcode.val ∈ [27,35,36,67,68,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62])
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -109,7 +111,7 @@ theorem IndexedTableReaderCompilerPoint.float_base {A : Type}
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (floatOpcode op)))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -138,7 +140,7 @@ theorem IndexedTableReaderCompilerPoint.float_saturating {A : Type}
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (252#u8))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index (252#u8) before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -178,7 +180,7 @@ theorem IndexedTableReaderCompilerPoint.typed_select {A : Type}
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -229,7 +231,7 @@ theorem IndexedTableReaderCompilerPoint.scope_step {A : Type}
     (signatures : SignatureSequence initial.signatures.val env.types.val)
     (opcode : U8) (supported : ScopeOpcode opcode)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -251,7 +253,7 @@ theorem IndexedTableReaderCompilerPoint.else_ {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1) (inbounds : st.core.pos.val < data.length)
     (out : code.BodyState) (initialLocals : LocalLayout initial)
     (byte : data.val[st.core.pos.val]'inbounds = 5#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 5#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty
@@ -277,7 +279,7 @@ theorem IndexedTableReaderCompilerPoint.end_nested {A : Type}
     (nonRoot : st.blocks.val.length ≠ 1)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty

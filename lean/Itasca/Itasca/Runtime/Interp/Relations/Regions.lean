@@ -1,6 +1,8 @@
 import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 import Itasca.Runtime.Compiler.Local.Relations.Layout.ValueRegions
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

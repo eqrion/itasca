@@ -9,6 +9,8 @@ import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -538,7 +540,7 @@ theorem dispatch_branch_guard_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame) (cond target : U32) (value : Nat)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (depth : Nat) (front : List val)
     (lookup : exec.frames.val[index.val]? = some raw)
     (bound : value < 2 ^ 32)
@@ -634,7 +636,7 @@ theorem step_unreachable_refines {M P F A : Type}
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)

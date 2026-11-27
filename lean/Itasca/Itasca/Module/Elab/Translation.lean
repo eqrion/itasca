@@ -2,6 +2,8 @@ import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Support.Translation
 
+open WebAssembly
+
 /-!
 # Import projections and validity translation
 

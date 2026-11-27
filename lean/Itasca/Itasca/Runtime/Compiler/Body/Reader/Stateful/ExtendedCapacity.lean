@@ -13,6 +13,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallMetadata
 import Itasca.Runtime.Compiler.Local.Lowering.Simd.ConstructionChecks
 import Itasca.Runtime.Compiler.Local.Relations.LoweringEffects
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Stateful.
 
@@ -51,7 +53,7 @@ theorem reader_stateful_bulk {data env locals index st}
     (member : subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17])
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
-    (accepted : code.step_profile visitor st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body visitor st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     ∃ op a b, StatefulArguments op a b ∧
       statefulCallback visitor before out.core op a b = .ok (.Ok (),after) ∧ StatefulReaderPost p out.core op := by
   obtain ⟨size,run⟩ := scalar_success visitor st out data env ctx index 252#u8 before after (by decide) accepted
@@ -145,7 +147,7 @@ theorem reader_stateful_base {data env locals index st}
     (before after : V) (out : code.BodyState) (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body visitor st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     ∃ op a b, StatefulArguments op a b ∧
       statefulCallback visitor before out.core op a b = .ok (.Ok (),after) ∧ StatefulReaderPost p out.core op := by
   simp only [List.mem_cons,List.not_mem_nil,or_false] at member
@@ -254,7 +256,7 @@ theorem reader_indirect_call_depths {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     after.table_depths = before.table_depths := by
   obtain ⟨idx,table,values,callback,rest⟩ := reader_indirect_call p
@@ -267,7 +269,7 @@ theorem reader_typed_select_depths {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     after.table_depths = before.table_depths := by
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select p
@@ -306,7 +308,7 @@ theorem reader_indirect_call_code_mono {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
   obtain ⟨idx,table,values,callback,rest⟩ := reader_indirect_call p
@@ -319,7 +321,7 @@ theorem reader_typed_select_code_mono {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     before.function.code.val.length ≤ after.function.code.val.length := by
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select p
@@ -417,7 +419,7 @@ theorem reader_stateful_base_full_capacity {data env locals index st}
     (ctx : code.Context) (opcode : U8)
     (member : opcode.val ∈ [37,38,63,64,208,209,210])
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   obtain ⟨op,a,b,arguments,callback,_⟩ := reader_stateful_base p
@@ -433,7 +435,7 @@ theorem reader_stateful_bulk_full_capacity {data env locals index st}
     (member : subopcode.val ∈ [8,9,10,11,12,13,14,15,16,17])
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   obtain ⟨op,a,b,arguments,callback,_⟩ := reader_stateful_bulk p
@@ -447,7 +449,7 @@ theorem reader_indirect_call_full_capacity {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   obtain ⟨idx,table,values,callback,rest⟩ := reader_indirect_call p
@@ -460,7 +462,7 @@ theorem reader_typed_select_full_capacity {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState)
     (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     CapacityStep before after out.core := by
   obtain ⟨ty,position,callback,rest⟩ := reader_typed_select p

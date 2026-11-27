@@ -22,6 +22,8 @@ import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 import Itasca.Runtime.Interp.Machine.Calls.IndirectOperands
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Frames.
 
@@ -59,7 +61,7 @@ or fetches the compiler's exact final Return. Root alignment rules out falling
 past the bytecode vector. -/
 theorem function_end {M : Type} {store : runtime.store.Store M}
     {raw : runtime.interp.Frame} {source : SourceMachine.AFrame}
-    {compiled : runtime.bytecode.CompiledFunction} {C : context} {s : _root_.store} {targets next output}
+    {compiled : runtime.bytecode.CompiledFunction} {C : context} {s : WebAssembly.store} {targets next output}
     (program : FrameProgram store raw compiled (source.locals.map Representation.valueType) source.resultTypes C.FUNCS)
     (point : FramePoint s raw { source with code := [], labels := [] }
       compiled C targets next output) :
@@ -281,7 +283,7 @@ theorem step_return_structured {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction) [OrdinaryHeads (emission compiled)]
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
     (hi : store.instances.val[raw.instance.val]? = some inst)
@@ -473,7 +475,7 @@ namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem SavedFrame.store_prefix_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (retained : Store.MetadataExtended before after) (bounds : FrameTypeBounds before)
+    {oldSource newSource : WebAssembly.store} (retained : Store.MetadataExtended before after) (bounds : FrameTypeBounds before)
     (extension : Extend_store oldSource newSource) {exec raw source waiting childBase}
     (saved : SavedFrame before oldSource exec raw source waiting childBase) :
     SavedFrame after newSource exec raw source waiting childBase := by
@@ -482,7 +484,7 @@ theorem SavedFrame.store_prefix_extension {M : Type} {before after : runtime.sto
   exact ⟨compiled,C,targets,next,output,program.store_prefix retained,point.extend extension⟩
 
 theorem SavedFrames.store_prefix_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (retained : Store.MetadataExtended before after) (bounds : FrameTypeBounds before)
+    {oldSource newSource : WebAssembly.store} (retained : Store.MetadataExtended before after) (bounds : FrameTypeBounds before)
     (extension : Extend_store oldSource newSource) {exec raws sources waiting base}
     (saved : SavedFrames before oldSource exec raws sources waiting base) :
     SavedFrames after newSource exec raws sources waiting base := by
@@ -552,7 +554,7 @@ namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
 theorem FrameStackRel.source_base {M : Type}
-    {store : runtime.store.Store M} {sourceStore : _root_.store} {exec : runtime.interp.Execution}
+    {store : runtime.store.Store M} {sourceStore : WebAssembly.store} {exec : runtime.interp.Execution}
     {f : SourceMachine.AFrame} {rest : List SourceMachine.AFrame} (stack : FrameStackRel store sourceStore exec (f::rest))
     {raw : runtime.interp.Frame} {index : Usize}
     (last : index.val+1=exec.frames.length) (found : exec.frames.val[index.val]?=some raw) :

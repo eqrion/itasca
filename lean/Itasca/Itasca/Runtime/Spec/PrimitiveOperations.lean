@@ -10,6 +10,8 @@ import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import WebAssembly.Host
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Spec.
 
@@ -1269,7 +1271,7 @@ theorem loaded_wf (op : PackedMemory) (sign : sx) (payload : List byte)
 
 /-- Packed source loads consume exactly their encoded byte width, then perform
 canonical sign or zero extension. -/
-theorem load_step (s : _root_.store) (f : frame) (op : PackedMemory) (sign : sx) (argument : memarg) (address : Nat)
+theorem load_step (s : WebAssembly.store) (f : frame) (op : PackedMemory) (sign : sx) (argument : memarg) (address : Nat)
     (storeWf : wf_store s) (frameWf : wf_frame f) (addressBound : address < 2^32)
     (operationWf : wf_admininstr (op.load sign argument))
     (bytesWf : Forall wf_byte (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES) :
@@ -1325,7 +1327,7 @@ theorem load_step (s : _root_.store) (f : frame) (op : PackedMemory) (sign : sx)
 
 /-- Packed stores use the low bytes of the source integer, preserving the
 well-formed source store and returning the generated bounds trap when needed. -/
-theorem store_step (s : _root_.store) (f : frame) (op : PackedMemory) (argument : memarg)
+theorem store_step (s : WebAssembly.store) (f : frame) (op : PackedMemory) (argument : memarg)
     (address value : Nat) (storeWf : wf_store s) (frameWf : wf_frame f) (addressBound : address < 2^32)
     (operationWf : wf_admininstr (op.store argument))
     (valueWf : wf_num_ (numtype_Inn op.type) (.mk_num__0 op.type (.mk_uN value)))
@@ -2562,13 +2564,13 @@ private theorem get_some_programs (indices : List Nat) (programs : List (List in
     (indices.map (fun _ (program : Option (List instr)) => Option.get! program)).ap
       (programs.map some) = programs := by
   induction indices generalizing programs with
-  | nil => cases programs <;> simp_all [List.ap]
+  | nil => cases programs <;> simp_all [WebAssembly.List.ap]
   | cons index rest ih =>
     cases programs with
     | nil => simp at lengths
     | cons program programs =>
       simp only [List.length_cons, Nat.add_right_cancel_iff] at lengths
-      simpa only [List.map_cons, List.ap, List.zipWith_cons_cons, Option.get!_some] using
+      simpa only [List.map_cons, WebAssembly.List.ap, List.zipWith_cons_cons, Option.get!_some] using
         congrArg (program :: ·) (ih programs lengths)
 
 /-- A compact constructor for the generated instantiation judgment. Repeated

@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Machine.Control.BranchSource
 import Itasca.Runtime.Interp.Machine.Stateful.ReadExecution
 import Itasca.Runtime.Integration.Execution.TableSetStep
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / Dispatch.
 

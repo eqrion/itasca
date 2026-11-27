@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdEmissions
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

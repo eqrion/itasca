@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.Lowering
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Numeric / Integer.
 

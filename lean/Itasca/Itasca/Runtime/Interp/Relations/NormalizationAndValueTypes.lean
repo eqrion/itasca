@@ -4,6 +4,8 @@ import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.Interp.Control.StructuredLinear
 
+open WebAssembly
+
 /-!
 # Normalization And Value Types
 

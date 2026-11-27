@@ -4,6 +4,8 @@ import Itasca.Runtime.SourceMachine.Float.Descriptors
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Representation.Values
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

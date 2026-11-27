@@ -9,7 +9,7 @@ require ItascaRust from "../ItascaRust"
 
 @[default_target]
 lean_lib Itasca where
-  globs := #[.submodules `Itasca]
+  globs := #[.andSubmodules `Itasca]
 
 target audit pkg : FilePath := do
   -- Use Lake's module inventory so the audit follows each library's globs.

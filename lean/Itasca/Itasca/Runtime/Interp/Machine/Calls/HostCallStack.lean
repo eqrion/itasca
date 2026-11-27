@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Machine.CompiledFunctions
 import Itasca.Runtime.Interp.HostCalls
 import Itasca.Runtime.Interp.Machine.Frames.ReturnsAndDepth
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## IndirectSelected -/
@@ -222,7 +224,7 @@ Main declarations: `SavedFrame.resume_host` and `host_return_stack`.
 namespace Itasca.Interp.Machine
 open Aeneas Aeneas.Std
 
-theorem SavedFrame.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrame.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {base : Nat} {raw : runtime.interp.Frame}
     {source : SourceMachine.AFrame} {waiting : List valtype} {results : List val}
     (saved : SavedFrame store sourceStore before raw source waiting base)
@@ -233,7 +235,7 @@ theorem SavedFrame.resume_host {M : Type} {store : runtime.store.Store M} {sourc
   obtain ⟨compiled,functions,targets,next,output,program,point⟩ := saved.continuation
   exact ⟨compiled,functions,targets,next,output,false,program,.ready (point.resume results types heights)⟩
 
-theorem SavedFrames.host_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrames.host_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
     {raws sources waiting boundary}
     (saved : SavedFrames store sourceStore before raws sources waiting boundary)
@@ -248,7 +250,7 @@ theorem SavedFrames.host_preserved {M : Type} {store : runtime.store.Store M} {s
 /-- A synchronous host call does not push a concrete Wasm frame. Its waiting
 caller becomes active again after the checked result write, while every older
 caller keeps its own saved continuation. -/
-theorem host_return_stack {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem host_return_stack {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
     {raw : runtime.interp.Frame} {raws : List runtime.interp.Frame}
     {caller : SourceMachine.AFrame} {rest : List SourceMachine.AFrame} {waiting : List valtype}
@@ -286,7 +288,7 @@ open Aeneas Aeneas.Std
 
 /-- Consume exactly the suspended stack produced by prepare_call. A host
 callee contributes no concrete frame, so the saved head resumes directly. -/
-theorem SavedFrames.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrames.resume_host {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
     {raws : List runtime.interp.Frame} {caller : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     {waiting : List valtype}
@@ -301,7 +303,7 @@ theorem SavedFrames.resume_host {M : Type} {store : runtime.store.Store M} {sour
     exact host_return_stack (by simpa only [List.reverse_cons] using frames) head tail effect types heights
 
 theorem SavedFrames.resume_host_extended {M : Type} {beforeStore afterStore : runtime.store.Store M}
-    {oldSource newSource : _root_.store}
+    {oldSource newSource : WebAssembly.store}
     (retained : Store.MetadataExtended beforeStore afterStore) (bounds : FrameTypeBounds beforeStore)
     (extension : Extend_store oldSource newSource)
     {before after : runtime.interp.Execution} {base : Nat} {results : List val}
@@ -327,7 +329,7 @@ open Aeneas Aeneas.Std
 
 /-- Actual caller PC advancement and checked host result writes compose into
 the full resumed concrete stack under retained raw metadata and source extension. -/
-theorem FrameStackRel.host_call_return {M : Type} {store : runtime.store.Store M} {s : _root_.store}
+theorem FrameStackRel.host_call_return {M : Type} {store : runtime.store.Store M} {s : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store s exec (source :: rest))
     (raw : runtime.interp.Frame) (index : Usize) (pc : U32)
@@ -344,7 +346,7 @@ theorem FrameStackRel.host_call_return {M : Type} {store : runtime.store.Store M
     (heights : ∀ label ∈ source.labels, label.height ≤ front.length)
     (continuation : Compiler.StructuredCode (emission compiled C) C.TYPES C.FUNCS source.resultTypes C.LOCALS compiled.code.val compiled.jump_tables.val targets
       (front.map Representation.valueType ++ returns) after pc.val next output)
-    (afterStore : runtime.store.Store M) (sourceAfter : _root_.store)
+    (afterStore : runtime.store.Store M) (sourceAfter : WebAssembly.store)
     (retained : Store.MetadataExtended store afterStore) (bounds : FrameTypeBounds store)
     (extension : Extend_store s sourceAfter)
     (finished : runtime.interp.Execution) (values : List val)

@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.Interp.State.ObjectBindingsAndMutation
 
+open WebAssembly
+
 /-! ## Projection -/
 
 section

@@ -8,6 +8,8 @@ import Itasca.Runtime.SourceMachine.Simd.MemoryTransition
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 # Entry And Branch Tables
 

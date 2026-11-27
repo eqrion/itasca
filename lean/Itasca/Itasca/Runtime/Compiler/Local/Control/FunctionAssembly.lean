@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Function.CapturedContext
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerAuxiliaryTables
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

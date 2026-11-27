@@ -1,5 +1,7 @@
 import Itasca.Module.Const.ParserComplete
 
+open WebAssembly
+
 /-!
 # Inversion of section typing
 
@@ -61,7 +63,7 @@ theorem global_valid_of_typing {env : metadata.Env} {C : context} {g : metadata.
   Module.Constants.valid_of_typing hg hf (global_expr_typed h)
 
 /-- Inversion of `Start_ok`: the start function exists and has type `[] -> []`. -/
-theorem start_signature {C : context} {s : _root_.start} (h : Start_ok C s) :
+theorem start_signature {C : context} {s : WebAssembly.start} (h : Start_ok C s) :
     match s with
     | .START idx => proj_uN_0 idx < C.FUNCS.length ∧
         C.FUNCS[proj_uN_0 idx]! = .mk_functype (.mk_list []) (.mk_list []) := by
@@ -90,7 +92,7 @@ theorem datamode_active_properties {C : context} {mode : datamode} (h : Datamode
   · trivial
 
 /-- A typed data segment has a typed mode. -/
-theorem data_mode_typed {C : context} {d : _root_.data} (h : Data_ok C d) :
+theorem data_mode_typed {C : context} {d : WebAssembly.data} (h : Data_ok C d) :
     match d with | .DATA _ mode => Datamode_ok C mode := by cases h; assumption
 
 /-- A typed data segment is valid in the environment. -/

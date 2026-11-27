@@ -8,6 +8,8 @@ import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 
+open WebAssembly
+
 /-!
 Supported source execution: correctness, ownership, code bounds, extension and terminal cases compose the cumulative step theorem. The independently consumed coverage contract remains separate.
 -/
@@ -230,7 +232,7 @@ open Itasca.SourceMachine.Core
 
 /-- Successful instructions retain the supported source grammar, including
 unchanged defined function bodies after mutable object-content writes. -/
-theorem instruction_covered (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_covered (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
     (descriptor : CoreHead op)
     (typed : FrameTyped s {f with code := op :: after} [])

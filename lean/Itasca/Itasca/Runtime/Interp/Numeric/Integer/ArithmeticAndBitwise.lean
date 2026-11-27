@@ -2,6 +2,8 @@ import Itasca.Runtime.Equations.Interp
 import Itasca.Runtime.SourceMachine.Sim.Control
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-!
 # Integer operation correspondence
 

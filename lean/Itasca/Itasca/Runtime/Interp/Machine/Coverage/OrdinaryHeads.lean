@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Body.Simd.EmissionTags
 import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
 import Itasca.Runtime.Interp.Machine.Normalization.IndexedEmpty
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## SupportedHeadCoverage -/

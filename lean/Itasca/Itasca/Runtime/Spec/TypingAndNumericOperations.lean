@@ -6,6 +6,8 @@ import Itasca.Runtime.SourceMachine.Simulation
 import Mathlib.Data.Rat.Floor
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Spec.
 

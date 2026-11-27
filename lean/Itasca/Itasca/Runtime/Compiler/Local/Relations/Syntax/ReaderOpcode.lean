@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.Lowering
 import Itasca.Runtime.Compiler.Local.Lowering.Float.LoweringAndEffects
 import Itasca.Runtime.Compiler.Local.Source.InstructionSourceAndEntry
 
+open WebAssembly
+
 /-! ## ExecutableTokens -/
 
 section
@@ -64,7 +66,7 @@ theorem Emits.executable_tokens {tokens ops} (emitted : Emits tokens ops) :
 theorem BodyTokens.executable_tokens {tokens ops} (body : BodyTokens tokens ops)
     (supported : Forall Itasca.SourceMachine.BinaryInstr ops) : Forall ExecutableToken tokens := by
   obtain ⟨inner, rfl, emitted⟩ := body
-  have inside := emitted.executable_tokens supported
+  have inside := Emits.executable_tokens emitted supported
   simpa [Forall, or_imp, forall_and, ExecutableToken] using inside
 /-- A retained unfinished reader prefix selects a supported token from the
 original complete executable body, independently of opcode-specific parser facts. -/
@@ -278,6 +280,7 @@ theorem scalar_immediate_reader_opcode {opcode token bytes}
     (encoded : Body.Scalar.Immediate opcode token bytes) : ReaderOpcode opcode := by
   cases encoded
   case numericInstruction source meaning =>
+    change Body.Numeric.opcodeInstruction _ = _ at meaning
     rw [Body.Numeric.opcodeInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     exact numeric_reader_opcode decoded
@@ -290,6 +293,7 @@ theorem immediate_reader_opcode {opcode token bytes}
   cases encoded with
   | plain encoded => exact scalar_immediate_reader_opcode encoded
   | signExtensionInstruction _ source meaning =>
+    change Body.NumericExtensions.signInstruction _ = _ at meaning
     rw [Body.NumericExtensions.signInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     exact sign_reader_opcode decoded

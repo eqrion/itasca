@@ -8,6 +8,8 @@ import Itasca.Runtime.SourceMachine.OwnershipExtension
 import Itasca.Runtime.Interp.Relations.NormalizationAndValueTypes
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
+open WebAssembly
+
 /-! ## CodeBounds -/
 
 section

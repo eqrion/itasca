@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Safety.InstructionSafety
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 import Itasca.Body.Bulk.Step
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Source.
 
@@ -116,7 +118,7 @@ the source run itself, without any compiler premise. -/
 theorem source_misc_prefix {V : Type} (source : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (before after : V)
-    (reference : code.step_profile source st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
+    (reference : code.step_body source st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     ∃ sub next, Binary.Leb128.Decoded data st.core.pos sub next ∧
       (sub.val < 8 ∨ sub.val ∈ [8,9,10,11,12,13,14,15,16,17]) := by
   obtain ⟨capacity,raw⟩ := scalar_success source st out data env ctx index 252#u8 before after (by decide) reference
@@ -242,7 +244,7 @@ theorem source_opcode_family (opcode : U8) : SourceOpcodeFamily opcode := by
 theorem ReservedSourceOpcode.rejects {V : Type} (source : code.OpVisitor V)
     (st out : code.BodyState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (before after : V) (reserved : ReservedSourceOpcode opcode)
-    (reference : code.step_profile source st data env ctx index opcode before = .ok (.Ok (),out,after)) : False := by
+    (reference : code.step_body source st data env ctx index opcode before = .ok (.Ok (),out,after)) : False := by
   obtain ⟨_,raw⟩ := base_success source st out data env ctx ctx index opcode before after
     reserved.ordinary reserved.plain reserved.sign reserved.misc rfl reference
   rcases reserved.absent with low | high

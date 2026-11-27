@@ -2,6 +2,8 @@ import Itasca.Body.Scalar.Readers
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Local.
 

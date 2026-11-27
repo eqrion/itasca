@@ -2,6 +2,8 @@ import Itasca.Runtime.SourceMachine.Definitions
 import Itasca.Results.Definitions.Host
 import Itasca.Runtime.Compiler.Body.Definitions
 
+open WebAssembly
+
 
 section InterpCallSites
 
@@ -58,7 +60,7 @@ open Aeneas Aeneas.Std
 /-- The type and function tables used by the integer/control trace match the
 source module and its issued function signatures. The selected signature also
 matches the source function itself; no compiled slot counter appears here. -/
-structure SourceCapacityEnvironment (store : _root_.store) (function : funcinst)
+structure SourceCapacityEnvironment (store : WebAssembly.store) (function : funcinst)
     (env : Itasca.metadata.Env) (typeIndex : U32) : Prop where
   types : function.MODULE.TYPES = env.types.val.map Itasca.Translation.Environment.funcType
   functions : Representation.FunctionsMatch store function.MODULE (env.func_types.val.map Itasca.Translation.Environment.funcType)
@@ -74,7 +76,7 @@ def sourceCapacityContext (env : Itasca.metadata.Env) (dataCount : Nat) : contex
 /-- A source frame requirement whose complete validation environment is tied
 by semantic bindings to the actual source instance. The function is typed in
 that same context. No compiled slot counter appears in this definition. -/
-def SourceCanonicalFunctionCapacity (store : _root_.store) (address : funcaddr) (words : Nat) : Prop :=
+def SourceCanonicalFunctionCapacity (store : WebAssembly.store) (address : funcaddr) (words : Nat) : Prop :=
   ∃ (function : funcinst) (env : Itasca.metadata.Env)
       (typeIndex : U32) (dataCount : Nat),
     store.FUNCS[address]? = some function ∧

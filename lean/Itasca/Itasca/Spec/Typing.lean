@@ -3,6 +3,8 @@ import Itasca.Results.Definitions.Binary
 import WebAssembly
 import Itasca.Support.Translation
 
+open WebAssembly
+
 /-!
 Proofs for Spec.
 

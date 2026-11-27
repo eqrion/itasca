@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.SafetyAndFinish
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 import Itasca.Runtime.Compiler.Local.Callbacks.Table.CompilerTableScratchEntry
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

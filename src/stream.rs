@@ -1,8 +1,8 @@
 //! Streaming module validation with bounded, independently scheduled workers.
 //!
-//! `validate_streaming` decodes the environment, issues `CodeBatch` work, validates
+//! `validate_streaming` decodes the environment, issues `StreamingBatch` work, validates
 //! the tail, and retires every outstanding batch before accepting. Workers may
-//! complete in any order. `Source` defines the byte-coherence obligation;
+//! complete in any order. `StreamingSource` defines the byte-coherence obligation;
 //! `StreamingVisitor` defines callback order and worker ownership.
 //!
 //! The source and environment must outlive every worker. Invocation IDs must be
@@ -22,7 +22,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 /// The source region containing a reported custom section.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
-pub enum Region {
+pub enum StreamingRegion {
     Environment,
     Tail,
 }
@@ -30,7 +30,7 @@ pub enum Region {
 /// The target batch size and maximum number of outstanding batches.
 ///
 /// Both fields must be positive; the driver rejects zero values.
-pub struct Config {
+pub struct StreamingConfig {
     /// The target entry-content bytes per batch, including locals. One entry may
     /// exceed it.
     pub batch_bytes: usize,
@@ -48,7 +48,7 @@ pub struct Config {
 /// Regions may use separate allocations. Every successful read must agree with
 /// the same fixed logical bytes; immutable Rust borrows alone do not ensure
 /// coherence across calls. Read errors may reject otherwise valid input.
-pub trait Source {
+pub trait StreamingSource {
     /// Returns the complete environment region, including the module header.
     fn environment(&self) -> Result<&[u8]>;
 
@@ -78,22 +78,22 @@ pub trait Source {
 /// successful driver result certifies the complete module.
 pub trait StreamingVisitor<'a>: metadata::ModuleVisitor {
     /// Selects the source region used by subsequent custom-section offsets.
-    fn custom_region(&mut self, region: Region);
+    fn custom_region(&mut self, region: StreamingRegion);
 
     /// Reports the decoded environment and checked code header, then selects
     /// batch settings.
-    fn environment_ready(&mut self, env: &Env) -> Result<Config>;
+    fn environment_ready(&mut self, env: &Env) -> Result<StreamingConfig>;
 
     /// Takes ownership of an issued batch for validation through its batch
     /// methods.
-    fn submit_code_batch(&mut self, batch: CodeBatch<'a>) -> Result<()>;
+    fn submit_code_batch(&mut self, batch: StreamingBatch<'a>) -> Result<()>;
 
     /// Waits for and returns an issued batch in any completion order.
     ///
     /// The driver rejects foreign, duplicate, or unfinished batches. To accept
     /// valid input, the scheduler must return each outstanding batch after
     /// successful validation.
-    fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>>;
+    fn poll_code_batch(&mut self) -> Result<StreamingBatch<'a>>;
 
     /// Reports that all code batches have been submitted.
     fn code_end(&mut self) -> Result<()>;
@@ -108,7 +108,7 @@ pub trait StreamingVisitor<'a>: metadata::ModuleVisitor {
 /// entry.
 #[cfg_attr(not(charon), derive(Debug))]
 #[derive(Clone, Copy)]
-pub struct CodeEntry {
+pub struct StreamingEntry {
     /// The defined-function index, excluding imported functions.
     pub index: usize,
     /// The offset of the entry's size prefix.
@@ -125,7 +125,7 @@ pub struct CodeEntry {
 /// independent validation cursor and stores the first error. The driver accepts a
 /// returned batch only when its identity is outstanding and every byte and
 /// function has been validated.
-pub struct CodeBatch<'a> {
+pub struct StreamingBatch<'a> {
     /// The module invocation that issued this batch.
     module_id: u64,
     /// The batch's submission index within its invocation.
@@ -147,7 +147,7 @@ pub struct CodeBatch<'a> {
     error: Option<Error>,
 }
 
-impl CodeBatch<'_> {
+impl StreamingBatch<'_> {
     /// Returns the number of functions in this batch.
     pub fn len(&self) -> usize {
         self.num_funcs
@@ -178,7 +178,7 @@ impl CodeBatch<'_> {
     /// it.
     ///
     /// Returns `Error::Host` when no undispatched entries remain.
-    pub fn next_entry(&mut self) -> Result<CodeEntry> {
+    pub fn next_entry(&mut self) -> Result<StreamingEntry> {
         if self.num_dispatched >= self.num_funcs {
             return Err(Error::Host);
         }
@@ -194,7 +194,7 @@ impl CodeBatch<'_> {
     ///
     /// `index` is the defined-function index, excluding imports, and must match
     /// the next validation entry. Function bounds are relative to
-    /// `CodeBatch::code`; operator cursors are relative to the instruction body.
+    /// `StreamingBatch::code`; operator cursors are relative to the instruction body.
     /// The first error remains stored and is returned by all later validation
     /// calls.
     pub fn validate_func<V: OpVisitor>(&mut self, index: usize, visitor: &mut V) -> Result<()> {
@@ -219,7 +219,7 @@ impl CodeBatch<'_> {
         while self.num_validated < self.num_funcs && ok {
             let index = self.first_func + self.num_validated;
             ok = self
-                .validate_func(index, &mut crate::EmptyOpVisitor)
+                .validate_func(index, &mut crate::DefaultOpVisitor)
                 .is_ok();
         }
     }
@@ -257,7 +257,12 @@ impl CodeBatch<'_> {
 /// regions, positive batch settings, and callbacks and workers that accept valid
 /// input. Only `Ok(())` certifies the complete module; earlier callbacks can
 /// observe metadata from a module later rejected.
-pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisitor<'data>>(
+pub fn validate_streaming<
+    'visitor,
+    'data: 'visitor,
+    S: StreamingSource,
+    V: StreamingVisitor<'data>,
+>(
     module_id: u64,
     source: &'data S,
     visitor: &'visitor mut V,
@@ -265,7 +270,7 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
 ) -> Result<()> {
     let bytes = source.environment()?;
     let env_len = add_offset(0, bytes.len())?;
-    visitor.custom_region(Region::Environment);
+    visitor.custom_region(StreamingRegion::Environment);
     let (decoded, env_end) = metadata::validate_env_with(bytes, visitor)?;
     if env_end != env_len {
         return Err(Error::Host);
@@ -275,7 +280,7 @@ pub fn validate_streaming<'visitor, 'data: 'visitor, S: Source, V: StreamingVisi
 }
 
 /// Validates the code region and tail using the decoded immutable environment.
-fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
+fn validate_remaining<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
     module_id: u64,
     source: &'a S,
     env: &'a Env,
@@ -295,7 +300,7 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
 
     let tail_bytes = source.tail()?;
     add_offset(code_end, tail_bytes.len())?;
-    visitor.custom_region(Region::Tail);
+    visitor.custom_region(StreamingRegion::Tail);
     let tail = metadata::validate_tail_with(tail_bytes, 0, env, visitor)?;
     visitor.tail_ready(tail)?;
     retire_all_code_batches(module_id, visitor, &mut pending)
@@ -303,7 +308,7 @@ fn validate_remaining<'a, S: Source, V: StreamingVisitor<'a>>(
 
 /// Checks the code header against the region size and declared functions,
 /// returning the first entry offset.
-fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result<usize> {
+fn read_code_header<S: StreamingSource>(source: &S, code_len: usize, env: &Env) -> Result<usize> {
     if code_len == 0 {
         if !env.func_type_indices.is_empty() {
             return Err(Error::MissingCodeSection);
@@ -333,13 +338,13 @@ fn read_code_header<S: Source>(source: &S, code_len: usize, env: &Env) -> Result
 }
 
 /// Submits every function entry and returns the remaining outstanding batch IDs.
-fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
+fn submit_code_batches<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
     module_id: u64,
     source: &'a S,
     env: &'a Env,
     code_len: usize,
     pos: usize,
-    config: &Config,
+    config: &StreamingConfig,
     visitor: &mut V,
 ) -> Result<Vec<usize>> {
     let mut pending = Vec::new();
@@ -355,7 +360,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
             get_next_batch(source, code_len, pos, func, num_funcs, config.batch_bytes)?;
         let bytes = read_exact(source, pos, end)?;
         pending.push(batch_id);
-        visitor.submit_code_batch(CodeBatch {
+        visitor.submit_code_batch(StreamingBatch {
             module_id,
             batch_id,
             env,
@@ -382,7 +387,7 @@ fn submit_code_batches<'a, S: Source, V: StreamingVisitor<'a>>(
 /// Frames at least one entry and extends the batch toward its target byte size.
 ///
 /// Workers revalidate framing while validating their entries.
-fn get_next_batch<S: Source>(
+fn get_next_batch<S: StreamingSource>(
     source: &S,
     code_len: usize,
     start: usize,
@@ -453,9 +458,14 @@ fn retire_all_code_batches<'a, V: StreamingVisitor<'a>>(
 
 /// Frames an entry and translates its batch-relative offsets into code-region
 /// offsets.
-fn frame_entry(code: &[u8], pos: usize, index: usize, code_offset: usize) -> Result<CodeEntry> {
+fn frame_entry(
+    code: &[u8],
+    pos: usize,
+    index: usize,
+    code_offset: usize,
+) -> Result<StreamingEntry> {
     let (contents, end) = metadata::code_entry_extent(code, pos)?;
-    Ok(CodeEntry {
+    Ok(StreamingEntry {
         index,
         start: add_offset(code_offset, pos)?,
         contents: add_offset(code_offset, contents)?,
@@ -473,7 +483,7 @@ fn read_len(data: &[u8], pos: usize) -> Result<(usize, usize)> {
     }
 }
 
-fn read_exact<S: Source>(source: &S, start: usize, end: usize) -> Result<&[u8]> {
+fn read_exact<S: StreamingSource>(source: &S, start: usize, end: usize) -> Result<&[u8]> {
     let bytes = source.code(start, end)?;
     if bytes.len() != end - start {
         return Err(Error::UnexpectedEof);
@@ -540,7 +550,7 @@ struct SliceSource<'a> {
     tail: &'a [u8],
 }
 
-impl Source for SliceSource<'_> {
+impl StreamingSource for SliceSource<'_> {
     /// Returns the complete environment region, including the module header.
     fn environment(&self) -> Result<&[u8]> {
         Ok(self.env)
@@ -566,29 +576,29 @@ impl Source for SliceSource<'_> {
 ///
 /// Batches stay within one invocation, so a constant module ID is sufficient.
 struct SyncVisitor<'a> {
-    completed: Option<CodeBatch<'a>>,
+    completed: Option<StreamingBatch<'a>>,
     tail: Option<Tail>,
 }
 
 impl metadata::ModuleVisitor for SyncVisitor<'_> {}
 
 impl<'a> StreamingVisitor<'a> for SyncVisitor<'a> {
-    fn custom_region(&mut self, _region: Region) {}
+    fn custom_region(&mut self, _region: StreamingRegion) {}
 
-    fn environment_ready(&mut self, _env: &Env) -> Result<Config> {
-        Ok(Config {
+    fn environment_ready(&mut self, _env: &Env) -> Result<StreamingConfig> {
+        Ok(StreamingConfig {
             batch_bytes: 25000,
             max_batches: 1,
         })
     }
 
-    fn submit_code_batch(&mut self, mut batch: CodeBatch<'a>) -> Result<()> {
+    fn submit_code_batch(&mut self, mut batch: StreamingBatch<'a>) -> Result<()> {
         batch.validate_all();
         self.completed = Some(batch);
         Ok(())
     }
 
-    fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>> {
+    fn poll_code_batch(&mut self) -> Result<StreamingBatch<'a>> {
         match self.completed.take() {
             Some(batch) => Ok(batch),
             None => Err(Error::Host),

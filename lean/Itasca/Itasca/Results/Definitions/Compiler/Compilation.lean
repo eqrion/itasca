@@ -8,6 +8,8 @@ import Itasca.Results.Definitions.Streaming
 import Itasca.Results.Definitions.Validation
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Whole-module compilation guarantees
 
@@ -110,7 +112,7 @@ open Aeneas Aeneas.Std Itasca
 Execution of the compiled artifact is specified by instantiation and invocation
 in RuntimeContract; bytecode layout is not part of this source association. -/
 def CompilationSource (bytes : Slice U8) (executable : runtime.compiler.ExecutableModule) : Prop :=
-  ∃ raw, Binary.ModuleEncodingWith CodeEntry.CodeEncoding raw bytes.val ∧
+  ∃ raw, WebAssembly.Binary.ModuleEncoding (Binary.Source.rawModule raw) (Binary.Source.bytes bytes.val) ∧
     Module.Elaboration.Elaborates raw (Module.Elaboration.moduleOf raw) ∧
     Module_ok (Module.Elaboration.moduleOf raw) ∧ Module.Elaboration.Restrictions raw ∧
     Module.Elaboration.Matches executable.module.env executable.module.tail raw ∧

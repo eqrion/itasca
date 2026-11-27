@@ -3,6 +3,8 @@ import Itasca.Runtime.Interp.Simd.Lanes.Permutation
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -26,7 +28,7 @@ open Aeneas Aeneas.Std Itasca.Body.Simd
 
 theorem lane_entry_21 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 21#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i8x16ExtractS = some op at meaning
+  change some (.i8x16ExtractS : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_signed_dispatch_sound floats .I8 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source⟩
@@ -39,7 +41,7 @@ theorem lane_entry_21 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_22 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 22#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i8x16ExtractU = some op at meaning
+  change some (.i8x16ExtractU : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .I8 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -48,7 +50,7 @@ theorem lane_entry_22 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_23 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 23#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i8x16Replace = some op at meaning
+  change some (.i8x16Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .I8 offset laneIndex bits x y z memory valid
   simp only [Spec.Simd.scalarInput,UScalar.cast_bv_eq,UScalarTy.numBits,
@@ -62,7 +64,7 @@ theorem lane_entry_23 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_24 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 24#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i16x8ExtractS = some op at meaning
+  change some (.i16x8ExtractS : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_signed_dispatch_sound floats .I16 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source⟩
@@ -75,7 +77,7 @@ theorem lane_entry_24 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_25 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 25#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i16x8ExtractU = some op at meaning
+  change some (.i16x8ExtractU : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .I16 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -84,7 +86,7 @@ theorem lane_entry_25 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_26 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 26#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i16x8Replace = some op at meaning
+  change some (.i16x8Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .I16 offset laneIndex bits x y z memory valid
   simp only [Spec.Simd.scalarInput,UScalar.cast_bv_eq,UScalarTy.numBits,
@@ -98,7 +100,7 @@ theorem lane_entry_26 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_27 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 27#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i32x4Extract = some op at meaning
+  change some (.i32x4Extract : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .I32 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -107,7 +109,7 @@ theorem lane_entry_27 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_28 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 28#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i32x4Replace = some op at meaning
+  change some (.i32x4Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .I32 offset laneIndex bits x y z memory valid
   simp only [Spec.Simd.scalarInput,UScalar.cast_bv_eq,UScalarTy.numBits,
@@ -121,7 +123,7 @@ theorem lane_entry_28 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_29 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 29#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i64x2Extract = some op at meaning
+  change some (.i64x2Extract : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .I64 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -130,7 +132,7 @@ theorem lane_entry_29 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_30 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 30#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.i64x2Replace = some op at meaning
+  change some (.i64x2Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .I64 offset laneIndex bits x y z memory valid
   apply WP.spec_mono h
@@ -142,7 +144,7 @@ theorem lane_entry_30 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_31 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 31#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.f32x4Extract = some op at meaning
+  change some (.f32x4Extract : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .F32 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -151,7 +153,7 @@ theorem lane_entry_31 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_32 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 32#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.f32x4Replace = some op at meaning
+  change some (.f32x4Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .F32 offset laneIndex bits x y z memory valid
   simp only [Spec.Simd.scalarInput,UScalar.cast_bv_eq,UScalarTy.numBits,
@@ -165,7 +167,7 @@ theorem lane_entry_32 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_33 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 33#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.f64x2Extract = some op at meaning
+  change some (.f64x2Extract : LaneOperation) = some op at meaning
   cases meaning
   apply WP.spec_mono (extract_dispatch_values floats .F64 offset laneIndex bits x y z memory valid)
   rintro result ⟨value,returned,source,bounded⟩
@@ -174,7 +176,7 @@ theorem lane_entry_33 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEn
 
 theorem lane_entry_34 {F : Type} (floats : runtime.platform.FloatOps F) : LaneEntrySound floats 34#u32 := by
   intro op meaning offset laneIndex bits x y z memory valid
-  change some LaneOperation.f64x2Replace = some op at meaning
+  change some (.f64x2Replace : LaneOperation) = some op at meaning
   cases meaning
   have h := replace_dispatch_sound floats .F64 offset laneIndex bits x y z memory valid
   apply WP.spec_mono h

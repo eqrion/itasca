@@ -55,14 +55,14 @@ private theorem read_at (data : Slice U8) (pos next : Usize) (byte : U8)
 theorem header (data : Slice U8) (rest : List U8)
     (hdata : data.val = Binary.magicVersion ++ rest) :
     metadata.read_header data = .ok (.Ok 8#usize) := by
-  have h0 := read_at data 0#usize 1#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h1 := read_at data 1#usize 2#usize 0x61#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h2 := read_at data 2#usize 3#usize 0x73#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h3 := read_at data 3#usize 4#usize 0x6D#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h4 := read_at data 4#usize 5#usize 1#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h5 := read_at data 5#usize 6#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h6 := read_at data 6#usize 7#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
-  have h7 := read_at data 7#usize 8#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion])
+  have h0 := read_at data 0#usize 1#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h1 := read_at data 1#usize 2#usize 0x61#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h2 := read_at data 2#usize 3#usize 0x73#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h3 := read_at data 3#usize 4#usize 0x6D#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h4 := read_at data 4#usize 5#usize 1#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h5 := read_at data 5#usize 6#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h6 := read_at data 6#usize 7#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
+  have h7 := read_at data 7#usize 8#usize 0#u8 (by simp [hdata, Binary.magicVersion]) rfl (by simp [hdata, Binary.magicVersion]; rfl)
   simp [metadata.read_header, h0, h1, h2, h3, h4, h5, h6, h7,
     core.result.Result.Insts.CoreOpsTry.branch]
 

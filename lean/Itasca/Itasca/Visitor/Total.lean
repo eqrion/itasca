@@ -216,7 +216,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Visitor
 
 /-- The empty visitor is total. -/
-theorem empty_total : Total code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
+theorem empty_total : Total code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor := by
   intro v event
   exact ⟨.Ok (), v, empty_invoke v event⟩
 
@@ -414,7 +414,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Visitor
 
 /-- The empty visitor accepts. -/
-theorem empty_accepts : Accepts code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor := by
+theorem empty_accepts : Accepts code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor := by
   intro v event
   exact ⟨v, empty_invoke v event⟩
 

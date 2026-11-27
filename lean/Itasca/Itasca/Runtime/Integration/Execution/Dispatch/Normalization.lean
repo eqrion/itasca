@@ -7,6 +7,8 @@ import Itasca.Runtime.Interp.Machine.Calls.HostCallStack
 import Itasca.Runtime.Interp.Machine.StateAndOwnership
 import Itasca.Runtime.Integration.Execution.Resources.InvocationErrors
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## BranchTable -/
@@ -234,7 +236,7 @@ namespace Itasca.Integration
 open Aeneas Aeneas.Std Itasca.Interp
 theorem Machine.Advance.prepend_normalization {M : Type} {view : M → Slice U8} {code : Representation.CodeInterpretation}
     {store : runtime.store.Store M} {exec : runtime.interp.Execution} {expected : List valtype} {codeLength pc : Nat}
-    {count : Nat} {before middle : SourceMachine.AFrame} {s : _root_.store} {ambient : frame} {rest : List SourceMachine.AFrame}
+    {count : Nat} {before middle : SourceMachine.AFrame} {s : WebAssembly.store} {ambient : frame} {rest : List SourceMachine.AFrame}
     (chain : ErasedSteps count before middle)
     (typed : SourceMachine.ATyped ⟨s,ambient,before::rest,[]⟩)
     (advance : Machine.Advance view code store exec expected codeLength pc false ⟨s,ambient,middle::rest,[]⟩) :
@@ -246,7 +248,7 @@ theorem Machine.Advance.prepend_normalization {M : Type} {view : M → Slice U8}
 theorem SupportedStepOutcome.prepend_normalization {M P A : Type} {allocator : runtime.platform.Alloc A}
     {hooks : runtime.platform.Platform P M} {view : M → Slice U8} {code : Representation.CodeInterpretation}
     {exec : runtime.interp.Execution} {store : runtime.store.Store M} {platform : P} {expected : List valtype}
-    {codeLength pc count : Nat} {before middle : SourceMachine.AFrame} {s : _root_.store} {ambient : frame} {rest : List SourceMachine.AFrame}
+    {codeLength pc count : Nat} {before middle : SourceMachine.AFrame} {s : WebAssembly.store} {ambient : frame} {rest : List SourceMachine.AFrame}
     {out : core.result.Result Unit runtime.ExecError × runtime.interp.Execution × runtime.store.Store M × P}
     (chain : ErasedSteps count before middle)
     (typed : SourceMachine.ATyped ⟨s,ambient,before::rest,[]⟩)

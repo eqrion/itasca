@@ -2,6 +2,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Fixups.FixupAlgebra
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlLayout
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Callbacks / Control.
 

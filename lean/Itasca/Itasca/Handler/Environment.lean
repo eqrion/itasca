@@ -2,6 +2,8 @@ import Itasca.Support.Translation
 import Itasca.Binary.LebReaders
 import Itasca.Results.Definitions.Validation
 
+open WebAssembly
+
 /-!
 Proofs for Handler.
 

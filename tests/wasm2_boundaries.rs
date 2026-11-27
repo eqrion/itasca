@@ -1,5 +1,5 @@
 //! Core 2.0 boundaries that cross instruction, module, and binary decoding rules.
-//! The oracle and itasca gates run together for the complete Wasm2 profile.
+//! The oracle and itasca gates run together for WebAssembly Core 2.0.
 
 struct Case {
     name: &'static str,

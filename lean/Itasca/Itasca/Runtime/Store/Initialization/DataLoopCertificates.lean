@@ -6,6 +6,8 @@ import Itasca.Runtime.Store.Initialization.SegmentSyntheticPreservation
 import Itasca.Runtime.Store.Invariant.AllocatedMemoryLoop
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## DataStagingLoop -/

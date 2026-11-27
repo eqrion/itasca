@@ -2,6 +2,8 @@ import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 import Itasca.Runtime.SourceMachine.Sim.Host
 
+open WebAssembly
+
 /-!
 # Progress And Bounds
 
@@ -16,19 +18,19 @@ namespace Itasca.SourceMachine.Core
 
 /-- Code bounds depend on function bodies and frame continuations, so changing
 only source object contents retains them. -/
-theorem code_bound_store {bound : Nat} {s : AState} {target : _root_.store}
+theorem code_bound_store {bound : Nat} {s : AState} {target : WebAssembly.store}
     (bounded : CodeBound bound s) (functions : target.FUNCS = s.store.FUNCS) :
     CodeBound bound {s with store := target} :=
   ⟨bounded.positive,bounded.frames,by simpa only [functions] using bounded.functions⟩
 
-theorem advance_content_bound {bound : Nat} {s target : _root_.store} {ambient : frame}
+theorem advance_content_bound {bound : Nat} {s target : WebAssembly.store} {ambient : frame}
     {f f' : AFrame} {rest : List AFrame} {next : AState}
     (bounded : CodeBound bound ⟨s,ambient,f::rest,[]⟩)
     (step : advance ⟨target,ambient,f::rest,[]⟩ f' rest = .next next)
     (functions : target.FUNCS = s.FUNCS) (frame : FrameCodeBound bound f') : CodeBound bound next :=
   advance_bound (code_bound_store (target := target) bounded functions) step frame
 
-theorem instruction_bound (bound : Nat) (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_bound (bound : Nat) (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
     (covered : CoreHead op) (typed : FrameTyped s {f with code := op::after} [])
     (bounded : CodeBound bound ⟨s,ambient,{f with code := op::after}::rest,[]⟩)
@@ -87,7 +89,7 @@ open WebAssembly Itasca.Spec
 
 /-- A typed scalar load either produces the value prescribed by the generated
 memory rule, or takes a positive source reduction sequence to the bounds trap. -/
-theorem load_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem load_progress (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Load) (argument : memarg)
     (typed : CoreTyped ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     (∃ next, load ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
@@ -166,7 +168,7 @@ section
 namespace Itasca.SourceMachine.Core
 open WebAssembly Itasca.Spec
 
-theorem numeric_value_inv {s : _root_.store} {value : val} {ty : numtype}
+theorem numeric_value_inv {s : WebAssembly.store} {value : val} {ty : numtype}
     (typed : Val_ok s value (valtype_numtype ty)) :
     ∃ number, value = .CONST ty number ∧ wf_num_ ty number := by
   have wf := val_ok_wf typed
@@ -183,7 +185,7 @@ theorem numeric_value_inv {s : _root_.store} {value : val} {ty : numtype}
 
 /-- Scalar stores update only an in-bounds payload and retain full source
 store/frame typing; an out-of-bounds write reaches the generated trap. -/
-theorem store_progress (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem store_progress (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Store) (argument : memarg)
     (typed : CoreTyped ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩) :
     (∃ next, store ⟨s,ambient,{f with code := op.source argument :: after} :: rest,[]⟩
@@ -263,7 +265,7 @@ open WebAssembly Itasca.Spec
 
 /-- Every successful covered instruction preserves source store/frame typing
 and has a counted source simulation (or the bounded constant stutter). -/
-theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_correct (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
     (covered : CoreHead op)
     (typed : CoreTyped ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩)
@@ -323,7 +325,7 @@ theorem instruction_correct (s : _root_.store) (ambient : frame) (f : AFrame)
     · rw [actualEq] at equation
       contradiction
 
-theorem empty_correct (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem empty_correct (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (next : AState)
     (typed : CoreTyped ⟨s,ambient,{f with code := []} :: rest,[]⟩)
     (equation : astep ⟨s,ambient,{f with code := []} :: rest,[]⟩ = .next next) :
@@ -364,7 +366,7 @@ section
 namespace Itasca.SourceMachine.Core
 open WebAssembly Itasca.Spec
 
-theorem instruction_extends (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_extends (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
     (covered : CoreHead op)
     (typed : CoreTyped ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩)
@@ -439,7 +441,7 @@ open WebAssembly Itasca.Spec
 
 /-- Core traps are generated source traps: integer exceptional arithmetic,
 explicit unreachable, and scalar memory bounds failures. -/
-theorem instruction_trap (s : _root_.store) (ambient : frame) (f : AFrame)
+theorem instruction_trap (s : WebAssembly.store) (ambient : frame) (f : AFrame)
     (rest : List AFrame) (op : instr) (after : List instr)
     (covered : CoreHead op)
     (typed : CoreTyped ⟨s,ambient,{f with code := op :: after} :: rest,[]⟩)
@@ -603,7 +605,7 @@ section
 
 namespace Itasca.SourceMachine.Core
 open WebAssembly
-theorem load_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem load_step_positive (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Load) (argument : memarg) (next : AState)
     (typed : CoreTyped ⟨s,ambient,{f with code := op.source argument::after}::rest,[]⟩)
     (equation : step ⟨s,ambient,{f with code := op.source argument::after}::rest,[]⟩ = .next next) :
@@ -618,7 +620,7 @@ theorem load_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (re
   · rw [actualEq] at equation
     contradiction
 
-theorem store_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem store_step_positive (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (op : Memory.Store) (argument : memarg) (next : AState)
     (typed : CoreTyped ⟨s,ambient,{f with code := op.source argument::after}::rest,[]⟩)
     (equation : step ⟨s,ambient,{f with code := op.source argument::after}::rest,[]⟩ = .next next) :
@@ -644,7 +646,7 @@ section
 namespace Itasca.SourceMachine.Core
 open WebAssembly
 
-theorem select_step_positive (s : _root_.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
+theorem select_step_positive (s : WebAssembly.store) (ambient : frame) (f : AFrame) (rest : List AFrame)
     (after : List instr) (next : AState)
     (typed : CoreTyped ⟨s,ambient,{f with code := .SELECT none::after}::rest,[]⟩)
     (step : step ⟨s,ambient,{f with code := .SELECT none::after}::rest,[]⟩ = .next next) :

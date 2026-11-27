@@ -5,6 +5,8 @@ import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.Equations.Interp
 import Itasca.Runtime.SourceMachine.Sim.Structured
 
+open WebAssembly
+
 /-! ## StructuredPoint -/
 
 section

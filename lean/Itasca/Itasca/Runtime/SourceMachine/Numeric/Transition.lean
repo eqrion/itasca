@@ -1,6 +1,8 @@
 import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.SourceMachine.Numeric.Decode
 
+open WebAssembly
+
 /-! ## OperandsCore -/
 
 section

@@ -26,6 +26,8 @@ import Itasca.Runtime.Compiler.Local.Control.Structured.Prefixes
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Interp.Machine.Control.BranchSource
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Arguments -/

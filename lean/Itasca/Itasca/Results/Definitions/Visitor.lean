@@ -254,7 +254,7 @@ inductive Action where
   | memory (operation : MemoryHook) (argument : code.MemArg) : Action
 
 /-- All arguments of a callback, including the validator state the hook observes.
-Function-start endpoints are relative to `CodeBatch.code`, excluding locals;
+Function-start endpoints are relative to `StreamingBatch.code`, excluding locals;
 operator-state cursors are relative to that instruction body. -/
 inductive Event where
   | functionStart (context : code.Context) (typeIndex : U32) (bodyStart bodyEnd : Usize) : Event

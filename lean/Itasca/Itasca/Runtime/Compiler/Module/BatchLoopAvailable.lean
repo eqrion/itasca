@@ -19,6 +19,8 @@ import Mathlib.Data.List.Forall2
 import Itasca.Runtime.Compiler.Local.Relations.Function.CapturedContext
 import Itasca.Stream.Completeness
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Module.
 
@@ -455,7 +457,7 @@ bookkeeping and source-paid budget charges. Only source and numerical demand
 premises are supplied; no accepting visitor contract is required. -/
 theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (batch : stream.CodeBatch) (index finish : Usize) (entry : Binary.Code)
+    (batch : stream.StreamingBatch) (index finish : Usize) (entry : Binary.Code)
     (noError : batch.error = none) (remaining : batch.num_validated.val < batch.num_funcs.val)
     (position : index.val = batch.first_func.val+batch.num_validated.val)
     (indexBound : index.val < batch.env.func_type_indices.val.length)
@@ -472,7 +474,7 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
     (created : runtime.compiler.FunctionCompiler.new ops signatures functionSlots budget batchStart = .ok initial)
     (demand : EntryResourceDemand budget batch.code batch.env index batch.validated_end bound) :
     ∃ count after, count.val = batch.num_validated.val+1 ∧
-      stream.CodeBatch.validate_func (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+      stream.StreamingBatch.validate_func (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         batch index initial = .ok (.Ok (),{batch with num_validated := count,validated_end := finish},after) ∧
       runtime.compiler.FunctionCompiler.finish ops after (.Ok ()) = .ok (.Ok after.function,after.budget) ∧
       ∃ w : CodeEntry.Prepared batch.code batch.env index batch.validated_end,
@@ -488,13 +490,13 @@ theorem compiler_batch_entry_available {A : Type} (ops : runtime.platform.Alloc 
   have same : expected = index := UScalar.eq_of_val_eq (by omega)
   subst expected
   have more : ¬ batch.num_validated ≥ batch.num_funcs := by scalar_tac
-  have next : stream.CodeBatch.validate_next (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+  have next : stream.StreamingBatch.validate_next (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       batch index initial = .ok (.Ok finish,after) := by
-    simp [stream.CodeBatch.validate_next,more,added,called]
+    simp [stream.StreamingBatch.validate_next,more,added,called]
   obtain ⟨count,increment,countValue⟩ := WP.spec_imp_exists
     (UScalar.add_spec (x := batch.num_validated) (y := 1#usize) (by scalar_tac))
   refine ⟨count,after,by simpa using countValue,?_,finished,effect⟩
-  simp [Itasca.stream.CodeBatch.validate_func,noError,core.option.Option.is_none,next,increment]
+  simp [Itasca.stream.StreamingBatch.validate_func,noError,core.option.Option.is_none,next,increment]
 
 end Itasca.Compiler
 
@@ -512,9 +514,9 @@ entry into its vacant source-indexed slot. All compiler calls, including finish,
 are constructed from source-only demand and bounded allocation availability. -/
 theorem compiler_scheduled_entry_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (before : runtime.compiler.CompileScheduler A) (batch dispatched : stream.CodeBatch)
-    (frame : stream.CodeEntry) (finish : Usize) (entry : Binary.Code)
-    (dispatch : stream.CodeBatch.next_entry batch = .ok (.Ok frame,dispatched))
+    (before : runtime.compiler.CompileScheduler A) (batch dispatched : stream.StreamingBatch)
+    (frame : stream.StreamingEntry) (finish : Usize) (entry : Binary.Code)
+    (dispatch : stream.StreamingBatch.next_entry batch = .ok (.Ok frame,dispatched))
     (noError : dispatched.error = none) (remaining : dispatched.num_validated.val < dispatched.num_funcs.val)
     (position : frame.index.val = dispatched.first_func.val+dispatched.num_validated.val)
     (indexBound : frame.index.val < dispatched.env.func_type_indices.val.length)
@@ -754,14 +756,14 @@ private theorem count_not_ge (count limit : Usize) (less : count.val < limit.val
 
 /-- Source framing and intrinsic coordinate bounds construct the actual next
 scheduler dispatch, retaining the independent validation cursor unchanged. -/
-theorem compiler_next_entry_available (batch : stream.CodeBatch) (content finish : Usize)
+theorem compiler_next_entry_available (batch : stream.StreamingBatch) (content finish : Usize)
     (remaining : batch.num_dispatched.val < batch.num_funcs.val)
     (indices : batch.first_func.val+batch.num_funcs.val ≤ Usize.max)
     (extent : Module.Code.Extent batch.code batch.dispatch_end content finish)
     (coordinates : batch.code_offset.val+finish.val ≤ limits.MAX_MODULE_BYTES.val) :
     ∃ index count frame, index.val = batch.first_func.val+batch.num_dispatched.val ∧
       count.val = batch.num_dispatched.val+1 ∧ frame.index = index ∧
-      stream.CodeBatch.next_entry batch = .ok (.Ok frame,{batch with num_dispatched := count,dispatch_end := finish}) := by
+      stream.StreamingBatch.next_entry batch = .ok (.Ok frame,{batch with num_dispatched := count,dispatch_end := finish}) := by
   obtain ⟨index,added,indexValue⟩ := WP.spec_imp_exists
     (Usize.add_spec (x := batch.first_func) (y := batch.num_dispatched) (by scalar_tac))
   obtain ⟨frame,framed,content',finish',actual,same,_,_,endValue,_⟩ :=
@@ -781,7 +783,7 @@ theorem compiler_next_entry_available (batch : stream.CodeBatch) (content finish
     (Usize.add_spec (x := batch.num_dispatched) (y := 1#usize) (by simpa using count_room _ _ remaining))
   refine ⟨index,count,frame,indexValue,by simpa using countValue,same,?_⟩
   have more : ¬ batch.num_dispatched ≥ batch.num_funcs := count_not_ge _ _ remaining
-  simp [Itasca.stream.CodeBatch.next_entry,more,added,framed,
+  simp [Itasca.stream.StreamingBatch.next_entry,more,added,framed,
     core.result.Result.Insts.CoreOpsTry.branch,subtracted,increment]
 
 end Itasca.Compiler
@@ -840,7 +842,7 @@ publication fills each source slot once, including unreachable body code. -/
 theorem compiler_batch_loop_available {A : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
     (base : runtime.compiler.Budget A) (bodyBytes localCount peak : Nat)
-    (before : runtime.compiler.CompileScheduler A) (batch : stream.CodeBatch)
+    (before : runtime.compiler.CompileScheduler A) (batch : stream.StreamingBatch)
     (loopIndex finish : Usize) (entries : List Binary.Code)
     (source : PreparedBatchSource batch.code batch.env bodyBytes localCount peak
       (batch.first_func.val+batch.num_validated.val) batch.validated_end entries finish)
@@ -975,11 +977,11 @@ namespace Itasca.Compiler
 open Aeneas Aeneas.Std Itasca
 
 /-- A queued worker retains its issued identity and a proved successful finish. -/
-def CompletedWorker (issued : Stream.Batch.Issued) (worker : Itasca.stream.CodeBatch) : Prop :=
-  Stream.Batch.Identity issued worker ∧ Itasca.stream.CodeBatch.finish worker = .ok (.Ok ())
+def CompletedWorker (issued : Stream.Batch.Issued) (worker : Itasca.stream.StreamingBatch) : Prop :=
+  Stream.Batch.Identity issued worker ∧ Itasca.stream.StreamingBatch.finish worker = .ok (.Ok ())
 
 /-- The actual reverse-order poll selects the final logical issued worker. -/
-theorem completed_workers_last {queue : List Stream.Batch.Issued} {workers : List Itasca.stream.CodeBatch}
+theorem completed_workers_last {queue : List Stream.Batch.Issued} {workers : List Itasca.stream.StreamingBatch}
     (related : List.Forall₂ CompletedWorker queue workers) (nonempty : queue ≠ []) :
     ∃ issued rest worker previous, queue = rest++[issued] ∧ workers = previous++[worker] ∧
       List.Forall₂ CompletedWorker rest previous ∧ CompletedWorker issued worker := by
@@ -1104,7 +1106,7 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
         CompilationBudgetEffect base out.2.budget
           (fun counter => (issued.first_func.val+issued.num_funcs.val)*functionDemandRate bodyBytes localCount counter) ∧
         ∃ worker, out.2.completed.val = before.completed.val++[worker] ∧
-          Itasca.stream.CodeBatch.finish worker = .ok (.Ok ()) ⦄ := by
+          Itasca.stream.StreamingBatch.finish worker = .ok (.Ok ()) ⦄ := by
   have arithmetic : before.code_start.val+issued.code_offset.val+issued.code.length ≤ Usize.max := by
     have wordRoom : Itasca.limits.MAX_MODULE_BYTES.val+Itasca.limits.MAX_MODULE_BYTES.val ≤ Usize.max := by
       simp only [Itasca.limits.MAX_MODULE_BYTES]
@@ -1119,8 +1121,8 @@ theorem compiler_submit_batch_available {A : Type} (ops : runtime.platform.Alloc
   have run := (submit_loop_accepted ops before middle issued.seed worker 0#usize (.Ok ()) compiled).2
   have identity := (run.reachable .seed).validation.1
   obtain ⟨_,_,_,sameCode,_,_,sameCount⟩ := identity
-  have finished : Itasca.stream.CodeBatch.finish worker = .ok (.Ok ()) := by
-    apply (Itasca.stream.CodeBatch.finish.accepted_iff worker).mpr
+  have finished : Itasca.stream.StreamingBatch.finish worker = .ok (.Ok ()) := by
+    apply (Itasca.stream.StreamingBatch.finish.accepted_iff worker).mpr
     exact ⟨noError,validated.trans sameCount.symm,ended.trans (by rw [sameCode])⟩
   obtain ⟨⟨reply,budget,completed⟩,pushed,status,sameBudget,appended⟩ := WP.spec_imp_exists
     (budget_push_available ops bound allocation middle.budget middle.completed worker
@@ -1396,7 +1398,7 @@ theorem compiler_source_regions_available (data : Slice U8) (regions : Itasca.st
     (codeStart codeEnd : Usize)
     (split : Stream.CompleteRegions.ComputedSplit data regions)
     (selected : Itasca.stream.find_code_region data = .ok (codeStart,codeEnd)) :
-    Stream.Source.Available runtime.compiler.CompileSource.Insts.ItascaStreamSource
+    Stream.Source.Available runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource
       {bytes := data,code_start := codeStart,code_end := codeEnd} regions.env.val regions.code.val regions.tail.val := by
   obtain ⟨first,last,scanned,environment,code,tail⟩ := split
   have same : first = codeStart ∧ last = codeEnd := by
@@ -1436,12 +1438,12 @@ section
 open Aeneas Aeneas.Std Itasca
 
 namespace Itasca.Compiler.StreamAvailability
-open Binary Stream.Scheduler
+open Itasca.Binary Stream.Scheduler
 
 /-- The scheduler's queue of valid work matches the pending vector, and the remaining bytes and
 entries keep their independent encoding and typing. -/
 def CompleteInvariant {V : Type} (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config)
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.StreamingConfig)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize) : Prop :=
   batchId.val ≤ func.val ∧ pending.length ≤ batchId.val ∧ pending.length ≤ config.max_batches.val ∧
     ∃ queue entries, Queued id queue func.val v ∧ ValidQueue id queue ∧
@@ -1453,14 +1455,14 @@ def CompleteInvariant {V : Type} (Queued : U64 → List Stream.Batch.Issued → 
 /-- A successful submission leaves a valid queue whose batch IDs are a permutation of the pending
 IDs, so the final drain can retire exactly this queue. Errors are excluded. -/
 def CompletePost {V : Type} (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (id : U64) (config : Itasca.stream.Config) (env : metadata.Env) :
+    (id : U64) (config : Itasca.stream.StreamingConfig) (env : metadata.Env) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ queue, Queued id queue env.func_type_indices.val.length v ∧ ValidQueue id queue ∧
       pending.val.Perm (queue.map Stream.Batch.Issued.batch_id) ∧ pending.length ≤ config.max_batches.val
   | (.Err _, _) => False
 
 private def CompleteBodyPost {V : Type} (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.Config) (func : Usize) :
+    (code : Slice U8) (env : metadata.Env) (id : U64) (config : Itasca.stream.StreamingConfig) (func : Usize) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | .done result => CompletePost Queued id config env result
@@ -1473,9 +1475,9 @@ private theorem increment (n bound : Usize) (h : n.val < bound.val) :
     (UScalar.add_spec (x := n) (y := 1#usize) (by scalar_tac))
   exact ⟨next, hr, by simpa using hv⟩
 
-private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
+private theorem resume_complete {S V : Type} (source : Itasca.stream.StreamingSource S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (config : Itasca.stream.Config)
+    (config : Itasca.stream.StreamingConfig)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env code.length Queued)
     (environment tail : List U8) (hs : Stream.Source.Available source state environment code.val tail)
@@ -1592,11 +1594,11 @@ private theorem resume_complete {S V : Type} (source : Itasca.stream.Source S)
 end Itasca.Compiler.StreamAvailability
 
 namespace Itasca.Compiler.StreamAvailability
-open Binary Stream.Scheduler
+open Itasca.Binary Stream.Scheduler
 
-private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
+private theorem body_complete {S V : Type} (source : Itasca.stream.StreamingSource S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (config : Itasca.stream.Config)
+    (config : Itasca.stream.StreamingConfig)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env code.length Queued)
     (environment tail : List U8) (hs : Stream.Source.Available source state environment code.val tail)
@@ -1650,13 +1652,13 @@ private theorem body_complete {S V : Type} (source : Itasca.stream.Source S)
 end Itasca.Compiler.StreamAvailability
 
 namespace Itasca.Compiler.StreamAvailability
-open Binary Stream.Scheduler
+open Itasca.Binary Stream.Scheduler
 
 /-- The submission loop accepts independently encoded and typed entries, maintaining the queue of
 outstanding work as its function cursor advances. -/
-theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
+theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.StreamingSource S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (config : Itasca.stream.Config)
+    (config : Itasca.stream.StreamingConfig)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env code.length Queued)
     (environment tail : List U8) (hs : Stream.Source.Available source state environment code.val tail)
@@ -1693,9 +1695,9 @@ theorem submit_loop_complete_spec {S V : Type} (source : Itasca.stream.Source S)
 /-- From an independently encoded and typed code region and an accepting scheduler policy,
 `Itasca.stream.submit_code_batches` submits and retires batches successfully. The remaining valid queue
 matches the pending IDs for the final drain. -/
-theorem submit_complete {S V : Type} (source : Itasca.stream.Source S)
+theorem submit_complete {S V : Type} (source : Itasca.stream.StreamingSource S)
     (visitor : Itasca.stream.StreamingVisitor V) (Queued : U64 → List Stream.Batch.Issued → Nat → V → Prop)
-    (config : Itasca.stream.Config)
+    (config : Itasca.stream.StreamingConfig)
     (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8)
     (ha : QueuePolicy visitor config env code.length Queued) (start : Usize)
     (environment tail : List U8) (hs : Stream.Source.Available source state environment code.val tail)
@@ -1748,7 +1750,7 @@ reverse-order retirement accept from independent region validity and numerical
 demand. No successful compiler call or emitted certificate is an input. -/
 theorem compiler_remaining_available {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (source : Itasca.stream.Source S) (state : S) (id : U64)
+    (source : Itasca.stream.StreamingSource S) (state : S) (id : U64)
     (data : Slice U8) (raw : Binary.Module) (regions : Itasca.stream.SliceSource)
     (env : metadata.Env) (tail : metadata.Tail)
     (certificate : Stream.CompleteRegions.Certificate data raw regions env tail)
@@ -1833,7 +1835,7 @@ The certificate is produced by independent validator completeness, not by an
 accepted compiler trace or a caller-supplied emitted-code certificate. -/
 theorem compiler_streaming_available {A S : Type} (ops : runtime.platform.Alloc A)
     (law : Platform.AllocCorrect ops) (bound : Nat) (allocation : Platform.AllocationAvailable ops bound)
-    (source : Itasca.stream.Source S) (state : S) (id : U64)
+    (source : Itasca.stream.StreamingSource S) (state : S) (id : U64)
     (data : Slice U8) (raw : Binary.Module) (regions : Itasca.stream.SliceSource)
     (env : metadata.Env) (tail : metadata.Tail)
     (certificate : Stream.CompleteRegions.Certificate data raw regions env tail)
@@ -1942,7 +1944,7 @@ theorem compile_with_available {A : Type} (ops : runtime.platform.Alloc A)
     exact ⟨smaller.trans body, locals, (Nat.mul_le_mul_left 500 smaller).trans operands⟩
   obtain ⟨storage,initialized,_⟩ := WP.spec_imp_exists Itasca.metadata.Env.new.spec
   obtain ⟨scheduler,run,streamCall,tailEq,tailReady,ready,workers⟩ := compiler_streaming_available ops law bound allocation
-    runtime.compiler.CompileSource.Insts.ItascaStreamSource {bytes,code_start := codeStart,code_end := codeEnd} 0#u64
+    runtime.compiler.CompileSource.Insts.ItascaStreamStreamingSource {bytes,code_start := codeStart,code_end := codeEnd} 0#u64
     bytes raw regions env tail certificate available (initialScheduler A limits codeStart) storage bodyBytes localCount peak
     (demand.environment_at codeStart) (demand.functions_at codeStart) regionMaxima demand.queueReserve rfl rfl rfl rfl origin
   have functionReserve : scheduler.functions.length ≤ bound := by

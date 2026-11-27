@@ -1,6 +1,8 @@
 import Itasca.Runtime.Store.Definitions
 import Itasca.Runtime.Representation.Store
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## Syntax -/
@@ -190,7 +192,7 @@ section
 namespace Itasca.Store
 open Aeneas Aeneas.Std
 
-theorem function_ref_typed (s : _root_.store) (hwf : wf_store s)
+theorem function_ref_typed (s : WebAssembly.store) (hwf : wf_store s)
     (address : Nat) (haddress : address < s.FUNCS.length) :
     Ref_ok s (.REF_FUNC_ADDR address) .FUNCREF := by
   apply Ref_ok.func s address (s.FUNCS[address]!).TYPE
@@ -368,7 +370,7 @@ theorem decode_element_typed {M : Type} (view : M → Slice U8) (code : CodeInte
   · simpa using hbound
   · exact hwf
 
-theorem decode_data_typed (s : _root_.store) (hwf : wf_store s)
+theorem decode_data_typed (s : WebAssembly.store) (hwf : wf_store s)
     (data : runtime.store.DataInst) (hbound : data.bytes.length < 2^32) :
     Datainst_ok s (decodeData data) .OK := by
   constructor

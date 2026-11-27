@@ -3,6 +3,8 @@ import Itasca.Runtime.Compiler.Body.Control.Closing
 import Itasca.Visitor.BodyReplay
 import Itasca.Body.Trace.BytesScalar
 
+open WebAssembly
+
 /-!
 A rejected body needs no retained suffix; an accepted open boundary retains both the exact compiler/source point and its quantitative callback ledger.
 
@@ -50,7 +52,7 @@ theorem compiler_body_steps {A} (ops : runtime.platform.Alloc A) (law : Platform
   have fresh := ledger.reader ops law pending out ⟨sourceLocals,ft.results⟩ (observed rfl) (by simpa only [pending,ReaderBoundary.pending] using run)
   have moved := point.advance_or_closed ops law C layout localsMatch metadata matched contextLocals signatures
     bodyBound next advance inbounds out run
-  have cursor := code.step_profile.accepted_progress
+  have cursor := code.step_body.accepted_progress
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ⟨sourceLocals,ft.results⟩ index
     st out compiler after state.boundary.bounds.size state.boundary.opened.shape.core (by simp)
     state.boundary.bounds.ctrls nonempty inbounds next advance run

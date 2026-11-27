@@ -4,6 +4,8 @@ import Itasca.Runtime.Interp.Machine.CompiledFunctions
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Integration.Execution.History.State
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## ExecutionCode -/

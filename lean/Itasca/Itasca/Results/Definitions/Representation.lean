@@ -5,6 +5,8 @@ import Itasca.Results.Definitions.Foundations
 import Itasca.Results.Definitions.Validation
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Decoding the API into source objects
 
@@ -170,7 +172,7 @@ def decodeFunction {M : Type} (code : CodeInterpretation) (s : runtime.store.Sto
     | none => ⟨ty, default, .HOST 0⟩
 
 def decodeStore {M : Type} (view : M → Slice U8) (code : CodeInterpretation)
-    (s : runtime.store.Store M) : _root_.store :=
+    (s : runtime.store.Store M) : WebAssembly.store :=
   ⟨s.funcs.val.map (decodeFunction code s), s.globals.val.map decodeGlobal,
     s.tables.val.map decodeTable, s.memories.val.map (decodeMemory view),
     s.elems.val.map decodeElement, s.datas.val.map decodeData⟩

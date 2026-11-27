@@ -12,6 +12,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.BranchAndElseCompilation
 import Itasca.Runtime.Compiler.Body.Reader.Scalar.DeadBasicPrefix
 import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 
+open WebAssembly
+
 /-!
 # Closing
 
@@ -51,7 +53,7 @@ theorem IndexedTableReaderCompilerPoint.advance_or_closed_of_opcode {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
     (allowed : ReaderOpcode data.val[st.core.pos.val])
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     out.core.ctrls.val = [] ∨
@@ -129,7 +131,7 @@ theorem IndexedTableReaderCompilerPoint.advance_or_closed {A : Type}
     (bodyBound : initial.function.body_start.val + data.length ≤ Usize.max)
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     out.core.ctrls.val = [] ∨
@@ -178,7 +180,7 @@ theorem IndexedTableReaderCompilerPoint.advance_or_closing_of_opcode {A : Type}
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
     (allowed : ReaderOpcode data.val[st.core.pos.val])
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     (data.val[st.core.pos.val] = 11#u8 ∧ out.core.ctrls.val = []) ∨
@@ -256,7 +258,7 @@ theorem IndexedTableReaderCompilerPoint.advance_or_closing {A : Type}
     (bodyBound : initial.function.body_start.val + data.length ≤ Usize.max)
     (next : Usize) (advance : next.val = st.core.pos.val + 1)
     (inbounds : st.core.pos.val < data.length) (out : code.BodyState)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index
       data.val[st.core.pos.val] before = .ok (.Ok (),out,middle)) :
     (data.val[st.core.pos.val] = 11#u8 ∧ out.core.ctrls.val = []) ∨

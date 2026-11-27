@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Body.References.Reader
 import Itasca.Runtime.Compiler.Body.Relations.KnownFixedStack
 
+open WebAssembly
+
 /-! ## PostDeclared -/
 
 section

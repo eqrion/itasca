@@ -34,7 +34,7 @@ section
 # Batch retirement
 
 `stream.retire_code_batch` polls a worker, checks its module identity, removes
-its batch ID by swap-and-pop and requires `stream.CodeBatch.finish` to succeed.
+its batch ID by swap-and-pop and requires `stream.StreamingBatch.finish` to succeed.
 Its `spec` and `accepted` contracts record the pending-vector effect and actual
 finished worker. Draining returns whenever polls return (`PollTotal`), including
 when the scheduler supplies records that cause rejection.
@@ -125,19 +125,19 @@ end Itasca.Stream.Retirement
 namespace Itasca.Stream.Retirement
 
 /-- A successful retirement comes from an actual poll that returned a batch of the expected module
-whose `stream.CodeBatch.finish` succeeded, and the batch ID was removed from the pending vector. -/
+whose `stream.StreamingBatch.finish` succeeded, and the batch ID was removed from the pending vector. -/
 def Retired {V : Type} (visitor : stream.StreamingVisitor V) (moduleId : U64)
     (before : V) (pending : alloc.vec.Vec Usize) :
     (core.result.Result Unit error.Error × V × alloc.vec.Vec Usize) → Prop
   | (.Ok (), after, remaining) => ∃ batch,
       visitor.poll_code_batch before = .ok (.Ok batch, after) ∧
-      batch.module_id = moduleId ∧ stream.CodeBatch.finish batch = .ok (.Ok ()) ∧
+      batch.module_id = moduleId ∧ stream.StreamingBatch.finish batch = .ok (.Ok ()) ∧
       (batch.batch_id :: remaining.val).Perm pending.val
   | (.Err _, _, _) => True
 
-private theorem finish_returns (batch : stream.CodeBatch) :
-    ∃ r, stream.CodeBatch.finish batch = .ok r := by
-  unfold stream.CodeBatch.finish
+private theorem finish_returns (batch : stream.StreamingBatch) :
+    ∃ r, stream.StreamingBatch.finish batch = .ok r := by
+  unfold stream.StreamingBatch.finish
   cases batch.error <;> simp only
   · split
     · split <;> exact ⟨_, rfl⟩
@@ -212,7 +212,7 @@ theorem stream.retire_code_batch.accepted {V : Type} (visitor : stream.Streaming
     (moduleId : U64) (state state' : V) (pending remaining : alloc.vec.Vec Usize)
     (h : stream.retire_code_batch visitor moduleId state pending = .ok (.Ok (), state', remaining)) :
     ∃ batch, visitor.poll_code_batch state = .ok (.Ok batch, state') ∧
-      batch.module_id = moduleId ∧ stream.CodeBatch.finish batch = .ok (.Ok ()) ∧
+      batch.module_id = moduleId ∧ stream.StreamingBatch.finish batch = .ok (.Ok ()) ∧
       (batch.batch_id :: remaining.val).Perm pending.val := by
   have hex : ∃ r, visitor.poll_code_batch state = .ok r := by
     unfold stream.retire_code_batch at h
@@ -386,7 +386,7 @@ section
 /-!
 # Code entry frames
 
-`Stream.Framing.EntryFrame` describes the `stream.CodeEntry` returned by `stream.frame_entry`: its
+`Stream.Framing.EntryFrame` describes the `stream.StreamingEntry` returned by `stream.frame_entry`: its
 declared byte extent (`Module.Code.Extent`) shifted by the batch offset into absolute coordinates.
 `stream.frame_entry.sound` and `.complete` relate the function to this predicate. Completeness
 needs only that the shifted end stays within the module cap.
@@ -399,7 +399,7 @@ namespace Itasca.Stream.Framing
 /-- A frame records the entry's declared byte extent and the corresponding
 absolute offsets. It does not certify local declarations or instructions. -/
 def EntryFrame (data : Slice U8) (pos index offset : Usize)
-    (entry : stream.CodeEntry) : Prop :=
+    (entry : stream.StreamingEntry) : Prop :=
   ∃ content finish, Module.Code.Extent data pos content finish ∧
     entry.index = index ∧ entry.start.val = offset.val + pos.val ∧
     entry.contents.val = offset.val + content.val ∧
@@ -469,7 +469,7 @@ section
 /-!
 # Worker cursor bounds
 
-`stream.CodeBatch.next_entry.total` proves normal return when the batch's
+`stream.StreamingBatch.next_entry.total` proves normal return when the batch's
 function-index interval fits in `Usize`. It permits malformed bytes and an
 exhausted dispatch cursor. Actual successful worker histories and their
 validation evidence are handled in `Stream/WorkersAndSource`.
@@ -481,11 +481,11 @@ namespace Itasca
 
 /-- Dispatch returns an ordinary result when function indices fit in `Usize`, including on
 malformed bytes and when the dispatch cursor is already exhausted. -/
-theorem stream.CodeBatch.next_entry.total (batch : stream.CodeBatch)
+theorem stream.StreamingBatch.next_entry.total (batch : stream.StreamingBatch)
     (hindex : batch.first_func.val + batch.num_funcs.val ≤ Usize.max) :
-    ∃ r, stream.CodeBatch.next_entry batch = .ok r := by
-  have ht : stream.CodeBatch.next_entry batch ⦃ _ => True ⦄ := by
-    unfold stream.CodeBatch.next_entry
+    ∃ r, stream.StreamingBatch.next_entry batch = .ok r := by
+  have ht : stream.StreamingBatch.next_entry batch ⦃ _ => True ⦄ := by
+    unfold stream.StreamingBatch.next_entry
     split
     · simp
     · rename_i hcount
@@ -528,7 +528,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- An accepted `stream.validate_remaining` yields witnesses for each of its phases. -/
-theorem stream.validate_remaining.accepted {S V : Type} (source : stream.Source S)
+theorem stream.validate_remaining.accepted {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v v' : V)
     (h : stream.validate_remaining source visitor id state env envLen v = .ok (.Ok (), v')) :
@@ -601,7 +601,7 @@ theorem stream.validate_remaining.accepted {S V : Type} (source : stream.Source 
 set_option maxHeartbeats 600000 in
 /-- An accepted generic driver exposes its decoded environment and the tail delivery it actually
 performed. No assumption is made that the visitor state keeps any metadata. -/
-theorem stream.validate_streaming.accepted {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.accepted {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
     (v v' : V) (initial env : metadata.Env)
     (h : stream.validate_streaming source visitor id state v initial = .ok (.Ok (), v', env)) :
@@ -677,7 +677,7 @@ end Stream.Framing
 
 /-- `stream.read_code_header` either errors or returns the entry count of a checked header,
 provided the reached code read returns. -/
-theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_code_header.spec {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen : Usize) (env : metadata.Env)
     (hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
       (core.cmp.impls.OrdUsize.min codeLen 11#usize) = .ok r) :
@@ -764,7 +764,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.Source S) (stat
 
 /-- Acceptance itself supplies the reached source callback. No premise is
 imposed on unrelated or unexecuted source calls. -/
-theorem stream.read_code_header.checked {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_code_header.checked {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen : Usize) (env : metadata.Env) (entries : Usize)
     (h : stream.read_code_header source state codeLen env = .ok (.Ok entries)) :
     Stream.Framing.HeaderChecked source state codeLen env entries := by
@@ -785,7 +785,7 @@ theorem stream.read_code_header.checked {S : Type} (source : stream.Source S) (s
 
 namespace Stream.Framing
 
-theorem HeaderChecked.sound {S : Type} {source : stream.Source S} {state : S}
+theorem HeaderChecked.sound {S : Type} {source : stream.StreamingSource S} {state : S}
     {codeLen : Usize} {env : metadata.Env} {entries : Usize} {data : Slice U8}
     {environment tail : List U8}
     (h : HeaderChecked source state codeLen env entries)
@@ -815,7 +815,7 @@ end Stream.Framing
 
 /-- Over a coherent source, a successful `stream.read_code_header` returns the entry count of a
 code section that spans the whole code region. -/
-theorem stream.read_code_header.sound {S : Type} (source : stream.Source S) (state : S)
+theorem stream.read_code_header.sound {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen : Usize) (env : metadata.Env) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)
     (hcoherent : Stream.Source.Coherent source state environment data.val tail)
@@ -880,7 +880,7 @@ private theorem drain_delivery {V : Type} (visitor : stream.StreamingVisitor V)
         exact ih rest.length smaller current rest (.poll delivered polled) remainingCall rfl
 
 /-- Project the final callback suffix from the full internal driver witness. -/
-theorem Run.Remaining.delivery {S V : Type} {source : stream.Source S}
+theorem Run.Remaining.delivery {S V : Type} {source : stream.StreamingSource S}
     {visitor : stream.StreamingVisitor V} {id : U64} {state : S}
     {env : metadata.Env} {environmentLength : Usize} {before after : V}
     (run : Run.Remaining source visitor id state env environmentLength before after) :
@@ -978,7 +978,7 @@ namespace Itasca
 
 /-- The framing loop returns, and its result satisfies `Stream.Framing.BatchPost`, from any state
 satisfying `Stream.Framing.BatchInvariant`. -/
-theorem stream.get_next_batch_loop.total_spec {S : Type} (source : stream.Source S) (state : S)
+theorem stream.get_next_batch_loop.total_spec {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold pos func bytes : Usize) (done : Bool)
     (htotal : Stream.Source.CallbacksTotal source state)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -1118,7 +1118,7 @@ theorem stream.get_next_batch_loop.total_spec {S : Type} (source : stream.Source
 
 /-- `stream.get_next_batch` returns and satisfies `Stream.Framing.BatchPost` when the source
 callbacks return and the code region respects the module cap. -/
-theorem stream.get_next_batch.spec {S : Type} (source : stream.Source S) (state : S)
+theorem stream.get_next_batch.spec {S : Type} (source : stream.StreamingSource S) (state : S)
     (codeLen start first num threshold : Usize)
     (htotal : Stream.Source.CallbacksTotal source state)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
@@ -1166,8 +1166,8 @@ def Post (max : Usize) : (core.result.Result (alloc.vec.Vec Usize) error.Error �
 
 /-- The loop continuation after its optional retirement, written as the extracted subexpression
 so that both generated branches share one proof. -/
-private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.Config)
+private theorem resume {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
+    (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -1253,9 +1253,9 @@ private theorem resume {S V : Type} (source : stream.Source S) (visitor : stream
 end Itasca.Stream.Submission
 
 namespace Itasca
-private theorem submit_body_total {S V : Type} (source : stream.Source S)
+private theorem submit_body_total {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (num : Usize)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig) (num : Usize)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -1304,9 +1304,9 @@ private theorem submit_body_total {S V : Type} (source : stream.Source S)
 
 /-- Submission terminates because each framed batch contains at least one function. The pending
 vector stays within the configured maximum. -/
-theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Source S)
+theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig) (v : V)
     (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
@@ -1332,9 +1332,9 @@ theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.Sourc
 /-- `stream.submit_code_batches` returns and keeps its pending vector within the configured
 maximum, when the source and scheduler callbacks return. -/
 @[step]
-theorem stream.submit_code_batches.spec {S V : Type} (source : stream.Source S)
+theorem stream.submit_code_batches.spec {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
@@ -1346,9 +1346,9 @@ theorem stream.submit_code_batches.spec {S V : Type} (source : stream.Source S)
     hs hv henv rfl hcap
   exact ⟨hpos, by simp, by simp, by simp, by simp⟩
 
-theorem stream.submit_code_batches.total {S V : Type} (source : stream.Source S)
+theorem stream.submit_code_batches.total {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen pos : Usize) (config : stream.Config) (v : V)
+    (env : metadata.Env) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
@@ -1382,7 +1382,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 /-- After a decoded environment, all remaining phases return an ordinary result when the source
 and visitor callbacks return. Worker provenance is not needed. -/
-theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Source S)
+theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
@@ -1444,7 +1444,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                   | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
                   | Ok whole =>
                     simp
-                    obtain ⟨v4, hregion⟩ := hv.region v3 stream.Region.Tail
+                    obtain ⟨v4, hregion⟩ := hv.region v3 stream.StreamingRegion.Tail
                     rw [hregion]
                     simp only [bind_ok]
                     obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
@@ -1468,7 +1468,7 @@ theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.Sourc
                         simp
 
 /-- `stream.validate_remaining` returns an ordinary result under returning callbacks. -/
-theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
+theorem stream.validate_remaining.total {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (env : metadata.Env) (envLen : Usize) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
@@ -1481,7 +1481,7 @@ theorem stream.validate_remaining.total {S V : Type} (source : stream.Source S)
 /-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
 is a termination premise. -/
-theorem stream.validate_streaming.total_core {S V : Type} (source : stream.Source S)
+theorem stream.validate_streaming.total_core {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : metadata.Env)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor ) :
@@ -1502,7 +1502,7 @@ theorem stream.validate_streaming.total_core {S V : Type} (source : stream.Sourc
       | Ok envLen =>
         have hsize : bytes.length ≤ limits.MAX_MODULE_BYTES.val := by scalar_tac
         simp
-        obtain ⟨v1, hregion⟩ := hv.region v stream.Region.Environment
+        obtain ⟨v1, hregion⟩ := hv.region v stream.StreamingRegion.Environment
         rw [hregion]
         simp only [bind_ok]
         obtain ⟨⟨r, v2⟩, hparsed, _⟩ := WP.spec_imp_exists

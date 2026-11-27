@@ -1,5 +1,7 @@
 import Itasca.Runtime.Compiler.Local.Definitions
 
+open WebAssembly
+
 /-! Completed function certificates used to construct the verified runtime protocol. -/
 
 /-! ## Compiler / Body / Functions -/

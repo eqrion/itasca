@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Publication.ScalarCallbackPublication
 import Itasca.Runtime.Compiler.Body.Reader.Simd.SimdCallbackPublication
 import Itasca.Runtime.Compiler.Local.Publication.ScalarAndTablePublication
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Publication.
 

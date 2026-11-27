@@ -14,6 +14,8 @@ import Itasca.Runtime.Compiler.Local.Publication.ControlMapPublication
 import Itasca.Runtime.Compiler.Local.Publication.ScopeEntryPublication
 import Itasca.Runtime.Compiler.Local.Relations.Control.ControlCoordinates
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -252,7 +254,7 @@ theorem reader_br_exit_slots {jumpTables : List U32} {data env sourceLocals inde
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (held : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BR before = .ok (.Ok (),out,after)) : FrameExitSlotBounds after := by
   obtain ⟨depth,view,callback,read,post⟩ := reader_br p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
@@ -276,7 +278,7 @@ theorem reader_br_if_exit_slots {jumpTables : List U32} {data env sourceLocals i
     (sourceBound : p.start.val ≤ limits.MAX_MODULE_BYTES.val)
     (held : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR_IF)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BR_IF before = .ok (.Ok (),out,after)) : FrameExitSlotBounds after := by
   obtain ⟨depth,view,values,callback,read,post⟩ := reader_br_if p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
@@ -321,7 +323,7 @@ theorem reader_br_open_instructions {jumpTables : List U32} {data env sourceLoca
     (coordinate : before.function.body_start.val+before.next_source.val ≤ Usize.max)
     (held : CompilerInstructionPrefix before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BR before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
   obtain ⟨depth,view,callback,read,post⟩ := reader_br p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
@@ -345,7 +347,7 @@ theorem reader_br_if_open_instructions {jumpTables : List U32} {data env sourceL
     (sourceBound : p.start.val ≤ limits.MAX_MODULE_BYTES.val)
     (held : CompilerInstructionPrefix before)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_BR_IF)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_BR_IF before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
   obtain ⟨depth,view,values,callback,read,post⟩ := reader_br_if p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx (by simpa only [global_simps] using byte) (by simpa only [global_simps] using accepted)
@@ -449,7 +451,7 @@ theorem reader_else_exit_slots {jumpTables : List U32} {data env sourceLocals in
     (monomorphic : before.reachable = true → p.current.ctrl.polymorphic_base = false)
     (held : FrameExitSlotBounds before)
     (byte : data.val[p.start.val]'p.inbounds = 5#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) : FrameExitSlotBounds after := by
   obtain ⟨callback,read,sourceForm,encoded,results,opened,afterState⟩ := reader_else p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -568,7 +570,7 @@ theorem reader_else_open_instructions {jumpTables : List U32} {data env sourceLo
     (same : ReaderScopeZipper parents current p.parents p.current)
     (held : CompilerInstructionPrefix before)
     (byte : data.val[p.start.val]'p.inbounds = 5#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 5#u8 before = .ok (.Ok (),out,after)) : CompilerInstructionPrefix after := by
   obtain ⟨callback,_,sourceForm,_⟩ := reader_else p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -689,7 +691,7 @@ theorem reader_nested_end_exit_slots {jumpTables : List U32}
     (maps : ControlMapPublication before) (held : FrameExitSlotBounds before)
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     FrameExitSlotBounds after := by
   obtain ⟨callback,_,_,_,_,afterState⟩ := reader_end p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -811,7 +813,7 @@ theorem reader_nested_end_open_instructions {jumpTables : List U32}
     (maps : ControlMapPublication before) (held : CompilerInstructionPrefix before)
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     CompilerInstructionPrefix after := by
   obtain ⟨callback,_,_,_,_,afterState⟩ := reader_end p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -918,7 +920,7 @@ theorem reader_enter_exit_slots {jumpTables : List U32}
     (held : FrameExitSlotBounds before)
     (form : Body.Frames.Form) (initialForm : form.Initial)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
     FrameExitSlotBounds after := by
   obtain ⟨bt,ins,outs,remaining,base,callback,_,post⟩ := reader_enter p form initialForm
@@ -1095,7 +1097,7 @@ theorem reader_end_publication {jumpTables : List U32}
     (coordinates : SourceCoordinates before) (maps : ControlMapPublication before)
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     SourceCoordinates after ∧ ControlMapPublication after := by
   obtain ⟨callback,_,_,_,_,afterState⟩ := reader_end p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted
@@ -1206,7 +1208,7 @@ theorem reader_enter_publication {jumpTables : List U32}
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (form : Body.Frames.Form) (initialForm : form.Initial)
     (byte : data.val[p.start.val]'p.inbounds = form.opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index form.opcode before = .ok (.Ok (),out,after)) :
     SourceCoordinates after ∧ ControlMapPublication after := by
   obtain ⟨bt,ins,outs,remaining,base,callback,_,post⟩ := reader_enter p form initialForm
@@ -1286,7 +1288,7 @@ theorem reader_root_map_publication {jumpTables : List U32}
     (extent : before.function.body_end.val = before.function.body_start.val+data.length)
     (closed : out.core.ctrls.val = [])
     (byte : data.val[p.start.val]'p.inbounds = 11#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) st data env ctx index 11#u8 before = .ok (.Ok (),out,after)) :
     FinalControlMapBounds after.function ∧ SourceAligned after := by
   obtain ⟨callback,_,_,_,zipper,afterState⟩ := reader_end p
     (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) before after out ctx byte accepted

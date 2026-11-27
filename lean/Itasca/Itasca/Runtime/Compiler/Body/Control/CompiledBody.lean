@@ -37,6 +37,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Function.FunctionStartContracts
 import Itasca.Runtime.Compiler.Local.Relations.Function.RootLabel
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Control.
 
@@ -77,7 +79,7 @@ theorem IndexedTableReaderCompilerPoint.indirect_call {A : Type}
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   obtain ⟨parents,current,savedParents,savedCurrent,state⟩ := point.future CompilerTables.empty

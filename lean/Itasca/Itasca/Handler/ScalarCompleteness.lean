@@ -4,6 +4,8 @@ import Itasca.Visitor.Total
 import Itasca.Handler.StackEffects
 import Itasca.Binary.Scalar.Encoding
 
+open WebAssembly
+
 /-!
 Proofs for Handler.
 

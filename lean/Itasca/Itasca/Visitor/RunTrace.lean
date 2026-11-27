@@ -157,7 +157,7 @@ section
 
 `Visitor.Core.run.accepted` extracts the reader output and the accepting hook call from an accepted
 `Visitor.Core.run`. `run.accepted_transfer` replays the run with another hook that accepts the same
-outputs, which is how the later erasure theorems replace a visitor by `code.EmptyOpVisitor`.
+outputs, which is how the later erasure theorems replace a visitor by `code.DefaultOpVisitor`.
 -/
 
 open Aeneas Aeneas.Std
@@ -478,7 +478,7 @@ section
 # Erasing the visitor from an accepted step
 
 `code.step.accepted_erase` shows that if `code.step` accepts an instruction with any visitor, it
-accepts it with `code.EmptyOpVisitor` and reaches the same validator state. The proof dispatches
+accepts it with `code.DefaultOpVisitor` and reaches the same validator state. The proof dispatches
 on the opcode using `Visitor/Events`; the branch-table erasure lemmas below handle its nested
 label hooks. The result covers the extracted scalar step `code.step`.
 -/
@@ -491,7 +491,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- The empty visitor accepts every numeric opcode. -/
 theorem visit_numeric_empty (st : code.OpIterState) (opcode : U8) :
-    code.visit_numeric code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
+    code.visit_numeric code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor () st opcode =
       .ok (.Ok (), ()) := by
   rcases opcode with ⟨⟨n, hn⟩⟩
   change n < 256 at hn
@@ -501,7 +501,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- The empty visitor accepts every load and store opcode. -/
 theorem visit_memory_empty (st : code.OpIterState) (opcode : U8) (arg : code.MemArg) :
-    code.visit_memory code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor () st opcode arg =
+    code.visit_memory code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor () st opcode arg =
       .ok (.Ok (), ()) := by
   rcases opcode with ⟨⟨n, hn⟩⟩
   change n < 256 at hn
@@ -515,7 +515,7 @@ namespace Itasca
 theorem code.step_numeric.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (opcode : U8) (v v' : V)
     (h : code.step_numeric visitor st opcode v = .ok (.Ok (), st', v')) :
-    code.step_numeric code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st opcode () =
+    code.step_numeric code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st opcode () =
       .ok (.Ok (), st', ()) := by
   cases hm : Body.Numeric.opcodeMeaning opcode with
   | none => simp [code.step_numeric.unrecognized visitor st opcode v hm] at h
@@ -531,7 +531,7 @@ theorem code.step.accepted_erase {V : Type} (visitor : code.OpVisitor V)
     (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v v' : V)
     (h : code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v')) :
-    code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
+    code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), st', ()) := by
   cases hm : Body.MemoryMeaning.opcodeMeaning opcode with
   | some op =>
@@ -639,7 +639,7 @@ section
 # Lifting an accepted step to an accepting visitor
 
 The converse of `code.step.accepted_erase`. `code.step.accepted_lift` shows that if `code.step` accepts
-with `code.EmptyOpVisitor`, it also accepts, at the same validator state, with any visitor
+with `code.DefaultOpVisitor`, it also accepts, at the same validator state, with any visitor
 satisfying `Visitor.Accepts`. The `br_table` label loop is lifted in
 `code.read_table_labels_loop.accepted_lift`. Covers the scalar step `code.step`.
 -/
@@ -670,7 +670,7 @@ at the same state. -/
 theorem code.step_numeric.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor)
     (st st' : code.OpIterState) (opcode : U8) (v : V)
-    (h : code.step_numeric code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st opcode () =
+    (h : code.step_numeric code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st opcode () =
       .ok (.Ok (), st', ())) :
     ∃ v', code.step_numeric visitor st opcode v = .ok (.Ok (), st', v') := by
   cases hm : Body.Numeric.opcodeMeaning opcode with
@@ -688,7 +688,7 @@ theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor)
     (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
     (opcode : U8) (v : V)
-    (h : code.step code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
+    (h : code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), st', ())) :
     ∃ v', code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v') := by
   cases hm : Body.MemoryMeaning.opcodeMeaning opcode with

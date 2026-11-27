@@ -8,6 +8,8 @@ import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 import Itasca.Runtime.SourceMachine.Stateful.AccessAndGrowth
 import Itasca.Runtime.Representation.Store
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

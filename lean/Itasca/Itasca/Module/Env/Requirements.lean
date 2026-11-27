@@ -585,7 +585,7 @@ theorem Effect.valid {data pos env before id next result after last}
     intro entry hm
     obtain ⟨bytes, hbytes, _⟩ := hb
     obtain ⟨bs, he⟩ := hbytes.member (List.mem_map.mpr ⟨entry, hm, rfl⟩)
-    obtain ⟨_, _, _, hm, hn, _, _⟩ := he
+    obtain ⟨_, _, _, hm, hn, _, _⟩ := ImportEncoding.reader_parts.mp he
     exact ⟨hm.2, hn.2⟩
   | functions ha hb =>
     have hearly := Early.of_phase hr hp (by change last < 3 at ho; omega)
@@ -653,7 +653,7 @@ theorem Effect.valid {data pos env before id next result after last}
     intro entry hm
     obtain ⟨bytes, hbytes, _⟩ := hb
     obtain ⟨bs, he⟩ := hbytes.member (List.mem_map.mpr ⟨entry, hm, rfl⟩)
-    obtain ⟨_, _, hn, _, _⟩ := he
+    obtain ⟨_, _, hn, _, _⟩ := ExportEncoding.reader_parts.mp he
     exact hn.2
   | start he hb hstart =>
     have hc : SameCore env result := by constructor <;> rw [he]

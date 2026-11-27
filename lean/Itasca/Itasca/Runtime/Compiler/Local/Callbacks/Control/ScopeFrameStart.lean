@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.Control.ScopeFrames
 import Itasca.Runtime.Compiler.Local.Relations.Function.EnvironmentContracts
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## FixupBranchPreservation -/

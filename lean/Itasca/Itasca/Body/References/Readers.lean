@@ -2,6 +2,8 @@ import Itasca.Body.Scalar.Env
 import Itasca.Module.Env.Externals
 import Itasca.Binary.Body.Encoding
 
+open WebAssembly
+
 /-! ## ReadersTotal -/
 
 section

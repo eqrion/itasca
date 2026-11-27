@@ -2,6 +2,8 @@ import Itasca.Runtime.Representation.Layout
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Support.Translation
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! The layout component of the compiler invariant, stated over the actual

@@ -8,6 +8,8 @@ import Itasca.Runtime.Store.Api.DefinitionsAndGrowth
 import Itasca.Runtime.Representation.Store
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -123,7 +125,7 @@ private theorem prefix_rel {T : Type} [Inhabited T] (rel : T → T → Prop) (va
 
 /-- Exact retained prefixes are a sufficient concrete case of the specification's
 store-extension relation, including its explicit well-formedness obligations. -/
-theorem store_prefix_extends (before after : _root_.store)
+theorem store_prefix_extends (before after : WebAssembly.store)
     (hb : wf_store before) (ha : wf_store after)
     (hf : after.FUNCS.take before.FUNCS.length = before.FUNCS)
     (hg : after.GLOBALS.take before.GLOBALS.length = before.GLOBALS)

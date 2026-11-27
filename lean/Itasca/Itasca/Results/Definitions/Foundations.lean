@@ -2,6 +2,8 @@ import Aeneas
 import ItascaRust.Types
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Shared representation conventions
 
@@ -111,7 +113,7 @@ def dataTypes (env : metadata.Env) : List datatype :=
 /-- The SpecTec context for a function body, with no labels. Function types come from the
 environment's resolved function-type cache; its coherence with the module's type indices is a
 separate module invariant. -/
-def context (env : metadata.Env) (ctx : code.Context) : _root_.context :=
+def context (env : metadata.Env) (ctx : code.Context) : WebAssembly.context :=
   { TYPES := env.types.val.map funcType
     FUNCS := env.func_types.val.map funcType
     GLOBALS := env.global_types.val.map Translation.globalType

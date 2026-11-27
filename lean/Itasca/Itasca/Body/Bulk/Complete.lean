@@ -1,5 +1,7 @@
 import Itasca.Body.References.Complete
 
+open WebAssembly
+
 /-!
 # Completeness of bulk instructions
 
@@ -27,7 +29,7 @@ theorem Frame.memory_fill {st} (f : Frame st) (data : Slice U8) (env : metadata.
     () next (fun _ => [.I32, .I32, .I32]) (fun _ => none) id front hmeta hsize
     (by simpa [Simd.inputTypes, Translation.valueType] using hr)
   rw [← code.read_memory_fill.fixed] at hs
-  exact f.reader_step data env ctx index 252#u8 _ (fun v s _ => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_fill v s) () s next _ (by decide)
+  exact f.reader_step data env ctx index 252#u8 _ (fun v s _ => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_fill v s) () s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 11#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
@@ -48,7 +50,7 @@ theorem Frame.memory_copy {st} (f : Frame st) (data : Slice U8) (env : metadata.
     () next (fun _ => [.I32, .I32, .I32]) (fun _ => none) id front hmeta hsize
     (by simpa [Simd.inputTypes, Translation.valueType] using hr)
   rw [← code.read_memory_copy.fixed] at hs
-  exact f.reader_step data env ctx index 252#u8 _ (fun v s _ => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_copy v s) () s next _ (by decide)
+  exact f.reader_step data env ctx index 252#u8 _ (fun v s _ => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_copy v s) () s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 10#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
@@ -72,7 +74,7 @@ theorem Frame.memory_init {st} (f : Frame st) (data : Slice U8) (env : metadata.
     idx next (fun _ => [.I32, .I32, .I32]) (fun _ => none) id front hmeta hsize
     (by simpa [Simd.inputTypes, Translation.valueType] using hr)
   rw [← code.read_memory_init.fixed] at hs
-  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_init v s a) idx s next _ (by decide)
+  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_memory_init v s a) idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 8#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
@@ -89,7 +91,7 @@ theorem Frame.data_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.En
     idx next (fun _ => []) (fun _ => none) id front
     (code.take_data_index.complete {st.core with pos := middle} data env idx count next hd hcount hidx) hsize (by simpa [Simd.inputTypes] using hr)
   rw [metadataOperands.empty] at hs
-  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_data_drop v s a) idx s next _ (by decide)
+  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_data_drop v s a) idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 9#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
@@ -106,7 +108,7 @@ theorem Frame.elem_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.En
     (idx, Module.Constants.referenceValueType env.elements.val[idx.val].elem) next (fun _ => []) (fun _ => none) id front
     (code.take_element.complete {st.core with pos := middle} data env idx next hd hidx) hsize (by simpa [Simd.inputTypes] using hr)
   rw [metadataOperands.empty] at hs
-  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_elem_drop v s a.1) (idx, Module.Constants.referenceValueType env.elements.val[idx.val].elem) s next _ (by decide)
+  exact f.reader_step data env ctx index 252#u8 _ (fun v s a => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_elem_drop v s a.1) (idx, Module.Constants.referenceValueType env.elements.val[idx.val].elem) s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 13#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
 
@@ -136,7 +138,7 @@ theorem Frame.table_init {st} (f : Frame st) (data : Slice U8) (env : metadata.E
     (by simpa [Simd.inputTypes, Translation.valueType] using hr)
   rw [← code.read_table_init.fixed] at hs
   exact f.reader_step data env ctx index 252#u8 _
-    (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_table_init v s a.1 a.2)
+    (fun v s a => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_table_init v s a.1 a.2)
     (i, j) s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 12#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize
@@ -167,7 +169,7 @@ theorem Frame.table_copy {st} (f : Frame st) (data : Slice U8) (env : metadata.E
     (by simpa [Simd.inputTypes, Translation.valueType] using hr)
   rw [← code.read_table_copy.fixed] at hs
   exact f.reader_step data env ctx index 252#u8 _
-    (fun v s a => code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor.on_table_copy v s a.1 a.2)
+    (fun v s a => code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor.on_table_copy v s a.1 a.2)
     (i, j) s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 14#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl)
     hs rfl hp (by simpa [Simd.outputTypes] using hout) hl hsize

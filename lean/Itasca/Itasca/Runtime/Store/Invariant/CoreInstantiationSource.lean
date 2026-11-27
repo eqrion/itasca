@@ -10,6 +10,8 @@ import Itasca.Runtime.Store.Initialization.SegmentSyntheticPreservation
 import Itasca.Runtime.Store.Invariant.SemanticApi
 import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Invariant.
 

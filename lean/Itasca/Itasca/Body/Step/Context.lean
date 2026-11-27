@@ -218,7 +218,7 @@ theorem step.scalar_eq (st : code.BodyState) (data : Slice U8) (env : metadata.E
       if alloc.vec.Vec.len st.core.vals = core.num.Usize.MAX then
         .ok (.Err .StackTooLarge, st)
       else (do
-        let (r, s, _) ← code.step_wasm2 code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+        let (r, s, _) ← code.step_wasm2 code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
           st.core data env ctx opcode ()
         .ok (r, {st with core := s})) := by
   unfold step

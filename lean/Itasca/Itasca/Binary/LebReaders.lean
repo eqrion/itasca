@@ -1,3 +1,4 @@
+import WebAssembly.Binary.LebUnique
 import Itasca.Binary.Definitions
 import Itasca.Results.Definitions.Binary
 import Itasca.Support.Translation
@@ -103,8 +104,8 @@ namespace Itasca.Binary.Leb128
 private theorem payload_append (xs ys : List U8) :
     payload (xs ++ ys) = payload xs + 128 ^ xs.length * payload ys := by
   induction xs with
-  | nil => simp [payload]
-  | cons b xs ih => simp [payload, ih, pow_succ]; ring
+  | nil => simp [payload_nil, payload_cons]
+  | cons b xs ih => simp [payload_nil, payload_cons, ih, pow_succ]; ring
 
 /-- Rejections describe malformed or truncated bytes rather than runtime failures. -/
 inductive Rejected (data : Slice U8) (start : Usize) : error.OpError → Prop where
@@ -201,46 +202,10 @@ end Itasca.Binary.Leb128
 
 namespace Itasca.Binary.Leb128
 
-/-- A continuation-byte prefix cannot pass an encoding's terminating byte. -/
-private theorem continuation_prefix_le (xs ys : List U8) (a : U8) (leftTail bs : List U8)
-    (hx : ∀ b ∈ xs, 128 ≤ b.val) (hy : ∀ b ∈ ys, 128 ≤ b.val)
-    (ha : a.val < 128) (heq : xs ++ a :: leftTail = ys ++ bs) :
-    ys.length ≤ xs.length := by
-  induction xs generalizing ys with
-  | nil =>
-    cases ys with
-    | nil => simp
-    | cons y ys =>
-      have hay : a = y := (List.cons.inj heq).1
-      have := hy y (by simp)
-      subst y
-      omega
-  | cons x xs ih =>
-    cases ys with
-    | nil => simp
-    | cons y ys =>
-      obtain ⟨hxy, htail⟩ := List.cons.inj heq
-      have hxs : ∀ b ∈ xs, 128 ≤ b.val := by intros b hb; exact hx b (by simp [hb])
-      have hys : ∀ b ∈ ys, 128 ≤ b.val := by intros b hb; exact hy b (by simp [hb])
-      simpa using ih ys hxs hys htail
-
-/-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Nat} {leftTail bs : List U8}
     (hx : Encoding xs x) (hy : Encoding ys y) (heq : xs ++ leftTail = ys ++ bs) :
-    xs = ys ∧ x = y := by
-  rcases hx with ⟨xs', a, rfl, hxlen, hxmore, ha, hlast, rfl⟩
-  rcases hy with ⟨ys', b, rfl, hylen, hymore, hb, hlast', rfl⟩
-  simp only [List.append_assoc, List.singleton_append] at heq
-  have hxy := continuation_prefix_le xs' ys' a leftTail (b :: bs) hxmore hymore ha heq
-  have hyx := continuation_prefix_le ys' xs' b bs (a :: leftTail) hymore hxmore hb heq.symm
-  have hlen : xs'.length = ys'.length := by omega
-  have hfirst : xs' = ys' := by
-    have := congrArg (List.take xs'.length) heq
-    simpa [List.take_append, hlen] using this
-  subst ys'
-  have hab : a = b := (List.cons.inj (List.append_cancel_left heq)).1
-  subst b
-  exact ⟨rfl, rfl⟩
+    xs = ys ∧ x = y :=
+  WebAssembly.Binary.Leb128.UnsignedForm.prefix_unique hx hy heq
 
 private theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     (value : U32) (next : Usize) (e : error.OpError)
@@ -255,7 +220,7 @@ private theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     omega
   | overlong bs b after hbs hbslen hbscont hb =>
     have heq : before ++ last :: data.val.drop next.val = bs ++ b :: after := hbytes.symm.trans hbs
-    have hle := continuation_prefix_le before bs last (data.val.drop next.val)
+    have hle := WebAssembly.Binary.Leb128.continuation_prefix_le UScalar.val before bs last (data.val.drop next.val)
       (b :: after) hmore hbscont hlast heq
     have hlen' : before.length = 4 := by omega
     have hfirst : before = bs := by
@@ -322,10 +287,10 @@ namespace Itasca.Binary.Leb128
 
 private theorem payload_lt (bs : List U8) : payload bs < 128 ^ bs.length := by
   induction bs with
-  | nil => simp [payload]
+  | nil => simp [payload_nil, payload_cons]
   | cons b bs ih =>
     have hm : b.val % 128 < 128 := Nat.mod_lt _ (by decide)
-    simp only [payload, List.length_cons, pow_succ]
+    simp only [payload_nil, payload_cons, List.length_cons, pow_succ]
     omega
 
 /-- The byte-level relation itself enforces the U32 range. -/
@@ -333,7 +298,7 @@ theorem Encoding.value_lt {bytes : List U8} {value : Nat} (h : Encoding bytes va
     value < 2 ^ 32 := by
   rcases h with ⟨before, last, rfl, hlen, _, hlast, hfifth, rfl⟩
   rw [payload_append]
-  simp only [payload, mul_zero, add_zero, Nat.mod_eq_of_lt hlast]
+  simp only [payload_nil, payload_cons, mul_zero, add_zero, Nat.mod_eq_of_lt hlast]
   have hp := payload_lt before
   have hcases : before.length = 0 ∨ before.length = 1 ∨ before.length = 2 ∨
       before.length = 3 ∨ before.length = 4 := by omega
@@ -470,8 +435,8 @@ variable (format : Format)
 private theorem payload_append (xs ys : List U8) :
     Binary.Leb128.payload (xs ++ ys) = Binary.Leb128.payload xs + 128 ^ xs.length * Binary.Leb128.payload ys := by
   induction xs with
-  | nil => simp [Binary.Leb128.payload]
-  | cons b xs ih => simp [Binary.Leb128.payload, ih, pow_succ]; ring
+  | nil => simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]
+  | cons b xs ih => simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, ih, pow_succ]; ring
 
 /-- A successful read consumes an `Encoding` of the value and leaves the input suffix untouched. -/
 def Decoded (data : Slice U8) (start : Usize) (value : Int) (next : Usize) : Prop :=
@@ -597,50 +562,10 @@ namespace Itasca.Binary.SignedLeb
 
 variable (format : Format)
 
-private theorem continuation_prefix_le (xs ys : List U8) (a : U8) (leftTail bs : List U8)
-    (hx : ∀ b ∈ xs, 128 ≤ b.val) (hy : ∀ b ∈ ys, 128 ≤ b.val)
-    (ha : a.val < 128) (heq : xs ++ a :: leftTail = ys ++ bs) :
-    ys.length ≤ xs.length := by
-  induction xs generalizing ys with
-  | nil =>
-    cases ys with
-    | nil => simp
-    | cons y ys =>
-      have hay : a = y := (List.cons.inj heq).1
-      have := hy y (by simp)
-      subst y
-      omega
-  | cons x xs ih =>
-    cases ys with
-    | nil => simp
-    | cons y ys =>
-      obtain ⟨hxy, htail⟩ := List.cons.inj heq
-      have hxs : ∀ b ∈ xs, 128 ≤ b.val := by intros b hb; exact hx b (by simp [hb])
-      have hys : ∀ b ∈ ys, 128 ≤ b.val := by intros b hb; exact hy b (by simp [hb])
-      simpa using ih ys hxs hys htail
-
-private theorem terminated_unique (xs ys : List U8) (a b : U8) (leftTail rightTail : List U8)
-    (hx : ∀ c ∈ xs, 128 ≤ c.val) (hy : ∀ c ∈ ys, 128 ≤ c.val)
-    (ha : a.val < 128) (hb : b.val < 128)
-    (heq : xs ++ a :: leftTail = ys ++ b :: rightTail) : xs = ys ∧ a = b := by
-  have hxy := continuation_prefix_le xs ys a leftTail (b :: rightTail) hx hy ha heq
-  have hyx := continuation_prefix_le ys xs b rightTail (a :: leftTail) hy hx hb heq.symm
-  have hlen : xs.length = ys.length := by omega
-  have hfirst : xs = ys := by
-    have := congrArg (List.take xs.length) heq
-    simpa [List.take_append, hlen] using this
-  subst ys
-  exact ⟨rfl, (List.cons.inj (List.append_cancel_left heq)).1⟩
-
-/-- Two encodings that are prefixes of the same byte string are equal and have equal values. -/
 theorem Encoding.prefix_unique {xs ys : List U8} {x y : Int} {leftTail rightTail : List U8}
     (hx : Encoding format xs x) (hy : Encoding format ys y) (heq : xs ++ leftTail = ys ++ rightTail) :
-    xs = ys ∧ x = y := by
-  rcases hx with ⟨xs', a, rfl, _, hxmore, ha, rfl, _⟩
-  rcases hy with ⟨ys', b, rfl, _, hymore, hb, rfl, _⟩
-  simp only [List.append_assoc, List.singleton_append] at heq
-  obtain ⟨rfl, rfl⟩ := terminated_unique xs' ys' a b leftTail rightTail hxmore hymore ha hb heq
-  exact ⟨rfl, rfl⟩
+    xs = ys ∧ x = y :=
+  WebAssembly.Binary.Leb128.SignedForm.prefix_unique hx hy heq
 
 /-- A successful decoding and a rejection of the same input cannot both hold. -/
 theorem decoded_not_rejected (data : Slice U8) (start : Usize)
@@ -656,7 +581,7 @@ theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     omega
   | continued bs b after hbs hbslen hbscont hb =>
     have heq : before ++ last :: data.val.drop next.val = bs ++ b :: after := hbytes.symm.trans hbs
-    have hle := continuation_prefix_le before bs last (data.val.drop next.val)
+    have hle := WebAssembly.Binary.Leb128.continuation_prefix_le UScalar.val before bs last (data.val.drop next.val)
       (b :: after) hmore hbscont hlast heq
     have hlen' : before.length = format.last.val := by omega
     have hfirst : before = bs := by
@@ -667,7 +592,7 @@ theorem decoded_not_rejected (data : Slice U8) (start : Usize)
     subst b
     omega
   | range bs b after hbs _ hbscont hb hout =>
-    obtain ⟨rfl, rfl⟩ := terminated_unique before bs last b (data.val.drop next.val) after
+    obtain ⟨rfl, rfl⟩ := WebAssembly.Binary.Leb128.terminated_unique UScalar.val before bs last b (data.val.drop next.val) after
       hmore hbscont hlast hb (hbytes.symm.trans hbs)
     omega
 
@@ -938,16 +863,16 @@ namespace Itasca.Binary.FloatBits
 private theorem payload_append (xs ys : List U8) :
     payload (xs ++ ys) = payload xs + 256 ^ xs.length * payload ys := by
   induction xs with
-  | nil => simp [payload]
-  | cons b xs ih => simp [payload, ih, pow_succ]; ring
+  | nil => simp [payload_nil, payload_cons]
+  | cons b xs ih => simp [payload_nil, payload_cons, ih, pow_succ]; ring
 
 /-- The value of a byte list is below `256 ^ length`. -/
 theorem payload_lt (bs : List U8) : payload bs < 256 ^ bs.length := by
   induction bs with
-  | nil => simp [payload]
+  | nil => simp [payload_nil, payload_cons]
   | cons b bs ih =>
     have hb : b.val < 256 := by scalar_tac
-    simp only [payload, List.length_cons, pow_succ]
+    simp only [payload_nil, payload_cons, List.length_cons, pow_succ]
     omega
 
 /-- A successful read consumes `n` bytes that form an `Encoding` and leaves the suffix untouched. -/

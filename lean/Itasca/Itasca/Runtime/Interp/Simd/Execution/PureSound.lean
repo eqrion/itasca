@@ -13,6 +13,8 @@ import Itasca.Runtime.Interp.Simd.Float.PureEntries
 import Itasca.Runtime.Interp.Simd.Execution.PureUnary
 import Mathlib.Tactic.IntervalCases
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Simd / Execution.
 

@@ -15,6 +15,8 @@ import Itasca.Visitor.BodyReplay
 import Itasca.Runtime.Compiler.Local.Capacity.CallbackBudgets
 import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryLayout
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## IndirectEmission -/
@@ -46,7 +48,7 @@ theorem reader_emit_indirect_call {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ index table values emitted output,
@@ -114,7 +116,7 @@ theorem structured_reader_prefix_indirect_call {jumpTables : List U32} {data env
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     ∃ (index table : U32) (values : List code.StackType) (extra : List (U32 × U32)),
       after.function.indirect.val = before.function.indirect.val ++ extra ∧
@@ -183,7 +185,7 @@ theorem reader_indirect_call_pair_prefix {jumpTables : List U32} {data env sourc
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 17#u8 before = .ok (.Ok (),out,after)) :
     ∃ extra, after.function.indirect.val = before.function.indirect.val ++ extra := by
   by_cases reachable : before.reachable = true
@@ -254,7 +256,7 @@ theorem reader_emit_call {data env locals typeIndex st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx typeIndex 16#u8 before = .ok (.Ok (), out, after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧
     after.next_source = out.core.pos ∧
@@ -328,8 +330,8 @@ theorem reached_call_available {data env locals index st}
     (monomorphic : compiler.reachable = true → p.current.ctrl.polymorphic_base = false)
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (byte : data.val[p.start.val]'p.inbounds = 16#u8)
-    (reference : code.step_profile source st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 16#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by
@@ -388,8 +390,8 @@ theorem reached_indirect_call_available {data env locals index st}
     (wholeLayout : compiler.reachable = true → CompilerLayout compiler (Body.Stack.stackTypes st.core.vals.val))
     (pairs : compiler.function.indirect.length ≤ compiler.function.code.length)
     (byte : data.val[p.start.val]'p.inbounds = 17#u8)
-    (reference : code.step_profile source st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
-    code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (reference : code.step_body source st data env ctx index 17#u8 before = .ok (.Ok (),out,after)) :
+    code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 17#u8 compiler ⦃ result => result.1 = .Ok () ∧ result.2.1 = out ∧
         CompilationBudgetEffect compiler.budget result.2.2.budget
           (fun counter => if counter = .instructions then 1 else 0) ⦄ := by

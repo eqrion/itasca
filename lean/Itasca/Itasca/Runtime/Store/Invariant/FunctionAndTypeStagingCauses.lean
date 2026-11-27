@@ -19,6 +19,8 @@ import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Compiler.Local.Initializer
 import Itasca.Runtime.Store.Invariant.SourceAllocationLists
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Invariant.
 

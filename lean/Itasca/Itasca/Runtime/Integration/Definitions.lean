@@ -3,6 +3,8 @@ import Itasca.Runtime.Store.Definitions
 import Itasca.Results.Definitions.Runtime
 import Itasca.Runtime.Interp.Definitions
 
+open WebAssembly
+
 
 /-! Internal projections of the unified host callback contract. These adapters
 retain the proof-facing split between source semantics and concrete ownership. -/
@@ -111,7 +113,7 @@ open Aeneas Aeneas.Std WebAssembly
 interrupt cases retain the exact reached store, including callback effects;
 local cause theorems separately constrain why those errors were chosen. -/
 def EventfulInvocationError (initial : config) (events : List HostEvent)
-    (store : _root_.store) (ambient : frame) : runtime.ExecError → Prop
+    (store : WebAssembly.store) (ambient : frame) : runtime.ExecError → Prop
   | .Trap _ => StepsH initial events ⟨⟨store,ambient⟩,[.TRAP]⟩
   | .Exhausted _ | .Terminated => ∃ body, StepsH initial events ⟨⟨store,ambient⟩,body⟩
   | _ => False
@@ -239,7 +241,7 @@ def SignatureAllocation {A : Type} (allocator : runtime.platform.Alloc A) (signa
 /-- Actual refusal witnesses use source signature/frame requirements, including
 the concrete requests for signature buffers and reached invocation frames. -/
 def CanonicalInvocationResourceCause {A M P : Type} (allocator : runtime.platform.Alloc A)
-    (hooks : runtime.platform.Platform P M) (initial : config) (store : _root_.store)
+    (hooks : runtime.platform.Platform P M) (initial : config) (store : WebAssembly.store)
     (signature : functype) (address : funcaddr) (valueLimit frameLimit : Nat) : runtime.ExecError → Prop
   | .Exhausted .Values =>
     valueLimit<signatureWords signature ∨
@@ -346,7 +348,7 @@ structure SourceWorldResources (valueLimit frameLimit : Nat) (source : SourceMac
 signature and frame, the frame depth of every reachable configuration, and every function
 called from a reachable state. Host replies are arbitrary typed values, so this quantifies
 over all host behaviors. -/
-structure SourceResourcesFit (store : _root_.store) (address : funcaddr) (initial : config)
+structure SourceResourcesFit (store : WebAssembly.store) (address : funcaddr) (initial : config)
     (valueLimit frameLimit : Nat) : Prop where
   signature : ∀ function,store.FUNCS[address]?=some function → signatureWords function.TYPE≤valueLimit
   entry : ∀ words,SourceCanonicalFunctionCapacity store address words → words≤valueLimit

@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Control.Reachability
 import Itasca.Runtime.Compiler.Body.Reader.Control.EndCompilation
 import Itasca.Runtime.Compiler.Body.Reader.StackValues
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Control.
 
@@ -119,7 +121,7 @@ theorem structured_reader_prefix_loop {jumpTables : List U32} {emit : List valty
     (reachable : before.reachable = true)
     (signatures : SignatureSequence before.signatures.val env.types.val)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_LOOP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_LOOP before = .ok (.Ok (), out, after)) :
     ∃ bt ins outs remaining base front,
       let child := SourceScope.enterLoop (Body.blockType bt) front (ins.map Translation.valueType)

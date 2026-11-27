@@ -9,6 +9,8 @@ import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 import Itasca.Runtime.Interp.Machine.Coverage.OrdinaryHeads
 
+open WebAssembly
+
 /-! ## SupportedControlSemantics -/
 
 section

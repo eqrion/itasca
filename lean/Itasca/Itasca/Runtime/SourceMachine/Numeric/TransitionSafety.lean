@@ -4,6 +4,8 @@ import Itasca.Runtime.Spec.TypingAndNumericOperations
 import WebAssembly.Builtins.IntegerRepresentation
 import Itasca.Runtime.SourceMachine.Preservation
 
+open WebAssembly
+
 /-!
 # Transition Safety
 

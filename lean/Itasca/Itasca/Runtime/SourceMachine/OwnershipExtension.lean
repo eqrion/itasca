@@ -4,6 +4,8 @@ import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Preservation
 import Itasca.Runtime.SourceMachine.Core.OperationsAndMemoryTyping
 
+open WebAssembly
+
 /-! ## Bounds -/
 
 section
@@ -361,7 +363,7 @@ theorem store_owned {bounds s f rest next after op argument}
       aesop (add safe forward ValuesOwned.pop)
   · contradiction
 
-theorem instruction_owned (bounds : Bounds) (s : _root_.store) (ambient : frame)
+theorem instruction_owned (bounds : Bounds) (s : WebAssembly.store) (ambient : frame)
     (f : AFrame) (rest : List AFrame) (op : instr) (after : List instr) (next : AState)
     (covered : CoreHead op) (typed : FrameTyped s {f with code := op :: after} [])
     (globals : GlobalsOwned bounds s) (frame : FrameOwned bounds f)

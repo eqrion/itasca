@@ -4,6 +4,8 @@ import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Spec.Typing
 import Itasca.Runtime.Spec.PrimitiveOperations
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / SourceMachine.
 
@@ -452,7 +454,7 @@ theorem Store.payload_wf (op : Store) (value : num_) : Forall wf_byte (op.payloa
 
 /-- Every scalar load descriptor has the generated source step, with exactly
 its byte-width bounds test and canonical decoded value. -/
-theorem Load.source_step (op : Load) (s : _root_.store) (f : frame) (argument : memarg) (address : Nat)
+theorem Load.source_step (op : Load) (s : WebAssembly.store) (f : frame) (argument : memarg) (address : Nat)
     (storeWf : wf_store s) (frameWf : wf_frame f) (addressBound : address < 2^32)
     (operationWf : wf_admininstr (admininstr_instr (op.source argument)))
     (bytesWf : Forall wf_byte (fun_mem ⟨s,f⟩ (.mk_uN 0)).BYTES) :
@@ -470,7 +472,7 @@ theorem Load.source_step (op : Load) (s : _root_.store) (f : frame) (argument : 
     cases ty <;> cases width <;> exact source
 
 /-- Scalar stores use the exact byte payload and generated bounds trap. -/
-theorem Store.source_step (op : Store) (s : _root_.store) (f : frame) (argument : memarg)
+theorem Store.source_step (op : Store) (s : WebAssembly.store) (f : frame) (argument : memarg)
     (address : Nat) (value : num_) (storeWf : wf_store s) (frameWf : wf_frame f)
     (addressBound : address < 2^32) (operationWf : wf_admininstr (admininstr_instr (op.source argument)))
     (valueWf : wf_num_ op.type value) (mapped : 0 < f.MODULE.MEMS.length) :

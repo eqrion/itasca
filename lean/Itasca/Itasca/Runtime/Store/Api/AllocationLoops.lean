@@ -10,6 +10,8 @@ import Itasca.Runtime.Store.Preparation.PreparationErrorLoops
 import Itasca.Runtime.Store.Invariant.FunctionStaging
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!
@@ -515,7 +517,7 @@ theorem global_source_staging_loop {M P F A : Type}
     (objectBound : objectCount store ≤ Usize.max)
     (startBound : start.val ≤ inst.module.module.env.globals.val.length)
     (mapCapacity : inst.globals.length + (inst.module.module.env.globals.val.length - start.val) ≤ Usize.max)
-    (sourceStore : _root_.store) (sourceInstance : moduleinst)
+    (sourceStore : WebAssembly.store) (sourceInstance : moduleinst)
     (storeWf : wf_store sourceStore) (frameWf : wf_frame ⟨[], sourceInstance⟩)
     (sourceContext : InitializerSourceContext sourceStore sourceInstance store inst)
     (baseGlobals : List runtime.store.GlobalInst)

@@ -3,6 +3,8 @@ import Itasca.Runtime.Interp.Simd.Integer.ShiftsAndComparison
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 /-!
 # SIMD lane extraction and permutation
 

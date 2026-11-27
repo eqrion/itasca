@@ -2,6 +2,8 @@ import Itasca
 import Itasca.Examples.Module.Basic
 import Itasca.Examples.Module.SliceLayout
 
+open WebAssembly
+
 /-!
 # Imported and defined globals in constant expressions
 
@@ -18,7 +20,7 @@ namespace Itasca.Examples.Module.ImportedGlobal
 
 open Itasca.Examples.Module.Support (leb one padded omitted)
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- An immutable `i32` global type. -/
 def globalType : wasm_types.GlobalType := ⟨.Const, .I32⟩
@@ -42,14 +44,15 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
   constructor
   · exact omitted _ _ _
   · refine padded _ 11#u8 _ (one ?_) rfl
-    refine ⟨[1#u8,0x6D#u8], [4#u8,0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], [3#u8,0x7F#u8,0#u8], ?_, ?_, .global _ rfl, rfl⟩
+    apply ImportEncoding.reader_parts.mpr
+    refine ⟨[1#u8,0x6D#u8], [4#u8,0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], [3#u8,0x7F#u8,0#u8], ?_, ?_, .global _ ⟨.I32, rfl, rfl⟩, rfl⟩
     · exact ⟨ByteVecEncoding.iff.mpr ⟨[1#u8], leb 1#u8, rfl⟩, .cons (.one _ (by decide)) .nil⟩
     · exact ⟨ByteVecEncoding.iff.mpr ⟨[4#u8], leb 4#u8, rfl⟩,
-        .cons (.four _ _ _ _ (Or.inl ⟨rfl, by decide, by decide⟩) (by decide) (by decide) (by decide) (by decide)) .nil⟩
+        .cons (.four (byte := @UScalar.val .U8) 0xF0#u8 0x9F#u8 0x98#u8 0x80#u8 (Or.inl ⟨rfl, by decide, by decide⟩) (by decide) (by decide) (by decide) (by decide)) .nil⟩
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
-  · exact padded _ 6#u8 _ (one ⟨[0x7F#u8,0#u8], [0x23#u8,0#u8,0x0B#u8], rfl, .globalGet 0#u32 (leb 0#u8), rfl⟩) rfl
+  · exact padded _ 6#u8 _ (one (GlobalEncoding.reader_parts.mpr ⟨[0x7F#u8,0#u8], [0x23#u8,0#u8,0x0B#u8], GlobalTypeEncoding.reader_bytes.mpr rfl, .globalGet 0 ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8)), rfl⟩)) rfl
   · exact omitted _ _ _
   · exact omitted _ _ _
   · exact omitted _ _ _
@@ -143,10 +146,10 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
   have hcount := (show At IndexEncoding data 10#usize 2#u32 11#usize from
     ⟨[2#u8], leb 2#u8, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hg1 := metadata.decode_global_type.complete data 11#usize globalType 13#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    ⟨[0x7F#u8,0#u8], GlobalTypeEncoding.reader_bytes.mpr rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
 
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
-    .i32 _ ⟨[], 0#u8, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
+    .i32 _ ⟨[], 0, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := metadata.decode_const_expr.complete
     (env := initial) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
@@ -162,7 +165,7 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     have hcast : UScalar.cast .Usize 0#u32 = 0#usize := by scalar_tac
     simp [metadata.const_global, hcast, lift, hgt, updated, initial, Examples.Module.Basic.emptyEnv]
   have hg2 := metadata.decode_global_type.complete data 16#usize globalType 18#usize
-    ⟨[0x7F#u8,0#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
+    ⟨[0x7F#u8,0#u8], GlobalTypeEncoding.reader_bytes.mpr rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩
 
   have hop := (show At ByteEncoding data 18#usize 0x23#u8 19#usize from
     ⟨[0x23#u8], rfl, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte

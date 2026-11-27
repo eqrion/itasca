@@ -2849,8 +2849,8 @@ theorem Accepts.on_simd_shuffle {V : Type} {visitor : code.OpVisitor V} (h : Acc
   exact h v (.op st (.simd_shuffle a0 a1))
 
 /-- The empty visitor preserves its state and accepts every event. -/
-theorem empty_invoke (v : code.EmptyOpVisitor) (event : Trace.Event) :
-    Trace.invoke code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor v event = .ok (.Ok (), v) := by
+theorem empty_invoke (v : code.DefaultOpVisitor) (event : Trace.Event) :
+    Trace.invoke code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor v event = .ok (.Ok (), v) := by
   cases event with
   | functionStart ctx idx first last => rfl
   | op st action =>

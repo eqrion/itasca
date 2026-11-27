@@ -4,6 +4,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.CallbackEquations
 import Itasca.Runtime.Compiler.Local.Lowering.Emission.OpEquations
 import Itasca.Runtime.Compiler.Local.Callbacks.Observation.Frame
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Lowering / Emission.
 

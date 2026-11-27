@@ -3,6 +3,8 @@ import Itasca.Runtime.Spec.Simd.LaneOperations
 import Itasca.Runtime.Spec.Simd.ArithmeticMemoryAndFloat
 import Itasca.Runtime.Interp.Numeric.Integer.SignedOperationsAndCounts
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

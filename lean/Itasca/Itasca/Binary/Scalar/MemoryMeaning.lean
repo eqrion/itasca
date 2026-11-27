@@ -3,6 +3,8 @@ import Itasca.Binary.Body.Encoding
 import Itasca.Binary.Scalar.Encoding
 import Itasca.Support.Translation
 
+open WebAssembly
+
 /-!
 Proofs for Binary / Scalar.
 
@@ -69,7 +71,7 @@ theorem Immediate.prefix_unique (opcode : U8) : PrefixUnique (Immediate opcode) 
   case brTable.brTable =>
     rename_i xs x count entries final hn he hf ys y count' entries' final' hn' he' hf'
     obtain ⟨hl, rfl, hrest⟩ := leb_prefix_unique hn hn' (by simpa [List.append_assoc] using heq)
-    obtain ⟨rfl, rfl, hentries⟩ := index_prefix_unique.rep he.rep he'.rep hl
+    obtain ⟨rfl, rfl, hentries⟩ := index_prefix_unique.rep (IndicesEncoding.rep he) (IndicesEncoding.rep he') hl
       (by simpa [List.append_assoc] using hrest)
     obtain ⟨rfl, rfl, rfl⟩ := index_prefix_unique hf hf' hentries
     exact ⟨rfl, rfl, rfl⟩
@@ -129,7 +131,7 @@ theorem token_prefix_unique : PrefixUnique TokenEncoding := by
   exact ⟨rfl, rfl, rfl⟩
 
 /-- A byte string is the encoding of at most one token sequence. -/
-theorem tokens_unique : Unique (Rep TokenEncoding) :=
+theorem tokens_unique : Itasca.Binary.Unique (Itasca.Binary.Rep TokenEncoding) :=
   token_prefix_unique.rep_unique (by rintro _ _ ⟨op, immediate, rfl, _⟩; simp)
 
 end Itasca.Body.Scalar
@@ -323,17 +325,18 @@ theorem packed_store_typed (ty : wasm_types.ValueType) (it : Inn) (width : Nat) 
 /-- Every row of the memory opcode table is typed by the generated rule. -/
 theorem opcode_meaning_typed (opcode : U8) (op : Operation)
     (h : opcodeMeaning opcode = some op) : op.Typed := by
+  have align (n : Nat) : (⟨BitVec.ofNat 32 n⟩ : U32).val = n % 2^32 := rfl
   unfold opcodeMeaning at h
   split at h <;> cases h
   all_goals first
-    | exact full_load_typed _ _ _ 32 rfl rfl (by norm_num)
-    | exact full_load_typed _ _ _ 64 rfl rfl (by norm_num)
-    | exact full_store_typed _ _ _ 32 rfl rfl (by norm_num)
-    | exact full_store_typed _ _ _ 64 rfl rfl (by norm_num)
+    | exact full_load_typed _ _ _ 32 rfl rfl (by norm_num [align])
+    | exact full_load_typed _ _ _ 64 rfl rfl (by norm_num [align])
+    | exact full_store_typed _ _ _ 32 rfl rfl (by norm_num [align])
+    | exact full_store_typed _ _ _ 64 rfl rfl (by norm_num [align])
     | apply packed_load_typed
     | apply packed_store_typed
   all_goals try (apply wf_sz.sz_case_0; norm_num)
-  all_goals norm_num [valtype_numtype, valtype_Inn, Translation.valueType, size, sizenn, numtype_Inn]
+  all_goals norm_num [valtype_numtype, valtype_Inn, Translation.valueType, size, sizenn, numtype_Inn, align, Binary.Source.readerValueType]
 
 end Itasca.Body.MemoryMeaning
 
@@ -424,9 +427,10 @@ open Body (Token TokensDeclared tokens_declared_append tokens_declared_singleton
 set_option maxHeartbeats 2000000 in
 /-- Every scalar instruction token meets its obligation, since the grammar has no `ref.func`. -/
 theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token bytes)
-    (refs : List funcidx) : token.Declared refs := by
+    (refs : List funcidx) : Body.Token.Declared refs token := by
   cases hi with
   | numericInstruction opcode source hmap =>
+    change Body.Numeric.opcodeInstruction opcode = some source at hmap
     rw [Body.Numeric.opcodeInstruction_eq] at hmap
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp hmap
     unfold Body.Numeric.opcodeMeaning at decoded
@@ -436,6 +440,7 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
       Spec.DeclaredReferences.instructionIndices, Body.Numeric.unary, Body.Numeric.binary,
       Body.Numeric.test, Body.Numeric.relation, Body.Numeric.conversion]
   | memory opcode operation arg hmap _ _ =>
+    change Body.MemoryMeaning.opcodeMeaning opcode = some operation at hmap
     unfold Body.MemoryMeaning.opcodeMeaning at hmap
     split at hmap <;> simp only [Option.some.injEq, reduceCtorEq] at hmap
     all_goals subst operation
@@ -443,13 +448,14 @@ theorem Immediate.declared {opcode token bytes} (hi : Immediate opcode token byt
       Spec.DeclaredReferences.instructionIndices, Body.MemoryMeaning.fullLoad, Body.MemoryMeaning.packedLoad,
       Body.MemoryMeaning.fullStore, Body.MemoryMeaning.packedStore]
   | _ => simp [Body.Token.Declared, Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices,
-      Spec.i32Const, Spec.Constants.i64, Spec.Constants.f32, Spec.Constants.f64]
+      WebAssembly.Binary.Constants.i32Const, WebAssembly.Binary.Constants.i64,
+      WebAssembly.Binary.Constants.f32, WebAssembly.Binary.Constants.f64]
 
 /-- A token read at a cursor meets its obligation. -/
 theorem At.declared {data start token next} (h : At data start token next) (refs : List funcidx) :
-    token.Declared refs := by
+    Body.Token.Declared refs token := by
   obtain ⟨_, ⟨_, _, _, hi⟩, _⟩ := h
-  exact hi.declared refs
+  exact Immediate.declared hi refs
 
 end Itasca.Body.Scalar
 

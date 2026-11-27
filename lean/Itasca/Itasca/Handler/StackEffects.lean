@@ -3,6 +3,8 @@ import Itasca.Binary.LebReaders
 import Itasca.Binary.Scalar.Encoding
 import Itasca.Spec.Typing
 
+open WebAssembly
+
 /-!
 # Operand stack effects
 

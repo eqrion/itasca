@@ -3,6 +3,8 @@ import Itasca.Results.Definitions.Streaming
 import Itasca.Stream.SubmissionSound
 import Itasca.Stream.Completeness
 
+open WebAssembly
+
 /-!
 # Streaming validation
 
@@ -28,7 +30,7 @@ Soundness requires coherent source views and worker provenance. Read errors and 
 are allowed, and neither callback termination, a canonical region split nor prevalidated bodies
 are needed. -/
 theorem stream.validate_streaming.sound {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (provenance : Stream.Scheduler.Provenance visitor Tracks)
     (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
@@ -48,7 +50,7 @@ theorem stream.validate_streaming.sound {S V : Type}
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
 is a termination premise. -/
 theorem stream.validate_streaming.total {S V : Type}
-    (source : stream.Source S)
+    (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
     (v : V) (storage : metadata.Env)
     (source_returns : Stream.Source.CallbacksTotal source state) (scheduler_returns : Stream.Scheduler.CallbacksTotal visitor) :
@@ -61,8 +63,8 @@ scheduler that returns actual worker results, without assuming worker success.
 The returned environment and delivered tail describe the same raw module, including
 public metadata. Completeness fails if reads are unavailable or workers do not accept. -/
 theorem stream.validate_streaming.complete {S V : Type}
-    (source : stream.Source S) (visitor : stream.StreamingVisitor V)
-    (config : stream.Config) (Queued : U64 → List Stream.Batch.Issued → V → Prop)
+    (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
+    (config : stream.StreamingConfig) (Queued : U64 → List Stream.Batch.Issued → V → Prop)
     (scheduler_accepts : Stream.Scheduler.Accepts visitor config Queued)
     (id : U64) (state : S) (before : V) (storage : metadata.Env)
     (data : Slice U8) (raw : Binary.Module)

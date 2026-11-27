@@ -8,6 +8,8 @@ import Itasca.Runtime.Compiler.Local.Source.SourceTactics
 import Itasca.Runtime.Compiler.Local.Capacity.ControlCapacity
 import Itasca.Binary.Body.Encoding
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Lowering / Simd.
 

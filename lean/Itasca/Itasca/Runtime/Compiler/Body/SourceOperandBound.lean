@@ -142,7 +142,7 @@ private theorem step_operand_bound (st out : code.BodyState) (data : Slice U8)
     (shape : Body.Control.Shape st.core) (size : st.core.vals.val.length ≤ bound)
     (outSize : out.core.vals.val.length ≤ bound)
     (initial : (observationDemand before).operands ≤ bound)
-    (accepted : code.step_profile recorder st data env ctx index opcode before = .ok (.Ok (),out,after)) :
+    (accepted : code.step_body recorder st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     (observationDemand after).operands ≤ bound := by
   by_cases block : opcode = 2#u8
   · rw [block, Body.CallbackTrace.dispatch_block] at accepted
@@ -204,7 +204,7 @@ private theorem typed_operand_bound {data env ctx index st last before after}
       have posEq := eqs.2
       subst opcode pos
       obtain ⟨emptyVisitorState, erased⟩ := Body.Visitor.step_transfer recorder
-        code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
+        code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_accepts
         data env ctx ctx rfl index _ {core := {st.core with pos := cursor}} out before () middle called
       cases emptyVisitorState
       have same := Representation.empty_dispatch_eq nonempty read step erased

@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Callbacks.MetadataPreservation
 import Itasca.Runtime.Compiler.Local.Callbacks.Control.CallbackRetention
 import Itasca.Runtime.Compiler.Local.Source.SourceTactics
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

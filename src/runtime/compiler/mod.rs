@@ -13,9 +13,9 @@ use super::clear;
 use super::platform::Alloc;
 use super::value::{self, width};
 use crate::{
-    BlockType, CodeBatch, Config, Context, ElemType, Env, Error, LabelKind, MemArg, Module,
-    ModuleVisitor, OpIterState, OpVisitor, Region, ResultType, Source, StackType, StreamingVisitor,
-    Tail, ValueType, VisitError, VisitResult,
+    BlockType, Context, ElemType, Env, Error, LabelKind, MemArg, Module, ModuleVisitor,
+    OpIterState, OpVisitor, ResultType, StackType, StreamingBatch, StreamingConfig,
+    StreamingRegion, StreamingSource, StreamingVisitor, Tail, ValueType, VisitError, VisitResult,
 };
 use alloc::vec::Vec;
 use core::marker::PhantomData;
@@ -145,7 +145,7 @@ impl<A: Alloc> Budget<A> {
 /// Validated metadata and immutable executable code, independent of any instance.
 ///
 /// Constructed only after the entire validation driver accepts, including its
-/// tail and every issued worker. `lean/Itasca/Runtime` proves the rewriting and its
+/// tail and every issued worker. `lean/Itasca/Itasca/Runtime` proves the rewriting and its
 /// execution correct under explicit platform contracts.
 #[cfg_attr(not(charon), derive(Debug))]
 pub struct ExecutableModule {
@@ -368,7 +368,7 @@ struct CompileSource<'a> {
     code_start: usize,
     code_end: usize,
 }
-impl Source for CompileSource<'_> {
+impl StreamingSource for CompileSource<'_> {
     fn environment(&self) -> Result<&[u8], Error> {
         Ok(&self.bytes[..self.code_start])
     }
@@ -429,7 +429,7 @@ fn take_function<A: Alloc>(
 struct CompileScheduler<'a, A: Alloc> {
     signatures: Vec<Signature>,
     func_param_slots: Vec<u32>,
-    completed: Vec<CodeBatch<'a>>,
+    completed: Vec<StreamingBatch<'a>>,
     functions: Vec<Option<CompiledFunction>>,
     tail: Option<Tail>,
     code_start: usize,
@@ -441,8 +441,8 @@ impl<A: Alloc> ModuleVisitor for CompileScheduler<'_, A> {
     }
 }
 impl<'a, A: Alloc> StreamingVisitor<'a> for CompileScheduler<'a, A> {
-    fn custom_region(&mut self, _region: Region) {}
-    fn environment_ready(&mut self, env: &Env) -> Result<Config, Error> {
+    fn custom_region(&mut self, _region: StreamingRegion) {}
+    fn environment_ready(&mut self, env: &Env) -> Result<StreamingConfig, Error> {
         if env.func_type_indices().len() > self.budget.limits.max_functions {
             return Err(Error::Visitor(
                 self.budget.reject(CompileResource::Functions),
@@ -470,12 +470,12 @@ impl<'a, A: Alloc> StreamingVisitor<'a> for CompileScheduler<'a, A> {
             i += 1;
         }
         result?;
-        Ok(Config {
+        Ok(StreamingConfig {
             batch_bytes: 25_000,
             max_batches: 4,
         })
     }
-    fn submit_code_batch(&mut self, mut batch: CodeBatch<'a>) -> Result<(), Error> {
+    fn submit_code_batch(&mut self, mut batch: StreamingBatch<'a>) -> Result<(), Error> {
         let mut i = 0;
         let mut result = Ok(());
         while i < batch.len() && result.is_ok() {
@@ -486,7 +486,7 @@ impl<'a, A: Alloc> StreamingVisitor<'a> for CompileScheduler<'a, A> {
         visitor_result(self.budget.push(&mut self.completed, batch))?;
         Ok(())
     }
-    fn poll_code_batch(&mut self) -> Result<CodeBatch<'a>, Error> {
+    fn poll_code_batch(&mut self) -> Result<StreamingBatch<'a>, Error> {
         // Deliberately retire in reverse completion order: artifact assembly
         // depends on the issued function identity, never the poll order.
         self.completed.pop().ok_or(Error::Host)
@@ -702,7 +702,7 @@ impl<'a, A: Alloc> CompileScheduler<'a, A> {
             type_slots(&env.func_types()[index].params)?,
         ))
     }
-    fn compile_entry(&mut self, batch: &mut CodeBatch<'a>) -> Result<(), Error> {
+    fn compile_entry(&mut self, batch: &mut StreamingBatch<'a>) -> Result<(), Error> {
         let entry = batch.next_entry()?;
         let mut compiler = FunctionCompiler::new(
             &self.signatures,

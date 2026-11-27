@@ -1,6 +1,8 @@
 import Itasca.Runtime.Representation.Definitions
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 
+open WebAssembly
+
 /-! Slot layout derived from specification value types. Prefix widths give
 positions independently of the compiler's counters. Vector values use adjacent
 low/high slots; every scalar or reference uses one slot. -/

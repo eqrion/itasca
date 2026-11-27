@@ -2,6 +2,8 @@ import Itasca.Runtime.Interp.Numeric.Integer.ArithmeticAndBitwise
 import WebAssembly.Builtins.IntegerRepresentation
 import Itasca.Runtime.Spec.Simd.LaneOperations
 
+open WebAssembly
+
 /-! ## Access -/
 
 section

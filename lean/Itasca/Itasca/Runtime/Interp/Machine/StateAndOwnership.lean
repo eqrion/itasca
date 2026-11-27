@@ -37,6 +37,8 @@ import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.SourceMachine.Float.Descriptors
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine.
 
@@ -68,7 +70,7 @@ theorem step_float_frame {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : Instruction) (after : List instr) (front : List val) (a b : Nat) (left right : U32)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -156,7 +158,7 @@ theorem step_float_structured {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : Instruction) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)
@@ -252,7 +254,7 @@ theorem step_float_structured_owned {M P F A : Type}
     (index : Usize) (raw : runtime.interp.Frame)
     (inst : runtime.store.ModuleInst) (compiled : runtime.bytecode.CompiledFunction)
     (C : context) (targets : List Compiler.LabelTarget) (next : Nat) (output : List valtype)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (op : Instruction) (after : List instr)
     (last : index.val + 1 = exec.frames.length)
     (hf : exec.frames.val[index.val]? = some raw)

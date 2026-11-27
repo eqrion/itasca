@@ -3,6 +3,8 @@ import ItascaRust.Funs
 import Itasca.Runtime.Store.Api.DefinitionsAndGrowth
 import Itasca.Runtime.Representation.Store
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

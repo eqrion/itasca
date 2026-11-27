@@ -9,6 +9,8 @@ import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Module.Elab.SegmentTyping
 import Itasca.Runtime.Compiler.Local.Source.ModuleSourceAndSubmission
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Relations / Segments.
 

@@ -59,6 +59,8 @@ import Itasca.Runtime.Interp.Machine.Frames.ReturnsAndDepth
 import Itasca.Runtime.Interp.Relations.StepActive
 import Itasca.Runtime.Spec.PrimitiveOperations
 
+open WebAssembly
+
 /-!
 # Event-bearing execution histories
 

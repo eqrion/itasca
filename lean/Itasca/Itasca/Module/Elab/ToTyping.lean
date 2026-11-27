@@ -7,6 +7,8 @@ import Itasca.Module.Elab.SegmentTyping
 import Itasca.Support.Translation
 import Mathlib.Data.List.Nodup
 
+open WebAssembly
+
 /-!
 Proofs for Module / Elab.
 
@@ -939,7 +941,7 @@ section
 # Returned metadata
 
 `Matches` says the environment and tail the validator returns describe exactly a raw module, and
-`AccessorTypes` says the results of `metadata.import_types` and `metadata.export_types` agree with the
+`AccessorTypes` says the results of `metadata.Env.import_types` and `metadata.Env.export_types` agree with the
 elaborated module's import types and typed exports. `contextOf` is the module context computed from
 the raw module alone, and `accessor_types` and `matches_from_env` establish these properties for a
 valid cached environment.
@@ -975,8 +977,8 @@ theorem accessor_types {env tables memories codes segments}
     AccessorTypes env (fromEnv env tables memories codes segments) := by
   obtain ⟨ixts, hi⟩ := hc.imports_resolve
   obtain ⟨exts, he⟩ := hv.exports_resolve
-  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists (metadata.import_types.resolved env ixts hi)
-  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (metadata.export_types.resolved env exts he)
+  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists (metadata.Env.import_types.resolved env ixts hi)
+  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (metadata.Env.export_types.resolved env exts he)
   refine ⟨imports, exports, hir, her, ?_, ?_⟩
   · simpa [hiEq, fromEnv, Module.Environment.rawImport, List.map_map, Function.comp_def] using import_types_resolved hi
   · rw [heEq, context_of_from_env hc]

@@ -16,6 +16,8 @@ import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.Spec.PrimitiveOperations
 import Itasca.Runtime.SourceMachine.Simulation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / SourceMachine.
 
@@ -231,7 +233,7 @@ structure HostPending (state : AState) (results : List valtype) : Prop where
 resume the active one. New functions obtain their typing from the post-store
 invariant instead of assuming the host cannot add functions. -/
 theorem HostPending.resume {state : AState} {types : List valtype}
-    (pending : HostPending state types) {after : _root_.store}
+    (pending : HostPending state types) {after : WebAssembly.store}
     (extension : Extend_store state.store after) (functions : FunctionsTyped after)
     {values : List val} (typed : ResultsTyped after types values) :
     ∃ f rest, state.frames = f :: rest ∧
@@ -411,7 +413,7 @@ def finishHost (pending : AState) (after : store) (values : List val) : AState :
     | f :: rest => {f with vals := f.vals ++ values} :: rest}
 
 theorem HostPending.finish_typed {state : AState} {types : List valtype}
-    (pending : HostPending state types) {after : _root_.store}
+    (pending : HostPending state types) {after : WebAssembly.store}
     (extension : Extend_store state.store after) (functions : FunctionsTyped after)
     {values : List val} (typed : ResultsTyped after types values) :
     ATyped (finishHost state after values) := by

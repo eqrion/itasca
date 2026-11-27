@@ -1,8 +1,11 @@
+import Itasca.Binary.InstructionSource
 import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Binary.ModuleUnique
 import Itasca.Module.Elab.Translation
 import Itasca.Module.Readers.Syntax
+
+open WebAssembly
 
 /-!
 # Parser
@@ -301,7 +304,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := Module.Constants.finish_spec data pos mid env expected .I32
           (.I32 value) (0x41#u8 :: bytes) hs
-          (by simpa using Binary.ConstEncoding.i32 value he)
+          (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .i32 value.val ((Binary.SignedLeb32.encoding_iff _ _).mp he))
           (Module.Constants.Valid.i32 value)
         obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .I32 expected)
         obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -324,7 +330,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := Module.Constants.finish_spec data pos mid env expected .I64
           (.I64 value) (0x42#u8 :: bytes) hs
-          (by simpa using Binary.ConstEncoding.i64 value he)
+          (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .i64 value.val ((Binary.SignedLeb64.encoding_iff _ _).mp he))
           (Module.Constants.Valid.i64 value)
         obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .I64 expected)
         obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -347,7 +356,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := Module.Constants.finish_spec data pos mid env expected .F32
           (.F32 value) (0x43#u8 :: bytes) hs
-          (by simpa using Binary.ConstEncoding.f32 value he)
+          (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .f32 value.val (Binary.Source.floatBits.mp he))
           (Module.Constants.Valid.f32 value)
         obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .F32 expected)
         obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -370,7 +382,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
         have ht := Module.Constants.finish_spec data pos mid env expected .F64
           (.F64 value) (0x44#u8 :: bytes) hs
-          (by simpa using Binary.ConstEncoding.f64 value he)
+          (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .f64 value.val (Binary.Source.floatBits.mp he))
           (Module.Constants.Valid.f64 value)
         obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .F64 expected)
         obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -401,7 +416,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
           have ht := Module.Constants.finish_spec data pos mid env expected gt.valtype
             (.GlobalGet idx) (0x23#u8 :: bytes) hs
-            (by simpa using Binary.ConstEncoding.globalGet idx he)
+            (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .globalGet idx.val ((Binary.Leb128.encoding_iff _ _).mp he))
             (Module.Constants.Valid.globalGet idx gt hi hgt himport hconst)
           obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec gt.valtype expected)
           obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -424,7 +442,7 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           cases ty <;> rfl
         have ht := Module.Constants.finish_spec data pos mid env expected
           (Module.Constants.referenceValueType ty) (.RefNull ty) [0xD0#u8, Binary.elemByte ty] hs
-          (Binary.ConstEncoding.refNull ty) (Module.Constants.Valid.refNull ty)
+          (by cases ty <;> exact .refNull _) (Module.Constants.Valid.refNull ty)
         obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists
           (metadata.expect_const_type.spec (Module.Constants.referenceValueType ty) expected)
         obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -451,7 +469,10 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
           have hs := (Body.Scalar.BytesAt.byte data pos next _ hb hop' hp).append himm
           have ht := Module.Constants.finish_spec data pos mid env expected .FuncRef
             (.RefFunc idx) (0xD2#u8 :: bytes) hs
-            (by simpa using Binary.ConstEncoding.refFunc idx he)
+            (by
+            simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+              List.map_append, List.map_nil]
+            exact .refFunc idx.val ((Binary.Leb128.encoding_iff _ _).mp he))
             (Module.Constants.Valid.refFunc idx hi)
           obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .FuncRef expected)
           obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)
@@ -496,7 +517,13 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
               have ht := Module.Constants.finish_spec data pos mid env expected .V128
                 (.V128 low high) (0xFD#u8 :: (subbytes ++ lowbytes ++ highbytes))
                 (by simpa using hs)
-                (by simpa [List.append_assoc] using Binary.ConstEncoding.v128 low high hse hle hhe)
+                (by
+                  simp only [Binary.ConstEncoding, Binary.Source.bytes, List.cons_append, List.map_cons,
+                    List.map_nil, List.map_append]
+                  apply WebAssembly.Binary.ConstEncoding.v128 low.val high.val
+                  · exact (Binary.Leb128.encoding_iff _ _).mp hse
+                  · exact Binary.Source.floatBits.mp hle
+                  · exact Binary.Source.floatBits.mp hhe)
                 (Module.Constants.Valid.v128 low high)
               obtain ⟨typeResult, htype, _⟩ := WP.spec_imp_exists (metadata.expect_const_type.spec .V128 expected)
               obtain ⟨endResult, hend, _⟩ := WP.spec_imp_exists (metadata.read_expr_end.spec data mid)

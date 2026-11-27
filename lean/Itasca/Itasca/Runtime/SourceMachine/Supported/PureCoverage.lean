@@ -4,6 +4,8 @@ import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 import Itasca.Runtime.SourceMachine.Numeric.Transition
 import Itasca.Runtime.SourceMachine.Bound
 
+open WebAssembly
+
 /-! ## CoreStuck -/
 
 section

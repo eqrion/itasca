@@ -4,6 +4,8 @@ import Itasca.Runtime.Store.Preparation.AllocationStorage
 import Itasca.Runtime.Store.Linking.LinkedOwners
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

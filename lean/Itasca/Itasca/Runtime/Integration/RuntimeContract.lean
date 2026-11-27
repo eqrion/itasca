@@ -9,6 +9,8 @@ import Itasca.Runtime.Integration.Instantiation.InstantiateSource
 import Itasca.Runtime.Integration.Invocation.Behaves
 import Itasca.Runtime.Integration.Api.SourceResourceBounds
 
+open WebAssembly
+
 /-! Constructs the public runtime protocol from the internal invariant.
 Only this proof knows which store predicate implements the protocol. -/
 namespace Itasca.Integration

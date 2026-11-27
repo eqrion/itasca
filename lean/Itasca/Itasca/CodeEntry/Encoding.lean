@@ -4,6 +4,8 @@ import Itasca.Body.LoopDispatch
 import Itasca.Binary.Body.Encoding
 import Itasca.Module.Code.ContextTransport
 
+open WebAssembly
+
 /-! ## CodeEntry -/
 
 section
@@ -24,7 +26,7 @@ namespace Itasca.CodeEntry
 /-- A bounded code entry encoding is a code entry encoding. -/
 theorem CodeEncodingWithinLimits.encoding {entry bytes}
     (h : CodeEncodingWithinLimits entry bytes) : CodeEncoding entry bytes := by
-  obtain ⟨_, size, locals, body, hs, hl, hb, _, he⟩ := h
+  obtain ⟨_, size, locals, body, hs, hl, ⟨hb, _⟩, he⟩ := h
   exact ⟨size, locals, body, hs, hl, hb, he⟩
 
 /-- The specification of the code entry for function `index` between byte offsets `start` and

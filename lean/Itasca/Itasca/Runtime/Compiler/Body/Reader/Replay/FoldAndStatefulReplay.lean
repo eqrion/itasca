@@ -48,6 +48,8 @@ import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 import Itasca.Runtime.Compiler.Local.Source.TypedRunClosed
 import Itasca.Runtime.Compiler.Body.Relations.Control.ReachedControlSafety
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Replay.
 
@@ -89,7 +91,7 @@ theorem TypedRun.fold_indexed_tables {A : Type}
       IndexedTableReaderCompilerPoint emit initial before types functions returns locals data env ctx.locals index ft st →
       next.val = st.core.pos.val + 1 →
       (inbounds : st.core.pos.val < data.length) →
-      code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+      code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         {core := {st.core with pos := next}} data env ctx index
         data.val[st.core.pos.val] before = .ok (.Ok (), out, middle) →
       TypedRun (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops) data env ctx index out middle final →
@@ -107,7 +109,7 @@ theorem TypedRun.fold_indexed_tables {A : Type}
     simp at blocks
   | @step st before next out middle final typed pending start advance called rest ih =>
     have inbounds : st.core.pos.val < data.length := by simpa only [start] using pending.inbounds
-    have called' : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    have called' : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
         {core := {st.core with pos := next}} data env ctx index
         data.val[st.core.pos.val] before = .ok (.Ok (), out, middle) := by
       simpa only [start] using called
@@ -254,7 +256,7 @@ theorem IndexedTableReaderCompilerPoint.stateful_base {A : Type}
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   apply point.stateful_reader ops law embedding matched contextLocals next advance inbounds out sourceBound bodyBound
@@ -280,7 +282,7 @@ theorem IndexedTableReaderCompilerPoint.stateful_bulk {A : Type}
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 252#u8)
     (decoded : Binary.Leb128.Decoded data next subopcode afterSubopcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     IndexedTableReaderCompilerPoint emit initial after types functions returns locals data env ctx.locals index ft out := by
   apply point.stateful_reader ops law embedding matched contextLocals next advance inbounds out sourceBound bodyBound

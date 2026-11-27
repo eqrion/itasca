@@ -1,6 +1,9 @@
+import Itasca.Binary.ReaderBytes
 import Itasca.Module.Elab.ToTyping
 import Itasca.Module.Const.Parser
 import Itasca.Module.Readers.Syntax
+
+open WebAssembly
 
 /-! ## Inversion -/
 
@@ -158,8 +161,17 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     (hv : Module.Constants.Valid env expr ty) :
     metadata.decode_const_expr data pos env ty = .ok (.Ok (expr, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
+  unfold Binary.ConstEncoding at he
+  rw [← Binary.Source.readerBytes_bytes bytes] at hs
+  generalize Binary.Source.bytes bytes = raw at he hs
+  generalize hExpr : Binary.Source.constant expr = c at he
   cases he with
-  | @i32 value immediate hi =>
+  | @i32 _ rawImm encoded =>
+    obtain ⟨value, rfl, hi⟩ := Binary.Source.readerS32 encoded
+    have eq : expr = .I32 value := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
       (first := [0x41#u8]) (rest := immediate ++ [0x0B#u8]) hs
@@ -168,7 +180,12 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       ⟨immediate, himm.suffix, himm.length, himm.bound, hi⟩
     simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
       metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
-  | @i64 value immediate hi =>
+  | @i64 _ rawImm encoded =>
+    obtain ⟨value, rfl, hi⟩ := Binary.Source.readerS64 encoded
+    have eq : expr = .I64 value := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
       (first := [0x42#u8]) (rest := immediate ++ [0x0B#u8]) hs
@@ -177,25 +194,40 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       ⟨immediate, himm.suffix, himm.length, himm.bound, hi⟩
     simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
       metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
-  | @f32 value immediate hi =>
+  | @f32 _ rawImm encoded =>
+    obtain ⟨value, rfl, hi⟩ := Binary.Source.readerFloat32 encoded
+    have eq : expr = .F32 value := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
       (first := [0x43#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f32_bits.complete data afterOp value beforeEnd
-      ⟨immediate, himm.suffix, by simpa [hi.1] using himm.length, himm.bound, hi⟩
+      ⟨immediate, himm.suffix, himm.length.trans (congrArg (afterOp.val + ·) hi.1), himm.bound, hi⟩
     simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
       metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
-  | @f64 value immediate hi =>
+  | @f64 _ rawImm encoded =>
+    obtain ⟨value, rfl, hi⟩ := Binary.Source.readerFloat64 encoded
+    have eq : expr = .F64 value := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
       (first := [0x44#u8]) (rest := immediate ++ [0x0B#u8]) hs
     obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
     have hr := reader.read_f64_bits.complete data afterOp value beforeEnd
-      ⟨immediate, himm.suffix, by simpa [hi.1] using himm.length, himm.bound, hi⟩
+      ⟨immediate, himm.suffix, himm.length.trans (congrArg (afterOp.val + ·) hi.1), himm.bound, hi⟩
     simp [metadata.decode_const_expr, hop.read_byte, hr, metadata.expect_const_type.complete,
       metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
-  | @globalGet idx immediate hi =>
+  | @globalGet _ rawImm encoded =>
+    obtain ⟨idx, rfl, hi⟩ := Binary.Source.readerIndex encoded
+    have eq : expr = .GlobalGet idx := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv with
     | globalGet _ gt hidx hgt hn hm =>
       obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
@@ -206,10 +238,14 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       simp [metadata.decode_const_expr, hop.read_byte, hr, hg, metadata.expect_const_type.complete,
         metadata.read_expr_end.complete hend, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
-  | refNull refTy =>
+  | refNull rt =>
+    let refTy := Binary.Source.readerRef rt
+    have eq : expr = .RefNull refTy := Binary.Source.constantInjective
+      (by simpa only [Binary.Source.constant, refTy, Binary.Source.referenceType_readerRef] using hExpr)
+    subst expr
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
-      (first := [0xD0#u8]) (rest := [Binary.elemByte refTy, 0x0B#u8]) hs
+      (first := [0xD0#u8]) (rest := [Binary.elemByte refTy, 0x0B#u8]) (by cases rt <;> exact hs)
     obtain ⟨beforeEnd, himm, hend⟩ := Body.Scalar.BytesAt.split
       (first := [Binary.elemByte refTy]) (rest := [0x0B#u8]) hrest
     have hr := metadata.decode_elem_type.complete data afterOp refTy beforeEnd
@@ -219,7 +255,12 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     simp [metadata.decode_const_expr, hop.read_byte, hr, ht,
       metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
       core.result.Result.Insts.CoreOpsTry.branch]
-  | @refFunc idx immediate hi =>
+  | @refFunc _ rawImm encoded =>
+    obtain ⟨idx, rfl, hi⟩ := Binary.Source.readerIndex encoded
+    have eq : expr = .RefFunc idx := Binary.Source.constantInjective hExpr
+    subst expr
+    let immediate := Binary.Source.readerBytes rawImm
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv with
     | refFunc _ hidx =>
       obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
@@ -230,7 +271,16 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
       simp [metadata.decode_const_expr, hop.read_byte, hr, lift, hn,
         metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
         core.result.Result.Insts.CoreOpsTry.branch]
-  | @v128 low high subBytes lowBytes highBytes hsub hlo hhi =>
+  | @v128 _ _ subRaw lowRaw highRaw subEnc lowEnc highEnc =>
+    obtain ⟨low, rfl, hlo⟩ := Binary.Source.readerFloat64 lowEnc
+    obtain ⟨high, rfl, hhi⟩ := Binary.Source.readerFloat64 highEnc
+    have eq : expr = .V128 low high := Binary.Source.constantInjective hExpr
+    subst expr
+    let subBytes := Binary.Source.readerBytes subRaw
+    let lowBytes := Binary.Source.readerBytes lowRaw
+    let highBytes := Binary.Source.readerBytes highRaw
+    have hsub := Binary.Source.readerLeb subEnc
+    simp only [Binary.Source.readerBytes, List.map_cons, List.map_append, List.map_nil] at hs
     cases hv
     obtain ⟨afterOp, hop, hrest⟩ := Body.Scalar.BytesAt.split
       (first := [0xFD#u8]) (rest := subBytes ++ lowBytes ++ highBytes ++ [0x0B#u8]) hs
@@ -243,9 +293,9 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
     have hs := reader.read_u32_leb.complete data afterOp 12#u32 afterSub
       (hsubspan.u32_decoded 12#u32 hsub)
     have hl := reader.read_f64_bits.complete data afterSub low afterLow
-      ⟨lowBytes, hlospan.suffix, by simpa [hlo.1] using hlospan.length, hlospan.bound, hlo⟩
+      ⟨lowBytes, hlospan.suffix, hlospan.length.trans (congrArg (afterSub.val + ·) hlo.1), hlospan.bound, hlo⟩
     have hh := reader.read_f64_bits.complete data afterLow high beforeEnd
-      ⟨highBytes, hhispan.suffix, by simpa [hhi.1] using hhispan.length, hhispan.bound, hhi⟩
+      ⟨highBytes, hhispan.suffix, hhispan.length.trans (congrArg (afterLow.val + ·) hhi.1), hhispan.bound, hhi⟩
     simp [metadata.decode_const_expr, hop.read_byte, hs, hl, hh,
       metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
       core.result.Result.Insts.CoreOpsTry.branch]

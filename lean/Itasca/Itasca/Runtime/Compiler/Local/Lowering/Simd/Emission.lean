@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulSuccess
 import Itasca.Runtime.Compiler.Local.Control.CodeSegmentsAndPositions
 import Itasca.Binary.Body.Encoding
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

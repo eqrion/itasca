@@ -267,7 +267,7 @@ theorem DispatchResourceCause.excludes_boundary {M P A : Type} {hooks : runtime.
 
 theorem CanonicalInvocationResourceCause.excludes_boundary {A M P : Type}
     {allocator : runtime.platform.Alloc A} {hooks : runtime.platform.Platform P M}
-    {initial : config} {store : _root_.store} {signature : functype} {address : funcaddr}
+    {initial : config} {store : WebAssembly.store} {signature : functype} {address : funcaddr}
     {valueLimit frameLimit : Nat} {error : runtime.ExecError}
     (fits : SourceResourcesFit store address initial valueLimit frameLimit)
     (signatureFits : signatureWords signature≤valueLimit) (initialWf : wf_config initial)

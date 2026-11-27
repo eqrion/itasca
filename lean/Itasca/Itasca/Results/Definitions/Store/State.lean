@@ -6,6 +6,8 @@ import ItascaRust.Funs
 import Itasca.Results.Definitions.Representation
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Store observations and effects
 
@@ -240,7 +242,7 @@ open Aeneas Aeneas.Std
 
 /-- A successful memory growth is SpecTec growth at exactly one source address.
 The failure sentinel preserves every source object. -/
-def MemoryGrown (before after : _root_.store) (address delta returned : Nat) : Prop :=
+def MemoryGrown (before after : WebAssembly.store) (address delta returned : Nat) : Prop :=
   (returned = U32.max ∧ after = before) ∨
   ∃ old next, before.MEMS[address]? = some old ∧
     fun_growmemory old delta (some next) ∧ returned = old.BYTES.length / 65536 ∧
@@ -248,7 +250,7 @@ def MemoryGrown (before after : _root_.store) (address delta returned : Nat) : P
 
 /-- A successful table growth is SpecTec growth with the caller's source reference.
 The failure sentinel preserves every source object. -/
-def TableGrown (before after : _root_.store) (address delta returned : Nat) (value : val) : Prop :=
+def TableGrown (before after : WebAssembly.store) (address delta returned : Nat) (value : val) : Prop :=
   (returned = U32.max ∧ after = before) ∨
   ∃ old next reference, before.TABLES[address]? = some old ∧ val_ref reference = value ∧
     fun_growtable old delta reference (some next) ∧ returned = old.REFS.length ∧
@@ -265,7 +267,7 @@ open Aeneas Aeneas.Std WebAssembly
 
 /-- Adding an object retains every existing source object, including mutable
 contents. This is stronger than source type extension, which permits writes. -/
-def SourceStorePrefix (before after : _root_.store) : Prop :=
+def SourceStorePrefix (before after : WebAssembly.store) : Prop :=
   after.FUNCS.take before.FUNCS.length = before.FUNCS ∧
   after.GLOBALS.take before.GLOBALS.length = before.GLOBALS ∧
   after.TABLES.take before.TABLES.length = before.TABLES ∧
@@ -274,14 +276,14 @@ def SourceStorePrefix (before after : _root_.store) : Prop :=
   after.DATAS.take before.DATAS.length = before.DATAS
 
 /-- A global write changes only the selected mutable source global. -/
-def GlobalUpdate (before after : _root_.store) (address : Nat) (value : val) : Prop :=
+def GlobalUpdate (before after : WebAssembly.store) (address : Nat) (value : val) : Prop :=
   ∃ old, before.GLOBALS[address]? = some old ∧
     old.TYPE = .mk_globaltype (some .MUT) (Representation.valueType value) ∧
     after = {before with GLOBALS := before.GLOBALS.set address {old with VALUE := value}}
 
 /-- A table write replaces one in-bounds source reference of the table's type.
 Every other source object and the table's type and length are unchanged. -/
-def TableUpdate (before after : _root_.store) (address index : Nat) (value : val) : Prop :=
+def TableUpdate (before after : WebAssembly.store) (address index : Nat) (value : val) : Prop :=
   ∃ old reference, before.TABLES[address]? = some old ∧ index < old.REFS.length ∧
     val_ref reference = value ∧
     (match old.TYPE with | .mk_tabletype _ type => Representation.valueType value = valtype_reftype type) ∧
@@ -289,7 +291,7 @@ def TableUpdate (before after : _root_.store) (address index : Nat) (value : val
 
 /-- A memory write replaces exactly the selected source byte sequence, retaining
 its length, declared type, and every other source object. -/
-def MemoryUpdate (before after : _root_.store) (address : Nat) (bytes : List byte) : Prop :=
+def MemoryUpdate (before after : WebAssembly.store) (address : Nat) (bytes : List byte) : Prop :=
   ∃ old, before.MEMS[address]? = some old ∧ bytes.length = old.BYTES.length ∧
     after = {before with MEMS := before.MEMS.set address {old with BYTES := bytes}}
 

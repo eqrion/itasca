@@ -546,7 +546,7 @@ impl Pair {
         // The oracle's module iterator is authoritative for its import order.
         // Match names explicitly instead of relying on internal index grouping.
         let mut used = vec![false; oracle_imports.len()];
-        let expected_imports = itasca::import_types(module.env()).unwrap();
+        let expected_imports = module.env().import_types().unwrap();
         let oracle_imports: Vec<_> = oracle_module
             .imports()
             .map(|required| {

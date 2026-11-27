@@ -4,6 +4,8 @@ import Itasca.Module.Sections.Headers
 import Itasca.Module.Readers.Syntax
 import Itasca.Binary.ModuleUnique
 
+open WebAssembly
+
 /-!
 # Encoding
 
@@ -26,7 +28,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module.Environment
 
-open Binary Module.Sections
+open Itasca.Binary Module.Sections
 
 /-- Decoding the section with id `id` at `pos` takes `env` to `result` and `before` to the final
 declarations, ending at `next`. Each constructor pairs the payload encoding with the section's
@@ -169,7 +171,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-open Binary Module.Sections Module.Environment
+open Itasca.Binary Module.Sections Module.Environment
 
 /-- `metadata.decode_env_section` terminates for every section id, preserves `Bounded`, and on
 success returns the `Effect` that relates the section's bytes to the resulting environment. -/
@@ -332,7 +334,7 @@ end Itasca.Module.Environment
 
 namespace Itasca
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- The section loop either rejects or returns the ordered section history. Custom-section hooks
 may reject, and they are only required to terminate. -/
@@ -439,7 +441,7 @@ carries the complete ordered section history needed for declarative assembly. -/
 theorem metadata.validate_env.spec (data : Slice U8) :
     metadata.validate_env data ⦃ Module.Environment.PostWith data ⦄ := by
   obtain ⟨⟨r, state⟩, hr, hp⟩ := WP.spec_imp_exists
-    (metadata.validate_env_with.spec metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
+    (metadata.validate_env_with.spec metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
       Module.Tail.empty_hooks_total data ())
   simpa [metadata.validate_env, hr] using hp
 
@@ -476,7 +478,7 @@ theorem Rep.member {α : Type} {R : α → List U8 → Prop} {values bytes}
 theorem VecEncoding.member {α : Type} {R : α → List U8 → Prop} {values bytes}
     (h : VecEncoding R values bytes) {value} (hm : value ∈ values) : ∃ bs, R value bs := by
   obtain ⟨_, _, _, hr, _⟩ := h
-  exact hr.member hm
+  exact Rep.member hr hm
 
 theorem PaddedEncoding.member {α : Type} {R : α → List U8 → Prop} {id values bytes}
     (h : PaddedEncoding id (VecEncoding R) [] values bytes)
@@ -486,23 +488,23 @@ theorem PaddedEncoding.member {α : Type} {R : α → List U8 → Prop} {id valu
   | absent => simp at hm
   | present hp =>
       obtain ⟨_, _, _, hr, _⟩ := hp
-      exact hr.member hm
+      exact VecEncoding.member hr hm
 
 theorem ImportEncoding.names_wf {entry bytes} (h : ImportEncoding entry bytes) :
     wf_name (nameOfBytes entry.moduleName) ∧ wf_name (nameOfBytes entry.name) := by
-  obtain ⟨_, _, _, hmodule, hname, _, _⟩ := h
+  obtain ⟨_, _, _, hmodule, hname, _, _⟩ := ImportEncoding.reader_parts.mp h
   exact ⟨hmodule.well_formed, hname.well_formed⟩
 
 theorem ExportEncoding.name_wf {entry bytes} (h : ExportEncoding entry bytes) :
     wf_name (nameOfBytes entry.name) := by
-  obtain ⟨_, _, hname, _, _⟩ := h
+  obtain ⟨_, _, hname, _, _⟩ := ExportEncoding.reader_parts.mp h
   exact hname.well_formed
 
 end Itasca.Binary
 
 namespace Itasca.Module.Environment
 
-open Binary
+open Itasca.Binary
 
 /-- Import module and field names in an encoded prefix are well-formed Unicode names. -/
 theorem PrefixEncoding.import_names_wf {decls bytes} (h : PrefixEncoding decls bytes) :
@@ -542,7 +544,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module.Environment
 
-open Binary
+open Itasca.Binary
 
 /-- Byte chunks for each declaration slot. Custom sections are attached to the slot that follows
 them, and `customs` holds those not yet attached. Slots after the last section seen are empty. -/

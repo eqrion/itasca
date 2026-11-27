@@ -3,6 +3,8 @@ import Itasca.Body.LoopDispatch
 import Itasca.Binary.Body.Encoding
 import Itasca.Body.Scalar.Readers
 
+open WebAssembly
+
 /-!
 Proofs for Body / References.
 

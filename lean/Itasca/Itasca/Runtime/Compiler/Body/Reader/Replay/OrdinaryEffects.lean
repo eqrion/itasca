@@ -46,10 +46,12 @@ import Itasca.Runtime.Compiler.Local.Capacity.ControlAvailability
 import Itasca.Runtime.Compiler.Local.Lowering.Integer.OperandEffects
 import Itasca.Runtime.Compiler.Local.Lowering.Float.LoweringAndEffects
 
+open WebAssembly
+
 /-!
 Every successful ordinary reader step is one compiler callback with
 `OrdinaryEffects`. The per-opcode lemmas are stated over the shared scalar
-step `code.step`; the `` dispatchers reduce `code.step_profile .Body`
+step `code.step`; the `` dispatchers reduce `code.step_body .Body`
 to it first.
 -/
 
@@ -467,7 +469,7 @@ theorem base_step {V : Type} (visitor : code.OpVisitor V)
     (ordinary : opcode.val ∉ Body.controlOpcodes)
     (base : opcode.val ∉ [28, 37, 38, 208, 209, 210, 252, 253])
     (sign : Body.NumericExtensions.signMeaning opcode = none) (misc : opcode ≠ code.OP_MISC_PREFIX)
-    (accepted : code.step_profile visitor st data env ctx index opcode before =
+    (accepted : code.step_body visitor st data env ctx index opcode before =
       .ok (.Ok (), out, after)) :
     code.step visitor st.core data env ctx opcode before = .ok (.Ok (), out.core, after) :=
   (base_success visitor st out data env ctx ctx index opcode before after
@@ -477,7 +479,7 @@ theorem reader_return_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 15#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_return] at accepted
@@ -493,7 +495,7 @@ theorem reader_call_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 16#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   rw [Body.CallbackTrace.dispatch_call] at accepted
@@ -510,7 +512,7 @@ theorem reader_numeric_effects {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (op : SourceMachine.Numeric.Instruction)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   by_cases small : (integerOpcode op).val < 192
@@ -532,7 +534,7 @@ theorem reader_saturating_effects {data env locals index st}
     (subopcode : U32) (next : Usize) (subopcodeEq : subopcode.val = (floatOpcode op).val - 256)
     (decoded : Binary.Leb128.Decoded data st.core.pos subopcode next)
     (byte : data.val[p.start.val]'p.inbounds = 252#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 252#u8 before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   obtain ⟨_,_,_,_,callback,_⟩ :=
@@ -549,7 +551,7 @@ theorem reader_ordinary_effects {data env locals index st}
     (before after : runtime.compiler.FunctionCompiler A) (out : code.BodyState) (ctx : code.Context)
     (opcode : U8) (ordinary : opcode ∈ readerOrdinaryOpcodes)
     (byte : data.val[p.start.val]'p.inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core := by
   rcases List.mem_append.mp ordinary with base | numeric
@@ -577,7 +579,7 @@ theorem reader_scalar_effects {A : Type}
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (opcode : U8) (covered : opcode.val ∈ scalarOpcodeValues)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index opcode before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=
   have ⟨ordinary,base,sign,misc⟩ := scalar_base_conditions covered
@@ -589,7 +591,7 @@ theorem reader_float_base_effects {A : Type}
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
     (op : SourceMachine.Float.Instruction) (baseOpcode : (floatOpcode op).val < 256)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (floatOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=
   have ⟨_,_,_,_,_,_,_,_,ordinary,base,sign,misc⟩ := float_reader_facts ops before out.core op baseOpcode
@@ -600,7 +602,7 @@ theorem reader_memory_load_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Load)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (memoryLoadOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=
   have ⟨_,_,_,_,_,ordinary,base,sign,misc⟩ := memory_load_reader_facts ops before out.core op ⟨0#u32,0#u32⟩
@@ -611,7 +613,7 @@ theorem reader_memory_store_effects {A : Type}
     (ops : runtime.platform.Alloc A) (law : Platform.AllocCorrect ops)
     (before after : runtime.compiler.FunctionCompiler A) (st out : code.BodyState)
     (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32) (op : SourceMachine.Memory.Store)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (memoryStoreOpcode op)) before = .ok (.Ok (),out,after)) :
     OrdinaryEffects before after out.core :=
   have ⟨_,_,_,_,_,ordinary,base,sign,misc⟩ := memory_store_reader_facts ops before out.core op ⟨0#u32,0#u32⟩

@@ -20,6 +20,8 @@ import Itasca.Runtime.Store.Api.ObjectStaging
 import Itasca.Runtime.Equations.Interp
 import Itasca.Runtime.Store.Initialization.SegmentInitializePreservation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Store / Instantiation.
 

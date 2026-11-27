@@ -3,6 +3,8 @@ import Itasca.Runtime.Interp.Relations.Regions
 import Itasca.Runtime.Interp.Relations.SlotsAndDefaults
 import Itasca.Runtime.SourceMachine.Sim.Host
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## CallRegions -/
@@ -239,13 +241,13 @@ open Aeneas Aeneas.Std
 
 /-- The abstract state after returning either resumes the immediate caller or
 records the final invocation values. -/
-def returnedState (s : _root_.store) (ambient : frame) (rest : List SourceMachine.AFrame)
+def returnedState (s : WebAssembly.store) (ambient : frame) (rest : List SourceMachine.AFrame)
     (results : List val) : SourceMachine.AState :=
   match rest with
   | [] => ⟨s, ambient, [], results⟩
   | caller :: tail => ⟨s, ambient, { caller with vals := caller.vals ++ results } :: tail, []⟩
 
-theorem return_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem return_next (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame) (after : List instr) (front results : List val)
     (types : results.map SourceMachine.valueType = f.resultTypes) :
     SourceMachine.astep ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩ =
@@ -260,7 +262,7 @@ theorem dispatch_return_refines {M P F A : Type}
     (floats : runtime.platform.FloatOps F) (allocator : runtime.platform.Alloc A)
     (exec : runtime.interp.Execution) (store : runtime.store.Store M) (platform : P)
     (frameIndex : Usize) (raw : runtime.interp.Frame) (src count : U32)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front results : List val)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
     (types : results.map SourceMachine.valueType = f.resultTypes)
@@ -319,7 +321,7 @@ theorem step_return_refines {M P F A : Type}
     (hc : inst.module.functions.val[raw.function.val]? = some compiled)
     (fetched : compiled.code.val[raw.pc.val]? = some (.Return src count))
     (pcBound : raw.pc.val < U32.max)
-    (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
+    (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame) (rest : List SourceMachine.AFrame)
     (after : List instr) (front results : List val)
     (typed : SourceMachine.ATyped ⟨s, ambient, { f with code := .RETURN :: after, vals := front ++ results } :: rest, []⟩)
     (types : results.map SourceMachine.valueType = f.resultTypes)

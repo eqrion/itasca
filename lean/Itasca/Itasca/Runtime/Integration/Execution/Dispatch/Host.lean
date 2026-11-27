@@ -76,6 +76,8 @@ import Itasca.Runtime.Store.Initialization.SegmentSourceStaging
 import Itasca.Runtime.Interp.Machine.Normalization.NormalizeExecution
 import Itasca.Runtime.Platform.Laws
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Execution / Dispatch.
 
@@ -440,7 +442,7 @@ structure HostFrameSite {M : Type}
   raw : runtime.interp.Frame
   inst : runtime.store.ModuleInst
   compiled : runtime.bytecode.CompiledFunction
-  context : _root_.context
+  context : WebAssembly.context
   targets : List Compiler.LabelTarget
   next : Nat
   output : List valtype

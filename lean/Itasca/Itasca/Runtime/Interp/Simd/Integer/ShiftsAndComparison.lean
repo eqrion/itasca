@@ -3,6 +3,8 @@ import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Itasca.Runtime.Spec.Simd.LaneOperations
 import Itasca.Runtime.Spec.Simd.ArithmeticMemoryAndFloat
 
+open WebAssembly
+
 /-!
 # SIMD shifts, widening and signed comparison
 

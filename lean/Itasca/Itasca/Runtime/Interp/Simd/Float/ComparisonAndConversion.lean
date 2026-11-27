@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Numeric.Float
 import Itasca.Runtime.Spec.Simd.ConversionAndPacking
 import Itasca.Runtime.Interp.Numeric.Float.InstructionContracts
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

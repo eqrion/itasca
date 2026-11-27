@@ -10,6 +10,8 @@ import Itasca.Handler.ScalarOperations
 import Itasca.Binary.Scalar.MemoryMeaning
 import Itasca.Body.Scalar.Readers
 
+open WebAssembly
+
 /-!
 Proofs for Body / Control.
 
@@ -323,7 +325,7 @@ theorem Body.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
         Body.TableTargets env st depths (some n) ∧
         r.2.core.vals.val = st.core.vals.val.take c.value_stack_base.val ∧
         r.2.core.ctrls.val = cs ++ [{c with polymorphic_base := true}] ∧ r.2.blocks = st.blocks ⦄ := by
-  have hlo : code.branch_table_with_loop code.EmptyOpVisitor.Insts.ItascaCodeOpVisitor
+  have hlo : code.branch_table_with_loop code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       st.core data env () count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
         Body.BrTable.LabelsDecoded data st.core.pos depths r.2.1.core.pos ∧
@@ -1394,7 +1396,7 @@ theorem Pending.call_reader {data env locals index st} (p : Pending data env loc
   intro r hr hok
   obtain ⟨idx, hd, hc, hb, rest, hv, ht⟩ := hr hok
   have encoded : Body.Scalar.At data p.start (.plain (.CALL (.mk_uN idx.val))) r.2.core.pos :=
-    .of_u32 idx p.inbounds hbyte p.pos (fun _ => .call idx) hd
+    .of_u32 idx p.inbounds hbyte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.call (r := Body.Scalar.operands) idx h) hd
   refine ⟨idx, rest, hd, ?_⟩
   apply p.append_reader_context C outer spine header base r.2.core (.CALL (.mk_uN idx.val))
     p.current.ctrl.polymorphic_base rest (.instr_case_10 _ (Translation.Environment.index_wf idx))
@@ -1463,7 +1465,7 @@ theorem Pending.branch_reader {data env locals index st} (p : Pending data env l
   intro r hr hok
   obtain ⟨depth, hd, hv, hb, hc, ht⟩ := hr hok
   have encoded : Body.Scalar.At data p.start (.plain (.BR (.mk_uN depth.val))) r.2.core.pos :=
-    .of_u32 depth p.inbounds hbyte p.pos (fun _ => .br depth) hd
+    .of_u32 depth p.inbounds hbyte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.br (r := Body.Scalar.operands) depth h) hd
   refine ⟨depth, hd, ?_⟩
   exact p.append_reader_context C outer spine header base r.2.core (.BR (.mk_uN depth.val)) true []
     (.instr_case_7 _ (Spec.label_wf depth)) (.plain encoded) ht hc
@@ -1494,7 +1496,7 @@ theorem Pending.branch_if_reader {data env locals index st} (p : Pending data en
   intro r hr hok
   obtain ⟨depth, hd, hc, hb, rest, hv, ht⟩ := hr hok
   have encoded : Body.Scalar.At data p.start (.plain (.BR_IF (.mk_uN depth.val))) r.2.core.pos :=
-    .of_u32 depth p.inbounds hbyte p.pos (fun _ => .brIf depth) hd
+    .of_u32 depth p.inbounds hbyte p.pos (fun _ h => WebAssembly.Binary.Scalar.ImmediateWith.brIf (r := Body.Scalar.operands) depth h) hd
   refine ⟨depth, rest, hd, ?_⟩
   apply p.append_reader_context C outer spine header base r.2.core (.BR_IF (.mk_uN depth.val))
     p.current.ctrl.polymorphic_base rest (.instr_case_8 _ (Spec.label_wf depth))

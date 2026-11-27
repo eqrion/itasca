@@ -15,6 +15,8 @@ import Itasca.Runtime.Compiler.Local.Initializer.ModuleMappings
 import Itasca.Runtime.Compiler.Local.Capacity.IndependentBodyReplay
 import Itasca.Runtime.Compiler.Local.Relations.Global.GlobalLowering
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Capacity.
 

@@ -9,6 +9,8 @@ import Itasca.Runtime.SourceMachine.OwnershipExtension
 import Itasca.Runtime.SourceMachine.Stateful.TransitionInvariants
 import Itasca.Runtime.SourceMachine.Supported.CumulativeStep
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## OrdinaryStack -/
@@ -27,7 +29,7 @@ open Aeneas Aeneas.Std
 /-- Ordinary bytecode changes only the active source's live values and code.
 Its observed prefix law preserves all suspended frames at once. -/
 theorem FrameStackRel.ordinary {M : Type} {store nextStore : runtime.store.Store M}
-    {sourceStore nextSourceStore : _root_.store}
+    {sourceStore nextSourceStore : WebAssembly.store}
     {exec after : runtime.interp.Execution} {source updatedSource : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore exec (source :: rest))
     (stores : Store.MetadataPreserved store nextStore) (extension : Extend_store sourceStore nextSourceStore)

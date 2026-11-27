@@ -32,17 +32,17 @@ theorem entry_typed_steps {V : Type} (visitor : code.OpVisitor V)
 /-- The same typed run is obtained from the issued batch's actual successful
 validation, with its checked function index and original framing witness. -/
 theorem batch_typed_steps {V : Type} (visitor : code.OpVisitor V)
-    (batch afterBatch : stream.CodeBatch) (index : Usize) (before after : V)
+    (batch afterBatch : stream.StreamingBatch) (index : Usize) (before after : V)
     (bounds : CodeEntry.Bounds batch.env)
-    (accepted : stream.CodeBatch.validate_func visitor batch index before = .ok (.Ok (), afterBatch, after)) :
+    (accepted : stream.StreamingBatch.validate_func visitor batch index before = .ok (.Ok (), afterBatch, after)) :
     ∃ finish, index.val = batch.first_func.val + batch.num_validated.val ∧
       ∃ w : CodeEntry.Witness visitor batch.code batch.env index batch.validated_end finish before after,
         TypedRun visitor w.body batch.env w.ctx w.typeIdx (Body.initial w.typeIdx) w.startedState after := by
-  have cases := stream.CodeBatch.validate_func.cases visitor batch afterBatch index before after (.Ok ()) accepted
+  have cases := stream.StreamingBatch.validate_func.cases visitor batch afterBatch index before after (.Ok ()) accepted
   rcases cases with ⟨error, _, impossible, _⟩ | ⟨_, error, _, impossible, _⟩ | ⟨_, finish, count, next, _, _, _⟩
   · cases impossible
   · cases impossible
-  · obtain ⟨_, position, entry⟩ := stream.CodeBatch.validate_next.accepted visitor batch index finish before after next
+  · obtain ⟨_, position, entry⟩ := stream.StreamingBatch.validate_next.accepted visitor batch index finish before after next
     exact ⟨finish, position, entry_typed_steps visitor batch.code batch.validated_end batch.env index finish
       before after bounds entry⟩
 end Itasca.Compiler

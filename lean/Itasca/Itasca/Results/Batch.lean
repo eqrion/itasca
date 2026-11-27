@@ -20,44 +20,44 @@ namespace Itasca
 
 open Binary
 
-/-- Running `stream.CodeBatch.validate_all` terminates in a reachable state, including on invalid
+/-- Running `stream.StreamingBatch.validate_all` terminates in a reachable state, including on invalid
 bytes and stored errors. -/
-theorem stream.CodeBatch.validate_all.spec
+theorem stream.StreamingBatch.validate_all.spec
     (issued : Stream.Batch.Issued)
-    (batch : stream.CodeBatch) (issued_bounds : issued.Bounded)
+    (batch : stream.StreamingBatch) (issued_bounds : issued.Bounded)
     (entry_bounds : CodeEntry.Bounds issued.env) (reachable : Stream.Batch.Reachable issued batch) :
-    stream.CodeBatch.validate_all batch ⦃ after => Stream.Batch.Reachable issued after ⦄ :=
-  stream.CodeBatch.validate_all.reachable issued batch issued_bounds entry_bounds reachable
+    stream.StreamingBatch.validate_all batch ⦃ after => Stream.Batch.Reachable issued after ⦄ :=
+  stream.StreamingBatch.validate_all.reachable issued batch issued_bounds entry_bounds reachable
 
-/-- `stream.CodeBatch.validate_all` returns a reachable batch. -/
-theorem stream.CodeBatch.validate_all.total
+/-- `stream.StreamingBatch.validate_all` returns a reachable batch. -/
+theorem stream.StreamingBatch.validate_all.total
     (issued : Stream.Batch.Issued)
-    (batch : stream.CodeBatch) (issued_bounds : issued.Bounded)
+    (batch : stream.StreamingBatch) (issued_bounds : issued.Bounded)
     (entry_bounds : CodeEntry.Bounds issued.env) (reachable : Stream.Batch.Reachable issued batch) :
-    ∃ after, stream.CodeBatch.validate_all batch = .ok after ∧
+    ∃ after, stream.StreamingBatch.validate_all batch = .ok after ∧
       Stream.Batch.Reachable issued after :=
-  WP.spec_imp_exists (stream.CodeBatch.validate_all.spec issued batch issued_bounds entry_bounds reachable)
+  WP.spec_imp_exists (stream.StreamingBatch.validate_all.spec issued batch issued_bounds entry_bounds reachable)
 
 /-- A bounded issued batch whose contents are independently valid runs from its seed to a
-reachable state that `stream.CodeBatch.finish` accepts. -/
-theorem stream.CodeBatch.validate_all.complete
+reachable state that `stream.StreamingBatch.finish` accepts. -/
+theorem stream.StreamingBatch.validate_all.complete
     (issued : Stream.Batch.Issued)
     (entries : List Code) (issued_bounds : issued.Bounded)
     (entry_count : entries.length = issued.num_funcs.val)
     (typed : Module.Code.EntriesTyped issued.env issued.first_func.val entries)
     (signature_limits : CodeEntry.EnvironmentWithinLimits issued.env) (entry_bounds : CodeEntry.Bounds issued.env)
     (encoded : Rep (CodeEntry.CodeEncodingWithinLimits) entries issued.code.val) :
-    ∃ after, stream.CodeBatch.validate_all issued.seed = .ok after ∧
-      Stream.Batch.Reachable issued after ∧ stream.CodeBatch.finish after = .ok (.Ok ()) :=
-  stream.CodeBatch.validate_all.complete_at_seed issued entries issued_bounds entry_count typed signature_limits
+    ∃ after, stream.StreamingBatch.validate_all issued.seed = .ok after ∧
+      Stream.Batch.Reachable issued after ∧ stream.StreamingBatch.finish after = .ok (.Ok ()) :=
+  stream.StreamingBatch.validate_all.complete_at_seed issued entries issued_bounds entry_count typed signature_limits
     entry_bounds encoded
 
 /-- Finishing a reachable batch implies validation of every entry, in order, and consumption of
 exactly its issued bytes. No premise prevalidates workers. -/
-theorem stream.CodeBatch.finish.sound {issued : Stream.Batch.Issued}
-    {batch : stream.CodeBatch}
+theorem stream.StreamingBatch.finish.sound {issued : Stream.Batch.Issued}
+    {batch : stream.StreamingBatch}
     (reachable : Stream.Batch.Reachable issued batch) (entry_bounds : CodeEntry.Bounds issued.env)
-    (finished : stream.CodeBatch.finish batch = .ok (.Ok ())) :
+    (finished : stream.StreamingBatch.finish batch = .ok (.Ok ())) :
     ∃ entries, entries.length = issued.num_funcs.val ∧
       Binary.Rep (CodeEntry.CodeEncoding) entries issued.code.val ∧
       Module.Code.EntriesTyped issued.env issued.first_func.val entries :=

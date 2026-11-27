@@ -4,6 +4,8 @@ import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.Interp.Relations.StackPreservation
 import Itasca.Runtime.Interp.Calls.ReturnRefinement
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Interp / Machine / Frames.
 
@@ -39,7 +41,7 @@ theorem SavedFrame.base_le {M : Type} {store : runtime.store.Store M} {sourceSto
 /-- Concrete metadata and generated source extension jointly transport all
 suspended contexts through memory/global content mutations. -/
 theorem SavedFrame.store_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (metadata : Store.MetadataPreserved before after)
+    {oldSource newSource : WebAssembly.store} (metadata : Store.MetadataPreserved before after)
     (extension : Extend_store oldSource newSource) {exec raw source waiting childBase}
     (saved : SavedFrame before oldSource exec raw source waiting childBase) :
     SavedFrame after newSource exec raw source waiting childBase := by
@@ -48,7 +50,7 @@ theorem SavedFrame.store_extension {M : Type} {before after : runtime.store.Stor
   exact ⟨compiled,C,targets,next,output,program.store_metadata metadata,point.extend extension⟩
 
 theorem SavedFrames.store_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (metadata : Store.MetadataPreserved before after)
+    {oldSource newSource : WebAssembly.store} (metadata : Store.MetadataPreserved before after)
     (extension : Extend_store oldSource newSource) {exec raws sources waiting base}
     (saved : SavedFrames before oldSource exec raws sources waiting base) :
     SavedFrames after newSource exec raws sources waiting base := by
@@ -56,7 +58,7 @@ theorem SavedFrames.store_extension {M : Type} {before after : runtime.store.Sto
   | nil waiting => exact .nil waiting
   | cons head tail ih => exact .cons (head.store_extension metadata extension) ih
 
-theorem SavedFrames.transport {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrames.transport {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {raws sources waiting base}
     (saved : SavedFrames store sourceStore before raws sources waiting base)
     (bindings : ∀ raw source, FrameBinding store before raw source → raw ∈ raws → FrameBinding store after raw source)
@@ -75,7 +77,7 @@ theorem SavedFrames.transport {M : Type} {store : runtime.store.Store M} {source
       · intro position bits represented bound
         exact preserve position bits represented (bound.trans head.base_le)
 
-def ReadyTop {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.store)
+def ReadyTop {M : Type} (store : runtime.store.Store M) (sourceStore : WebAssembly.store)
     (exec : runtime.interp.Execution) (source : SourceMachine.AFrame) : Prop :=
   ∃ raw compiled C targets next output,
     exec.frames.val.getLast? = some raw ∧
@@ -83,7 +85,7 @@ def ReadyTop {M : Type} (store : runtime.store.Store M) (sourceStore : _root_.st
     FramePoint sourceStore raw source compiled C targets next output
 
 theorem ActiveFrame.store_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (metadata : Store.MetadataPreserved before after)
+    {oldSource newSource : WebAssembly.store} (metadata : Store.MetadataPreserved before after)
     (extension : Extend_store oldSource newSource) {exec raw source}
     (active : ActiveFrame before oldSource exec raw source) : ActiveFrame after newSource exec raw source := by
   refine ⟨active.binding.store_metadata metadata,active.slots,?_⟩
@@ -91,7 +93,7 @@ theorem ActiveFrame.store_extension {M : Type} {before after : runtime.store.Sto
   exact ⟨compiled,C,targets,next,output,pending,program.store_metadata metadata,point.extend extension⟩
 
 theorem FrameStackRel.store_extension {M : Type} {before after : runtime.store.Store M}
-    {oldSource newSource : _root_.store} (metadata : Store.MetadataPreserved before after)
+    {oldSource newSource : WebAssembly.store} (metadata : Store.MetadataPreserved before after)
     (extension : Extend_store oldSource newSource) {exec sources}
     (stack : FrameStackRel before oldSource exec sources) : FrameStackRel after newSource exec sources := by
   cases stack with
@@ -102,7 +104,7 @@ def ReadyState {M : Type} (store : runtime.store.Store M) (exec : runtime.interp
   match source.frames with
   | [] => ValuesAt exec.slots.val 0 source.results
   | frame :: _ => ReadyTop store source.store exec frame
-theorem SavedFrames.call_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrames.call_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {raws sources waiting boundary}
     (saved : SavedFrames store sourceStore before raws sources waiting boundary)
     {instanceIndex functionIndex base : Usize} {compiled : runtime.bytecode.CompiledFunction}
@@ -116,7 +118,7 @@ theorem SavedFrames.call_preserved {M : Type} {store : runtime.store.Store M} {s
   · intro position bits represented bound
     exact effect.preserve_prefix represented (bound.trans below) params capacity
 
-theorem SavedFrames.return_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrames.return_preserved {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {raws sources waiting boundary}
     (saved : SavedFrames store sourceStore before raws sources waiting boundary)
     {base src count : Nat} (effect : ReturnEffect before after base src count)
@@ -129,7 +131,7 @@ theorem SavedFrames.return_preserved {M : Type} {store : runtime.store.Store M} 
   · intro position bits represented bound
     exact effect.preserve_prefix represented (bound.trans below) bounds
 
-theorem SavedFrame.resume {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem SavedFrame.resume {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {raw source waiting base src count}
     (saved : SavedFrame store sourceStore before raw source waiting base)
     (effect : ReturnEffect before after base src count) (member : raw ∈ before.frames.val.dropLast)
@@ -177,7 +179,7 @@ open Aeneas Aeneas.Std
 /-- A checked ordinary mutation preserves the full caller chain through both
 source store extension and exact concrete metadata/prefix preservation. -/
 theorem FrameStackRel.step_active {M : Type} {oldStore newStore : runtime.store.Store M}
-    {oldSourceStore newSourceStore : _root_.store}
+    {oldSourceStore newSourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {source updatedSource : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel oldStore oldSourceStore before (source :: rest))
     (metadata : Store.MetadataPreserved oldStore newStore) (extension : Extend_store oldSourceStore newSourceStore)
@@ -206,7 +208,7 @@ theorem FrameStackRel.step_active {M : Type} {oldStore newStore : runtime.store.
         exact List.mem_append_left _ (List.mem_reverse.mpr member)
       · exact preserve
 
-theorem FrameStackRel.single_base {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem FrameStackRel.single_base {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {exec : runtime.interp.Execution} {source : SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore exec [source])
     (raw : runtime.interp.Frame) (top : exec.frames.val.getLast? = some raw) : raw.base.val = 0 := by
@@ -237,7 +239,7 @@ open Aeneas Aeneas.Std
 
 /-- Returning to a suspended caller restores the active certificate and
 preserves the older caller chain. -/
-theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {callee caller : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before (callee :: caller :: rest))
     (raw : runtime.interp.Frame) (top : before.frames.val.getLast? = some raw)
@@ -275,7 +277,7 @@ theorem FrameStackRel.return_to_caller_ready {M : Type} {store : runtime.store.S
         simp
 
 /-- The last return removes the concrete frame stack completely. -/
-theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {callee : SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before [callee])
     {base src count : Nat} (effect : ReturnEffect before after base src count) :
@@ -286,7 +288,7 @@ theorem FrameStackRel.return_final {M : Type} {store : runtime.store.Store M} {s
     apply FrameStackRel.empty
     simpa only [empty, List.reverse_nil] using effect.frames frames
 
-theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M} {sourceStore : _root_.store}
+theorem FrameStackRel.return_complete {M : Type} {store : runtime.store.Store M} {sourceStore : WebAssembly.store}
     {before after : runtime.interp.Execution} {callee : SourceMachine.AFrame} {rest : List SourceMachine.AFrame}
     (relation : FrameStackRel store sourceStore before (callee :: rest))
     (ambient : frame)

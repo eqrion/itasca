@@ -2,7 +2,7 @@
 
 ## Keep the statement independent
 
-Put public semantic vocabulary in `Itasca/Itasca/Results/Definitions/` and public theorem statements in `Results/*.lean`. A reader should be able to inspect the premises of a completeness theorem without following the validator's control flow. In particular, state acceptance premises using the independent encoding and typing relations.
+Define Wasm binary syntax and exact byte encodings in `WebAssembly.Binary`. Keep reader spans, scalar conversions, and implementation limits in Itasca. For each grammar change, check reader soundness and completeness against the canonical production. Use the byte round trips to transport the original span, including nonminimal LEB spellings. Prove prefix uniqueness in WebAssembly so the module uniqueness proof builds independently of Itasca. Put Itasca-specific public semantic vocabulary in `Itasca/Itasca/Results/Definitions/` and public theorem statements in `Results/*.lean`. A reader should be able to inspect the premises of a completeness theorem without following the validator's control flow. In particular, state acceptance premises using the independent encoding and typing relations.
 
 Keep implementation proofs out of the transitive imports of public definitions. Validator proofs also stay independent of runtime internals and the handwritten execution extensions to WebAssembly. The generated specification contains three unproved lemmas: `Step_is_wf`, `Step_read_is_wf`, and `Step_pure_is_wf`. Never use them, even indirectly.
 

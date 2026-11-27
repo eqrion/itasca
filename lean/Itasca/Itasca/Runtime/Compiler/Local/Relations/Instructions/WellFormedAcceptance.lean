@@ -5,6 +5,8 @@ import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Compiler.Local.Lowering.Float.InstructionChecks
 import Itasca.Runtime.Compiler.Local.Relations.Stateful.StatefulLowered
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## SimdInstructionAcceptance -/

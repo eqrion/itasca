@@ -11,6 +11,8 @@ import Itasca.Support.Translation
 import Itasca.Runtime.Compiler.Local.Relations.Local.LocalDeclarations
 import Itasca.Runtime.Compiler.Local.Source.SourceTactics
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Local / Relations / Function.
 
@@ -353,7 +355,7 @@ def schedulerFrame {A : Type} (scheduler : runtime.compiler.CompileScheduler A) 
   (scheduler.completed, scheduler.tail, scheduler.code_start)
 
 abbrev EnvironmentCapture (A : Type) :=
-  alloc.vec.Vec runtime.compiler.Signature × alloc.vec.Vec U32 × alloc.vec.Vec Itasca.stream.CodeBatch ×
+  alloc.vec.Vec runtime.compiler.Signature × alloc.vec.Vec U32 × alloc.vec.Vec Itasca.stream.StreamingBatch ×
   alloc.vec.Vec (Option runtime.bytecode.CompiledFunction) × Option Itasca.metadata.Tail × Usize ×
   runtime.compiler.Budget A × core.result.Result Unit Itasca.error.Error
 
@@ -751,7 +753,7 @@ theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStream
   · exact ⟨rfl,rfl,inside,rfl⟩
 
 theorem _root_.Itasca.runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready.inv {A : Type} (allocator : runtime.platform.Alloc A)
-    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.Config)
+    (before after : runtime.compiler.CompileScheduler A) (env : metadata.Env) (config : stream.StreamingConfig)
     (accepted : runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready
       allocator before env = .ok (.Ok config, after)) : schedulerFrame after = schedulerFrame before := by
   unfold runtime.compiler.CompileScheduler.Insts.ItascaStreamStreamingVisitor.environment_ready at accepted

@@ -2,6 +2,8 @@ import WebAssembly.Builtins.IntegerRepresentation
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import WebAssembly.Builtins.Float.Representation
 
+open WebAssembly
+
 /-!
 # SIMD lane and mask operations
 

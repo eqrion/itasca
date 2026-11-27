@@ -129,7 +129,7 @@ theorem host_only_invoke : ∃ Inv, RuntimeContract exampleView Inv ∧ ∃ addr
     cases member
 
 namespace EmptyModule
-open Compiler Itasca Binary Module.Elaboration
+open Compiler Itasca Itasca.Binary Module.Elaboration
 
 def raw : Binary.Module := ⟨[], [], [], [], [], [], [], none, [], none, [], []⟩
 def bytes : Slice U8 := Slice.from magicVersion (by simp only [magicVersion, List.length_cons, List.length_nil, zero_add, Nat.reduceAdd]; scalar_tac)
@@ -168,12 +168,14 @@ private theorem omitted {α : Type} (id : U8) (R : α → List U8 → Prop) (abs
 private theorem encoded : ModuleEncodingWithinLimits raw bytes.val := by
   constructor
   · exact Compiler.module_header_fits
-  · refine ⟨[], [], [], [], [], [], [], [], [], [], [], [], [],
+  · apply Itasca.Binary.Source.moduleEncodingWith @Itasca.Binary.Source.codeWithinLimits
+    refine ⟨[], [], [], [], [], [], [], [], [], [], [], [], [],
       omitted _ _ _, omitted _ _ _, omitted _ _ _, omitted _ _ _, omitted _ _ _,
       omitted _ _ _, omitted _ _ _, omitted _ _ _, omitted _ _ _, omitted _ _ _,
       omitted _ _ _, omitted _ _ _, .nil, ?_, ?_⟩
     · simp only [bytes, Slice.from_val, List.append_nil]
-    · simp only [DataCountValid, raw, List.not_mem_nil, IsEmpty.forall_iff, implies_true]
+      rfl
+    · simp only [DataCountValid, WebAssembly.Binary.DataCountValidWith, raw, List.not_mem_nil, IsEmpty.forall_iff, implies_true]
 
 theorem valid : Compiler.ValidCompilationSource bytes raw := by
   have codes : List.Forall₂ (fun idx code => CodeEntry.Typed env idx code) env.func_type_indices.val [] := .nil
@@ -219,7 +221,7 @@ theorem compiled_instantiates : ∃ Inv, RuntimeContract exampleView Inv ∧ ∃
     (trapHost exampleMemory) Platform.floatWitness grantAll exampleView Inv laws.toInstantiationContract
     (Platform.vec_memory_laws grantAll grant_all_correct) grant_all_correct freshStore executable
     (Slice.new runtime.Extern) () exampleCode (fresh_store_valid Inv laws)
-    (by intro external member; cases member) bytes compileLimits accepted raw encoded.encoding
+    (by intro external member; cases member) bytes compileLimits accepted raw (Source.moduleEncoding encoded.encoding)
   refine ⟨executable, accepted, WP.spec_mono contract.2 ?_⟩
   rintro ⟨result, after, platform⟩ ⟨invariant, _retained, _extension, outcome⟩
   exact ⟨invariant, outcome⟩
@@ -237,7 +239,7 @@ section
 /-!
 # Adversarial streaming cases
 
-Kernel-checked examples for the streaming API (`stream.CodeBatch`, `stream.Source`,
+Kernel-checked examples for the streaming API (`stream.StreamingBatch`, `stream.StreamingSource`,
 `stream.retire_code_batch`, `stream.validate_module_slice`). They show why the guarantees
 need the issued-batch provenance (`Stream.Batch.Reachable`) and source coherence
 (`Stream.Source.Coherent`) premises: a forged finished batch, an incoherent source, and replayed or
@@ -276,13 +278,13 @@ def impossibleIssued : Stream.Batch.Issued :=
   ⟨0#u64, 0#usize, emptyEnv, emptyBytes, 0#usize, 0#usize, 1#usize⟩
 
 /-- An arbitrary extracted record can forge the private validation cursor. -/
-def forgedBatch : stream.CodeBatch :=
+def forgedBatch : stream.StreamingBatch :=
   { impossibleIssued.seed with num_validated := 1#usize }
 
-/-- `stream.CodeBatch.finish` accepts the forged record, so the finish check alone does not
+/-- `stream.StreamingBatch.finish` accepts the forged record, so the finish check alone does not
 establish provenance in the extracted model. -/
-theorem forged_finish : stream.CodeBatch.finish forgedBatch = .ok (.Ok ()) := by
-  rw [stream.CodeBatch.finish.accepted_iff]
+theorem forged_finish : stream.StreamingBatch.finish forgedBatch = .ok (.Ok ()) := by
+  rw [stream.StreamingBatch.finish.accepted_iff]
   simp [forgedBatch, impossibleIssued, Stream.Batch.Issued.seed, emptyBytes, bytes,
     alloc.vec.Vec.deref]
   rfl
@@ -303,7 +305,7 @@ theorem forged_unreachable : ¬ Stream.Batch.Reachable impossibleIssued forgedBa
 
 /-- A source whose environment is empty and whose code region has length 3. Reads of `[0, 2)` and
 `[1, 3)` each return two bytes, but the overlapping views disagree at offset 1. -/
-def incoherentSource : stream.Source Unit where
+def incoherentSource : stream.StreamingSource Unit where
   environment := fun _ => .ok (.Ok emptyBytes)
   code_len := fun _ => .ok 3#usize
   code := fun _ first _ => .ok (.Ok (if first = 0#usize then bytes [0#u8, 0#u8]
@@ -417,7 +419,7 @@ theorem empty_slice_rejected : stream.validate_module_slice emptyBytes =
   rw [empty_split]
   simp only [bind_ok, Std.uncurry, hlen]
   simp [hslice, metadata.Env.new, stream.validate_streaming,
-    stream.SliceSource.Insts.ItascaStreamSource.environment,
+    stream.SliceSource.Insts.ItascaStreamStreamingSource.environment,
     stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, hlen,
     metadata.validate_env_with, hheader, hadd, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]

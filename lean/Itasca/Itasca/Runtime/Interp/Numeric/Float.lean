@@ -3,6 +3,8 @@ import Itasca.Runtime.Platform.Laws
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import WebAssembly.Builtins.Float.Representation
 
+open WebAssembly
+
 /-! Refinement of the extracted NaN-canonicalizing wrappers. These lemmas use
 ordinary integer/bitvector semantics and the checked IEEE decoder. -/
 

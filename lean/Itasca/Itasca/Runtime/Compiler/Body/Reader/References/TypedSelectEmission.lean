@@ -7,6 +7,8 @@ import Itasca.Runtime.Compiler.Local.Relations.LoweringEffects
 import Itasca.Runtime.Compiler.Body.CapacityTrace
 import Itasca.Runtime.Compiler.Body.Reader.Replay.ReaderCompilerState
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / References.
 
@@ -37,7 +39,7 @@ theorem reader_typed_select {data env locals index st}
     (p : Body.Pending data env locals index st) {V : Type} (visitor : code.OpVisitor V)
     (before after : V) (out : code.BodyState) (ctx : code.Context)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile visitor st data env ctx index 28#u8 before =
+    (accepted : code.step_body visitor st data env ctx index 28#u8 before =
       .ok (.Ok (),out,after)) :
     ∃ ty position, visitor.on_select_typed before out.core ty = .ok (.Ok (),after) ∧
       Body.Simd.readFixed {st.core with pos := position} [.I32,ty,ty] (some ty) =
@@ -229,7 +231,7 @@ theorem reader_emit_typed_select {data env locals index st}
     (sourceFits : before.function.source_offsets.val.length < Usize.max)
     (coordinateFits : before.function.body_start.val + before.next_source.val ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     CompilerOrdinaryStable before after ∧ SourceProgress before after ∧ after.next_source = out.core.pos ∧
     ∃ (ty : wasm_types.ValueType) (front : List valtype) (values : List code.StackType) (emitted : runtime.bytecode.Instr),
@@ -288,7 +290,7 @@ theorem StructuredReaderCompilerState.typed_select {jumpTables : List U32} {A : 
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 28#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 28#u8 before = .ok (.Ok (),out,after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds

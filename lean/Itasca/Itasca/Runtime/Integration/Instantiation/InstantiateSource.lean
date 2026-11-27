@@ -77,6 +77,8 @@ import Itasca.Runtime.Store.Initialization.InitializerResourceCauses
 import Itasca.Runtime.Store.Invariant.Rollback
 import Itasca.Runtime.Compiler.Local.Initializer
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Integration / Instantiation.
 
@@ -318,7 +320,7 @@ theorem instantiate_compiled_executable_eventful_origin {M P F A : Type}
     Compiler.compile_executable_functions allocator law bytes limits module accepted
   obtain ⟨capacityRaw,capacityEncoded,_,_,_,_,_,capacities⟩ :=
     Compiler.compile_executable_capacities allocator law bytes limits module accepted
-  have sameRaw := Binary.ModuleEncodingWith.unique CodeEntry.code_prefix_unique encoded capacityEncoded
+  have sameRaw := Binary.module_unique encoded capacityEncoded
   subst capacityRaw
   refine ⟨raw, encoded, elaborated, matched, typed, ?_⟩
   obtain ⟨witness⟩ := Compiler.compile_accepted allocator bytes limits module accepted
@@ -527,7 +529,7 @@ theorem instantiate_compiled_source {M P F A : Type}
     (bytes : Slice U8) (limits : runtime.compiler.CompileLimits)
     (accepted : runtime.compiler.compile_with allocator bytes limits = .ok (.Ok module))
     (raw : Binary.Module)
-    (encoded : Binary.ModuleEncodingWith CodeEntry.CodeEncoding raw bytes.val ) :
+    (encoded : WebAssembly.Binary.ModuleEncoding (Binary.Source.rawModule raw) (Binary.Source.bytes bytes.val)) :
     Module_ok (Module.Elaboration.moduleOf raw) ∧
       runtime.store.instantiate.Store.instantiate_with memory hooks floats allocator before module imports platform
         ⦃ (result, after, nextPlatform) => ExecutableInv view (installCode oldCode before.instances.length (Compiler.sourceFunctions raw)) after ∧
@@ -541,7 +543,8 @@ theorem instantiate_compiled_source {M P F A : Type}
   obtain ⟨actualRaw,actualEncoded,elaborated,matched,typed,origin⟩ :=
     instantiate_compiled_executable_eventful_origin memory hooks floats allocator view laws law before module imports platform
       oldCode old.toCertifiedApiStore old.segmentAccounting handles bytes limits accepted
-  have sameRaw := Binary.ModuleEncodingWith.unique CodeEntry.code_prefix_unique encoded actualEncoded
+  have sameRaw := Binary.Source.rawModuleInjective (WebAssembly.Binary.ModuleEncoding.unique encoded
+    (Binary.Source.moduleEncoding actualEncoded))
   subst actualRaw
   refine ⟨typed,?_⟩
   rcases origin with ⟨error,staged,returned,retained⟩ |

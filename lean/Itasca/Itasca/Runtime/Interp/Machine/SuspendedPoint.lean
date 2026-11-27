@@ -5,6 +5,8 @@ import Itasca.Runtime.SourceMachine.StructureAndTyping
 import Itasca.Runtime.Compiler.Body.Relations.ExecutableEmission
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 
+open WebAssembly
+
 /-! ## Point -/
 
 section
@@ -20,7 +22,7 @@ open Aeneas.Std
 
 /-- Content mutations transport the same source/code position through the
 specification's checked store extension; no code or frame state is changed. -/
-theorem FramePoint.extend {before after : _root_.store} (extension : Extend_store before after)
+theorem FramePoint.extend {before after : WebAssembly.store} (extension : Extend_store before after)
     {raw frame compiled C targets next output}
     (point : FramePoint before raw frame compiled C targets next output) :
     FramePoint after raw frame compiled C targets next output :=
@@ -43,7 +45,7 @@ Main declarations: `SuspendedFramePoint` and `ControlPoint`.
 namespace Itasca.Interp.Machine
 open Aeneas.Std
 
-theorem SuspendedFramePoint.extend {before after : _root_.store} (extension : Extend_store before after)
+theorem SuspendedFramePoint.extend {before after : WebAssembly.store} (extension : Extend_store before after)
     {raw source compiled C targets next output waiting}
     (point : SuspendedFramePoint before raw source compiled C targets next output waiting) :
     SuspendedFramePoint after raw source compiled C targets next output waiting :=
@@ -70,7 +72,7 @@ theorem FramePoint.suspend {sourceStore raw source compiled C targets next outpu
   intro label member
   rw [split,List.take_append_of_le_length (heights label member)]
 
-theorem ControlPoint.extend {before after : _root_.store} (extension : Extend_store before after)
+theorem ControlPoint.extend {before after : WebAssembly.store} (extension : Extend_store before after)
     {raw source compiled C targets next output pending}
     (point : ControlPoint before raw source compiled C targets next output pending) :
     ControlPoint after raw source compiled C targets next output pending := by

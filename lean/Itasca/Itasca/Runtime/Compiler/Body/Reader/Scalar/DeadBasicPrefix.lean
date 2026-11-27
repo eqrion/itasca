@@ -16,6 +16,8 @@ import Itasca.Runtime.Compiler.Local.Lowering.Integer.Lowering
 import Itasca.Runtime.Compiler.Body.Reader.Memory.MemoryEmissions
 import Itasca.Runtime.Compiler.Body.Reader.Float.ConstantAndSaturatingCompilation
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Reader / Scalar.
 
@@ -54,7 +56,7 @@ theorem reader_prefix_global_get {jumpTables : List U32} {data env sourceLocals 
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.GLOBAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
@@ -93,7 +95,7 @@ theorem reader_prefix_global_set {jumpTables : List U32} {data env sourceLocals 
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.GLOBAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
@@ -128,7 +130,7 @@ theorem reader_prefix_select {jumpTables : List U32} {data env sourceLocals inde
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_SELECT before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core (.SELECT none) p.current.ctrl.polymorphic_base values ∧
@@ -168,7 +170,7 @@ theorem reader_prefix_dead_global_get {jumpTables : List U32} {data env sourceLo
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = 35#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_GLOBAL_GET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.GLOBAL_GET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
@@ -197,7 +199,7 @@ theorem reader_prefix_dead_global_set {jumpTables : List U32} {data env sourceLo
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = 36#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_GLOBAL_SET before = .ok (.Ok (), out, after)) :
     ∃ (idx : U32) (values : List code.StackType),
       Body.ReaderPost p out.core (.GLOBAL_SET (.mk_uN idx.val)) p.current.ctrl.polymorphic_base values ∧
@@ -226,7 +228,7 @@ theorem reader_prefix_dead_select {jumpTables : List U32} {data env sourceLocals
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = 27#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_SELECT before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core (.SELECT none) p.current.ctrl.polymorphic_base values ∧
@@ -268,7 +270,7 @@ theorem StructuredReaderCompilerState.global_get {jumpTables : List U32} {A : Ty
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 35#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 35#u8 before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
@@ -295,7 +297,7 @@ theorem StructuredReaderCompilerState.global_set {jumpTables : List U32} {A : Ty
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 36#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 36#u8 before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
@@ -321,7 +323,7 @@ theorem StructuredReaderCompilerState.select {jumpTables : List U32} {A : Type}
     (out : code.BodyState) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = 27#u8)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index 27#u8 before = .ok (.Ok (), out, after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   let p := state.boundary.pending next advance inbounds
@@ -363,7 +365,7 @@ theorem structured_reader_prefix_dead_const32 {jumpTables : List U32} {data env 
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I32_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_I32_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Body.ReaderPost p out.core (Spec.i32Const value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .I32]) ∧
@@ -390,7 +392,7 @@ theorem structured_reader_prefix_dead_const64 {jumpTables : List U32} {data env 
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_I64_CONST)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_I64_CONST before = .ok (.Ok (), out, after)) :
     ∃ value,
       Body.ReaderPost p out.core (Spec.Constants.i64 value) p.current.ctrl.polymorphic_base (p.current.vals ++ [.Val .I64]) ∧
@@ -417,7 +419,7 @@ theorem structured_reader_prefix_dead_nop {jumpTables : List U32} {data env sour
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_NOP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_NOP before = .ok (.Ok (), out, after)) :
     Body.ReaderPost p out.core .NOP p.current.ctrl.polymorphic_base p.current.vals ∧
       StructuredCompilerPrefix (jumpTables := jumpTables) emit initial after types functions returns locals parents (current.advance .NOP)
@@ -443,7 +445,7 @@ theorem structured_reader_prefix_dead_drop {jumpTables : List U32} {data env sou
     (invariant : StructuredCompilerPrefix (jumpTables := jumpTables) emit initial before types functions returns locals parents current st.core.vals.val p.start.val)
     (dead : before.reachable = false)
     (byte : data.val[p.start.val]'p.inbounds = code.OP_DROP)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index code.OP_DROP before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core .DROP p.current.ctrl.polymorphic_base values ∧
@@ -503,7 +505,7 @@ theorem structured_reader_prefix_dead_numeric {jumpTables : List U32} {data env 
     (dead : before.reachable = false)
     (op : SourceMachine.Numeric.Instruction) (standard : (integerOpcode op).val < 192)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
@@ -548,7 +550,7 @@ theorem structured_reader_prefix_numeric {jumpTables : List U32} {data env sourc
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
@@ -593,7 +595,7 @@ theorem structured_reader_prefix_sign {jumpTables : List U32} {data env sourceLo
     (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
@@ -624,7 +626,7 @@ theorem structured_reader_prefix_dead_sign {jumpTables : List U32} {data env sou
     (dead : before.reachable = false)
     (op : SourceMachine.Numeric.Instruction) (extension : 192 ≤ (integerOpcode op).val)
     (byte : data.val[p.start.val]'p.inbounds = UScalar.cast .U8 (integerOpcode op))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       st data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ values,
       Body.ReaderPost p out.core op.source p.current.ctrl.polymorphic_base values ∧
@@ -663,7 +665,7 @@ theorem StructuredReaderCompilerState.numeric {jumpTables : List U32} {A : Type}
     (out : code.BodyState) (op : SourceMachine.Numeric.Instruction) (sourceBound : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (byte : data.val[st.core.pos.val]'inbounds = (UScalar.cast .U8 (integerOpcode op)))
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index (UScalar.cast .U8 (integerOpcode op)) before = .ok (.Ok (), out, after)) :
     ∃ values, StructuredReaderCompilerState jumpTables emit initial after types functions returns locals data env ctx.locals index ft out
       parents (current.advance op.source) savedParents
@@ -721,7 +723,7 @@ theorem StructuredReaderCompilerState.core_extra {jumpTables : List U32} {A : Ty
     (bodyBound : before.function.body_start.val + data.length ≤ Usize.max)
     (opcode : U8) (covered : opcode.val ∈ [27,35,36,67,68,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62])
     (byte : data.val[st.core.pos.val]'inbounds = opcode)
-    (accepted : code.step_profile (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
+    (accepted : code.step_body (runtime.compiler.FunctionCompiler.Insts.ItascaCodeOpVisitor ops)
       {core := {st.core with pos := next}} data env ctx index opcode before = .ok (.Ok (),out,after)) :
     StructuredReaderCompilerPoint jumpTables emit initial after types functions returns locals data env ctx.locals index ft out := by
   simp only [List.mem_cons,List.mem_nil_iff,or_false] at covered

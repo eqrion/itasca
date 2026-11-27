@@ -1,6 +1,8 @@
 import Itasca.Runtime.Interp.Relations.ReadbackAndBindings
 import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 
+open WebAssembly
+
 /-!
 Repositioning a frame program certificate.
 

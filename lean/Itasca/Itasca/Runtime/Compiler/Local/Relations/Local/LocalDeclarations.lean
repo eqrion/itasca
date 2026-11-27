@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Relations.Layout.LayoutProofs
 import Itasca.Runtime.Compiler.Local.Relations.Layout.CompileInv
 
+open WebAssembly
+
 open Itasca.Representation
 /-! Exact allocation-aware local declaration accumulation and prefix offsets.
 The actual function-start loop terminates with an explicit compiler error or

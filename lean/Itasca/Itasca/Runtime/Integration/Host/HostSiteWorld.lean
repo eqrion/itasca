@@ -6,6 +6,8 @@ import Itasca.Runtime.Interp.Relations.ResourceCausesAndArgumentErrors
 import Itasca.Runtime.Integration.Host.HostRecordingBoundary
 import Itasca.Runtime.Interp.Relations.StepActive
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

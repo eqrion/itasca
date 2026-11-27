@@ -4,6 +4,8 @@ import Itasca.Module.Env.Encoding
 import Itasca.Module.Sections.DeclarationsComplete
 import Itasca.Module.Readers.Completeness
 
+open WebAssembly
+
 /-!
 # Complete
 
@@ -125,7 +127,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module.Environment
 
-open Binary
+open Itasca.Binary
 
 /-- The ten ordered optional declaration slots, followed by all custom bytes consumed before the
 first code or data section. -/
@@ -240,10 +242,10 @@ theorem Ready.data_context {raw last decls env} (h : Ready raw last decls env) (
   | none =>
     right
     exact (show ∀ code ∈ raw.codes, Binary.instructionsUseData code.body = false from by
-      simpa only [Binary.DataCountValid, hc] using hv) entry hm
+      simpa only [Binary.DataCountValid, WebAssembly.Binary.DataCountValidWith, hc] using hv) entry hm
   | some count =>
     left
-    have he : count.val = raw.data.length := by simpa only [Binary.DataCountValid, hc] using hv
+    have he : count.val = raw.data.length := by simpa only [Binary.DataCountValid, WebAssembly.Binary.DataCountValidWith, hc] using hv
     simp [contextOf, Translation.Environment.dataTypes, h.data_count_eq hn, hc, he]
 
 theorem Ready.import_types_eq {raw last decls env} (h : Ready raw last decls env) (hn : 2 ≤ last) :
@@ -353,7 +355,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca
 
-open Binary Module.Sections Module.Environment
+open Itasca.Binary Module.Sections Module.Environment
 
 /-- For an independently encoded section payload with valid contents, `metadata.decode_env_section`
 returns success at the end of the payload together with the `Effect` of the matching slot update.
@@ -480,12 +482,12 @@ end Itasca.Binary
 
 namespace Itasca
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- The environment section loop run with the empty module visitor. -/
 abbrev Module.Environment.parseLoop (data : Slice U8) (env : metadata.Env) (pos : Usize) (last : U8)
      :=
-  metadata.validate_env_with_loop metadata.EmptyModuleVisitor.Insts.ItascaMetadataModuleVisitor
+  metadata.validate_env_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
     data () env pos last
 
 /-- At end of input or at a code or data header, the loop returns the current environment and
@@ -574,7 +576,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Module.Environment
 
-open Binary
+open Itasca.Binary
 
 /-- The parser loop `parseLoop` accepts any `Chain` encoding. Absent slots advance the ghost
 phase, and only actual sections update the parser's last-seen section id. -/
@@ -627,7 +629,7 @@ end Itasca.Module.Environment
 
 namespace Itasca
 
-open Binary Module.Environment
+open Itasca.Binary Module.Environment
 
 /-- Declarative requirements and an independently encoded complete environment
 prefix imply success of the actual environment parser at its greedy boundary. -/

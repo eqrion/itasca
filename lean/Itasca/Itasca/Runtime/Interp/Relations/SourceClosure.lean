@@ -9,6 +9,8 @@ import Itasca.Runtime.SourceMachine.Sim.Host
 import Itasca.Runtime.SourceMachine.Bound
 import Itasca.Runtime.SourceMachine.EntryAndBranchTables
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

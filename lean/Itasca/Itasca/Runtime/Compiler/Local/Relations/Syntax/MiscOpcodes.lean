@@ -25,10 +25,12 @@ theorem misc_immediate {token bytes}
   cases encoded with
   | plain h => exact False.elim (scalar_misc_immediate_false h)
   | signExtensionInstruction opcode source meaning =>
+    change Body.NumericExtensions.signInstruction 252#u8 = some source at meaning
     rw [Body.NumericExtensions.signInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     simp [Body.NumericExtensions.signMeaning] at decoded
   | saturatingInstruction subopcode source meaning leb =>
+    change Body.NumericExtensions.saturatingInstruction subopcode = some source at meaning
     rw [Body.NumericExtensions.saturatingInstruction_eq] at meaning
     obtain ⟨operation, decoded, rfl⟩ := Option.map_eq_some_iff.mp meaning
     obtain ⟨op,extension,equal,_⟩ := saturating_float_descriptor decoded
@@ -36,7 +38,7 @@ theorem misc_immediate {token bytes}
   | reference h => cases h
   | bulk subopcode prefixEncoding h =>
     refine ⟨subopcode,_,_,rfl,prefixEncoding,Or.inr ?_⟩
-    cases h <;> simp
+    cases h <;> decide
 end Itasca.Compiler
 
 namespace Itasca.Body

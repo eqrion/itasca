@@ -1,6 +1,8 @@
 import Itasca.Results.Definitions.Compiler.Compilation
 import Itasca.Runtime.Compiler.Body.Definitions
 
+open WebAssembly
+
 /-! ## Function preparation and output storage -/
 
 namespace Itasca.Compiler

@@ -15,6 +15,8 @@ import Itasca.Runtime.Compiler.Body.Relations.Entry.EntryLayout
 import Itasca.Runtime.Compiler.Local.Relations.Calls.IndirectAndStatefulCallbacks
 import Itasca.Runtime.Compiler.Local.Relations.Calls.BranchAndCallMetadata
 
+open WebAssembly
+
 /-!
 Proofs for Runtime / Compiler / Body / Relations.
 

@@ -142,6 +142,197 @@ structure code.OpIterState where
 structure code.BodyState where
   core : code.OpIterState
 
+/-- [itasca::code::Opcode]
+    Source: 'src/code.rs'
+    Visibility: public -/
+@[discriminant u8 [0,1,2,3,4,5,11,12,13,14,15,16,17,26,27,28,32,33,34,35,36,37,38,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59,60,61,62,63,64,65,66,67,68,69,70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100,101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,160,161,162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,180,181,182,183,184,185,186,187,188,189,190,191,192,193,194,195,196,208,209,210,252,253]]
+inductive code.Opcode where
+| Unreachable : code.Opcode
+| Nop : code.Opcode
+| Block : code.Opcode
+| Loop : code.Opcode
+| If : code.Opcode
+| Else : code.Opcode
+| End : code.Opcode
+| Br : code.Opcode
+| BrIf : code.Opcode
+| BrTable : code.Opcode
+| Return : code.Opcode
+| Call : code.Opcode
+| CallIndirect : code.Opcode
+| Drop : code.Opcode
+| Select : code.Opcode
+| SelectTyped : code.Opcode
+| LocalGet : code.Opcode
+| LocalSet : code.Opcode
+| LocalTee : code.Opcode
+| GlobalGet : code.Opcode
+| GlobalSet : code.Opcode
+| TableGet : code.Opcode
+| TableSet : code.Opcode
+| I32Load : code.Opcode
+| I64Load : code.Opcode
+| F32Load : code.Opcode
+| F64Load : code.Opcode
+| I32Load8S : code.Opcode
+| I32Load8U : code.Opcode
+| I32Load16S : code.Opcode
+| I32Load16U : code.Opcode
+| I64Load8S : code.Opcode
+| I64Load8U : code.Opcode
+| I64Load16S : code.Opcode
+| I64Load16U : code.Opcode
+| I64Load32S : code.Opcode
+| I64Load32U : code.Opcode
+| I32Store : code.Opcode
+| I64Store : code.Opcode
+| F32Store : code.Opcode
+| F64Store : code.Opcode
+| I32Store8 : code.Opcode
+| I32Store16 : code.Opcode
+| I64Store8 : code.Opcode
+| I64Store16 : code.Opcode
+| I64Store32 : code.Opcode
+| MemorySize : code.Opcode
+| MemoryGrow : code.Opcode
+| I32Const : code.Opcode
+| I64Const : code.Opcode
+| F32Const : code.Opcode
+| F64Const : code.Opcode
+| I32Eqz : code.Opcode
+| I32Eq : code.Opcode
+| I32Ne : code.Opcode
+| I32LtS : code.Opcode
+| I32LtU : code.Opcode
+| I32GtS : code.Opcode
+| I32GtU : code.Opcode
+| I32LeS : code.Opcode
+| I32LeU : code.Opcode
+| I32GeS : code.Opcode
+| I32GeU : code.Opcode
+| I64Eqz : code.Opcode
+| I64Eq : code.Opcode
+| I64Ne : code.Opcode
+| I64LtS : code.Opcode
+| I64LtU : code.Opcode
+| I64GtS : code.Opcode
+| I64GtU : code.Opcode
+| I64LeS : code.Opcode
+| I64LeU : code.Opcode
+| I64GeS : code.Opcode
+| I64GeU : code.Opcode
+| F32Eq : code.Opcode
+| F32Ne : code.Opcode
+| F32Lt : code.Opcode
+| F32Gt : code.Opcode
+| F32Le : code.Opcode
+| F32Ge : code.Opcode
+| F64Eq : code.Opcode
+| F64Ne : code.Opcode
+| F64Lt : code.Opcode
+| F64Gt : code.Opcode
+| F64Le : code.Opcode
+| F64Ge : code.Opcode
+| I32Clz : code.Opcode
+| I32Ctz : code.Opcode
+| I32Popcnt : code.Opcode
+| I32Add : code.Opcode
+| I32Sub : code.Opcode
+| I32Mul : code.Opcode
+| I32DivS : code.Opcode
+| I32DivU : code.Opcode
+| I32RemS : code.Opcode
+| I32RemU : code.Opcode
+| I32And : code.Opcode
+| I32Or : code.Opcode
+| I32Xor : code.Opcode
+| I32Shl : code.Opcode
+| I32ShrS : code.Opcode
+| I32ShrU : code.Opcode
+| I32Rotl : code.Opcode
+| I32Rotr : code.Opcode
+| I64Clz : code.Opcode
+| I64Ctz : code.Opcode
+| I64Popcnt : code.Opcode
+| I64Add : code.Opcode
+| I64Sub : code.Opcode
+| I64Mul : code.Opcode
+| I64DivS : code.Opcode
+| I64DivU : code.Opcode
+| I64RemS : code.Opcode
+| I64RemU : code.Opcode
+| I64And : code.Opcode
+| I64Or : code.Opcode
+| I64Xor : code.Opcode
+| I64Shl : code.Opcode
+| I64ShrS : code.Opcode
+| I64ShrU : code.Opcode
+| I64Rotl : code.Opcode
+| I64Rotr : code.Opcode
+| F32Abs : code.Opcode
+| F32Neg : code.Opcode
+| F32Ceil : code.Opcode
+| F32Floor : code.Opcode
+| F32Trunc : code.Opcode
+| F32Nearest : code.Opcode
+| F32Sqrt : code.Opcode
+| F32Add : code.Opcode
+| F32Sub : code.Opcode
+| F32Mul : code.Opcode
+| F32Div : code.Opcode
+| F32Min : code.Opcode
+| F32Max : code.Opcode
+| F32Copysign : code.Opcode
+| F64Abs : code.Opcode
+| F64Neg : code.Opcode
+| F64Ceil : code.Opcode
+| F64Floor : code.Opcode
+| F64Trunc : code.Opcode
+| F64Nearest : code.Opcode
+| F64Sqrt : code.Opcode
+| F64Add : code.Opcode
+| F64Sub : code.Opcode
+| F64Mul : code.Opcode
+| F64Div : code.Opcode
+| F64Min : code.Opcode
+| F64Max : code.Opcode
+| F64Copysign : code.Opcode
+| I32WrapI64 : code.Opcode
+| I32TruncF32S : code.Opcode
+| I32TruncF32U : code.Opcode
+| I32TruncF64S : code.Opcode
+| I32TruncF64U : code.Opcode
+| I64ExtendI32S : code.Opcode
+| I64ExtendI32U : code.Opcode
+| I64TruncF32S : code.Opcode
+| I64TruncF32U : code.Opcode
+| I64TruncF64S : code.Opcode
+| I64TruncF64U : code.Opcode
+| F32ConvertI32S : code.Opcode
+| F32ConvertI32U : code.Opcode
+| F32ConvertI64S : code.Opcode
+| F32ConvertI64U : code.Opcode
+| F32DemoteF64 : code.Opcode
+| F64ConvertI32S : code.Opcode
+| F64ConvertI32U : code.Opcode
+| F64ConvertI64S : code.Opcode
+| F64ConvertI64U : code.Opcode
+| F64PromoteF32 : code.Opcode
+| I32ReinterpretF32 : code.Opcode
+| I64ReinterpretF64 : code.Opcode
+| F32ReinterpretI32 : code.Opcode
+| F64ReinterpretI64 : code.Opcode
+| I32Extend8S : code.Opcode
+| I32Extend16S : code.Opcode
+| I64Extend8S : code.Opcode
+| I64Extend16S : code.Opcode
+| I64Extend32S : code.Opcode
+| RefNull : code.Opcode
+| RefIsNull : code.Opcode
+| RefFunc : code.Opcode
+| MiscPrefix : code.Opcode
+| SimdPrefix : code.Opcode
+
 /-- [itasca::wasm_types::Mut]
     Source: 'src/types.rs'
     Visibility: public -/
@@ -739,11 +930,11 @@ inductive code.SimdSignature where
 | SplatF32 : code.SimdSignature
 | SplatF64 : code.SimdSignature
 
-/-- [itasca::code::EmptyOpVisitor]
+/-- [itasca::code::DefaultOpVisitor]
     Source: 'src/code.rs'
     Visibility: public -/
 @[reducible]
-def code.EmptyOpVisitor := Unit
+def code.DefaultOpVisitor := Unit
 
 /-- [itasca::error::Error]
     Source: 'src/error.rs'
@@ -807,10 +998,10 @@ structure metadata.Module where
   env : metadata.Env
   tail : metadata.Tail
 
-/-- [itasca::stream::CodeBatch]
+/-- [itasca::stream::StreamingBatch]
     Source: 'src/stream.rs'
     Visibility: public -/
-structure stream.CodeBatch where
+structure stream.StreamingBatch where
   module_id : Std.U64
   batch_id : Std.Usize
   env : metadata.Env
@@ -827,23 +1018,23 @@ structure stream.CodeBatch where
 /-- [itasca::stream::SyncVisitor]
     Source: 'src/stream.rs' -/
 structure stream.SyncVisitor where
-  completed : Option stream.CodeBatch
+  completed : Option stream.StreamingBatch
   tail : Option metadata.Tail
 
-/-- [itasca::stream::Config]
+/-- [itasca::stream::StreamingConfig]
     Source: 'src/stream.rs'
     Visibility: public -/
-structure stream.Config where
+structure stream.StreamingConfig where
   batch_bytes : Std.Usize
   max_batches : Std.Usize
 
-/-- [itasca::stream::Region]
+/-- [itasca::stream::StreamingRegion]
     Source: 'src/stream.rs'
     Visibility: public -/
 @[discriminant isize]
-inductive stream.Region where
-| Environment : stream.Region
-| Tail : stream.Region
+inductive stream.StreamingRegion where
+| Environment : stream.StreamingRegion
+| Tail : stream.StreamingRegion
 
 /-- [itasca::wasm_types::CustomSection]
     Source: 'src/types.rs'
@@ -865,12 +1056,12 @@ structure metadata.ModuleVisitor (Self : Type) where
     Visibility: public -/
 structure stream.StreamingVisitor (Self : Type) where
   metadataModuleVisitorInst : metadata.ModuleVisitor Self
-  custom_region : Self → stream.Region → Result Self
+  custom_region : Self → stream.StreamingRegion → Result Self
   environment_ready : Self → metadata.Env → Result ((core.result.Result
-    stream.Config error.Error) × Self)
-  submit_code_batch : Self → stream.CodeBatch → Result ((core.result.Result
-    Unit error.Error) × Self)
-  poll_code_batch : Self → Result ((core.result.Result stream.CodeBatch
+    stream.StreamingConfig error.Error) × Self)
+  submit_code_batch : Self → stream.StreamingBatch → Result
+    ((core.result.Result Unit error.Error) × Self)
+  poll_code_batch : Self → Result ((core.result.Result stream.StreamingBatch
     error.Error) × Self)
   code_end : Self → Result ((core.result.Result Unit error.Error) × Self)
   tail_ready : Self → metadata.Tail → Result ((core.result.Result Unit
@@ -883,10 +1074,10 @@ structure stream.SliceSource where
   code : Slice Std.U8
   tail : Slice Std.U8
 
-/-- Trait declaration: [itasca::stream::Source]
+/-- Trait declaration: [itasca::stream::StreamingSource]
     Source: 'src/stream.rs'
     Visibility: public -/
-structure stream.Source (Self : Type) where
+structure stream.StreamingSource (Self : Type) where
   environment : Self → Result (core.result.Result (Slice Std.U8) error.Error)
   code_len : Self → Result Std.Usize
   code : Self → Std.Usize → Std.Usize → Result (core.result.Result (Slice
@@ -903,11 +1094,11 @@ inductive wasm_types.ExternType where
 | Memory : wasm_types.MemType → wasm_types.ExternType
 | Global : wasm_types.GlobalType → wasm_types.ExternType
 
-/-- [itasca::metadata::EmptyModuleVisitor]
+/-- [itasca::metadata::DefaultModuleVisitor]
     Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
-def metadata.EmptyModuleVisitor := Unit
+def metadata.DefaultModuleVisitor := Unit
 
 /-- [itasca::runtime::compiler::ControlMap]
     Source: 'src/runtime/compiler/mod.rs'
@@ -1706,16 +1897,16 @@ structure runtime.compiler.FunctionStats where
 structure runtime.compiler.CompileScheduler (A : Type) where
   signatures : alloc.vec.Vec runtime.compiler.Signature
   func_param_slots : alloc.vec.Vec Std.U32
-  completed : alloc.vec.Vec stream.CodeBatch
+  completed : alloc.vec.Vec stream.StreamingBatch
   functions : alloc.vec.Vec (Option runtime.bytecode.CompiledFunction)
   tail : Option metadata.Tail
   code_start : Std.Usize
   budget : runtime.compiler.Budget A
 
-/-- [itasca::stream::CodeEntry]
+/-- [itasca::stream::StreamingEntry]
     Source: 'src/stream.rs'
     Visibility: public -/
-structure stream.CodeEntry where
+structure stream.StreamingEntry where
   index : Std.Usize
   start : Std.Usize
   contents : Std.Usize

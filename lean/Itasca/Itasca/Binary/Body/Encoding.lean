@@ -1,3 +1,6 @@
+import WebAssembly.Binary.InstructionUnique
+import WebAssembly.Binary.SyntaxUnique
+import Itasca.Binary.InstructionSource
 import Itasca.Binary.Definitions
 import Itasca.Binary.Scalar.NumericOperations
 import Itasca.Binary.Body.SimdPureMeaning
@@ -11,6 +14,8 @@ import Itasca.Binary.Body.Syntax
 import Mathlib.Tactic.CasesM
 import Itasca.Binary.LebReaders
 import Itasca.Binary.ModuleUnique
+
+open WebAssembly
 
 /-!
 Proofs for Binary / Body.
@@ -252,7 +257,8 @@ theorem LaneOperation.bound (op : LaneOperation) (C : context) (lane : laneidx)
 /-- A lane operation has no declared-reference obligation. -/
 theorem LaneOperation.declared (op : LaneOperation) (refs : List funcidx) (lane : laneidx) :
     Spec.DeclaredReferences.Instruction refs (op.instruction lane) := by
-  cases op <;> simp [instruction, replace, Spec.DeclaredReferences.Instruction,
+  cases op <;> simp [instruction, replace, WebAssembly.Binary.Simd.LaneOperation.instruction,
+    WebAssembly.Binary.Simd.LaneOperation.replace, Spec.DeclaredReferences.Instruction,
     Spec.DeclaredReferences.instructionIndices]
 
 end Itasca.Body.Simd
@@ -324,21 +330,21 @@ theorem MemoryOperation.typed (op : MemoryOperation) (C : context) (arg : memarg
   case storeFull =>
     exact Instr_ok.vstore C  arg mt hm he (by decide) (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load8Lane =>
-    exact Instr_ok.vload_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load16Lane =>
-    exact Instr_ok.vload_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load32Lane =>
-    exact Instr_ok.vload_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load64Lane =>
-    exact Instr_ok.vload_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vload_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store8Lane =>
-    exact Instr_ok.vstore_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 8 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store16Lane =>
-    exact Instr_ok.vstore_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 16 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store32Lane =>
-    exact Instr_ok.vstore_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 32 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case store64Lane =>
-    exact Instr_ok.vstore_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
+    exact Instr_ok.vstore_lane C 64 arg lane mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) (by have h := hlane (by decide); norm_num [laneCount, WebAssembly.Binary.Simd.MemoryOperation.laneCount] at h ⊢; exact_mod_cast h) hC hmt hw
   case load32Zero =>
     exact Instr_ok.vload_zero C 32 arg mt hm he (by convert halign using 1; norm_num [naturalAlign, size]) hC hmt hw
   case load64Zero =>
@@ -354,7 +360,7 @@ theorem MemoryOperation.principal (op : MemoryOperation) (C : context) (arg : me
 /-- A memory operation has no declared-reference obligation. -/
 theorem MemoryOperation.declared (op : MemoryOperation) (refs : List funcidx) (arg : memarg) (lane : laneidx) :
     Spec.DeclaredReferences.Instruction refs (op.instruction arg lane) := by
-  cases op <;> simp [instruction, Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices]
+  cases op <;> simp [instruction, WebAssembly.Binary.Simd.MemoryOperation.instruction, Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices]
 
 /-- A subopcode with a lane meaning has no pure meaning. -/
 theorem lane_pure_none {opcode : Nat} {op : LaneOperation}
@@ -424,7 +430,7 @@ theorem Emits.declared_iff {tokens ops} (h : Emits tokens ops) (refs : List func
 theorem BodyTokens.declared_iff {tokens ops} (h : BodyTokens tokens ops) (refs : List funcidx) :
     TokensDeclared refs tokens ↔ Spec.DeclaredReferences.Instructions refs ops := by
   obtain ⟨inner, rfl, he⟩ := h
-  simpa [Token.Declared] using he.declared_iff refs
+  simpa [Token.Declared] using Emits.declared_iff he refs
 
 end Itasca.Body
 
@@ -495,7 +501,7 @@ theorem shuffle_wf (low high : U64) : wf_instr (shuffle low high) := by
     · repeat' first | decide | constructor
     · rfl
   · intro lane hl
-    simp only [shuffleIndices, List.mem_map, List.mem_append] at hl
+    simp only [WebAssembly.Binary.Simd.shuffleIndices, List.mem_map, List.mem_append] at hl
     obtain ⟨n, hn, rfl⟩ := hl
     constructor
     rcases hn with hn | hn
@@ -505,7 +511,7 @@ theorem shuffle_wf (low high : U64) : wf_instr (shuffle low high) := by
     · have := unpack_bytes_lt _ _ _ hn
       norm_num
       omega
-  · exact ⟨rfl, by simp [shuffleIndices, unpack_bytes_length]⟩
+  · exact ⟨rfl, by simp [WebAssembly.Binary.Simd.shuffleIndices, unpack_bytes_length]⟩
 
 end Itasca.Body.Simd
 
@@ -515,73 +521,10 @@ namespace Itasca.Body.Simd
 
 open Binary
 
-private theorem pure_lane_disjoint {n op lane} (hp : pureInstruction n = some op)
-    (hl : laneMeaning n = some lane) : False := by
-  rw [pureInstruction_eq, lane_pure_none hl] at hp
-  contradiction
-
-private theorem pure_memory_disjoint {n op mem} (hp : pureInstruction n = some op)
-    (hm : memoryMeaning n = some mem) : False := by
-  rw [pureInstruction_eq, memory_pure_none hm] at hp
-  contradiction
-
-private theorem lane_memory_disjoint {n lane mem} (hl : laneMeaning n = some lane)
-    (hm : memoryMeaning n = some mem) : False := by
-  rw [memory_lane_none hm] at hl
-  contradiction
-
-/-- SIMD immediates are prefix-unique. -/
 theorem Immediate.prefix_unique (subopcode : U32) : PrefixUnique (Immediate subopcode) := by
-  intro t u bs cs rest tail ht hu heq
-  cases ht <;> cases hu
-  all_goals try { contradiction }
-  all_goals try { exact False.elim (pure_lane_disjoint ‹_› ‹_›) }
-  all_goals try { exact False.elim (pure_memory_disjoint ‹_› ‹_›) }
-  all_goals try { exact False.elim (lane_memory_disjoint ‹_› ‹_›) }
-  case pure.pure =>
-    rename_i hp hp'
-    exact ⟨Option.some.inj (hp.symm.trans hp'), rfl, heq⟩
-  case lane.lane =>
-    rename_i op lane hp op' lane' hp'
-    obtain rfl := Option.some.inj (hp.symm.trans hp')
-    obtain ⟨rfl, rfl⟩ := List.cons.inj heq
-    exact ⟨rfl, rfl, rfl⟩
-  case memory.memory =>
-    rename_i op arg align offset hc ha ho hp op' arg' align' offset' hc' ha' ho' hp'
-    obtain rfl := Option.some.inj (hp.symm.trans hp')
-    obtain ⟨haeq, rfl, hrest⟩ := leb_prefix_unique ha ha' (by simpa [List.append_assoc] using heq)
-    obtain ⟨hoeq, rfl, rfl⟩ := leb_prefix_unique ho ho' hrest
-    have haeq := UScalar.eq_of_val_eq haeq
-    have hoeq := UScalar.eq_of_val_eq hoeq
-    have he : arg = arg' := by cases arg; cases arg'; simp_all
-    subst arg'
-    exact ⟨rfl, rfl, rfl⟩
-  case memory.memoryLane =>
-    rename_i op arg align offset hc ha ho hp op' arg' lane align' offset' hc' ha' ho' hp'
-    obtain rfl := Option.some.inj (hp.symm.trans hp')
-    exact False.elim (hc' hc)
-  case memoryLane.memory =>
-    rename_i op arg lane align offset hc ha ho hp op' arg' align' offset' hc' ha' ho' hp'
-    obtain rfl := Option.some.inj (hp.symm.trans hp')
-    exact False.elim (hc hc')
-  case memoryLane.memoryLane =>
-    rename_i op arg lane align offset hc ha ho hp op' arg' lane' align' offset' hc' ha' ho' hp'
-    obtain rfl := Option.some.inj (hp.symm.trans hp')
-    obtain ⟨haeq, rfl, hrest⟩ := leb_prefix_unique ha ha' (by simpa [List.append_assoc] using heq)
-    obtain ⟨hoeq, rfl, htail⟩ := leb_prefix_unique ho ho' (by simpa [List.append_assoc] using hrest)
-    obtain ⟨rfl, rfl⟩ := List.cons.inj htail
-    have haeq := UScalar.eq_of_val_eq haeq
-    have hoeq := UScalar.eq_of_val_eq hoeq
-    have he : arg = arg' := by cases arg; cases arg'; simp_all
-    subst arg'
-    exact ⟨rfl, rfl, rfl⟩
-  case constant.constant | shuffle.shuffle =>
-    rename_i low high lower upper hlo hhi low' high' lower' upper' hlo' hhi'
-    obtain ⟨hloeq, rfl, hrest⟩ := float_prefix_unique 8 hlo hlo' (by simpa [List.append_assoc] using heq)
-    obtain ⟨hhieq, rfl, rfl⟩ := float_prefix_unique 8 hhi hhi' hrest
-    obtain rfl := UScalar.eq_of_val_eq hloeq
-    obtain rfl := UScalar.eq_of_val_eq hhieq
-    exact ⟨rfl, rfl, rfl⟩
+  intro x y a b rest tail hx hy eq
+  exact PrefixUnique.of_source (f := id) (WebAssembly.Binary.Simd.Immediate.prefix_unique subopcode.val)
+    Function.injective_id (Binary.Source.simdImmediate hx) (Binary.Source.simdImmediate hy) eq
 
 end Itasca.Body.Simd
 
@@ -609,6 +552,7 @@ namespace Itasca.Body
 theorem block_decoded_iff {data pos bt next} :
     BlockDecoded data pos bt next ↔
       ∃ bytes, BlockEncoding bt bytes ∧ Body.Scalar.BytesAt data pos bytes next := by
+  simp only [BlockEncoding.reader_form]
   cases bt with
   | Empty | Value _ =>
     constructor
@@ -690,86 +634,57 @@ delimiters, off the remaining syntax.
 
 namespace Itasca.Body
 
-/-- The complete flat token spelling of a single instruction, including nested delimiters. -/
-inductive Atom : List Token → instr → Prop where
-  | simple {token op} : Simple token op → Atom [token] op
-  | block {tokens ops} (bt : signature.BlockType) : Emits tokens ops →
-      Atom ([.block bt] ++ tokens ++ [.end_]) (.BLOCK (blockType bt) ops)
-  | loop {tokens ops} (bt : signature.BlockType) : Emits tokens ops →
-      Atom ([.loop bt] ++ tokens ++ [.end_]) (.LOOP (blockType bt) ops)
-  | ifElse {yesTokens yes noTokens no} (bt : signature.BlockType) :
-      Emits yesTokens yes → Emits noTokens no →
-      Atom ([.if_ bt] ++ yesTokens ++ [.else_] ++ noTokens ++ [.end_])
-        (.IFELSE (blockType bt) yes no)
-  | ifEnd {tokens ops} (bt : signature.BlockType) : Emits tokens ops →
-      Atom ([.if_ bt] ++ tokens ++ [.end_]) (.IFELSE (blockType bt) ops [])
+/-- A single instruction retains the same token derivation as a whole body. -/
+abbrev Atom (tokens : List Token) (op : instr) := Emits tokens [op]
 
-/-- An atom emits its instruction. -/
-theorem Atom.emits {tokens op} (h : Atom tokens op) : Emits tokens [op] := by
-  cases h with
-  | simple hs => simpa using Emits.simple .nil hs
-  | block bt hb => simpa using Emits.block bt .nil hb
-  | loop bt hb => simpa using Emits.loop bt .nil hb
-  | ifElse bt hy hn => simpa using Emits.ifElse bt .nil hy hn
-  | ifEnd bt hb => simpa using Emits.ifEnd bt .nil hb
+/-- Split a right-growing derivation into successive single-instruction spans. -/
+private abbrev Spells := WebAssembly.Binary.Rep (fun op tokens => Atom tokens op)
 
-theorem Atom.nonempty {tokens op} (h : Atom tokens op) : tokens ≠ [] := by
-  cases h <;> simp
-
-/-- A left-to-right presentation of `Emits` as a concatenation of atoms. -/
-inductive Spells : List Token → List instr → Prop where
-  | nil : Spells [] []
-  | cons {first rest op ops} : Atom first op → Spells rest ops →
-      Spells (first ++ rest) (op :: ops)
-
-theorem Spells.append {xs ys ops rest} (hx : Spells xs ops) (hy : Spells ys rest) :
-    Spells (xs ++ ys) (ops ++ rest) := by
+private theorem spells_append {xs ys ops rest} (hx : Spells ops xs) (hy : Spells rest ys) :
+    Spells (ops ++ rest) (xs ++ ys) := by
   induction hx with
   | nil => exact hy
-  | cons h _ ih => simpa [List.append_assoc] using Spells.cons h ih
+  | cons h _ ih => simpa [List.append_assoc] using WebAssembly.Binary.Rep.cons (R := fun op ts => Atom ts op) h ih
 
-/-- `Spells` implies `Emits`. -/
-theorem Spells.emits {tokens ops} (h : Spells tokens ops) : Emits tokens ops := by
+private theorem emits_spells {tokens ops} (h : Emits tokens ops) : Spells ops tokens := by
+  have one {op ts} (h : Emits ts [op]) : Spells [op] ts := by
+    simpa using WebAssembly.Binary.Rep.cons (R := fun op ts => Atom ts op) h .nil
   induction h with
   | nil => exact .nil
-  | cons hop _ ih => simpa using hop.emits.append ih
+  | simple _ hs ih => exact spells_append ih (one (.simple .nil hs))
+  | block bt _ hb ih _ => simpa [List.append_assoc] using spells_append ih (one (.block bt .nil hb))
+  | loop bt _ hb ih _ => simpa [List.append_assoc] using spells_append ih (one (.loop bt .nil hb))
+  | ifElse bt _ hy hn ih _ _ => simpa [List.append_assoc] using spells_append ih (one (.ifElse bt .nil hy hn))
+  | ifEnd bt _ hb ih _ => simpa [List.append_assoc] using spells_append ih (one (.ifEnd bt .nil hb))
 
-/-- `Emits` implies `Spells`. -/
-theorem Emits.spells {tokens ops} (h : Emits tokens ops) : Spells tokens ops := by
+private theorem spells_emits {tokens ops} (h : Spells ops tokens) : Emits tokens ops := by
   induction h with
   | nil => exact .nil
-  | simple _ hs ih =>
-    simpa using ih.append (.cons (.simple hs) .nil)
-  | block bt _ hb ih _ =>
-    simpa [List.append_assoc] using ih.append (.cons (.block bt hb) .nil)
-  | loop bt _ hb ih _ =>
-    simpa [List.append_assoc] using ih.append (.cons (.loop bt hb) .nil)
-  | ifElse bt _ hy hn ih _ _ =>
-    simpa [List.append_assoc] using ih.append (.cons (.ifElse bt hy hn) .nil)
-  | ifEnd bt _ hb ih _ =>
-    simpa [List.append_assoc] using ih.append (.cons (.ifEnd bt hb) .nil)
+  | cons hop _ ih => exact Emits.append hop ih
 
 theorem Emits.empty_iff {tokens} : Emits tokens [] ↔ tokens = [] := by
   constructor
   · intro h
-    have hs := h.spells
-    cases hs
+    cases emits_spells h
     rfl
   · rintro rfl
     exact .nil
 
-/-- Splits the first instruction and its tokens, including all nested delimiters, off the rest of
-the syntax. -/
+theorem Atom.nonempty {tokens op} (h : Atom tokens op) : tokens ≠ [] := by
+  change Emits tokens [op] at h
+  generalize eq : [op] = ops at h
+  cases h <;> simp_all
+
+/-- Splits off the first instruction without changing its nested delimiters. -/
 theorem Emits.cons_iff {tokens op ops} :
     Emits tokens (op :: ops) ↔
       ∃ first rest, tokens = first ++ rest ∧ Atom first op ∧ Emits rest ops := by
   constructor
   · intro h
-    have hs := h.spells
-    cases hs with
-    | cons hop ht => exact ⟨_, _, rfl, hop, ht.emits⟩
+    cases emits_spells h with
+    | cons hop ht => exact ⟨_, _, rfl, hop, spells_emits ht⟩
   · rintro ⟨first, rest, rfl, hop, ht⟩
-    simpa using hop.emits.append ht
+    exact Emits.append hop ht
 
 end Itasca.Body
 
@@ -909,7 +824,7 @@ theorem unpack_bytes_payload (bytes : List U8) :
   | nil => rfl
   | cons b bs ih =>
     have hb : b.val < 256 := by scalar_tac
-    simp only [Binary.FloatBits.payload, List.length_cons, unpackBytes, List.map_cons]
+    simp only [Binary.FloatBits.payload_nil, Binary.FloatBits.payload_cons, List.length_cons, unpackBytes, List.map_cons]
     have hm : (b.val + 256 * Binary.FloatBits.payload bs) % 256 = b.val := by omega
     have hd : (b.val + 256 * Binary.FloatBits.payload bs) / 256 = Binary.FloatBits.payload bs := by omega
     rw [hm, hd, ih]
@@ -967,87 +882,19 @@ section
 # Uniqueness of Wasm 2.0 instruction syntax
 
 `Emits.unique` and `BodyTokens.unique` show that a token list spells at most one instruction
-list. The proof folds the tokens with a stack of open structured instructions
-(`SyntaxDecode.run`).
+list. The structured decoding proof lives in `WebAssembly.Binary.SyntaxUnique`.
 -/
 
 namespace Itasca.Body
 
-namespace SyntaxDecode
-
-/-- An open structured instruction awaiting its `end`, with the instructions emitted before it. -/
-inductive Frame where
-  | block (bt : signature.BlockType) (prior : List instr)
-  | loop (bt : signature.BlockType) (prior : List instr)
-  | then_ (bt : signature.BlockType) (prior : List instr)
-  | else_ (bt : signature.BlockType) (prior yes : List instr)
-
-/-- The instructions emitted at the current nesting level and the stack of open frames. -/
-structure State where
-  ops : List instr
-  parents : List Frame
-
-/-- Processes one token, failing on an `else` or `end` with no matching open frame. -/
-def step (s : State) : Token → Option State
-  | .plain op => some { s with ops := s.ops ++ [op] }
-  | .block bt => some ⟨[], .block bt s.ops :: s.parents⟩
-  | .loop bt => some ⟨[], .loop bt s.ops :: s.parents⟩
-  | .if_ bt => some ⟨[], .then_ bt s.ops :: s.parents⟩
-  | .else_ => match s.parents with
-    | .then_ bt prior :: parents => some ⟨[], .else_ bt prior s.ops :: parents⟩
-    | _ => none
-  | .end_ => match s.parents with
-    | .block bt prior :: parents =>
-        some ⟨prior ++ [.BLOCK (blockType bt) s.ops], parents⟩
-    | .loop bt prior :: parents =>
-        some ⟨prior ++ [.LOOP (blockType bt) s.ops], parents⟩
-    | .then_ bt prior :: parents =>
-        some ⟨prior ++ [.IFELSE (blockType bt) s.ops []], parents⟩
-    | .else_ bt prior yes :: parents =>
-        some ⟨prior ++ [.IFELSE (blockType bt) yes s.ops], parents⟩
-    | [] => none
-
-/-- Processes a token list from a state. -/
-def run : List Token → State → Option State
-  | [], s => some s
-  | t :: ts, s => (step s t).bind (run ts)
-
-theorem run_append (xs ys : List Token) (s : State) :
-    run (xs ++ ys) s = (run xs s).bind (run ys) := by
-  induction xs generalizing s with
-  | nil => rfl
-  | cons x xs ih =>
-    simp only [List.cons_append, run]
-    cases step s x <;> simp_all
-
-end SyntaxDecode
-
-/-- `SyntaxDecode.run` on an emitting token list appends the emitted instructions. -/
-theorem Emits.decode {tokens ops} (h : Emits tokens ops) (s : SyntaxDecode.State) :
-    SyntaxDecode.run tokens s = some { s with ops := s.ops ++ ops } := by
-  induction h generalizing s with
-  | nil => simp [SyntaxDecode.run]
-  | simple _ hs ih =>
-    cases hs
-    simp [SyntaxDecode.run_append, ih, SyntaxDecode.run, SyntaxDecode.step, List.append_assoc]
-  | block bt _ _ ih ihb | loop bt _ _ ih ihb | ifEnd bt _ _ ih ihb =>
-    simp [SyntaxDecode.run_append, ih, SyntaxDecode.run, SyntaxDecode.step, ihb, List.append_assoc]
-  | ifElse bt _ _ _ ih ihy ihn =>
-    simp [SyntaxDecode.run_append, ih, SyntaxDecode.run, SyntaxDecode.step, ihy, ihn, List.append_assoc]
-
 /-- A token list determines the structured instructions it spells. -/
-theorem Emits.unique {tokens xs ys} (hx : Emits tokens xs) (hy : Emits tokens ys) : xs = ys := by
-  have h := (hx.decode ⟨[], []⟩).symm.trans (hy.decode ⟨[], []⟩)
-  simpa using congrArg (fun s => s.map SyntaxDecode.State.ops) h
+theorem Emits.unique {tokens xs ys} (hx : Emits tokens xs) (hy : Emits tokens ys) : xs = ys :=
+  (Binary.Source.emits hx).unique (Binary.Source.emits hy)
 
 /-- A body's tokens determine its instructions. -/
 theorem BodyTokens.unique {tokens xs ys}
-    (hx : BodyTokens tokens xs) (hy : BodyTokens tokens ys) : xs = ys := by
-  obtain ⟨left, hl, hx⟩ := hx
-  obtain ⟨right, hr, hy⟩ := hy
-  have he : left = right := List.append_cancel_right (hl.symm.trans hr)
-  subst right
-  exact hx.unique hy
+    (hx : BodyTokens tokens xs) (hy : BodyTokens tokens ys) : xs = ys :=
+  (Binary.Source.bodyTokens hx).unique (Binary.Source.bodyTokens hy)
 
 end Itasca.Body
 

@@ -1,6 +1,8 @@
 import Itasca.Runtime.Compiler.Local.Relations.Stacks.KnownStackTransfer
 import Itasca.Runtime.Compiler.Body.Reader.Replay.Post
 
+open WebAssembly
+
 /-!
 # Stack Values
 

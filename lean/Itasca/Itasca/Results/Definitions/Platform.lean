@@ -3,6 +3,8 @@ import ItascaRust.Types
 import WebAssembly.Host
 import WebAssembly
 
+open WebAssembly
+
 /-!
 # Platform laws
 

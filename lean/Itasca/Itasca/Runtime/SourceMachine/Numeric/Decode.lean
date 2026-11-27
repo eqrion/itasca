@@ -1,6 +1,8 @@
 import Itasca.Runtime.SourceMachine.Simulation
 import WebAssembly.Builtins.IntegerRepresentation
 
+open WebAssembly
+
 /-! ## Semantics -/
 
 section

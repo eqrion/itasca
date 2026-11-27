@@ -14,6 +14,8 @@ import Itasca.Runtime.SourceMachine.TransitionAndHostPreparation
 import Itasca.Runtime.Interp.Machine.CompiledFunctions
 import Itasca.Runtime.SourceMachine.Indirect.HostTyping
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-! ## HostOwnership -/
@@ -280,7 +282,7 @@ namespace Itasca.Integration
 open Aeneas Aeneas.Std WebAssembly Itasca.Interp
 open Itasca.Interp.Machine
 
-theorem structured_host_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem structured_host_next (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame) (after : List instr) (index address identity : Nat)
     (params results : List valtype) (front args : List val)
     (resolve : f.module.FUNCS[index]? = some address)
@@ -361,7 +363,7 @@ namespace Itasca.Integration
 open Aeneas Aeneas.Std WebAssembly Itasca.Interp
 open Itasca.Interp.Machine
 
-theorem structured_indirect_host_next (s : _root_.store) (ambient : frame) (f : SourceMachine.AFrame)
+theorem structured_indirect_host_next (s : WebAssembly.store) (ambient : frame) (f : SourceMachine.AFrame)
     (rest : List SourceMachine.AFrame) (after : List instr) (table type position address identity : Nat)
     (params results : List valtype) (front args : List val)
     (resolved : SourceMachine.Indirect.resolve s f table type position=some address)

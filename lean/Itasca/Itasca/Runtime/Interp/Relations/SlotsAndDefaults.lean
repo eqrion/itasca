@@ -5,6 +5,8 @@ import Itasca.Runtime.Interp.Numeric.Float
 import Itasca.Runtime.Compiler.Local.Definitions
 import Itasca.Runtime.Platform.Laws
 
+open WebAssembly
+
 open Itasca.Representation
 
 /-!

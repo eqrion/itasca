@@ -3,6 +3,8 @@ import Itasca.CodeEntry.Validation
 import Itasca.Module.Code.ContextTransport
 import Itasca.Module.Elab.ToTyping
 
+open WebAssembly
+
 /-! ## EntryOfEnv -/
 
 section
@@ -60,7 +62,7 @@ in the local context prepended to `C`. -/
 theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
     match f with
     | .FUNC _ locals body => ∃ declared params results,
-        locals = declared.map _root_.local.LOCAL ∧
+        locals = declared.map WebAssembly.local.LOCAL ∧
         ft = .mk_functype (.mk_list params) (.mk_list results) ∧
         Expr_ok ((⟨[], [], [], [], [], [], [], params ++ declared,
           [.mk_list results], some (.mk_list results)⟩ : context) ++ C)
@@ -85,7 +87,7 @@ theorem Typed.of_func_ok {env : metadata.Env} {C : context} {idx : U32}
   rw [Module.Elaboration.function_type_lookup hi] at hft
   obtain ⟨declared, params, results, hlocals, ht, hb⟩ := function_body hf
   have hd' : entry.declared.map Translation.valueType = declared := by
-    have he := congrArg (List.map (fun l => match l with | _root_.local.LOCAL t => t)) hlocals
+    have he := congrArg (List.map (fun l => match l with | WebAssembly.local.LOCAL t => t)) hlocals
     simpa [List.map_map, Function.comp_def] using he
   subst declared
   rw [ht] at hft

@@ -7,6 +7,8 @@ import Itasca.Runtime.SourceMachine.Numeric.Decode
 import Itasca.Runtime.Spec.TypingAndNumericOperations
 import Mathlib.Tactic
 
+open WebAssembly
+
 /-!
 # Structure And Typing
 
@@ -469,7 +471,7 @@ theorem FramesTyped.extend {before after : store} (extension : Extend_store befo
 
 /-- Content updates preserve the complete abstract typing invariant. Adding
 functions requires a separate typing attachment for those new bodies. -/
-theorem ATyped.extend_same {state : AState} {after : _root_.store}
+theorem ATyped.extend_same {state : AState} {after : WebAssembly.store}
     (typed : ATyped state) (extension : Extend_store state.store after)
     (functions : after.FUNCS = state.store.FUNCS) : ATyped {state with store := after} :=
   ⟨(extend_store_wf extension).2, typed.functions.extend_same extension functions,
