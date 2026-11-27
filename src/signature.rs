@@ -4,7 +4,7 @@
 //! indices before accessing storage.
 
 use crate::error::OpError;
-use crate::metadata::Env;
+use crate::metadata::CodeMetadata;
 use crate::reader::{read_byte, read_s33_leb};
 use crate::wasm_types::ValueType;
 
@@ -26,7 +26,7 @@ pub enum ResultType {
 }
 
 impl ResultType {
-    pub fn len(&self, env: &Env) -> Result<usize, OpError> {
+    pub fn len(&self, env: &CodeMetadata) -> Result<usize, OpError> {
         match self {
             ResultType::Empty => Ok(0),
             ResultType::One(_) => Ok(1),
@@ -47,7 +47,7 @@ impl ResultType {
     ///
     /// An invalid type index returns `OpError::UnknownType` before indexing
     /// storage.
-    pub fn get(&self, env: &Env, element: usize) -> Result<Option<ValueType>, OpError> {
+    pub fn get(&self, env: &CodeMetadata, element: usize) -> Result<Option<ValueType>, OpError> {
         match self {
             ResultType::Empty => Ok(None),
             ResultType::One(v) => {

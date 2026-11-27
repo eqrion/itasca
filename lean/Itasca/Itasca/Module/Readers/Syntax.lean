@@ -940,17 +940,6 @@ theorem metadata.copy_func_type.spec (ft : wasm_types.FuncType) :
   have hr' : r = ft.results := alloc.vec.Vec.ext _ _ (by simpa [alloc.vec.Vec.deref] using hrval)
   simp [hp, hr, hp', hr']
 
-/-- `metadata.lookup_type` returns the type at the index, or `UnknownType` exactly when the index is
-out of range. -/
-@[step]
-theorem metadata.lookup_type.spec (env : metadata.Env) (idx : U32) :
-    metadata.lookup_type env idx ⦃ r =>
-      match r with
-      | .Ok ft => ∃ hi : idx.val < env.types.val.length, env.types.val[idx.val] = ft
-      | .Err e => e = .UnknownType idx ∧ env.types.val.length ≤ idx.val ⦄ := by
-  unfold metadata.lookup_type
-  step*
-
 end Itasca
 
 end

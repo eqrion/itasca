@@ -12,4 +12,4 @@ subDir = "backends/lean"
 name = "ItascaRust"
 # Only the named modules belong to the library. Aeneas also emits an ignored template.
 roots = []
-globs = ["ItascaRust.Types", "ItascaRust.FunsExternal", "ItascaRust.Funs"]
+globs = ["ItascaRust.TypesExternal", "ItascaRust.Types", "ItascaRust.FunsExternal", "ItascaRust.Funs"]

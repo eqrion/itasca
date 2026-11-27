@@ -32,7 +32,7 @@ namespace Itasca.Body.Visitor
 
 /-- The suffix check of one `br_table` target, factored from the extracted loop. It compares the
 target arity with the first target's arity and checks the operand suffix. -/
-def tableCheck (st : code.BodyState) (env : metadata.Env) (ts : signature.ResultType)
+def tableCheck (st : code.BodyState) (env : metadata.CodeMetadata) (ts : signature.ResultType)
     (arity : Option Usize) : Result (core.result.Result (Option Usize) error.OpError) := do
   let r ← signature.ResultType.len ts env
   match r with
@@ -54,7 +54,7 @@ def tableCheck (st : code.BodyState) (env : metadata.Env) (ts : signature.Result
 /-- The part of a table iteration after its label callback: checks the target, and at the default
 target (`i = count`) marks the code unreachable and calls the `br_table` callback. -/
 def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
-    (env : metadata.Env) (count i depth : U32) (ts : signature.ResultType)
+    (env : metadata.CodeMetadata) (count i depth : U32) (ts : signature.ResultType)
     (arity : Option Usize) (v : V) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V)) := do
@@ -74,7 +74,7 @@ def tableRest {V : Type} (visitor : code.OpVisitor V) (st : code.BodyState)
 /-- One iteration of the `br_table` target loop: reads a label, calls the label callback for
 every target but the default, and continues with `tableRest`. -/
 def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : metadata.Env) (count : U32) (st : code.BodyState)
+    (env : metadata.CodeMetadata) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32) :
     Result (ControlFlow (code.OpIterState × V × Option Usize × U32)
       (core.result.Result Unit error.OpError × code.BodyState × V)) := do
@@ -93,7 +93,7 @@ def tableBody {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
 set_option maxHeartbeats 1000000 in
 /-- The transfer adapter is an exact factorization of the extracted loop body. -/
 theorem table_body_eq {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : metadata.Env) (count : U32) (st : code.BodyState)
+    (env : metadata.CodeMetadata) (count : U32) (st : code.BodyState)
     (v : V) (arity : Option Usize) (i : U32) :
     code.branch_table_with_loop.body visitor data env count st.core v arity i =
       tableBody visitor data env count st v arity i := by
@@ -147,7 +147,7 @@ def tableGood {V : Type} (cf :
 /-- Accepting replacements preserve each successful table continuation. -/
 theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (st : code.BodyState) (env : metadata.Env) (count i depth : U32)
+    (st : code.BodyState) (env : metadata.CodeMetadata) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (v : V) (w : W) (cf)
     (h : tableRest visitor st env count i depth ts arity v = .ok cf)
     (hg : tableGood cf) :
@@ -189,7 +189,7 @@ theorem tableRest.transfer {V W : Type} (visitor : code.OpVisitor V)
 returning on any unrelated execution. -/
 theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (data : Slice U8) (env : metadata.Env) (count : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (count : U32)
     (st : code.BodyState) (v : V) (w : W) (arity : Option Usize) (i : U32) (cf)
     (h : tableBody visitor data env count st v arity i = .ok cf)
     (hg : tableGood cf) :
@@ -223,7 +223,7 @@ theorem tableBody.transfer {V W : Type} (visitor : code.OpVisitor V)
         exact tableRest.transfer visitor replacement ha s env count i depth ts arity v' w' cf h hg
 
 theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (env : metadata.Env) (count i depth : U32)
+    (st : code.BodyState) (env : metadata.CodeMetadata) (count i depth : U32)
     (ts : signature.ResultType) (arity : Option Usize) (v : V)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (j : U32)
@@ -253,7 +253,7 @@ theorem tableRest.cont_progress {V : Type} (visitor : code.OpVisitor V)
       scalar_tac
 
 theorem tableBody.cont_progress {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (count : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (count : U32)
     (st : code.BodyState) (v : V) (arity : Option Usize) (i : U32)
     (ois : code.OpIterState)
     (v' : V) (arity' : Option Usize) (j : U32)
@@ -292,7 +292,7 @@ with exactly the same validation state. -/
 theorem code.branch_table_with_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : Visitor.Accepts replacement) (st : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (v : V) (w : W)
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V) (w : W)
     (count : U32) (arity : Option Usize) (i : U32)
     (hi : i.val ≤ count.val) (final : code.BodyState) (v' : V)
     (h : code.branch_table_with_loop visitor st.core data env v count arity i =
@@ -345,7 +345,7 @@ theorem code.branch_table_with_loop.accepted_transfer {V W : Type}
 theorem code.branch_table_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (ha : Visitor.Accepts replacement) (st : code.BodyState)
-    (data : Slice U8) (env : metadata.Env) (v : V) (w : W)
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V) (w : W)
     (final : code.BodyState) (v' : V)
     (h : code.branch_table_with visitor st data env v = .ok (.Ok (), final, v')) :
     ∃ w', code.branch_table_with replacement st data env w = .ok (.Ok (), final, w') := by
@@ -391,7 +391,7 @@ set_option maxHeartbeats 2000000 in
 validator state. Scalar steps depend on locals, not the context result vector. -/
 theorem step_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32) (opcode : U8)
     (st final : code.BodyState) (v : V) (w : W) (v' : V)
     (h : code.step_body visitor st data env ctx index opcode v =
@@ -532,7 +532,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 @[step] theorem code.branch_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (conditional : Bool) (hs : Body.Control.Shape st.core)
+    (env : metadata.CodeMetadata) (conditional : Bool) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch_info st data env conditional ⦃ r =>
       Body.Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -547,7 +547,7 @@ namespace Itasca
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at hnext
   all_goals subst r; exact hp
 
-@[step] theorem code.end_frame_info.total (st : code.BodyState) (env : metadata.Env)
+@[step] theorem code.end_frame_info.total (st : code.BodyState) (env : metadata.CodeMetadata)
     (isElse : Bool) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.end_frame_info st env isElse ⦃ r =>
@@ -607,7 +607,7 @@ attribute [local step] code.pop_with_type.total code.check_suffix.spec
 rejections and the default target at the maximal encoded count. -/
 theorem code.branch_table_with_loop.total {V : Type} (visitor : code.OpVisitor V)
     (hv : Visitor.Total visitor) (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (v : V) (count : U32) (arity : Option Usize)
+    (env : metadata.CodeMetadata) (v : V) (count : U32) (arity : Option Usize)
     (i : U32)
     (hs : Body.Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (hi : i.val ≤ count.val) :
@@ -649,7 +649,7 @@ theorem code.branch_table_with_loop.total {V : Type} (visitor : code.OpVisitor V
 @[step]
 theorem code.branch_table_with.total {V : Type} (visitor : code.OpVisitor V)
     (hv : Visitor.Total visitor) (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (v : V) (hs : Body.Control.Shape st.core)
+    (env : metadata.CodeMetadata) (v : V) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch_table_with visitor st data env v ⦃ r =>
       Body.Control.Shape r.2.1.core ∧ r.2.1.blocks.val.length = r.2.1.core.ctrls.val.length ∧
@@ -743,7 +743,7 @@ set_option maxHeartbeats 2000000 in
 continuing iteration advances the byte cursor. Returning hooks may reject. -/
 theorem code.body_loop_loop.body.total {V : Type}
     (visitor : code.OpVisitor V) (hv : Visitor.Total visitor)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (type_index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (type_index : U32)
      (s : code.BodyState) (v : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Body.Control.Shape s.core)
     (ha : s.blocks.val.length = s.core.ctrls.val.length)
@@ -817,7 +817,7 @@ set_option maxHeartbeats 2000000 in
 /-- The actual visiting body loop terminates for structurally bounded states.
 Every continuing iteration consumes an opcode; rejecting hooks terminate early. -/
 theorem code.body_loop_loop.total {V : Type} (visitor : code.OpVisitor V)
-    (hv : Visitor.Total visitor) (data : Slice U8) (env : metadata.Env)
+    (hv : Visitor.Total visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (type_index : U32) (st : code.BodyState)
     (v : V) (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -838,7 +838,7 @@ theorem code.body_loop_loop.total {V : Type} (visitor : code.OpVisitor V)
 attribute [local step] code.body_loop_loop.total
 
 /-- Initialization is total and supplies the shared loop invariant. -/
-@[step] theorem code.initial_state.total (env : metadata.Env) (index : U32) :
+@[step] theorem code.initial_state.total (env : metadata.CodeMetadata) (index : U32) :
     code.initial_state env index ⦃ r =>
       match r with
       | .Err _ => True
@@ -854,7 +854,7 @@ attribute [local step] code.body_loop_loop.total
 /-- Returning opcode hooks suffice for totality on arbitrary input in the unified validator; no byte
 validity, signature, or environment hypothesis is required. -/
 theorem code.validate_body_with.total {V : Type} (visitor : code.OpVisitor V)
-    (hv : Visitor.Total visitor) (data : Slice U8) (env : metadata.Env)
+    (hv : Visitor.Total visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (type_index : U32) (v : V) :
     ∃ r, code.validate_body_with visitor data env ctx type_index v = .ok r := by
   have ht : code.validate_body_with visitor data env ctx type_index v ⦃ _ => True ⦄ := by

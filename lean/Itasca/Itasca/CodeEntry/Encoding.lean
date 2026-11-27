@@ -32,11 +32,11 @@ theorem CodeEncodingWithinLimits.encoding {entry bytes}
 /-- The specification of the code entry for function `index` between byte offsets `start` and
 `finish`: it parses as a `CodeEncoding`, satisfies `Typed` against the function's type, and
 stays within the local limit. -/
-def Entry (data : Slice U8) (env : metadata.Env)
+def Entry (data : Slice U8) (env : metadata.CodeMetadata)
     (index start finish : Usize) : Prop :=
   ∃ entry, Binary.At (CodeEncoding) data start entry finish ∧
-    ∃ hi : index.val < env.func_type_indices.val.length,
-      Typed env env.func_type_indices.val[index.val] entry ∧
+    ∃ hi : index.val < (Translation.Environment.definedTypeIndices env).length,
+      Typed env (Translation.Environment.definedTypeIndices env)[index.val] entry ∧
       entry.declared.length ≤ limits.MAX_LOCALS.val
 
 /-- Wasm 2.0 tokens consumed from `data` form a `Rep` of `TokenEncoding` over the same span. -/
@@ -101,7 +101,7 @@ theorem code_encoding_of_parts {data start content localEnd last size groups bod
 
 /-- `Body.functionContext` is the code entry body context when locals are parameters then declared
 locals. -/
-theorem function_context_entry {env : metadata.Env} {locals : alloc.vec.Vec wasm_types.ValueType}
+theorem function_context_entry {env : metadata.CodeMetadata} {locals : alloc.vec.Vec wasm_types.ValueType}
     {ft : wasm_types.FuncType} {declared : List wasm_types.ValueType}
     (hl : locals.val = ft.params.val ++ declared) :
     Body.functionContext env locals ft = CodeEntry.bodyContext env ft.params.val declared ft.results.val := by
@@ -115,7 +115,7 @@ theorem Typed.of_body {env locals index ft groups ops}
     (hl : locals.val = ft.params.val ++ CodeEntry.Locals.declared groups)
     (ht : Body.FunctionTyped env locals ft ops)
     (hdeclared : Spec.DeclaredReferences.Instructions
-      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) ops) :
+      (Translation.Environment.declaredReferences env) ops) :
     Typed env index ⟨groups, ops⟩ := by
   have hlt := List.getElem?_eq_some_iff.mp hi
   refine ⟨hlt.1, ?_, hdeclared⟩

@@ -1,5 +1,7 @@
 import Itasca.Body.Scalar.Env
-import Itasca.Module.Env.Externals
+import Itasca.Module.CodeMetadata
+import Itasca.Module.Definitions
+import Itasca.Spec.Typing
 import Itasca.Binary.Body.Encoding
 
 open WebAssembly
@@ -23,7 +25,7 @@ set_option maxHeartbeats 2000000
 namespace Itasca
 
 attribute [local step] code.pop_with_type.total code.pop_stack_type.total
-  code.push_val.shape_total Body.ScalarReaders.reserved_zero metadata.Env.declares_function.spec
+  code.push_val.shape_total Body.ScalarReaders.reserved_zero metadata.CodeMetadata.declares_function.spec
 
 /-- Index parsing preserves operand capacity as well as frame structure. -/
 @[step] theorem code.take_index.total (st : code.OpIterState) (data : Slice U8)
@@ -65,28 +67,28 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 @[step] theorem code.take_table.total (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st) :
     code.take_table st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_table
   step*
 
 @[step] theorem code.take_element.total (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st) :
     code.take_element st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_element
   step*
 
 @[step] theorem code.take_data_index.total (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st) :
     code.take_data_index st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.take_data_index
   step*
 
 @[step] theorem code.read_bulk_memory.total (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st) :
     code.read_bulk_memory st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
   unfold code.read_bulk_memory
@@ -114,7 +116,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   unfold code.read_ref_is_null
   step*
 
-@[step] theorem code.read_ref_func.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_ref_func.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_func st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
@@ -128,7 +130,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   unfold code.read_typed_select
   step*
 
-@[step] theorem code.read_table_get.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_get.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_table_get st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
@@ -137,7 +139,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
 
-@[step] theorem code.read_table_set.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_set.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_table_set st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
@@ -146,28 +148,28 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
 
-@[step] theorem code.read_memory_init.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_memory_init.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_memory_init st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_init
   step*
 
-@[step] theorem code.read_memory_copy.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_memory_copy.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_memory_copy st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_copy
   step*
 
-@[step] theorem code.read_memory_fill.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_memory_fill.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_memory_fill st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
   unfold code.read_memory_fill
   step*
 
-@[step] theorem code.read_table_init.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_init.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_table_init st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
@@ -178,7 +180,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val1 with ⟨index1, ty1⟩)
   all_goals step*
 
-@[step] theorem code.read_table_copy.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_copy.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_table_copy st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
@@ -189,7 +191,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val1 with ⟨index1, ty1⟩)
   all_goals step*
 
-@[step] theorem code.read_table_grow.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_grow.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_table_grow st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
@@ -198,7 +200,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
 
-@[step] theorem code.read_table_size.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_size.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_table_size st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 1 ⦄ := by
@@ -207,7 +209,7 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   all_goals try (rcases val with ⟨index, ty⟩)
   all_goals step*
 
-@[step] theorem code.read_table_fill.total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem code.read_table_fill.total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.read_table_fill st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length ≤ st.vals.val.length + 0 ⦄ := by
@@ -280,11 +282,11 @@ theorem wasm_types.ElemType.value_type.eq (rt : wasm_types.ElemType) :
   cases rt <;> rfl
 
 /-- A decoded index resolves to its actual reference element type. -/
-theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.take_table st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index ty, r.1 = .Ok (index, ty) → Binary.Leb128.Decoded data st.pos index r.2.pos ∧
-        ∃ hi : index.val < env.table_types.val.length,
-          ty = Module.Constants.referenceValueType env.table_types.val[index.val].elem ⦄ := by
+        ∃ hi : index.val < env.tables.val.length,
+          ty = Module.Constants.referenceValueType env.tables.val[index.val].ty.elem ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_index.spec st data)
   dsimp only at hv hc hd
   cases r with
@@ -292,14 +294,14 @@ theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : me
     simp [code.take_table, hr, hv, hc, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok index =>
-    by_cases hi : index.val < env.table_types.val.length
-    · have hix : (UScalar.cast .Usize index).val < env.table_types.val.length := by simpa using hi
+    by_cases hi : index.val < env.tables.val.length
+    · have hix : (UScalar.cast .Usize index).val < env.tables.val.length := by simpa using hi
       obtain ⟨entry, hget, heq⟩ := WP.spec_imp_exists
-        (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize index) hix)
-      have he : env.table_types.val[index.val] = entry := by simpa using heq.symm
+        (alloc.vec.Vec.index_usize_spec env.tables (UScalar.cast .Usize index) hix)
+      have he : env.tables.val[index.val] = entry := by simpa using heq.symm
       have hn := Nat.not_le_of_gt hi
       rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (index, Module.Constants.referenceValueType entry.elem), s), ?_, hv, hc, ?_⟩
+      refine ⟨(.Ok (index, Module.Constants.referenceValueType entry.ty.elem), s), ?_, hv, hc, ?_⟩
       · simp [code.take_table, hr, lift, hn, hget, wasm_types.ElemType.value_type.eq,
           core.result.Result.Insts.CoreOpsTry.branch]
       · intro other ty hok
@@ -309,11 +311,11 @@ theorem code.take_table.spec (st : code.OpIterState) (data : Slice U8) (env : me
       simp [code.take_table, hr, hv, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- A decoded index resolves to its actual reference element type. -/
-theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.take_element st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index ty, r.1 = .Ok (index, ty) → Binary.Leb128.Decoded data st.pos index r.2.pos ∧
-        ∃ hi : index.val < env.elements.val.length,
-          ty = Module.Constants.referenceValueType env.elements.val[index.val].elem ⦄ := by
+        ∃ hi : index.val < env.elem_segment_types.val.length,
+          ty = Module.Constants.referenceValueType env.elem_segment_types.val[index.val] ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_index.spec st data)
   dsimp only at hv hc hd
   cases r with
@@ -321,14 +323,14 @@ theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : 
     simp [code.take_element, hr, hv, hc, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok index =>
-    by_cases hi : index.val < env.elements.val.length
-    · have hix : (UScalar.cast .Usize index).val < env.elements.val.length := by simpa using hi
+    by_cases hi : index.val < env.elem_segment_types.val.length
+    · have hix : (UScalar.cast .Usize index).val < env.elem_segment_types.val.length := by simpa using hi
       obtain ⟨entry, hget, heq⟩ := WP.spec_imp_exists
-        (alloc.vec.Vec.index_usize_spec env.elements (UScalar.cast .Usize index) hix)
-      have he : env.elements.val[index.val] = entry := by simpa using heq.symm
+        (alloc.vec.Vec.index_usize_spec env.elem_segment_types (UScalar.cast .Usize index) hix)
+      have he : env.elem_segment_types.val[index.val] = entry := by simpa using heq.symm
       have hn := Nat.not_le_of_gt hi
       rw [WP.spec_equiv_exists]
-      refine ⟨(.Ok (index, Module.Constants.referenceValueType entry.elem), s), ?_, hv, hc, ?_⟩
+      refine ⟨(.Ok (index, Module.Constants.referenceValueType entry), s), ?_, hv, hc, ?_⟩
       · simp [code.take_element, hr, lift, hn, hget, wasm_types.ElemType.value_type.eq,
           core.result.Result.Insts.CoreOpsTry.branch]
       · intro other ty hok
@@ -338,7 +340,7 @@ theorem code.take_element.spec (st : code.OpIterState) (data : Slice U8) (env : 
       simp [code.take_element, hr, hv, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Data instructions require the explicit data-count section and its bound. -/
-theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.take_data_index st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ index, r.1 = .Ok index → Binary.Leb128.Decoded data st.pos index r.2.pos ∧
         ∃ count, env.data_count = some count ∧ index.val < count.val ⦄ := by
@@ -364,9 +366,9 @@ theorem code.take_data_index.spec (st : code.OpIterState) (data : Slice U8) (env
         simp [code.take_data_index, hr, hv, hc, hcount, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Bulk memory instructions consume one literal reserved byte and require memory zero. -/
-theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_bulk_memory st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      (r.1 = .Ok () → Body.Scalar.BytesAt data st.pos [0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
+      (r.1 = .Ok () → Body.Scalar.BytesAt data st.pos [0#u8] r.2.pos ∧ 0 < env.memories.val.length) ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_reserved_zero.spec st data)
   dsimp only at hv hc hd
   cases r with
@@ -375,10 +377,10 @@ theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (en
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok u =>
     cases u
-    by_cases hm : env.mem_types.val = []
+    by_cases hm : env.memories.val = []
     · simp [code.read_bulk_memory, hr, hv, hc, alloc.vec.Vec.is_empty, hm,
         core.result.Result.Insts.CoreOpsTry.branch]
-    · have hn : env.mem_types.val.isEmpty = false := by simp [hm]
+    · have hn : env.memories.val.isEmpty = false := by simp [hm]
       rw [WP.spec_equiv_exists]
       refine ⟨(.Ok (), s), ?_, hv, hc, ?_⟩
       · simp [code.read_bulk_memory, hr, alloc.vec.Vec.is_empty, hn,
@@ -390,12 +392,12 @@ theorem code.read_bulk_memory.spec (st : code.OpIterState) (data : Slice U8) (en
 /-- Successful `ref.func` decoding establishes the independent declaration
 condition in addition to ordinary function-index bounds. -/
 theorem code.read_ref_func.spec (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (hsize : st.vals.val.length < Usize.max) :
+    (env : metadata.CodeMetadata) (hsize : st.vals.val.length < Usize.max) :
     code.read_ref_func st data env ⦃ r =>
       r.2.ctrls = st.ctrls ∧ ∀ index, r.1 = .Ok index →
-        Binary.Leb128.Decoded data st.pos index r.2.pos ∧ index.val < env.func_types.val.length ∧
+        Binary.Leb128.Decoded data st.pos index r.2.pos ∧ index.val < env.funcs.val.length ∧
         Spec.DeclaredReferences.Instruction
-          (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (.REF_FUNC (.mk_uN index.val)) ∧
+          (Translation.Environment.declaredReferences env) (.REF_FUNC (.mk_uN index.val)) ∧
         r.2.vals.val = st.vals.val ++ [.Val .FuncRef] ⦄ := by
   obtain ⟨⟨r, s⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_index.spec st data)
   dsimp only at hv hc hd
@@ -404,21 +406,21 @@ theorem code.read_ref_func.spec (st : code.OpIterState) (data : Slice U8)
     simp [code.read_ref_func, hr, hc, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   | Ok index =>
-    by_cases hi : index.val < env.func_types.val.length
+    by_cases hi : index.val < env.funcs.val.length
     · have hn := Nat.not_le_of_gt hi
-      by_cases hm : index ∈ env.declared_funcs.val
+      by_cases hm : uN.mk_uN index.val ∈ Translation.Environment.declaredReferences env
       · obtain ⟨out, hp, hvals, hctrls, hpos⟩ := WP.spec_imp_exists
           (code.push_val.spec s (.Val .FuncRef) (by simpa [hv] using hsize))
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok index, out), ?_, hctrls.trans hc, ?_⟩
         · simp [code.read_ref_func, hr, core.result.Result.Insts.CoreOpsTry.branch,
-            lift, hn, metadata.Env.declares_function.eq, hm, hp]
+            lift, hn, metadata.CodeMetadata.declares_function.eq, hm, hp]
         intro other he
         cases he
         exact ⟨by simpa [hpos] using hd, hi,
-          Spec.DeclaredReferences.Instruction.ref_func_iff.mpr (List.mem_map.mpr ⟨index, hm, rfl⟩),
+          Spec.DeclaredReferences.Instruction.ref_func_iff.mpr hm,
           by simpa [hv] using hvals⟩
-      · simp [code.read_ref_func, hr, hc, lift, hn, metadata.Env.declares_function.eq, hm,
+      · simp [code.read_ref_func, hr, hc, lift, hn, metadata.CodeMetadata.declares_function.eq, hm,
           core.result.Result.Insts.CoreOpsTry.branch]
     · have hn := Nat.le_of_not_gt hi
       simp [code.read_ref_func, hr, hc, lift, hn, core.result.Result.Insts.CoreOpsTry.branch]

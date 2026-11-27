@@ -1,548 +1,103 @@
-import Itasca.Module.Definitions
-import Itasca.Results.Definitions.Validation
-import Itasca.Module.Env.Encoding
-import Itasca.Module.Sections.EnvironmentAndTail
-import Itasca.Module.Sections.Headers
-
-/-!
-# Requirements
-
-Environment preservation, validity and source semantics establish the requirements consumed by module assembly. Cache and declaration witnesses remain tied to the same parsed environment.
--/
-
-/-! ## Preservation -/
+import Itasca.Module.Env.ValidityTransport
 
 section
-
-/-!
-# Preservation along section runs
-
-`Effect.represents` and `Run.represents` show that decoding sections keeps `Represents` between
-the environment and the ghost declarations. `Effect.signature_bounded` and `Run.signature_bounded`
-keep the signature bounds. `metadata.Env.new.declarations` shows that the empty environment
-starts all of these invariants, and `ImportsAdded.represents` covers the import section.
--/
-
 open Aeneas Aeneas.Std
-
-namespace Itasca
-
-/-- The extracted initial environment represents the empty declaration prefix, is valid and
-bounded, and has phase `0`. -/
-theorem metadata.Env.new.declarations : metadata.Env.new ⦃ env =>
-    Module.Environment.Represents env {} ∧ Module.Environment.Valid env ∧
-    Module.Environment.SignatureBounded env 0 ∧ Module.Environment.Bounded env 0 ∧ Module.Environment.Phase 0 {} ⦄ := by
-  unfold metadata.Env.new
-  simp only [WP.spec_ok]
-  refine ⟨?_, ?_, ?_, ?_, ?_⟩
-  · constructor <;> try rfl
-    constructor <;> simp [Module.Environment.importedFuncs, Module.Environment.importedGlobals,
-      Module.Environment.importedTables, Module.Environment.importedMems]
-  · constructor <;> simp [Module.References.Coherent, Module.References.collected]
-  · simp [Module.Environment.SignatureBounded]
-  · constructor <;> simp
-  · simp [Module.Environment.Phase]
-
-end Itasca
-
-namespace Itasca.Module.Sections
-
-theorem ImportsAdded.types {env entries result} (h : ImportsAdded env entries result) :
-    result.types = env.types := by
-  induction h with
-  | nil => rfl
-  | @snoc entries before after entry hp ha ih =>
-      obtain ⟨_, ha⟩ := ha
-      cases hd : entry.desc <;> simp only [hd] at ha
-      · obtain ⟨_, _, he, _⟩ := ha
-        have ht := congrArg metadata.Env.types he
-        change after.types = before.types at ht
-        exact ht.trans ih
-      · have ht := congrArg metadata.Env.types ha.1
-        change after.types = before.types at ht
-        exact ht.trans ih
-      · have ht := congrArg metadata.Env.types ha.1
-        change after.types = before.types at ht
-        exact ht.trans ih
-      · have ht := congrArg metadata.Env.types ha.1
-        change after.types = before.types at ht
-        exact ht.trans ih
-
-open Module.Environment
-
-/-- Adding one import appends it to the declared imports and keeps the environment representing
-the declarations, provided no functions, globals, tables or memories are declared yet. -/
-theorem ImportAdded.represents {env result entry decls}
-    (h : ImportAdded env result entry) (hr : Represents env decls)
-    (hf : decls.functions = []) (hg : decls.globals = [])
-    (ht : decls.tables = []) (hm : decls.memories = []) :
-    Represents result { decls with imports := decls.imports ++ [rawImport entry] } := by
-  have hidx : env.func_type_indices.val = [] := hr.functions.symm.trans hf
-  have hglobals : env.globals.val = [] := hr.globals.symm.trans hg
-  obtain ⟨hi, hd⟩ := h
-  cases he : entry.desc <;> simp only [he] at hd
-  · obtain ⟨ft, hresolve, henv, hfuncs, hnum⟩ := hd
-    rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
-    · constructor
-      · simpa [importedFuncs, hi, he, hidx, hfuncs] using
-          List.rel_append hr.cache.funcs (List.Forall₂.cons hresolve .nil)
-      · simpa [importedFuncs, hi, he, hnum] using hr.cache.numFuncs
-      · simpa [importedGlobals, hi, he] using hr.cache.globals
-      · simpa [importedGlobals, hi, he] using hr.cache.numGlobals
-      · simpa [importedTables, hi, he] using hr.cache.tables
-      · simpa [importedMems, hi, he] using hr.cache.memories
-  · rename_i tt
-    obtain ⟨henv, htables, _⟩ := hd
-    rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
-    · constructor
-      · simpa [importedFuncs, hi, he] using hr.cache.funcs
-      · simpa [importedFuncs, hi, he] using hr.cache.numFuncs
-      · simpa [importedGlobals, hi, he] using hr.cache.globals
-      · simpa [importedGlobals, hi, he] using hr.cache.numGlobals
-      · simpa [importedTables, hi, he, htables, ht] using congrArg (· ++ [tt]) hr.cache.tables
-      · simpa [importedMems, hi, he] using hr.cache.memories
-  · rename_i mt
-    obtain ⟨henv, hmemories, _, _⟩ := hd
-    rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
-    · constructor
-      · simpa [importedFuncs, hi, he] using hr.cache.funcs
-      · simpa [importedFuncs, hi, he] using hr.cache.numFuncs
-      · simpa [importedGlobals, hi, he] using hr.cache.globals
-      · simpa [importedGlobals, hi, he] using hr.cache.numGlobals
-      · simpa [importedTables, hi, he] using hr.cache.tables
-      · simpa [importedMems, hi, he, hmemories, hm] using congrArg (· ++ [mt]) hr.cache.memories
-  · rename_i gt
-    obtain ⟨henv, htypes, hnum⟩ := hd
-    rw [henv]
-    refine ⟨hr.types, ?_, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · simp only [hi, List.map_append, List.map_cons, List.map_nil, hr.imports]
-    · constructor
-      · simpa [importedFuncs, hi, he] using hr.cache.funcs
-      · simpa [importedFuncs, hi, he] using hr.cache.numFuncs
-      · simpa [importedGlobals, hi, he, hglobals, htypes] using congrArg (· ++ [gt]) hr.cache.globals
-      · simpa [importedGlobals, hi, he, hnum] using hr.cache.numGlobals
-      · simpa [importedTables, hi, he] using hr.cache.tables
-      · simpa [importedMems, hi, he] using hr.cache.memories
-
-/-- Adding a vector of imports appends them to the declared imports and keeps the environment
-representing the declarations. -/
-theorem ImportsAdded.represents {env result entries decls}
-    (h : ImportsAdded env entries result) (hr : Represents env decls)
-    (hf : decls.functions = []) (hg : decls.globals = [])
-    (ht : decls.tables = []) (hm : decls.memories = []) :
-    Represents result { decls with imports := decls.imports ++ entries.map rawImport } := by
-  induction h generalizing decls with
-  | nil => simpa using hr
-  | snoc hp ha ih =>
-    have hr' := ih hr hf hg ht hm
-    have hr'' := ha.represents hr' hf hg ht hm
-    simpa only [List.map_append, List.map_cons, List.map_nil, List.append_assoc] using hr''
-
-end Itasca.Module.Sections
-
-namespace Itasca.Module.Environment
-
-open Binary Module.Sections
-
-/-- Every section preserves the bound on nested parameter vectors. Newly declared signatures obtain
-their bound from their own byte span. -/
-theorem Effect.signature_bounded {data pos env before id next result after}
-    (h : Effect data pos env before id next result after) (hs : SignatureBounded env pos.val) :
-    SignatureBounded result next.val := by
-  have hspan := h.span
-  have hm := hs.mono hspan.1
-  cases h with
-  | types ha hb hv => exact hs.of_types_added ha hb
-  | imports ha hb => simpa only [SignatureBounded, ha.types] using hm
-  | functions ha hb =>
-      have ht := congrArg metadata.Env.types ha.1
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-  | tables ha hb hv =>
-      have ht := congrArg metadata.Env.types ha.1
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-  | memories ha hb hv hc =>
-      have ht := congrArg metadata.Env.types ha.1
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-  | globals ha hb hv =>
-      have ht := congrArg metadata.Env.types ha.1
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-  | exports ha hb =>
-      have ht := congrArg metadata.Env.types ha.unchanged
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-  | start he hb hv => simpa only [SignatureBounded, he] using hm
-  | elements ha hb hv =>
-      have ht := congrArg metadata.Env.types ha.1
-      change result.types = env.types at ht
-      simpa only [SignatureBounded, ht] using hm
-
-  | dataCount he hb => simpa only [SignatureBounded, he] using hm
-
-/-- A section update in increasing section order keeps the environment representing the
-declarations, including the merged index-space caches. -/
-theorem Effect.represents {data pos env before id next result after last}
-    (h : Effect data pos env before id next result after) (hr : Represents env before)
-    (hp : Phase last before) (horder : last < (sectionRank id).val) : Represents result after := by
-  obtain ⟨h1, h2, h3, h4, h5, h6, h7, h8, h9, h10⟩ := hp
-  cases h with
-  | types ha hb hv =>
-    change last < 1 at horder
-    have ht := h1 (by simpa using horder)
-    have hi : env.imports.val = [] := by
-      have he := hr.imports.symm.trans (h2 (by scalar_tac))
-      simpa using he
-    have hidx : env.func_type_indices.val = [] := hr.functions.symm.trans (h3 (by scalar_tac))
-    have hfuncs : env.func_types.val = [] := by
-      have hl := hr.cache.funcs.length_eq
-      simpa [importedFuncs, hi, hidx] using hl.symm
-    rw [ha.1]
-    refine ⟨?_, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · dsimp only
-      rw [ha.2, ← hr.types, ht, List.nil_append]
-    · constructor
-      · simp [importedFuncs, hi, hidx, hfuncs]
-      · exact hr.cache.numFuncs
-      · exact hr.cache.globals
-      · exact hr.cache.numGlobals
-      · exact hr.cache.tables
-      · exact hr.cache.memories
-  | imports ha hb =>
-    change last < 2 at horder
-    have hi := ha.represents hr (h3 (by scalar_tac)) (h6 (by scalar_tac))
-      (h4 (by scalar_tac)) (h5 (by scalar_tac))
-    simpa only [h2 (by scalar_tac), List.nil_append] using hi
-  | functions ha hb =>
-    change last < 3 at horder
-    have hf := h3 (by simpa using horder)
-    rw [ha.1]
-    refine ⟨hr.types, hr.imports, ?_, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · dsimp only
-      rw [ha.2.1, ← hr.functions, hf, List.nil_append]
-    · constructor
-      · simpa only [ha.2.1, ha.2.2.1, List.append_assoc] using
-          List.rel_append hr.cache.funcs ha.2.2.2
-      · exact hr.cache.numFuncs
-      · exact hr.cache.globals
-      · exact hr.cache.numGlobals
-      · exact hr.cache.tables
-      · exact hr.cache.memories
-  | tables ha hb hv =>
-    change last < 4 at horder
-    have ht := h4 (by simpa using horder)
-    rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    constructor
-    · exact hr.cache.funcs
-    · exact hr.cache.numFuncs
-    · exact hr.cache.globals
-    · exact hr.cache.numGlobals
-    · dsimp only
-      rw [ha.2, hr.cache.tables, ht, List.append_nil]
-    · exact hr.cache.memories
-  | memories ha hb hv hc =>
-    change last < 5 at horder
-    have hm := h5 (by simpa using horder)
-    rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    constructor
-    · exact hr.cache.funcs
-    · exact hr.cache.numFuncs
-    · exact hr.cache.globals
-    · exact hr.cache.numGlobals
-    · exact hr.cache.tables
-    · dsimp only
-      rw [ha.2, hr.cache.memories, hm, List.append_nil]
-  | globals ha hb hv =>
-    change last < 6 at horder
-    have hg := h6 (by simpa using horder)
-    rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, ?_, hr.exports, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · dsimp only
-      rw [ha.2.1, ← hr.globals, hg, List.nil_append]
-    · constructor
-      · exact hr.cache.funcs
-      · exact hr.cache.numFuncs
-      · dsimp only
-        rw [ha.2.1, ha.2.2.1, hr.cache.globals, List.map_append, List.append_assoc]
-      · exact hr.cache.numGlobals
-      · exact hr.cache.tables
-      · exact hr.cache.memories
-  | exports ha hb =>
-    change last < 7 at horder
-    have he := h7 (by simpa using horder)
-    rw [ha.unchanged]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, ?_, hr.start, hr.elements, hr.dataCount, ?_⟩
-    · dsimp only
-      rw [ha.exports, List.map_append, ← hr.exports, he, List.nil_append]
-    · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
-  | start he hb hv =>
-    change last < 8 at horder
-    rw [he]
-    exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, rfl, hr.elements, hr.dataCount, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
-  | elements ha hb hv =>
-    change last < 9 at horder
-    have he := h9 (by simpa using horder)
-    rw [ha.1]
-    refine ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start, ?_, hr.dataCount, ?_⟩
-    · dsimp only
-      rw [ha.2.1, List.map_append, ← hr.elements, he, List.nil_append]
-    · exact ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals, hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩
-
-  | dataCount he hb =>
-    rw [he]
-    exact ⟨hr.types, hr.imports, hr.functions, hr.globals, hr.exports, hr.start,
-      hr.elements, rfl, ⟨hr.cache.funcs, hr.cache.numFuncs, hr.cache.globals,
-      hr.cache.numGlobals, hr.cache.tables, hr.cache.memories⟩⟩
-
-/-- A run of sections keeps the environment representing the declarations. -/
-theorem Run.represents {data initial decls start initialId after afterDecls next id}
-    (h : Run data initial decls start initialId after afterDecls next id)
-    (hr : Represents initial decls) (hp : Phase initialId.val decls) :
-    Represents after afterDecls := by
-  induction h with
-  | nil => exact hr
-  | custom _ _ ih => exact ih
-  | step previous horder hh he ih => exact he.represents ih (previous.phase hp) horder
-
-/-- A run of sections keeps the signature bound. -/
-theorem Run.signature_bounded {data initial decls start initialId after afterDecls next id}
-    (h : Run data initial decls start initialId after afterDecls next id)
-    (hs : SignatureBounded initial start.val) : SignatureBounded after next.val := by
-  induction h with
-  | nil => exact hs
-  | custom _ hb ih => exact ih.mono hb.span.1
-  | step _ horder hh he ih => exact he.signature_bounded (ih.mono (Nat.le_of_lt hh.span.1))
-
-end Itasca.Module.Environment
-
-end
-
-/-! ## Validity -/
-
-section
-
-/-!
-# Validity of decoded environments
-
-`Effect.valid` shows that each section effect, applied in increasing section order, preserves
-`Valid`. The per-section steps are `ImportsAdded.valid` and `ExportsAdded.valid`, and the
-helpers `Early` and `SameCore` capture which parts of the environment a section leaves alone.
--/
-
-open Aeneas Aeneas.Std
-
-namespace Itasca.Module.Environment
-
-open Binary Module.Sections
-
-/-- Before globals, all consumers of the cached index spaces are absent. -/
-structure Early (env : metadata.Env) : Prop where
-  globals : env.globals.val = []
-  exports : env.exports.val = []
-  start : env.start = none
-  elements : env.elements.val = []
-
-theorem Early.of_phase {env decls last} (hr : Represents env decls)
-    (hp : Phase last decls) (hl : last < 6) : Early env := by
-  rcases hp with ⟨_, _, _, _, _, hg, he, hs, hm, _⟩
-  refine ⟨hr.globals.symm.trans (hg hl), ?_, hr.start.symm.trans (hs (by omega)), ?_⟩
-  · have h := hr.exports.symm.trans (he (by omega))
-    exact List.map_eq_nil_iff.mp h
-  · have h := hr.elements.symm.trans (hm (by omega))
-    exact List.map_eq_nil_iff.mp h
-
-theorem Early.valid {env} (h : Early env)
-    (ht : ∀ ft ∈ env.types.val, CodeEntry.FuncTypeWithinLimits ft)
-    (htt : ∀ tt ∈ env.table_types.val, Module.Translation.LimitsValid tt.limits (2 ^ 32 - 1))
-    (hmt : ∀ mt ∈ env.mem_types.val, Module.Translation.LimitsValid mt.limits (2 ^ 16))
-    (hmc : env.mem_types.val.length ≤ 1)
-    (hi : ∀ entry ∈ env.imports.val, Utf8 entry.module.val ∧ Utf8 entry.name.val)
-    (href : Module.References.Coherent env) : Valid env := by
-  refine ⟨ht, htt, hmt, hmc, ?_, hi, ?_, ?_, ?_, ?_, ?_, href⟩
-  all_goals simp [h.globals, h.exports, h.start, h.elements]
-
-end Itasca.Module.Environment
 
 namespace Itasca.Module.Sections
 
 open Module.Environment Binary
 
-theorem ImportAdded.early {env result entry} (h : ImportAdded env result entry)
-    (he : Early env) : Early result := by
-  obtain ⟨_, h⟩ := h
-  cases hd : entry.desc <;> simp only [hd] at h
-  · obtain ⟨_, _, h, _⟩ := h
-    rw [h]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
-  all_goals rw [h.1]; exact ⟨he.globals, he.exports, he.start, he.elements⟩
+private theorem Marked.sameCore {env result desc} (h : Marked env result desc) : SameCore env result := by
+  cases desc <;> obtain ⟨d, lookup, rfl⟩ := h <;> constructor <;>
+    first | rfl | exact map_descriptor_update _ _ _ lookup rfl
 
-theorem ImportAdded.valid {env result entry} (h : ImportAdded env result entry)
-    (hv : Valid env) (he : Early env)
-    (hn : Utf8 entry.module.val ∧ Utf8 entry.name.val) : Valid result := by
-  have her := h.early he
-  obtain ⟨hi, ha⟩ := h
-  have hnames : ∀ e ∈ result.imports.val, Utf8 e.module.val ∧ Utf8 e.name.val := by
-    simp only [hi, List.mem_append, List.mem_singleton]
-    intro e hm
-    rcases hm with hm | rfl
-    · exact hv.imports e hm
-    · exact hn
-  cases hd : entry.desc <;> simp only [hd] at ha
-  · obtain ⟨ft, hft, heq, hfs, hnum⟩ := ha
-    apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
-      (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.memoryCount) |
-      (rw [heq]; exact hv.references)
-  · obtain ⟨heq, hts, hlim⟩ := ha
-    apply her.valid
-    · (rw [heq]; exact hv.types)
-    · intro tt hm
-      rw [hts] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hv.tables _ hm
-      · simpa using (List.mem_singleton.mp hm ▸ hlim)
-    · (rw [heq]; exact hv.memories)
-    · (rw [heq]; exact hv.memoryCount)
-    · exact hnames
-    · rw [heq]; exact hv.references
-  · obtain ⟨heq, hms, hcount, hlim⟩ := ha
-    apply her.valid
-    · (rw [heq]; exact hv.types)
-    · (rw [heq]; exact hv.tables)
-    · intro mt hm
-      rw [hms] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hv.memories _ hm
-      · simpa using (List.mem_singleton.mp hm ▸ hlim)
-    · exact hcount
-    · exact hnames
-    · rw [heq]; exact hv.references
-  · obtain ⟨heq, hgs, hnum⟩ := ha
-    apply her.valid <;> first | exact hnames | (rw [heq]; exact hv.types) |
-      (rw [heq]; exact hv.tables) | (rw [heq]; exact hv.memories) |
-      (rw [heq]; exact hv.memoryCount) |
-      (rw [heq]; exact hv.references)
+private theorem Marked.globalEntries {env result desc} (h : Marked env result desc) :
+    result.globals.val.map (fun g => (g.gtype, g.init)) =
+      env.globals.val.map (fun g => (g.gtype, g.init)) := by
+  cases desc <;> obtain ⟨d, lookup, rfl⟩ := h <;>
+    first | rfl | exact map_descriptor_update _ _ _ lookup rfl
 
-theorem ImportsAdded.early {env entries result} (h : ImportsAdded env entries result)
-    (he : Early env) : Early result := by
-  induction h with
-  | nil => exact he
-  | snoc hp ha ih => exact ha.early ih
+private theorem Marked.resolves {env result desc} (h : Marked env result desc) (valid : DescriptorIndices env) :
+    ∃ xt, env.externalTypeAt desc = some xt := by
+  cases desc <;> obtain ⟨d, lookup, rfl⟩ := h
+  case Func idx =>
+    have bound := valid d (List.mem_iff_getElem?.mpr ⟨_,lookup⟩)
+    simp [metadata.CodeMetadata.externalTypeAt, lookup, List.getElem?_eq_getElem bound]
+  all_goals simp [metadata.CodeMetadata.externalTypeAt, lookup]
 
-theorem ImportsAdded.valid {env entries result} (h : ImportsAdded env entries result)
-    (hv : Valid env) (he : Early env)
-    (hn : ∀ e ∈ entries, Utf8 e.module.val ∧ Utf8 e.name.val) : Valid result := by
-  induction h with
-  | nil => exact hv
-  | snoc hp ha ih =>
-    exact ha.valid (ih (by intro e hm; exact hn e (by simp [hm])))
-      (hp.early he) (hn _ (by simp))
+private theorem Marked.declared {env result desc} (h : Marked env result desc) (i : Nat) :
+    WebAssembly.uN.mk_uN i ∈ Translation.Environment.declaredReferences result ↔
+    WebAssembly.uN.mk_uN i ∈ Translation.Environment.declaredReferences env ∨
+      ∃ idx : U32, desc = .Func idx ∧ idx.val = i := by
+  cases desc <;> obtain ⟨d, lookup, rfl⟩ := h
+  case Func idx =>
+    rw [Translation.Environment.mem_declaredReferences, Translation.Environment.mem_declaredReferences]
+    have hc : (UScalar.cast .Usize idx).val = idx.val := by scalar_tac
+    have hb := (List.getElem?_eq_some_iff.mp lookup).1
+    by_cases eq : idx.val = i
+    · subst i; simp [alloc.vec.Vec.set_val_eq, hc, hb]
+    · simp [alloc.vec.Vec.set_val_eq, hc, List.getElem?_set_ne eq, eq]
+  all_goals simp [Translation.Environment.declaredReferences]
 
-end Itasca.Module.Sections
+private theorem projected_mem {α β : Type} {f : α → β} {xs ys : List α}
+    (eq : xs.map f = ys.map f) {x} (hm : x ∈ xs) : ∃ y ∈ ys, f y = f x := by
+  apply List.mem_map.mp
+  rw [← eq]; exact List.mem_map_of_mem hm
 
-namespace Itasca.Module.Environment
-
-/-- Later sections leave the function, table, memory and global index spaces unchanged. -/
-structure SameCore (env result : metadata.Env) : Prop where
-  funcs : result.func_types = env.func_types
-  tables : result.table_types = env.table_types
-  memories : result.mem_types = env.mem_types
-  globals : result.global_types = env.global_types
-  numGlobals : result.num_imported_globals = env.num_imported_globals
-
-theorem SameCore.constant {env result e t} (h : SameCore env result)
-    (hv : Module.Constants.Valid env e t) : Module.Constants.Valid result e t := by
-  cases hv with
-  | i32 value => exact .i32 value
-  | i64 value => exact .i64 value
-  | f32 value => exact .f32 value
-  | f64 value => exact .f64 value
-  | v128 low high => exact .v128 low high
-  | refNull ty => exact .refNull ty
-  | refFunc idx hi => exact .refFunc idx (by simpa [h.funcs] using hi)
-  | globalGet idx gt hi hgt himp hc =>
-    exact .globalGet idx gt (by simpa [h.globals] using hi)
-      (by simpa [h.globals] using hgt) (by simpa [h.numGlobals] using himp) hc
-
-theorem SameCore.export {env result e xt} (h : SameCore env result)
-    (hv : Module.Externals.ExportResolves env e xt) : Module.Externals.ExportResolves result e xt := by
-  cases hd : e.desc <;> simpa only [Module.Externals.ExportResolves, hd,
-    h.funcs, h.tables, h.memories, h.globals] using hv
-
-theorem SameCore.element {env result entry} (h : SameCore env result)
-    (hv : Module.Sections.ElementValid env entry) : Module.Sections.ElementValid result entry := by
-  refine ⟨?_, fun e hm => h.constant (hv.2 e hm)⟩
-  cases hm : entry.mode with
-  | Passive => trivial
-  | Declarative => trivial
-  | Active idx offset =>
-    obtain ⟨hi, ht, ho⟩ := (show ∃ hi : idx.val < env.table_types.val.length,
-      env.table_types.val[idx.val].elem = entry.elem ∧ Module.Constants.Valid env offset .I32 from by simpa [hm] using hv.1)
-    exact ⟨by simpa [h.tables] using hi, by simpa [h.tables] using ht, h.constant ho⟩
-
-theorem SameCore.start {env result} {idx : U32} (h : SameCore env result)
-    (hv : ∃ hi : idx.val < env.func_types.val.length,
-      env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = []) :
-    ∃ hi : idx.val < result.func_types.val.length,
-      result.func_types.val[idx.val].params.val = [] ∧ result.func_types.val[idx.val].results.val = [] := by
-  simpa only [h.funcs] using hv
-
-end Itasca.Module.Environment
-
-namespace Itasca.Module.Sections
-
-open Module.Environment Binary
-
+/-- Marking an export preserves all previous external types and declares an exported function. -/
 theorem ExportAdded.valid {env result entry} (h : ExportAdded env result entry)
     (hv : Valid env) (helements : env.elements.val = []) (hn : Utf8 entry.name.val) : Valid result := by
-  obtain ⟨he, hexports, hnew, hresolve, href⟩ := h
-  have hc : SameCore env result := by constructor <;> rw [he]
-  refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-  · rw [he]; exact hv.types
-  · rw [he]; exact hv.tables
-  · rw [he]; exact hv.memories
-  · rw [he]; exact hv.memoryCount
-  · intro g hg
-    have hg' : g ∈ env.globals.val := by simpa only [congrArg metadata.Env.globals he] using hg
-    exact hc.constant (hv.globals g hg')
-  · rw [he]; exact hv.imports
+  obtain ⟨fields, exports, fresh, marked⟩ := h
+  have hc := marked.sameCore
+  have hg := marked.globalEntries
+  refine ⟨?_, DescriptorIndices.marked hv.funcs marked, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
+  · rw [hc.types]; exact hv.types
+  · intro d hd
+    obtain ⟨old, hm, eq⟩ := projected_mem hc.tables hd
+    rw [← eq]; exact hv.tables _ hm
+  · intro d hd
+    obtain ⟨old, hm, eq⟩ := projected_mem hc.memories hd
+    rw [← eq]; exact hv.memories _ hm
+  · have eq := congrArg List.length hc.memories
+    simp only [List.length_map] at eq
+    rw [eq]; exact hv.memoryCount
+  · intro g hm init eq
+    obtain ⟨old, hm, same⟩ := projected_mem hg hm
+    have gt : old.gtype = g.gtype := congrArg Prod.fst same
+    have gi := congrArg Prod.snd same
+    rw [← gt]; exact hc.constant (hv.globals old hm init (gi.trans eq))
+  · rw [fields]; exact hv.imports
   · intro e hm
-    rw [hexports] at hm
+    rw [exports] at hm
     rcases List.mem_append.mp hm with hm | hm
     · exact hv.exportNames _ hm
     · exact List.mem_singleton.mp hm ▸ hn
-  · rw [hexports, List.map_append, List.map_singleton]
-    exact List.Nodup.append hv.distinctExports (by simp) (by simpa using hnew)
+  · rw [exports, List.map_append, List.map_singleton]
+    exact List.Nodup.append hv.distinctExports (by simp) (by simpa using fresh)
   · intro e hm
-    rw [hexports] at hm
+    rw [exports] at hm
     rcases List.mem_append.mp hm with hm | hm
-    · obtain ⟨xt, hx⟩ := hv.exports _ hm
-      exact ⟨xt, hc.export hx⟩
+    · obtain ⟨xt, hx⟩ := hv.exports e hm; exact ⟨xt, hc.export hx⟩
     · obtain rfl := List.mem_singleton.mp hm
-      obtain ⟨xt, hx⟩ := hresolve
+      obtain ⟨xt, hx⟩ := marked.resolves hv.funcs
       exact ⟨xt, hc.export hx⟩
   · intro idx hs
-    have hs' : env.start = some idx := by simpa only [congrArg metadata.Env.start he] using hs
-    exact hc.start (hv.start idx hs')
-  · intro e hm
-    have hm' : e ∈ env.elements.val := by simpa only [congrArg metadata.Env.elements he] using hm
-    exact hc.element (hv.elements _ hm')
-  · have hrefold := hv.references
-    unfold Module.References.Coherent Module.References.collected at hrefold ⊢
-    rw [href, hrefold]
-    rw [he]
-    dsimp only
-    simp only [hexports, List.flatMap_append, List.flatMap_cons, List.flatMap_nil, List.append_nil]
-    simp [helements, List.append_assoc]
+    have same : result.code.start = env.code.start := by
+      cases hd : entry.desc <;> rw [hd] at marked <;> obtain ⟨_,_,eq⟩ := marked <;> rw [eq]
+    exact hc.start (hv.start idx (same ▸ hs))
+  · rw [fields]; simp [helements]
+  · have hglobal : result.code.globals.val.flatMap Module.References.global =
+        env.code.globals.val.flatMap Module.References.global := by
+      have eq := congrArg (List.flatMap (fun g : wasm_types.GlobalType × Option wasm_types.ConstExpr =>
+        g.2.toList.flatMap Module.References.initializer)) hg
+      unfold Module.References.global
+      simpa only [List.flatMap_map, Function.comp_def] using eq
+    intro i
+    rw [marked.declared, hv.references]
+    have elems : result.elements = env.elements := by rw [fields]
+    simp only [Module.References.collected, hglobal, exports, elems, helements, List.flatMap_append,
+      List.flatMap_cons, List.flatMap_nil, List.append_nil, List.mem_append]
+    cases hd : entry.desc <;> simp [Module.References.exportIndices, hd] <;> grind
 
 theorem ExportsAdded.valid {env entries result} (h : ExportsAdded env entries result)
     (hv : Valid env) (helements : env.elements.val = []) (hn : ∀ e ∈ entries, Utf8 e.name.val) : Valid result := by
@@ -558,94 +113,134 @@ namespace Itasca.Module.Environment
 
 open Binary Module.Sections
 
+private theorem initializer_bound {env init ty} (h : Module.Constants.Valid env init ty) :
+    ∀ idx ∈ Module.References.initializer init, idx.val < env.funcs.val.length := by
+  cases h <;> simp_all [Module.References.initializer]
+
+private theorem element_bound {env entry} (h : ElementValid env entry) :
+    ∀ idx ∈ Module.References.element entry, idx.val < env.funcs.val.length := by
+  cases eq : entry.init with
+  | Functions xs =>
+    intro idx hm
+    have mem : wasm_types.ConstExpr.RefFunc idx ∈ (rawElement entry).init := by
+      simpa [rawElement, eq] using List.mem_map_of_mem (f := wasm_types.ConstExpr.RefFunc)
+        (by simpa [Module.References.element, eq] using hm : idx ∈ xs.val)
+    exact initializer_bound (h.2 _ mem) idx (by simp [Module.References.initializer])
+  | Expressions xs =>
+    intro idx hm
+    obtain ⟨init, mem, ref⟩ := List.mem_flatMap.mp (by simpa [Module.References.element, eq] using hm :
+      idx ∈ xs.val.flatMap Module.References.initializer)
+    exact initializer_bound (h.2 init (by simpa [rawElement, eq] using mem)) idx ref
+
+private theorem valid_late {env result : metadata.ModuleMetadata metadata.CodeMetadata}
+    (valid : Valid env) (core : SameCore env.code result.code) (indices : DescriptorIndices result.code)
+    (tables : result.code.tables = env.code.tables) (memories : result.code.memories = env.code.memories)
+    (globals : result.code.globals = env.code.globals) (imports : result.imports = env.imports)
+    (exports : result.exports = env.exports)
+    (start : ∀ idx, result.code.start = some idx → ∃ ft, result.code.externalTypeAt (.Func idx) = some (.Func ft) ∧
+      ft.params.val = [] ∧ ft.results.val = [])
+    (elements : ∀ e ∈ result.elements.val, ElementValid result.code e)
+    (refs : Module.References.Coherent result) : Valid result := by
+  refine ⟨core.types ▸ valid.types, indices, tables ▸ valid.tables, memories ▸ valid.memories,
+    memories ▸ valid.memoryCount, ?_, imports ▸ valid.imports, exports ▸ valid.exportNames,
+    exports ▸ valid.distinctExports, ?_, start, elements, refs⟩
+  · intro g hm init eq
+    exact core.constant (valid.globals g (globals ▸ hm) init eq)
+  · intro e hm
+    obtain ⟨xt,hx⟩ := valid.exports e (exports ▸ hm)
+    exact ⟨xt, core.export hx⟩
+
 /-- A section effect in increasing section order preserves `Valid`, including name well-formedness,
 export uniqueness and initializer validity. -/
 theorem Effect.valid {data pos env before id next result after last}
     (h : Effect data pos env before id next result after)
     (hr : Represents env before) (hv : Valid env)
     (hp : Phase last before) (ho : last < (sectionRank id).val) : Valid result := by
+  have indices := h.indices hv.funcs
   cases h with
-  | types ha hb ht =>
-    have hearly := Early.of_phase hr hp (by change last < 1 at ho; omega)
-    obtain ⟨he, hts⟩ := ha
-    have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
-    apply her.valid
+  | @types updated _ added ha hb ht =>
+    have early := Early.of_phase hr hp (by change last < 1 at ho; omega)
+    have er : Early {env with code := updated} := by rw [ha.1]; exact ⟨early.globals, early.exports, early.start, early.elements⟩
+    rw [ha.1] at er indices ⊢
+    apply er.valid
     · intro ft hm
-      rw [hts] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hv.types _ hm
-      · exact ht _ hm
-    · rw [he]; exact hv.tables
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.references
+      rcases List.mem_append.mp (ha.2 ▸ hm) with h | h
+      · exact hv.types _ h
+      · exact ht _ h
+    · exact indices
+    · exact hv.tables
+    · exact hv.memories
+    · exact hv.memoryCount
+    · exact hv.imports
+    · exact hv.references
   | imports ha hb =>
     apply ha.valid hv (Early.of_phase hr hp (by change last < 2 at ho; omega))
     intro entry hm
-    obtain ⟨bytes, hbytes, _⟩ := hb
-    obtain ⟨bs, he⟩ := hbytes.member (List.mem_map.mpr ⟨entry, hm, rfl⟩)
-    obtain ⟨_, _, _, hm, hn, _, _⟩ := ImportEncoding.reader_parts.mp he
+    obtain ⟨_, bytes, _⟩ := hb
+    obtain ⟨_, encoded⟩ := bytes.member hm
+    obtain ⟨_, _, _, hm, hn, _, _⟩ := ImportEncoding.reader_parts.mp encoded
     exact ⟨hm.2, hn.2⟩
-  | functions ha hb =>
-    have hearly := Early.of_phase hr hp (by change last < 3 at ho; omega)
-    obtain ⟨he, hindices, hfuncs, hresolve⟩ := ha
-    have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
-    apply her.valid <;> first | (rw [he]; exact hv.types) |
-      (rw [he]; exact hv.tables) | (rw [he]; exact hv.memories) |
-      (rw [he]; exact hv.memoryCount) |
-      (rw [he]; exact hv.imports) |
-      (rw [he]; exact hv.references)
-  | tables ha hb ht =>
-    have hearly := Early.of_phase hr hp (by change last < 4 at ho; omega)
-    obtain ⟨he, hts⟩ := ha
-    have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
-    apply her.valid
-    · rw [he]; exact hv.types
-    · intro tt hm
-      rw [hts] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hv.tables _ hm
-      · exact ht _ hm
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.references
-  | memories ha hb ht hcount =>
-    have hearly := Early.of_phase hr hp (by change last < 5 at ho; omega)
-    obtain ⟨he, hms⟩ := ha
-    have her : Early result := by rw [he]; exact ⟨hearly.globals, hearly.exports, hearly.start, hearly.elements⟩
-    apply her.valid
-    · rw [he]; exact hv.types
-    · rw [he]; exact hv.tables
-    · intro mt hm
-      rw [hms] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hv.memories _ hm
-      · exact ht _ hm
-    · simpa [max_eq_right hv.memoryCount] using hcount
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.references
-  | globals ha hb hg =>
-    have hearly := Early.of_phase hr hp (by change last < 6 at ho; exact ho)
-    obtain ⟨he, hgs, htypes, href⟩ := ha
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · rw [he]; exact hv.types
-    · rw [he]; exact hv.tables
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · intro g hm
-      exact hg _ (by simpa [hgs, hearly.globals] using hm)
-    · rw [he]; exact hv.imports
-    all_goals try (rw [he]; simp [hearly.exports, hearly.start, hearly.elements]; done)
-    · unfold Module.References.Coherent Module.References.collected
-      rw [he]
-      dsimp only
-      rw [href, hgs]
-      have hold := hv.references
-      unfold Module.References.Coherent Module.References.collected at hold
-      simp [hearly.globals, hearly.exports, hearly.elements] at hold
-      simp [hold, hearly.globals, hearly.exports, hearly.elements]
+  | @functions updated _ added ha _ =>
+    have early := Early.of_phase hr hp (by change last < 3 at ho; omega)
+    have er : Early {env with code := updated} := by rw [ha.1]; exact ⟨early.globals, early.exports, early.start, early.elements⟩
+    rw [ha.1] at er indices ⊢
+    apply er.valid
+      hv.types indices hv.tables hv.memories hv.memoryCount hv.imports
+    apply er.coherent.mpr
+    intro d hm
+    rcases List.mem_append.mp (ha.2.1 ▸ hm) with h | h
+    · exact early.coherent.mp hv.references _ h
+    · obtain ⟨_, _, rfl⟩ := List.mem_map.mp h; rfl
+  | @tables updated _ added ha _ ht =>
+    have early := Early.of_phase hr hp (by change last < 4 at ho; omega)
+    have er : Early {env with code := updated} := by rw [ha.1]; exact ⟨early.globals, early.exports, early.start, early.elements⟩
+    rw [ha.1] at er indices ⊢
+    refine er.valid
+      hv.types indices ?_ hv.memories hv.memoryCount hv.imports hv.references
+    intro d hm
+    rcases List.mem_append.mp (ha.2 ▸ hm) with h | h
+    · exact hv.tables _ h
+    · obtain ⟨ty, mem, rfl⟩ := List.mem_map.mp h; exact ht _ mem
+  | @memories updated _ added ha _ ht count =>
+    have early := Early.of_phase hr hp (by change last < 5 at ho; omega)
+    have er : Early {env with code := updated} := by rw [ha.1]; exact ⟨early.globals, early.exports, early.start, early.elements⟩
+    rw [ha.1] at er indices ⊢
+    refine er.valid
+      hv.types indices hv.tables ?_ (by simpa [max_eq_right hv.memoryCount] using count) hv.imports hv.references
+    intro d hm
+    rcases List.mem_append.mp (ha.2 ▸ hm) with h | h
+    · exact hv.memories _ h
+    · obtain ⟨ty, mem, rfl⟩ := List.mem_map.mp h; exact ht _ mem
+  | @globals updated _ added ha hb hg =>
+    have early := Early.of_phase hr hp (by change last < 6 at ho; exact ho)
+    have old : env.code.globals.val.flatMap Module.References.global = [] := by
+      simpa [Module.References.collected, early.exports, early.elements] using early.collected
+    have len := congrArg List.length ha.2.2.funcs
+    simp only [List.length_map, List.length_zipIdx] at len
+    have bound : ∀ idx ∈ added.flatMap (fun g => Module.References.initializer g.init), idx.val < env.code.funcs.val.length := by
+      intro idx hm
+      obtain ⟨g, mem, ref⟩ := List.mem_flatMap.mp hm
+      exact len ▸ initializer_bound (hg g mem) idx ref
+    have decl := ha.2.2.declared bound
+    rw [ha.1] at indices ⊢
+    refine ⟨hv.types, indices, hv.tables, hv.memories, hv.memoryCount, ?_, hv.imports,
+      hv.exportNames, hv.distinctExports, ?_, ?_, ?_, ?_⟩
+    · intro g hm init eq
+      rcases List.mem_append.mp (ha.2.1 ▸ hm) with hm | hm
+      · simp [early.globals g hm] at eq
+      · obtain ⟨raw, member, rfl⟩ := List.mem_map.mp hm
+        have valid := hg raw member
+        cases eq
+        rw [ha.1] at valid; exact valid
+    · simp [early.exports]
+    · simp [early.start]
+    · simp [early.elements]
+    · intro i
+      change WebAssembly.uN.mk_uN i ∈ Translation.Environment.declaredReferences
+        {env.code with funcs := _} ↔ _
+      rw [decl, hv.references, early.collected]
+      simp [Module.References.collected, ha.2.1, early.exports, early.elements, old,
+        List.flatMap_map, Module.References.global]
   | exports ha hb =>
     apply ha.valid hv
     · have he := hp.2.2.2.2.2.2.2.2.1 (by change last < 7 at ho; omega)
@@ -655,77 +250,62 @@ theorem Effect.valid {data pos env before id next result after last}
     obtain ⟨bs, he⟩ := hbytes.member (List.mem_map.mpr ⟨entry, hm, rfl⟩)
     obtain ⟨_, _, hn, _, _⟩ := ExportEncoding.reader_parts.mp he
     exact hn.2
-  | start he hb hstart =>
-    have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · rw [he]; exact hv.types
-    · rw [he]; exact hv.tables
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.exportNames
-    · rw [he]; exact hv.distinctExports
-    · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
-      exact ⟨xt, hc.export hx⟩
-    · intro idx hs
-      rw [he] at hs
-      cases Option.some.inj hs
-      exact hc.start hstart
-    · intro e hm
-      exact hc.element (hv.elements e (by simpa only [congrArg metadata.Env.elements he] using hm))
-    · rw [he]; exact hv.references
-  | elements ha hb ht =>
-    obtain ⟨he, hes, href⟩ := ha
-    have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · rw [he]; exact hv.types
-    · rw [he]; exact hv.tables
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.exportNames
-    · rw [he]; exact hv.distinctExports
-    · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
-      exact ⟨xt, hc.export hx⟩
-    · intro idx hs
-      exact hc.start (hv.start idx (by simpa only [congrArg metadata.Env.start he] using hs))
-    · intro e hm
-      rw [hes] at hm
-      rcases List.mem_append.mp hm with hm | hm
-      · exact hc.element (hv.elements e hm)
-      · exact hc.element (ht e hm)
-    · have hrefold := hv.references
-      unfold Module.References.Coherent Module.References.collected at hrefold ⊢
-      rw [href, hrefold]
+  | @start updated _ index d he _ hstart =>
+    have hc : SameCore env.code updated := by
       rw [he]
-      dsimp only
-      simp only [hes, List.flatMap_append, List.append_assoc]
-  | dataCount he hbytes =>
-    have hc : SameCore env result := by constructor <;> rw [he]
-    refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-    · rw [he]; exact hv.types
-    · rw [he]; exact hv.tables
-    · rw [he]; exact hv.memories
-    · rw [he]; exact hv.memoryCount
-    · intro g hg
-      exact hc.constant (hv.globals g (by simpa only [congrArg metadata.Env.globals he] using hg))
-    · rw [he]; exact hv.imports
-    · rw [he]; exact hv.exportNames
-    · rw [he]; exact hv.distinctExports
-    · intro e hm
-      obtain ⟨xt, hx⟩ := hv.exports e (by simpa only [congrArg metadata.Env.exports he] using hm)
-      exact ⟨xt, hc.export hx⟩
+      constructor <;> first | rfl | exact map_descriptor_update _ _ _ hstart.1 rfl
+    rw [he] at hc indices ⊢
+    apply valid_late hv hc indices rfl rfl rfl rfl rfl
     · intro idx hs
-      exact hc.start (hv.start idx (by simpa only [congrArg metadata.Env.start he] using hs))
+      cases Option.some.inj hs
+      obtain ⟨ft, lookup, params, results⟩ := hstart.2
+      exact hc.start ⟨ft, by simp [metadata.CodeMetadata.externalTypeAt, hstart.1, lookup], params, results⟩
+    · intro e hm; exact hc.element (hv.elements _ hm)
+    · intro i
+      rw [Translation.Environment.mem_declaredReferences]
+      have old := hv.references i
+      rw [Translation.Environment.mem_declaredReferences] at old
+      change (_ ↔ ∃ idx ∈ Module.References.collected env, idx.val = i)
+      rw [← old]
+      dsimp only
+      have cast : (UScalar.cast .Usize index).val = index.val := by scalar_tac
+      obtain ⟨bound,eq⟩ := List.getElem?_eq_some_iff.mp hstart.1
+      by_cases same : index.val = i
+      · subst i
+        simp [alloc.vec.Vec.set_val_eq, cast, bound, eq]
+      · simp [alloc.vec.Vec.set_val_eq, cast, List.getElem?_set_ne same]
+  | @elements updated _ added ha _ ht =>
+    have bound : ∀ idx ∈ added.flatMap Module.References.element, idx.val < env.code.funcs.val.length := by
+      intro idx hm
+      obtain ⟨e, mem, ref⟩ := List.mem_flatMap.mp hm
+      exact element_bound (ht e mem) idx ref
+    have decl := ha.refs.declared bound
+    have hc : SameCore env.code result.code := by
+      rw [ha.fields]
+      constructor <;> try rfl
+      dsimp only
+      rw [ha.refs.funcs]
+      apply List.ext_getElem <;> simp
+    rw [ha.fields] at hc indices ⊢
+    apply valid_late hv hc indices rfl rfl rfl rfl rfl
+    · intro idx hs; exact hc.start (hv.start idx hs)
     · intro e hm
-      exact hc.element (hv.elements e (by simpa only [congrArg metadata.Env.elements he] using hm))
-    · rw [he]; exact hv.references
+      rcases List.mem_append.mp (ha.elements ▸ hm) with hm | hm
+      · exact hc.element (hv.elements _ hm)
+      · exact hc.element (ht _ hm)
+    · intro i
+      change WebAssembly.uN.mk_uN i ∈ Translation.Environment.declaredReferences
+        {env.code with funcs := _} ↔ _
+      rw [decl, hv.references]
+      simp [Module.References.collected, ha.elements, List.flatMap_append, List.mem_append]
+      grind
+  | @dataCount updated _ count he _ =>
+    have hc : SameCore env.code updated := by rw [he]; constructor <;> rfl
+    rw [he] at hc indices ⊢
+    apply valid_late hv hc indices rfl rfl rfl rfl rfl
+    · intro idx hs; exact hc.start (hv.start idx hs)
+    · intro e hm; exact hc.element (hv.elements _ hm)
+    · exact hv.references
 
 end Itasca.Module.Environment
 
@@ -762,10 +342,10 @@ theorem Run.valid {data initial decls start initialId after afterDecls next id}
 /-- An accepted environment comes with a declaration record that represents it, its semantic
 checks, the signature and size bounds needed by the code and data parsers, and the independent byte
 encoding of the consumed prefix. -/
-def SemanticPostWith (data : Slice U8) : core.result.Result (metadata.Env × Usize) error.Error → Prop
+def SemanticPostWith (data : Slice U8) : core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ decls, Represents env decls ∧ Valid env ∧
-      SignatureBounded env next.val ∧ Bounded env next.val ∧
+      SignatureBounded env.code next.val ∧ Bounded env next.val ∧
       Binary.At (fun ds bs => PrefixEncoding ds bs) data 0#usize decls next
 
 /-- The run-based postcondition implies the semantic one. -/
@@ -775,7 +355,7 @@ theorem PostWith.semantic {data result} (h : PostWith data result) : SemanticPos
   | Ok pair =>
       obtain ⟨env, next⟩ := pair
       obtain ⟨initial, start, decls, last, hinit, hheader, hrun, hbound⟩ := h
-      have hi := metadata.Env.new.declarations
+      have hi := metadata.ModuleMetadataCodeMetadata.new.declarations
       rw [hinit] at hi
       simp only [WP.spec_ok] at hi
       obtain ⟨hr, hv, hs, _, hp⟩ := hi
@@ -817,12 +397,12 @@ open Aeneas Aeneas.Std
 namespace Itasca.Module.Sections
 
 /-- The semantic requirements for one import against the index spaces built so far. -/
-def ImportValid (env : metadata.Env) (desc : metadata.ImportDesc) : Prop :=
+def ImportValid (env : metadata.CodeMetadata) (desc : Binary.ImportDesc) : Prop :=
   match desc with
   | .Func idx => idx.val < env.types.val.length
   | .Table tt => Binary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
   | .Memory mt => Binary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES ∧
-      env.mem_types.val.length + 1 ≤ 1
+      env.memories.val.length + 1 ≤ 1
   | .Global _ => True
 
 /-- The memory types among the raw imports. -/
@@ -831,20 +411,20 @@ def rawMemories (entries : List Binary.Import) : List wasm_types.MemType :=
 
 /-- The imports are valid against `env`. Descriptor checks are separate from the cardinality limits
 on the merged memory space, so imports can be processed in order. -/
-structure ImportsValid (env : metadata.Env) (entries : List Binary.Import) : Prop where
+structure ImportsValid (env : metadata.CodeMetadata) (entries : List Binary.Import) : Prop where
   descriptors : ∀ e ∈ entries, match e.desc with
     | .Func idx => idx.val < env.types.val.length
     | .Table tt => Binary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
     | .Memory mt => Binary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES
     | .Global _ => True
-  memories : env.mem_types.val.length + (rawMemories entries).length ≤ 1
+  memories : env.memories.val.length + (rawMemories entries).length ≤ 1
 
 /-- A raw element segment is valid against `env`. An active segment names a table of its element
 type with a valid `i32` offset, and every initializer is a valid constant of the element type. -/
-def ElementValidRaw (env : metadata.Env) (entry : Binary.Element) : Prop :=
+def ElementValidRaw (env : metadata.CodeMetadata) (entry : Binary.Element) : Prop :=
   (match entry.mode with
-    | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
-        env.table_types.val[idx.val].elem = entry.elem ∧ Module.Constants.Valid env offset .I32
+    | .Active idx offset => ∃ hi : idx.val < env.tables.val.length,
+        env.tables.val[idx.val].ty.elem = entry.elem ∧ Module.Constants.Valid env offset .I32
     | .Passive | .Declarative => True) ∧
   ∀ init ∈ entry.init, Module.Constants.Valid env init (Module.Constants.referenceValueType entry.elem)
 
@@ -862,36 +442,40 @@ theorem ImportsValid.head {env entry entries} (h : ImportsValid env (entry :: en
 
 /-- After the first import is added, the remaining imports are valid against the updated
 environment. -/
-theorem ImportsValid.tail {env result actual entries}
-    (h : ImportsValid env (Module.Environment.rawImport actual :: entries))
-    (ha : ImportAdded env result actual) : ImportsValid result entries := by
+theorem ImportsValid.tail {env result : metadata.ModuleMetadata metadata.CodeMetadata} {actual entries}
+    (h : ImportsValid env.code (actual :: entries))
+    (ha : ImportAdded env result actual) : ImportsValid result.code entries := by
   obtain ⟨_, ha⟩ := ha
   have hd : ∀ e ∈ entries, match e.desc with
-      | .Func idx => idx.val < env.types.val.length
+      | .Func idx => idx.val < env.code.types.val.length
       | .Table tt => Binary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
       | .Memory mt => Binary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES
       | .Global _ => True := fun e he => h.descriptors e (by simp [he])
   have hm := h.memories
   cases he : actual.desc <;> simp only [he] at ha
-  · obtain ⟨_, _, hr, _, _⟩ := ha
+  · obtain ⟨_, hr, _, _⟩ := ha
     rw [hr]
-    exact ⟨hd, by simpa [rawMemories, Module.Environment.rawImport, he] using hm⟩
+    exact ⟨hd, by simpa [rawMemories, he] using hm⟩
   · obtain ⟨hr, _, _⟩ := ha
     rw [hr]
-    exact ⟨hd, by simpa [rawMemories, Module.Environment.rawImport, he] using hm⟩
+    exact ⟨hd, by simpa [rawMemories, he] using hm⟩
   · obtain ⟨hr, hs, _, _⟩ := ha
     rw [hr]
     refine ⟨hd, ?_⟩
     simp only
     rw [hs]
-    have hl : (rawMemories (Module.Environment.rawImport actual :: entries)).length = (rawMemories entries).length + 1 := by
-      simp [rawMemories, Module.Environment.rawImport, he]
+    have hl : (rawMemories (actual :: entries)).length = (rawMemories entries).length + 1 := by
+      simp [rawMemories, he]
     rw [hl] at hm
     simp only [List.length_append, List.length_singleton]
     omega
   · obtain ⟨hr, _, _⟩ := ha
     rw [hr]
-    exact ⟨hd, by simpa [rawMemories, Module.Environment.rawImport, he] using hm⟩
+    exact ⟨hd, by simpa [rawMemories, he] using hm⟩
+
+/-- A raw export descriptor resolves in its Wasm index space. -/
+def ExportDescValid (env : metadata.CodeMetadata) (desc : metadata.ExportDesc) : Prop :=
+  ∃ xt, env.externalTypeAt desc = some xt
 
 end Itasca.Module.Sections
 
@@ -905,19 +489,19 @@ def StopAt (data : Slice U8) (pos : Usize) : Prop :=
 
 /-- The semantic requirements of declaration section rank `id` of `raw` against `env`. Binary
 framing, UTF-8 names, and cursor and capacity bounds come separately from the grammar. -/
-def SectionValid (raw : Binary.Module) (id : Nat) (env : metadata.Env) : Prop :=
+def SectionValid (raw : Binary.Module) (id : Nat) (env : metadata.CodeMetadata) : Prop :=
   match id with
   | 1 => ∀ ft ∈ raw.types, CodeEntry.FuncTypeWithinLimits ft
   | 2 => Module.Sections.ImportsValid env raw.imports
   | 3 => ∀ idx ∈ raw.functions, idx.val < env.types.val.length
   | 4 => ∀ tt ∈ raw.tables, Binary.LimitsValid tt.limits limits.MAX_TABLE_ELEMS
   | 5 => (∀ mt ∈ raw.memories, Binary.LimitsValid mt.limits limits.MAX_MEMORY_PAGES) ∧
-      env.mem_types.val.length + raw.memories.length ≤ 1
+      env.memories.val.length + raw.memories.length ≤ 1
   | 6 => ∀ g ∈ raw.globals, Module.Constants.Valid env g.init g.gtype.valtype
   | 7 => (raw.exports.map Binary.Export.name).Nodup ∧
       ∀ e ∈ raw.exports, Module.Sections.ExportDescValid env e.desc
-  | 8 => ∀ idx, raw.start = some idx → ∃ hi : idx.val < env.func_types.val.length,
-      env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = []
+  | 8 => ∀ idx, raw.start = some idx → ∃ ft, env.externalTypeAt (.Func idx) = some (.Func ft) ∧
+      ft.params.val = [] ∧ ft.results.val = []
   | 9 => ∀ e ∈ raw.elements, Module.Sections.ElementValidRaw env e
   | 10 => True
   | _ => True
@@ -926,7 +510,7 @@ def SectionValid (raw : Binary.Module) (id : Nat) (env : metadata.Env) : Prop :=
 ready. Declarative assembly discharges this once, and it has no parser-execution or
 successful-decoding premise. -/
 def Requirements (raw : Binary.Module) : Prop :=
-  ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env
+  ∀ id decls env, 1 ≤ id → id ≤ 10 → Ready raw (id - 1) decls env → SectionValid raw id env.code
 
 end Itasca.Module.Environment
 

@@ -38,7 +38,7 @@ namespace Itasca.Visitor.Dispatch
 /-- `code.step` on `code.OP_I32_CONST` runs `code.read_i32_const` and then calls the `on_i32_const`
 hook. -/
 theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_CONST v =
       Visitor.Core.run (code.read_i32_const st data) visitor.on_i32_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -51,7 +51,7 @@ theorem dispatch_i32_const {V : Type} (visitor : code.OpVisitor V)
 
 /-- `code.step` on `code.OP_DROP` runs `code.read_drop` and then calls the `on_drop` hook. -/
 theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_DROP v =
       Visitor.Core.run (code.read_drop st) visitor.on_drop v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -65,7 +65,7 @@ theorem dispatch_drop {V : Type} (visitor : code.OpVisitor V)
 /-- `code.step` on `code.OP_UNREACHABLE` runs `code.read_unreachable` and then calls the
 `on_unreachable` hook. -/
 theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_UNREACHABLE v =
       Visitor.Core.run (code.read_unreachable st) (fun v s _ => visitor.on_unreachable v s) v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -79,7 +79,7 @@ theorem dispatch_unreachable {V : Type} (visitor : code.OpVisitor V)
 /-- `code.step` on `code.OP_I64_CONST` runs `code.read_i64_const` and then calls the `on_i64_const`
 hook. -/
 theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       Visitor.Core.run (code.read_i64_const st data) visitor.on_i64_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -93,7 +93,7 @@ theorem dispatch_i64_const {V : Type} (visitor : code.OpVisitor V)
 /-- `code.step` on `code.OP_F32_CONST` runs `code.read_f32_const` and then calls the `on_f32_const`
 hook. -/
 theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       Visitor.Core.run (code.read_f32_const st data) visitor.on_f32_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -107,7 +107,7 @@ theorem dispatch_f32_const {V : Type} (visitor : code.OpVisitor V)
 /-- `code.step` on `code.OP_F64_CONST` runs `code.read_f64_const` and then calls the `on_f64_const`
 hook. -/
 theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       Visitor.Core.run (code.read_f64_const st data) visitor.on_f64_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -120,7 +120,7 @@ theorem dispatch_f64_const {V : Type} (visitor : code.OpVisitor V)
 
 /-- `code.step` on `code.OP_NOP` reads no immediates and calls the `on_nop` hook. -/
 theorem dispatch_nop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_NOP v =
       Visitor.Core.run (.ok (.Ok (), st)) (fun v st (_ : Unit) => visitor.on_nop v st) v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -132,7 +132,7 @@ set_option maxHeartbeats 1000000 in
 /-- `code.step_memory` behaves as `code.step_numeric` on an opcode that is neither a load or store
 nor `memory.size` or `memory.grow`. -/
 theorem memory_fallback {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U8) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U8) (v : V)
     (hm : Body.MemoryMeaning.opcodeMeaning opcode = none)
     (hsize : opcode ≠ code.OP_MEMORY_SIZE) (hgrow : opcode ≠ code.OP_MEMORY_GROW) :
     code.step_memory visitor st data env opcode v = code.step_numeric visitor st opcode v := by
@@ -528,7 +528,7 @@ theorem code.step_numeric.accepted_erase {V : Type} (visitor : code.OpVisitor V)
 set_option maxHeartbeats 1000000 in
 /-- An accepted `code.step` run also succeeds, at the same state, with the empty visitor. -/
 theorem code.step.accepted_erase {V : Type} (visitor : code.OpVisitor V)
-    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v v' : V)
     (h : code.step visitor st data env ctx opcode v = .ok (.Ok (), st', v')) :
     code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
@@ -686,7 +686,7 @@ set_option maxHeartbeats 1000000 in
 whose hooks all accept. The resulting visitor state is unconstrained. -/
 theorem code.step.accepted_lift {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor)
-    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st st' : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v : V)
     (h : code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), st', ())) :

@@ -29,7 +29,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 theorem code.step_local_get.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_GET v =
       Visitor.Core.run (code.read_local_get st data ctx) visitor.on_local_get v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -41,7 +41,7 @@ theorem code.step_local_get.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_local_set.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_SET v =
       Visitor.Core.run (code.read_local_set st data ctx) visitor.on_local_set v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -53,7 +53,7 @@ theorem code.step_local_set.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_local_tee.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_LOCAL_TEE v =
       Visitor.Core.run (code.read_local_tee st data ctx) visitor.on_local_tee v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -65,7 +65,7 @@ theorem code.step_local_tee.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_global_get.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_GLOBAL_GET v =
       Visitor.Core.run (code.read_global_get st data env) visitor.on_global_get v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -77,7 +77,7 @@ theorem code.step_global_get.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_global_set.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_GLOBAL_SET v =
       Visitor.Core.run (code.read_global_set st data env) visitor.on_global_set v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -89,7 +89,7 @@ theorem code.step_global_set.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_memory_size.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_MEMORY_SIZE v =
       Visitor.Core.run (code.read_memory_size st data env) (fun v s _ => visitor.on_memory_size v s) v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -101,7 +101,7 @@ theorem code.step_memory_size.dispatch {V : Type} (visitor : code.OpVisitor V)
   congr 1
 
 theorem code.step_memory_grow.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_MEMORY_GROW v =
       Visitor.Core.run (code.read_memory_grow st data env) (fun v s _ => visitor.on_memory_grow v s) v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -115,7 +115,7 @@ theorem code.step_memory_grow.dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- For an opcode with a row in `Body.MemoryMeaning.opcodeMeaning`, `code.step` runs `code.read_store`
 or `code.read_load` and then `code.visit_memory`. -/
 theorem code.step_memory.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (opcode : U8) (operation : Body.MemoryMeaning.Operation)
     (hrow : Body.MemoryMeaning.opcodeMeaning opcode = some operation) :
     code.step visitor st data env ctx opcode v =
@@ -440,8 +440,8 @@ theorem code.local_type.complete (ctx : code.Context) (idx : U32) (t : wasm_type
   | Err e => have := hp.2; omega
 
 /-- `code.global_type` succeeds for an in-range global. -/
-theorem code.global_type.complete (env : metadata.Env) (idx : U32) (gt : wasm_types.GlobalType)
-    (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt) :
+theorem code.global_type.complete (env : metadata.CodeMetadata) (idx : U32) (gt : wasm_types.GlobalType)
+    (hi : idx.val < env.globals.val.length) (ht : env.globals.val[idx.val].gtype = gt) :
     code.global_type env idx = .ok (.Ok gt) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.global_type.spec env idx)
   cases r with
@@ -458,16 +458,16 @@ theorem code.take_local.complete (st : code.OpIterState) (data : Slice U8) (ctx 
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `code.take_global` succeeds when the LEB128 read returns an in-range global index. -/
-theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.take_global.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
-    (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt) :
+    (hi : idx.val < env.globals.val.length) (ht : env.globals.val[idx.val].gtype = gt) :
     code.take_global st data env = .ok (.Ok (idx, gt), { st with pos := next }) := by
   simp [code.take_global, hd, code.global_type.complete env idx gt hi ht,
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- `code.require_memory` succeeds when the environment has a memory. -/
-theorem code.require_memory.complete (env : metadata.Env) (h : 0 < env.mem_types.val.length) :
+theorem code.require_memory.complete (env : metadata.CodeMetadata) (h : 0 < env.memories.val.length) :
     code.require_memory env = .ok (.Ok ()) := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.require_memory.spec env)
   cases r with
@@ -475,8 +475,8 @@ theorem code.require_memory.complete (env : metadata.Env) (h : 0 < env.mem_types
   | Err e => simp [hp.2] at h
 
 /-- `code.check_memory_and_alignment` succeeds with a memory and an alignment at most `natural`. -/
-theorem code.check_memory_and_alignment.complete (env : metadata.Env) (arg : code.MemArg)
-    (natural : U32) (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val) :
+theorem code.check_memory_and_alignment.complete (env : metadata.CodeMetadata) (arg : code.MemArg)
+    (natural : U32) (hm : 0 < env.memories.val.length) (ha : arg.align.val ≤ natural.val) :
     code.check_memory_and_alignment env arg natural = .ok (.Ok ()) := by
   have hle : ¬ arg.align > natural := by scalar_tac
   simp [code.check_memory_and_alignment, code.require_memory.complete env hm, hle,
@@ -542,10 +542,10 @@ theorem code.read_local_tee.complete (st : code.OpIterState) (data : Slice U8) (
   · exact (Body.Stack.realizes_append_concrete _ rest [t] _).mpr ⟨before, hrest, rfl⟩
 
 /-- `code.read_global_get` succeeds for an in-range global, pushing its type. -/
-theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
-    (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt)
+    (hi : idx.val < env.globals.val.length) (ht : env.globals.val[idx.val].gtype = gt)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes (Body.Control.polymorphic st) segment before) :
@@ -561,10 +561,10 @@ theorem code.read_global_get.complete (st : code.OpIterState) (data : Slice U8) 
 
 /-- `code.read_global_set` succeeds for an in-range mutable global when the segment realizes a
 stack ending in its type. -/
-theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_global_set.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx : U32) (next : Usize) (gt : wasm_types.GlobalType)
     (hd : reader.read_u32_leb data st.pos = .ok (.Ok (idx, next)))
-    (hi : idx.val < env.global_types.val.length) (ht : env.global_types.val[idx.val] = gt)
+    (hi : idx.val < env.globals.val.length) (ht : env.globals.val[idx.val].gtype = gt)
     (hmut : gt.mutability = .Var)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Body.Control.base st).val = outer.length)
@@ -586,9 +586,9 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- `code.read_memory_size` succeeds with a memory and a zero reserved byte, pushing an `i32`. -/
-theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
-    (hm : 0 < env.mem_types.val.length)
+    (hm : 0 < env.memories.val.length)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes (Body.Control.polymorphic st) segment before) :
@@ -606,9 +606,9 @@ theorem code.read_memory_size.complete (st : code.OpIterState) (data : Slice U8)
 
 /-- `code.read_memory_grow` succeeds with a memory and a zero reserved byte when the segment
 realizes a stack ending in `i32`, and pushes an `i32`. -/
-theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (next : Usize) (hz : reader.read_byte data st.pos = .ok (.Ok (0#u8, next)))
-    (hm : 0 < env.mem_types.val.length)
+    (hm : 0 < env.memories.val.length)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Body.Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
@@ -631,10 +631,10 @@ theorem code.read_memory_grow.complete (st : code.OpIterState) (data : Slice U8)
 
 /-- `code.read_load` succeeds with a memory and a valid alignment when the segment realizes a stack
 ending in the `i32` address, and pushes the loaded type. -/
-theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (next : Usize) (arg : code.MemArg) (t : wasm_types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))
-    (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val)
+    (hm : 0 < env.memories.val.length) (ha : arg.align.val ≤ natural.val)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Body.Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
@@ -655,10 +655,10 @@ theorem code.read_load.complete (st : code.OpIterState) (data : Slice U8) (env :
 
 /-- `code.read_store` succeeds with a memory and a valid alignment when the segment realizes a
 stack ending in the address and stored value. -/
-theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_store.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (next : Usize) (arg : code.MemArg) (t : wasm_types.ValueType) (natural : U32)
     (hd : code.read_memarg st data = .ok (.Ok arg, {st with pos := next}))
-    (hm : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ natural.val)
+    (hm : 0 < env.memories.val.length) (ha : arg.align.val ≤ natural.val)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.vals.val = outer ++ segment) (hb : (Body.Control.base st).val = outer.length)
     (hr : Body.Stack.Realizes (Body.Control.polymorphic st) segment (before ++ [.I32, Translation.valueType t])) :

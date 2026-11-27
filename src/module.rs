@@ -4,6 +4,7 @@
 //! contiguous source and synchronous worker. Section parsers carry declared end
 //! positions and require exact consumption before accepting each section.
 
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 use crate::code::{
@@ -38,22 +39,23 @@ pub(crate) const SECTION_DATA_COUNT: u8 = 12;
 
 // --- The environment: everything before the code section ---
 
-/// A defined global and its initializer.
+/// A global in module index order. Imported globals have no initializer.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
 pub struct Global {
     pub gtype: GlobalType,
-    pub init: ConstExpr,
+    pub init: Option<ConstExpr>,
+    pub is_exported: bool,
 }
 
-/// The declared type or type index of an import.
+/// The index space of an import declaration.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]
-pub enum ImportDesc {
-    Func(u32),
-    Table(TableType),
-    Memory(MemType),
-    Global(GlobalType),
+pub enum ImportKind {
+    Func,
+    Table,
+    Memory,
+    Global,
 }
 
 /// An import declaration with UTF-8 module and field names stored as bytes.
@@ -62,7 +64,7 @@ pub enum ImportDesc {
 pub struct Import {
     pub module: Vec<u8>,
     pub name: Vec<u8>,
-    pub desc: ImportDesc,
+    pub kind: ImportKind,
 }
 
 /// An exported index in the corresponding module index space.
@@ -92,160 +94,134 @@ pub enum ElementMode {
     Declarative,
 }
 
-/// An element segment with its reference type, mode, and initializer expressions.
+/// Initializers in the segment's original index or expression encoding.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+#[derive(Clone)]
+pub enum ElementInit {
+    Functions(Vec<u32>),
+    Expressions(Vec<ConstExpr>),
+}
+
+/// An element segment with its reference type, mode, and initializer payload.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone)]
 pub struct Element {
     pub elem: ElemType,
     pub mode: ElementMode,
-    pub init: Vec<ConstExpr>,
+    pub init: ElementInit,
 }
 
-/// Read-only declarations and index spaces decoded before the code section.
-///
-/// Streaming callers allocate storage with `Env::new`. The driver replaces it
-/// before issuing batches. Metadata observed before the driver succeeds does not
-/// certify a complete module.
+/// A function in module index order, including imports.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-#[derive(Clone)]
-pub struct Env {
-    /// The declared function types, in type-index order.
+pub struct FuncDesc {
+    pub type_index: u32,
+    pub can_ref_func: bool,
+    /// Needs an eager entry point (explicit export or start function).
+    pub eager: bool,
+}
+
+impl FuncDesc {
+    /// The engine needs an external entry point even for an unnamed reference.
+    pub fn is_exported(&self) -> bool {
+        self.eager || self.can_ref_func
+    }
+}
+
+/// A table in module index order.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub struct TableDesc {
+    pub ty: TableType,
+    pub is_imported: bool,
+    pub is_exported: bool,
+}
+
+/// A memory in module index order.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub struct MemoryDesc {
+    pub ty: MemType,
+    pub is_imported: bool,
+    pub is_exported: bool,
+}
+
+/// Declarations available to function validation and compilation.
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub struct CodeMetadata {
     pub(crate) types: Vec<FuncType>,
-    /// The import declarations, in binary order.
-    pub(crate) imports: Vec<Import>,
-    /// The defined globals and their initializers.
+    pub(crate) funcs: Vec<FuncDesc>,
     pub(crate) globals: Vec<Global>,
-    /// The export declarations, in binary order.
-    pub(crate) exports: Vec<Export>,
-    /// The element segments in element-index order.
-    pub(crate) elements: Vec<Element>,
-    /// The optional data-segment count declared before function bodies.
+    pub(crate) tables: Vec<TableDesc>,
+    pub(crate) memories: Vec<MemoryDesc>,
+    pub(crate) elem_segment_types: Vec<ElemType>,
     pub(crate) data_count: Option<u32>,
-    /// Function indices declared as referenceable outside function bodies.
-    pub(crate) declared_funcs: Vec<u32>,
-    /// The optional start-function index.
     pub(crate) start: Option<u32>,
-    /// The type index of each defined function, in code-section order.
-    pub(crate) func_type_indices: Vec<u32>,
-
-    /// The function index space, with imports preceding definitions.
-    pub(crate) func_types: Vec<FuncType>,
-    pub(crate) table_types: Vec<TableType>,
-    pub(crate) mem_types: Vec<MemType>,
-    pub(crate) global_types: Vec<GlobalType>,
-
-    /// The number of imported functions preceding defined functions.
     pub(crate) num_imported_funcs: usize,
     pub(crate) num_imported_globals: usize,
 }
 
-impl Env {
-    /// Creates empty output storage for `validate_streaming`.
-    ///
-    /// The driver fills this storage with the decoded environment. An empty or
-    /// partially validated environment is not evidence of whole-module
-    /// acceptance.
-    #[allow(clippy::new_without_default)]
-    pub fn new() -> Env {
-        Env {
+impl CodeMetadata {
+    fn new() -> Self {
+        Self {
             types: Vec::new(),
-            imports: Vec::new(),
+            funcs: Vec::new(),
             globals: Vec::new(),
-            exports: Vec::new(),
-            elements: Vec::new(),
+            tables: Vec::new(),
+            memories: Vec::new(),
+            elem_segment_types: Vec::new(),
             data_count: None,
-            declared_funcs: Vec::new(),
             start: None,
-            func_type_indices: Vec::new(),
-            func_types: Vec::new(),
-            table_types: Vec::new(),
-            mem_types: Vec::new(),
-            global_types: Vec::new(),
             num_imported_funcs: 0,
             num_imported_globals: 0,
         }
     }
 
-    /// Returns the declared function types in type-index order.
+    /// Resolves a module function index to its signature.
+    pub fn func_type(&self, index: u32) -> Option<&FuncType> {
+        let i = index as usize;
+        if i >= self.funcs.len() {
+            return None;
+        }
+        let t = self.funcs[i].type_index as usize;
+        if t >= self.types.len() {
+            return None;
+        }
+        Some(&self.types[t])
+    }
+
+    pub fn declares_function(&self, index: u32) -> bool {
+        let i = index as usize;
+        i < self.funcs.len() && self.funcs[i].can_ref_func
+    }
+
+    pub fn num_func_defs(&self) -> usize {
+        self.funcs.len() - self.num_imported_funcs
+    }
     pub fn types(&self) -> &[FuncType] {
         &self.types
     }
-
-    /// Returns the import declarations in binary order.
-    pub fn imports(&self) -> &[Import] {
-        &self.imports
+    pub fn funcs(&self) -> &[FuncDesc] {
+        &self.funcs
     }
-
-    /// Returns the defined globals and their initializers.
     pub fn globals(&self) -> &[Global] {
         &self.globals
     }
-
-    /// Returns the export declarations in binary order.
-    pub fn exports(&self) -> &[Export] {
-        &self.exports
+    pub fn tables(&self) -> &[TableDesc] {
+        &self.tables
     }
-
-    /// Returns all element segments in element-index order.
-    pub fn elements(&self) -> &[Element] {
-        &self.elements
+    pub fn memories(&self) -> &[MemoryDesc] {
+        &self.memories
     }
-
-    /// Returns the optional data count declared before the code section.
-    pub fn data_count(&self) -> Option<u32> {
-        self.data_count
+    pub fn elem_segment_types(&self) -> &[ElemType] {
+        &self.elem_segment_types
     }
-
-    /// Returns whether the module declares a function as referenceable.
-    pub fn declares_function(&self, index: u32) -> bool {
-        let mut i: usize = 0;
-        loop {
-            if i >= self.declared_funcs.len() {
-                return false;
-            }
-            if self.declared_funcs[i] == index {
-                return true;
-            }
-            i += 1;
-        }
-    }
-
-    /// Returns the optional start-function index.
     pub fn start(&self) -> Option<u32> {
         self.start
     }
-
-    /// Returns the type index of each defined function in code-section order.
-    pub fn func_type_indices(&self) -> &[u32] {
-        &self.func_type_indices
+    pub fn data_count(&self) -> Option<u32> {
+        self.data_count
     }
-
-    /// Returns the function index space, with imports preceding definitions.
-    pub fn func_types(&self) -> &[FuncType] {
-        &self.func_types
-    }
-
-    /// Returns the table index space, with imports preceding definitions.
-    pub fn table_types(&self) -> &[TableType] {
-        &self.table_types
-    }
-
-    /// Returns the memory index space, with imports preceding definitions.
-    pub fn mem_types(&self) -> &[MemType] {
-        &self.mem_types
-    }
-
-    /// Returns the global index space, with imports preceding definitions.
-    pub fn global_types(&self) -> &[GlobalType] {
-        &self.global_types
-    }
-
-    /// Returns the number of imported functions.
     pub fn num_imported_funcs(&self) -> usize {
         self.num_imported_funcs
     }
-
-    /// Returns the number of imported globals.
     pub fn num_imported_globals(&self) -> usize {
         self.num_imported_globals
     }
@@ -266,28 +242,54 @@ pub struct Data {
     pub init: Vec<u8>,
 }
 
-/// The data segments decoded after the code section.
+/// The decoded module declarations and initialization segments.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-pub struct Tail {
-    pub data: Vec<Data>,
+pub struct ModuleMetadata<C = Arc<CodeMetadata>> {
+    pub(crate) code: C,
+    imports: Vec<Import>,
+    exports: Vec<Export>,
+    elements: Vec<Element>,
+    pub(crate) data: Vec<Data>,
 }
 
-/// Read-only metadata returned after successful whole-module validation.
-#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-pub struct Module {
-    pub(crate) env: Env,
-    pub(crate) tail: Tail,
-}
-
-impl Module {
-    /// Returns the validated declarations and index spaces.
-    pub fn env(&self) -> &Env {
-        &self.env
+impl ModuleMetadata<CodeMetadata> {
+    fn new() -> Self {
+        Self {
+            code: CodeMetadata::new(),
+            imports: Vec::new(),
+            exports: Vec::new(),
+            elements: Vec::new(),
+            data: Vec::new(),
+        }
     }
 
-    /// Returns the validated data segments.
-    pub fn tail(&self) -> &Tail {
-        &self.tail
+    /// Publish the completed index spaces before any workers are issued.
+    pub(crate) fn share(self) -> ModuleMetadata {
+        ModuleMetadata {
+            code: Arc::new(self.code),
+            imports: self.imports,
+            exports: self.exports,
+            elements: self.elements,
+            data: self.data,
+        }
+    }
+}
+
+impl ModuleMetadata {
+    pub fn code(&self) -> &Arc<CodeMetadata> {
+        &self.code
+    }
+    pub fn imports(&self) -> &[Import] {
+        &self.imports
+    }
+    pub fn exports(&self) -> &[Export] {
+        &self.exports
+    }
+    pub fn elements(&self) -> &[Element] {
+        &self.elements
+    }
+    pub fn data(&self) -> &[Data] {
+        &self.data
     }
 }
 
@@ -297,81 +299,90 @@ impl Module {
 /// soundness, and completeness guarantees within the implementation limits,
 /// assuming allocation succeeds. Supports the complete WebAssembly Core 2.0
 /// instruction and module grammar.
-pub fn validate_module(data: &[u8]) -> Result<Module> {
+pub fn validate_module(data: &[u8]) -> Result<ModuleMetadata> {
     crate::stream::validate_module_slice(data)
 }
 
 // --- The module's external types ---
 
-impl Env {
-    /// Resolves import types in declaration order.
-    ///
-    /// For an environment returned by successful module validation, every type index
-    /// is valid and resolution succeeds.
+impl ModuleMetadata {
+    /// Resolves imports in binary order using the import prefix of each index space.
     pub fn import_types(&self) -> Result<Vec<ExternType>> {
-        let mut out: Vec<ExternType> = Vec::new();
-        let mut i: usize = 0;
-        loop {
-            if i >= self.imports.len() {
-                return Ok(out);
-            }
-            let desc = self.imports[i].desc;
-            match desc {
-                ImportDesc::Func(idx) => {
-                    let ft = lookup_type(self, idx)?;
-                    out.push(ExternType::Func(ft));
+        let mut funcs = 0;
+        let mut tables = 0;
+        let mut memories = 0;
+        let mut globals = 0;
+        let mut out = Vec::new();
+        let mut i = 0;
+        while i < self.imports.len() {
+            let desc = match self.imports[i].kind {
+                ImportKind::Func => {
+                    let index = funcs;
+                    funcs += 1;
+                    ExportDesc::Func(index)
                 }
-                ImportDesc::Table(tt) => out.push(ExternType::Table(tt)),
-                ImportDesc::Memory(mt) => out.push(ExternType::Memory(mt)),
-                ImportDesc::Global(gt) => out.push(ExternType::Global(gt)),
-            }
+                ImportKind::Table => {
+                    let index = tables;
+                    tables += 1;
+                    ExportDesc::Table(index)
+                }
+                ImportKind::Memory => {
+                    let index = memories;
+                    memories += 1;
+                    ExportDesc::Memory(index)
+                }
+                ImportKind::Global => {
+                    let index = globals;
+                    globals += 1;
+                    ExportDesc::Global(index)
+                }
+            };
+            out.push(self.code.extern_type(desc)?);
             i += 1;
         }
+        Ok(out)
     }
 
-    /// Resolves export types in declaration order.
-    ///
-    /// For an environment returned by successful module validation, every exported
-    /// index is valid and resolution succeeds.
+    /// Resolves exports in binary order, including aliases of the same index.
     pub fn export_types(&self) -> Result<Vec<ExternType>> {
-        let mut out: Vec<ExternType> = Vec::new();
-        let mut i: usize = 0;
-        loop {
-            if i >= self.exports.len() {
-                return Ok(out);
-            }
-            let desc = self.exports[i].desc;
-            match desc {
-                ExportDesc::Func(idx) => {
-                    let j = idx as usize;
-                    if j >= self.func_types.len() {
-                        return Err(Error::UnknownFunc(idx));
-                    }
-                    out.push(ExternType::Func(copy_func_type(&self.func_types[j])));
-                }
-                ExportDesc::Table(idx) => {
-                    let j = idx as usize;
-                    if j >= self.table_types.len() {
-                        return Err(Error::UnknownTable(idx));
-                    }
-                    out.push(ExternType::Table(self.table_types[j]));
-                }
-                ExportDesc::Memory(idx) => {
-                    let j = idx as usize;
-                    if j >= self.mem_types.len() {
-                        return Err(Error::UnknownMemory(idx));
-                    }
-                    out.push(ExternType::Memory(self.mem_types[j]));
-                }
-                ExportDesc::Global(idx) => {
-                    let j = idx as usize;
-                    if j >= self.global_types.len() {
-                        return Err(Error::UnknownGlobal(idx));
-                    }
-                    out.push(ExternType::Global(self.global_types[j]));
-                }
-            }
+        let mut out = Vec::new();
+        let mut i = 0;
+        while i < self.exports.len() {
+            out.push(self.code.extern_type(self.exports[i].desc)?);
             i += 1;
+        }
+        Ok(out)
+    }
+}
+
+impl CodeMetadata {
+    fn extern_type(&self, desc: ExportDesc) -> Result<ExternType> {
+        match desc {
+            ExportDesc::Func(idx) => {
+                let ft = self.func_type(idx).ok_or(Error::UnknownFunc(idx))?;
+                Ok(ExternType::Func(copy_func_type(ft)))
+            }
+            ExportDesc::Table(idx) => {
+                let i = idx as usize;
+                if i >= self.tables.len() {
+                    return Err(Error::UnknownTable(idx));
+                }
+                Ok(ExternType::Table(self.tables[i].ty))
+            }
+            ExportDesc::Memory(idx) => {
+                let i = idx as usize;
+                if i >= self.memories.len() {
+                    return Err(Error::UnknownMemory(idx));
+                }
+                Ok(ExternType::Memory(self.memories[i].ty))
+            }
+            ExportDesc::Global(idx) => {
+                let i = idx as usize;
+                if i >= self.globals.len() {
+                    return Err(Error::UnknownGlobal(idx));
+                }
+                Ok(ExternType::Global(self.globals[i].gtype))
+            }
         }
     }
 }
@@ -680,15 +691,15 @@ fn read_expr_end(data: &[u8], pos: usize) -> Result<usize> {
 }
 
 /// Resolves an immutable imported global for a constant expression.
-fn const_global(env: &Env, idx: u32) -> Result<GlobalType> {
+fn const_global(env: &CodeMetadata, idx: u32) -> Result<GlobalType> {
     let i = idx as usize;
-    if i >= env.global_types.len() {
+    if i >= env.globals.len() {
         return Err(Error::UnknownGlobal(idx));
     }
     if i >= env.num_imported_globals {
         return Err(Error::MutableGlobalInConstExpr);
     }
-    let gt = env.global_types[i];
+    let gt = env.globals[i].gtype;
     if gt.mutability != Mut::Const {
         return Err(Error::MutableGlobalInConstExpr);
     }
@@ -699,7 +710,7 @@ fn const_global(env: &Env, idx: u32) -> Result<GlobalType> {
 pub(crate) fn decode_const_expr(
     data: &[u8],
     pos: usize,
-    env: &Env,
+    env: &CodeMetadata,
     expected: ValueType,
 ) -> Result<(ConstExpr, usize)> {
     let (op, p) = read_byte(data, pos)?;
@@ -743,7 +754,7 @@ pub(crate) fn decode_const_expr(
         }
         code::OP_REF_FUNC => {
             let (idx, p1) = read_u32_leb(data, p)?;
-            if idx as usize >= env.func_types.len() {
+            if idx as usize >= env.funcs.len() {
                 return Err(Error::UnknownFunc(idx));
             }
             expect_const_type(ValueType::FuncRef, expected)?;
@@ -786,18 +797,9 @@ fn copy_func_type(ft: &FuncType) -> FuncType {
     }
 }
 
-/// Checks a function type index and copies its signature.
-fn lookup_type(env: &Env, idx: u32) -> Result<FuncType> {
-    let i = idx as usize;
-    if i >= env.types.len() {
-        return Err(Error::UnknownType(idx));
-    }
-    Ok(copy_func_type(&env.types[i]))
-}
-
 // --- The environment's sections ---
 
-fn decode_type_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_type_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -813,54 +815,72 @@ fn decode_type_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> 
 }
 
 /// Decodes an import and appends it to the corresponding index space.
-fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_import(data: &[u8], pos: usize, env: &mut ModuleMetadata<CodeMetadata>) -> Result<usize> {
     let (module, p1) = decode_name(data, pos)?;
     let (name, p2) = decode_name(data, p1)?;
     let (kind, p3) = read_byte(data, p2)?;
     match kind {
         0x00 => {
             let (idx, p4) = read_u32_leb(data, p3)?;
-            let ft = lookup_type(env, idx)?;
-            env.func_types.push(ft);
-            env.num_imported_funcs += 1;
+            if idx as usize >= env.code.types.len() {
+                return Err(Error::UnknownType(idx));
+            }
+            env.code.funcs.push(FuncDesc {
+                type_index: idx,
+                can_ref_func: false,
+                eager: false,
+            });
+            env.code.num_imported_funcs += 1;
             env.imports.push(Import {
                 module,
                 name,
-                desc: ImportDesc::Func(idx),
+                kind: ImportKind::Func,
             });
             Ok(p4)
         }
         0x01 => {
             let (tt, p4) = decode_table_type(data, p3)?;
-            env.table_types.push(tt);
+            env.code.tables.push(TableDesc {
+                ty: tt,
+                is_imported: true,
+                is_exported: false,
+            });
             env.imports.push(Import {
                 module,
                 name,
-                desc: ImportDesc::Table(tt),
+                kind: ImportKind::Table,
             });
             Ok(p4)
         }
         0x02 => {
             let (mt, p4) = decode_mem_type(data, p3)?;
-            env.mem_types.push(mt);
-            if env.mem_types.len() > MAX_MEMORIES {
+            env.code.memories.push(MemoryDesc {
+                ty: mt,
+                is_imported: true,
+                is_exported: false,
+            });
+            if env.code.memories.len() > MAX_MEMORIES {
                 return Err(Error::MultipleMemories);
             }
             env.imports.push(Import {
                 module,
                 name,
-                desc: ImportDesc::Memory(mt),
+                kind: ImportKind::Memory,
             });
             Ok(p4)
         }
         0x03 => {
             let (gt, p4) = decode_global_type(data, p3)?;
-            env.global_types.push(gt);
-            env.num_imported_globals += 1;
+            env.code.globals.push(Global {
+                gtype: gt,
+                is_exported: false,
+                init: None,
+            });
+            env.code.num_imported_globals += 1;
             env.imports.push(Import {
                 module,
                 name,
-                desc: ImportDesc::Global(gt),
+                kind: ImportKind::Global,
             });
             Ok(p4)
         }
@@ -868,7 +888,11 @@ fn decode_import(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
     }
 }
 
-fn decode_import_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_import_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut ModuleMetadata<CodeMetadata>,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -881,7 +905,7 @@ fn decode_import_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
     }
 }
 
-fn decode_function_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_function_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -890,15 +914,20 @@ fn decode_function_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usi
             return Ok(q);
         }
         let (idx, q1) = read_u32_leb(data, q)?;
-        let ft = lookup_type(env, idx)?;
-        env.func_types.push(ft);
-        env.func_type_indices.push(idx);
+        if idx as usize >= env.types.len() {
+            return Err(Error::UnknownType(idx));
+        }
+        env.funcs.push(FuncDesc {
+            type_index: idx,
+            can_ref_func: false,
+            eager: false,
+        });
         q = q1;
         i += 1;
     }
 }
 
-fn decode_table_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_table_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -907,13 +936,17 @@ fn decode_table_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize>
             return Ok(q);
         }
         let (tt, q1) = decode_table_type(data, q)?;
-        env.table_types.push(tt);
+        env.tables.push(TableDesc {
+            ty: tt,
+            is_imported: false,
+            is_exported: false,
+        });
         q = q1;
         i += 1;
     }
 }
 
-fn decode_memory_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_memory_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -922,8 +955,12 @@ fn decode_memory_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
             return Ok(q);
         }
         let (mt, q1) = decode_mem_type(data, q)?;
-        env.mem_types.push(mt);
-        if env.mem_types.len() > MAX_MEMORIES {
+        env.memories.push(MemoryDesc {
+            ty: mt,
+            is_imported: false,
+            is_exported: false,
+        });
+        if env.memories.len() > MAX_MEMORIES {
             return Err(Error::MultipleMemories);
         }
         q = q1;
@@ -931,7 +968,7 @@ fn decode_memory_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
     }
 }
 
-fn decode_global_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_global_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -942,8 +979,11 @@ fn decode_global_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
         let (gtype, q1) = decode_global_type(data, q)?;
         let (init, q2) = decode_const_expr(data, q1, env, gtype.valtype)?;
         declare_initializer(env, init);
-        env.global_types.push(gtype);
-        env.globals.push(Global { gtype, init });
+        env.globals.push(Global {
+            gtype,
+            init: Some(init),
+            is_exported: false,
+        });
         q = q2;
         i += 1;
     }
@@ -966,7 +1006,7 @@ fn names_equal(a: &[u8], b: &[u8]) -> bool {
 }
 
 /// Returns whether an earlier export has the same decoded name bytes.
-fn export_name_taken(env: &Env, name: &[u8]) -> bool {
+fn export_name_taken(env: &ModuleMetadata<CodeMetadata>, name: &[u8]) -> bool {
     let mut i: usize = 0;
     loop {
         if i >= env.exports.len() {
@@ -979,38 +1019,47 @@ fn export_name_taken(env: &Env, name: &[u8]) -> bool {
     }
 }
 
-fn export_desc(env: &Env, kind: u8, idx: u32) -> Result<ExportDesc> {
+fn mark_exported(env: &mut CodeMetadata, kind: u8, idx: u32) -> Result<ExportDesc> {
     let i = idx as usize;
     match kind {
         0x00 => {
-            if i >= env.func_types.len() {
+            if i >= env.funcs.len() {
                 return Err(Error::UnknownFunc(idx));
             }
+            env.funcs[i].can_ref_func = true;
+            env.funcs[i].eager = true;
             Ok(ExportDesc::Func(idx))
         }
         0x01 => {
-            if i >= env.table_types.len() {
+            if i >= env.tables.len() {
                 return Err(Error::UnknownTable(idx));
             }
+            env.tables[i].is_exported = true;
             Ok(ExportDesc::Table(idx))
         }
         0x02 => {
-            if i >= env.mem_types.len() {
+            if i >= env.memories.len() {
                 return Err(Error::UnknownMemory(idx));
             }
+            env.memories[i].is_exported = true;
             Ok(ExportDesc::Memory(idx))
         }
         0x03 => {
-            if i >= env.global_types.len() {
+            if i >= env.globals.len() {
                 return Err(Error::UnknownGlobal(idx));
             }
+            env.globals[i].is_exported = true;
             Ok(ExportDesc::Global(idx))
         }
         _ => Err(Error::InvalidType(kind)),
     }
 }
 
-fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_export_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut ModuleMetadata<CodeMetadata>,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -1024,10 +1073,7 @@ fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
         }
         let (kind, q2) = read_byte(data, q1)?;
         let (idx, q3) = read_u32_leb(data, q2)?;
-        let desc = export_desc(env, kind, idx)?;
-        if let ExportDesc::Func(index) = desc {
-            env.declared_funcs.push(index);
-        }
+        let desc = mark_exported(&mut env.code, kind, idx)?;
         env.exports.push(Export { name, desc });
         q = q3;
         i += 1;
@@ -1036,15 +1082,17 @@ fn decode_export_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize
 
 /// Decodes the start-function index and requires an empty parameter and result
 /// signature.
-fn decode_start_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_start_section(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (idx, p) = read_u32_leb(data, pos)?;
     let i = idx as usize;
-    if i >= env.func_types.len() {
+    if i >= env.funcs.len() {
         return Err(Error::UnknownFunc(idx));
     }
-    if !env.func_types[i].params.is_empty() || !env.func_types[i].results.is_empty() {
+    let signature = &env.types[env.funcs[i].type_index as usize];
+    if !signature.params.is_empty() || !signature.results.is_empty() {
         return Err(Error::InvalidStartType);
     }
+    env.funcs[i].eager = true;
     env.start = Some(idx);
     Ok(p)
 }
@@ -1066,16 +1114,16 @@ fn decode_segment_index(
 }
 
 /// Records a function reference made outside function bodies.
-fn declare_initializer(env: &mut Env, init: ConstExpr) {
+fn declare_initializer(env: &mut CodeMetadata, init: ConstExpr) {
     if let ConstExpr::RefFunc(index) = init {
-        env.declared_funcs.push(index);
+        env.funcs[index as usize].can_ref_func = true;
     }
 }
 
 fn decode_element_header(
     data: &[u8],
     pos: usize,
-    env: &Env,
+    env: &CodeMetadata,
 ) -> Result<(ElementMode, ElemType, bool, usize)> {
     let (tag, mut q) = read_u32_leb(data, pos)?;
     let (mode, elem, expressions) = {
@@ -1090,7 +1138,7 @@ fn decode_element_header(
             } else {
                 0
             };
-            if table_idx as usize >= env.table_types.len() {
+            if table_idx as usize >= env.tables.len() {
                 return Err(Error::UnknownTable(table_idx));
             }
             let (offset, next) = decode_const_expr(data, q, env, ValueType::I32)?;
@@ -1121,66 +1169,63 @@ fn decode_element_header(
     if let ElementMode::Active { table_idx, .. } = mode {
         // This lookup also checks its bound independently of mode decoding.
         let i = table_idx as usize;
-        if i >= env.table_types.len() {
+        if i >= env.tables.len() {
             return Err(Error::UnknownTable(table_idx));
         }
-        if elem.value_type() != env.table_types[i].elem.value_type() {
+        if elem.value_type() != env.tables[i].ty.elem.value_type() {
             return Err(Error::InvalidConstExpr);
         }
     }
     Ok((mode, elem, expressions, q))
 }
 
-/// Decodes one initializer without changing the declaration cache.
-fn decode_element_initializer(
-    data: &[u8],
-    pos: usize,
-    env: &Env,
-    elem: ElemType,
-    expressions: bool,
-) -> Result<(ConstExpr, usize)> {
-    if expressions {
-        decode_const_expr(data, pos, env, elem.value_type())
-    } else {
-        let (index, next) = read_u32_leb(data, pos)?;
-        if index as usize >= env.func_types.len() {
-            return Err(Error::UnknownFunc(index));
-        }
-        Ok((ConstExpr::RefFunc(index), next))
-    }
-}
-
-/// Decodes a segment's initializer vector and records its function declarations.
+/// Retains the original element encoding and records referenceable functions.
 fn decode_element_initializers(
     data: &[u8],
     pos: usize,
-    env: &mut Env,
+    env: &mut CodeMetadata,
     elem: ElemType,
     expressions: bool,
-) -> Result<(Vec<ConstExpr>, usize)> {
-    let (count, p) = read_u32_leb(data, pos)?;
-    let mut q = p;
-    let mut init = Vec::new();
-    let mut i: u32 = 0;
-    loop {
-        if i >= count {
-            return Ok((init, q));
+) -> Result<(ElementInit, usize)> {
+    let (count, mut q) = read_u32_leb(data, pos)?;
+    let mut i = 0;
+    if expressions {
+        let mut values = Vec::new();
+        while i < count {
+            let (value, next) = decode_const_expr(data, q, env, elem.value_type())?;
+            declare_initializer(env, value);
+            values.push(value);
+            q = next;
+            i += 1;
         }
-        let (value, next) = decode_element_initializer(data, q, env, elem, expressions)?;
-        declare_initializer(env, value);
-        init.push(value);
-        q = next;
-        i += 1;
+        Ok((ElementInit::Expressions(values), q))
+    } else {
+        let mut indices = Vec::new();
+        while i < count {
+            let (index, next) = read_u32_leb(data, q)?;
+            if index as usize >= env.funcs.len() {
+                return Err(Error::UnknownFunc(index));
+            }
+            env.funcs[index as usize].can_ref_func = true;
+            indices.push(index);
+            q = next;
+            i += 1;
+        }
+        Ok((ElementInit::Functions(indices), q))
     }
 }
 
-fn decode_element(data: &[u8], pos: usize, env: &mut Env) -> Result<(Element, usize)> {
+fn decode_element(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<(Element, usize)> {
     let (mode, elem, expressions, next) = decode_element_header(data, pos, env)?;
     let (init, next) = decode_element_initializers(data, next, env, elem, expressions)?;
     Ok((Element { elem, mode, init }, next))
 }
 
-fn decode_element_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_element_section(
+    data: &[u8],
+    pos: usize,
+    env: &mut ModuleMetadata<CodeMetadata>,
+) -> Result<usize> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut q = p;
     let mut i: u32 = 0;
@@ -1188,14 +1233,15 @@ fn decode_element_section(data: &[u8], pos: usize, env: &mut Env) -> Result<usiz
         if i >= count {
             return Ok(q);
         }
-        let (element, next) = decode_element(data, q, env)?;
+        let (element, next) = decode_element(data, q, &mut env.code)?;
+        env.code.elem_segment_types.push(element.elem);
         env.elements.push(element);
         q = next;
         i += 1;
     }
 }
 
-fn decode_data_count(data: &[u8], pos: usize, env: &mut Env) -> Result<usize> {
+fn decode_data_count(data: &[u8], pos: usize, env: &mut CodeMetadata) -> Result<usize> {
     let (count, next) = read_u32_leb(data, pos)?;
     env.data_count = Some(count);
     Ok(next)
@@ -1212,25 +1258,30 @@ fn section_order(id: u8) -> Result<u8> {
     }
 }
 
-pub(crate) fn decode_env_section(data: &[u8], pos: usize, id: u8, env: &mut Env) -> Result<usize> {
+pub(crate) fn decode_env_section(
+    data: &[u8],
+    pos: usize,
+    id: u8,
+    env: &mut ModuleMetadata<CodeMetadata>,
+) -> Result<usize> {
     match id {
-        SECTION_TYPE => decode_type_section(data, pos, env),
+        SECTION_TYPE => decode_type_section(data, pos, &mut env.code),
         SECTION_IMPORT => decode_import_section(data, pos, env),
-        SECTION_FUNCTION => decode_function_section(data, pos, env),
-        SECTION_TABLE => decode_table_section(data, pos, env),
-        SECTION_MEMORY => decode_memory_section(data, pos, env),
-        SECTION_GLOBAL => decode_global_section(data, pos, env),
+        SECTION_FUNCTION => decode_function_section(data, pos, &mut env.code),
+        SECTION_TABLE => decode_table_section(data, pos, &mut env.code),
+        SECTION_MEMORY => decode_memory_section(data, pos, &mut env.code),
+        SECTION_GLOBAL => decode_global_section(data, pos, &mut env.code),
         SECTION_EXPORT => decode_export_section(data, pos, env),
-        SECTION_START => decode_start_section(data, pos, env),
+        SECTION_START => decode_start_section(data, pos, &mut env.code),
         SECTION_ELEMENT => decode_element_section(data, pos, env),
-        SECTION_DATA_COUNT => decode_data_count(data, pos, env),
+        SECTION_DATA_COUNT => decode_data_count(data, pos, &mut env.code),
         _ => Err(Error::UnknownSection(id)),
     }
 }
 
 /// Validates the environment with accepting custom-section callbacks.
 #[allow(dead_code)] // Retained as an extracted proof entry point.
-pub(crate) fn validate_env(data: &[u8]) -> Result<(Env, usize)> {
+pub(crate) fn validate_env(data: &[u8]) -> Result<(ModuleMetadata<CodeMetadata>, usize)> {
     let mut nop = DefaultModuleVisitor;
     validate_env_with(data, &mut nop)
 }
@@ -1239,8 +1290,11 @@ pub(crate) fn validate_env(data: &[u8]) -> Result<(Env, usize)> {
 ///
 /// Returns the environment and the next section position. The caller must bound
 /// `data` by `MAX_MODULE_BYTES`; the streaming driver establishes this bound.
-pub(crate) fn validate_env_with<V: ModuleVisitor>(data: &[u8], v: &mut V) -> Result<(Env, usize)> {
-    let mut env = Env::new();
+pub(crate) fn validate_env_with<V: ModuleVisitor>(
+    data: &[u8],
+    v: &mut V,
+) -> Result<(ModuleMetadata<CodeMetadata>, usize)> {
+    let mut env = ModuleMetadata::new();
     let mut q = read_header(data)?;
     let mut last_id: u8 = 0;
     loop {
@@ -1330,11 +1384,11 @@ pub(crate) fn build_func_locals(params: &[ValueType], declared: &[ValueType]) ->
 pub(crate) fn validate_code_entry_with<V: OpVisitor>(
     data: &[u8],
     pos: usize,
-    env: &Env,
+    env: &CodeMetadata,
     index: usize,
     v: &mut V,
 ) -> Result<usize> {
-    if index >= env.func_type_indices.len() {
+    if index >= env.num_func_defs() {
         return Err(Error::FuncCodeMismatch);
     }
     let (size, p) = read_u32_leb(data, pos)?;
@@ -1347,7 +1401,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
         return Err(Error::SectionSizeMismatch);
     }
 
-    let type_idx = env.func_type_indices[index];
+    let type_idx = env.funcs[env.num_imported_funcs + index].type_index;
     let t = type_idx as usize;
     if t >= env.types.len() {
         return Err(Error::UnknownType(type_idx));
@@ -1376,7 +1430,7 @@ pub(crate) fn validate_code_entry_with<V: OpVisitor>(
 pub(crate) fn validate_code_entry(
     data: &[u8],
     pos: usize,
-    env: &Env,
+    env: &CodeMetadata,
     index: usize,
 ) -> Result<usize> {
     let mut nop = DefaultOpVisitor;
@@ -1385,14 +1439,14 @@ pub(crate) fn validate_code_entry(
 
 // --- The tail ---
 
-fn decode_data_segment(data: &[u8], pos: usize, env: &Env) -> Result<(Data, usize)> {
+fn decode_data_segment(data: &[u8], pos: usize, env: &CodeMetadata) -> Result<(Data, usize)> {
     let (tag, mut q) = read_u32_leb(data, pos)?;
     let mode = match tag {
         1 => DataMode::Passive,
         _ => {
             let (memory_idx, next, _) = decode_segment_index(data, q, tag)?;
             q = next;
-            if memory_idx as usize >= env.mem_types.len() {
+            if memory_idx as usize >= env.memories.len() {
                 return Err(Error::UnknownMemory(memory_idx));
             }
             let (offset, next) = decode_const_expr(data, q, env, ValueType::I32)?;
@@ -1407,7 +1461,7 @@ fn decode_data_segment(data: &[u8], pos: usize, env: &Env) -> Result<(Data, usiz
     Ok((Data { mode, init }, p + n))
 }
 
-fn decode_data_section(data: &[u8], pos: usize, env: &Env) -> Result<(Vec<Data>, usize)> {
+fn decode_data_section(data: &[u8], pos: usize, env: &CodeMetadata) -> Result<(Vec<Data>, usize)> {
     let (count, p) = read_u32_leb(data, pos)?;
     let mut out = Vec::new();
     let mut q = p;
@@ -1425,7 +1479,7 @@ fn decode_data_section(data: &[u8], pos: usize, env: &Env) -> Result<(Vec<Data>,
 
 /// Validates the tail with accepting custom-section callbacks.
 #[allow(dead_code)] // Retained as an extracted proof entry point.
-pub(crate) fn validate_tail(data: &[u8], pos: usize, env: &Env) -> Result<Tail> {
+pub(crate) fn validate_tail(data: &[u8], pos: usize, env: &CodeMetadata) -> Result<Vec<Data>> {
     let mut nop = DefaultModuleVisitor;
     validate_tail_with(data, pos, env, &mut nop)
 }
@@ -1437,9 +1491,9 @@ pub(crate) fn validate_tail(data: &[u8], pos: usize, env: &Env) -> Result<Tail> 
 pub(crate) fn validate_tail_with<V: ModuleVisitor>(
     data: &[u8],
     pos: usize,
-    env: &Env,
+    env: &CodeMetadata,
     v: &mut V,
-) -> Result<Tail> {
+) -> Result<Vec<Data>> {
     let mut segments = Vec::new();
     let mut q = pos;
     let mut seen_data = false;
@@ -1450,7 +1504,7 @@ pub(crate) fn validate_tail_with<V: ModuleVisitor>(
                     return Err(Error::DataCountMismatch);
                 }
             }
-            return Ok(Tail { data: segments });
+            return Ok(segments);
         }
         let (id, start, end) = read_section_header(data, q)?;
         if id == SECTION_CUSTOM {
@@ -1489,8 +1543,7 @@ pub(crate) fn code_entry_extent(data: &[u8], pos: usize) -> Result<(usize, usize
 pub trait ModuleVisitor {
     /// Reports a custom section after checking its framing and UTF-8 name.
     ///
-    /// Offsets refer to the current `StreamingRegion` selected by the streaming
-    /// visitor. Payload bytes are opaque to validation.
+    /// Offsets refer to the region being decoded (prefix or tail). Payload bytes are opaque to validation.
     fn on_custom_section(&mut self, _section: CustomSection) -> VisitResult {
         Ok(())
     }

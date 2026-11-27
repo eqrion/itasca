@@ -36,7 +36,7 @@ private theorem empty_saturating (st : code.OpIterState) (opcode : U32) :
   split <;> rfl
 
 /-- A sign-extension byte accepts its independently typed principal effect. -/
-theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (opcode : U8) (op : Body.Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.signMeaning opcode = some op)
@@ -66,7 +66,7 @@ theorem Frame.sign_extension {st} (f : Frame st) (data : Slice U8) (env : metada
     omega
 
 /-- A saturating conversion accepts every valid u32 LEB encoding of its subopcode. -/
-theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.saturating {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Body.Numeric.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : NumericExtensions.saturatingMeaning subopcode = some op)
@@ -169,7 +169,7 @@ its independently encoded instruction, including any consumed prefix bytes. -/
 theorem Pending.extended_numeric {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (v : V)
     (operation : Body.Numeric.Operation) (hunary : operation.binary = false)
-    (hdecl : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction)
+    (hdecl : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) operation.instruction)
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)
     (hook : V → code.OpIterState → Unit → Result (core.result.Result Unit error.VisitError × V))
     (hhook : ∀ s a, ∃ reply v', hook v s a = .ok (reply, v'))

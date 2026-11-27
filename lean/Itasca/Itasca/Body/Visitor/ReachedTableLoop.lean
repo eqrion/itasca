@@ -45,7 +45,7 @@ def bodyGood {V : Type} (cf :
   | .done (r, _) => r = .Ok ()
 
 /-- One iteration of the extracted body loop. -/
-abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
+abbrev body {V : Type} (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) (st : code.BodyState) :=
   code.body_loop_loop.body visitor data env ctx index v st
 
@@ -54,7 +54,7 @@ set_option maxHeartbeats 2000000 in
 same validator state. Only the locals component of the scalar context matters. -/
 theorem body.transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (data : Slice U8) (env : metadata.Env) (ctx ctx' : code.Context)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx ctx' : code.Context)
     (hlocals : ctx.locals = ctx'.locals) (index : U32)
     (st : code.BodyState) (v : V) (w : W) (cf)
     (h : body visitor data env ctx index v st = .ok cf) (hg : bodyGood cf) :
@@ -110,7 +110,7 @@ open Body.Visitor
 obtained from the accepting replacement, so the source needs no totality premise. -/
 theorem code.body_loop_loop.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : Visitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
+    (ha : Visitor.Accepts replacement) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
      (st : code.BodyState) (v : V) (w : W) (v' : V)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Body.Control.Shape st.core)
@@ -168,7 +168,7 @@ theorem code.body_loop_loop.accepted_transfer {V W : Type}
 successful execution under accepting callback replacement. -/
 theorem code.validate_body_with.accepted_transfer {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
-    (ha : Visitor.Accepts replacement) (data : Slice U8) (env : metadata.Env)
+    (ha : Visitor.Accepts replacement) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx ctx' : code.Context) (hlocals : ctx.locals = ctx'.locals) (index : U32)
      (v : V) (w : W) (v' : V)
     (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
@@ -213,7 +213,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- The empty-visitor run of `code.validate_body_with` is `code.bodyCore`. -/
-theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
+theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) :
     (do
       let (r, _) ← code.validate_body_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
@@ -245,7 +245,7 @@ theorem code.validate_body_with.eq_core (data : Slice U8) (env : metadata.Env)
 /-- An accepted visiting body is accepted by the empty-visitor validator, for any result vector
 of the scalar context. The source visitor needs no totality assumption. -/
 theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (results : alloc.vec.Vec wasm_types.ValueType) (v v' : V)
     (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     code.bodyCore data env ctx.locals results index = .ok (.Ok ()) := by
@@ -259,7 +259,7 @@ theorem code.validate_body_with.accepted_erase {V : Type} (visitor : code.OpVisi
 /-- Accepting hooks preserve acceptance by the empty-visitor validator. The scalar context's
 result vector does not constrain the signature selected by the type index. -/
 theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisitor V)
-    (ha : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
+    (ha : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (results : alloc.vec.Vec wasm_types.ValueType) (v : V)
     (h : code.bodyCore data env ctx.locals results index = .ok (.Ok ())) :
@@ -276,7 +276,7 @@ theorem code.validate_body_with.accepted_lift {V : Type} (visitor : code.OpVisit
 /-- Arbitrary accepted visitors establish `Body.Validated` for the instruction grammar, without a callback
 totality premise. -/
 theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v v' : V)
     (h : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     Body.Validated data env ctx.locals index :=
@@ -286,7 +286,7 @@ theorem code.validate_body_with.sound {V : Type} (visitor : code.OpVisitor V)
 /-- `Body.Validated` bodies are accepted with accepting callbacks, subject to the
 implementation limits. -/
 theorem code.validate_body_with.complete {V : Type} (visitor : code.OpVisitor V)
-    (ha : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
+    (ha : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (henv : CodeEntry.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)

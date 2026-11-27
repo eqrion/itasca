@@ -127,21 +127,21 @@ attribute [local step] code.pop_with_type.total code.pop_stack_type.total
   unfold code.read_simd_lane ReaderPost
   step* <;> simp_all [ReaderPost] <;> omega
 
-@[step] theorem memory_lane_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem memory_lane_total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (alignment : U32) (store : Bool) (count : U8)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_simd_memory_lane st data env alignment store count ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_simd_memory_lane ReaderPost
   step*
 
-@[step] theorem load_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem load_total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ty : wasm_types.ValueType) (alignment : U32)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_load st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
   unfold code.read_load ReaderPost
   step*
 
-@[step] theorem store_total (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+@[step] theorem store_total (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ty : wasm_types.ValueType) (alignment : U32)
     (hs : Body.Control.Shape st) :
     code.read_store st data env ty alignment ⦃ r => ReaderPost st r.2 ⦄ := by
@@ -302,7 +302,7 @@ namespace Itasca.Body.Simd
 
 /-- Factorization of the SIMD subopcode dispatcher around its readers and visitor callbacks. -/
 def subStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (subopcode : U32) (v : V) :
+    (data : Slice U8) (env : metadata.CodeMetadata) (subopcode : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
   let sig ← code.simd_signature subopcode
   match sig with
@@ -340,7 +340,7 @@ def subStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
 
 /-- Reads the subopcode after `0xFD` and continues with `subStep`. -/
 def prefixStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (v : V) :
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) := do
   let r ← reader.read_u32_leb data st.pos
   match r with
@@ -352,7 +352,7 @@ end Itasca.Body.Simd
 namespace Itasca
 
 theorem code.step_wasm2.simd {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step_wasm2 visitor st data env ctx 0xFD#u8 v = code.step_simd visitor st data env v := rfl
 
 macro "finish_simd_run" : tactic => `(tactic| (
@@ -371,7 +371,7 @@ macro "finish_simd_run" : tactic => `(tactic| (
 
 /-- `code.step_simd` equals its unfolded form `Body.Simd.prefixStep`. -/
 theorem code.step_simd.eq_runs {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (v : V) :
     code.step_simd visitor st data env v = Body.Simd.prefixStep visitor st data env v := by
   unfold code.step_simd Body.Simd.prefixStep
   congr 1
@@ -419,14 +419,14 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.Simd
 
 theorem subStep.pure {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) (op : Operation)
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) (op : Operation)
     (h : pureMeaning opcode.val = some op) :
     subStep visitor st data env opcode v = Visitor.Core.run (code.read_simd_signature st op.signature.runtime)
       (fun v s _ => visitor.on_simd v s opcode) v := by
   simp only [subStep, pure_table, h, Option.map_some, bind_ok]
 
 theorem subStep.lane {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) (op : LaneOperation)
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) (op : LaneOperation)
     (h : laneMeaning opcode.val = some op) :
     subStep visitor st data env opcode v = Visitor.Core.run
       (code.read_simd_lane st data op.runtime.1 op.runtime.2.1 op.replace)
@@ -435,7 +435,7 @@ theorem subStep.lane {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterSt
     Option.map_some, bind_ok, LaneOperation.runtime]
 
 theorem subStep.memory {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) (op : MemoryOperation)
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) (op : MemoryOperation)
     (h : memoryMeaning opcode.val = some op) (hc : op.laneCount = 0) :
     subStep visitor st data env opcode v = Visitor.Core.run
       (if op.store then code.read_store st data env .V128 op.runtime.1
@@ -446,7 +446,7 @@ theorem subStep.memory {V : Type} (visitor : code.OpVisitor V) (st : code.OpIter
   cases op.store <;> rfl
 
 theorem subStep.memory_lane {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) (op : MemoryOperation)
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) (op : MemoryOperation)
     (h : memoryMeaning opcode.val = some op) (hc : op.laneCount ≠ 0) :
     subStep visitor st data env opcode v = Visitor.Core.run
       (code.read_simd_memory_lane st data env op.runtime.1 op.store op.runtime.2.2)
@@ -458,7 +458,7 @@ theorem subStep.memory_lane {V : Type} (visitor : code.OpVisitor V) (st : code.O
   rw [if_pos hn]
 
 theorem subStep.constant {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (v : V) :
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V) :
     subStep visitor st data env 12#u32 v = Visitor.Core.run (code.read_simd_const st data)
       (fun v s a => visitor.on_simd_const v s a.1 a.2) v := by
   have hp : pureMeaning (12#u32).val = none := by with_unfolding_all rfl
@@ -468,7 +468,7 @@ theorem subStep.constant {V : Type} (visitor : code.OpVisitor V) (st : code.OpIt
   with_unfolding_all rfl
 
 theorem subStep.shuffle {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (v : V) :
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V) :
     subStep visitor st data env 13#u32 v = Visitor.Core.run (code.read_simd_shuffle st data)
       (fun v s a => visitor.on_simd_shuffle v s a.1 a.2) v := by
   have hp : pureMeaning (13#u32).val = none := by with_unfolding_all rfl
@@ -508,7 +508,7 @@ private theorem run_total {A V : Type}
   · exact WP.spec_mono hr (fun _ h => ⟨h, by simp⟩)
 
 theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (subopcode : U32) (v : V)
+    (data : Slice U8) (env : metadata.CodeMetadata) (subopcode : U32) (v : V)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : Visitor.Total visitor) :
     subStep visitor st data env subopcode v ⦃ r => ReaderPost st r.2.1 ⦄ := by
@@ -555,7 +555,7 @@ theorem sub_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState
 
 /-- Every SIMD prefix terminates, preserves controls, and advances monotonically. -/
 theorem simd_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (v : V)
+    (data : Slice U8) (env : metadata.CodeMetadata) (v : V)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : Visitor.Total visitor) :
     code.step_simd visitor st data env v ⦃ r => Body.Control.Shape r.2.1 ∧
@@ -970,7 +970,7 @@ def memoryOutput (store : Bool) : Option wasm_types.ValueType :=
 
 /-- Reads a memory argument, checks that memory zero exists and the alignment bound, then applies
 the operand effect of a full-width `v128` load or store. -/
-def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (align : U32) (store : Bool) :
     Result (core.result.Result code.MemArg error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_memarg st data
@@ -982,7 +982,7 @@ def fullMemoryReader (st : code.OpIterState) (data : Slice U8) (env : metadata.E
     | .Err e => .ok (.Err e, s)
     | .Ok _ => carryFixed arg s (fullMemoryInputs store) (memoryOutput store)
 
-theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (align : U32) (store : Bool) :
     (if store then code.read_store st data env .V128 align else code.read_load st data env .V128 align) =
       fullMemoryReader st data env align store := by
@@ -1013,7 +1013,7 @@ theorem full_memory_fixed (st : code.OpIterState) (data : Slice U8) (env : metad
 
 /-- Reads a memory argument and a lane index, checks memory and alignment, then applies the
 operand effect of a `v128` load or store lane operation. -/
-def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (align : U32) (store : Bool) (count : U8) :
     Result (core.result.Result (code.MemArg × U8) error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_memarg st data
@@ -1029,7 +1029,7 @@ def memoryLaneReader (st : code.OpIterState) (data : Slice U8) (env : metadata.E
       | .Err e => .ok (.Err e, s)
       | .Ok _ => carryFixed (arg, lane) s [.V128, .I32] (memoryOutput store)
 
-theorem memory_lane_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem memory_lane_fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (align : U32) (store : Bool) (count : U8) :
     code.read_simd_memory_lane st data env align store count = memoryLaneReader st data env align store count := by
   simp only [code.read_simd_memory_lane, memoryLaneReader]
@@ -1097,9 +1097,9 @@ theorem MemoryOperation.conditions (op : MemoryOperation) (C : context)
   exact ⟨hp.1, (pow_le_pow_iff_right₀ (a := (2 : Rat)) (by norm_num)).mp hp.2.1, hp.2.2⟩
 
 theorem MemoryOperation.typed_runtime (op : MemoryOperation) (C : context)
-    (env : metadata.Env) (ctx : code.Context) (hC : wf_context C)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (hC : wf_context C)
     (hm : Translation.Environment.Matches env ctx C) (arg : code.MemArg) (lane : U8)
-    (hmem : 0 < env.mem_types.val.length) (ha : arg.align.val ≤ op.naturalAlign)
+    (hmem : 0 < env.memories.val.length) (ha : arg.align.val ≤ op.naturalAlign)
     (hl : op.laneCount ≠ 0 → lane.val < op.laneCount) :
     Instr_ok C (op.instruction (Body.MemoryMeaning.memArg arg) (.mk_uN lane.val))
       (.mk_functype (.mk_list op.inputs) (.mk_list op.outputs)) := by
@@ -1108,9 +1108,9 @@ theorem MemoryOperation.typed_runtime (op : MemoryOperation) (C : context)
     hlen rfl hC ?_ (Body.MemoryMeaning.mem_arg_wf arg) (by constructor; scalar_tac)
     (Body.MemoryMeaning.alignment_mono _ _ ha) hl
   rw [hm.mems]
-  cases he : env.mem_types.val with
+  cases he : env.memories.val with
   | nil => simp [he] at hmem
-  | cons mt rest => simpa [he] using Translation.Environment.mem_type_wf mt
+  | cons mt rest => simpa [he] using Translation.Environment.mem_type_wf mt.ty
 
 end Itasca.Body.Simd
 
@@ -1311,7 +1311,7 @@ namespace Itasca.Body.Simd
 
 private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (subopcode : U32) (v v' : V) (w : W)
     (h : subStep visitor st data env subopcode v = .ok (.Ok (), final, v')) :
     ∃ w', subStep replacement st data env subopcode w = .ok (.Ok (), final, w') := by
@@ -1360,7 +1360,7 @@ private theorem sub_transfer {V W : Type} (visitor : code.OpVisitor V)
 /-- Accepting hooks preserve every successful SIMD state and immediate. -/
 theorem simd_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (v v' : V) (w : W)
     (h : code.step_simd visitor st data env v = .ok (.Ok (), final, v')) :
     ∃ w', code.step_simd replacement st data env w = .ok (.Ok (), final, w') := by

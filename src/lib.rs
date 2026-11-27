@@ -1,14 +1,13 @@
 //! WebAssembly Core 2.0 validation.
 //!
 //! [`validate_module`] validates a complete byte slice and returns read-only
-//! module metadata. It requires no caller preconditions. Lean proves
-//! termination, acceptance soundness, and completeness within the
-//! implementation limits, assuming successful allocation.
+//! module metadata. It accepts arbitrary input bytes. The Lean proofs for the
+//! previous API are being ported to this metadata representation.
 //!
 //! ```
 //! let bytes = b"\x00asm\x01\x00\x00\x00";
 //! let module = itasca::validate_module(bytes)?;
-//! let imports = module.env().import_types()?;
+//! let imports = module.import_types()?;
 //! # Ok::<(), itasca::Error>(())
 //! ```
 //!
@@ -50,8 +49,9 @@ pub use code::{
 };
 pub use error::{Error, OpError, VisitError};
 pub use metadata::{
-    validate_module, Data, DataMode, DefaultModuleVisitor, Element, ElementMode, Env, Export,
-    ExportDesc, Global, Import, ImportDesc, Module, ModuleVisitor, Tail,
+    validate_module, CodeMetadata, Data, DataMode, DefaultModuleVisitor, Element, ElementInit,
+    ElementMode, Export, ExportDesc, FuncDesc, Global, Import, ImportKind, MemoryDesc,
+    ModuleMetadata, ModuleVisitor, TableDesc,
 };
 pub use signature::{BlockType, ResultType, TypePart};
 pub use stream::{

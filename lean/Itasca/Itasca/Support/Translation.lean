@@ -129,9 +129,9 @@ section
 /-!
 # Environment translation
 
-Translates the extracted `metadata.Env` and `code.Context` into a SpecTec `context`
+Translates the extracted `metadata.CodeMetadata` and `code.Context` into a SpecTec `context`
 (`Translation.Environment.context`). `Matches` states that a context agrees with this translation in
-every field except the labels, and its lemmas turn bounds and lookups in `metadata.Env` into the
+every field except the labels, and its lemmas turn bounds and lookups in `metadata.CodeMetadata` into the
 premises of the generated `Instr_ok` rules for `local.*`, `global.*`, `call`, `call_indirect` and
 `memory.size`/`memory.grow`.
 -/
@@ -161,31 +161,31 @@ theorem mem_type_wf (mt : wasm_types.MemType) : wf_memtype (memType mt) :=
   .memtype_case_0 _ (limits_type_wf _)
 
 /-- Syntactic well-formedness needs no module validity assumptions. -/
-theorem context_wf (env : metadata.Env) (ctx : code.Context) :
+theorem context_wf (env : metadata.CodeMetadata) (ctx : code.Context) :
     wf_context (context env ctx) := by
   constructor
   · simp only [Forall, List.mem_map]
     rintro _ ⟨tt, _, rfl⟩
-    exact table_type_wf tt
+    exact table_type_wf tt.ty
   · simp only [Forall, List.mem_map]
     rintro _ ⟨mt, _, rfl⟩
-    exact mem_type_wf mt
+    exact mem_type_wf mt.ty
 
 /-- A context `C` agrees with `context env ctx` in every field except the labels, which change as
 structured control adds and removes them. -/
-structure Matches (env : metadata.Env) (ctx : code.Context) (C : WebAssembly.context) : Prop where
+structure Matches (env : metadata.CodeMetadata) (ctx : code.Context) (C : WebAssembly.context) : Prop where
   types : C.TYPES = env.types.val.map funcType
-  funcs : C.FUNCS = env.func_types.val.map funcType
-  globals : C.GLOBALS = env.global_types.val.map Translation.globalType
-  tables : C.TABLES = env.table_types.val.map tableType
-  mems : C.MEMS = env.mem_types.val.map memType
+  funcs : C.FUNCS = env.funcs.val.map (descriptorType env.types.val)
+  globals : C.GLOBALS = env.globals.val.map (fun g => Translation.globalType g.gtype)
+  tables : C.TABLES = env.tables.val.map (fun t => tableType t.ty)
+  mems : C.MEMS = env.memories.val.map (fun m => memType m.ty)
   elems : C.ELEMS = elementTypes env
   datas : C.DATAS = dataTypes env
   locals : C.LOCALS = ctx.locals.val.map Translation.valueType
   ret : C.RETURN = some (.mk_list (ctx.results.val.map Translation.valueType))
 
 /-- The root context matches itself. -/
-theorem Matches.root (env : metadata.Env) (ctx : code.Context) :
+theorem Matches.root (env : metadata.CodeMetadata) (ctx : code.Context) :
     Matches env ctx (context env ctx) := ⟨rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl, rfl⟩
 
 /-- Contexts that match a translated environment are well-formed. -/
@@ -197,13 +197,13 @@ theorem Matches.wf {env ctx C} (h : Matches env ctx C) : wf_context C := by
     rw [ht]
     simp only [Forall, List.mem_map]
     rintro _ ⟨tt, _, rfl⟩
-    exact table_type_wf tt
+    exact table_type_wf tt.ty
   · have hm := h.mems
     dsimp only at hm
     rw [hm]
     simp only [Forall, List.mem_map]
     rintro _ ⟨mt, _, rfl⟩
-    exact mem_type_wf mt
+    exact mem_type_wf mt.ty
 
 theorem Matches.local {env ctx C} (h : Matches env ctx C)
     (idx : U32) (t : wasm_types.ValueType) (hi : idx.val < ctx.locals.val.length)
@@ -215,8 +215,8 @@ theorem Matches.local {env ctx C} (h : Matches env ctx C)
   · rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map, ht]
 
 theorem Matches.global {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
-    (ht : env.global_types.val[idx.val] = gt) :
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.globals.val.length)
+    (ht : env.globals.val[idx.val].gtype = gt) :
     idx.val < C.GLOBALS.length ∧ C.GLOBALS[idx.val]! = Translation.globalType gt := by
   rw [h.globals]
   constructor
@@ -248,16 +248,16 @@ theorem Matches.local_tee {env ctx C} (h : Matches env ctx C)
   exact .local_tee C _ _ hb he h.wf (.instr_case_45 _ (index_wf idx))
 
 theorem Matches.global_get {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
-    (ht : env.global_types.val[idx.val] = gt) :
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.globals.val.length)
+    (ht : env.globals.val[idx.val].gtype = gt) :
     Instr_ok C (.GLOBAL_GET (.mk_uN idx.val))
       (.mk_functype (.mk_list []) (.mk_list [Translation.valueType gt.valtype])) := by
   obtain ⟨hb, he⟩ := h.global idx gt hi ht
   exact .global_get C _ _ _ hb he h.wf (.instr_case_46 _ (index_wf idx))
 
 theorem Matches.global_set {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
-    (ht : env.global_types.val[idx.val] = gt) (hm : gt.mutability = .Var) :
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.globals.val.length)
+    (ht : env.globals.val[idx.val].gtype = gt) (hm : gt.mutability = .Var) :
     Instr_ok C (.GLOBAL_SET (.mk_uN idx.val))
       (.mk_functype (.mk_list [Translation.valueType gt.valtype]) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.global idx gt hi ht
@@ -265,26 +265,25 @@ theorem Matches.global_set {env ctx C} (h : Matches env ctx C)
   simpa [Translation.globalType, hm, Translation.mutability, proj_uN_0] using he
 
 theorem Matches.call {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (ft : wasm_types.FuncType) (hi : idx.val < env.func_types.val.length)
-    (ht : env.func_types.val[idx.val] = ft) :
+    (idx : U32) (ft : wasm_types.FuncType) (hi : idx.val < env.funcs.val.length)
+    (ht : env.types.val[env.funcs.val[idx.val].type_index.val]? = some ft) :
     Instr_ok C (.CALL (.mk_uN idx.val)) (funcType ft) := by
   apply Instr_ok.call
   · simpa [h.funcs, proj_uN_0] using hi
   · simp only [h.funcs, proj_uN_0]
-    rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map, ht]
-    rfl
+    simp [getElem!_pos, hi, descriptorType, ht, funcType]
   · exact h.wf
   · exact .instr_case_10 _ (index_wf idx)
 
 theorem Matches.call_indirect {env ctx C} (h : Matches env ctx C)
     (idx tableIdx : U32) (ft : wasm_types.FuncType) (hi : idx.val < env.types.val.length)
     (ht : env.types.val[idx.val] = ft)
-    (htable : tableIdx.val < env.table_types.val.length)
-    (hfun : env.table_types.val[tableIdx.val].elem = .FuncRef) :
+    (htable : tableIdx.val < env.tables.val.length)
+    (hfun : env.tables.val[tableIdx.val].ty.elem = .FuncRef) :
     Instr_ok C (.CALL_INDIRECT (.mk_uN tableIdx.val) (.mk_uN idx.val))
       (.mk_functype (.mk_list (ft.params.val.map Translation.valueType ++ [.I32]))
         (.mk_list (ft.results.val.map Translation.valueType))) := by
-  apply Instr_ok.call_indirect _ _ _ _ _ (limitsType (env.table_types.val[tableIdx.val]).limits)
+  apply Instr_ok.call_indirect _ _ _ _ _ (limitsType env.tables.val[tableIdx.val].ty.limits)
   · simpa [h.tables, proj_uN_0] using htable
   · simp only [h.tables, proj_uN_0]
     rw [getElem!_pos _ _ (by simpa using htable), List.getElem_map]
@@ -298,9 +297,9 @@ theorem Matches.call_indirect {env ctx C} (h : Matches env ctx C)
   · exact .tabletype_case_0 _ _ (limits_type_wf _)
 
 theorem Matches.memory_size {env ctx C} (h : Matches env ctx C)
-    (hmem : 0 < env.mem_types.val.length) :
+    (hmem : 0 < env.memories.val.length) :
     Instr_ok C .MEMORY_SIZE (.mk_functype (.mk_list []) (.mk_list [.I32])) := by
-  apply Instr_ok.memory_size _ (memType (env.mem_types.val[0]))
+  apply Instr_ok.memory_size _ (memType env.memories.val[0].ty)
   · simpa [h.mems] using hmem
   · simp only [h.mems]
     rw [getElem!_pos _ _ (by simpa using hmem), List.getElem_map]
@@ -309,9 +308,9 @@ theorem Matches.memory_size {env ctx C} (h : Matches env ctx C)
   · exact .instr_case_62
 
 theorem Matches.memory_grow {env ctx C} (h : Matches env ctx C)
-    (hmem : 0 < env.mem_types.val.length) :
+    (hmem : 0 < env.memories.val.length) :
     Instr_ok C .MEMORY_GROW (.mk_functype (.mk_list [.I32]) (.mk_list [.I32])) := by
-  apply Instr_ok.memory_grow _ (memType (env.mem_types.val[0]))
+  apply Instr_ok.memory_grow _ (memType env.memories.val[0].ty)
   · simpa [h.mems] using hmem
   · simp only [h.mems]
     rw [getElem!_pos _ _ (by simpa using hmem), List.getElem_map]
@@ -341,15 +340,23 @@ theorem Matches.local_lookup {env ctx C} (h : Matches env ctx C)
 
 theorem Matches.global_lookup {env ctx C} (h : Matches env ctx C)
     (idx : U32) (t : globaltype) (hi : idx.val < C.GLOBALS.length) (ht : C.GLOBALS[idx.val]! = t) :
-    ∃ gt, ∃ hv : idx.val < env.global_types.val.length,
-      env.global_types.val[idx.val] = gt ∧ Translation.globalType gt = t := by
-  exact mapped_lookup _ _ _ _ (by simpa [h.globals] using hi) (by simpa [h.globals] using ht)
+    ∃ gt, ∃ hv : idx.val < env.globals.val.length,
+      env.globals.val[idx.val].gtype = gt ∧ Translation.globalType gt = t := by
+  obtain ⟨g, hi', hg, eq⟩ := mapped_lookup env.globals.val (fun g => Translation.globalType g.gtype)
+    idx.val t (by simpa [h.globals] using hi) (by simpa [h.globals] using ht)
+  exact ⟨g.gtype, hi', congrArg metadata.Global.gtype hg, eq⟩
 
+/-- A function lookup resolves the retained type index through the type section. -/
 theorem Matches.func_lookup {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (t : functype) (hi : idx.val < C.FUNCS.length) (ht : C.FUNCS[idx.val]! = t) :
-    ∃ ft, ∃ hv : idx.val < env.func_types.val.length,
-      env.func_types.val[idx.val] = ft ∧ funcType ft = t := by
-  exact mapped_lookup _ _ _ _ (by simpa [h.funcs] using hi) (by simpa [h.funcs] using ht)
+    (idx : U32) (t : functype) (hi : idx.val < C.FUNCS.length) (ht : C.FUNCS[idx.val]! = t)
+    (valid : ∀ d ∈ env.funcs.val, d.type_index.val < env.types.val.length) :
+    ∃ ft, ∃ hv : idx.val < env.funcs.val.length,
+      env.types.val[env.funcs.val[idx.val].type_index.val]? = some ft ∧ funcType ft = t := by
+  obtain ⟨d, hv, hd, eq⟩ := mapped_lookup env.funcs.val (descriptorType env.types.val)
+    idx.val t (by simpa [h.funcs] using hi) (by simpa [h.funcs] using ht)
+  subst d
+  have bound := valid _ (List.getElem_mem hv)
+  exact ⟨_, hv, List.getElem?_eq_getElem bound, by simpa [descriptorType, bound] using eq⟩
 
 theorem Matches.type_lookup {env ctx C} (h : Matches env ctx C)
     (idx : U32) (t : functype) (hi : idx.val < C.TYPES.length) (ht : C.TYPES[idx.val]! = t) :
@@ -359,22 +366,24 @@ theorem Matches.type_lookup {env ctx C} (h : Matches env ctx C)
 
 theorem Matches.table_lookup {env ctx C} (h : Matches env ctx C)
     (idx : U32) (t : tabletype) (hi : idx.val < C.TABLES.length) (ht : C.TABLES[idx.val]! = t) :
-    ∃ tt, ∃ hv : idx.val < env.table_types.val.length,
-      env.table_types.val[idx.val] = tt ∧ tableType tt = t := by
-  exact mapped_lookup _ _ _ _ (by simpa [h.tables] using hi) (by simpa [h.tables] using ht)
+    ∃ tt, ∃ hv : idx.val < env.tables.val.length,
+      env.tables.val[idx.val].ty = tt ∧ tableType tt = t := by
+  obtain ⟨d, hv, hd, eq⟩ := mapped_lookup env.tables.val (fun d => tableType d.ty)
+    idx.val t (by simpa [h.tables] using hi) (by simpa [h.tables] using ht)
+  exact ⟨d.ty, hv, congrArg metadata.TableDesc.ty hd, eq⟩
 
 /-- A `funcref` table in the context is a `FuncRef` table in the environment. -/
 theorem Matches.table_funcref {env ctx C} (h : Matches env ctx C)
     (idx : U32) (lim : limits) (hi : idx.val < C.TABLES.length)
     (ht : C.TABLES[idx.val]! = .mk_tabletype lim .FUNCREF) :
-    ∃ hv : idx.val < env.table_types.val.length, env.table_types.val[idx.val].elem = .FuncRef := by
+    ∃ hv : idx.val < env.tables.val.length, env.tables.val[idx.val].ty.elem = .FuncRef := by
   obtain ⟨tt, hv, htt, htype⟩ := h.table_lookup idx _ hi ht
   refine ⟨hv, ?_⟩
   rw [htt]
   cases he : tt.elem <;> simp_all [tableType, Translation.referenceType]
 
 theorem Matches.memory_exists {env ctx C} (h : Matches env ctx C)
-    (hi : 0 < C.MEMS.length) : 0 < env.mem_types.val.length := by simpa [h.mems] using hi
+    (hi : 0 < C.MEMS.length) : 0 < env.memories.val.length := by simpa [h.mems] using hi
 
 end Itasca.Translation.Environment
 

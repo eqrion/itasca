@@ -96,7 +96,7 @@ structure Saved where
 
 /-- The static facts about a frame: its control entry matches its form, its signature resolves
 from its block type, and its completed material is valid and emitted by its tokens. -/
-structure Header (env : metadata.Env) (C : context) (f : Saved) : Prop where
+structure Header (env : metadata.CodeMetadata) (C : context) (f : Saved) : Prop where
   /-- Concrete and source control kinds agree. -/
   kind : f.ctrl.kind = f.form.kind
   /-- The binary signature resolves to these input types. -/
@@ -110,7 +110,7 @@ structure Header (env : metadata.Env) (C : context) (f : Saved) : Prop where
 
 /-- Suspended frames retain typing from their own input vector and remember
 the child arguments removed from the concrete operand stack. -/
-inductive Spine (env : metadata.Env) (root : context) :
+inductive Spine (env : metadata.CodeMetadata) (root : context) :
     List Saved → context → List code.StackType → Form → List wasm_types.ValueType → Prop where
   | root (ins) : Spine env root [] root [] .body ins
   | push (parents : List Saved) (C : context) (outer : List code.StackType)
@@ -127,7 +127,7 @@ inductive Spine (env : metadata.Env) (root : context) :
 
 /-- The semantic control invariant aligns both physical control vectors with
 a typed syntax zipper, and partitions operands at each frame's actual base. -/
-def Open (env : metadata.Env) (root : context) (st : code.BodyState)
+def Open (env : metadata.CodeMetadata) (root : context) (st : code.BodyState)
     (parents : List Saved) (current : Saved) : Prop :=
   ∃ C outer, Spine env root parents C outer current.form current.ins ∧
     Header env C current ∧ current.ctrl.value_stack_base.val = outer.length ∧
@@ -174,7 +174,7 @@ structure Bounds (data : Slice U8) (st : code.BodyState) : Prop where
 
 /-- A running typed zipper or a completed typed body, with exact provenance
 for the consumed prefix. No condition is placed on unread bytes. -/
-inductive State (data : Slice U8) (env : metadata.Env)
+inductive State (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) : code.BodyState → Prop where
   | running (st : code.BodyState) (ft : wasm_types.FuncType)
       (parents : List Frames.Saved) (current : Frames.Saved) :
@@ -182,13 +182,13 @@ inductive State (data : Slice U8) (env : metadata.Env)
       Frames.Open env (bodyContext env locals ft) st parents current →
       Frames.bodyType parents current = some (.TypeIndex index) →
       Consumed data 0#usize (Frames.trace parents current) st.core.pos →
-      TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (Frames.trace parents current) →
+      TokensDeclared (Translation.Environment.declaredReferences env) (Frames.trace parents current) →
       State data env locals index st
   | closed (st : code.BodyState) (ft : wasm_types.FuncType) (ops : List instr) (tokens : List Token) :
       env.types.val[index.val]? = some ft → Bounds data st →
       st.core.ctrls.val = [] → st.blocks.val = [] → BodyTokens tokens ops →
       FunctionTyped env locals ft ops → Consumed data 0#usize tokens st.core.pos →
-      TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) tokens →
+      TokensDeclared (Translation.Environment.declaredReferences env) tokens →
       State data env locals index st
 
 /-- The loop's initial body state: one body frame for the function type at `index`. -/
@@ -198,7 +198,7 @@ def initial (index : U32) : code.BodyState :=
 
 /-- The opcode at `start` has been consumed; its immediate remains arbitrary.
 The retained prefix, open frames and bounds describe the state before dispatch. -/
-structure Pending (data : Slice U8) (env : metadata.Env)
+structure Pending (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (index : U32) (st : code.BodyState) where
   /-- Body-relative byte position of the consumed opcode. -/
   start : Usize
@@ -219,7 +219,7 @@ structure Pending (data : Slice U8) (env : metadata.Env)
   /-- The preceding body bytes encode the reconstructed instruction prefix. -/
   consumed : Consumed data 0#usize (Frames.trace parents current) start
   /-- Every `ref.func` in that prefix satisfies the declared-reference condition. -/
-  declared : TokensDeclared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (Frames.trace parents current)
+  declared : TokensDeclared (Translation.Environment.declaredReferences env) (Frames.trace parents current)
   /-- The consumed opcode position is within the complete body buffer. -/
   inbounds : start.val < data.length
   /-- The concrete cursor is immediately after the opcode byte. -/
@@ -274,7 +274,7 @@ theorem code.check_func_type.spec (ft : wasm_types.FuncType) :
 
 /-- Pushing a resolved descriptor has exactly the shared stack primitive's
     effect, with no intermediate runtime vector. -/
-theorem code.push_results.spec (st : code.OpIterState) (env : metadata.Env)
+theorem code.push_results.spec (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hts : Body.resolve env view = some ts)
     (hcap : st.vals.val.length + ts.length ≤ Usize.max) :
@@ -332,7 +332,7 @@ namespace Itasca
 
 /-- Descriptor pops preserve the backward stack interpretation, including
 mixed concrete/`Bot` stacks and implicit operands at an unreachable base. -/
-theorem code.pop_results.realizes (st : code.OpIterState) (env : metadata.Env)
+theorem code.pop_results.realizes (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (hts : Body.resolve env view = some expected)
@@ -375,7 +375,7 @@ theorem code.pop_results.realizes (st : code.OpIterState) (env : metadata.Env)
     · simp [Body.resolve, List.getElem?_eq_none (by omega : env.types.val.length ≤ index.val)] at hts
 
 /-- Independent stack compatibility suffices for descriptor-pop acceptance. -/
-theorem code.pop_results.complete (st : code.OpIterState) (env : metadata.Env)
+theorem code.pop_results.complete (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (expected : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hts : Body.resolve env view = some expected)
@@ -418,7 +418,7 @@ theorem code.pop_results.complete (st : code.OpIterState) (env : metadata.Env)
 /-- No descriptor, including an invalid type index, can make a bounded pop
 panic or diverge. Frame bounds are preserved even on rejection. -/
 @[step]
-theorem code.pop_results.total (st : code.OpIterState) (env : metadata.Env)
+theorem code.pop_results.total (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (hshape : Body.Control.Shape st) :
     code.pop_results st env view ⦃ r =>
       Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -441,7 +441,7 @@ theorem code.pop_results.total (st : code.OpIterState) (env : metadata.Env)
 /-- The explicit capacity guard makes descriptor pushes total for arbitrary
 environments, including invalid descriptors and oversized stored signatures. -/
 @[step]
-theorem code.push_results.total (st : code.OpIterState) (env : metadata.Env)
+theorem code.push_results.total (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (hshape : Body.Control.Shape st) :
     code.push_results st env view ⦃ r =>
       Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧ r.2.pos = st.pos ∧
@@ -519,7 +519,7 @@ namespace Itasca
 
 /-- Exact loop contract: rejection is equivalent to incompatibility of the
 remaining signature with the unchanged stack slice. -/
-theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : metadata.Env)
+theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hts : Body.resolve env view = some ts) (stack i : Usize)
     (hb : (Body.Control.base st).val ≤ stack.val) (hs : stack.val ≤ st.vals.val.length)
@@ -609,7 +609,7 @@ theorem code.check_suffix_loop.spec (st : code.OpIterState) (env : metadata.Env)
 
 /-- The actual non-destructive suffix checker is total, sound, and complete
 for the independently specified operand compatibility relation. -/
-theorem code.check_suffix.spec (st : code.OpIterState) (env : metadata.Env)
+theorem code.check_suffix.spec (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (hshape : Body.Control.Shape st) :
     code.check_suffix st env view ⦃ r =>
       r = .Ok () ↔ ∃ ts, Body.resolve env view = some ts ∧ Body.Suffix st ts ⦄ := by
@@ -730,7 +730,7 @@ namespace Itasca
 /-- One iteration of the extracted loop body with the visitor argument kept only as a pass-through
 value, so semantic proofs do not track the empty visitor. -/
 def Body.emptyVisitorLoop.body
-  (data : Slice U8) (env : metadata.Env) (type_index : U32)
+  (data : Slice U8) (env : metadata.CodeMetadata) (type_index : U32)
   (locals : alloc.vec.Vec wasm_types.ValueType)
   (results : alloc.vec.Vec wasm_types.ValueType)
   (st : code.BodyState)
@@ -934,7 +934,7 @@ def Body.emptyVisitorLoop.body
 /-- The extracted loop `code.body_loop_loop` run with the empty visitor, returning only the
 validation result. -/
 def Body.emptyVisitorLoop
-  (data : Slice U8) (env : metadata.Env) (type_index : U32)
+  (data : Slice U8) (env : metadata.CodeMetadata) (type_index : U32)
   (st : code.BodyState)
   (locals : alloc.vec.Vec wasm_types.ValueType)
   (results : alloc.vec.Vec wasm_types.ValueType)
@@ -947,7 +947,7 @@ def Body.emptyVisitorLoop
 
 /-- Only the placement of the empty visitor changes between the semantic
 adapter and the extracted visiting loop. -/
-theorem Body.emptyVisitorLoop.body_eq (data : Slice U8) (env : metadata.Env)
+theorem Body.emptyVisitorLoop.body_eq (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     code.body_loop_loop.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
       data env ctx index () st = (do
@@ -994,7 +994,7 @@ theorem Body.emptyVisitorLoop.body_eq (data : Slice U8) (env : metadata.Env)
 
 /-- The visitor-free body validator with the loop replaced by `Body.emptyVisitorLoop`. -/
 def code.bodyCore
-  (data : Slice U8) (env : metadata.Env)
+  (data : Slice U8) (env : metadata.CodeMetadata)
   (locals results : alloc.vec.Vec wasm_types.ValueType) (type_index : U32)
    :
   Result (core.result.Result Unit error.OpError)

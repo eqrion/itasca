@@ -1,3 +1,4 @@
+import Itasca.Module.CodeMetadata
 import Itasca.Module.Definitions
 import Itasca.Results.Definitions.Validation
 import Itasca.Module.Code.ContextTransport
@@ -88,11 +89,11 @@ theorem entries_at_snoc {data start pos next entries entry} {R : Binary.Code →
 /-- Typed entries covering all remaining functions are pointwise `CodeEntry.Typed` against the
 function type indices from `i`. -/
 theorem EntriesTyped.forall₂ {env i entries}
-    (h : EntriesTyped env i entries) (hn : i + entries.length = env.func_type_indices.val.length) :
-    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) (env.func_type_indices.val.drop i) entries := by
+    (h : EntriesTyped env i entries) (hn : i + entries.length = (Translation.Environment.definedTypeIndices env).length) :
+    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) ((Translation.Environment.definedTypeIndices env).drop i) entries := by
   induction h with
   | nil i =>
-    have hb : env.func_type_indices.val.length ≤ i := by simpa using hn.symm.le
+    have hb : (Translation.Environment.definedTypeIndices env).length ≤ i := by simpa using hn.symm.le
     simp [List.drop_eq_nil_of_le hb]
   | @cons i entry entries ht hs ih =>
     obtain ⟨hi, ht, _⟩ := ht
@@ -127,7 +128,7 @@ def Encoding := Binary.OptionalSectionEncoding 10#u8
 theorem Section.encoding {data start env cs entries}
     (h : Section data start env cs)
     (hb : Binary.At (Binary.Rep (CodeEntry.CodeEncoding)) data cs.entries entries cs.end)
-    (hn : entries.length = env.func_type_indices.val.length) :
+    (hn : entries.length = (Translation.Environment.definedTypeIndices env).length) :
     Binary.At (Encoding) data start entries cs.end := by
   obtain ⟨content, ⟨afterId, size, hid, hsize, hlen, _⟩, hcount, hcountval⟩ := h
   obtain ⟨countBytes, hc, hclen, hcbound, hcenc⟩ := hcount
@@ -296,7 +297,7 @@ namespace Itasca.CodeEntry
 records the size header, the locals bytes and bound, the context handed to the visitor, the
 function-start callback and the body validation on the body slice. -/
 structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
-    (env : metadata.Env) (index start finish : Usize) (v v' : V)
+    (env : metadata.CodeMetadata) (index start finish : Usize) (v v' : V)
      where
   typeIdx : U32
   ft : wasm_types.FuncType
@@ -307,8 +308,8 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
   body : Slice U8
   size : U32
   startedState : V
-  index_lt : index.val < env.func_type_indices.val.length
-  index_type : env.func_type_indices.val[index.val] = typeIdx
+  index_lt : index.val < (Translation.Environment.definedTypeIndices env).length
+  index_type : (Translation.Environment.definedTypeIndices env)[index.val] = typeIdx
   type_lt : typeIdx.val < env.types.val.length
   function_type : env.types.val[typeIdx.val] = ft
   header : Binary.Leb128.Decoded data start size content
@@ -324,8 +325,10 @@ structure Witness {V : Type} (visitor : code.OpVisitor V) (data : Slice U8)
     .ok (.Ok (), v')
 
 /-- Parameter counts bounded by the maximum module size give `Bounds`. -/
-theorem Bounds.of_module_bound (env : metadata.Env)
+theorem Bounds.of_module_bound (env : metadata.CodeMetadata)
+    (imports : env.num_imported_funcs.val ≤ env.funcs.val.length)
     (h : ∀ ft ∈ env.types.val, ft.params.val.length ≤ limits.MAX_MODULE_BYTES.val) : Bounds env := by
+  refine ⟨imports, ?_⟩
   intro ft hm
   have := h ft hm
   have hcap : limits.MAX_MODULE_BYTES.val + limits.MAX_LOCALS.val ≤ Usize.max := by
@@ -339,7 +342,7 @@ end CodeEntry
 successful call has a `CodeEntry.Witness`. Rejecting callbacks are ordinary module errors. -/
 theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (visitor : code.OpVisitor V)
     (hvisitor : Visitor.Total visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
+    (env : metadata.CodeMetadata) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
 
     (hbody : ∀ body ctx typeIdx started,
       ∃ r, code.validate_body_with visitor body env ctx typeIdx started = .ok r) :
@@ -347,11 +350,12 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
       ∀ finish, r.1 = .Ok finish →
         Nonempty (CodeEntry.Witness visitor data env index pos finish v r.2 ) ⦄ := by
   unfold metadata.validate_code_entry_with
-  dsimp only
+  obtain ⟨count, hcount, hcountVal⟩ := WP.spec_imp_exists (metadata.CodeMetadata.num_func_defs.spec env hbound.imported)
+  simp only [hcount, bind_ok]
   split
   · simp
   · rename_i hindex
-    have hi : index.val < env.func_type_indices.val.length := by scalar_tac
+    have hi : index.val < (Translation.Environment.definedTypeIndices env).length := by simp [Translation.Environment.definedTypeIndices]; scalar_tac
     obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
     rw [hr]
     cases r with
@@ -386,7 +390,9 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
                 split
                 · simp
                 · rename_i hbodyStart
-                  step
+                  obtain ⟨absolute, fd, hadd, hfd, htypeIdx⟩ := Translation.Environment.defined_descriptor env index hi
+                  simp only [hadd, bind_ok, hfd]
+                  let type_idx := fd.type_index
                   step
                   split
                   · simp
@@ -396,7 +402,7 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
                     have hftmem : ft ∈ env.types.val := by
                       rw [ft_post]
                       exact List.getElem_mem _
-                    have hparams := hbound ft hftmem
+                    have hparams := hbound.locals ft hftmem
                     have hroom : ft.params.val.length + declared.val.length ≤ Usize.max := by omega
                     obtain ⟨v1, hv1, v1_post⟩ := WP.spec_imp_exists
                       (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
@@ -426,7 +432,7 @@ theorem metadata.validate_code_entry_with.pipeline_of_body_total {V : Type} (vis
                             refine ⟨{
                               typeIdx := type_idx, ft := ft, groups := groups, ctx := ⟨v1, v2⟩
                               content := content, bodyStart := bodyStart, body := s3, size := size
-                              startedState := started, index_lt := hi, index_type := type_idx_post.symm
+                              startedState := started, index_lt := hi, index_type := htypeIdx.symm
                               type_lt := hti, function_type := ?_, header := hp, extent := ?_
                               locals_bytes := hg, locals_bound := ?_, context_locals := ?_
                               context_results := ?_, body_bytes := ?_, function_start := hstart
@@ -462,16 +468,18 @@ namespace Itasca
 /-- A successful `metadata.validate_code_entry_with` call gives a `CodeEntry.Witness` of its visitor
 calls and parser results. Other executions of the visitor need not terminate. -/
 theorem metadata.validate_code_entry_with.witness {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
+    (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env)
     (h : metadata.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
     Nonempty (CodeEntry.Witness visitor data env index pos finish v v' ) := by
   unfold metadata.validate_code_entry_with at h
-  dsimp only at h
-  by_cases hi : index ≥ alloc.vec.Vec.len env.func_type_indices
+  obtain ⟨count, hcount, hcountVal⟩ := WP.spec_imp_exists (metadata.CodeMetadata.num_func_defs.spec env hbound.imported)
+  simp only [hcount, bind_ok] at h
+  by_cases hi : index ≥ count
   · simp [hi] at h
   rw [if_neg hi] at h
-  have hindex : index.val < env.func_type_indices.val.length := by scalar_tac
+  have hindex : index.val < (Translation.Environment.definedTypeIndices env).length := by
+    simp [Translation.Environment.definedTypeIndices]; scalar_tac
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   rw [hr] at h
   cases r with
@@ -507,12 +515,9 @@ theorem metadata.validate_code_entry_with.witness {V : Type} (visitor : code.OpV
         by_cases hbeyond : last.val < bodyStart.val
         · simp [hbeyond] at h
         rw [if_neg hbeyond] at h
-        have hget : alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice U32)
-            env.func_type_indices index ⦃ idx => idx = env.func_type_indices.val[index.val] ⦄ := by
-          step*
-        obtain ⟨typeIdx, hget, htypeIdx⟩ := WP.spec_imp_exists hget
-        have hget : env.func_type_indices.index_usize index = .ok typeIdx := by simpa using hget
-        simp [hget] at h
+        obtain ⟨absolute, fd, hadd, hfd, htypeIdx⟩ := Translation.Environment.defined_descriptor env index hindex
+        simp only [hadd, bind_ok, hfd] at h
+        generalize hidx : fd.type_index = typeIdx at h htypeIdx
         by_cases htype : env.types.val.length ≤ typeIdx.val
         · simp [htype] at h
         rw [if_neg htype] at h
@@ -524,7 +529,7 @@ theorem metadata.validate_code_entry_with.witness {V : Type} (visitor : code.OpV
         have hget : env.types.index_usize (UScalar.cast .Usize typeIdx) = .ok ft := by simpa using hget
         simp only [hget, bind_ok] at h
         have hmem : ft ∈ env.types.val := by rw [hft]; exact List.getElem_mem _
-        have hparams := hbound ft hmem
+        have hparams := hbound.locals ft hmem
         obtain ⟨locals, hlocals, hlocalsval⟩ := WP.spec_imp_exists
           (metadata.build_func_locals.spec (alloc.vec.Vec.deref ft.params)
             (alloc.vec.Vec.deref declared) (by simpa [alloc.vec.Vec.deref] using (show

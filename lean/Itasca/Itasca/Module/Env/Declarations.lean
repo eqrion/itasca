@@ -65,7 +65,7 @@ namespace Itasca.Module.Environment
 
 /-- Every function type in the environment has at most `limit` parameters. Parameter vectors are
 nested inside the type list, so they need their own size bound unlike the index-space caches. -/
-def SignatureBounded (env : metadata.Env) (limit : Nat) : Prop :=
+def SignatureBounded (env : metadata.CodeMetadata) (limit : Nat) : Prop :=
   ∀ ft ∈ env.types.val, ft.params.val.length ≤ limit
 
 theorem SignatureBounded.mono {env limit next} (h : SignatureBounded env limit) (hle : limit ≤ next) :
@@ -100,7 +100,7 @@ section
 
 `Declarations` is the ghost record of the sections decoded before the code section, keeping the
 section boundaries that the environment's merged caches lose. `Phase` constrains it by the last
-section seen, `Represents` relates it to a `metadata.Env`, and `PrefixEncoding` is the independent
+section seen, `Represents` relates it to decoded prefix metadata, and `PrefixEncoding` is the independent
 byte grammar of the whole prefix, including custom sections.
 -/
 

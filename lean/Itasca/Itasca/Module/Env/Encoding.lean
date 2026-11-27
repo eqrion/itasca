@@ -1,3 +1,4 @@
+import Itasca.Module.Env.DescriptorIndices
 import Itasca.Module.Env.Declarations
 import Itasca.Module.Sections.EnvironmentAndTail
 import Itasca.Module.Sections.Headers
@@ -34,48 +35,91 @@ open Itasca.Binary Module.Sections
 declarations, ending at `next`. Each constructor pairs the payload encoding with the section's
 checked environment update. Emptiness of later sections distinguishes an initial declaration
 vector from an append performed by the extracted parser. -/
-inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.Env)
-    (before : Declarations) : U8 → Usize → metadata.Env → Declarations →
+inductive Effect (data : Slice U8) (pos : Usize) (env : metadata.ModuleMetadata metadata.CodeMetadata)
+    (before : Declarations) : U8 → Usize → metadata.ModuleMetadata metadata.CodeMetadata → Declarations →
       Prop where
-  | types {result next added} : TypesAdded env result added →
+  | types {result next added} : TypesAdded env.code result added →
       At (VecEncoding FuncTypeEncoding) data pos added next →
       (∀ ft ∈ added, CodeEntry.FuncTypeWithinLimits ft) →
-      Effect data pos env before 1#u8 next result {before with types := added}
+      Effect data pos env before 1#u8 next { env with code := result } {before with types := added}
   | imports {result next added} : ImportsAdded env added result →
-      At (VecEncoding ImportEncoding) data pos (added.map rawImport) next →
-      Effect data pos env before 2#u8 next result {before with imports := added.map rawImport}
-  | functions {result next indices signatures} : FunctionsAdded env result indices signatures →
+      At (VecEncoding ImportEncoding) data pos added next →
+      Effect data pos env before 2#u8 next result {before with imports := added}
+  | functions {result next indices} : FunctionsAdded env.code result indices →
       At (VecEncoding IndexEncoding) data pos indices next →
-      Effect data pos env before 3#u8 next result {before with functions := indices}
-  | tables {result next added} : TablesAdded env result added →
+      Effect data pos env before 3#u8 next { env with code := result } {before with functions := indices}
+  | tables {result next added} : TablesAdded env.code result added →
       At (VecEncoding TableTypeEncoding) data pos added next →
       (∀ tt ∈ added, Module.Translation.LimitsValid tt.limits (2 ^ 32 - 1)) →
-      Effect data pos env before 4#u8 next result {before with tables := added}
-  | memories {result next added} : MemoriesAdded env result added →
+      Effect data pos env before 4#u8 next { env with code := result } {before with tables := added}
+  | memories {result next added} : MemoriesAdded env.code result added →
       At (VecEncoding MemTypeEncoding) data pos added next →
       (∀ mt ∈ added, Module.Translation.LimitsValid mt.limits (2 ^ 16)) →
-      result.mem_types.val.length ≤ max env.mem_types.val.length 1 →
-      Effect data pos env before 5#u8 next result {before with memories := added}
-  | globals {result next added} : GlobalsAdded env result added →
+      result.memories.val.length ≤ max env.code.memories.val.length 1 →
+      Effect data pos env before 5#u8 next { env with code := result } {before with memories := added}
+  | globals {result next added} : GlobalsAdded env.code result added →
       At (VecEncoding GlobalEncoding) data pos added next →
       (∀ g ∈ added, Module.Constants.Valid result g.init g.gtype.valtype) →
-      Effect data pos env before 6#u8 next result {before with globals := added}
+      Effect data pos env before 6#u8 next { env with code := result } {before with globals := added}
   | exports {result next added} : ExportsAdded env added result →
       At (VecEncoding ExportEncoding) data pos (added.map rawExport) next →
       Effect data pos env before 7#u8 next result {before with exports := added.map rawExport}
-  | start {result next idx} : result = {env with start := some idx} →
+  | start {result next idx d} : result = { env.code with
+        start := some idx
+        funcs := env.code.funcs.set (UScalar.cast .Usize idx) { d with eager := true } } →
       At StartEncoding data pos (some idx) next →
-      (∃ hi : idx.val < env.func_types.val.length,
-        env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = []) →
-      Effect data pos env before 8#u8 next result {before with start := some idx}
+      (env.code.funcs.val[idx.val]? = some d ∧ ∃ ft, env.code.types.val[d.type_index.val]? = some ft ∧
+        ft.params.val = [] ∧ ft.results.val = []) →
+      Effect data pos env before 8#u8 next {env with code := result} {before with start := some idx}
   | elements {result next added} : ElementsAdded env result added →
       At (VecEncoding ElementEncoding) data pos (added.map rawElement) next →
-      (∀ entry ∈ added, ElementValid env entry) →
+      (∀ entry ∈ added, ElementValid env.code entry) →
       Effect data pos env before 9#u8 next result {before with elements := added.map rawElement}
-  | dataCount {result next count} : result = {env with data_count := some count} →
+  | dataCount {result next count} : result = {env.code with data_count := some count} →
       At StartEncoding data pos (some count) next →
-      Effect data pos env before 12#u8 next result
+      Effect data pos env before 12#u8 next { env with code := result }
         { before with dataCount := some count }
+
+/-- Every accepted section preserves in-range function type indices. -/
+theorem Effect.indices {data pos env before id next result after}
+    (h : Effect data pos env before id next result after) (valid : DescriptorIndices env.code) :
+    DescriptorIndices result.code := by
+  cases h with
+  | types add _ _ =>
+    intro d hd
+    rw [add.1] at hd ⊢
+    have hb := valid d hd
+    simp [add.2]; omega
+  | imports add _ => exact valid.imports add
+  | functions add _ =>
+    intro d hd
+    rw [add.2.1] at hd
+    rw [add.1]
+    rcases List.mem_append.mp hd with hd | hd
+    · exact valid d hd
+    · obtain ⟨idx,hm,rfl⟩ := List.mem_map.mp hd
+      exact add.2.2 idx hm
+  | tables add _ _ | memories add _ _ _ => rw [add.1]; exact valid
+  | globals add _ _ =>
+    rw [add.1]
+    have ok := valid.refs add.2.2
+    exact ok
+  | exports add _ => exact valid.exports add
+  | start eq _ ht =>
+    rw [eq]
+    obtain ⟨hd,_⟩ := ht
+    apply DescriptorIndices.of_fields valid
+    · rfl
+    apply List.ext_getElem
+    · simp
+    · intro i hi hj
+      simp only [List.getElem_map, alloc.vec.Vec.set_val_eq, List.getElem_set]
+      split <;> simp_all
+  | elements add _ _ =>
+    rw [add.fields]
+    have ok := valid.refs add.refs
+    exact ok
+  | dataCount eq _ => rw [eq]; exact valid
 
 theorem Effect.span {data pos env before id next result after}
     (h : Effect data pos env before id next result after) :
@@ -117,8 +161,8 @@ namespace Itasca.Module.Environment
 /-- An ordered history of decoded sections from the initial environment and declarations to the
 final ones, ending at position `next` after a section of rank `id`. It records bytes and semantic
 changes rather than calls to the extracted parser. -/
-inductive Run (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
-    (start : Usize) (initialId : U8) : metadata.Env → Declarations → Usize → U8 →
+inductive Run (data : Slice U8) (initial : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations)
+    (start : Usize) (initialId : U8) : metadata.ModuleMetadata metadata.CodeMetadata → Declarations → Usize → U8 →
       Prop where
   | nil : Run data initial decls start initialId initial decls start initialId
   | custom {before beforeDecls pos last next} :
@@ -177,18 +221,20 @@ open Itasca.Binary Module.Sections Module.Environment
 success returns the `Effect` that relates the section's bytes to the resulting environment. -/
 @[step]
 theorem metadata.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U8)
-    (env : metadata.Env) (before : Declarations) (hb : Bounded env pos.val) :
+    (env : metadata.ModuleMetadata metadata.CodeMetadata) (before : Declarations) (hb : Bounded env pos.val) (valid : DescriptorIndices env.code) :
     metadata.decode_env_section data pos id env ⦃ r => match r.1 with
       | .Ok next => ∃ after, Effect data pos env before id next r.2 after ∧ Bounded r.2 next.val
       | .Err _ => True ⦄ := by
   unfold metadata.decode_env_section
   split
-  · apply WP.spec_mono (metadata.decode_type_section.spec data pos env hb.types)
+  · apply WP.spec_bind (metadata.decode_type_section.spec data pos env.code hb.types)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .types hadd hbytes (by intro ft hm; exact hv ft hm), ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
@@ -197,91 +243,113 @@ theorem metadata.decode_env_section.spec (data : Slice U8) (pos : Usize) (id : U
   · apply WP.spec_mono (metadata.decode_import_section.spec data pos env hb)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hbound⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .imports hadd hbytes, ?_⟩
       exact hbound
-  · apply WP.spec_mono (metadata.decode_function_section.spec data pos env hb.funcs hb.funcIndices)
+  · apply WP.spec_bind (metadata.decode_function_section.spec data pos env.code hb.funcs)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
-      obtain ⟨indices, signatures, hadd, hbytes, hs, hi⟩ := hp
+      dsimp only at hp
+      obtain ⟨indices, hadd, hbytes, hs⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .functions hadd hbytes, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_table_section.spec data pos env hb.tables)
+  · apply WP.spec_bind (metadata.decode_table_section.spec data pos env.code hb.tables)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .tables hadd hbytes hv, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_memory_section.spec data pos env hb.memories)
+  · apply WP.spec_bind (metadata.decode_memory_section.spec data pos env.code hb.memories)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hv, hs, hc⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .memories hadd hbytes hv hc, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [hadd.1]
       cases hold
       constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_global_section.spec data pos env hb.globals hb.globalTypes hb.declaredFuncs)
+  · apply WP.spec_bind (metadata.decode_global_section.spec data pos env.code hb.globals)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
-      obtain ⟨added, hadd, hbytes, hv, hs, ht, href⟩ := hp
+      dsimp only at hp
+      obtain ⟨added, hadd, hbytes, hv, hs⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .globals hadd hbytes hv, ?_⟩
       have hold := hb.mono hbytes.span.1
+      have hflen := congrArg List.length hadd.2.2.funcs
+      simp only [List.length_map, List.length_zipIdx] at hflen
       rw [hadd.1]
       cases hold
-      constructor <;> assumption
+      constructor <;> dsimp only at * <;> omega
   · apply WP.spec_mono (metadata.decode_export_section.spec data pos env hb)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hbound⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .exports hadd hbytes, ?_⟩
       exact hbound
-  · apply WP.spec_mono (metadata.decode_start_section.spec data pos env )
+  · apply WP.spec_bind (metadata.decode_start_section.spec data pos env.code valid)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
-      obtain ⟨idx, hbytes, he, hi⟩ := hp
-      refine ⟨_, .start he hbytes hi, ?_⟩
+      dsimp only at hp
+      obtain ⟨idx, d, ft, hbytes, hd, ht, hp, hr, he⟩ := hp
+      try simp only [WP.spec_ok]
+      refine ⟨_, .start he hbytes ⟨hd,ft,ht,hp,hr⟩, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [he]
       cases hold
-      constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_element_section.spec data pos env hb.elements hb.declaredFuncs)
+      constructor <;> first | assumption | simpa using hb.funcs.trans hbytes.span.1
+  · apply WP.spec_mono (metadata.decode_element_section.spec data pos env hb.elements hb.elementTypes)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨added, hadd, hbytes, hv, hs, href⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .elements hadd hbytes hv, ?_⟩
+      have hflen := congrArg List.length hadd.refs.funcs
+      simp only [List.length_map,List.length_zipIdx] at hflen
       have hold := hb.mono hbytes.span.1
-      rw [hadd.1]
+      rw [hadd.fields]
       cases hold
-      constructor <;> assumption
-  · apply WP.spec_mono (metadata.decode_data_count.spec data pos env)
+      constructor <;> dsimp only at * <;> omega
+  · apply WP.spec_bind (metadata.decode_data_count.spec data pos env.code)
     rintro ⟨r, result⟩ hp
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok next =>
+      dsimp only at hp
       obtain ⟨count, hbytes, he⟩ := hp
+      try simp only [WP.spec_ok]
       refine ⟨_, .dataCount he hbytes, ?_⟩
       have hold := hb.mono hbytes.span.1
       rw [he]
@@ -313,9 +381,9 @@ namespace Itasca.Module.Environment
 
 /-- Postcondition of the section loop for the module. An accepted result comes with a `Run` from the
 initial state and a `Bounded` environment. -/
-def LoopPostWith (data : Slice U8) (initial : metadata.Env) (decls : Declarations)
+def LoopPostWith (data : Slice U8) (initial : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations)
     (start : Usize) (initialId : U8) :
-    core.result.Result (metadata.Env × Usize) error.Error → Prop
+    core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ after last, Run data initial decls start initialId env after next last ∧
       Bounded env next.val
@@ -323,10 +391,10 @@ def LoopPostWith (data : Slice U8) (initial : metadata.Env) (decls : Declaration
 /-- Postcondition of `metadata.validate_env` for the module. An accepted result comes with a fresh
 environment, the module header bytes, a `Run` of sections from the header to the returned
 position, and a `Bounded` environment. -/
-def PostWith (data : Slice U8) : core.result.Result (metadata.Env × Usize) error.Error → Prop
+def PostWith (data : Slice U8) : core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error → Prop
   | .Err _ => True
   | .Ok (env, next) => ∃ initial start decls last,
-      metadata.Env.new = .ok initial ∧
+      metadata.ModuleMetadataCodeMetadata.new = .ok initial ∧
       Body.Scalar.BytesAt data 0#usize Binary.magicVersion start ∧
       Run data initial {} start 0#u8 env decls next last ∧ Bounded env next.val
 
@@ -340,16 +408,16 @@ open Itasca.Binary Module.Environment
 may reject, and they are only required to terminate. -/
 theorem metadata.validate_env_with_loop.spec {V : Type} (visitor : metadata.ModuleVisitor V)
     (htotal : Module.Tail.HooksTotal visitor) (data : Slice U8) (v : V)
-    (env : metadata.Env) (decls : Declarations) (start : Usize) (initialId : U8)
-    (hstart : start.val ≤ data.length) (hbound : Bounded env start.val) :
+    (env : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations) (start : Usize) (initialId : U8)
+    (hstart : start.val ≤ data.length) (hbound : Bounded env start.val) (valid : DescriptorIndices env.code) :
     metadata.validate_env_with_loop visitor data v env start initialId ⦃ r =>
       LoopPostWith data env decls start initialId r.1 ⦄ := by
   unfold metadata.validate_env_with_loop
   apply loop.spec_decr_nat (fun s => data.length - s.2.2.1.val)
     (fun s => ∃ currentDecls, Run data env decls start initialId s.2.1 currentDecls s.2.2.1 s.2.2.2 ∧
-      Bounded s.2.1 s.2.2.1.val)
-  · rintro ⟨state, current, pos, lastId⟩ ⟨currentDecls, hrun, hbound⟩
-    dsimp only at hrun hbound
+      Bounded s.2.1 s.2.2.1.val ∧ DescriptorIndices s.2.1.code)
+  · rintro ⟨state, current, pos, lastId⟩ ⟨currentDecls, hrun, hbound, hvalid⟩
+    dsimp only at hrun hbound hvalid
     have hpos := (hrun.span hstart).2
     unfold metadata.validate_env_with_loop.body
     dsimp only
@@ -380,7 +448,7 @@ theorem metadata.validate_env_with_loop.spec {V : Type} (visitor : metadata.Modu
             cases res with
             | Err e => simp [LoopPostWith]
             | Ok u =>
-              exact ⟨⟨currentDecls, .custom hrun hbytes⟩, hbound.mono (next := last.val) (by omega), by scalar_tac⟩
+              exact ⟨⟨currentDecls, .custom hrun hbytes⟩, hbound.mono (next := last.val) (by omega), hvalid, by scalar_tac⟩
         · simp only [hc, ↓reduceIte]
           split
           · exact ⟨currentDecls, lastId, hrun, hbound⟩
@@ -399,7 +467,7 @@ theorem metadata.validate_env_with_loop.spec {V : Type} (visitor : metadata.Modu
                 · rename_i horder
                   have horder' : lastId.val < (sectionRank id).val := by scalar_tac
                   obtain ⟨⟨r, updated⟩, hread, hp⟩ := WP.spec_imp_exists
-                    (metadata.decode_env_section.spec data first id current currentDecls (hbound.mono (by omega)))
+                    (metadata.decode_env_section.spec data first id current currentDecls (hbound.mono (by omega)) hvalid)
                   simp only [hread, bind_ok]
                   cases r with
                   | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, LoopPostWith]
@@ -409,17 +477,17 @@ theorem metadata.validate_env_with_loop.spec {V : Type} (visitor : metadata.Modu
                     by_cases he : next = last
                     · subst next
                       simp only [↓reduceIte, WP.spec_ok]
-                      exact ⟨⟨after, .step hrun horder' hh heffect⟩, hbound, by scalar_tac⟩
+                      exact ⟨⟨after, .step hrun horder' hh heffect⟩, hbound, heffect.indices hvalid, by scalar_tac⟩
                     · have hn : next.val ≠ last.val := fun h => he (UScalar.eq_of_val_eq h)
                       simp [hn, LoopPostWith]
-  · exact ⟨decls, .nil, hbound⟩
+  · exact ⟨decls, .nil, hbound, valid⟩
 
 /-- `metadata.validate_env_with` reads the header, starts from the empty environment and runs the
 section loop, so its result satisfies `PostWith`. -/
 theorem metadata.validate_env_with.spec {V : Type} (visitor : metadata.ModuleVisitor V)
     (htotal : Module.Tail.HooksTotal visitor) (data : Slice U8) (v : V) :
     metadata.validate_env_with visitor data v ⦃ r => Module.Environment.PostWith data r.1 ⦄ := by
-  obtain ⟨initial, hi, _, _, hb⟩ := WP.spec_imp_exists metadata.Env.new.spec
+  obtain ⟨initial, hi, _, hvalid, hb⟩ := WP.spec_imp_exists metadata.ModuleMetadataCodeMetadata.new.spec
   obtain ⟨r, hr, hh⟩ := WP.spec_imp_exists (metadata.read_header.spec data)
   cases r with
   | Err e => simp [metadata.validate_env_with, hi, hr, core.result.Result.Insts.CoreOpsTry.branch,
@@ -427,10 +495,10 @@ theorem metadata.validate_env_with.spec {V : Type} (visitor : metadata.ModuleVis
   | Ok start =>
     obtain ⟨⟨r, finalVisitor⟩, hloop, hp⟩ := WP.spec_imp_exists
       (metadata.validate_env_with_loop.spec visitor htotal data v initial {} start 0#u8 hh.bound
-        (hb.mono (Nat.zero_le _)))
+        (hb.mono (Nat.zero_le _)) hvalid.funcs)
     simp [metadata.validate_env_with, hi, hr, core.result.Result.Insts.CoreOpsTry.branch, hloop]
     cases r with
-    | Err e => trivial
+    | Err e => first | trivial | simp
     | Ok pair =>
       obtain ⟨result, next⟩ := pair
       obtain ⟨decls, last, hrun, hbound⟩ := hp

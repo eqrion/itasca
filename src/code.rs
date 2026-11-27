@@ -6,7 +6,7 @@
 
 use crate::error::{OpError, VisitError};
 use crate::limits::{MAX_FUNCTION_BYTES, MAX_MULTI_VALUE_PARAMS, MAX_MULTI_VALUE_RESULTS};
-use crate::metadata::Env;
+use crate::metadata::CodeMetadata;
 use crate::reader::{
     read_byte, read_f32_bits, read_f64_bits, read_s32_leb, read_s64_leb, read_u32_leb,
 };
@@ -562,16 +562,16 @@ fn read_local_tee(st: &mut OpIterState, data: &[u8], ctx: &Context) -> Result<u3
 }
 
 /// Returns the declared type and mutability of a global, checking its index.
-fn global_type(env: &Env, idx: u32) -> Result<GlobalType> {
+fn global_type(env: &CodeMetadata, idx: u32) -> Result<GlobalType> {
     let i = idx as usize;
-    if i >= env.global_types.len() {
+    if i >= env.globals.len() {
         return Err(OpError::UnknownGlobal);
     }
-    Ok(env.global_types[i])
+    Ok(env.globals[i].gtype)
 }
 
 /// Reads a global index and resolves its type and mutability.
-fn take_global(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, GlobalType)> {
+fn take_global(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<(u32, GlobalType)> {
     let (idx, p) = read_u32_leb(data, st.pos)?;
     st.pos = p;
     let g = global_type(env, idx)?;
@@ -579,14 +579,14 @@ fn take_global(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, Glo
 }
 
 /// Validates `global.get` and returns its global index.
-fn read_global_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_global_get(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (idx, g) = take_global(st, data, env)?;
     push_val(st, StackType::Val(g.valtype));
     Ok(idx)
 }
 
 /// Validates `global.set`, requiring a mutable global, and returns its index.
-fn read_global_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_global_set(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (idx, g) = take_global(st, data, env)?;
     match g.mutability {
         Mut::Const => return Err(OpError::ImmutableGlobal),
@@ -607,7 +607,7 @@ fn read_reserved_zero(st: &mut OpIterState, data: &[u8]) -> Result<()> {
 }
 
 /// Validates `memory.size` and pushes an `i32` result.
-fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
     push_val(st, StackType::Val(ValueType::I32));
@@ -615,7 +615,7 @@ fn read_memory_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> 
 }
 
 /// Validates `memory.grow`, consuming and returning an `i32`.
-fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+fn read_memory_grow(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     read_reserved_zero(st, data)?;
     require_memory(env)?;
     pop_with_type(st, ValueType::I32)?;
@@ -634,7 +634,7 @@ fn take_index(st: &mut OpIterState, data: &[u8]) -> Result<u32> {
 fn read_load(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ty: ValueType,
     natural_align: u32,
 ) -> Result<MemArg> {
@@ -649,7 +649,7 @@ fn read_load(
 fn read_store(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ty: ValueType,
     natural_align: u32,
 ) -> Result<MemArg> {
@@ -668,8 +668,8 @@ fn read_memarg(st: &mut OpIterState, data: &[u8]) -> Result<MemArg> {
 }
 
 /// Checks that the module declares or imports a memory.
-fn require_memory(env: &Env) -> Result<()> {
-    if env.mem_types.is_empty() {
+fn require_memory(env: &CodeMetadata) -> Result<()> {
+    if env.memories.is_empty() {
         return Err(OpError::UnknownMemory);
     }
     Ok(())
@@ -677,7 +677,11 @@ fn require_memory(env: &Env) -> Result<()> {
 
 /// Checks that a memory exists and the alignment does not exceed the natural
 /// alignment.
-fn check_memory_and_alignment(env: &Env, memarg: &MemArg, natural_align: u32) -> Result<()> {
+fn check_memory_and_alignment(
+    env: &CodeMetadata,
+    memarg: &MemArg,
+    natural_align: u32,
+) -> Result<()> {
     require_memory(env)?;
     if memarg.align > natural_align {
         return Err(OpError::InvalidAlignment);
@@ -766,7 +770,7 @@ pub(crate) fn binary_types(opcode: u8) -> Option<(ValueType, ValueType)> {
 pub(crate) fn step<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     opcode: u8,
     v: &mut V,
@@ -843,7 +847,7 @@ pub(crate) fn step<V: OpVisitor>(
 fn step_memory<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     opcode: u8,
     v: &mut V,
 ) -> Result<()> {
@@ -997,7 +1001,7 @@ fn saturating_types(opcode: u32) -> Option<(ValueType, ValueType)> {
 fn step_extended<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     opcode: u8,
     visitor: &mut V,
@@ -1094,9 +1098,9 @@ fn read_ref_is_null(st: &mut OpIterState) -> Result<()> {
     Ok(())
 }
 
-fn read_ref_func(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_ref_func(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let index = take_index(st, data)?;
-    if index as usize >= env.func_types.len() {
+    if index as usize >= env.funcs.len() {
         return Err(OpError::UnknownFunc);
     }
     if !env.declares_function(index) {
@@ -1119,30 +1123,30 @@ fn read_typed_select(st: &mut OpIterState, data: &[u8]) -> Result<ValueType> {
     Ok(ty)
 }
 
-fn take_table(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, ValueType)> {
+fn take_table(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<(u32, ValueType)> {
     let index = take_index(st, data)?;
     let i = index as usize;
-    if i >= env.table_types.len() {
+    if i >= env.tables.len() {
         return Err(OpError::UnknownTable);
     }
-    Ok((index, env.table_types[i].elem.value_type()))
+    Ok((index, env.tables[i].ty.elem.value_type()))
 }
 
-fn read_table_get(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_table_get(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (index, ty) = take_table(st, data, env)?;
     pop_with_type(st, ValueType::I32)?;
     push_val(st, StackType::Val(ty));
     Ok(index)
 }
 
-fn read_table_set(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_table_set(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (index, ty) = take_table(st, data, env)?;
     pop_with_type(st, ty)?;
     pop_with_type(st, ValueType::I32)?;
     Ok(index)
 }
 
-fn take_data_index(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn take_data_index(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let index = take_index(st, data)?;
     match env.data_count {
         Some(count) => {
@@ -1155,13 +1159,13 @@ fn take_data_index(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> 
     Ok(index)
 }
 
-fn take_element(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, ValueType)> {
+fn take_element(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<(u32, ValueType)> {
     let index = take_index(st, data)?;
     let i = index as usize;
-    if i >= env.elements.len() {
+    if i >= env.elem_segment_types.len() {
         return Err(OpError::UnknownElement);
     }
-    Ok((index, env.elements[i].elem.value_type()))
+    Ok((index, env.elem_segment_types[i].value_type()))
 }
 
 fn read_bulk_operands(st: &mut OpIterState) -> Result<()> {
@@ -1171,33 +1175,33 @@ fn read_bulk_operands(st: &mut OpIterState) -> Result<()> {
     Ok(())
 }
 
-fn read_bulk_memory(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+fn read_bulk_memory(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     read_reserved_zero(st, data)?;
-    if env.mem_types.is_empty() {
+    if env.memories.is_empty() {
         return Err(OpError::UnknownMemory);
     }
     Ok(())
 }
 
-fn read_memory_init(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_memory_init(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let index = take_data_index(st, data, env)?;
     read_bulk_memory(st, data, env)?;
     read_bulk_operands(st)?;
     Ok(index)
 }
 
-fn read_memory_copy(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+fn read_memory_copy(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     read_bulk_memory(st, data, env)?;
     read_reserved_zero(st, data)?;
     read_bulk_operands(st)
 }
 
-fn read_memory_fill(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<()> {
+fn read_memory_fill(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     read_bulk_memory(st, data, env)?;
     read_bulk_operands(st)
 }
 
-fn read_table_init(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+fn read_table_init(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<(u32, u32)> {
     let (element, element_type) = take_element(st, data, env)?;
     let (table, table_type) = take_table(st, data, env)?;
     if element_type != table_type {
@@ -1207,7 +1211,7 @@ fn read_table_init(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32,
     Ok((element, table))
 }
 
-fn read_table_copy(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+fn read_table_copy(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<(u32, u32)> {
     let (destination, destination_type) = take_table(st, data, env)?;
     let (source, source_type) = take_table(st, data, env)?;
     if destination_type != source_type {
@@ -1217,7 +1221,7 @@ fn read_table_copy(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<(u32,
     Ok((destination, source))
 }
 
-fn read_table_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_table_grow(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (index, ty) = take_table(st, data, env)?;
     pop_with_type(st, ValueType::I32)?;
     pop_with_type(st, ty)?;
@@ -1225,13 +1229,13 @@ fn read_table_grow(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> 
     Ok(index)
 }
 
-fn read_table_size(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_table_size(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (index, _) = take_table(st, data, env)?;
     push_val(st, StackType::Val(ValueType::I32));
     Ok(index)
 }
 
-fn read_table_fill(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> {
+fn read_table_fill(st: &mut OpIterState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let (index, ty) = take_table(st, data, env)?;
     pop_with_type(st, ValueType::I32)?;
     pop_with_type(st, ty)?;
@@ -1242,7 +1246,7 @@ fn read_table_fill(st: &mut OpIterState, data: &[u8], env: &Env) -> Result<u32> 
 fn step_bulk<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     subopcode: u32,
     visitor: &mut V,
 ) -> Result<()> {
@@ -1430,7 +1434,7 @@ fn simd_memory_info(subopcode: u32) -> Option<(u32, bool, u8)> {
 fn read_simd_memory_lane(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     natural_align: u32,
     store: bool,
     count: u8,
@@ -1479,7 +1483,7 @@ fn read_simd_shuffle(st: &mut OpIterState, data: &[u8]) -> Result<(u64, u64)> {
 fn step_simd<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     visitor: &mut V,
 ) -> Result<()> {
     let (subopcode, next) = read_u32_leb(data, st.pos)?;
@@ -1520,7 +1524,7 @@ fn step_simd<V: OpVisitor>(
 fn step_wasm2<V: OpVisitor>(
     st: &mut OpIterState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     opcode: u8,
     visitor: &mut V,
@@ -1578,7 +1582,7 @@ fn check_func_type(ft: &FuncType) -> Result<()> {
     Ok(())
 }
 
-fn pop_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+fn pop_results(st: &mut OpIterState, env: &CodeMetadata, ts: ResultType) -> Result<()> {
     match ts {
         ResultType::Empty => Ok(()),
         ResultType::One(t) => {
@@ -1598,7 +1602,7 @@ fn pop_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
     }
 }
 
-fn push_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+fn push_results(st: &mut OpIterState, env: &CodeMetadata, ts: ResultType) -> Result<()> {
     let n = ts.len(env)?;
     if n > usize::MAX - st.vals.len() {
         return Err(OpError::StackTooLarge);
@@ -1620,7 +1624,7 @@ fn push_results(st: &mut OpIterState, env: &Env, ts: ResultType) -> Result<()> {
     Ok(())
 }
 
-fn same_types(env: &Env, a: ResultType, b: ResultType) -> Result<bool> {
+fn same_types(env: &CodeMetadata, a: ResultType, b: ResultType) -> Result<bool> {
     let n = a.len(env)?;
     if n != b.len(env)? {
         return Ok(false);
@@ -1654,7 +1658,7 @@ fn push_frame(st: &mut BodyState, kind: LabelKind, bt: BlockSignature) {
 fn enter_info(
     st: &mut BodyState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     kind: LabelKind,
 ) -> Result<BlockSignature> {
     let (bt, end) = signature::read_block_type(data, st.core.pos)?;
@@ -1678,14 +1682,14 @@ fn enter_info(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn enter(st: &mut BodyState, data: &[u8], env: &Env, kind: LabelKind) -> Result<()> {
+fn enter(st: &mut BodyState, data: &[u8], env: &CodeMetadata, kind: LabelKind) -> Result<()> {
     enter_info(st, data, env, kind)?;
     Ok(())
 }
 
 fn end_frame_info(
     st: &mut BodyState,
-    env: &Env,
+    env: &CodeMetadata,
     is_else: bool,
 ) -> Result<(LabelKind, BlockSignature)> {
     let n = st.core.ctrls.len();
@@ -1725,7 +1729,7 @@ fn end_frame_info(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn end_frame(st: &mut BodyState, env: &Env, is_else: bool) -> Result<()> {
+fn end_frame(st: &mut BodyState, env: &CodeMetadata, is_else: bool) -> Result<()> {
     end_frame_info(st, env, is_else)?;
     Ok(())
 }
@@ -1760,7 +1764,7 @@ fn read_multi_value_label(st: &mut BodyState, data: &[u8]) -> Result<ResultType>
 fn branch_info(
     st: &mut BodyState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     conditional: bool,
 ) -> Result<(u32, ResultType)> {
     let (depth, ts) = read_label_info(st, data)?;
@@ -1778,7 +1782,7 @@ fn branch_info(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn branch(st: &mut BodyState, data: &[u8], env: &Env, conditional: bool) -> Result<()> {
+fn branch(st: &mut BodyState, data: &[u8], env: &CodeMetadata, conditional: bool) -> Result<()> {
     branch_info(st, data, env, conditional)?;
     Ok(())
 }
@@ -1787,7 +1791,7 @@ fn branch(st: &mut BodyState, data: &[u8], env: &Env, conditional: bool) -> Resu
 ///
 /// Keeping `Bot` unresolved allows it to match different concrete target types
 /// under the Wasm 2.0 common-subtype rule.
-fn check_suffix(st: &OpIterState, env: &Env, ts: ResultType) -> Result<()> {
+fn check_suffix(st: &OpIterState, env: &CodeMetadata, ts: ResultType) -> Result<()> {
     let base = cur_base(st);
     let mut stack = st.vals.len();
     let mut i = ts.len(env)?;
@@ -1818,7 +1822,7 @@ fn check_suffix(st: &OpIterState, env: &Env, ts: ResultType) -> Result<()> {
 fn branch_table_with<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     visitor: &mut V,
 ) -> Result<()> {
     let (count, end) = read_u32_leb(data, st.core.pos)?;
@@ -1853,7 +1857,7 @@ fn branch_table_with<V: OpVisitor>(
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn branch_table(st: &mut BodyState, data: &[u8], env: &Env) -> Result<()> {
+fn branch_table(st: &mut BodyState, data: &[u8], env: &CodeMetadata) -> Result<()> {
     let mut visitor = DefaultOpVisitor;
     branch_table_with(st, data, env, &mut visitor)
 }
@@ -1868,24 +1872,21 @@ fn apply_func_type(st: &mut OpIterState, ft: &FuncType) -> Result<()> {
     Ok(())
 }
 
-fn call_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<u32> {
+fn call_info(st: &mut BodyState, data: &[u8], env: &CodeMetadata) -> Result<u32> {
     let index = take_index(&mut st.core, data)?;
-    let i = index as usize;
-    if i >= env.func_types.len() {
-        return Err(OpError::UnknownFunc);
-    }
-    apply_func_type(&mut st.core, &env.func_types[i])?;
+    let signature = env.func_type(index).ok_or(OpError::UnknownFunc)?;
+    apply_func_type(&mut st.core, signature)?;
     Ok(index)
 }
 
-fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<(u32, u32)> {
+fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &CodeMetadata) -> Result<(u32, u32)> {
     let index = take_index(&mut st.core, data)?;
     let table = take_index(&mut st.core, data)?;
     let t = table as usize;
-    if t >= env.table_types.len() {
+    if t >= env.tables.len() {
         return Err(OpError::UnknownTable);
     }
-    if env.table_types[t].elem.value_type() != ValueType::FuncRef {
+    if env.tables[t].ty.elem.value_type() != ValueType::FuncRef {
         return Err(OpError::TypeMismatch);
     }
     let i = index as usize;
@@ -1899,7 +1900,7 @@ fn call_indirect_info(st: &mut BodyState, data: &[u8], env: &Env) -> Result<(u32
 
 // Stable no-op projection used by the extracted semantic contracts.
 #[allow(dead_code)]
-fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()> {
+fn call(st: &mut BodyState, data: &[u8], env: &CodeMetadata, indirect: bool) -> Result<()> {
     if indirect {
         call_indirect_info(st, data, env)?;
     } else {
@@ -1911,7 +1912,7 @@ fn call(st: &mut BodyState, data: &[u8], env: &Env, indirect: bool) -> Result<()
 // --- Function body validation entry points ---
 
 /// Opens the function-body frame with the signature of `type_index`.
-fn initial_state(env: &Env, type_index: u32) -> Result<BodyState> {
+fn initial_state(env: &CodeMetadata, type_index: u32) -> Result<BodyState> {
     let i = type_index as usize;
     if i >= env.types.len() {
         return Err(OpError::UnknownType);
@@ -1935,7 +1936,7 @@ fn initial_state(env: &Env, type_index: u32) -> Result<BodyState> {
 /// Runs the shared body loop with WebAssembly Core 2.0 control rules.
 fn body_loop<V: OpVisitor>(
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     type_index: u32,
     visitor: &mut V,
@@ -1958,7 +1959,7 @@ fn body_loop<V: OpVisitor>(
 fn step_body<V: OpVisitor>(
     st: &mut BodyState,
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     type_index: u32,
     op: u8,
@@ -2035,7 +2036,7 @@ fn step_body<V: OpVisitor>(
 /// callback.
 pub(crate) fn validate_body_with<V: OpVisitor>(
     data: &[u8],
-    env: &Env,
+    env: &CodeMetadata,
     ctx: &Context,
     type_index: u32,
     visitor: &mut V,

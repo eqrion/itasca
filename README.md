@@ -20,8 +20,8 @@ This file is written by a human, the rest of this repository is not.
 ```rust
 let bytes = b"\x00asm\x01\x00\x00\x00";
 let module = itasca::validate_module(bytes)?;
-let imports = module.env().import_types()?;
-let exports = module.env().export_types()?;
+let imports = module.import_types()?;
+let exports = module.export_types()?;
 ```
 
 The validator supports multi-value, sign extension, saturating conversions,
@@ -34,7 +34,8 @@ buffers, and parallel validation of function bodies.
 
 ```rust
 use itasca::{
-    StreamingBatch, StreamingConfig, Env, Error, StreamingRegion, Result, StreamingSource, StreamingVisitor, Tail,
+    Error, ModuleMetadata, Result, StreamingBatch, StreamingConfig, StreamingRegion,
+    StreamingSource, StreamingVisitor,
 };
 use std::vec::Vec;
 
@@ -48,14 +49,13 @@ impl StreamingSource for Input {
     fn tail(&self) -> Result<&[u8]> { Ok(&[]) }
 }
 
-#[derive(Default)]
 struct Visitor<'a> { returned: Vec<StreamingBatch<'a>> }
 
 impl itasca::ModuleVisitor for Visitor<'_> {}
 
 impl<'a> StreamingVisitor<'a> for Visitor<'a> {
     fn custom_region(&mut self, _region: StreamingRegion) {}
-    fn environment_ready(&mut self, _env: &Env) -> Result<StreamingConfig> {
+    fn environment_ready(&mut self, _module: &ModuleMetadata) -> Result<StreamingConfig> {
         Ok(StreamingConfig { batch_bytes: 4096, max_batches: 2 })
     }
     fn submit_code_batch(&mut self, mut batch: StreamingBatch<'a>) -> Result<()> {
@@ -75,16 +75,16 @@ impl<'a> StreamingVisitor<'a> for Visitor<'a> {
         self.returned.pop().ok_or(Error::Host)
     }
     fn code_end(&mut self) -> Result<()> { Ok(()) }
-    fn tail_ready(&mut self, _tail: Tail) -> Result<()> { Ok(()) }
 }
 
 let source = Input(b"\x00asm\x01\x00\x00\x00");
-let mut visitor = Visitor::default();
-let mut env = Env::new();
-itasca::validate_streaming(0, &source, &mut visitor, &mut env)?;
+let module = itasca::validate_streaming(0, &source, &mut Visitor { returned: Vec::new() })?;
 ```
 
 ## Formal verification
+
+The Rust metadata and streaming API have changed. The guarantees below describe
+the previous extracted API until the handwritten proofs are ported to the new model.
 
 The pipeline is:
 
@@ -116,5 +116,9 @@ The proofs depend on:
      sources with [versioned patches](patches/).
   4. The [handwritten binary grammar](lean/WebAssembly/WebAssembly/Binary/Module.lean)
      and [external Rust operation models](lean/ItascaRust/ItascaRust/FunsExternal.lean).
+     The shared-metadata model treats `Arc` construction, borrowing and strong-reference
+     cloning as preserving the immutable value. It assumes successful allocation and
+     a representable strong-reference count. Atomic memory ordering, destruction timing,
+     and allocator and reference-count exhaustion are outside the model.
   5. The rustc compiler.
   6. Lean's kernel and standard logical foundations.

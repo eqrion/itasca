@@ -34,7 +34,7 @@ namespace Itasca.Body
 
 /-- Factorization of the bulk instruction callbacks around their readers. -/
 def bulkStep {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) :
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) :
     Result (core.result.Result Unit error.OpError × code.OpIterState × V) :=
   match opcode with
   | 8#uscalar => Visitor.Core.run (code.read_memory_init st data env) (fun v s a => visitor.on_memory_init v s a) v
@@ -55,7 +55,7 @@ namespace Itasca
 
 /-- `code.step_bulk` equals its unfolded form `Body.bulkStep`. -/
 theorem code.step_bulk.eq_runs {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V) :
     code.step_bulk visitor st data env opcode v = Body.bulkStep visitor st data env opcode v := by
   unfold code.step_bulk Body.bulkStep
   split <;> try rfl
@@ -112,7 +112,7 @@ theorem run_reader_total {A V : Type} (st : code.OpIterState)
 
 /-- Bulk instructions preserve structural bounds for arbitrary immediate bytes. -/
 theorem bulk_total {V : Type} (visitor : code.OpVisitor V) (st : code.OpIterState)
-    (data : Slice U8) (env : metadata.Env) (opcode : U32) (v : V)
+    (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32) (v : V)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max)
     (hv : Visitor.Total visitor) :
     code.step_bulk visitor st data env opcode v ⦃ r => Body.Control.Shape r.2.1 ∧
@@ -186,7 +186,7 @@ namespace Itasca.Body.Visitor
 /-- Accepted replacement hooks preserve every successful bulk reader state. -/
 theorem bulk_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env) (opcode : U32)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (opcode : U32)
     (v v' : V) (w : W)
     (h : code.step_bulk visitor st data env opcode v = .ok (.Ok (), final, v')) :
     ∃ w', code.step_bulk replacement st data env opcode w = .ok (.Ok (), final, w') := by
@@ -242,7 +242,7 @@ local instance : DecidableEq Itasca.wasm_types.ValueType := Classical.decEq _
 namespace Itasca.Body
 
 /-- Read a data-segment index and the reserved memory-zero byte before operands. -/
-def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     Result (core.result.Result U32 error.OpError × code.OpIterState) := do
   let (r, s) ← code.take_data_index st data env
   match r with
@@ -254,7 +254,7 @@ def memoryInitMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata
     | .Ok () => .ok (.Ok idx, out)
 
 /-- Wasm 2.0 `memory.copy` reads two reserved literal memory-zero bytes. -/
-def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     Result (core.result.Result Unit error.OpError × code.OpIterState) := do
   let (r, s) ← code.read_bulk_memory st data env
   match r with
@@ -265,7 +265,7 @@ def memoryCopyMetadata (st : code.OpIterState) (data : Slice U8) (env : metadata
 `table.copy` and `table.init` do. -/
 def referencePairMetadata
     (first : Result (core.result.Result (U32 × wasm_types.ValueType) error.OpError × code.OpIterState))
-    (data : Slice U8) (env : metadata.Env) :
+    (data : Slice U8) (env : metadata.CodeMetadata) :
     Result (core.result.Result (U32 × U32) error.OpError × code.OpIterState) := do
   let (r, s) ← first
   match r with
@@ -299,7 +299,7 @@ theorem code.read_bulk_operands.fixed (st : code.OpIterState) :
        cases res <;> simp [core.result.Result.Insts.CoreOpsTry.branch,
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual])
 
-theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_memory_fill st data env = Body.metadataOperands (code.read_bulk_memory st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_fill, Body.metadataOperands,
@@ -313,7 +313,7 @@ theorem code.read_memory_fill.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Body.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_memory_init st data env = Body.metadataOperands (Body.memoryInitMetadata st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_init, Body.metadataOperands, Body.memoryInitMetadata,
@@ -327,7 +327,7 @@ theorem code.read_memory_init.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Body.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_memory_copy st data env = Body.metadataOperands (Body.memoryCopyMetadata st data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_memory_copy, Body.metadataOperands, Body.memoryCopyMetadata,
@@ -341,7 +341,7 @@ theorem code.read_memory_copy.fixed (st : code.OpIterState) (data : Slice U8) (e
          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
          Body.Simd.readFixed, Std.bind_assoc, Std.uncurry])
 
-theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_init st data env = Body.metadataOperands (Body.referencePairMetadata (code.take_element st data env) data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_table_init, Body.metadataOperands, Body.referencePairMetadata,
@@ -357,7 +357,7 @@ theorem code.read_table_init.fixed (st : code.OpIterState) (data : Slice U8) (en
     | (rename_i a; cases (show U32 × wasm_types.ValueType from a))
     | (simp only [wasm_types.ValueType.ne.eq, bind_ok]; split <;> simp_all)
 
-theorem code.read_table_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_copy.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_copy st data env = Body.metadataOperands (Body.referencePairMetadata (code.take_table st data env) data env)
       (fun _ => [.I32, .I32, .I32]) (fun _ => none) id := by
   simp only [code.read_table_copy, Body.metadataOperands, Body.referencePairMetadata,
@@ -379,11 +379,11 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Body
 
-theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     memoryInitMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ idx, r.1 = .Ok idx → ∃ bytes,
         Body.Scalar.BytesAt data st.pos (bytes ++ [0#u8]) r.2.pos ∧ Binary.Leb128.Encoding bytes idx.val ∧
-        (∃ count, env.data_count = some count ∧ idx.val < count.val) ∧ 0 < env.mem_types.val.length ⦄ := by
+        (∃ count, env.data_count = some count ∧ idx.val < count.val) ∧ 0 < env.memories.val.length ⦄ := by
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.take_data_index.spec st data env)
   dsimp only at hv hc hd
   cases res with
@@ -403,9 +403,9 @@ theorem memoryInitMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
       obtain ⟨hzero, hmem⟩ := hod rfl
       exact ⟨bytes, (Body.Scalar.BytesAt.mk hbs hbl hbb).append hzero, hbe, hcount, hmem⟩
 
-theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     memoryCopyMetadata st data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
-      (r.1 = .Ok () → Body.Scalar.BytesAt data st.pos [0#u8, 0#u8] r.2.pos ∧ 0 < env.mem_types.val.length) ⦄ := by
+      (r.1 = .Ok () → Body.Scalar.BytesAt data st.pos [0#u8, 0#u8] r.2.pos ∧ 0 < env.memories.val.length) ⦄ := by
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists (code.read_bulk_memory.spec st data env)
   dsimp only at hv hc hd
   cases res with
@@ -425,7 +425,7 @@ theorem memoryCopyMetadata.spec (st : code.OpIterState) (data : Slice U8) (env :
 /-- Sequential reference-index decoding preserves each byte span and compares
 the two resolved element types before the fixed operand checker runs. -/
 theorem referencePairMetadata.spec
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (first : Result (core.result.Result (U32 × wasm_types.ValueType) error.OpError × code.OpIterState))
     (P : U32 → wasm_types.ValueType → Usize → Prop)
     (hf : first ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
@@ -433,8 +433,8 @@ theorem referencePairMetadata.spec
     referencePairMetadata first data env ⦃ r => r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       ∀ i j, r.1 = .Ok (i, j) → ∃ middle ty,
         P i ty middle ∧ Binary.Leb128.Decoded data middle j r.2.pos ∧
-        ∃ hi : j.val < env.table_types.val.length,
-          ty = Module.Constants.referenceValueType env.table_types.val[j.val].elem ⦄ := by
+        ∃ hi : j.val < env.tables.val.length,
+          ty = Module.Constants.referenceValueType env.tables.val[j.val].ty.elem ⦄ := by
   classical
   obtain ⟨⟨res, middle⟩, hr, hv, hc, hd⟩ := WP.spec_imp_exists hf
   dsimp only at hv hc hd
@@ -570,8 +570,8 @@ theorem Pending.table_init {data env locals index st} (p : Pending data env loca
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
     (code.take_element {st.core with pos := next} data env)
     (fun i ty pos => Binary.Leb128.Decoded data next i pos ∧
-      ∃ hi : i.val < env.elements.val.length,
-        ty = Module.Constants.referenceValueType env.elements.val[i.val].elem)
+      ∃ hi : i.val < env.elem_segment_types.val.length,
+        ty = Module.Constants.referenceValueType env.elem_segment_types.val[i.val])
     (code.take_element.spec {st.core with pos := next} data env)
   apply p.metadata_read
     _ (fun _ => [.I32, .I32, .I32]) (fun _ => none) id
@@ -591,7 +591,7 @@ theorem Pending.table_init {data env locals index st} (p : Pending data env loca
     rw [hrun, WP.spec_ok] at hmetadata
     obtain ⟨middle, ty, ⟨_, hi, hity⟩, _, hj, hjty⟩ := hmetadata.2.2 i j rfl
     simpa [Simd.inputTypes, Simd.outputTypes, Translation.valueType] using
-      hC.table_init j i env.table_types.val[j.val] env.elements.val[i.val] hj hi rfl rfl (reference_value_injective (hity.symm.trans hjty))
+      hC.table_init j i env.tables.val[j.val].ty env.elem_segment_types.val[i.val] hj hi rfl rfl (reference_value_injective (hity.symm.trans hjty))
 
 theorem Pending.table_copy {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 252#u8) (next : Usize)
@@ -603,8 +603,8 @@ theorem Pending.table_copy {data env locals index st} (p : Pending data env loca
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
     (code.take_table {st.core with pos := next} data env)
     (fun i ty pos => Binary.Leb128.Decoded data next i pos ∧
-      ∃ hi : i.val < env.table_types.val.length,
-        ty = Module.Constants.referenceValueType env.table_types.val[i.val].elem)
+      ∃ hi : i.val < env.tables.val.length,
+        ty = Module.Constants.referenceValueType env.tables.val[i.val].ty.elem)
     (code.take_table.spec {st.core with pos := next} data env)
   apply p.metadata_read
     _ (fun _ => [.I32, .I32, .I32]) (fun _ => none) id
@@ -624,7 +624,7 @@ theorem Pending.table_copy {data env locals index st} (p : Pending data env loca
     rw [hrun, WP.spec_ok] at hmetadata
     obtain ⟨middle, ty, ⟨_, hi, hity⟩, _, hj, hjty⟩ := hmetadata.2.2 i j rfl
     simpa [Simd.inputTypes, Simd.outputTypes, Translation.valueType] using
-      hC.table_copy i j env.table_types.val[i.val] env.table_types.val[j.val] hi hj rfl rfl (reference_value_injective (hjty.symm.trans hity))
+      hC.table_copy i j env.tables.val[i.val].ty env.tables.val[j.val].ty hi hj rfl rfl (reference_value_injective (hjty.symm.trans hity))
 
 end Itasca.Body
 

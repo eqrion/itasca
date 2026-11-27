@@ -16,39 +16,6 @@ model.
 
 -/
 
-section StreamHeader
-
-/-!
-## Streaming run witnesses
-
-`TailDelivery` describes the callback suffix of an accepted run: delivery of
-the validated tail, followed by worker polls. Driver-phase witnesses are internal.
--/
-
-open Aeneas Aeneas.Std
-
-namespace Itasca.Stream
-open Aeneas Aeneas.Std
-
-/-- Observable delivery of the module tail to the final visitor state.
-The tail callback succeeds, and only successful worker polls follow it. This
-lets clients retain any property established by `tail_ready` and preserved by
-polling, without depending on the driver's parsing, batching or drain loops.
-Source coherence and worker provenance remain separate theorem premises. -/
-inductive TailDelivery {V : Type} (visitor : stream.StreamingVisitor V)
-    (tail : metadata.Tail) : V → Prop where
-  | ready {before after : V}
-      (called : visitor.tail_ready before tail = .ok (.Ok (), after)) :
-      TailDelivery visitor tail after
-  | poll {before after : V} {batch : stream.StreamingBatch}
-      (delivered : TailDelivery visitor tail before)
-      (called : visitor.poll_code_batch before = .ok (.Ok batch, after)) :
-      TailDelivery visitor tail after
-
-end Itasca.Stream
-
-end StreamHeader
-
 /-! ## StreamingContracts -/
 
 section StreamingContracts
@@ -98,11 +65,11 @@ end Itasca.Module.Tail
 
 namespace Itasca.CodeEntry
 
-/-- Parameters plus the maximum local count fit in a `Usize` for every function type. The
-environment decoder supplies this. The validator accepts arbitrary environments, but concatenating
-parameters and locals cannot be total for a caller-built vector already at machine capacity. -/
-def Bounds (env : metadata.Env) : Prop :=
-  ∀ ft ∈ env.types.val, ft.params.val.length + limits.MAX_LOCALS.val ≤ Usize.max
+/-- Arithmetic bounds provided by the decoder for entry validation. The imported
+function prefix fits in the descriptor vector, and expanded locals fit in a vector. -/
+structure Bounds (env : metadata.CodeMetadata) : Prop where
+  imported : env.num_imported_funcs.val ≤ env.funcs.val.length
+  locals : ∀ ft ∈ env.types.val, ft.params.val.length + limits.MAX_LOCALS.val ≤ Usize.max
 
 end Itasca.CodeEntry
 
@@ -212,7 +179,7 @@ structure Issued where
   /-- Batch identity assigned within that invocation. -/
   batch_id : Usize
   /-- Immutable decoded environment shared by the batch's workers. -/
-  env : metadata.Env
+  env : metadata.CodeMetadata
   /-- Exact bytes of the framed entries assigned to this batch. -/
   code : Slice U8
   /-- Start of `code` measured from the complete code-region origin. -/
@@ -234,7 +201,7 @@ def Issued.seed (issued : Issued) : stream.StreamingBatch :=
 from the operation history of a worker. -/
 def Issued.Bounded (issued : Issued) : Prop :=
   0 < issued.num_funcs.val ∧
-  issued.first_func.val + issued.num_funcs.val ≤ issued.env.func_type_indices.val.length ∧
+  issued.first_func.val + issued.num_funcs.val ≤ (Translation.Environment.definedTypeIndices issued.env).length ∧
   issued.code_offset.val + issued.code.length ≤ limits.MAX_MODULE_BYTES.val
 
 /-- Workers obtainable from the seed of `issued` through actual `stream.StreamingBatch.next_entry` and
@@ -281,8 +248,6 @@ structure CallbacksTotal {V : Type} (visitor : stream.StreamingVisitor V) : Prop
   poll : Stream.Retirement.PollTotal visitor
   /-- End-of-code notification returns normally. -/
   code_end : ∀ v, ∃ r, visitor.code_end v = .ok r
-  /-- Tail notification returns normally for any supplied tail. -/
-  tail_ready : ∀ v tail, ∃ r, visitor.tail_ready v tail = .ok r
 
 /-- Soundness premise on the scheduler: returned workers derive from issued seeds through
 `Stream.Batch.Reachable`. The scheduler tracks the history of issued batches across every
@@ -317,9 +282,6 @@ structure Provenance {V : Type} (visitor : stream.StreamingVisitor V)
   /-- Successful end-of-code notification preserves history. -/
   code_end : ∀ id history v v', Tracks id history v →
     visitor.code_end v = .ok (.Ok (), v') → Tracks id history v'
-  /-- Successful tail notification preserves history. -/
-  tail_ready : ∀ id history v tail v', Tracks id history v →
-    visitor.tail_ready v tail = .ok (.Ok (), v') → Tracks id history v'
 
 /-- Completeness premise on the scheduler: positive batch settings, accepting callbacks, and
 actual `stream.StreamingBatch.validate_all` results in any order. Each returned worker is the actual
@@ -359,9 +321,6 @@ structure Accepts {V : Type} (visitor : stream.StreamingVisitor V)
   /-- End-of-code notification accepts and retains the queue. -/
   code_end : ∀ id queue v, Queued id queue v →
     ∃ v', visitor.code_end v = .ok (.Ok (), v') ∧ Queued id queue v'
-  /-- Tail notification accepts and retains the queue. -/
-  tail_ready : ∀ id queue v tail, Queued id queue v →
-    ∃ v', visitor.tail_ready v tail = .ok (.Ok (), v') ∧ Queued id queue v'
 
 end Itasca.Stream.Scheduler
 

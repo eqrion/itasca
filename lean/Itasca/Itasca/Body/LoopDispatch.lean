@@ -280,7 +280,7 @@ theorem Open.enter_child {env root st st' parents current}
   · simp [trace, Saved.trace, Saved.fresh, List.flatMap_append, List.append_assoc]
 
 /-- The state with a single fresh body frame satisfies `Open`. -/
-theorem Open.start (env : metadata.Env) (root : context) (hroot : wf_context root)
+theorem Open.start (env : metadata.CodeMetadata) (root : context) (hroot : wf_context root)
     (st : code.BodyState) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hctrls : st.core.ctrls.val = [(Saved.fresh 0#usize .body bt ins outs).ctrl])
@@ -362,7 +362,7 @@ theorem Spine.headers {env root parents C outer form ins}
 
 /-- Physical reverse-depth lookup resolves to exactly the generated label
 vector, including loop parameters and invalid depths. -/
-theorem resolved_label_at (env : metadata.Env) (st : code.BodyState) (frames : List Saved)
+theorem resolved_label_at (env : metadata.CodeMetadata) (st : code.BodyState) (frames : List Saved)
     (hc : st.core.ctrls.val = frames.map Saved.ctrl)
     (hb : st.blocks.val = frames.map Saved.bt)
     (hh : ∀ f ∈ frames, ∃ C, Header env C f) (depth : Nat) :
@@ -486,7 +486,7 @@ theorem State.finished {data env locals index st}
     exact ⟨ft, ops, hi, ⟨tokens, st.core.pos, hc, hpos, ht⟩, htyped, (ht.declared_iff _).mp hd⟩
 
 /-- The initial state satisfies `State` for a body within the size limit. -/
-theorem State.start (data : Slice U8) (env : metadata.Env)
+theorem State.start (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType)
     (index : U32) (ft : wasm_types.FuncType) (hi : env.types.val[index.val]? = some ft)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val) :
@@ -534,7 +534,7 @@ theorem Pending.running_after {data env locals index st}
     (hb : Frames.bodyType parents current = some (.TypeIndex index))
     (ht : Frames.trace parents current = Frames.trace p.parents p.current ++ [token])
     (hc : s.blocks.val.length ≤ st.blocks.val.length + 1)
-    (hd : token.Declared (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) := by
+    (hd : token.Declared (Translation.Environment.declaredReferences env) := by
       simp [Token.Declared, Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices]) : p.After s := by
   have hs := encoded.span
   have hp := p.pos
@@ -594,7 +594,7 @@ theorem Pending.append_result {data env locals index st}
       [{ p.current.ctrl with polymorphic_base := poly }])
     (hb : s.blocks.val = p.parents.map Frames.Saved.bt ++ [p.current.bt])
     (hv : s.core.vals.val = outer ++ newVals)
-    (hdecl : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op := by
+    (hdecl : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) op := by
       simp [Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices]) : p.After s := by
   refine p.running_after s p.parents (p.current.advance (.plain op) op poly newVals)
     (.plain op) encoded ?_ ?_ ?_ ?_ hdecl
@@ -638,7 +638,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Body
 
 /-- The return arm of the extracted loop, with its state exposed for proofs. -/
-def returnStep (st : code.BodyState) (env : metadata.Env) (index : U32) :
+def returnStep (st : code.BodyState) (env : metadata.CodeMetadata) (index : U32) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, ois) ← code.pop_results st.core env (.Type index .Results)
   match r with
@@ -649,7 +649,7 @@ def returnStep (st : code.BodyState) (env : metadata.Env) (index : U32) :
 
 /-- Proof adapter for one opcode of the extracted body loop . Its
 exact factorization is checked by `loop_body_eq`; it is not a separate validity judgment. -/
-def step (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+def step (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (opcode : U8) :
     Result (core.result.Result Unit error.OpError × code.BodyState) :=
   match opcode with
@@ -673,12 +673,12 @@ def step (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
       .ok (r, { st with core := ois })
 
 /-- The extracted body loop with the empty visitor. -/
-abbrev run (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+abbrev run (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (st : code.BodyState) :=
   Body.emptyVisitorLoop data env index st ctx.locals ctx.results ()
 
 /-- One iteration of `run`. -/
-abbrev loopBody (data : Slice U8) (env : metadata.Env)
+abbrev loopBody (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :=
   Body.emptyVisitorLoop.body data env index ctx.locals ctx.results st ()
 
@@ -691,7 +691,7 @@ def continueStep (r : core.result.Result Unit error.OpError × code.BodyState) :
 
 /-- One loop iteration stops at the end of the body (with `TrailingBytes` if bytes remain) and
 otherwise reads an opcode and runs `step`. -/
-theorem loop_body_eq (data : Slice U8) (env : metadata.Env)
+theorem loop_body_eq (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     loopBody data env ctx index st =
       if st.blocks.val = [] then

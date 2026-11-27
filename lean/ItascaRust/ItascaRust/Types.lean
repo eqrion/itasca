@@ -2,6 +2,7 @@
 -- [itasca]: type definitions
 module
 public import Aeneas
+public import ItascaRust.TypesExternal
 @[expose] public section
 open Aeneas Aeneas.Std Result ControlFlow Error
 set_option linter.dupNamespace false
@@ -349,12 +350,33 @@ inductive wasm_types.ElemType where
 | FuncRef : wasm_types.ElemType
 | ExternRef : wasm_types.ElemType
 
+/-- [itasca::wasm_types::FuncType]
+    Source: 'src/types.rs'
+    Visibility: public -/
+structure wasm_types.FuncType where
+  params : alloc.vec.Vec wasm_types.ValueType
+  results : alloc.vec.Vec wasm_types.ValueType
+
 /-- [itasca::wasm_types::Limits]
     Source: 'src/types.rs'
     Visibility: public -/
 structure wasm_types.Limits where
   min : Std.U32
   max : Option Std.U32
+
+/-- [itasca::wasm_types::MemType]
+    Source: 'src/types.rs'
+    Visibility: public -/
+structure wasm_types.MemType where
+  limits : wasm_types.Limits
+
+/-- [itasca::metadata::MemoryDesc]
+    Source: 'src/module.rs'
+    Visibility: public -/
+structure metadata.MemoryDesc where
+  ty : wasm_types.MemType
+  is_imported : Bool
+  is_exported : Bool
 
 /-- [itasca::wasm_types::TableType]
     Source: 'src/types.rs'
@@ -363,18 +385,21 @@ structure wasm_types.TableType where
   limits : wasm_types.Limits
   elem : wasm_types.ElemType
 
-/-- [itasca::wasm_types::MemType]
-    Source: 'src/types.rs'
+/-- [itasca::metadata::TableDesc]
+    Source: 'src/module.rs'
     Visibility: public -/
-structure wasm_types.MemType where
-  limits : wasm_types.Limits
+structure metadata.TableDesc where
+  ty : wasm_types.TableType
+  is_imported : Bool
+  is_exported : Bool
 
-/-- [itasca::wasm_types::FuncType]
-    Source: 'src/types.rs'
+/-- [itasca::metadata::FuncDesc]
+    Source: 'src/module.rs'
     Visibility: public -/
-structure wasm_types.FuncType where
-  params : alloc.vec.Vec wasm_types.ValueType
-  results : alloc.vec.Vec wasm_types.ValueType
+structure metadata.FuncDesc where
+  type_index : Std.U32
+  can_ref_func : Bool
+  eager : Bool
 
 /-- [itasca::wasm_types::ConstExpr]
     Source: 'src/types.rs'
@@ -390,82 +415,26 @@ inductive wasm_types.ConstExpr where
 | RefFunc : Std.U32 → wasm_types.ConstExpr
 | GlobalGet : Std.U32 → wasm_types.ConstExpr
 
-/-- [itasca::metadata::ElementMode]
-    Source: 'src/module.rs'
-    Visibility: public -/
-@[discriminant isize]
-inductive metadata.ElementMode where
-| Active : Std.U32 → wasm_types.ConstExpr → metadata.ElementMode
-| Passive : metadata.ElementMode
-| Declarative : metadata.ElementMode
-
-/-- [itasca::metadata::Element]
-    Source: 'src/module.rs'
-    Visibility: public -/
-structure metadata.Element where
-  elem : wasm_types.ElemType
-  mode : metadata.ElementMode
-  init : alloc.vec.Vec wasm_types.ConstExpr
-
-/-- [itasca::metadata::ExportDesc]
-    Source: 'src/module.rs'
-    Visibility: public -/
-@[discriminant isize]
-inductive metadata.ExportDesc where
-| Func : Std.U32 → metadata.ExportDesc
-| Table : Std.U32 → metadata.ExportDesc
-| Memory : Std.U32 → metadata.ExportDesc
-| Global : Std.U32 → metadata.ExportDesc
-
-/-- [itasca::metadata::Export]
-    Source: 'src/module.rs'
-    Visibility: public -/
-structure metadata.Export where
-  «name» : alloc.vec.Vec Std.U8
-  desc : metadata.ExportDesc
-
-/-- [itasca::metadata::ImportDesc]
-    Source: 'src/module.rs'
-    Visibility: public -/
-@[discriminant isize]
-inductive metadata.ImportDesc where
-| Func : Std.U32 → metadata.ImportDesc
-| Table : wasm_types.TableType → metadata.ImportDesc
-| Memory : wasm_types.MemType → metadata.ImportDesc
-| Global : wasm_types.GlobalType → metadata.ImportDesc
-
-/-- [itasca::metadata::Import]
-    Source: 'src/module.rs'
-    Visibility: public -/
-structure metadata.Import where
-  module : alloc.vec.Vec Std.U8
-  «name» : alloc.vec.Vec Std.U8
-  desc : metadata.ImportDesc
-
 /-- [itasca::metadata::Global]
     Source: 'src/module.rs'
     Visibility: public -/
 structure metadata.Global where
   gtype : wasm_types.GlobalType
-  init : wasm_types.ConstExpr
+  init : Option wasm_types.ConstExpr
+  is_exported : Bool
 
-/-- [itasca::metadata::Env]
+/-- [itasca::metadata::CodeMetadata]
     Source: 'src/module.rs'
     Visibility: public -/
-structure metadata.Env where
+structure metadata.CodeMetadata where
   types : alloc.vec.Vec wasm_types.FuncType
-  imports : alloc.vec.Vec metadata.Import
+  funcs : alloc.vec.Vec metadata.FuncDesc
   globals : alloc.vec.Vec metadata.Global
-  exports : alloc.vec.Vec metadata.Export
-  elements : alloc.vec.Vec metadata.Element
+  tables : alloc.vec.Vec metadata.TableDesc
+  memories : alloc.vec.Vec metadata.MemoryDesc
+  elem_segment_types : alloc.vec.Vec wasm_types.ElemType
   data_count : Option Std.U32
-  declared_funcs : alloc.vec.Vec Std.U32
   start : Option Std.U32
-  func_type_indices : alloc.vec.Vec Std.U32
-  func_types : alloc.vec.Vec wasm_types.FuncType
-  table_types : alloc.vec.Vec wasm_types.TableType
-  mem_types : alloc.vec.Vec wasm_types.MemType
-  global_types : alloc.vec.Vec wasm_types.GlobalType
   num_imported_funcs : Std.Usize
   num_imported_globals : Std.Usize
 
@@ -963,6 +932,66 @@ inductive error.Error where
 | Visitor : error.VisitError → error.Error
 | Host : error.Error
 
+/-- [itasca::metadata::ImportKind]
+    Source: 'src/module.rs'
+    Visibility: public -/
+@[discriminant isize]
+inductive metadata.ImportKind where
+| Func : metadata.ImportKind
+| Table : metadata.ImportKind
+| Memory : metadata.ImportKind
+| Global : metadata.ImportKind
+
+/-- [itasca::metadata::Import]
+    Source: 'src/module.rs'
+    Visibility: public -/
+structure metadata.Import where
+  module : alloc.vec.Vec Std.U8
+  «name» : alloc.vec.Vec Std.U8
+  kind : metadata.ImportKind
+
+/-- [itasca::metadata::ExportDesc]
+    Source: 'src/module.rs'
+    Visibility: public -/
+@[discriminant isize]
+inductive metadata.ExportDesc where
+| Func : Std.U32 → metadata.ExportDesc
+| Table : Std.U32 → metadata.ExportDesc
+| Memory : Std.U32 → metadata.ExportDesc
+| Global : Std.U32 → metadata.ExportDesc
+
+/-- [itasca::metadata::Export]
+    Source: 'src/module.rs'
+    Visibility: public -/
+structure metadata.Export where
+  «name» : alloc.vec.Vec Std.U8
+  desc : metadata.ExportDesc
+
+/-- [itasca::metadata::ElementMode]
+    Source: 'src/module.rs'
+    Visibility: public -/
+@[discriminant isize]
+inductive metadata.ElementMode where
+| Active : Std.U32 → wasm_types.ConstExpr → metadata.ElementMode
+| Passive : metadata.ElementMode
+| Declarative : metadata.ElementMode
+
+/-- [itasca::metadata::ElementInit]
+    Source: 'src/module.rs'
+    Visibility: public -/
+@[discriminant isize]
+inductive metadata.ElementInit where
+| Functions : alloc.vec.Vec Std.U32 → metadata.ElementInit
+| Expressions : alloc.vec.Vec wasm_types.ConstExpr → metadata.ElementInit
+
+/-- [itasca::metadata::Element]
+    Source: 'src/module.rs'
+    Visibility: public -/
+structure metadata.Element where
+  elem : wasm_types.ElemType
+  mode : metadata.ElementMode
+  init : metadata.ElementInit
+
 /-- [itasca::metadata::DataMode]
     Source: 'src/module.rs'
     Visibility: public -/
@@ -978,18 +1007,15 @@ structure metadata.Data where
   mode : metadata.DataMode
   init : alloc.vec.Vec Std.U8
 
-/-- [itasca::metadata::Tail]
+/-- [itasca::metadata::ModuleMetadata]
     Source: 'src/module.rs'
     Visibility: public -/
-structure metadata.Tail where
+structure metadata.ModuleMetadata (C : Type) where
+  code : C
+  imports : alloc.vec.Vec metadata.Import
+  exports : alloc.vec.Vec metadata.Export
+  elements : alloc.vec.Vec metadata.Element
   data : alloc.vec.Vec metadata.Data
-
-/-- [itasca::metadata::Module]
-    Source: 'src/module.rs'
-    Visibility: public -/
-structure metadata.Module where
-  env : metadata.Env
-  tail : metadata.Tail
 
 /-- [itasca::stream::StreamingBatch]
     Source: 'src/stream.rs'
@@ -997,7 +1023,7 @@ structure metadata.Module where
 structure stream.StreamingBatch where
   module_id : Std.U64
   batch_id : Std.Usize
-  env : metadata.Env
+  env : alloc.sync.Arc metadata.CodeMetadata
   code : Slice Std.U8
   code_offset : Std.Usize
   first_func : Std.Usize
@@ -1012,7 +1038,6 @@ structure stream.StreamingBatch where
     Source: 'src/stream.rs' -/
 structure stream.SyncVisitor where
   completed : Option stream.StreamingBatch
-  tail : Option metadata.Tail
 
 /-- [itasca::stream::StreamingConfig]
     Source: 'src/stream.rs'
@@ -1050,15 +1075,14 @@ structure metadata.ModuleVisitor (Self : Type) where
 structure stream.StreamingVisitor (Self : Type) where
   metadataModuleVisitorInst : metadata.ModuleVisitor Self
   custom_region : Self → stream.StreamingRegion → Result Self
-  environment_ready : Self → metadata.Env → Result ((core.result.Result
+  environment_ready : Self → metadata.ModuleMetadata (alloc.sync.Arc
+    metadata.CodeMetadata) → Result ((core.result.Result
     stream.StreamingConfig error.Error) × Self)
   submit_code_batch : Self → stream.StreamingBatch → Result
     ((core.result.Result Unit error.Error) × Self)
   poll_code_batch : Self → Result ((core.result.Result stream.StreamingBatch
     error.Error) × Self)
   code_end : Self → Result ((core.result.Result Unit error.Error) × Self)
-  tail_ready : Self → metadata.Tail → Result ((core.result.Result Unit
-    error.Error) × Self)
 
 /-- [itasca::stream::SliceSource]
     Source: 'src/stream.rs' -/

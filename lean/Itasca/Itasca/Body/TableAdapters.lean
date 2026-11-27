@@ -29,7 +29,7 @@ namespace Itasca
 /-- `code.branch` with `code.branch_info` unfolded, so it returns only the result and state. -/
 def Body.branchCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
-  (env : _root_.Itasca.metadata.Env) (conditional : Bool) :
+  (env : _root_.Itasca.metadata.CodeMetadata) (conditional : Bool) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
     _root_.Itasca.code.BodyState)
   := do
@@ -90,7 +90,7 @@ def Body.branchCore
 /-- `code.call` with `code.call_info` and `code.call_indirect_info` unfolded, so it returns only
 the result and state. -/
 def Body.callCore (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (indirect : Bool) :
+    (env : metadata.CodeMetadata) (indirect : Bool) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   if indirect then
     let (r, out) ← code.call_indirect_info st data env
@@ -102,18 +102,16 @@ def Body.callCore (st : code.BodyState) (data : Slice U8)
     match r with
     | .Err e => .ok (.Err e, st)
     | .Ok (index, next) =>
-      let i ← lift (UScalar.cast .Usize index)
-      if i ≥ alloc.vec.Vec.len env.func_types then
-        .ok (.Err .UnknownFunc, { st with core := { st.core with pos := next } })
-      else
-        let ft ← alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice wasm_types.FuncType)
-          env.func_types i
+      let resolved ← env.func_type index
+      match resolved with
+      | none => .ok (.Err .UnknownFunc, { st with core := { st.core with pos := next } })
+      | some ft =>
         let (r, out) ← code.apply_func_type { st.core with pos := next } ft
         .ok (r, { st with core := out })
 
 /-- The extracted `code.branch` equals `Body.branchCore`. -/
 theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (conditional : Bool) :
+    (env : metadata.CodeMetadata) (conditional : Bool) :
     code.branch st data env conditional = Body.branchCore st data env conditional := by
   simp only [code.branch, code.branch_info, Body.branchCore,
     code.read_multi_value_label, Std.bind_assoc]
@@ -145,7 +143,7 @@ theorem code.branch.eq_core (st : code.BodyState) (data : Slice U8)
 
 /-- The extracted `code.call` equals `Body.callCore`. -/
 theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (indirect : Bool) :
+    (env : metadata.CodeMetadata) (indirect : Bool) :
     code.call st data env indirect = Body.callCore st data env indirect := by
   cases indirect with
   | true =>
@@ -167,12 +165,12 @@ theorem code.call.eq_core (st : code.BodyState) (data : Slice U8)
       obtain ⟨index, next⟩ := pair
       simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok, Std.uncurry, Std.bind_assoc]
       congr 1
-      funext i
-      split
-      · simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      · simp only [Std.bind_assoc]
-        congr 1
-        funext ft
+      funext resolved
+      cases resolved with
+      | none => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+      | some ft =>
+        simp only [core.option.Option.ok_or, core.result.Result.Insts.CoreOpsTry.branch,
+          bind_ok, Std.bind_assoc]
         congr 1
         funext pair
         obtain ⟨r, out⟩ := pair
@@ -206,7 +204,7 @@ theorem wasm_types.ValueType.eq_spec (a b : wasm_types.ValueType) :
   cases a <;> cases b <;> simp [wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
 
 @[step]
-theorem signature.ResultType.len.spec (view : signature.ResultType) (env : metadata.Env) :
+theorem signature.ResultType.len.spec (view : signature.ResultType) (env : metadata.CodeMetadata) :
     signature.ResultType.len view env ⦃ r =>
       match r with
       | .Ok n => ∃ ts, Body.resolve env view = some ts ∧ n.val = ts.length
@@ -222,7 +220,7 @@ theorem signature.ResultType.len.spec (view : signature.ResultType) (env : metad
     all_goals simp_all
 
 @[step]
-theorem signature.ResultType.get.spec (view : signature.ResultType) (env : metadata.Env) (i : Usize) :
+theorem signature.ResultType.get.spec (view : signature.ResultType) (env : metadata.CodeMetadata) (i : Usize) :
     signature.ResultType.get view env i ⦃ r =>
       match r with
       | .Ok v => ∃ ts, Body.resolve env view = some ts ∧ v = ts[i.val]?
@@ -240,7 +238,7 @@ theorem signature.ResultType.get.spec (view : signature.ResultType) (env : metad
     all_goals have hi : index.val < env.types.val.length := by scalar_tac
     all_goals simp_all
 
-theorem signature.ResultType.len.complete (view : signature.ResultType) (env : metadata.Env)
+theorem signature.ResultType.len.complete (view : signature.ResultType) (env : metadata.CodeMetadata)
     (ts : List wasm_types.ValueType) (hts : Body.resolve env view = some ts) :
     ∃ n, signature.ResultType.len view env = .ok (.Ok n) ∧ n.val = ts.length := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.len.spec view env)
@@ -251,7 +249,7 @@ theorem signature.ResultType.len.complete (view : signature.ResultType) (env : m
     have he : us = ts := by simpa [hts] using hu.symm
     exact ⟨n, hr, he ▸ hn⟩
 
-theorem signature.ResultType.get.complete (view : signature.ResultType) (env : metadata.Env)
+theorem signature.ResultType.get.complete (view : signature.ResultType) (env : metadata.CodeMetadata)
     (ts : List wasm_types.ValueType) (hts : Body.resolve env view = some ts) (i : Usize) :
     signature.ResultType.get view env i = .ok (.Ok ts[i.val]?) := by
   obtain ⟨r, hr, hs⟩ := WP.spec_imp_exists (signature.ResultType.get.spec view env i)
@@ -284,7 +282,7 @@ namespace Itasca.Body
 
 /-- Resolving both views of an indexed block selects the same function type
     used by the generated Wasm 2.0 block typing rule. -/
-theorem block_type_ok (env : metadata.Env) (C : context) (hC : wf_context C)
+theorem block_type_ok (env : metadata.CodeMetadata) (C : context) (hC : wf_context C)
     (htypes : C.TYPES = env.types.val.map Translation.Environment.funcType)
     (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hi : resolve env (inputs bt) = some ins)
@@ -347,7 +345,7 @@ namespace Itasca
 
 /-- The comparison loop decides equality of the resolved lists, without
 assuming descriptor identity (distinct type indices may have equal types). -/
-theorem code.same_types_loop.spec (env : metadata.Env)
+theorem code.same_types_loop.spec (env : metadata.CodeMetadata)
     (a b : signature.ResultType) (ts us : List wasm_types.ValueType)
     (ha : Body.resolve env a = some ts)
     (hb : Body.resolve env b = some us)
@@ -402,7 +400,7 @@ theorem code.same_types_loop.spec (env : metadata.Env)
 
 /-- Totality and exact equality for arbitrary descriptor pairs. -/
 @[step]
-theorem code.same_types.spec (env : metadata.Env) (a b : signature.ResultType) :
+theorem code.same_types.spec (env : metadata.CodeMetadata) (a b : signature.ResultType) :
     code.same_types env a b ⦃ r =>
       match r with
       | .Ok equal => ∃ ts us, Body.resolve env a = some ts ∧
@@ -440,7 +438,7 @@ theorem code.same_types.spec (env : metadata.Env) (a b : signature.ResultType) :
         exact ⟨ts, us, ha, hb, hs⟩
 
 /-- Descriptors that resolve to the same list are accepted as equal. -/
-theorem code.same_types.complete (env : metadata.Env) (a b : signature.ResultType)
+theorem code.same_types.complete (env : metadata.CodeMetadata) (a b : signature.ResultType)
     (ts : List wasm_types.ValueType) (ha : Body.resolve env a = some ts)
     (hb : Body.resolve env b = some ts) :
     code.same_types env a b = .ok (.Ok true) := by
@@ -483,7 +481,7 @@ theorem Computation.map_spec {A B : Type} (m : Result A) (f : A → B) (P : B �
 
 /-- One iteration of `code.branch_table_with_loop` with the empty visitor removed. -/
 def Body.branchTableLoop.body
-  (data : Slice Std.U8) (env : _root_.Itasca.metadata.Env)
+  (data : Slice Std.U8) (env : _root_.Itasca.metadata.CodeMetadata)
   (count : Std.U32) (ois : _root_.Itasca.code.OpIterState)
   (arity : Option Std.Usize) (i : Std.U32) :
   Result (ControlFlow (_root_.Itasca.code.OpIterState × (Option Std.Usize) ×
@@ -552,7 +550,7 @@ def Body.branchTableLoop.body
 /-- The extracted `code.branch_table_with_loop` with the empty visitor, returning only the result
 and body state. -/
 def Body.branchTableLoop
-  (ois : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+  (ois : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
   (count : U32) (arity : Option Usize) (i : U32) :
   Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let (r, s, _) ← code.branch_table_with_loop
@@ -562,7 +560,7 @@ def Body.branchTableLoop
 /-- `code.branch_table_with` with the empty visitor, unfolded to `Body.branchTableLoop`. -/
 def Body.tableCore
   (st : _root_.Itasca.code.BodyState) (data : Slice Std.U8)
-  (env : _root_.Itasca.metadata.Env) :
+  (env : _root_.Itasca.metadata.CodeMetadata) :
   Result ((core.result.Result Unit _root_.Itasca.error.OpError) ×
     _root_.Itasca.code.BodyState)
   := do
@@ -608,7 +606,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 800000 in
 /-- The extracted loop body with the empty visitor equals `Body.branchTableLoop.body` up to the
 visitor component. -/
-theorem table_body_eq (data : Slice U8) (env : metadata.Env)
+theorem table_body_eq (data : Slice U8) (env : metadata.CodeMetadata)
     (count : U32) (ois : code.OpIterState) (arity : Option Usize)
     (i : U32) :
     code.branch_table_with_loop.body code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
@@ -644,7 +642,7 @@ theorem table_body_eq (data : Slice U8) (env : metadata.Env)
 end Body
 
 /-- The extracted `code.branch_table_with` with the empty visitor equals `Body.tableCore`. -/
-theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      :
     (do let (r, s, _) ← code.branch_table_with code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor
           st data env (); .ok (r, s)) = Body.tableCore st data env := by
@@ -664,7 +662,7 @@ theorem code.branch_table_with.eq_core (st : code.BodyState) (data : Slice U8) (
     cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- The extracted `code.branch_table` equals `Body.tableCore`. -/
-theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem code.branch_table.eq_core (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      :
     code.branch_table st data env = Body.tableCore st data env := by
   rw [← code.branch_table_with.eq_core]

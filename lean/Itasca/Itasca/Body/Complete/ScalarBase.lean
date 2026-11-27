@@ -97,7 +97,7 @@ theorem Frame.Output.transfer {st s t} {f : Frame st} {g : Frame s}
 
 /-- Common conclusion of a leaf dispatch after its opcode has been read: `code.step` returns
 `Ok` at the cursor `next` and the resulting state realizes the output types. -/
-def StepResult {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+def StepResult {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
       .ok (.Ok (), s, ()) ∧ s.pos = next ∧ f.Output out s ∧
@@ -125,7 +125,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.Scalar.Completeness
 
 private theorem finish {st : code.OpIterState} (f : Frame st)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (opcode : U8)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (opcode : U8)
     (before : List valtype) (outputs : List wasm_types.ValueType) (next : Usize)
     {α : Type} (value : α) (s : code.OpIterState)
     (hp : Handler.Environment.Post st f.outer f.operands before outputs next value (.Ok value, s))
@@ -138,7 +138,7 @@ private theorem finish {st : code.OpIterState} (f : Frame st)
   simp only [hv, f.vals, List.length_append]
   omega
 
-theorem local_get {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem local_get {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Binary.Leb128.Encoding bytes idx.val)
     (hb : Body.Scalar.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -158,7 +158,7 @@ theorem local_get {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ct
         code.OpVisitor.on_local_get.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_GET, hv] using result
 
-theorem local_set {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem local_set {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Binary.Leb128.Encoding bytes idx.val)
     (hb : Body.Scalar.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -177,7 +177,7 @@ theorem local_set {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ct
         code.OpVisitor.on_local_set.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_SET] using result
 
-theorem local_tee {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem local_tee {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Binary.Leb128.Encoding bytes idx.val)
     (hb : Body.Scalar.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -197,7 +197,7 @@ theorem local_tee {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ct
         code.OpVisitor.on_local_tee.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_LOCAL_TEE, hv] using result
 
-theorem global_get {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem global_get {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Binary.Leb128.Encoding bytes idx.val)
     (hb : Body.Scalar.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -218,7 +218,7 @@ theorem global_get {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (c
         code.OpVisitor.on_global_get.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_GLOBAL_GET, hvt] using result
 
-theorem global_set {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem global_set {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C) (idx : U32)
     (bytes : List U8) (next : Usize) (he : Binary.Leb128.Encoding bytes idx.val)
     (hb : Body.Scalar.BytesAt data st.pos bytes next) (front ins outs : List valtype)
@@ -240,7 +240,7 @@ theorem global_set {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (c
         code.OpVisitor.on_global_set.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_GLOBAL_SET] using result
 
-theorem memory_size {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem memory_size {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C)
     (next : Usize) (hb : Body.Scalar.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_SIZE (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -258,7 +258,7 @@ theorem memory_size {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (
         code.OpVisitor.on_memory_size.default, core.result.Result.Insts.CoreOpsTry.branch])
     simpa [code.OP_MEMORY_SIZE, Translation.valueType] using result
 
-theorem memory_grow {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem memory_grow {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C)
     (next : Usize) (hb : Body.Scalar.BytesAt data st.pos [0#u8] next) (front ins outs : List valtype)
     (ht : Instr_ok C .MEMORY_GROW (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -278,7 +278,7 @@ theorem memory_grow {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (
 
 /-- Every independently described memory row executes successfully when its
 principal generated typing rule applies to the realized operand stack. -/
-theorem memory {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem memory {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (hc : Translation.Environment.Matches env ctx C)
     (opcode : U8) (operation : Body.MemoryMeaning.Operation)
     (hrow : Body.MemoryMeaning.opcodeMeaning opcode = some operation) (arg : code.MemArg)
@@ -356,7 +356,7 @@ end Itasca.Body.Numeric
 
 namespace Itasca.Body.Scalar.Completeness
 
-private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (opcode : U8) (next : Usize) (out : List valtype)
     (s : code.OpIterState) (after : List code.StackType)
     (hs : code.step code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor st data env ctx opcode () =
@@ -370,7 +370,7 @@ private theorem same_ctrls {st} (f : Frame st) (data : Slice U8) (env : metadata
   omega
 
 /-- Numeric dispatch accepts its generated principal typing on the represented stack. -/
-theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (opcode : U8) (op : Body.Numeric.Operation) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (hmap : Body.Numeric.NumericOp opcode op) (hb : Body.Scalar.BytesAt data st.pos [] next)
@@ -388,7 +388,7 @@ theorem Frame.step_numeric {st} (f : Frame st) (data : Slice U8) (env : metadata
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Drop consumes the type supplied by its principal typing rule. -/
-theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
     (hb : Body.Scalar.BytesAt data st.pos [] next)
     (ht : Instr_ok C .DROP (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -405,7 +405,7 @@ theorem Frame.step_drop {st} (f : Frame st) (data : Slice U8) (env : metadata.En
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Untyped `select` consumes the operands given by its principal typing rule. -/
-theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (next : Usize) (C : context) (front ins outs : List valtype)
     (hb : Body.Scalar.BytesAt data st.pos [] next) (hsize : st.vals.val.length < Usize.max)
     (ht : Instr_ok C (.SELECT none) (.mk_functype (.mk_list ins) (.mk_list outs)))
@@ -421,7 +421,7 @@ theorem Frame.step_select {st} (f : Frame st) (data : Slice U8) (env : metadata.
       simp [hs, code.OpVisitor.on_select.default, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_i32_const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_i32_const {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (value : I32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : Binary.SignedLeb32.Encoding bytes value.val) (hbytes : Body.Scalar.BytesAt data st.pos bytes next)
@@ -440,7 +440,7 @@ theorem Frame.step_i32_const {st} (f : Frame st) (data : Slice U8) (env : metada
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_i64_const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_i64_const {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (value : I64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : Binary.SignedLeb64.Encoding bytes value.val) (hbytes : Body.Scalar.BytesAt data st.pos bytes next)
@@ -459,7 +459,7 @@ theorem Frame.step_i64_const {st} (f : Frame st) (data : Slice U8) (env : metada
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_f32_const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_f32_const {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (value : U32) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : Binary.FloatBits.Encoding 4 bytes value.val) (hbytes : Body.Scalar.BytesAt data st.pos bytes next)
@@ -478,7 +478,7 @@ theorem Frame.step_f32_const {st} (f : Frame st) (data : Slice U8) (env : metada
     core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- Exact scalar bytes and principal typing force successful constant dispatch. -/
-theorem Frame.step_f64_const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.step_f64_const {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (value : U64) (bytes : List U8) (next : Usize)
     (C : context) (front ins outs : List valtype)
     (he : Binary.FloatBits.Encoding 8 bytes value.val) (hbytes : Body.Scalar.BytesAt data st.pos bytes next)

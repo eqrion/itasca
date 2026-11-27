@@ -346,12 +346,12 @@ namespace Itasca.Translation.Environment
 in the SpecTec context. -/
 theorem Matches.memory_operation {env ctx C} (h : Matches env ctx C)
     (opcode : U8) (op : Body.MemoryMeaning.Operation) (hrow : Body.MemoryMeaning.opcodeMeaning opcode = some op)
-    (arg : code.MemArg) (hm : 0 < env.mem_types.val.length)
+    (arg : code.MemArg) (hm : 0 < env.memories.val.length)
     (ha : arg.align.val ≤ op.naturalAlign.val) :
     wf_instr (op.op arg) ∧ Instr_ok C (op.op arg)
       (.mk_functype (.mk_list (op.inputs.map Translation.valueType))
         (.mk_list (op.outputs.map Translation.valueType))) := by
-  apply Body.MemoryMeaning.opcode_meaning_typed opcode op hrow arg C (memType (env.mem_types.val[0]))
+  apply Body.MemoryMeaning.opcode_meaning_typed opcode op hrow arg C (memType env.memories.val[0].ty)
     h.wf _ _ (mem_type_wf _) ha
   · simpa [h.mems] using hm
   · simp only [h.mems]

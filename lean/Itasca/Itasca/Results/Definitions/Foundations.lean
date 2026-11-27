@@ -103,22 +103,34 @@ def tableType (tt : wasm_types.TableType) : tabletype :=
 def memType (mt : wasm_types.MemType) : memtype := .PAGE (limitsType mt.limits)
 
 /-- The element segment types of `env`. -/
-def elementTypes (env : metadata.Env) : List elemtype :=
-  env.elements.val.map (fun entry => Translation.referenceType entry.elem)
+def elementTypes (env : metadata.CodeMetadata) : List elemtype :=
+  env.elem_segment_types.val.map Translation.referenceType
 
 /-- The data segment types of `env`, one `OK` per declared data segment. -/
-def dataTypes (env : metadata.Env) : List datatype :=
+def dataTypes (env : metadata.CodeMetadata) : List datatype :=
   List.replicate ((env.data_count.map (fun count => count.val)).getD 0) .OK
 
-/-- The SpecTec context for a function body, with no labels. Function types come from the
-environment's resolved function-type cache; its coherence with the module's type indices is a
-separate module invariant. -/
-def context (env : metadata.Env) (ctx : code.Context) : WebAssembly.context :=
+/-- The signature selected by a function descriptor. The fallback makes this
+translation total for arbitrary extracted values. A decoded module must establish
+that every descriptor indexes its type section. -/
+def descriptorType (types : List wasm_types.FuncType) (desc : metadata.FuncDesc) : functype :=
+  ((types[desc.type_index.val]?).map funcType).getD (.mk_functype (.mk_list []) (.mk_list []))
+
+/-- Function indices for which the descriptor authorizes a body `ref.func`. -/
+def declaredReferences (env : metadata.CodeMetadata) : List funcidx :=
+  env.funcs.val.zipIdx.filterMap fun (d, i) => if d.can_ref_func then some (.mk_uN i) else none
+
+/-- Type indices in code-entry order, after the function-import prefix. -/
+def definedTypeIndices (env : metadata.CodeMetadata) : List U32 :=
+  (env.funcs.val.drop env.num_imported_funcs.val).map metadata.FuncDesc.type_index
+
+/-- The SpecTec context for a function body, in Wasm index order. -/
+def context (env : metadata.CodeMetadata) (ctx : code.Context) : WebAssembly.context :=
   { TYPES := env.types.val.map funcType
-    FUNCS := env.func_types.val.map funcType
-    GLOBALS := env.global_types.val.map Translation.globalType
-    TABLES := env.table_types.val.map tableType
-    MEMS := env.mem_types.val.map memType
+    FUNCS := env.funcs.val.map (descriptorType env.types.val)
+    GLOBALS := env.globals.val.map (fun g => Translation.globalType g.gtype)
+    TABLES := env.tables.val.map (fun t => tableType t.ty)
+    MEMS := env.memories.val.map (fun m => memType m.ty)
     ELEMS := elementTypes env
     DATAS := dataTypes env
     LOCALS := ctx.locals.val.map Translation.valueType

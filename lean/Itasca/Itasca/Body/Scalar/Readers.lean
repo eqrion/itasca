@@ -33,7 +33,7 @@ namespace Itasca.Body
 /-- Every independently encoded scalar instruction accepts its principal
 SpecTec typing. This imposes neither a scalar environment restriction nor a
 restriction on the active frame's input or output arity. -/
-theorem scalar_complete (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem scalar_complete (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (C : context) (st : code.OpIterState) (f : Body.Scalar.Completeness.Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
     (hc : Translation.Environment.Matches env ctx C) (hsize : st.vals.val.length < Usize.max)
@@ -125,7 +125,7 @@ theorem Pending.append_reader_context {data env locals index st}
     (controls : out.ctrls.val = p.parents.map Frames.Saved.ctrl ++ [{p.current.ctrl with polymorphic_base := poly}])
     (blocks : ({core := out} : code.BodyState).blocks.val = p.parents.map Frames.Saved.bt ++ [p.current.bt])
     (stack : out.vals.val = outer ++ values)
-    (declared : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction) :
+    (declared : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) instruction) :
     Body.ReaderPost p out instruction poly values := by
   refine ⟨encoded, ?_, ?_⟩
   · exact ⟨C, outer, spine, ⟨header.kind, header.inputs, header.outputs,
@@ -147,7 +147,7 @@ theorem Pending.append_reader {data env locals index st}
       [{p.current.ctrl with polymorphic_base := poly}])
     (stack : out.vals.val = st.core.vals.val.take p.current.ctrl.value_stack_base.val ++ values)
     (declared : Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) instruction) :
+      (Translation.Environment.declaredReferences env) instruction) :
     ReaderPost p out instruction poly values := by
   obtain ⟨C, outer, spine, header, base, priorTyped, ctrls, blocks, vals⟩ := p.opened
   have Cwf := Frames.enter_wf C (spine.context_wf (Translation.Environment.context_wf env ⟨locals, p.ft.results⟩))
@@ -183,7 +183,7 @@ theorem Pending.numeric_reader {data env locals index st}
     (position : Usize) (capacity : st.core.vals.val.length < Usize.max)
     (encoded : At data p.start (.plain operation.instruction) position)
     (declared : Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) operation.instruction) :
+      (Translation.Environment.declaredReferences env) operation.instruction) :
     Body.Numeric.read operation {st.core with pos := position} ⦃ r =>
       r.2.ctrls = st.core.ctrls ∧ r.2.pos = position ∧
       ∀ unit, r.1 = .Ok unit → ∃ values,
@@ -536,7 +536,7 @@ end Itasca.Body.Scalar
 namespace Itasca
 
 theorem code.read_load.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
@@ -592,7 +592,7 @@ theorem code.read_load.prefix {inputs : List valtype} (st : code.OpIterState) (d
                 · simpa [hv', List.append_assoc] using hv''
 
 theorem code.read_store.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment)
@@ -656,7 +656,7 @@ theorem code.read_store.prefix {inputs : List valtype} (st : code.OpIterState) (
                       rest', hv'', by omega, by simpa using htyping⟩
 
 theorem code.read_memory_size.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment) :
@@ -687,7 +687,7 @@ theorem code.read_memory_size.prefix {inputs : List valtype} (st : code.OpIterSt
             · simpa [hv, hvals, List.append_assoc] using hv'
 
 theorem code.read_memory_grow.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)

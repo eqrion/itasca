@@ -106,7 +106,7 @@ end Itasca.Visitor.Core
 namespace Itasca
 
 private theorem i32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I32_CONST v =
       Visitor.Core.run (code.read_i32_const st data) visitor.on_i32_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -120,7 +120,7 @@ private theorem i32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- Lifts a `code.read_i32_const` postcondition to `code.step` at `OP_I32_CONST`
 for a total visitor. -/
 theorem code.step_i32_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : I32 → code.OpIterState → Prop)
     (hread : code.read_i32_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : Visitor.Core.Total visitor) :
@@ -130,7 +130,7 @@ theorem code.step_i32_const.of_read {V : Type} (visitor : code.OpVisitor V)
   exact Visitor.Core.run.spec _ _ v Q P hread (hvisitor.i32Const v)
 
 private theorem drop_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_DROP v =
       Visitor.Core.run (code.read_drop st) visitor.on_drop v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -143,7 +143,7 @@ private theorem drop_dispatch {V : Type} (visitor : code.OpVisitor V)
 
 /-- Lifts a `code.read_drop` postcondition to `code.step` at `OP_DROP` for a total visitor. -/
 theorem code.step_drop.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : code.StackType → code.OpIterState → Prop)
     (hread : code.read_drop st ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : Visitor.Core.Total visitor) :
@@ -153,7 +153,7 @@ theorem code.step_drop.of_read {V : Type} (visitor : code.OpVisitor V)
   exact Visitor.Core.run.spec _ _ v Q P hread (hvisitor.drop v)
 
 private theorem unreachable_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_UNREACHABLE v =
       Visitor.Core.run (code.read_unreachable st) (fun v s _ => visitor.on_unreachable v s) v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -167,7 +167,7 @@ private theorem unreachable_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- Lifts a `code.read_unreachable` postcondition to `code.step` at `OP_UNREACHABLE`
 for a total visitor. -/
 theorem code.step_unreachable.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : Unit → code.OpIterState → Prop)
     (hread : code.read_unreachable st ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : Visitor.Core.Total visitor) :
@@ -179,7 +179,7 @@ theorem code.step_unreachable.of_read {V : Type} (visitor : code.OpVisitor V)
 /-- `code.step` at `OP_NOP` leaves the validator state unchanged for a total visitor, even when the
 hook rejects. -/
 theorem code.step_nop.total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (hvisitor : Visitor.Core.Total visitor) :
     code.step visitor st data env ctx code.OP_NOP v ⦃ r => r.2.1 = st ⦄ := by
   obtain ⟨res, v', hr⟩ := hvisitor.nop v st

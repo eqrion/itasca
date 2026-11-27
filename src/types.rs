@@ -145,8 +145,7 @@ pub enum ConstExpr {
 
 /// The name and payload bounds of a custom section.
 ///
-/// Offsets refer to the source region selected by
-/// `StreamingVisitor::custom_region`. The validator checks the name's
+/// Offsets are relative to the most recent `StreamingRegion` reported to the visitor. The validator checks the name's
 /// UTF-8 encoding and treats the payload as opaque bytes.
 #[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
 #[derive(Clone, Copy)]

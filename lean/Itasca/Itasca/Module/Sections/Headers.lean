@@ -61,7 +61,7 @@ namespace Itasca.Module.Sections
 
 /-- `result` is `env` with the signatures `added` appended to its type table and nothing else
 changed. -/
-def TypesAdded (env result : metadata.Env) (added : List wasm_types.FuncType) : Prop :=
+def TypesAdded (env result : metadata.CodeMetadata) (added : List wasm_types.FuncType) : Prop :=
   result = { env with types := result.types } ∧ result.types.val = env.types.val ++ added
 
 end Itasca.Module.Sections
@@ -73,7 +73,7 @@ open Binary Module.Sections
 /-- The type loop adds `count` signatures forming a `Rep FuncTypeEncoding` span. Each satisfies the
 completeness caps. -/
 @[step]
-theorem metadata.decode_type_section_loop.spec (data : Slice U8) (env : metadata.Env)
+theorem metadata.decode_type_section_loop.spec (data : Slice U8) (env : metadata.CodeMetadata)
      (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
     (hsize : env.types.val.length ≤ start.val) :
     metadata.decode_type_section_loop data env count start 0#u32 ⦃ r => match r.1 with
@@ -128,7 +128,7 @@ theorem metadata.decode_type_section_loop.spec (data : Slice U8) (env : metadata
 /-- `metadata.decode_type_section` adds the signatures of a `VecEncoding FuncTypeEncoding` span, each
 satisfying the completeness caps. -/
 @[step]
-theorem metadata.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : metadata.Env)
+theorem metadata.decode_type_section.spec (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata)
      (hsize : env.types.val.length ≤ pos.val) :
     metadata.decode_type_section data pos env ⦃ r => match r.1 with
       | .Ok next => ∃ added, TypesAdded env r.2 added ∧
@@ -230,7 +230,7 @@ theorem metadata.section_order.complete (id : U8) (hlo : 1 ≤ id.val) (hhi : id
 /-- An accepted `metadata.decode_data_count` reads a `u32` count, sets only `data_count`, and
 happens under Wasm 2.0. -/
 @[step]
-theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : metadata.Env) :
+theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata) :
     metadata.decode_data_count data pos env ⦃ result => match result.1 with
       | .Ok next => ∃ count,
           Binary.At Binary.StartEncoding data pos (some count) next ∧
@@ -250,7 +250,7 @@ theorem metadata.decode_data_count.spec (data : Slice U8) (pos : Usize) (env : m
     exact ⟨count, ⟨bytes, ⟨count, rfl, he⟩, hs, hl, hb⟩, rfl⟩
 
 /-- Under Wasm 2.0, `metadata.decode_data_count` accepts a count span and sets `data_count`. -/
-theorem metadata.decode_data_count.complete (data : Slice U8) (pos : Usize) (env : metadata.Env)
+theorem metadata.decode_data_count.complete (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata)
     (count : U32) (next : Usize)
     (hb : Binary.At Binary.StartEncoding data pos (some count) next) :
     metadata.decode_data_count data pos env = .ok (.Ok next, {env with data_count := some count}) := by
@@ -310,8 +310,8 @@ namespace Itasca.Module.Constants
 
 /-- Constant validity depends only on the function types, global types and imported global count. -/
 theorem Valid.same_caches {env result value ty} (h : Valid env value ty)
-    (hf : result.func_types = env.func_types)
-    (hg : result.global_types = env.global_types)
+    (hf : result.funcs.val.length = env.funcs.val.length)
+    (hg : result.globals = env.globals)
     (hn : result.num_imported_globals = env.num_imported_globals) : Valid result value ty := by
   cases h with
   | i32 v => exact .i32 v
@@ -332,166 +332,162 @@ namespace Itasca.Module.References
 /-- Validity after adding declared references implies validity before. -/
 theorem Added.valid_before {before after refs value ty} (h : Added before after refs)
     (hv : Module.Constants.Valid after value ty) : Module.Constants.Valid before value ty := by
-  apply hv.same_caches <;> rw [h.1]
+  apply hv.same_caches
+  · simp [h.funcs]
+  · rw [h.fields]
+  · rw [h.fields]
 
-/-- Reference additions compose. -/
+theorem Added.refl (env : metadata.CodeMetadata) : Added env env [] := by
+  refine ⟨rfl, ?_⟩
+  apply List.ext_getElem <;> simp
+
+/-- Reference additions compose, including repeated references. -/
 theorem Added.trans {before middle after xs ys} (h : Added before middle xs)
     (h' : Added middle after ys) : Added before after (xs ++ ys) := by
   constructor
-  · rw [h'.1, h.1]
-  · rw [h'.2, h.2, List.append_assoc]
+  · calc after = { middle with funcs := after.funcs } := h'.fields
+         _ = { before with funcs := after.funcs } := by rw [h.fields]
+  · rw [h'.funcs, h.funcs]
+    apply List.ext_getElem <;> simp [Bool.or_assoc]
 
 end Itasca.Module.References
 
 namespace Itasca
 
-/-- An accepted `metadata.decode_element_initializer` is an `InitializerEncoding` span whose value is
-`Valid` at `initializerType`. -/
-@[step]
-theorem metadata.decode_element_initializer.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool) :
-    metadata.decode_element_initializer data pos env elem expressions ⦃ r => match r with
-      | .Ok (value, next) =>
-          Binary.At (Module.Elements.InitializerEncoding expressions) data pos value next ∧
-          Module.Constants.Valid env value (Module.Elements.initializerType elem expressions)
-      | .Err _ => True ⦄ := by
-  cases expressions with
-  | true =>
-    have ht : wasm_types.ElemType.value_type elem = .ok (Module.Constants.referenceValueType elem) := by
-      cases elem <;> rfl
-    simp only [metadata.decode_element_initializer, ↓reduceIte, ht, bind_ok]
-    apply WP.spec_mono (metadata.decode_const_expr.spec data pos env (Module.Constants.referenceValueType elem))
-    intro r hp
-    cases r with
-    | Err _ => trivial
-    | Ok pair => exact hp
+open Module.Elements Module.References
 
-  | false =>
-    obtain ⟨r, hr, hb⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
-    cases r with
-    | Err e => simp [metadata.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch,
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-        error.Error.Insts.CoreConvertFromOpError.from]
-    | Ok pair =>
-      obtain ⟨idx, next⟩ := pair
-      simp [metadata.decode_element_initializer, hr, core.result.Result.Insts.CoreOpsTry.branch]
-      step
-      split
-      · simp
-      · have hi : idx.val < env.func_types.val.length := by scalar_tac
-        obtain ⟨bytes, he, hs⟩ := Binary.At.of_u32 hb
-        exact ⟨⟨bytes, Binary.ElementInitializerEncoding.index_parts.mpr ⟨idx, rfl, he⟩, hs⟩, .refFunc idx hi⟩
+private def initValues : metadata.ElementInit → List wasm_types.ConstExpr
+  | .Expressions values => values.val
+  | .Functions indices => indices.val.map wasm_types.ConstExpr.RefFunc
 
-/-- The initializer loop returns `count` initializers forming a `Rep` span, all valid, and extends
-only the declared functions, by their references. -/
-theorem metadata.decode_element_initializers_loop.spec (data : Slice U8) (env : metadata.Env)
-    (elem : wasm_types.ElemType) (expressions : Bool)
-    (count : U32) (start : Usize) (hstart : start.val ≤ data.length)
-    (hrefs : env.declared_funcs.val.length ≤ start.val) :
-    metadata.decode_element_initializers_loop data env elem expressions count start
-      (alloc.vec.Vec.new _) 0#u32 ⦃ r => match r.1 with
-      | .Ok (values, next) => values.val.length = count.val ∧
-          Module.References.Added env r.2 (values.val.flatMap Module.References.initializer) ∧
-          Binary.At (Binary.Rep (Module.Elements.InitializerEncoding expressions))
-            data start values.val next ∧
-          (∀ value ∈ values.val, Module.Constants.Valid env value (Module.Elements.initializerType elem expressions)) ∧
-          r.2.declared_funcs.val.length ≤ next.val
-      | .Err _ => True ⦄ := by
-  unfold metadata.decode_element_initializers_loop
-  apply loop.spec_decr_nat (fun s => count.val - s.2.2.2.val)
-    (fun s => s.2.2.2.val ≤ count.val ∧ s.2.2.1.val.length = s.2.2.2.val ∧
-      Module.References.Added env s.1 (s.2.2.1.val.flatMap Module.References.initializer) ∧
-      Binary.At (Binary.Rep (Module.Elements.InitializerEncoding expressions))
-        data start s.2.2.1.val s.2.1 ∧
-      (∀ value ∈ s.2.2.1.val, Module.Constants.Valid env value (Module.Elements.initializerType elem expressions)) ∧
-      s.1.declared_funcs.val.length ≤ s.2.1.val)
-  · rintro ⟨current, pos, values, i⟩ ⟨hi, hlen, henv, hbytes, hvalid, hbound⟩
-    dsimp only at hi hlen henv hbytes hvalid hbound
-    unfold metadata.decode_element_initializers_loop.body
-    dsimp only
+private def InitPost (env : metadata.CodeMetadata) (data : Slice U8) (start : Usize)
+    (exprs : Bool) (elem : wasm_types.ElemType) (count : U32)
+    (r : core.result.Result (metadata.ElementInit × Usize) error.Error × metadata.CodeMetadata) : Prop :=
+  match r.1 with
+  | .Err _ => True
+  | .Ok (values, next) =>
+    (initValues values).length = count.val ∧
+    Added env r.2 ((initValues values).flatMap initializer) ∧
+    Binary.At (Binary.Rep (InitializerEncoding exprs)) data start (initValues values) next ∧
+    ∀ v ∈ initValues values, Module.Constants.Valid env v (initializerType elem exprs)
+
+private theorem expr_loop (data : Slice U8) (env : metadata.CodeMetadata) (elem : wasm_types.ElemType)
+    (count : U32) (start : Usize) (hs : start.val ≤ data.length) :
+    metadata.decode_element_initializers_loop0 data env elem count start 0#u32 (alloc.vec.Vec.new _)
+      ⦃ r => InitPost env data start true elem count r ⦄ := by
+  unfold metadata.decode_element_initializers_loop0
+  apply loop.spec_decr_nat (fun s => count.val - s.2.2.1.val)
+    (fun (current, pos, i, values) => i.val ≤ count.val ∧ values.val.length = i.val ∧
+      Added env current (values.val.flatMap initializer) ∧
+      Binary.At (Binary.Rep (InitializerEncoding true)) data start values.val pos ∧
+      ∀ v ∈ values.val, Module.Constants.Valid env v (initializerType elem true))
+  · rintro ⟨current,pos,i,values⟩ ⟨hi,hlen,henv,hbytes,hvalid⟩
+    simp only [metadata.decode_element_initializers_loop0.body]
     split
-    · have heq : i.val = count.val := by scalar_tac
-      exact ⟨by omega, henv, hbytes, hvalid, hbound⟩
-    · obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists
-        (metadata.decode_element_initializer.spec data pos current elem expressions)
-      rw [hr]
+    · have ht : wasm_types.ElemType.value_type elem = .ok (Module.Constants.referenceValueType elem) := by
+        cases elem <;> rfl
+      obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists
+        (metadata.decode_const_expr.spec data pos current (Module.Constants.referenceValueType elem))
+      simp only [ht, hr, bind_ok]
       cases r with
       | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, InitPost]
       | Ok pair =>
-        obtain ⟨value, next⟩ := pair
-        obtain ⟨hb, hv⟩ := hp
-        have hspan := hb.span
-        have hprogress : pos.val < next.val := by
-          obtain ⟨bytes, he, hs⟩ := hb
-          have := he.nonempty
-          have := hs.length
-          omega
-        have hcapacity : values.val.length < Usize.max := by scalar_tac
-        have hrefcapacity : current.declared_funcs.val.length < Usize.max := by scalar_tac
-        simp [core.result.Result.Insts.CoreOpsTry.branch]
-        step as ⟨updated, hupdated⟩
-        step
-        step
-        refine ⟨?_, ?_, ?_, ?_, ?_, ?_, ?_⟩
-        · scalar_tac
-        · simp only [init1_post, List.length_append, List.length_singleton]
-          scalar_tac
-        · simpa only [init1_post, List.flatMap_append, List.flatMap_cons, List.flatMap_nil,
-            List.append_nil] using henv.trans hupdated
-        · obtain ⟨bytes, he, hs⟩ := hbytes
-          obtain ⟨last, he', hs'⟩ := hb
-          exact ⟨bytes ++ last, by simpa only [init1_post] using he.snoc he', hs.append hs'⟩
-        · intro val hm
-          rw [init1_post] at hm
-          rcases List.mem_append.mp hm with hm | hm
-          · exact hvalid val hm
-          · obtain rfl := List.mem_singleton.mp hm
-            exact henv.valid_before hv
-        · have hn : (Module.References.initializer value).length ≤ 1 := by
-            cases value <;> simp [Module.References.initializer]
-          rw [hupdated.2, List.length_append]
-          omega
-        · scalar_tac
-  · exact ⟨by simp, by simp, ⟨rfl, by simp⟩,
-      ⟨[], .nil, Body.Scalar.BytesAt.nil data start hstart⟩, by simp, hrefs⟩
+        obtain ⟨v,next⟩ := pair
+        obtain ⟨hv,typed⟩ := hp
+        have validIndex : ∀ idx ∈ initializer v, idx.val < current.funcs.val.length := by
+          generalize Module.Constants.referenceValueType elem = ty at typed
+          cases typed <;> simp_all [initializer]
+        have hcap : values.val.length < Usize.max := by scalar_tac
+        simp only [core.result.Result.Insts.CoreOpsTry.branch, bind_ok]
+        step with metadata.declare_initializer.spec current v validIndex as ⟨updated, hu⟩
+        step as ⟨values', hv'⟩
+        step as ⟨i', hi'⟩
+        refine ⟨by scalar_tac, by simp [hv',hi',hlen], ?_, ?_, ?_, by scalar_tac⟩
+        · simpa [hv'] using henv.trans hu
+        · simpa [hv'] using hbytes.snoc (R := InitializerEncoding true) hv
+        · intro x hx
+          rcases (by simpa [hv'] using hx : x ∈ values.val ∨ x = v) with hx | rfl
+          · exact hvalid x hx
+          · exact henv.valid_before typed
+    · exact ⟨by change values.val.length = count.val; scalar_tac, henv, hbytes, hvalid⟩
+  · exact ⟨by simp, by simp, Added.refl _, ⟨[], .nil, Body.Scalar.BytesAt.nil data start hs⟩, by simp⟩
 
-/-- `metadata.decode_element_initializers` returns the initializers of a `VecEncoding` span, all
-valid, and extends only the declared functions, by their references. -/
+private theorem index_loop (data : Slice U8) (env : metadata.CodeMetadata) (elem : wasm_types.ElemType)
+    (count : U32) (start : Usize) (hs : start.val ≤ data.length) :
+    metadata.decode_element_initializers_loop1 data env count start 0#u32 (alloc.vec.Vec.new _)
+      ⦃ r => InitPost env data start false elem count r ⦄ := by
+  unfold metadata.decode_element_initializers_loop1
+  apply loop.spec_decr_nat (fun s => count.val - s.2.2.1.val)
+    (fun (current,pos,i,indices) => i.val ≤ count.val ∧ indices.val.length = i.val ∧
+      Added env current indices.val ∧
+      Binary.At (Binary.Rep (InitializerEncoding false)) data start (indices.val.map wasm_types.ConstExpr.RefFunc) pos ∧
+      ∀ idx ∈ indices.val, idx.val < env.funcs.val.length)
+  · rintro ⟨current,pos,i,indices⟩ ⟨hi,hlen,henv,hbytes,hvalid⟩
+    simp only [metadata.decode_element_initializers_loop1.body]
+    split
+    · obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
+      rw [hr]
+      cases r with
+      | Err e => simp [InitPost, core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, error.Error.Insts.CoreConvertFromOpError.from]
+      | Ok pair =>
+        obtain ⟨idx,next⟩ := pair
+        by_cases hb : idx.val < current.funcs.val.length
+        · have cap : indices.val.length < Usize.max := by scalar_tac
+          have validIndex : ∀ j ∈ initializer (.RefFunc idx), j.val < current.funcs.val.length := by simp [initializer, hb]
+          obtain ⟨updated, hu, ha⟩ := WP.spec_imp_exists (metadata.declare_initializer.spec current (.RefFunc idx) validIndex)
+          obtain ⟨⟨fd,back⟩,hmut,hfd,hback⟩ := WP.spec_imp_exists (alloc.vec.Vec.index_mut_usize_spec current.funcs
+            (UScalar.cast .Usize idx) (by simpa using hb))
+          simp [metadata.declare_initializer, lift, hmut] at hu
+          subst updated
+          simp [core.result.Result.Insts.CoreOpsTry.branch, lift, Nat.not_le_of_gt hb, hmut]
+          step as ⟨indices', hv'⟩
+          step as ⟨i', hi'⟩
+          refine ⟨by scalar_tac, by simp [hv',hi',hlen], ?_, ?_, ?_, by scalar_tac⟩
+          · simpa [hv',initializer] using henv.trans ha
+          · obtain ⟨bytes, he, span⟩ := Binary.At.of_u32 hp
+            have hv : Binary.At (InitializerEncoding false) data pos (.RefFunc idx) next :=
+              ⟨bytes, Binary.ElementInitializerEncoding.index_parts.mpr ⟨idx,rfl,he⟩,span⟩
+            simpa [hv'] using hbytes.snoc hv
+          · have hb' : idx.val < env.funcs.val.length := by simpa [henv.funcs] using hb
+            intro x hx
+            rcases (by simpa [hv'] using hx : x ∈ indices.val ∨ x = idx) with hx | rfl
+            · exact hvalid x hx
+            · exact hb'
+        · simp [core.result.Result.Insts.CoreOpsTry.branch, lift, Nat.le_of_not_gt hb, InitPost]
+    · refine ⟨by simp [initValues]; scalar_tac, ?_, hbytes, ?_⟩
+      · simpa [initValues, initializer, List.flatMap_map] using henv
+      · simpa [initValues, initializerType] using fun idx h => Module.Constants.Valid.refFunc idx (hvalid idx h)
+  · exact ⟨by simp, by simp, Added.refl _, ⟨[], .nil, Body.Scalar.BytesAt.nil data start hs⟩, by simp⟩
+
 theorem metadata.decode_element_initializers.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (elem : wasm_types.ElemType) (expressions : Bool)
-    (hrefs : env.declared_funcs.val.length ≤ pos.val) :
+    (env : metadata.CodeMetadata) (elem : wasm_types.ElemType) (expressions : Bool) :
     metadata.decode_element_initializers data pos env elem expressions ⦃ r => match r.1 with
       | .Ok (values, next) =>
-          Binary.At (Binary.VecEncoding (Module.Elements.InitializerEncoding expressions))
-            data pos values.val next ∧
-          Module.References.Added env r.2 (values.val.flatMap Module.References.initializer) ∧
-          (∀ value ∈ values.val, Module.Constants.Valid env value (Module.Elements.initializerType elem expressions)) ∧
-          r.2.declared_funcs.val.length ≤ next.val
+          Binary.At (Binary.VecEncoding (InitializerEncoding expressions)) data pos (initValues values) next ∧
+          Added env r.2 ((initValues values).flatMap initializer) ∧
+          ∀ v ∈ initValues values, Module.Constants.Valid env v (initializerType elem expressions)
       | .Err _ => True ⦄ := by
-  obtain ⟨r, hr, hc⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
+  obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data pos)
   cases r with
   | Err e => simp [metadata.decode_element_initializers, hr, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-      error.Error.Insts.CoreConvertFromOpError.from]
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, error.Error.Insts.CoreConvertFromOpError.from]
   | Ok pair =>
-    obtain ⟨count, start⟩ := pair
-    have hs := hc.span
-    obtain ⟨r, hloop, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_element_initializers_loop.spec data env elem expressions count start
-        hs.2.2 (by omega))
-    obtain ⟨res, result⟩ := r
-    simp [metadata.decode_element_initializers, hr, hloop, core.result.Result.Insts.CoreOpsTry.branch]
-    cases res with
-    | Err e => trivial
-    | Ok pair =>
-      obtain ⟨values, next⟩ := pair
-      obtain ⟨hlen, hadded, hbytes, hvalid, hbound⟩ := hp
-      refine ⟨?_, hadded, hvalid, hbound⟩
-      obtain ⟨bytes, he, hs⟩ := hbytes
-      obtain ⟨cb, hcs, hcl, hcb, hce⟩ := hc
-      exact ⟨cb ++ bytes, ⟨cb, bytes, by simpa [hlen] using hce, he, rfl⟩,
-        (show Body.Scalar.BytesAt data pos cb start from ⟨hcs, hcl, hcb⟩).append hs⟩
+    obtain ⟨count,start⟩ := pair
+    unfold metadata.decode_element_initializers
+    simp only [hr, bind_ok, core.result.Result.Insts.CoreOpsTry.branch]
+    cases expressions <;> simp only [Bool.false_eq_true, ↓reduceIte]
+    all_goals
+      first | apply WP.spec_mono (index_loop data env elem count start hp.span.2.2)
+            | apply WP.spec_mono (expr_loop data env elem count start hp.span.2.2)
+      rintro ⟨r,result⟩ h
+      cases r with
+      | Err e => trivial
+      | Ok pair =>
+        obtain ⟨values,next⟩ := pair
+        obtain ⟨hlen,ha,hbytes,hv⟩ := h
+        exact ⟨Binary.At.vector hp hbytes hlen, ha, hv⟩
 
 end Itasca
 
@@ -523,10 +519,10 @@ abbrev HeaderEncoding := Binary.ElementHeaderEncoding
 
 /-- An active segment names an in-range table of the segment's element type with a valid `i32`
 offset. Passive and declarative segments have no condition. -/
-def HeaderValid (env : metadata.Env) (mode : metadata.ElementMode) (elem : wasm_types.ElemType) : Prop :=
+def HeaderValid (env : metadata.CodeMetadata) (mode : metadata.ElementMode) (elem : wasm_types.ElemType) : Prop :=
   match mode with
-  | .Active index offset => ∃ hi : index.val < env.table_types.val.length,
-      env.table_types.val[index.val].elem = elem ∧ Module.Constants.Valid env offset .I32
+  | .Active index offset => ∃ hi : index.val < env.tables.val.length,
+      env.tables.val[index.val].ty.elem = elem ∧ Module.Constants.Valid env offset .I32
   | .Passive | .Declarative => True
 
 theorem HeaderEncoding.append {mode elem expressions header init bytes}
@@ -557,7 +553,7 @@ open Binary Module.Elements
 mode and element type. -/
 @[step]
 theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) :
+    (env : metadata.CodeMetadata) :
     metadata.decode_element_header data pos env ⦃ r => match r with
       | .Ok (mode, elem, expressions, next) =>
           At (fun value => HeaderEncoding value.1 value.2.1 value.2.2)
@@ -606,10 +602,10 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
             step
             split
             · simp
-            · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
+            · have hi : (0#u32).val < env.tables.val.length := by scalar_tac
               simp only [wasm_types.ElemType.value_type, bind_ok]
-              step
-              cases ht : tt.elem <;>
+              step as ⟨tt, tt_post⟩
+              cases ht : tt.ty.elem <;>
                 simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
               all_goals
@@ -677,10 +673,10 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                   step
                   split
                   · simp
-                  · have hi : (index).val < env.table_types.val.length := by scalar_tac
+                  · have hi : (index).val < env.tables.val.length := by scalar_tac
                     simp only [wasm_types.ElemType.value_type, bind_ok]
-                    step
-                    cases ht : tt.elem <;>
+                    step as ⟨tt, tt_post⟩
+                    cases ht : tt.ty.elem <;>
                       simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
                     all_goals
@@ -688,7 +684,7 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                       simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
                       exact WebAssembly.Binary.ElementHeaderEncoding.explicitIndices ((Leb128.encoding_iff _ _).mp hf) ((Leb128.encoding_iff _ _).mp hindexEnc) ho, ((hfs.append his).append hos).append hks⟩,
                         hi, (by
-                          have hentry : tt = env.table_types.val[index.val] := by
+                          have hentry : tt = env.tables.val[index.val] := by
                             rw [tt_post]
                             congr 1
                             scalar_tac
@@ -729,10 +725,10 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
             step
             split
             · simp
-            · have hi : (0#u32).val < env.table_types.val.length := by scalar_tac
+            · have hi : (0#u32).val < env.tables.val.length := by scalar_tac
               simp only [wasm_types.ElemType.value_type, bind_ok]
-              step
-              cases ht : tt.elem <;>
+              step as ⟨tt, tt_post⟩
+              cases ht : tt.ty.elem <;>
                 simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
               all_goals
@@ -801,13 +797,13 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                 step
                 split
                 · simp [Target]
-                · have hi : (index).val < env.table_types.val.length := by scalar_tac
+                · have hi : (index).val < env.tables.val.length := by scalar_tac
                   have hty : wasm_types.ElemType.value_type elem = .ok (Module.Constants.referenceValueType elem) := by
                     cases elem <;> rfl
                   rw [hty]
                   simp only [bind_ok]
-                  step
-                  cases elem <;> cases ht : tt.elem <;>
+                  step as ⟨tt, tt_post⟩
+                  cases elem <;> cases ht : tt.ty.elem <;>
                     simp [Target, wasm_types.ElemType.value_type, Module.Constants.referenceValueType,
                       core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
                       wasm_types.ValueType.Insts.CoreCmpPartialEqValueType.eq]
@@ -816,7 +812,7 @@ theorem metadata.decode_element_header.spec (data : Slice U8) (pos : Usize)
                       simp only [HeaderEncoding, ElementHeaderEncoding, Source.bytes, List.map_append, List.map_cons, List.map_nil]
                       exact WebAssembly.Binary.ElementHeaderEncoding.explicitExpressions ((Leb128.encoding_iff _ _).mp hf) ((Leb128.encoding_iff _ _).mp hindexEnc) ho, ((hfs.append his).append hos).append hes⟩,
                       hi, (by
-                        have hentry : tt = env.table_types.val[index.val] := by
+                        have hentry : tt = env.tables.val[index.val] := by
                           rw [tt_post]
                           congr 1
                           scalar_tac
@@ -847,14 +843,14 @@ open Binary Module.Elements
 declared functions grow by its references, and the cursor advances. -/
 @[step]
 theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env)
-    (hrefs : env.declared_funcs.val.length ≤ pos.val) :
+    (env : metadata.CodeMetadata)
+    :
     metadata.decode_element data pos env ⦃ r => match r.1 with
       | .Ok (entry, next) =>
-          At ElementEncoding data pos ⟨entry.elem, entry.mode, entry.init.val⟩ next ∧
+          At ElementEncoding data pos (Module.Environment.rawElement entry) next ∧
           Module.References.Added env r.2 (Module.References.element entry) ∧
           Module.Segments.elementValid env entry ∧
-          r.2.declared_funcs.val.length ≤ next.val ∧ pos.val < next.val
+          pos.val < next.val
       | .Err _ => True ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (metadata.decode_element_header.spec data pos env)
   cases r with
@@ -865,13 +861,13 @@ theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
     obtain ⟨hheader, hvalid⟩ := hp
     have hspan := hheader.span
     obtain ⟨⟨r, result⟩, hinit, hp⟩ := WP.spec_imp_exists
-      (metadata.decode_element_initializers.spec data middle env elem expressions (by omega))
+      (metadata.decode_element_initializers.spec data middle env elem expressions)
     cases r with
     | Err e => simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch,
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
       obtain ⟨init, next⟩ := pair
-      obtain ⟨hib, hadded, hiv, hbound⟩ := hp
+      obtain ⟨hib, hadded, hiv⟩ := hp
       simp [metadata.decode_element, hr, hinit, core.result.Result.Insts.CoreOpsTry.branch]
       obtain ⟨fb, hf, hfs⟩ := hheader
       have hty := HeaderEncoding.initializer_type hf
@@ -881,8 +877,9 @@ theorem metadata.decode_element.spec (data : Slice U8) (pos : Usize)
         have := hi.span
         omega
       obtain ⟨ib, hi, his⟩ := hib
-      exact ⟨⟨fb ++ ib, HeaderEncoding.append hf hi, hfs.append his⟩, hadded,
-        ⟨hvalid, (by simpa only [hty] using hiv)⟩, hbound, by omega⟩
+      cases init <;> refine ⟨⟨fb ++ ib, HeaderEncoding.append hf hi, hfs.append his⟩, ?_,
+        ⟨hvalid, (by simpa only [hty, initValues, Module.Environment.rawElement] using hiv)⟩, by omega⟩
+      all_goals simpa [initValues, Module.References.element, Module.References.initializer, List.flatMap_map] using hadded
 
 end Itasca
 

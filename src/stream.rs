@@ -13,19 +13,12 @@
 
 use crate::limits::{add_offset, MAX_CODE_HEADER_BYTES, MAX_LEB_BYTES};
 use crate::metadata::{self, SECTION_CODE, SECTION_DATA_COUNT};
-use crate::{Env, Error, OpError, OpVisitor, Tail};
+use crate::{CodeMetadata, Error, ModuleMetadata, OpError, OpVisitor};
+use alloc::sync::Arc;
 use alloc::vec::Vec;
 
 /// A module validation or streaming-protocol result.
 pub type Result<T> = core::result::Result<T, Error>;
-
-/// The source region containing a reported custom section.
-#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
-#[derive(Clone, Copy)]
-pub enum StreamingRegion {
-    Environment,
-    Tail,
-}
 
 /// The target batch size and maximum number of outstanding batches.
 ///
@@ -66,23 +59,21 @@ pub trait StreamingSource {
     fn tail(&self) -> Result<&[u8]>;
 }
 
-/// Callbacks for scheduling workers and consuming module metadata.
-///
-/// The driver reports environment custom sections, calls `environment_ready`,
-/// submits batches in module order, and calls `code_end`. It then reports tail
-/// custom sections, calls `tail_ready`, and drains outstanding batches. Polls may
-/// also occur during submission when the configured limit is reached.
-///
-/// An error stops the driver. The visitor must still release or join every worker
-/// before its borrowed source and environment storage are released. Only a
-/// successful driver result certifies the complete module.
+/// The source region for subsequent custom-section offsets.
+#[derive(Clone, Copy)]
+#[cfg_attr(not(charon), derive(Debug, PartialEq, Eq))]
+pub enum StreamingRegion {
+    Environment,
+    Tail,
+}
+
+/// Receives module events, submits batches and collects them in completion order.
+/// A batch owns a shared metadata handle and borrows its bytes from the source.
 pub trait StreamingVisitor<'a>: metadata::ModuleVisitor {
-    /// Selects the source region used by subsequent custom-section offsets.
     fn custom_region(&mut self, region: StreamingRegion);
 
-    /// Reports the decoded environment and checked code header, then selects
-    /// batch settings.
-    fn environment_ready(&mut self, env: &Env) -> Result<StreamingConfig>;
+    /// The prefix and code header are valid. Data segments are still pending.
+    fn environment_ready(&mut self, module: &ModuleMetadata) -> Result<StreamingConfig>;
 
     /// Takes ownership of an issued batch for validation through its batch
     /// methods.
@@ -97,9 +88,6 @@ pub trait StreamingVisitor<'a>: metadata::ModuleVisitor {
 
     /// Reports that all code batches have been submitted.
     fn code_end(&mut self) -> Result<()>;
-
-    /// Reports the decoded tail before the driver drains remaining workers.
-    fn tail_ready(&mut self, tail: Tail) -> Result<()>;
 }
 
 /// The function index and byte extent of a framed code entry.
@@ -130,7 +118,7 @@ pub struct StreamingBatch<'a> {
     module_id: u64,
     /// The batch's submission index within its invocation.
     batch_id: usize,
-    env: &'a Env,
+    env: Arc<CodeMetadata>,
     /// The consecutive size-prefixed function entries in this batch.
     code: &'a [u8],
     /// The batch's starting offset within the code region.
@@ -148,6 +136,11 @@ pub struct StreamingBatch<'a> {
 }
 
 impl StreamingBatch<'_> {
+    /// Declarations shared by all workers validating this module.
+    pub fn code_metadata(&self) -> &CodeMetadata {
+        &self.env
+    }
+
     /// Returns the number of functions in this batch.
     pub fn len(&self) -> usize {
         self.num_funcs
@@ -160,7 +153,7 @@ impl StreamingBatch<'_> {
 
     /// Returns whether the batch contains the module's last defined function.
     pub fn is_last(&self) -> bool {
-        self.first_func + self.num_funcs == self.env.func_type_indices.len()
+        self.first_func + self.num_funcs == self.env.num_func_defs()
     }
 
     /// Returns the batch's encoded entries, including size prefixes and local
@@ -228,7 +221,7 @@ impl StreamingBatch<'_> {
         if self.num_validated >= self.num_funcs || index != self.first_func + self.num_validated {
             return Err(Error::Host);
         }
-        metadata::validate_code_entry_with(self.code, self.validated_end, self.env, index, visitor)
+        metadata::validate_code_entry_with(self.code, self.validated_end, &self.env, index, visitor)
     }
 
     fn finish(self) -> Result<()> {
@@ -246,71 +239,57 @@ impl StreamingBatch<'_> {
 
 /// Validates one WebAssembly Core 2.0 module using a source and scheduler.
 ///
-/// `env` is output storage filled before workers borrow it. The source and
-/// environment must outlive all workers, including after a driver error.
-/// `module_id` must be unique among invocations whose batches can reach the same
-/// scheduler.
-///
-/// Soundness requires coherent source views and workers derived from issued
-/// batches through their batch operations. Termination requires callbacks to
-/// return normally. Completeness additionally requires available canonical
-/// regions, positive batch settings, and callbacks and workers that accept valid
-/// input. Only `Ok(())` certifies the complete module; earlier callbacks can
-/// observe metadata from a module later rejected.
-pub fn validate_streaming<
-    'visitor,
-    'data: 'visitor,
-    S: StreamingSource,
-    V: StreamingVisitor<'data>,
->(
+/// Batches share ownership of immutable code metadata. Only
+/// a successful result certifies a complete module. Soundness requires coherent
+/// reads and issued-worker provenance. Completeness also requires returning,
+/// accepting callbacks and a scheduler that returns every validated batch.
+pub fn validate_streaming<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
     module_id: u64,
-    source: &'data S,
-    visitor: &'visitor mut V,
-    env: &'data mut Env,
-) -> Result<()> {
+    source: &'a S,
+    visitor: &mut V,
+) -> Result<ModuleMetadata> {
     let bytes = source.environment()?;
     let env_len = add_offset(0, bytes.len())?;
     visitor.custom_region(StreamingRegion::Environment);
-    let (decoded, env_end) = metadata::validate_env_with(bytes, visitor)?;
+    let (prefix, env_end) = metadata::validate_env_with(bytes, visitor)?;
     if env_end != env_len {
         return Err(Error::Host);
     }
-    *env = decoded;
-    validate_remaining(module_id, source, env, env_len, visitor)
-}
-
-/// Validates the code region and tail using the decoded immutable environment.
-fn validate_remaining<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
-    module_id: u64,
-    source: &'a S,
-    env: &'a Env,
-    env_len: usize,
-    visitor: &mut V,
-) -> Result<()> {
+    let mut module = prefix.share();
     let code_len = source.code_len();
     let code_end = add_offset(env_len, code_len)?;
-    let entries = read_code_header(source, code_len, env)?;
-    let config = visitor.environment_ready(env)?;
+    let entries = read_code_header(source, code_len, &module.code)?;
+    let config = visitor.environment_ready(&module)?;
     if config.batch_bytes == 0 || config.max_batches == 0 {
         return Err(Error::Host);
     }
-    let mut pending =
-        submit_code_batches(module_id, source, env, code_len, entries, &config, visitor)?;
+    let mut pending = submit_code_batches(
+        module_id,
+        source,
+        &module.code,
+        code_len,
+        entries,
+        &config,
+        visitor,
+    )?;
     visitor.code_end()?;
-
-    let tail_bytes = source.tail()?;
-    add_offset(code_end, tail_bytes.len())?;
+    let tail = source.tail()?;
+    add_offset(code_end, tail.len())?;
     visitor.custom_region(StreamingRegion::Tail);
-    let tail = metadata::validate_tail_with(tail_bytes, 0, env, visitor)?;
-    visitor.tail_ready(tail)?;
-    retire_all_code_batches(module_id, visitor, &mut pending)
+    module.data = metadata::validate_tail_with(tail, 0, &module.code, visitor)?;
+    retire_all_code_batches(module_id, visitor, &mut pending)?;
+    Ok(module)
 }
 
 /// Checks the code header against the region size and declared functions,
 /// returning the first entry offset.
-fn read_code_header<S: StreamingSource>(source: &S, code_len: usize, env: &Env) -> Result<usize> {
+fn read_code_header<S: StreamingSource>(
+    source: &S,
+    code_len: usize,
+    env: &CodeMetadata,
+) -> Result<usize> {
     if code_len == 0 {
-        if !env.func_type_indices.is_empty() {
+        if env.num_func_defs() != 0 {
             return Err(Error::MissingCodeSection);
         }
         return Ok(0);
@@ -331,17 +310,22 @@ fn read_code_header<S: StreamingSource>(source: &S, code_len: usize, env: &Env) 
     if entries > end {
         return Err(Error::SectionSizeMismatch);
     }
-    if count != env.func_type_indices.len() {
+    if count != env.num_func_defs() {
         return Err(Error::FuncCodeMismatch);
     }
     Ok(entries)
+}
+
+/// Acquire one strong reference to the same immutable metadata allocation.
+fn share_code(code: &Arc<CodeMetadata>) -> Arc<CodeMetadata> {
+    Arc::clone(code)
 }
 
 /// Submits every function entry and returns the remaining outstanding batch IDs.
 fn submit_code_batches<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
     module_id: u64,
     source: &'a S,
-    env: &'a Env,
+    env: &Arc<CodeMetadata>,
     code_len: usize,
     pos: usize,
     config: &StreamingConfig,
@@ -351,7 +335,7 @@ fn submit_code_batches<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
     let mut pos = pos;
     let mut func = 0;
     let mut batch_id = 0;
-    let num_funcs = env.func_type_indices.len();
+    let num_funcs = env.num_func_defs();
     while func < num_funcs {
         if pending.len() >= config.max_batches {
             retire_code_batch(module_id, visitor, &mut pending)?;
@@ -363,7 +347,7 @@ fn submit_code_batches<'a, S: StreamingSource, V: StreamingVisitor<'a>>(
         visitor.submit_code_batch(StreamingBatch {
             module_id,
             batch_id,
-            env,
+            env: share_code(env),
             code: bytes,
             code_offset: pos,
             first_func: func,
@@ -495,23 +479,14 @@ fn read_exact<S: StreamingSource>(source: &S, start: usize, end: usize) -> Resul
 
 /// Validates one contiguous module using the shared driver and synchronous
 /// worker.
-pub(crate) fn validate_module_slice(bytes: &[u8]) -> Result<metadata::Module> {
+pub(crate) fn validate_module_slice(bytes: &[u8]) -> Result<ModuleMetadata> {
     let (code_start, code_end) = find_code_region(bytes);
     let source = SliceSource {
         env: &bytes[0..code_start],
         code: &bytes[code_start..code_end],
         tail: &bytes[code_end..bytes.len()],
     };
-    let mut env = Env::new();
-    let mut visitor = SyncVisitor {
-        completed: None,
-        tail: None,
-    };
-    validate_streaming(0, &source, &mut visitor, &mut env)?;
-    match visitor.tail {
-        Some(tail) => Ok(metadata::Module { env, tail }),
-        None => Err(Error::Host),
-    }
+    validate_streaming(0, &source, &mut SyncVisitor { completed: None })
 }
 
 /// Locates the code region by framing section headers.
@@ -577,15 +552,11 @@ impl StreamingSource for SliceSource<'_> {
 /// Batches stay within one invocation, so a constant module ID is sufficient.
 struct SyncVisitor<'a> {
     completed: Option<StreamingBatch<'a>>,
-    tail: Option<Tail>,
 }
-
 impl metadata::ModuleVisitor for SyncVisitor<'_> {}
-
 impl<'a> StreamingVisitor<'a> for SyncVisitor<'a> {
     fn custom_region(&mut self, _region: StreamingRegion) {}
-
-    fn environment_ready(&mut self, _env: &Env) -> Result<StreamingConfig> {
+    fn environment_ready(&mut self, _module: &ModuleMetadata) -> Result<StreamingConfig> {
         Ok(StreamingConfig {
             batch_bytes: 25000,
             max_batches: 1,
@@ -606,11 +577,6 @@ impl<'a> StreamingVisitor<'a> for SyncVisitor<'a> {
     }
 
     fn code_end(&mut self) -> Result<()> {
-        Ok(())
-    }
-
-    fn tail_ready(&mut self, tail: Tail) -> Result<()> {
-        self.tail = Some(tail);
         Ok(())
     }
 }

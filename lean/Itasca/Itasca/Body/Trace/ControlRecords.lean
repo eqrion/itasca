@@ -41,7 +41,7 @@ visitor state, regardless of whether the iteration accepts or rejects. -/
 theorem body.refines {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (related : V → W → Prop)
     (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (st : code.BodyState) (v : V) (w : W) (hrelated : related v w) (cf)
     (h : body visitor data env ctx index v st = .ok cf) :
     ∃ cf', body replacement data env ctx index w st = .ok cf' ∧
@@ -92,7 +92,7 @@ visitor supplies structural progress only. -/
 theorem code.body_loop_loop.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (st : code.BodyState) (v : V) (w : W) (hrelated : related v w)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val) (hs : Body.Control.Shape st.core)
     (halign : st.blocks.val.length = st.core.ctrls.val.length)
@@ -156,7 +156,7 @@ No valid-byte, well-typed-context, or total-callback premise is assumed. -/
 theorem code.validate_body_with.refines {V W : Type}
     (visitor : code.OpVisitor V) (replacement : code.OpVisitor W)
     (related : V → W → Prop) (hrefines : Refines visitor replacement related)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v : V) (w : W) (hrelated : related v w)
     (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx index v = .ok (res, v')) :
@@ -186,7 +186,7 @@ theorem code.validate_body_with.refines {V W : Type}
 /-- Instrumenting body validation preserves its exact outcome and underlying visitor state and
 appends the actual callbacks, including rejection. -/
 theorem code.validate_body_with.instrument_forward {V : Type}
-    (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.Env)
+    (visitor : code.OpVisitor V) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V)
     (log : List Observation) (res : core.result.Result Unit error.OpError) (v' : V)
     (h : code.validate_body_with visitor data env ctx index v = .ok (res, v')) :
@@ -228,7 +228,7 @@ set_option maxHeartbeats 2000000 in
 /-- The signature returned to an entry callback is exactly the independently
 decoded block signature, and stack processing preserves its ending cursor. -/
 theorem code.enter_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (kind : code.LabelKind)
+    (env : metadata.CodeMetadata) (kind : code.LabelKind)
     (hs : Body.Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env kind ⦃ r => ∀ bt, r.1 = .Ok bt →
       Body.BlockDecoded data st.core.pos bt r.2.core.pos ⦄ := by
@@ -273,7 +273,7 @@ theorem code.read_label_info.bytes (st : code.BodyState) (data : Slice U8)
 set_option maxHeartbeats 1000000 in
 /-- Branch operand adjustment preserves the decoded depth and cursor. -/
 theorem code.branch_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (conditional : Bool) (hs : Body.Control.Shape st.core)
+    (env : metadata.CodeMetadata) (conditional : Bool) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch_info st data env conditional ⦃ r => ∀ depth types,
       r.1 = .Ok (depth, types) → Binary.Leb128.Decoded data st.core.pos depth r.2.core.pos ⦄ := by
@@ -381,7 +381,7 @@ namespace Itasca.Body.CallbackTrace
 open Visitor.Trace
 
 theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x02#u8 v =
       bodyRun (code.enter_info st data env .Block) visitor (Action.block) v := by
@@ -398,7 +398,7 @@ theorem dispatch_block {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x03#u8 v =
       bodyRun (code.enter_info st data env .Loop) visitor (Action.loop) v := by
@@ -415,7 +415,7 @@ theorem dispatch_loop {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x04#u8 v =
       bodyRun (code.enter_info st data env .Then) visitor (Action.if_) v := by
@@ -432,7 +432,7 @@ theorem dispatch_if {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x05#u8 v =
       bodyRun (code.end_frame_info st env true) visitor (fun a => Action.else_ a.2) v := by
@@ -452,7 +452,7 @@ theorem dispatch_else {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x0b#u8 v =
       bodyRun (code.end_frame_info st env false) visitor (fun a => Action.end_ a.1 a.2) v := by
@@ -472,7 +472,7 @@ theorem dispatch_end {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x0c#u8 v =
       bodyRun (code.branch_info st data env false) visitor (fun a => Action.br a.1 a.2) v := by
@@ -492,7 +492,7 @@ theorem dispatch_br {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x0d#u8 v =
       bodyRun (code.branch_info st data env true) visitor (fun a => Action.br_if a.1 a.2) v := by
@@ -512,7 +512,7 @@ theorem dispatch_br_if {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x10#u8 v =
       bodyRun (code.call_info st data env) visitor (Action.call) v := by
@@ -529,7 +529,7 @@ theorem dispatch_call {V : Type} (visitor : code.OpVisitor V)
   cases reply <;> simp [hookResult]
 
 theorem dispatch_call_indirect {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x11#u8 v =
       bodyRun (code.call_indirect_info st data env ) visitor (fun a => Action.call_indirect a.1 a.2) v := by
@@ -572,18 +572,21 @@ attribute [local step] code.pop_with_type.total code.check_suffix.spec
 
 /-- Call stack adjustment returns the exact encoded function index. -/
 theorem code.call_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st.core) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st.core) :
     code.call_info st data env ⦃ r => ∀ index, r.1 = .Ok index →
       Binary.Leb128.Decoded data st.core.pos index r.2.core.pos ⦄ := by
   unfold code.call_info
   step with code.take_index.spec st.core data as ⟨r, s, hv, hc, hd⟩
   have hs' : Body.Control.Shape s :=
     ⟨by simpa [hc] using hs.ordered, by simpa [hc, hv] using hs.bounded⟩
-  cases r <;> step*; simp_all
+  cases r <;> step* <;> try simp_all
+  rw [← o_post]
+  cases o <;> simp only [core.option.Option.ok_or, bind_ok]
+  all_goals step* <;> simp_all
 
 /-- Indirect-call callbacks receive both independently decoded indices. -/
 theorem code.call_indirect_info.bytes (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st.core) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st.core) :
     code.call_indirect_info st data env ⦃ r => ∀ index table, r.1 = .Ok (index, table) →
       ∃ middle, Binary.Leb128.Decoded data st.core.pos index middle ∧
         Binary.Leb128.Decoded data middle table r.2.core.pos ⦄ := by
@@ -789,7 +792,7 @@ open Visitor.Trace
 
 /-- Factor the actual return callback after result checking and stack erasure. -/
 theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x0f#u8 v =
       bodyRun (returnStep st env index) visitor (fun _ => .return_) v := by
@@ -814,7 +817,7 @@ theorem dispatch_return {V : Type} (visitor : code.OpVisitor V)
 
 /-- Return reads no immediate bytes; checking results and erasing the active
 stack segment preserve its post-opcode cursor. -/
-theorem return_position (st : code.BodyState) (env : metadata.Env) (index : U32)
+theorem return_position (st : code.BodyState) (env : metadata.CodeMetadata) (index : U32)
     (shape : Body.Control.Shape st.core) :
     returnStep st env index ⦃ r => r.2.core.pos = st.core.pos ⦄ := by
   obtain ⟨⟨res, popped⟩, hp, hs, _, hpos, _⟩ := WP.spec_imp_exists

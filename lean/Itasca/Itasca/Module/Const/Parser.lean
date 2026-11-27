@@ -53,12 +53,12 @@ theorem expression_wf (e : wasm_types.ConstExpr) : Forall wf_instr (expression e
   simpa [expression, Forall] using instruction_wf e
 
 /-- `C.GLOBALS` is the imported prefix of the environment's global types. -/
-def GlobalContext (env : metadata.Env) (C : context) : Prop :=
-  C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translation.globalType
+def GlobalContext (env : metadata.CodeMetadata) (C : context) : Prop :=
+  C.GLOBALS = (env.globals.val.take env.num_imported_globals.val).map (fun g => Translation.globalType g.gtype)
 
 /-- `C.FUNCS` is the environment's function types, imported and defined. -/
-def FunctionContext (env : metadata.Env) (C : context) : Prop :=
-  C.FUNCS = env.func_types.val.map Translation.Environment.funcType
+def FunctionContext (env : metadata.CodeMetadata) (C : context) : Prop :=
+  C.FUNCS = env.funcs.val.map (Translation.Environment.descriptorType env.types.val)
 
 end Itasca.Module.Constants
 
@@ -81,11 +81,11 @@ open Aeneas Aeneas.Std
 namespace Itasca.Module.Constants
 
 private theorem global_lookup {env C} (hC : GlobalContext env C)
-    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.global_types.val.length)
-    (hgt : env.global_types.val[idx.val] = gt) (himport : idx.val < env.num_imported_globals.val) :
+    (idx : U32) (gt : wasm_types.GlobalType) (hi : idx.val < env.globals.val.length)
+    (hgt : env.globals.val[idx.val].gtype = gt) (himport : idx.val < env.num_imported_globals.val) :
     idx.val < C.GLOBALS.length ∧ C.GLOBALS[idx.val]! = Translation.globalType gt := by
   rw [hC]
-  have hb : idx.val < (env.global_types.val.take env.num_imported_globals.val).length := by simp; omega
+  have hb : idx.val < (env.globals.val.take env.num_imported_globals.val).length := by simp; omega
   exact ⟨by simpa using hb, by
     rw [getElem!_pos _ _ (by simpa using hb), List.getElem_map, List.getElem_take, hgt]⟩
 
@@ -128,7 +128,7 @@ theorem Valid.expr_ok_const {env e t} (h : Valid env e t)
     hC (expression_wf _)
 
 /-- A global with a valid initializer satisfies `Global_ok`. -/
-theorem global_typed (env : metadata.Env) (g : metadata.Global)
+theorem global_typed (env : metadata.CodeMetadata) (g : Binary.Global)
     (h : Valid env g.init g.gtype.valtype) (C : context)
     (hC : wf_context C) (hglobals : GlobalContext env C) (hfunctions : FunctionContext env C) :
     Global_ok C (global g) (Translation.globalType g.gtype) := by
@@ -174,11 +174,11 @@ theorem metadata.expect_const_type.spec (actual expected : wasm_types.ValueType)
 
 /-- `metadata.const_global` returns the type of an in-range imported immutable global. -/
 @[step]
-theorem metadata.const_global.spec (env : metadata.Env) (idx : U32) :
+theorem metadata.const_global.spec (env : metadata.CodeMetadata) (idx : U32) :
     metadata.const_global env idx ⦃ r =>
       match r with
-      | .Ok gt => ∃ hi : idx.val < env.global_types.val.length,
-          env.global_types.val[idx.val] = gt ∧
+      | .Ok gt => ∃ hi : idx.val < env.globals.val.length,
+          env.globals.val[idx.val].gtype = gt ∧
           idx.val < env.num_imported_globals.val ∧ gt.mutability = .Const
       | .Err _ => True ⦄ := by
   unfold metadata.const_global
@@ -188,13 +188,12 @@ theorem metadata.const_global.spec (env : metadata.Env) (idx : U32) :
   · split
     · simp
     · step
-      rename_i gt hgt
-      cases hm : gt.mutability <;>
+      cases hm : g.gtype.mutability <;>
         simp [core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
           wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq, hm]
       refine ⟨⟨by scalar_tac, ?_⟩, by scalar_tac⟩
       have hi : i.val = idx.val := by scalar_tac
-      simpa [hi] using gt_post.symm
+      simpa [hi] using congrArg metadata.Global.gtype g_post.symm
 
 /-- An accepted `metadata.read_expr_end` consumed the single byte `0x0b`. -/
 @[step]
@@ -222,7 +221,7 @@ namespace Itasca.Module.Constants
 
 /-- The parser postcondition: an error carries no guarantee, and a success is a `ConstEncoding`
 span whose expression is `Valid` at the expected type. -/
-def Post (data : Slice U8) (pos : Usize) (env : metadata.Env)
+def Post (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata)
     (expected : wasm_types.ValueType) :
     core.result.Result (wasm_types.ConstExpr × Usize) error.Error → Prop
   | .Err _ => True
@@ -230,7 +229,7 @@ def Post (data : Slice U8) (pos : Usize) (env : metadata.Env)
       Valid env expr expected
 
 private theorem finish_spec (data : Slice U8) (start mid : Usize)
-    (env : metadata.Env) (expected actual : wasm_types.ValueType) (expr : wasm_types.ConstExpr)
+    (env : metadata.CodeMetadata) (expected actual : wasm_types.ValueType) (expr : wasm_types.ConstExpr)
     (before : List U8) (hspan : Body.Scalar.BytesAt data start before mid)
     (hencoding : Binary.ConstEncoding expr (before ++ [0x0B#u8]))
     (hvalid : Valid env expr actual) :
@@ -272,7 +271,7 @@ namespace Itasca
 /-- `metadata.decode_const_expr` satisfies `Module.Constants.Post`. -/
 @[step]
 theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (expected : wasm_types.ValueType) :
+    (env : metadata.CodeMetadata) (expected : wasm_types.ValueType) :
     metadata.decode_const_expr data pos env expected ⦃ Module.Constants.Post data pos env expected ⦄ := by
   unfold metadata.decode_const_expr
   by_cases hb : pos.val < data.length
@@ -462,7 +461,7 @@ theorem metadata.decode_const_expr.spec (data : Slice U8) (pos : Usize)
         step
         split
         · simp [Module.Constants.Post]
-        · have hi : idx.val < env.func_types.val.length := by scalar_tac
+        · have hi : idx.val < env.funcs.val.length := by scalar_tac
           obtain ⟨bytes, hsuffix, hlen, hbound, he⟩ := hdecode
           have hop' : data.val[pos.val] = 0xD2#u8 := by with_unfolding_all exact hop
           have himm : Body.Scalar.BytesAt data next bytes mid := ⟨hsuffix, hlen, hbound⟩

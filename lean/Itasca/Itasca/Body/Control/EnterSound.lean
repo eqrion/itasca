@@ -58,7 +58,7 @@ namespace Itasca.Body
 
 /-- The common continuation of the extracted `code.end_frame` branches. `end_frame_normalized`
 checks this factorization against the extracted code. -/
-def finishFrame (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+def finishFrame (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.results bt
@@ -93,7 +93,7 @@ def finishFrame (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
 
 set_option maxHeartbeats 1200000 in
 /-- Metadata erasure preserves the original closing continuation exactly. -/
-theorem end_frame_normalized (st : code.BodyState) (env : metadata.Env) (isElse : Bool) :
+theorem end_frame_normalized (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool) :
     code.end_frame st env isElse = (do
       let n := alloc.vec.Vec.len st.blocks
       if n = 0#usize then .ok (.Err .UnknownLabel, st) else
@@ -147,7 +147,7 @@ theorem end_frame_normalized (st : code.BodyState) (env : metadata.Env) (isElse 
 
 /-- `finishFrame` is total and preserves frame alignment and bounds. -/
 @[step]
-theorem finishFrame.total (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem finishFrame.total (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (hs : Body.Control.Shape st.core)
     (hi : i.val < st.core.ctrls.val.length) :
@@ -186,7 +186,7 @@ namespace Itasca
 /-- `code.end_frame` is total and preserves frame alignment and bounds, popping at most one frame
 and leaving the cursor unchanged. -/
 @[step]
-theorem code.end_frame.total (st : code.BodyState) (env : metadata.Env)
+theorem code.end_frame.total (st : code.BodyState) (env : metadata.CodeMetadata)
     (isElse : Bool) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.end_frame st env isElse ⦃ r =>
@@ -261,7 +261,7 @@ def EndEffect (st s : code.BodyState) (parents : List code.Ctrl)
 
 /-- `code.end_frame` on a state with a known innermost frame unfolds to the kind check,
 `code.same_types` for an omitted else, and `finishFrame`. -/
-theorem end_frame_eq (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem end_frame_eq (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (hc : st.core.ctrls.val = parents ++ [frame])
@@ -307,7 +307,7 @@ theorem end_frame_eq (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
   all_goals rfl
 
 /-- Successful closing consumes precisely a realization of the complete result vector. -/
-theorem finishFrame.sound (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem finishFrame.sound (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
@@ -383,7 +383,7 @@ namespace Itasca
 
 /-- Successful `else`/`end` exposes both the semantic closing check and the
 exact physical frame transition. No capacity assumption is needed for soundness. -/
-theorem code.end_frame.sound (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem code.end_frame.sound (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
@@ -455,7 +455,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Body
 
 /-- Realizing the declared results is sufficient to close a frame. -/
-theorem finishFrame.complete (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem finishFrame.complete (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (bt : signature.BlockType) (frame : code.Ctrl) (i n : Usize)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
@@ -513,7 +513,7 @@ end Itasca.Body
 namespace Itasca
 
 /-- Independent frame results and the omitted-else identity force actual acceptance. -/
-theorem code.end_frame.complete (st : code.BodyState) (env : metadata.Env) (isElse : Bool)
+theorem code.end_frame.complete (st : code.BodyState) (env : metadata.CodeMetadata) (isElse : Bool)
     (parents : List code.Ctrl) (blocks : List signature.BlockType)
     (frame : code.Ctrl) (bt : signature.BlockType)
     (ins outs : List wasm_types.ValueType) (outer segment : List code.StackType)
@@ -699,7 +699,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Body
 
 /-- Common parameter pop and frame setup in all extracted entry branches. -/
-def enterParams (st : code.BodyState) (env : metadata.Env)
+def enterParams (st : code.BodyState) (env : metadata.CodeMetadata)
     (kind : code.LabelKind) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   let rt ← signature.BlockType.params bt
@@ -717,7 +717,7 @@ def enterParams (st : code.BodyState) (env : metadata.Env)
 
 /-- Entry for all forms: `if` first pops its `i32` condition, then every form runs
 `enterParams`. -/
-def enterArgs (st : code.BodyState) (env : metadata.Env)
+def enterArgs (st : code.BodyState) (env : metadata.CodeMetadata)
     (kind : code.LabelKind) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError × code.BodyState) := do
   match kind with
@@ -734,7 +734,7 @@ def enterArgs (st : code.BodyState) (env : metadata.Env)
 
 /-- The validity check of an indexed block type: the index is in range and the function type is
 within the limits. -/
-def checkIndex (env : metadata.Env) (bt : signature.BlockType) :
+def checkIndex (env : metadata.CodeMetadata) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) := do
   match bt with
   | .TypeIndex index =>
@@ -746,12 +746,12 @@ def checkIndex (env : metadata.Env) (bt : signature.BlockType) :
   | _ => .ok (.Ok ())
 
 /-- The block type signature checks of `code.enter`. -/
-def checkBlock (env : metadata.Env) (bt : signature.BlockType) :
+def checkBlock (env : metadata.CodeMetadata) (bt : signature.BlockType) :
     Result (core.result.Result Unit error.OpError) :=
   checkIndex env bt
 
 /-- `code.enter` unfolds to the block type read, `checkBlock` and `enterArgs`. -/
-theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      (kind : code.LabelKind) :
     code.enter st data env kind = (do
       let r ← signature.read_block_type data st.core.pos
@@ -795,7 +795,7 @@ theorem enter_eq (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
     all_goals first | contradiction | simp_all [bind_ok]
 
 @[step]
-theorem checkIndex.spec (env : metadata.Env) (bt : signature.BlockType) :
+theorem checkIndex.spec (env : metadata.CodeMetadata) (bt : signature.BlockType) :
     checkIndex env bt ⦃ r => r = .Ok () → ∃ ins outs,
       resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
@@ -816,7 +816,7 @@ theorem checkIndex.spec (env : metadata.Env) (bt : signature.BlockType) :
         by simp [resolve, outputs, hi, hft, r_post], hr⟩
 
 @[step]
-theorem checkBlock.spec (env : metadata.Env) (bt : signature.BlockType) :
+theorem checkBlock.spec (env : metadata.CodeMetadata) (bt : signature.BlockType) :
     checkBlock env bt ⦃ r => r = .Ok () → ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
       ins.length ≤ 1000 ∧ outs.length ≤ 1000 ⦄ := by
   simp only [checkBlock]
@@ -834,7 +834,7 @@ def EnterEffect (st s : code.BodyState) (form : Frames.Form) (bt : signature.Blo
     s.core.vals.val = outer ++ remaining ++ ins.map code.StackType.Val
 
 /-- Parameter popping preserves the suspended parent's input signature. -/
-theorem enterParams.sound (st : code.BodyState) (env : metadata.Env)
+theorem enterParams.sound (st : code.BodyState) (env : metadata.CodeMetadata)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType)
     (hin : resolve env (inputs bt) = some ins)
@@ -870,7 +870,7 @@ theorem enterParams.sound (st : code.BodyState) (env : metadata.Env)
     · simpa [he, hv1, hv'] using hvs
   · step*
 
-theorem enterArgs.sound (st : code.BodyState) (env : metadata.Env)
+theorem enterArgs.sound (st : code.BodyState) (env : metadata.CodeMetadata)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
@@ -913,7 +913,7 @@ namespace Itasca
 
 /-- A successful `code.enter` decodes a block type whose signature resolves within the limits and
 opens the frame with effect `EnterEffect`. -/
-theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem code.enter.sound (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      (form : Body.Frames.Form) (initial : form.Initial)
     (outer segment : List code.StackType)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Body.Control.base st.core).val = outer.length)

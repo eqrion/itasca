@@ -1,3 +1,4 @@
+import Itasca.Module.CodeMetadata
 import Itasca.Body.EmptyVisitorLoop
 import Itasca.Handler.StackEffects
 import Itasca.Body.TableAdapters
@@ -405,7 +406,7 @@ theorem code.push_frame.total (st : code.BodyState)
 /-- Branches preserve frame alignment and bounds for arbitrary label bytes and
 arbitrary environments. Conditional branches restore the entire signature. -/
 theorem code.branch.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (conditional : Bool) (hs : Body.Control.Shape st.core)
+    (env : metadata.CodeMetadata) (conditional : Bool) (hs : Body.Control.Shape st.core)
     (ha : st.blocks.val.length = st.core.ctrls.val.length) :
     code.branch st data env conditional ⦃ r =>
       Body.Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -421,7 +422,7 @@ theorem code.branch.total (st : code.BodyState) (data : Slice U8)
 /-- Reading and entering a block is total on arbitrary bytes. Popping block
 parameters before fixing the frame's base preserves nested frame bounds. -/
 theorem code.enter_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (kind : code.LabelKind)
+    (env : metadata.CodeMetadata) (kind : code.LabelKind)
     (hs : Body.Control.Shape st.core) (hcap : st.blocks.val.length < Usize.max) :
     code.enter_info st data env kind ⦃ r =>
       Body.Control.Shape r.2.core ∧ r.2.blocks.val.length = r.2.core.ctrls.val.length ∧
@@ -475,16 +476,19 @@ theorem wasm_types.ValueType.ne.total (a b : wasm_types.ValueType) :
 
 @[step]
 theorem code.call_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st.core) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st.core) :
     code.call_info st data env ⦃ r =>
       Body.Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by
   unfold code.call_info
-  step* <;> simp_all
+  step* <;> try simp_all
+  rw [← o_post]
+  cases o <;> simp only [core.option.Option.ok_or, bind_ok]
+  all_goals step* <;> simp_all
 
 @[step]
 theorem code.call_indirect_info.total (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (hs : Body.Control.Shape st.core) :
+    (env : metadata.CodeMetadata) (hs : Body.Control.Shape st.core) :
     code.call_indirect_info st data env ⦃ r =>
       Body.Control.Shape r.2.core ∧ r.2.core.ctrls = st.core.ctrls ∧ r.2.blocks = st.blocks ∧
         st.core.pos.val ≤ r.2.core.pos.val ⦄ := by

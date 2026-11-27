@@ -32,7 +32,7 @@ namespace Itasca.Body
 
 /-- Every opcode preserves semantic control and exact byte provenance on
 success. Reserved opcodes and malformed immediates need no input premise. -/
-theorem steps (data : Slice U8) (env : metadata.Env)
+theorem steps (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hlocals : ctx.locals = locals) : Steps data env locals ctx index := by
   intro st p
@@ -61,14 +61,14 @@ end Itasca.Body
 namespace Itasca
 
 /-- `code.bodyCore` is sound for the unified validator, on arbitrary bytes and contexts. -/
-theorem code.bodyCore.spec (data : Slice U8) (env : metadata.Env)
+theorem code.bodyCore.spec (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) :
     code.bodyCore data env locals results index ⦃ r =>
       r = .Ok () → Body.Validated data env locals index ⦄ :=
   Body.public_spec_of_steps data env locals results index
     (Body.steps data env locals ⟨locals, results⟩ index rfl)
 
-theorem code.bodyCore.sound (data : Slice U8) (env : metadata.Env)
+theorem code.bodyCore.sound (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
     (haccepted : code.bodyCore data env locals results index = .ok (.Ok ())) :
     Body.Validated data env locals index := by
@@ -98,7 +98,7 @@ namespace Itasca.Body.Completeness
 /-- A body with independent encoding, typing and declared references is accepted, given a
 `Program` contract for every token sequence. Typing starts the body with no operands, even when
 its type has parameters, and the final `end` closes the selected result signature. -/
-theorem body_execution_of_programs (data : Slice U8) (env : metadata.Env)
+theorem body_execution_of_programs (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (hi : env.types.val[index.val]? = some ft)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -108,7 +108,7 @@ theorem body_execution_of_programs (data : Slice U8) (env : metadata.Env)
     (hencoding : ∃ tokens next, Body.Consumed data 0#usize tokens next ∧
       next.val = data.length ∧ BodyTokens tokens ops)
     (htyped : FunctionTyped env locals ft ops)
-    (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
+    (hdecl : Spec.DeclaredReferences.Instructions (Translation.Environment.declaredReferences env) ops) :
     ∃ last, Execution data env ⟨locals, results⟩ index (initial index) last ∧
       last.blocks.val = [] ∧ last.core.pos.val = data.length := by
   obtain ⟨tokens, next, hbytes, hfinish, inner, heq, hemits⟩ := hencoding
@@ -141,7 +141,7 @@ theorem body_execution_of_programs (data : Slice U8) (env : metadata.Env)
   · simpa [hgp, f] using hb'
   · simpa [hp'] using hfinish
 
-theorem body_of_programs (data : Slice U8) (env : metadata.Env)
+theorem body_of_programs (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (hi : env.types.val[index.val]? = some ft)
     (hparams : ft.params.val.length ≤ 1000) (hresults : ft.results.val.length ≤ 1000)
@@ -152,7 +152,7 @@ theorem body_of_programs (data : Slice U8) (env : metadata.Env)
     (hencoding : ∃ tokens next, Body.Consumed data 0#usize tokens next ∧
       next.val = data.length ∧ BodyTokens tokens ops)
     (htyped : FunctionTyped env locals ft ops)
-    (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
+    (hdecl : Spec.DeclaredReferences.Instructions (Translation.Environment.declaredReferences env) ops) :
     code.bodyCore data env locals results index = .ok (.Ok ()) := by
   obtain ⟨last, run, closed, finished⟩ := body_execution_of_programs data env locals results
     index ft hi hsize hprograms ops hencoding htyped hdecl
@@ -166,7 +166,7 @@ namespace Itasca.Body.Completeness
 
 /-- Every token sequence emitted by a syntax tree has a `Program` contract for arbitrary
 environments within limits. -/
-theorem programs (data : Slice U8) (env : metadata.Env)
+theorem programs (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (henv : CodeEntry.EnvironmentWithinLimits env)
     (hret : resolve env (.Type index .Results) = some ctx.results.val)
     (tokens : List Token) (ops : List instr) (he : Emits tokens ops) :
@@ -195,7 +195,7 @@ namespace Itasca
 /-- Completeness of `code.bodyCore` from independent binary encoding,
 generated Wasm 2.0 typing, and the independent function-reference declaration condition.
 Implementation bounds constrain body bytes and signature sizes. -/
-theorem code.bodyCore.complete (data : Slice U8) (env : metadata.Env)
+theorem code.bodyCore.complete (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
     (henv : CodeEntry.EnvironmentWithinLimits env)
     (hsize : data.length ≤ limits.MAX_FUNCTION_BYTES.val)

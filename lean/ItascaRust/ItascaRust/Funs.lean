@@ -1890,23 +1890,23 @@ def code.read_local_tee
 /-- [itasca::code::global_type]:
     Source: 'src/code.rs' -/
 def code.global_type
-  (env : metadata.Env) (idx : Std.U32) :
+  (env : metadata.CodeMetadata) (idx : Std.U32) :
   Result (core.result.Result wasm_types.GlobalType error.OpError)
   := do
   let i ← lift (UScalar.cast .Usize idx)
-  let i1 := alloc.vec.Vec.len env.global_types
+  let i1 := alloc.vec.Vec.len env.globals
   if i >= i1
   then ok (core.result.Result.Err error.OpError.UnknownGlobal)
   else
-    let gt ←
+    let g ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        wasm_types.GlobalType) env.global_types i
-    ok (core.result.Result.Ok gt)
+        metadata.Global) env.globals i
+    ok (core.result.Result.Ok g.gtype)
 
 /-- [itasca::code::take_global]:
     Source: 'src/code.rs' -/
 def code.take_global
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × wasm_types.GlobalType) error.OpError)
     × code.OpIterState)
   := do
@@ -1936,7 +1936,7 @@ def code.take_global
 /-- [itasca::code::read_global_get]:
     Source: 'src/code.rs' -/
 def code.read_global_get
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_global st data env
@@ -1955,7 +1955,7 @@ def code.read_global_get
 /-- [itasca::code::read_global_set]:
     Source: 'src/code.rs' -/
 def code.read_global_set
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_global st data env
@@ -2006,8 +2006,10 @@ def code.read_reserved_zero
 /-- [itasca::code::require_memory]:
     Source: 'src/code.rs' -/
 def code.require_memory
-  (env : metadata.Env) : Result (core.result.Result Unit error.OpError) := do
-  let b ← alloc.vec.Vec.is_empty Global env.mem_types
+  (env : metadata.CodeMetadata) :
+  Result (core.result.Result Unit error.OpError)
+  := do
+  let b ← alloc.vec.Vec.is_empty Global env.memories
   if b
   then ok (core.result.Result.Err error.OpError.UnknownMemory)
   else ok (core.result.Result.Ok ())
@@ -2015,7 +2017,7 @@ def code.require_memory
 /-- [itasca::code::read_memory_size]:
     Source: 'src/code.rs' -/
 def code.read_memory_size
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.read_reserved_zero st data
@@ -2043,7 +2045,7 @@ def code.read_memory_size
 /-- [itasca::code::read_memory_grow]:
     Source: 'src/code.rs' -/
 def code.read_memory_grow
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.read_reserved_zero st data
@@ -2098,7 +2100,8 @@ def code.take_index
 /-- [itasca::code::check_memory_and_alignment]:
     Source: 'src/code.rs' -/
 def code.check_memory_and_alignment
-  (env : metadata.Env) (memarg : code.MemArg) (natural_align : Std.U32) :
+  (env : metadata.CodeMetadata) (memarg : code.MemArg)
+  (natural_align : Std.U32) :
   Result (core.result.Result Unit error.OpError)
   := do
   let r ← code.require_memory env
@@ -2143,7 +2146,7 @@ def code.read_memarg
 /-- [itasca::code::read_load]:
     Source: 'src/code.rs' -/
 def code.read_load
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (ty : wasm_types.ValueType) (natural_align : Std.U32) :
   Result ((core.result.Result code.MemArg error.OpError) × code.OpIterState)
   := do
@@ -2180,7 +2183,7 @@ def code.read_load
 /-- [itasca::code::read_store]:
     Source: 'src/code.rs' -/
 def code.read_store
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (ty : wasm_types.ValueType) (natural_align : Std.U32) :
   Result ((core.result.Result code.MemArg error.OpError) × code.OpIterState)
   := do
@@ -2715,7 +2718,8 @@ def code.step_numeric
     Source: 'src/code.rs' -/
 def code.step_memory
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (opcode : Std.U8) (v : V) :
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (opcode : Std.U8) 
+  (v : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
   match opcode with
@@ -3250,7 +3254,7 @@ def code.step_memory
     Source: 'src/code.rs' -/
 def code.step
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (ctx : code.Context)
   (opcode : Std.U8) (v : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
@@ -3587,7 +3591,7 @@ def code.visit_sign_extension
     Source: 'src/code.rs' -/
 def code.step_extended
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (ctx : code.Context)
   (opcode : Std.U8) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
@@ -3800,48 +3804,25 @@ def code.read_ref_is_null
         Unit (core.convert.FromSame error.OpError) residual
     ok (r1, st1)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::declares_function]: loop body 0:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::declares_function]:
     Source: 'src/module.rs'
     Visibility: public -/
-@[rust_loop_body]
-def metadata.Env.declares_function_loop.body
-  (self : metadata.Env) (index : Std.U32) (i : Std.Usize) :
-  Result (ControlFlow Std.Usize Bool)
-  := do
-  let i1 := alloc.vec.Vec.len self.declared_funcs
-  if i >= i1
-  then ok (done false)
-  else
-    let i2 ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice Std.U32)
-        self.declared_funcs i
-    if i2 = index
-    then ok (done true)
-    else let i3 ← i + 1#usize
-         ok (cont i3)
-
-/-- [itasca::metadata::{itasca::metadata::Env}::declares_function]: loop 0:
-    Source: 'src/module.rs'
-    Visibility: public -/
-@[rust_loop]
-def metadata.Env.declares_function_loop
-  (self : metadata.Env) (index : Std.U32) (i : Std.Usize) : Result Bool := do
-  loop
-    (fun i1 => metadata.Env.declares_function_loop.body self index i1)
-    i
-
-/-- [itasca::metadata::{itasca::metadata::Env}::declares_function]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-@[reducible]
-def metadata.Env.declares_function
-  (self : metadata.Env) (index : Std.U32) : Result Bool := do
-  metadata.Env.declares_function_loop self index 0#usize
+def metadata.CodeMetadata.declares_function
+  (self : metadata.CodeMetadata) (index : Std.U32) : Result Bool := do
+  let i ← lift (UScalar.cast .Usize index)
+  let i1 := alloc.vec.Vec.len self.funcs
+  if i < i1
+  then
+    let fd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        metadata.FuncDesc) self.funcs i
+    ok fd.can_ref_func
+  else ok false
 
 /-- [itasca::code::read_ref_func]:
     Source: 'src/code.rs' -/
 def code.read_ref_func
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_index st data
@@ -3849,11 +3830,11 @@ def code.read_ref_func
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let i ← lift (UScalar.cast .Usize val)
-    let i1 := alloc.vec.Vec.len env.func_types
+    let i1 := alloc.vec.Vec.len env.funcs
     if i >= i1
     then ok (core.result.Result.Err error.OpError.UnknownFunc, st1)
     else
-      let b ← metadata.Env.declares_function env val
+      let b ← metadata.CodeMetadata.declares_function env val
       if b
       then
         let st2 ←
@@ -3930,7 +3911,7 @@ def code.read_typed_select
 /-- [itasca::code::take_table]:
     Source: 'src/code.rs' -/
 def code.take_table
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × wasm_types.ValueType) error.OpError)
     × code.OpIterState)
   := do
@@ -3939,14 +3920,14 @@ def code.take_table
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let i ← lift (UScalar.cast .Usize val)
-    let i1 := alloc.vec.Vec.len env.table_types
+    let i1 := alloc.vec.Vec.len env.tables
     if i >= i1
     then ok (core.result.Result.Err error.OpError.UnknownTable, st1)
     else
-      let tt ←
+      let td ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          wasm_types.TableType) env.table_types i
-      let vt ← wasm_types.ElemType.value_type tt.elem
+          metadata.TableDesc) env.tables i
+      let vt ← wasm_types.ElemType.value_type td.ty.elem
       ok (core.result.Result.Ok (val, vt), st1)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
@@ -3958,7 +3939,7 @@ def code.take_table
 /-- [itasca::code::read_table_get]:
     Source: 'src/code.rs' -/
 def code.read_table_get
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_table st data env
@@ -3986,7 +3967,7 @@ def code.read_table_get
 /-- [itasca::code::read_table_set]:
     Source: 'src/code.rs' -/
 def code.read_table_set
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_table st data env
@@ -4022,7 +4003,7 @@ def code.read_table_set
 /-- [itasca::code::take_data_index]:
     Source: 'src/code.rs' -/
 def code.take_data_index
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_index st data
@@ -4044,7 +4025,7 @@ def code.take_data_index
 /-- [itasca::code::take_element]:
     Source: 'src/code.rs' -/
 def code.take_element
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × wasm_types.ValueType) error.OpError)
     × code.OpIterState)
   := do
@@ -4053,14 +4034,14 @@ def code.take_element
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
     let i ← lift (UScalar.cast .Usize val)
-    let i1 := alloc.vec.Vec.len env.elements
+    let i1 := alloc.vec.Vec.len env.elem_segment_types
     if i >= i1
     then ok (core.result.Result.Err error.OpError.UnknownElement, st1)
     else
-      let e ←
+      let et ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          metadata.Element) env.elements i
-      let vt ← wasm_types.ElemType.value_type e.elem
+          wasm_types.ElemType) env.elem_segment_types i
+      let vt ← wasm_types.ElemType.value_type et
       ok (core.result.Result.Ok (val, vt), st1)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
@@ -4107,14 +4088,14 @@ def code.read_bulk_operands
 /-- [itasca::code::read_bulk_memory]:
     Source: 'src/code.rs' -/
 def code.read_bulk_memory
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.read_reserved_zero st data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue _ =>
-    let b ← alloc.vec.Vec.is_empty Global env.mem_types
+    let b ← alloc.vec.Vec.is_empty Global env.memories
     if b
     then ok (core.result.Result.Err error.OpError.UnknownMemory, st1)
     else ok (core.result.Result.Ok (), st1)
@@ -4127,7 +4108,7 @@ def code.read_bulk_memory
 /-- [itasca::code::read_memory_init]:
     Source: 'src/code.rs' -/
 def code.read_memory_init
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_data_index st data env
@@ -4162,7 +4143,7 @@ def code.read_memory_init
 /-- [itasca::code::read_memory_copy]:
     Source: 'src/code.rs' -/
 def code.read_memory_copy
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.read_bulk_memory st data env
@@ -4188,7 +4169,7 @@ def code.read_memory_copy
 /-- [itasca::code::read_memory_fill]:
     Source: 'src/code.rs' -/
 def code.read_memory_fill
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.read_bulk_memory st data env
@@ -4214,7 +4195,7 @@ impl_def wasm_types.ValueType.Insts.CoreCmpPartialEqValueType :
 /-- [itasca::code::read_table_init]:
     Source: 'src/code.rs' -/
 def code.read_table_init
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
     code.OpIterState)
   := do
@@ -4260,7 +4241,7 @@ def code.read_table_init
 /-- [itasca::code::read_table_copy]:
     Source: 'src/code.rs' -/
 def code.read_table_copy
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
     code.OpIterState)
   := do
@@ -4306,7 +4287,7 @@ def code.read_table_copy
 /-- [itasca::code::read_table_grow]:
     Source: 'src/code.rs' -/
 def code.read_table_grow
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_table st data env
@@ -4344,7 +4325,7 @@ def code.read_table_grow
 /-- [itasca::code::read_table_size]:
     Source: 'src/code.rs' -/
 def code.read_table_size
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_table st data env
@@ -4363,7 +4344,7 @@ def code.read_table_size
 /-- [itasca::code::read_table_fill]:
     Source: 'src/code.rs' -/
 def code.read_table_fill
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.OpIterState)
   := do
   let (r, st1) ← code.take_table st data env
@@ -4409,7 +4390,7 @@ def code.read_table_fill
     Source: 'src/code.rs' -/
 def code.step_bulk
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (subopcode : Std.U32)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (subopcode : Std.U32)
   (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
@@ -4933,7 +4914,7 @@ def code.simd_memory_info
 /-- [itasca::code::read_simd_memory_lane]:
     Source: 'src/code.rs' -/
 def code.read_simd_memory_lane
-  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.OpIterState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (natural_align : Std.U32) (store : Bool) (count : Std.U8) :
   Result ((core.result.Result (code.MemArg × Std.U8) error.OpError) ×
     code.OpIterState)
@@ -5120,7 +5101,7 @@ def code.read_simd_shuffle
     Source: 'src/code.rs' -/
 def code.step_simd
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (visitor : V) :
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
   let r ← reader.read_u32_leb data st.pos
@@ -5267,7 +5248,7 @@ def code.step_simd
     Source: 'src/code.rs' -/
 def code.step_wasm2
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (ctx : code.Context)
   (opcode : Std.U8) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState × V)
   := do
@@ -5399,7 +5380,8 @@ def code.check_func_type
 /-- [itasca::code::pop_results]:
     Source: 'src/code.rs' -/
 def code.pop_results
-  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
+  (st : code.OpIterState) (env : metadata.CodeMetadata)
+  (ts : signature.ResultType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   match ts with
@@ -5439,7 +5421,7 @@ def code.pop_results
     Source: 'src/signature.rs'
     Visibility: public -/
 def signature.ResultType.len
-  (self : signature.ResultType) (env : metadata.Env) :
+  (self : signature.ResultType) (env : metadata.CodeMetadata) :
   Result (core.result.Result Std.Usize error.OpError)
   := do
   match self with
@@ -5468,7 +5450,8 @@ def signature.ResultType.len
 /-- [itasca::code::push_results]:
     Source: 'src/code.rs' -/
 def code.push_results
-  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
+  (st : code.OpIterState) (env : metadata.CodeMetadata)
+  (ts : signature.ResultType) :
   Result ((core.result.Result Unit error.OpError) × code.OpIterState)
   := do
   let r ← signature.ResultType.len ts env
@@ -5516,7 +5499,8 @@ def code.push_results
     Source: 'src/signature.rs'
     Visibility: public -/
 def signature.ResultType.get
-  (self : signature.ResultType) (env : metadata.Env) (element : Std.Usize) :
+  (self : signature.ResultType) (env : metadata.CodeMetadata)
+  (element : Std.Usize) :
   Result (core.result.Result (Option wasm_types.ValueType) error.OpError)
   := do
   match self with
@@ -5561,8 +5545,8 @@ def signature.ResultType.get
     Source: 'src/code.rs' -/
 @[rust_loop_body]
 def code.same_types_loop.body
-  (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType)
-  (n : Std.Usize) (i : Std.Usize) :
+  (env : metadata.CodeMetadata) (a : signature.ResultType)
+  (b : signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
   Result (ControlFlow Std.Usize (core.result.Result Bool error.OpError))
   := do
   if i >= n
@@ -5605,8 +5589,8 @@ def code.same_types_loop.body
     Source: 'src/code.rs' -/
 @[rust_loop]
 def code.same_types_loop
-  (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType)
-  (n : Std.Usize) (i : Std.Usize) :
+  (env : metadata.CodeMetadata) (a : signature.ResultType)
+  (b : signature.ResultType) (n : Std.Usize) (i : Std.Usize) :
   Result (core.result.Result Bool error.OpError)
   := do
   loop
@@ -5616,7 +5600,8 @@ def code.same_types_loop
 /-- [itasca::code::same_types]:
     Source: 'src/code.rs' -/
 def code.same_types
-  (env : metadata.Env) (a : signature.ResultType) (b : signature.ResultType) :
+  (env : metadata.CodeMetadata) (a : signature.ResultType)
+  (b : signature.ResultType) :
   Result (core.result.Result Bool error.OpError)
   := do
   let r ← signature.ResultType.len a env
@@ -5741,7 +5726,7 @@ def signature.BlockType.params
 /-- [itasca::code::enter_info]:
     Source: 'src/code.rs' -/
 def code.enter_info
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (kind : code.LabelKind) :
   Result ((core.result.Result signature.BlockType error.OpError) ×
     code.BodyState)
@@ -6215,7 +6200,7 @@ def code.enter_info
 /-- [itasca::code::enter]:
     Source: 'src/code.rs' -/
 def code.enter
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (kind : code.LabelKind) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
@@ -6244,7 +6229,7 @@ def signature.BlockType.results
 /-- [itasca::code::end_frame_info]:
     Source: 'src/code.rs' -/
 def code.end_frame_info
-  (st : code.BodyState) (env : metadata.Env) (is_else : Bool) :
+  (st : code.BodyState) (env : metadata.CodeMetadata) (is_else : Bool) :
   Result ((core.result.Result (code.LabelKind × signature.BlockType)
     error.OpError) × code.BodyState)
   := do
@@ -6664,7 +6649,7 @@ def code.end_frame_info
 /-- [itasca::code::end_frame]:
     Source: 'src/code.rs' -/
 def code.end_frame
-  (st : code.BodyState) (env : metadata.Env) (is_else : Bool) :
+  (st : code.BodyState) (env : metadata.CodeMetadata) (is_else : Bool) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
   let (r, st1) ← code.end_frame_info st env is_else
@@ -6764,7 +6749,7 @@ def code.read_multi_value_label
 /-- [itasca::code::branch_info]:
     Source: 'src/code.rs' -/
 def code.branch_info
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (conditional : Bool) :
   Result ((core.result.Result (Std.U32 × signature.ResultType) error.OpError)
     × code.BodyState)
@@ -6849,7 +6834,7 @@ def code.branch_info
 /-- [itasca::code::branch]:
     Source: 'src/code.rs' -/
 def code.branch
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (conditional : Bool) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
@@ -6869,7 +6854,7 @@ def code.branch
 @[rust_loop_body]
 def code.check_suffix_loop.body
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
-  (i : Std.Usize) (env : metadata.Env) (ts : signature.ResultType)
+  (i : Std.Usize) (env : metadata.CodeMetadata) (ts : signature.ResultType)
   (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
   Result (ControlFlow (Std.Usize × Std.Usize) (core.result.Result Unit
     error.OpError))
@@ -6916,7 +6901,7 @@ def code.check_suffix_loop.body
 @[rust_loop]
 def code.check_suffix_loop
   (v : alloc.vec.Vec code.StackType) (v1 : alloc.vec.Vec code.Ctrl)
-  (i : Std.Usize) (env : metadata.Env) (ts : signature.ResultType)
+  (i : Std.Usize) (env : metadata.CodeMetadata) (ts : signature.ResultType)
   (base : Std.Usize) (stack : Std.Usize) (i1 : Std.Usize) :
   Result (core.result.Result Unit error.OpError)
   := do
@@ -6928,7 +6913,8 @@ def code.check_suffix_loop
 /-- [itasca::code::check_suffix]:
     Source: 'src/code.rs' -/
 def code.check_suffix
-  (st : code.OpIterState) (env : metadata.Env) (ts : signature.ResultType) :
+  (st : code.OpIterState) (env : metadata.CodeMetadata)
+  (ts : signature.ResultType) :
   Result (core.result.Result Unit error.OpError)
   := do
   let base ← code.cur_base st
@@ -6947,8 +6933,8 @@ def code.check_suffix
 @[rust_loop_body]
 def code.branch_table_with_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (count : Std.U32) (ois : code.OpIterState) (visitor : V)
-  (arity : Option Std.Usize) (i : Std.U32) :
+  (env : metadata.CodeMetadata) (count : Std.U32) (ois : code.OpIterState)
+  (visitor : V) (arity : Option Std.Usize) (i : Std.U32) :
   Result (ControlFlow (code.OpIterState × V × (Option Std.Usize) × Std.U32)
     ((core.result.Result Unit error.OpError) × code.BodyState × V))
   := do
@@ -7127,8 +7113,8 @@ def code.branch_table_with_loop.body
 @[rust_loop]
 def code.branch_table_with_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (ois : code.OpIterState)
-  (data : Slice Std.U8) (env : metadata.Env) (visitor : V) (count : Std.U32)
-  (arity : Option Std.Usize) (i : Std.U32) :
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (visitor : V)
+  (count : Std.U32) (arity : Option Std.Usize) (i : Std.U32) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
   loop
@@ -7140,7 +7126,7 @@ def code.branch_table_with_loop
     Source: 'src/code.rs' -/
 def code.branch_table_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
-  (data : Slice Std.U8) (env : metadata.Env) (visitor : V) :
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
   let r ← reader.read_u32_leb data st.core.pos
@@ -9518,7 +9504,7 @@ def code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor : code.OpVisitor
 /-- [itasca::code::branch_table]:
     Source: 'src/code.rs' -/
 def code.branch_table
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
   let (r, st1, _) ←
@@ -9561,34 +9547,61 @@ def code.apply_func_type
         Unit (core.convert.FromSame error.OpError) residual
     ok (r1, st)
 
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::func_type]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.CodeMetadata.func_type
+  (self : metadata.CodeMetadata) (index : Std.U32) :
+  Result (Option wasm_types.FuncType)
+  := do
+  let i ← lift (UScalar.cast .Usize index)
+  let i1 := alloc.vec.Vec.len self.funcs
+  if i >= i1
+  then ok none
+  else
+    let fd ←
+      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+        metadata.FuncDesc) self.funcs i
+    let t ← lift (UScalar.cast .Usize fd.type_index)
+    let i2 := alloc.vec.Vec.len self.types
+    if t >= i2
+    then ok none
+    else
+      let ft ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          wasm_types.FuncType) self.types t
+      ok (some ft)
+
 /-- [itasca::code::call_info]:
     Source: 'src/code.rs' -/
 def code.call_info
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result Std.U32 error.OpError) × code.BodyState)
   := do
   let (r, ois) ← code.take_index st.core data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let i ← lift (UScalar.cast .Usize val)
-    let i1 := alloc.vec.Vec.len env.func_types
-    if i >= i1
-    then ok (core.result.Result.Err error.OpError.UnknownFunc, { core := ois })
-    else
-      let ft ←
-        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          wasm_types.FuncType) env.func_types i
-      let (r1, ois1) ← code.apply_func_type ois ft
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
+    let o ← metadata.CodeMetadata.func_type env val
+    let r1 ← core.option.Option.ok_or o error.OpError.UnknownFunc
+    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
+    match cf1 with
+    | core.ops.control_flow.ControlFlow.Continue val1 =>
+      let (r2, ois1) ← code.apply_func_type ois val1
+      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
+      match cf2 with
       | core.ops.control_flow.ControlFlow.Continue _ =>
         ok (core.result.Result.Ok val, { core := ois1 })
       | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
+        let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
             Std.U32 (core.convert.FromSame error.OpError) residual
-        ok (r2, { core := ois1 })
+        ok (r3, { core := ois1 })
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r2 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          Std.U32 (core.convert.FromSame error.OpError) residual
+      ok (r2, { core := ois })
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -9598,7 +9611,7 @@ def code.call_info
 /-- [itasca::code::call_indirect_info]:
     Source: 'src/code.rs' -/
 def code.call_indirect_info
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env) :
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (Std.U32 × Std.U32) error.OpError) ×
     code.BodyState)
   := do
@@ -9611,16 +9624,16 @@ def code.call_indirect_info
     match cf1 with
     | core.ops.control_flow.ControlFlow.Continue val1 =>
       let t ← lift (UScalar.cast .Usize val1)
-      let i := alloc.vec.Vec.len env.table_types
+      let i := alloc.vec.Vec.len env.tables
       if t >= i
       then
         ok (core.result.Result.Err error.OpError.UnknownTable,
           { core := ois1 })
       else
-        let tt ←
+        let td ←
           alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.TableType) env.table_types t
-        let vt ← wasm_types.ElemType.value_type tt.elem
+            metadata.TableDesc) env.tables t
+        let vt ← wasm_types.ElemType.value_type td.ty.elem
         let b ←
           core.cmp.PartialEq.ne.trait_default
             wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
@@ -9675,7 +9688,7 @@ def code.call_indirect_info
 /-- [itasca::code::call]:
     Source: 'src/code.rs' -/
 def code.call
-  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.Env)
+  (st : code.BodyState) (data : Slice Std.U8) (env : metadata.CodeMetadata)
   (indirect : Bool) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState)
   := do
@@ -9706,7 +9719,7 @@ def code.call
 /-- [itasca::code::initial_state]:
     Source: 'src/code.rs' -/
 def code.initial_state
-  (env : metadata.Env) (type_index : Std.U32) :
+  (env : metadata.CodeMetadata) (type_index : Std.U32) :
   Result (core.result.Result code.BodyState error.OpError)
   := do
   let i ← lift (UScalar.cast .Usize type_index)
@@ -9740,7 +9753,7 @@ def code.initial_state
     Source: 'src/code.rs' -/
 def code.step_body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (st : code.BodyState)
-  (data : Slice Std.U8) (env : metadata.Env) (ctx : code.Context)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (ctx : code.Context)
   (type_index : Std.U32) (op : Std.U8) (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × code.BodyState × V)
   := do
@@ -9998,7 +10011,7 @@ def code.step_body
 @[rust_loop_body]
 def code.body_loop_loop.body
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
+  (env : metadata.CodeMetadata) (ctx : code.Context) (type_index : Std.U32)
   (visitor : V) (st : code.BodyState) :
   Result (ControlFlow (V × code.BodyState) ((core.result.Result Unit
     error.OpError) × V))
@@ -10041,7 +10054,7 @@ def code.body_loop_loop.body
 @[rust_loop]
 def code.body_loop_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
+  (env : metadata.CodeMetadata) (ctx : code.Context) (type_index : Std.U32)
   (visitor : V) (st : code.BodyState) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
@@ -10055,7 +10068,7 @@ def code.body_loop_loop
 @[reducible]
 def code.body_loop
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
+  (env : metadata.CodeMetadata) (ctx : code.Context) (type_index : Std.U32)
   (visitor : V) (st : code.BodyState) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
@@ -10071,7 +10084,7 @@ def limits.MAX_FUNCTION_BYTES : Std.Usize := 7654321#usize
     Source: 'src/code.rs' -/
 def code.validate_body_with
   {V : Type} (OpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (env : metadata.Env) (ctx : code.Context) (type_index : Std.U32)
+  (env : metadata.CodeMetadata) (ctx : code.Context) (type_index : Std.U32)
   (visitor : V) :
   Result ((core.result.Result Unit error.OpError) × V)
   := do
@@ -10231,149 +10244,184 @@ def limits.add_offset
     Source: 'src/module.rs' -/
 @[global_simps, irreducible] def metadata.SECTION_DATA_COUNT : Std.U8 := 12#u8
 
-/-- [itasca::metadata::{itasca::metadata::Env}::new]:
+/-- [itasca::metadata::{itasca::metadata::FuncDesc}::is_exported]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.new : Result metadata.Env := do
+def metadata.FuncDesc.is_exported
+  (self : metadata.FuncDesc) : Result Bool := do
+  if self.eager
+  then ok true
+  else ok self.can_ref_func
+
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::new]:
+    Source: 'src/module.rs' -/
+def metadata.CodeMetadata.new : Result metadata.CodeMetadata := do
   ok
     {
       types := (alloc.vec.Vec.new wasm_types.FuncType),
-      imports := (alloc.vec.Vec.new metadata.Import),
+      funcs := (alloc.vec.Vec.new metadata.FuncDesc),
       globals := (alloc.vec.Vec.new metadata.Global),
-      exports := (alloc.vec.Vec.new metadata.Export),
-      elements := (alloc.vec.Vec.new metadata.Element),
+      tables := (alloc.vec.Vec.new metadata.TableDesc),
+      memories := (alloc.vec.Vec.new metadata.MemoryDesc),
+      elem_segment_types := (alloc.vec.Vec.new wasm_types.ElemType),
       data_count := none,
-      declared_funcs := (alloc.vec.Vec.new Std.U32),
       start := none,
-      func_type_indices := (alloc.vec.Vec.new Std.U32),
-      func_types := (alloc.vec.Vec.new wasm_types.FuncType),
-      table_types := (alloc.vec.Vec.new wasm_types.TableType),
-      mem_types := (alloc.vec.Vec.new wasm_types.MemType),
-      global_types := (alloc.vec.Vec.new wasm_types.GlobalType),
       num_imported_funcs := 0#usize,
       num_imported_globals := 0#usize
     }
 
-/-- [itasca::metadata::{itasca::metadata::Env}::types]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::num_func_defs]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.types
-  (self : metadata.Env) : Result (Slice wasm_types.FuncType) := do
+def metadata.CodeMetadata.num_func_defs
+  (self : metadata.CodeMetadata) : Result Std.Usize := do
+  let i := alloc.vec.Vec.len self.funcs
+  i - self.num_imported_funcs
+
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::types]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.CodeMetadata.impl.types
+  (self : metadata.CodeMetadata) : Result (Slice wasm_types.FuncType) := do
   ok (alloc.vec.Vec.deref self.types)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::imports]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::funcs]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.imports
-  (self : metadata.Env) : Result (Slice metadata.Import) := do
-  ok (alloc.vec.Vec.deref self.imports)
+def metadata.CodeMetadata.impl.funcs
+  (self : metadata.CodeMetadata) : Result (Slice metadata.FuncDesc) := do
+  ok (alloc.vec.Vec.deref self.funcs)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::globals]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::globals]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.globals
-  (self : metadata.Env) : Result (Slice metadata.Global) := do
+def metadata.CodeMetadata.impl.globals
+  (self : metadata.CodeMetadata) : Result (Slice metadata.Global) := do
   ok (alloc.vec.Vec.deref self.globals)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::exports]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::tables]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.exports
-  (self : metadata.Env) : Result (Slice metadata.Export) := do
-  ok (alloc.vec.Vec.deref self.exports)
+def metadata.CodeMetadata.impl.tables
+  (self : metadata.CodeMetadata) : Result (Slice metadata.TableDesc) := do
+  ok (alloc.vec.Vec.deref self.tables)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::elements]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::memories]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.elements
-  (self : metadata.Env) : Result (Slice metadata.Element) := do
-  ok (alloc.vec.Vec.deref self.elements)
+def metadata.CodeMetadata.impl.memories
+  (self : metadata.CodeMetadata) : Result (Slice metadata.MemoryDesc) := do
+  ok (alloc.vec.Vec.deref self.memories)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::data_count]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::elem_segment_types]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.data_count
-  (self : metadata.Env) : Result (Option Std.U32) := do
-  ok self.data_count
+def metadata.CodeMetadata.impl.elem_segment_types
+  (self : metadata.CodeMetadata) : Result (Slice wasm_types.ElemType) := do
+  ok (alloc.vec.Vec.deref self.elem_segment_types)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::start]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::start]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.start
-  (self : metadata.Env) : Result (Option Std.U32) := do
+def metadata.CodeMetadata.impl.start
+  (self : metadata.CodeMetadata) : Result (Option Std.U32) := do
   ok self.start
 
-/-- [itasca::metadata::{itasca::metadata::Env}::func_type_indices]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::data_count]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.func_type_indices
-  (self : metadata.Env) : Result (Slice Std.U32) := do
-  ok (alloc.vec.Vec.deref self.func_type_indices)
+def metadata.CodeMetadata.impl.data_count
+  (self : metadata.CodeMetadata) : Result (Option Std.U32) := do
+  ok self.data_count
 
-/-- [itasca::metadata::{itasca::metadata::Env}::func_types]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::num_imported_funcs]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.func_types
-  (self : metadata.Env) : Result (Slice wasm_types.FuncType) := do
-  ok (alloc.vec.Vec.deref self.func_types)
-
-/-- [itasca::metadata::{itasca::metadata::Env}::table_types]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Env.impl.table_types
-  (self : metadata.Env) : Result (Slice wasm_types.TableType) := do
-  ok (alloc.vec.Vec.deref self.table_types)
-
-/-- [itasca::metadata::{itasca::metadata::Env}::mem_types]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Env.impl.mem_types
-  (self : metadata.Env) : Result (Slice wasm_types.MemType) := do
-  ok (alloc.vec.Vec.deref self.mem_types)
-
-/-- [itasca::metadata::{itasca::metadata::Env}::global_types]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Env.impl.global_types
-  (self : metadata.Env) : Result (Slice wasm_types.GlobalType) := do
-  ok (alloc.vec.Vec.deref self.global_types)
-
-/-- [itasca::metadata::{itasca::metadata::Env}::num_imported_funcs]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Env.impl.num_imported_funcs
-  (self : metadata.Env) : Result Std.Usize := do
+def metadata.CodeMetadata.impl.num_imported_funcs
+  (self : metadata.CodeMetadata) : Result Std.Usize := do
   ok self.num_imported_funcs
 
-/-- [itasca::metadata::{itasca::metadata::Env}::num_imported_globals]:
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::num_imported_globals]:
     Source: 'src/module.rs'
     Visibility: public -/
-def metadata.Env.impl.num_imported_globals
-  (self : metadata.Env) : Result Std.Usize := do
+def metadata.CodeMetadata.impl.num_imported_globals
+  (self : metadata.CodeMetadata) : Result Std.Usize := do
   ok self.num_imported_globals
 
-/-- [itasca::metadata::{itasca::metadata::Module}::env]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Module.impl.env
-  (self : metadata.Module) : Result metadata.Env := do
-  ok self.env
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<itasca::metadata::CodeMetadata>}::new]:
+    Source: 'src/module.rs' -/
+def metadata.ModuleMetadataCodeMetadata.new
+  : Result (metadata.ModuleMetadata metadata.CodeMetadata) := do
+  let cm ← metadata.CodeMetadata.new
+  ok
+    {
+      code := cm,
+      imports := (alloc.vec.Vec.new metadata.Import),
+      exports := (alloc.vec.Vec.new metadata.Export),
+      elements := (alloc.vec.Vec.new metadata.Element),
+      data := (alloc.vec.Vec.new metadata.Data)
+    }
 
-/-- [itasca::metadata::{itasca::metadata::Module}::tail]:
-    Source: 'src/module.rs'
-    Visibility: public -/
-def metadata.Module.impl.tail
-  (self : metadata.Module) : Result metadata.Tail := do
-  ok self.tail
-
-/-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::tail_ready]:
-    Source: 'src/stream.rs'
-    Visibility: public -/
-def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
-  (self : stream.SyncVisitor) (tail : metadata.Tail) :
-  Result ((core.result.Result Unit error.Error) × stream.SyncVisitor)
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<itasca::metadata::CodeMetadata>}::share]:
+    Source: 'src/module.rs' -/
+def metadata.ModuleMetadataCodeMetadata.share
+  (self : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result (metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
   := do
-  ok (core.result.Result.Ok (), { self with tail := (some tail) })
+  let a ← alloc.sync.Arc.new self.code
+  ok
+    {
+      code := a,
+      imports := self.imports,
+      exports := self.exports,
+      elements := self.elements,
+      data := self.data
+    }
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::code]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.ModuleMetadataArcCodeMetadata.code
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
+  Result (alloc.sync.Arc metadata.CodeMetadata)
+  := do
+  ok self.code
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::imports]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.ModuleMetadataArcCodeMetadata.imports
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
+  Result (Slice metadata.Import)
+  := do
+  ok (alloc.vec.Vec.deref self.imports)
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::exports]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.ModuleMetadataArcCodeMetadata.exports
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
+  Result (Slice metadata.Export)
+  := do
+  ok (alloc.vec.Vec.deref self.exports)
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::elements]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.ModuleMetadataArcCodeMetadata.elements
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
+  Result (Slice metadata.Element)
+  := do
+  ok (alloc.vec.Vec.deref self.elements)
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::data]:
+    Source: 'src/module.rs'
+    Visibility: public -/
+def metadata.ModuleMetadataArcCodeMetadata.data
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
+  Result (Slice metadata.Data)
+  := do
+  ok (alloc.vec.Vec.deref self.data)
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::code_end]:
     Source: 'src/stream.rs'
@@ -10394,9 +10442,8 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   := do
   let (o, o1) := core.option.Option.take self.completed
   match o with
-  | none =>
-    ok (core.result.Result.Err error.Error.Host, { self with completed := o1 })
-  | some sb => ok (core.result.Result.Ok sb, { self with completed := o1 })
+  | none => ok (core.result.Result.Err error.Error.Host, { completed := o1 })
+  | some sb => ok (core.result.Result.Ok sb, { completed := o1 })
 
 /-- [itasca::metadata::copy_value_types]: loop body 0:
     Source: 'src/module.rs' -/
@@ -10638,10 +10685,11 @@ def metadata.have_bytes
     Source: 'src/module.rs' -/
 def metadata.validate_code_entry_with
   {V : Type} (codeOpVisitorInst : code.OpVisitor V) (data : Slice Std.U8)
-  (pos : Std.Usize) (env : metadata.Env) (index : Std.Usize) (v : V) :
+  (pos : Std.Usize) (env : metadata.CodeMetadata) (index : Std.Usize) 
+  (v : V) :
   Result ((core.result.Result Std.Usize error.Error) × V)
   := do
-  let i := alloc.vec.Vec.len env.func_type_indices
+  let i ← metadata.CodeMetadata.num_func_defs env
   if index >= i
   then ok (core.result.Result.Err error.Error.FuncCodeMismatch, v)
   else
@@ -10664,14 +10712,16 @@ def metadata.validate_code_entry_with
           if p1 > «end»
           then ok (core.result.Result.Err error.Error.SectionSizeMismatch, v)
           else
-            let type_idx ←
+            let i1 ← env.num_imported_funcs + index
+            let fd ←
               alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                Std.U32) env.func_type_indices index
-            let t ← lift (UScalar.cast .Usize type_idx)
-            let i1 := alloc.vec.Vec.len env.types
-            if t >= i1
+                metadata.FuncDesc) env.funcs i1
+            let t ← lift (UScalar.cast .Usize fd.type_index)
+            let i2 := alloc.vec.Vec.len env.types
+            if t >= i2
             then
-              ok (core.result.Result.Err (error.Error.UnknownType type_idx), v)
+              ok (core.result.Result.Err (error.Error.UnknownType
+                fd.type_index), v)
             else
               let ft ←
                 alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
@@ -10683,7 +10733,7 @@ def metadata.validate_code_entry_with
               let v2 ← metadata.copy_value_types s2
               let (r3, v3) ←
                 codeOpVisitorInst.on_function_start v
-                  { locals := v1, results := v2 } type_idx p1 «end»
+                  { locals := v1, results := v2 } fd.type_index p1 «end»
               match r3 with
               | core.result.Result.Ok _ =>
                 let s3 ←
@@ -10692,7 +10742,7 @@ def metadata.validate_code_entry_with
                     { start := p1, «end» }
                 let (r4, v4) ←
                   code.validate_body_with codeOpVisitorInst s3 env
-                    { locals := v1, results := v2 } type_idx v3
+                    { locals := v1, results := v2 } fd.type_index v3
                 match r4 with
                 | core.result.Result.Ok _ =>
                   ok (core.result.Result.Ok «end», v4)
@@ -10731,8 +10781,9 @@ def stream.StreamingBatch.validate_next
     if index != i
     then ok (core.result.Result.Err error.Error.Host, visitor)
     else
+      let cm ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global self.env
       metadata.validate_code_entry_with codeOpVisitorInst self.code
-        self.validated_end self.env index visitor
+        self.validated_end cm index visitor
 
 /-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::validate_func]:
     Source: 'src/stream.rs'
@@ -10776,8 +10827,9 @@ def stream.StreamingBatch.validate_func
 def stream.StreamingBatch.validate_all_loop.body
   (self : stream.StreamingBatch) (ok1 : Bool) :
   Result (ControlFlow (stream.StreamingBatch × Bool) (Std.U64 × Std.Usize ×
-    metadata.Env × (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize ×
-    Std.Usize × Std.Usize × Std.Usize × Std.Usize × (Option error.Error)))
+    (alloc.sync.Arc metadata.CodeMetadata) × (Slice Std.U8) × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize
+    × (Option error.Error)))
   := do
   if self.num_validated < self.num_funcs
   then
@@ -10803,9 +10855,9 @@ def stream.StreamingBatch.validate_all_loop.body
 @[rust_loop]
 def stream.StreamingBatch.validate_all_loop
   (self : stream.StreamingBatch) (ok1 : Bool) :
-  Result (Std.U64 × Std.Usize × metadata.Env × (Slice Std.U8) × Std.Usize
-    × Std.Usize × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
-    Std.Usize × (Option error.Error))
+  Result (Std.U64 × Std.Usize × (alloc.sync.Arc metadata.CodeMetadata) ×
+    (Slice Std.U8) × Std.Usize × Std.Usize × Std.Usize × Std.Usize ×
+    Std.Usize × Std.Usize × Std.Usize × (Option error.Error))
   := do
   loop
     (fun (self1, ok2) => stream.StreamingBatch.validate_all_loop.body self1
@@ -10816,13 +10868,13 @@ def stream.StreamingBatch.validate_all_loop
     Source: 'src/stream.rs' -/
 def stream.StreamingBatch.validate_all
   (self : stream.StreamingBatch) : Result stream.StreamingBatch := do
-  let (i, i1, e, s, i2, i3, i4, i5, i6, i7, i8, o) ←
+  let (i, i1, a, s, i2, i3, i4, i5, i6, i7, i8, o) ←
     stream.StreamingBatch.validate_all_loop self true
   ok
     {
       module_id := i,
       batch_id := i1,
-      env := e,
+      env := a,
       code := s,
       code_offset := i2,
       first_func := i3,
@@ -10842,13 +10894,14 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.submit_code_batch
   Result ((core.result.Result Unit error.Error) × stream.SyncVisitor)
   := do
   let batch1 ← stream.StreamingBatch.validate_all batch
-  ok (core.result.Result.Ok (), { self with completed := (some batch1) })
+  ok (core.result.Result.Ok (), { completed := (some batch1) })
 
 /-- [itasca::stream::{impl itasca::stream::StreamingVisitor<'a> for itasca::stream::SyncVisitor<'a>}::environment_ready]:
     Source: 'src/stream.rs'
     Visibility: public -/
 def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.environment_ready
-  (self : stream.SyncVisitor) (_env : metadata.Env) :
+  (self : stream.SyncVisitor)
+  (_module : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
   Result ((core.result.Result stream.StreamingConfig error.Error) ×
     stream.SyncVisitor)
   := do
@@ -10898,8 +10951,6 @@ def stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor :
   poll_code_batch :=
     stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.poll_code_batch
   code_end := stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.code_end
-  tail_ready :=
-    stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.tail_ready
 }
 
 /-- [itasca::stream::{impl itasca::stream::StreamingSource for itasca::stream::SliceSource<'_0>}::tail]:
@@ -11402,14 +11453,7 @@ def stream.get_next_batch
 def stream.submit_code_batches_loop.body
   {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
   (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
-  (source : S) (v : alloc.vec.Vec wasm_types.FuncType)
-  (v1 : alloc.vec.Vec metadata.Import) (v2 : alloc.vec.Vec metadata.Global)
-  (v3 : alloc.vec.Vec metadata.Export) (v4 : alloc.vec.Vec metadata.Element)
-  (o : Option Std.U32) (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
-  (v6 : alloc.vec.Vec Std.U32) (v7 : alloc.vec.Vec wasm_types.FuncType)
-  (v8 : alloc.vec.Vec wasm_types.TableType)
-  (v9 : alloc.vec.Vec wasm_types.MemType)
-  (v10 : alloc.vec.Vec wasm_types.GlobalType) (i : Std.Usize) (i1 : Std.Usize)
+  (source : S) (env : alloc.sync.Arc metadata.CodeMetadata)
   (code_len : Std.Usize) (config : stream.StreamingConfig)
   (num_funcs : Std.Usize) (visitor : V) (pending : alloc.vec.Vec Std.Usize)
   (pos : Std.Usize) (func : Std.Usize) (batch_id : Std.Usize) :
@@ -11419,8 +11463,8 @@ def stream.submit_code_batches_loop.body
   := do
   if func < num_funcs
   then
-    let i2 := alloc.vec.Vec.len pending
-    if i2 >= config.max_batches
+    let i := alloc.vec.Vec.len pending
+    if i >= config.max_batches
     then
       let (r, visitor1, pending1) ←
         stream.retire_code_batch StreamingVisitorInst module_id visitor pending
@@ -11439,34 +11483,18 @@ def stream.submit_code_batches_loop.body
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val1 =>
             let pending2 ← alloc.vec.Vec.push pending1 batch_id
-            let i3 ← next_func - func
+            let a ← stream.share_code env
+            let i1 ← next_func - func
             let (r3, visitor2) ←
               StreamingVisitorInst.submit_code_batch visitor1
                 {
                   module_id,
                   batch_id,
-                  env :=
-                    {
-                      types := v,
-                      imports := v1,
-                      globals := v2,
-                      exports := v3,
-                      elements := v4,
-                      data_count := o,
-                      declared_funcs := v5,
-                      start := o1,
-                      func_type_indices := v6,
-                      func_types := v7,
-                      table_types := v8,
-                      mem_types := v9,
-                      global_types := v10,
-                      num_imported_funcs := i,
-                      num_imported_globals := i1
-                    },
+                  env := a,
                   code := val1,
                   code_offset := pos,
                   first_func := func,
-                  num_funcs := i3,
+                  num_funcs := i1,
                   num_dispatched := 0#usize,
                   dispatch_end := 0#usize,
                   num_validated := 0#usize,
@@ -11515,34 +11543,18 @@ def stream.submit_code_batches_loop.body
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue val1 =>
           let pending1 ← alloc.vec.Vec.push pending batch_id
-          let i3 ← next_func - func
+          let a ← stream.share_code env
+          let i1 ← next_func - func
           let (r2, visitor1) ←
             StreamingVisitorInst.submit_code_batch visitor
               {
                 module_id,
                 batch_id,
-                env :=
-                  {
-                    types := v,
-                    imports := v1,
-                    globals := v2,
-                    exports := v3,
-                    elements := v4,
-                    data_count := o,
-                    declared_funcs := v5,
-                    start := o1,
-                    func_type_indices := v6,
-                    func_types := v7,
-                    table_types := v8,
-                    mem_types := v9,
-                    global_types := v10,
-                    num_imported_funcs := i,
-                    num_imported_globals := i1
-                  },
+                env := a,
                 code := val1,
                 code_offset := pos,
                 first_func := func,
-                num_funcs := i3,
+                num_funcs := i1,
                 num_dispatched := 0#usize,
                 dispatch_end := 0#usize,
                 num_validated := 0#usize,
@@ -11585,14 +11597,7 @@ def stream.submit_code_batches_loop.body
 def stream.submit_code_batches_loop
   {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
   (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
-  (source : S) (v : alloc.vec.Vec wasm_types.FuncType)
-  (v1 : alloc.vec.Vec metadata.Import) (v2 : alloc.vec.Vec metadata.Global)
-  (v3 : alloc.vec.Vec metadata.Export) (v4 : alloc.vec.Vec metadata.Element)
-  (o : Option Std.U32) (v5 : alloc.vec.Vec Std.U32) (o1 : Option Std.U32)
-  (v6 : alloc.vec.Vec Std.U32) (v7 : alloc.vec.Vec wasm_types.FuncType)
-  (v8 : alloc.vec.Vec wasm_types.TableType)
-  (v9 : alloc.vec.Vec wasm_types.MemType)
-  (v10 : alloc.vec.Vec wasm_types.GlobalType) (i : Std.Usize) (i1 : Std.Usize)
+  (source : S) (env : alloc.sync.Arc metadata.CodeMetadata)
   (code_len : Std.Usize) (config : stream.StreamingConfig) (visitor : V)
   (pending : alloc.vec.Vec Std.Usize) (pos : Std.Usize) (func : Std.Usize)
   (batch_id : Std.Usize) (num_funcs : Std.Usize) :
@@ -11601,9 +11606,8 @@ def stream.submit_code_batches_loop
   loop
     (fun (visitor1, pending1, pos1, func1, batch_id1) =>
       stream.submit_code_batches_loop.body StreamingSourceInst
-      StreamingVisitorInst module_id source v v1 v2 v3 v4 o v5 o1 v6 v7 v8 v9
-      v10 i i1 code_len config num_funcs visitor1 pending1 pos1 func1
-      batch_id1)
+      StreamingVisitorInst module_id source env code_len config num_funcs
+      visitor1 pending1 pos1 func1 batch_id1)
     (visitor, pending, pos, func, batch_id)
 
 /-- [itasca::stream::submit_code_batches]:
@@ -11611,31 +11615,30 @@ def stream.submit_code_batches_loop
 def stream.submit_code_batches
   {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
   (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
-  (source : S) (env : metadata.Env) (code_len : Std.Usize) (pos : Std.Usize)
-  (config : stream.StreamingConfig) (visitor : V) :
+  (source : S) (env : alloc.sync.Arc metadata.CodeMetadata)
+  (code_len : Std.Usize) (pos : Std.Usize) (config : stream.StreamingConfig)
+  (visitor : V) :
   Result ((core.result.Result (alloc.vec.Vec Std.Usize) error.Error) × V)
   := do
-  let num_funcs := alloc.vec.Vec.len env.func_type_indices
+  let cm ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global env
+  let num_funcs ← metadata.CodeMetadata.num_func_defs cm
   stream.submit_code_batches_loop StreamingSourceInst StreamingVisitorInst
-    module_id source env.types env.imports env.globals env.exports env.elements
-    env.data_count env.declared_funcs env.start env.func_type_indices
-    env.func_types env.table_types env.mem_types env.global_types
-    env.num_imported_funcs env.num_imported_globals code_len config visitor
-    (alloc.vec.Vec.new Std.Usize) pos 0#usize 0#usize num_funcs
+    module_id source env code_len config visitor (alloc.vec.Vec.new Std.Usize)
+    pos 0#usize 0#usize num_funcs
 
 /-- [itasca::stream::read_code_header]:
     Source: 'src/stream.rs' -/
 def stream.read_code_header
   {S : Type} (StreamingSourceInst : stream.StreamingSource S) (source : S)
-  (code_len : Std.Usize) (env : metadata.Env) :
+  (code_len : Std.Usize) (env : metadata.CodeMetadata) :
   Result (core.result.Result Std.Usize error.Error)
   := do
   if code_len = 0#usize
   then
-    let b ← alloc.vec.Vec.is_empty Global env.func_type_indices
-    if b
-    then ok (core.result.Result.Ok 0#usize)
-    else ok (core.result.Result.Err error.Error.MissingCodeSection)
+    let i ← metadata.CodeMetadata.num_func_defs env
+    if i != 0#usize
+    then ok (core.result.Result.Err error.Error.MissingCodeSection)
+    else ok (core.result.Result.Ok 0#usize)
   else
     let i ← limits.MAX_CODE_HEADER_BYTES
     let i1 ← lift (core.cmp.impls.OrdUsize.min code_len i)
@@ -11671,7 +11674,7 @@ def stream.read_code_header
                   then
                     ok (core.result.Result.Err error.Error.SectionSizeMismatch)
                   else
-                    let i3 := alloc.vec.Vec.len env.func_type_indices
+                    let i3 ← metadata.CodeMetadata.num_func_defs env
                     if count != i3
                     then
                       ok (core.result.Result.Err error.Error.FuncCodeMismatch)
@@ -11738,27 +11741,27 @@ impl_def wasm_types.Mut.Insts.CoreCmpPartialEqMut : core.cmp.PartialEq
 /-- [itasca::metadata::const_global]:
     Source: 'src/module.rs' -/
 def metadata.const_global
-  (env : metadata.Env) (idx : Std.U32) :
+  (env : metadata.CodeMetadata) (idx : Std.U32) :
   Result (core.result.Result wasm_types.GlobalType error.Error)
   := do
   let i ← lift (UScalar.cast .Usize idx)
-  let i1 := alloc.vec.Vec.len env.global_types
+  let i1 := alloc.vec.Vec.len env.globals
   if i >= i1
   then ok (core.result.Result.Err (error.Error.UnknownGlobal idx))
   else
     if i >= env.num_imported_globals
     then ok (core.result.Result.Err error.Error.MutableGlobalInConstExpr)
     else
-      let gt ←
+      let g ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          wasm_types.GlobalType) env.global_types i
+          metadata.Global) env.globals i
       let b ←
         core.cmp.PartialEq.ne.trait_default
-          wasm_types.Mut.Insts.CoreCmpPartialEqMut gt.mutability
+          wasm_types.Mut.Insts.CoreCmpPartialEqMut g.gtype.mutability
           wasm_types.Mut.Const
       if b
       then ok (core.result.Result.Err error.Error.MutableGlobalInConstExpr)
-      else ok (core.result.Result.Ok gt)
+      else ok (core.result.Result.Ok g.gtype)
 
 /-- [itasca::metadata::read_expr_end]:
     Source: 'src/module.rs' -/
@@ -11816,7 +11819,7 @@ def metadata.decode_elem_type
 /-- [itasca::metadata::decode_const_expr]:
     Source: 'src/module.rs' -/
 def metadata.decode_const_expr
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata)
   (expected : wasm_types.ValueType) :
   Result (core.result.Result (wasm_types.ConstExpr × Std.Usize) error.Error)
   := do
@@ -12005,7 +12008,7 @@ def metadata.decode_const_expr
       | core.ops.control_flow.ControlFlow.Continue val1 =>
         let (idx, p1) := val1
         let i ← lift (UScalar.cast .Usize idx)
-        let i1 := alloc.vec.Vec.len env.func_types
+        let i1 := alloc.vec.Vec.len env.funcs
         if i >= i1
         then ok (core.result.Result.Err (error.Error.UnknownFunc idx))
         else
@@ -12129,7 +12132,7 @@ def metadata.copy_bytes
 /-- [itasca::metadata::decode_data_segment]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_segment
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
   Result (core.result.Result (metadata.Data × Std.Usize) error.Error)
   := do
   let r ← reader.read_u32_leb data pos
@@ -12168,7 +12171,7 @@ def metadata.decode_data_segment
       | core.ops.control_flow.ControlFlow.Continue val1 =>
         let (memory_idx, next, _) := val1
         let i ← lift (UScalar.cast .Usize memory_idx)
-        let i1 := alloc.vec.Vec.len env.mem_types
+        let i1 := alloc.vec.Vec.len env.memories
         if i >= i1
         then ok (core.result.Result.Err (error.Error.UnknownMemory memory_idx))
         else
@@ -12218,7 +12221,7 @@ def metadata.decode_data_segment
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_data_section_loop.body
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
   (out : alloc.vec.Vec metadata.Data) (q : Std.Usize) (i : Std.U32) :
   Result (ControlFlow ((alloc.vec.Vec metadata.Data) × Std.Usize × Std.U32)
     (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
@@ -12246,7 +12249,7 @@ def metadata.decode_data_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_data_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
   (out : alloc.vec.Vec metadata.Data) (q : Std.Usize) (i : Std.U32) :
   Result (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
     error.Error)
@@ -12259,7 +12262,7 @@ def metadata.decode_data_section_loop
 /-- [itasca::metadata::decode_data_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
   Result (core.result.Result ((alloc.vec.Vec metadata.Data) × Std.Usize)
     error.Error)
   := do
@@ -12720,22 +12723,22 @@ def metadata.read_section_header
 @[rust_loop_body]
 def metadata.validate_tail_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (env : metadata.Env) (v : V)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (v : V)
   (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize) (seen_data : Bool) :
   Result (ControlFlow (V × (alloc.vec.Vec metadata.Data) × Std.Usize × Bool)
-    ((core.result.Result metadata.Tail error.Error) × V))
+    ((core.result.Result (alloc.vec.Vec metadata.Data) error.Error) × V))
   := do
   let i := Slice.len data
   if q >= i
   then
     match env.data_count with
-    | none => ok (done (core.result.Result.Ok { data := segments }, v))
+    | none => ok (done (core.result.Result.Ok segments, v))
     | some count =>
       let i1 ← lift (UScalar.cast .Usize count)
       let i2 := alloc.vec.Vec.len segments
       if i1 != i2
       then ok (done (core.result.Result.Err error.Error.DataCountMismatch, v))
-      else ok (done (core.result.Result.Ok { data := segments }, v))
+      else ok (done (core.result.Result.Ok segments, v))
   else
     let r ← metadata.read_section_header data q
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -12757,7 +12760,8 @@ def metadata.validate_tail_with_loop.body
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              metadata.Tail (core.convert.FromSame error.Error) residual
+              (alloc.vec.Vec metadata.Data) (core.convert.FromSame error.Error)
+              residual
           ok (done (r2, v))
       else
         if id != metadata.SECTION_DATA
@@ -12781,12 +12785,14 @@ def metadata.validate_tail_with_loop.body
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r2 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  metadata.Tail (core.convert.FromSame error.Error) residual
+                  (alloc.vec.Vec metadata.Data) (core.convert.FromSame
+                  error.Error) residual
               ok (done (r2, v))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          metadata.Tail (core.convert.FromSame error.Error) residual
+          (alloc.vec.Vec metadata.Data) (core.convert.FromSame error.Error)
+          residual
       ok (done (r1, v))
 
 /-- [itasca::metadata::validate_tail_with]: loop 0:
@@ -12794,9 +12800,9 @@ def metadata.validate_tail_with_loop.body
 @[rust_loop]
 def metadata.validate_tail_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (env : metadata.Env) (v : V)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (v : V)
   (segments : alloc.vec.Vec metadata.Data) (q : Std.Usize) (seen_data : Bool) :
-  Result ((core.result.Result metadata.Tail error.Error) × V)
+  Result ((core.result.Result (alloc.vec.Vec metadata.Data) error.Error) × V)
   := do
   loop
     (fun (v1, segments1, q1, seen_data1) =>
@@ -12809,129 +12815,18 @@ def metadata.validate_tail_with_loop
 @[reducible]
 def metadata.validate_tail_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) (v : V) :
-  Result ((core.result.Result metadata.Tail error.Error) × V)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) 
+  (v : V) :
+  Result ((core.result.Result (alloc.vec.Vec metadata.Data) error.Error) × V)
   := do
   metadata.validate_tail_with_loop ModuleVisitorInst data env v
     (alloc.vec.Vec.new metadata.Data) pos false
 
-/-- [itasca::stream::validate_remaining]:
-    Source: 'src/stream.rs' -/
-def stream.validate_remaining
-  {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
-  (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
-  (source : S) (env : metadata.Env) (env_len : Std.Usize) (visitor : V) :
-  Result ((core.result.Result Unit error.Error) × V)
-  := do
-  let code_len ← StreamingSourceInst.code_len source
-  let r ← limits.add_offset env_len code_len
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue val =>
-    let r1 ← stream.read_code_header StreamingSourceInst source code_len env
-    let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-    match cf1 with
-    | core.ops.control_flow.ControlFlow.Continue val1 =>
-      let (r2, visitor1) ← StreamingVisitorInst.environment_ready visitor env
-      let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
-      match cf2 with
-      | core.ops.control_flow.ControlFlow.Continue val2 =>
-        if val2.batch_bytes = 0#usize
-        then ok (core.result.Result.Err error.Error.Host, visitor1)
-        else
-          if val2.max_batches = 0#usize
-          then ok (core.result.Result.Err error.Error.Host, visitor1)
-          else
-            let (r3, visitor2) ←
-              stream.submit_code_batches StreamingSourceInst
-                StreamingVisitorInst module_id source env code_len val1 val2
-                visitor1
-            let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
-            match cf3 with
-            | core.ops.control_flow.ControlFlow.Continue val3 =>
-              let (r4, visitor3) ← StreamingVisitorInst.code_end visitor2
-              let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-              match cf4 with
-              | core.ops.control_flow.ControlFlow.Continue _ =>
-                let r5 ← StreamingSourceInst.tail source
-                let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
-                match cf5 with
-                | core.ops.control_flow.ControlFlow.Continue val4 =>
-                  let i := Slice.len val4
-                  let r6 ← limits.add_offset val i
-                  let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
-                  match cf6 with
-                  | core.ops.control_flow.ControlFlow.Continue _ =>
-                    let visitor4 ←
-                      StreamingVisitorInst.custom_region visitor3
-                        stream.StreamingRegion.Tail
-                    let (r7, visitor5) ←
-                      metadata.validate_tail_with
-                        StreamingVisitorInst.metadataModuleVisitorInst val4
-                        0#usize env visitor4
-                    let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
-                    match cf7 with
-                    | core.ops.control_flow.ControlFlow.Continue val5 =>
-                      let (r8, visitor6) ←
-                        StreamingVisitorInst.tail_ready visitor5 val5
-                      let cf8 ← core.result.Result.Insts.CoreOpsTry.branch r8
-                      match cf8 with
-                      | core.ops.control_flow.ControlFlow.Continue _ =>
-                        let (r9, visitor7, _) ←
-                          stream.retire_all_code_batches StreamingVisitorInst
-                            module_id visitor6 val3
-                        ok (r9, visitor7)
-                      | core.ops.control_flow.ControlFlow.Break residual =>
-                        let r9 ←
-                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                            Unit (core.convert.FromSame error.Error) residual
-                        ok (r9, visitor6)
-                    | core.ops.control_flow.ControlFlow.Break residual =>
-                      let r8 ←
-                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                          Unit (core.convert.FromSame error.Error) residual
-                      ok (r8, visitor5)
-                  | core.ops.control_flow.ControlFlow.Break residual =>
-                    let r7 ←
-                      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                        Unit (core.convert.FromSame error.Error) residual
-                    ok (r7, visitor3)
-                | core.ops.control_flow.ControlFlow.Break residual =>
-                  let r6 ←
-                    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      Unit (core.convert.FromSame error.Error) residual
-                  ok (r6, visitor3)
-              | core.ops.control_flow.ControlFlow.Break residual =>
-                let r5 ←
-                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                    Unit (core.convert.FromSame error.Error) residual
-                ok (r5, visitor3)
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r4 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Unit (core.convert.FromSame error.Error) residual
-              ok (r4, visitor2)
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r3 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.Error) residual
-        ok (r3, visitor1)
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      let r2 ←
-        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame error.Error) residual
-      ok (r2, visitor)
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    let r1 ←
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame error.Error) residual
-    ok (r1, visitor)
-
 /-- [itasca::metadata::decode_data_count]:
     Source: 'src/module.rs' -/
 def metadata.decode_data_count
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -12945,39 +12840,11 @@ def metadata.decode_data_count
         Std.Usize error.Error.Insts.CoreConvertFromOpError residual
     ok (r1, env)
 
-/-- [itasca::metadata::decode_element_initializer]:
-    Source: 'src/module.rs' -/
-def metadata.decode_element_initializer
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
-  (elem : wasm_types.ElemType) (expressions : Bool) :
-  Result (core.result.Result (wasm_types.ConstExpr × Std.Usize) error.Error)
-  := do
-  if expressions
-  then
-    let vt ← wasm_types.ElemType.value_type elem
-    metadata.decode_const_expr data pos env vt
-  else
-    let r ← reader.read_u32_leb data pos
-    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-    match cf with
-    | core.ops.control_flow.ControlFlow.Continue val =>
-      let (index, next) := val
-      let i ← lift (UScalar.cast .Usize index)
-      let i1 := alloc.vec.Vec.len env.func_types
-      if i >= i1
-      then ok (core.result.Result.Err (error.Error.UnknownFunc index))
-      else
-        ok (core.result.Result.Ok (wasm_types.ConstExpr.RefFunc index, next))
-    | core.ops.control_flow.ControlFlow.Break residual =>
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        (wasm_types.ConstExpr × Std.Usize)
-        error.Error.Insts.CoreConvertFromOpError residual
-
 /-- [itasca::metadata::declare_initializer]:
     Source: 'src/module.rs' -/
 def metadata.declare_initializer
-  (env : metadata.Env) (init : wasm_types.ConstExpr) :
-  Result metadata.Env
+  (env : metadata.CodeMetadata) (init : wasm_types.ConstExpr) :
+  Result metadata.CodeMetadata
   := do
   match init with
   | wasm_types.ConstExpr.I32 _ => ok env
@@ -12987,82 +12854,150 @@ def metadata.declare_initializer
   | wasm_types.ConstExpr.V128 _ _ => ok env
   | wasm_types.ConstExpr.RefNull _ => ok env
   | wasm_types.ConstExpr.RefFunc index =>
-    let v ← alloc.vec.Vec.push env.declared_funcs index
-    ok { env with declared_funcs := v }
+    let i ← lift (UScalar.cast .Usize index)
+    let (fd, index_mut_back) ←
+      alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+        metadata.FuncDesc) env.funcs i
+    let v := index_mut_back { fd with can_ref_func := true }
+    ok { env with funcs := v }
   | wasm_types.ConstExpr.GlobalGet _ => ok env
 
 /-- [itasca::metadata::decode_element_initializers]: loop body 0:
     Source: 'src/module.rs' -/
 @[rust_loop_body]
-def metadata.decode_element_initializers_loop.body
-  (data : Slice Std.U8) (elem : wasm_types.ElemType) (expressions : Bool)
-  (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × (alloc.vec.Vec
-    wasm_types.ConstExpr) × Std.U32) ((core.result.Result ((alloc.vec.Vec
-    wasm_types.ConstExpr) × Std.Usize) error.Error) × metadata.Env))
+def metadata.decode_element_initializers_loop0.body
+  (data : Slice Std.U8) (elem : wasm_types.ElemType) (count : Std.U32)
+  (env : metadata.CodeMetadata) (q : Std.Usize) (i : Std.U32)
+  (values : alloc.vec.Vec wasm_types.ConstExpr) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32 ×
+    (alloc.vec.Vec wasm_types.ConstExpr)) ((core.result.Result
+    (metadata.ElementInit × Std.Usize) error.Error) × metadata.CodeMetadata))
   := do
-  if i >= count
-  then ok (done (core.result.Result.Ok (init, q), env))
-  else
-    let r ← metadata.decode_element_initializer data q env elem expressions
+  if i < count
+  then
+    let vt ← wasm_types.ElemType.value_type elem
+    let r ← metadata.decode_const_expr data q env vt
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (value, next) := val
       let env1 ← metadata.declare_initializer env value
-      let init1 ← alloc.vec.Vec.push init value
+      let values1 ← alloc.vec.Vec.push values value
       let i1 ← i + 1#u32
-      ok (cont (env1, next, init1, i1))
+      ok (cont (env1, next, i1, values1))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          ((alloc.vec.Vec wasm_types.ConstExpr) × Std.Usize)
-          (core.convert.FromSame error.Error) residual
+          (metadata.ElementInit × Std.Usize) (core.convert.FromSame
+          error.Error) residual
       ok (done (r1, env))
+  else
+    ok (done (core.result.Result.Ok (metadata.ElementInit.Expressions values,
+      q), env))
 
 /-- [itasca::metadata::decode_element_initializers]: loop 0:
     Source: 'src/module.rs' -/
 @[rust_loop]
-def metadata.decode_element_initializers_loop
-  (data : Slice Std.U8) (env : metadata.Env) (elem : wasm_types.ElemType)
-  (expressions : Bool) (count : Std.U32) (q : Std.Usize)
-  (init : alloc.vec.Vec wasm_types.ConstExpr) (i : Std.U32) :
-  Result ((core.result.Result ((alloc.vec.Vec wasm_types.ConstExpr) ×
-    Std.Usize) error.Error) × metadata.Env)
+def metadata.decode_element_initializers_loop0
+  (data : Slice Std.U8) (env : metadata.CodeMetadata)
+  (elem : wasm_types.ElemType) (count : Std.U32) (q : Std.Usize) (i : Std.U32)
+  (values : alloc.vec.Vec wasm_types.ConstExpr) :
+  Result ((core.result.Result (metadata.ElementInit × Std.Usize) error.Error)
+    × metadata.CodeMetadata)
   := do
   loop
-    (fun (env1, q1, init1, i1) =>
-      metadata.decode_element_initializers_loop.body data elem expressions
-      count env1 q1 init1 i1)
-    (env, q, init, i)
+    (fun (env1, q1, i1, values1) =>
+      metadata.decode_element_initializers_loop0.body data elem count env1 q1
+      i1 values1)
+    (env, q, i, values)
+
+/-- [itasca::metadata::decode_element_initializers]: loop body 1:
+    Source: 'src/module.rs' -/
+@[rust_loop_body]
+def metadata.decode_element_initializers_loop1.body
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) (indices : alloc.vec.Vec Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32 ×
+    (alloc.vec.Vec Std.U32)) ((core.result.Result (metadata.ElementInit ×
+    Std.Usize) error.Error) × metadata.CodeMetadata))
+  := do
+  if i < count
+  then
+    let r ← reader.read_u32_leb data q
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let (index, next) := val
+      let i1 ← lift (UScalar.cast .Usize index)
+      let i2 := alloc.vec.Vec.len env.funcs
+      if i1 >= i2
+      then
+        ok (done (core.result.Result.Err (error.Error.UnknownFunc index), env))
+      else
+        let i3 ← lift (UScalar.cast .Usize index)
+        let (fd, index_mut_back) ←
+          alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+            metadata.FuncDesc) env.funcs i3
+        let indices1 ← alloc.vec.Vec.push indices index
+        let i4 ← i + 1#u32
+        let v := index_mut_back { fd with can_ref_func := true }
+        ok (cont ({ env with funcs := v }, next, i4, indices1))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (metadata.ElementInit × Std.Usize)
+          error.Error.Insts.CoreConvertFromOpError residual
+      ok (done (r1, env))
+  else
+    ok (done (core.result.Result.Ok (metadata.ElementInit.Functions indices,
+      q), env))
+
+/-- [itasca::metadata::decode_element_initializers]: loop 1:
+    Source: 'src/module.rs' -/
+@[rust_loop]
+def metadata.decode_element_initializers_loop1
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) (indices : alloc.vec.Vec Std.U32) :
+  Result ((core.result.Result (metadata.ElementInit × Std.Usize) error.Error)
+    × metadata.CodeMetadata)
+  := do
+  loop
+    (fun (env1, q1, i1, indices1) =>
+      metadata.decode_element_initializers_loop1.body data count env1 q1 i1
+      indices1)
+    (env, q, i, indices)
 
 /-- [itasca::metadata::decode_element_initializers]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_initializers
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata)
   (elem : wasm_types.ElemType) (expressions : Bool) :
-  Result ((core.result.Result ((alloc.vec.Vec wasm_types.ConstExpr) ×
-    Std.Usize) error.Error) × metadata.Env)
+  Result ((core.result.Result (metadata.ElementInit × Std.Usize) error.Error)
+    × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
   | core.ops.control_flow.ControlFlow.Continue val =>
-    let (count, p) := val
-    metadata.decode_element_initializers_loop data env elem expressions count p
-      (alloc.vec.Vec.new wasm_types.ConstExpr) 0#u32
+    let (count, q) := val
+    if expressions
+    then
+      metadata.decode_element_initializers_loop0 data env elem count q 0#u32
+        (alloc.vec.Vec.new wasm_types.ConstExpr)
+    else
+      metadata.decode_element_initializers_loop1 data env count q 0#u32
+        (alloc.vec.Vec.new Std.U32)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        ((alloc.vec.Vec wasm_types.ConstExpr) × Std.Usize)
+        (metadata.ElementInit × Std.Usize)
         error.Error.Insts.CoreConvertFromOpError residual
     ok (r1, env)
 
 /-- [itasca::metadata::decode_element_header]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_header
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
   Result (core.result.Result (metadata.ElementMode × wasm_types.ElemType ×
     Bool × Std.Usize) error.Error)
   := do
@@ -13085,7 +13020,7 @@ def metadata.decode_element_header
           | core.ops.control_flow.ControlFlow.Continue val1 =>
             let (index, next) := val1
             let i1 ← lift (UScalar.cast .Usize index)
-            let i2 := alloc.vec.Vec.len env.table_types
+            let i2 := alloc.vec.Vec.len env.tables
             if i1 >= i2
             then ok (core.result.Result.Err (error.Error.UnknownTable index))
             else
@@ -13099,7 +13034,7 @@ def metadata.decode_element_header
                 if tag = 0#u32
                 then
                   let i3 ← lift (UScalar.cast .Usize index)
-                  let i4 := alloc.vec.Vec.len env.table_types
+                  let i4 := alloc.vec.Vec.len env.tables
                   if i3 >= i4
                   then
                     ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13108,11 +13043,11 @@ def metadata.decode_element_header
                     let vt ←
                       wasm_types.ElemType.value_type
                         wasm_types.ElemType.FuncRef
-                    let tt ←
+                    let td ←
                       alloc.vec.Vec.index
                         (core.slice.index.SliceIndexUsizeSlice
-                        wasm_types.TableType) env.table_types i3
-                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                        metadata.TableDesc) env.tables i3
+                    let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                     let b ←
                       core.cmp.PartialEq.ne.trait_default
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
@@ -13128,7 +13063,7 @@ def metadata.decode_element_header
                   if tag = 4#u32
                   then
                     let i3 ← lift (UScalar.cast .Usize index)
-                    let i4 := alloc.vec.Vec.len env.table_types
+                    let i4 := alloc.vec.Vec.len env.tables
                     if i3 >= i4
                     then
                       ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13137,11 +13072,11 @@ def metadata.decode_element_header
                       let vt ←
                         wasm_types.ElemType.value_type
                           wasm_types.ElemType.FuncRef
-                      let tt ←
+                      let td ←
                         alloc.vec.Vec.index
                           (core.slice.index.SliceIndexUsizeSlice
-                          wasm_types.TableType) env.table_types i3
-                      let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          metadata.TableDesc) env.tables i3
+                      let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                       let b ←
                         core.cmp.PartialEq.ne.trait_default
                           wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13163,18 +13098,18 @@ def metadata.decode_element_header
                       | core.ops.control_flow.ControlFlow.Continue val3 =>
                         let (ty, next2) := val3
                         let i3 ← lift (UScalar.cast .Usize index)
-                        let i4 := alloc.vec.Vec.len env.table_types
+                        let i4 := alloc.vec.Vec.len env.tables
                         if i3 >= i4
                         then
                           ok (core.result.Result.Err (error.Error.UnknownTable
                             index))
                         else
                           let vt ← wasm_types.ElemType.value_type ty
-                          let tt ←
+                          let td ←
                             alloc.vec.Vec.index
                               (core.slice.index.SliceIndexUsizeSlice
-                              wasm_types.TableType) env.table_types i3
-                          let vt1 ← wasm_types.ElemType.value_type tt.elem
+                              metadata.TableDesc) env.tables i3
+                          let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                           let b ←
                             core.cmp.PartialEq.ne.trait_default
                               wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13204,7 +13139,7 @@ def metadata.decode_element_header
                             kind))
                         else
                           let i3 ← lift (UScalar.cast .Usize index)
-                          let i4 := alloc.vec.Vec.len env.table_types
+                          let i4 := alloc.vec.Vec.len env.tables
                           if i3 >= i4
                           then
                             ok (core.result.Result.Err
@@ -13213,11 +13148,12 @@ def metadata.decode_element_header
                             let vt ←
                               wasm_types.ElemType.value_type
                                 wasm_types.ElemType.FuncRef
-                            let tt ←
+                            let td ←
                               alloc.vec.Vec.index
                                 (core.slice.index.SliceIndexUsizeSlice
-                                wasm_types.TableType) env.table_types i3
-                            let vt1 ← wasm_types.ElemType.value_type tt.elem
+                                metadata.TableDesc) env.tables i3
+                            let vt1 ←
+                              wasm_types.ElemType.value_type td.ty.elem
                             let b ←
                               core.cmp.PartialEq.ne.trait_default
                                 wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13253,7 +13189,7 @@ def metadata.decode_element_header
             | core.ops.control_flow.ControlFlow.Continue val1 =>
               let (index, next) := val1
               let i1 ← lift (UScalar.cast .Usize index)
-              let i2 := alloc.vec.Vec.len env.table_types
+              let i2 := alloc.vec.Vec.len env.tables
               if i1 >= i2
               then ok (core.result.Result.Err (error.Error.UnknownTable index))
               else
@@ -13267,7 +13203,7 @@ def metadata.decode_element_header
                   if tag = 0#u32
                   then
                     let i3 ← lift (UScalar.cast .Usize index)
-                    let i4 := alloc.vec.Vec.len env.table_types
+                    let i4 := alloc.vec.Vec.len env.tables
                     if i3 >= i4
                     then
                       ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13276,11 +13212,11 @@ def metadata.decode_element_header
                       let vt ←
                         wasm_types.ElemType.value_type
                           wasm_types.ElemType.FuncRef
-                      let tt ←
+                      let td ←
                         alloc.vec.Vec.index
                           (core.slice.index.SliceIndexUsizeSlice
-                          wasm_types.TableType) env.table_types i3
-                      let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          metadata.TableDesc) env.tables i3
+                      let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                       let b ←
                         core.cmp.PartialEq.ne.trait_default
                           wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13297,7 +13233,7 @@ def metadata.decode_element_header
                     if tag = 4#u32
                     then
                       let i3 ← lift (UScalar.cast .Usize index)
-                      let i4 := alloc.vec.Vec.len env.table_types
+                      let i4 := alloc.vec.Vec.len env.tables
                       if i3 >= i4
                       then
                         ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13306,11 +13242,11 @@ def metadata.decode_element_header
                         let vt ←
                           wasm_types.ElemType.value_type
                             wasm_types.ElemType.FuncRef
-                        let tt ←
+                        let td ←
                           alloc.vec.Vec.index
                             (core.slice.index.SliceIndexUsizeSlice
-                            wasm_types.TableType) env.table_types i3
-                        let vt1 ← wasm_types.ElemType.value_type tt.elem
+                            metadata.TableDesc) env.tables i3
+                        let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                         let b ←
                           core.cmp.PartialEq.ne.trait_default
                             wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13333,18 +13269,19 @@ def metadata.decode_element_header
                         | core.ops.control_flow.ControlFlow.Continue val3 =>
                           let (ty, next2) := val3
                           let i3 ← lift (UScalar.cast .Usize index)
-                          let i4 := alloc.vec.Vec.len env.table_types
+                          let i4 := alloc.vec.Vec.len env.tables
                           if i3 >= i4
                           then
                             ok (core.result.Result.Err
                               (error.Error.UnknownTable index))
                           else
                             let vt ← wasm_types.ElemType.value_type ty
-                            let tt ←
+                            let td ←
                               alloc.vec.Vec.index
                                 (core.slice.index.SliceIndexUsizeSlice
-                                wasm_types.TableType) env.table_types i3
-                            let vt1 ← wasm_types.ElemType.value_type tt.elem
+                                metadata.TableDesc) env.tables i3
+                            let vt1 ←
+                              wasm_types.ElemType.value_type td.ty.elem
                             let b ←
                               core.cmp.PartialEq.ne.trait_default
                                 wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13375,7 +13312,7 @@ def metadata.decode_element_header
                               kind))
                           else
                             let i3 ← lift (UScalar.cast .Usize index)
-                            let i4 := alloc.vec.Vec.len env.table_types
+                            let i4 := alloc.vec.Vec.len env.tables
                             if i3 >= i4
                             then
                               ok (core.result.Result.Err
@@ -13384,12 +13321,12 @@ def metadata.decode_element_header
                               let vt ←
                                 wasm_types.ElemType.value_type
                                   wasm_types.ElemType.FuncRef
-                              let tt ←
+                              let td ←
                                 alloc.vec.Vec.index
                                   (core.slice.index.SliceIndexUsizeSlice
-                                  wasm_types.TableType) env.table_types i3
+                                  metadata.TableDesc) env.tables i3
                               let vt1 ←
-                                wasm_types.ElemType.value_type tt.elem
+                                wasm_types.ElemType.value_type td.ty.elem
                               let b ←
                                 core.cmp.PartialEq.ne.trait_default
                                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13418,7 +13355,7 @@ def metadata.decode_element_header
                 Std.Usize) error.Error.Insts.CoreConvertFromOpError residual
           else
             let i1 ← lift (UScalar.cast .Usize 0#u32)
-            let i2 := alloc.vec.Vec.len env.table_types
+            let i2 := alloc.vec.Vec.len env.tables
             if i1 >= i2
             then ok (core.result.Result.Err (error.Error.UnknownTable 0#u32))
             else
@@ -13431,7 +13368,7 @@ def metadata.decode_element_header
                 if tag = 0#u32
                 then
                   let i3 ← lift (UScalar.cast .Usize 0#u32)
-                  let i4 := alloc.vec.Vec.len env.table_types
+                  let i4 := alloc.vec.Vec.len env.tables
                   if i3 >= i4
                   then
                     ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13440,11 +13377,11 @@ def metadata.decode_element_header
                     let vt ←
                       wasm_types.ElemType.value_type
                         wasm_types.ElemType.FuncRef
-                    let tt ←
+                    let td ←
                       alloc.vec.Vec.index
                         (core.slice.index.SliceIndexUsizeSlice
-                        wasm_types.TableType) env.table_types i3
-                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                        metadata.TableDesc) env.tables i3
+                    let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                     let b ←
                       core.cmp.PartialEq.ne.trait_default
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
@@ -13460,7 +13397,7 @@ def metadata.decode_element_header
                   if tag = 4#u32
                   then
                     let i3 ← lift (UScalar.cast .Usize 0#u32)
-                    let i4 := alloc.vec.Vec.len env.table_types
+                    let i4 := alloc.vec.Vec.len env.tables
                     if i3 >= i4
                     then
                       ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13469,11 +13406,11 @@ def metadata.decode_element_header
                       let vt ←
                         wasm_types.ElemType.value_type
                           wasm_types.ElemType.FuncRef
-                      let tt ←
+                      let td ←
                         alloc.vec.Vec.index
                           (core.slice.index.SliceIndexUsizeSlice
-                          wasm_types.TableType) env.table_types i3
-                      let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          metadata.TableDesc) env.tables i3
+                      let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                       let b ←
                         core.cmp.PartialEq.ne.trait_default
                           wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13495,18 +13432,18 @@ def metadata.decode_element_header
                       | core.ops.control_flow.ControlFlow.Continue val2 =>
                         let (ty, next1) := val2
                         let i3 ← lift (UScalar.cast .Usize 0#u32)
-                        let i4 := alloc.vec.Vec.len env.table_types
+                        let i4 := alloc.vec.Vec.len env.tables
                         if i3 >= i4
                         then
                           ok (core.result.Result.Err (error.Error.UnknownTable
                             0#u32))
                         else
                           let vt ← wasm_types.ElemType.value_type ty
-                          let tt ←
+                          let td ←
                             alloc.vec.Vec.index
                               (core.slice.index.SliceIndexUsizeSlice
-                              wasm_types.TableType) env.table_types i3
-                          let vt1 ← wasm_types.ElemType.value_type tt.elem
+                              metadata.TableDesc) env.tables i3
+                          let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                           let b ←
                             core.cmp.PartialEq.ne.trait_default
                               wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13536,7 +13473,7 @@ def metadata.decode_element_header
                             kind))
                         else
                           let i3 ← lift (UScalar.cast .Usize 0#u32)
-                          let i4 := alloc.vec.Vec.len env.table_types
+                          let i4 := alloc.vec.Vec.len env.tables
                           if i3 >= i4
                           then
                             ok (core.result.Result.Err
@@ -13545,11 +13482,12 @@ def metadata.decode_element_header
                             let vt ←
                               wasm_types.ElemType.value_type
                                 wasm_types.ElemType.FuncRef
-                            let tt ←
+                            let td ←
                               alloc.vec.Vec.index
                                 (core.slice.index.SliceIndexUsizeSlice
-                                wasm_types.TableType) env.table_types i3
-                            let vt1 ← wasm_types.ElemType.value_type tt.elem
+                                metadata.TableDesc) env.tables i3
+                            let vt1 ←
+                              wasm_types.ElemType.value_type td.ty.elem
                             let b ←
                               core.cmp.PartialEq.ne.trait_default
                                 wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13585,17 +13523,17 @@ def metadata.decode_element_header
           match mode with
           | metadata.ElementMode.Active table_idx _ =>
             let i1 ← lift (UScalar.cast .Usize table_idx)
-            let i2 := alloc.vec.Vec.len env.table_types
+            let i2 := alloc.vec.Vec.len env.tables
             if i1 >= i2
             then
               ok (core.result.Result.Err (error.Error.UnknownTable table_idx))
             else
               let vt ←
                 wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef
-              let tt ←
+              let td ←
                 alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                  wasm_types.TableType) env.table_types i1
-              let vt1 ← wasm_types.ElemType.value_type tt.elem
+                  metadata.TableDesc) env.tables i1
+              let vt1 ← wasm_types.ElemType.value_type td.ty.elem
               let b ←
                 core.cmp.PartialEq.ne.trait_default
                   wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt vt1
@@ -13616,7 +13554,7 @@ def metadata.decode_element_header
             match mode with
             | metadata.ElementMode.Active table_idx _ =>
               let i1 ← lift (UScalar.cast .Usize table_idx)
-              let i2 := alloc.vec.Vec.len env.table_types
+              let i2 := alloc.vec.Vec.len env.tables
               if i1 >= i2
               then
                 ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13624,10 +13562,10 @@ def metadata.decode_element_header
               else
                 let vt ←
                   wasm_types.ElemType.value_type wasm_types.ElemType.FuncRef
-                let tt ←
+                let td ←
                   alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-                    wasm_types.TableType) env.table_types i1
-                let vt1 ← wasm_types.ElemType.value_type tt.elem
+                    metadata.TableDesc) env.tables i1
+                let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                 let b ←
                   core.cmp.PartialEq.ne.trait_default
                     wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt vt1
@@ -13653,18 +13591,18 @@ def metadata.decode_element_header
                 match mode with
                 | metadata.ElementMode.Active table_idx _ =>
                   let i1 ← lift (UScalar.cast .Usize table_idx)
-                  let i2 := alloc.vec.Vec.len env.table_types
+                  let i2 := alloc.vec.Vec.len env.tables
                   if i1 >= i2
                   then
                     ok (core.result.Result.Err (error.Error.UnknownTable
                       table_idx))
                   else
                     let vt ← wasm_types.ElemType.value_type ty
-                    let tt ←
+                    let td ←
                       alloc.vec.Vec.index
                         (core.slice.index.SliceIndexUsizeSlice
-                        wasm_types.TableType) env.table_types i1
-                    let vt1 ← wasm_types.ElemType.value_type tt.elem
+                        metadata.TableDesc) env.tables i1
+                    let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                     let b ←
                       core.cmp.PartialEq.ne.trait_default
                         wasm_types.ValueType.Insts.CoreCmpPartialEqValueType vt
@@ -13696,7 +13634,7 @@ def metadata.decode_element_header
                   match mode with
                   | metadata.ElementMode.Active table_idx _ =>
                     let i1 ← lift (UScalar.cast .Usize table_idx)
-                    let i2 := alloc.vec.Vec.len env.table_types
+                    let i2 := alloc.vec.Vec.len env.tables
                     if i1 >= i2
                     then
                       ok (core.result.Result.Err (error.Error.UnknownTable
@@ -13705,11 +13643,11 @@ def metadata.decode_element_header
                       let vt ←
                         wasm_types.ElemType.value_type
                           wasm_types.ElemType.FuncRef
-                      let tt ←
+                      let td ←
                         alloc.vec.Vec.index
                           (core.slice.index.SliceIndexUsizeSlice
-                          wasm_types.TableType) env.table_types i1
-                      let vt1 ← wasm_types.ElemType.value_type tt.elem
+                          metadata.TableDesc) env.tables i1
+                      let vt1 ← wasm_types.ElemType.value_type td.ty.elem
                       let b ←
                         core.cmp.PartialEq.ne.trait_default
                           wasm_types.ValueType.Insts.CoreCmpPartialEqValueType
@@ -13740,9 +13678,9 @@ def metadata.decode_element_header
 /-- [itasca::metadata::decode_element]:
     Source: 'src/module.rs' -/
 def metadata.decode_element
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
   Result ((core.result.Result (metadata.Element × Std.Usize) error.Error) ×
-    metadata.Env)
+    metadata.CodeMetadata)
   := do
   let r ← metadata.decode_element_header data pos env
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -13773,35 +13711,41 @@ def metadata.decode_element
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_element_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (data : Slice Std.U8) (count : Std.U32)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) (q : Std.Usize)
   (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  Result (ControlFlow ((metadata.ModuleMetadata metadata.CodeMetadata) ×
+    Std.Usize × Std.U32) ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata)))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
   else
-    let (r, env1) ← metadata.decode_element data q env
+    let (r, cm) ← metadata.decode_element data q env.code
     let cf ← core.result.Result.Insts.CoreOpsTry.branch r
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (element, next) := val
-      let v ← alloc.vec.Vec.push env1.elements element
+      let v ← alloc.vec.Vec.push cm.elem_segment_types element.elem
+      let v1 ← alloc.vec.Vec.push env.elements element
       let i1 ← i + 1#u32
-      ok (cont ({ env1 with elements := v }, next, i1))
+      ok (cont
+        ({ env with code := { cm with elem_segment_types := v }, elements := v1
+         }, next, i1))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
           Std.Usize (core.convert.FromSame error.Error) residual
-      ok (done (r1, env1))
+      ok (done (r1, { env with code := cm }))
 
 /-- [itasca::metadata::decode_element_section]: loop 0:
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_element_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_element_section_loop.body data count
@@ -13811,8 +13755,10 @@ def metadata.decode_element_section_loop
 /-- [itasca::metadata::decode_element_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_element_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -13829,8 +13775,8 @@ def metadata.decode_element_section
 /-- [itasca::metadata::decode_start_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_start_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -13838,19 +13784,29 @@ def metadata.decode_start_section
   | core.ops.control_flow.ControlFlow.Continue val =>
     let (idx, p) := val
     let i ← lift (UScalar.cast .Usize idx)
-    let i1 := alloc.vec.Vec.len env.func_types
+    let i1 := alloc.vec.Vec.len env.funcs
     if i >= i1
     then ok (core.result.Result.Err (error.Error.UnknownFunc idx), env)
     else
-      let ft ←
+      let fd ←
         alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-          wasm_types.FuncType) env.func_types i
-      let b ← alloc.vec.Vec.is_empty Global ft.params
+          metadata.FuncDesc) env.funcs i
+      let i2 ← lift (UScalar.cast .Usize fd.type_index)
+      let signature ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          wasm_types.FuncType) env.types i2
+      let b ← alloc.vec.Vec.is_empty Global signature.params
       if b
       then
-        let b1 ← alloc.vec.Vec.is_empty Global ft.results
+        let b1 ← alloc.vec.Vec.is_empty Global signature.results
         if b1
-        then ok (core.result.Result.Ok p, { env with start := (some idx) })
+        then
+          let (fd1, index_mut_back) ←
+            alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+              metadata.FuncDesc) env.funcs i
+          let v := index_mut_back { fd1 with eager := true }
+          ok (core.result.Result.Ok p,
+            { env with funcs := v, start := (some idx) })
         else ok (core.result.Result.Err error.Error.InvalidStartType, env)
       else ok (core.result.Result.Err error.Error.InvalidStartType, env)
   | core.ops.control_flow.ControlFlow.Break residual =>
@@ -13859,35 +13815,64 @@ def metadata.decode_start_section
         Std.Usize error.Error.Insts.CoreConvertFromOpError residual
     ok (r1, env)
 
-/-- [itasca::metadata::export_desc]:
+/-- [itasca::metadata::mark_exported]:
     Source: 'src/module.rs' -/
-def metadata.export_desc
-  (env : metadata.Env) (kind : Std.U8) (idx : Std.U32) :
-  Result (core.result.Result metadata.ExportDesc error.Error)
+def metadata.mark_exported
+  (env : metadata.CodeMetadata) (kind : Std.U8) (idx : Std.U32) :
+  Result ((core.result.Result metadata.ExportDesc error.Error) ×
+    metadata.CodeMetadata)
   := do
   let i ← lift (UScalar.cast .Usize idx)
   match kind with
   | 0#uscalar =>
-    let i1 := alloc.vec.Vec.len env.func_types
+    let i1 := alloc.vec.Vec.len env.funcs
     if i >= i1
-    then ok (core.result.Result.Err (error.Error.UnknownFunc idx))
-    else ok (core.result.Result.Ok (metadata.ExportDesc.Func idx))
+    then ok (core.result.Result.Err (error.Error.UnknownFunc idx), env)
+    else
+      let (fd, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          metadata.FuncDesc) env.funcs i
+      let v := index_mut_back { fd with can_ref_func := true }
+      let (fd1, index_mut_back1) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          metadata.FuncDesc) v i
+      let v1 := index_mut_back1 { fd1 with eager := true }
+      ok (core.result.Result.Ok (metadata.ExportDesc.Func idx),
+        { env with funcs := v1 })
   | 1#uscalar =>
-    let i1 := alloc.vec.Vec.len env.table_types
+    let i1 := alloc.vec.Vec.len env.tables
     if i >= i1
-    then ok (core.result.Result.Err (error.Error.UnknownTable idx))
-    else ok (core.result.Result.Ok (metadata.ExportDesc.Table idx))
+    then ok (core.result.Result.Err (error.Error.UnknownTable idx), env)
+    else
+      let (td, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          metadata.TableDesc) env.tables i
+      let v := index_mut_back { td with is_exported := true }
+      ok (core.result.Result.Ok (metadata.ExportDesc.Table idx),
+        { env with tables := v })
   | 2#uscalar =>
-    let i1 := alloc.vec.Vec.len env.mem_types
+    let i1 := alloc.vec.Vec.len env.memories
     if i >= i1
-    then ok (core.result.Result.Err (error.Error.UnknownMemory idx))
-    else ok (core.result.Result.Ok (metadata.ExportDesc.Memory idx))
+    then ok (core.result.Result.Err (error.Error.UnknownMemory idx), env)
+    else
+      let (md, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          metadata.MemoryDesc) env.memories i
+      let v := index_mut_back { md with is_exported := true }
+      ok (core.result.Result.Ok (metadata.ExportDesc.Memory idx),
+        { env with memories := v })
   | 3#uscalar =>
-    let i1 := alloc.vec.Vec.len env.global_types
+    let i1 := alloc.vec.Vec.len env.globals
     if i >= i1
-    then ok (core.result.Result.Err (error.Error.UnknownGlobal idx))
-    else ok (core.result.Result.Ok (metadata.ExportDesc.Global idx))
-  | _ => ok (core.result.Result.Err (error.Error.InvalidType kind))
+    then ok (core.result.Result.Err (error.Error.UnknownGlobal idx), env)
+    else
+      let (g, index_mut_back) ←
+        alloc.vec.Vec.index_mut (core.slice.index.SliceIndexUsizeSlice
+          metadata.Global) env.globals i
+      let v := index_mut_back { g with is_exported := true }
+      ok (core.result.Result.Ok (metadata.ExportDesc.Global idx),
+        { env with globals := v })
+  | _ => ok (core.result.Result.Err (error.Error.InvalidType kind), env)
 
 /-- [itasca::metadata::names_equal]: loop body 0:
     Source: 'src/module.rs' -/
@@ -13930,7 +13915,8 @@ def metadata.names_equal
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.export_name_taken_loop.body
-  (env : metadata.Env) («name» : Slice Std.U8) (i : Std.Usize) :
+  (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  («name» : Slice Std.U8) (i : Std.Usize) :
   Result (ControlFlow Std.Usize Bool)
   := do
   let i1 := alloc.vec.Vec.len env.exports
@@ -13951,7 +13937,8 @@ def metadata.export_name_taken_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.export_name_taken_loop
-  (env : metadata.Env) («name» : Slice Std.U8) (i : Std.Usize) :
+  (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  («name» : Slice Std.U8) (i : Std.Usize) :
   Result Bool
   := do
   loop
@@ -13962,17 +13949,22 @@ def metadata.export_name_taken_loop
     Source: 'src/module.rs' -/
 @[reducible]
 def metadata.export_name_taken
-  (env : metadata.Env) («name» : Slice Std.U8) : Result Bool := do
+  (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  («name» : Slice Std.U8) :
+  Result Bool
+  := do
   metadata.export_name_taken_loop env «name» 0#usize
 
 /-- [itasca::metadata::decode_export_section]: loop body 0:
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_export_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (data : Slice Std.U8) (count : Std.U32)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) (q : Std.Usize)
   (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  Result (ControlFlow ((metadata.ModuleMetadata metadata.CodeMetadata) ×
+    Std.Usize × Std.U32) ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata)))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -13998,29 +13990,20 @@ def metadata.decode_export_section_loop.body
           match cf2 with
           | core.ops.control_flow.ControlFlow.Continue val2 =>
             let (idx, q3) := val2
-            let r3 ← metadata.export_desc env kind idx
+            let (r3, cm) ← metadata.mark_exported env.code kind idx
             let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
             match cf3 with
             | core.ops.control_flow.ControlFlow.Continue val3 =>
-              let env1 ←
-                match val3 with
-                | metadata.ExportDesc.Func index =>
-                  do
-                  let v ← alloc.vec.Vec.push env.declared_funcs index
-                  ok { env with declared_funcs := v }
-                | metadata.ExportDesc.Table _ => ok env
-                | metadata.ExportDesc.Memory _ => ok env
-                | metadata.ExportDesc.Global _ => ok env
               let v ←
-                alloc.vec.Vec.push env1.exports ({ «name», desc := val3 } :
+                alloc.vec.Vec.push env.exports ({ «name», desc := val3 } :
                   metadata.Export)
               let i1 ← i + 1#u32
-              ok (cont ({ env1 with exports := v }, q3, i1))
+              ok (cont ({ env with code := cm, exports := v }, q3, i1))
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r4 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
                   Std.Usize (core.convert.FromSame error.Error) residual
-              ok (done (r4, env))
+              ok (done (r4, { env with code := cm }))
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r3 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14041,9 +14024,10 @@ def metadata.decode_export_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_export_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_export_section_loop.body data count
@@ -14053,8 +14037,10 @@ def metadata.decode_export_section_loop
 /-- [itasca::metadata::decode_export_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_export_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14105,10 +14091,10 @@ def metadata.decode_global_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_global_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32)
+    ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14124,11 +14110,12 @@ def metadata.decode_global_section_loop.body
       | core.ops.control_flow.ControlFlow.Continue val1 =>
         let (init, q2) := val1
         let env1 ← metadata.declare_initializer env init
-        let v ← alloc.vec.Vec.push env1.global_types gtype
-        let v1 ←
-          alloc.vec.Vec.push env1.globals ({ gtype, init } : metadata.Global)
+        let v ←
+          alloc.vec.Vec.push env1.globals
+            ({ gtype, init := (some init), is_exported := false } :
+            metadata.Global)
         let i1 ← i + 1#u32
-        ok (cont ({ env1 with globals := v1, global_types := v }, q2, i1))
+        ok (cont ({ env1 with globals := v }, q2, i1))
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r2 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14144,9 +14131,9 @@ def metadata.decode_global_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_global_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_global_section_loop.body data count
@@ -14156,8 +14143,8 @@ def metadata.decode_global_section_loop
 /-- [itasca::metadata::decode_global_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_global_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14249,10 +14236,10 @@ def metadata.decode_mem_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_memory_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32)
+    ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14262,14 +14249,17 @@ def metadata.decode_memory_section_loop.body
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (mt, q1) := val
-      let v ← alloc.vec.Vec.push env.mem_types mt
+      let v ←
+        alloc.vec.Vec.push env.memories
+          ({ ty := mt, is_imported := false, is_exported := false } :
+          metadata.MemoryDesc)
       let i1 := alloc.vec.Vec.len v
       if i1 > limits.MAX_MEMORIES
       then
         ok (done (core.result.Result.Err error.Error.MultipleMemories,
-          { env with mem_types := v }))
+          { env with memories := v }))
       else let i2 ← i + 1#u32
-           ok (cont ({ env with mem_types := v }, q1, i2))
+           ok (cont ({ env with memories := v }, q1, i2))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14280,9 +14270,9 @@ def metadata.decode_memory_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_memory_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_memory_section_loop.body data count
@@ -14292,8 +14282,8 @@ def metadata.decode_memory_section_loop
 /-- [itasca::metadata::decode_memory_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_memory_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14345,10 +14335,10 @@ def metadata.decode_table_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_table_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32)
+    ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14358,9 +14348,12 @@ def metadata.decode_table_section_loop.body
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (tt, q1) := val
-      let v ← alloc.vec.Vec.push env.table_types tt
+      let v ←
+        alloc.vec.Vec.push env.tables
+          ({ ty := tt, is_imported := false, is_exported := false } :
+          metadata.TableDesc)
       let i1 ← i + 1#u32
-      ok (cont ({ env with table_types := v }, q1, i1))
+      ok (cont ({ env with tables := v }, q1, i1))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14371,9 +14364,9 @@ def metadata.decode_table_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_table_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_table_section_loop.body data count
@@ -14383,8 +14376,8 @@ def metadata.decode_table_section_loop
 /-- [itasca::metadata::decode_table_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_table_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14398,41 +14391,14 @@ def metadata.decode_table_section
         Std.Usize error.Error.Insts.CoreConvertFromOpError residual
     ok (r1, env)
 
-/-- [itasca::metadata::copy_func_type]:
-    Source: 'src/module.rs' -/
-def metadata.copy_func_type
-  (ft : wasm_types.FuncType) : Result wasm_types.FuncType := do
-  let s := alloc.vec.Vec.deref ft.params
-  let v ← metadata.copy_value_types s
-  let s1 := alloc.vec.Vec.deref ft.results
-  let v1 ← metadata.copy_value_types s1
-  ok { params := v, results := v1 }
-
-/-- [itasca::metadata::lookup_type]:
-    Source: 'src/module.rs' -/
-def metadata.lookup_type
-  (env : metadata.Env) (idx : Std.U32) :
-  Result (core.result.Result wasm_types.FuncType error.Error)
-  := do
-  let i ← lift (UScalar.cast .Usize idx)
-  let i1 := alloc.vec.Vec.len env.types
-  if i >= i1
-  then ok (core.result.Result.Err (error.Error.UnknownType idx))
-  else
-    let ft ←
-      alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-        wasm_types.FuncType) env.types i
-    let ft1 ← metadata.copy_func_type ft
-    ok (core.result.Result.Ok ft1)
-
 /-- [itasca::metadata::decode_function_section]: loop body 0:
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_function_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32)
+    ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14442,20 +14408,18 @@ def metadata.decode_function_section_loop.body
     match cf with
     | core.ops.control_flow.ControlFlow.Continue val =>
       let (idx, q1) := val
-      let r1 ← metadata.lookup_type env idx
-      let cf1 ← core.result.Result.Insts.CoreOpsTry.branch r1
-      match cf1 with
-      | core.ops.control_flow.ControlFlow.Continue val1 =>
-        let v ← alloc.vec.Vec.push env.func_types val1
-        let v1 ← alloc.vec.Vec.push env.func_type_indices idx
-        let i1 ← i + 1#u32
-        ok (cont ({ env with func_type_indices := v1, func_types := v }, q1,
-          i1))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r2 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Std.Usize (core.convert.FromSame error.Error) residual
-        ok (done (r2, env))
+      let i1 ← lift (UScalar.cast .Usize idx)
+      let i2 := alloc.vec.Vec.len env.types
+      if i1 >= i2
+      then
+        ok (done (core.result.Result.Err (error.Error.UnknownType idx), env))
+      else
+        let v ←
+          alloc.vec.Vec.push env.funcs
+            ({ type_index := idx, can_ref_func := false, eager := false } :
+            metadata.FuncDesc)
+        let i3 ← i + 1#u32
+        ok (cont ({ env with funcs := v }, q1, i3))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14466,9 +14430,9 @@ def metadata.decode_function_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_function_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_function_section_loop.body data
@@ -14478,8 +14442,8 @@ def metadata.decode_function_section_loop
 /-- [itasca::metadata::decode_function_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_function_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14496,8 +14460,10 @@ def metadata.decode_function_section
 /-- [itasca::metadata::decode_import]:
     Source: 'src/module.rs' -/
 def metadata.decode_import
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   let r ← metadata.decode_name data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14521,27 +14487,28 @@ def metadata.decode_import
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
             let (idx, p4) := val3
-            let r4 ← metadata.lookup_type env idx
-            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
-            match cf4 with
-            | core.ops.control_flow.ControlFlow.Continue val4 =>
-              let v ← alloc.vec.Vec.push env.func_types val4
-              let i ← env.num_imported_funcs + 1#usize
+            let i ← lift (UScalar.cast .Usize idx)
+            let i1 := alloc.vec.Vec.len env.code.types
+            if i >= i1
+            then ok (core.result.Result.Err (error.Error.UnknownType idx), env)
+            else
+              let v ←
+                alloc.vec.Vec.push env.code.funcs
+                  ({ type_index := idx, can_ref_func := false, eager := false }
+                  : metadata.FuncDesc)
+              let i2 ← env.code.num_imported_funcs + 1#usize
               let v1 ←
                 alloc.vec.Vec.push env.imports
-                  ({ module, «name», desc := (metadata.ImportDesc.Func idx) }
-                  : metadata.Import)
+                  ({ module, «name», kind := metadata.ImportKind.Func } :
+                  metadata.Import)
               ok (core.result.Result.Ok p4,
                 {
                   env
                     with
-                    imports := v1, func_types := v, num_imported_funcs := i
+                    code :=
+                      { env.code with funcs := v, num_imported_funcs := i2 },
+                    imports := v1
                 })
-            | core.ops.control_flow.ControlFlow.Break residual =>
-              let r5 ←
-                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  Std.Usize (core.convert.FromSame error.Error) residual
-              ok (r5, env)
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14553,13 +14520,16 @@ def metadata.decode_import
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
             let (tt, p4) := val3
-            let v ← alloc.vec.Vec.push env.table_types tt
+            let v ←
+              alloc.vec.Vec.push env.code.tables
+                ({ ty := tt, is_imported := true, is_exported := false } :
+                metadata.TableDesc)
             let v1 ←
               alloc.vec.Vec.push env.imports
-                ({ module, «name», desc := (metadata.ImportDesc.Table tt) } :
+                ({ module, «name», kind := metadata.ImportKind.Table } :
                 metadata.Import)
             ok (core.result.Result.Ok p4,
-              { env with imports := v1, table_types := v })
+              { env with code := { env.code with tables := v }, imports := v1 })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14571,19 +14541,26 @@ def metadata.decode_import
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
             let (mt, p4) := val3
-            let v ← alloc.vec.Vec.push env.mem_types mt
+            let v ←
+              alloc.vec.Vec.push env.code.memories
+                ({ ty := mt, is_imported := true, is_exported := false } :
+                metadata.MemoryDesc)
             let i := alloc.vec.Vec.len v
             if i > limits.MAX_MEMORIES
             then
               ok (core.result.Result.Err error.Error.MultipleMemories,
-                { env with mem_types := v })
+                { env with code := { env.code with memories := v } })
             else
               let v1 ←
                 alloc.vec.Vec.push env.imports
-                  ({ module, «name», desc := (metadata.ImportDesc.Memory mt)
-                   } : metadata.Import)
+                  ({ module, «name», kind := metadata.ImportKind.Memory } :
+                  metadata.Import)
               ok (core.result.Result.Ok p4,
-                { env with imports := v1, mem_types := v })
+                {
+                  env
+                    with
+                    code := { env.code with memories := v }, imports := v1
+                })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
@@ -14595,17 +14572,22 @@ def metadata.decode_import
           match cf3 with
           | core.ops.control_flow.ControlFlow.Continue val3 =>
             let (gt, p4) := val3
-            let v ← alloc.vec.Vec.push env.global_types gt
-            let i ← env.num_imported_globals + 1#usize
+            let v ←
+              alloc.vec.Vec.push env.code.globals
+                ({ gtype := gt, init := none, is_exported := false } :
+                metadata.Global)
+            let i ← env.code.num_imported_globals + 1#usize
             let v1 ←
               alloc.vec.Vec.push env.imports
-                ({ module, «name», desc := (metadata.ImportDesc.Global gt) }
-                : metadata.Import)
+                ({ module, «name», kind := metadata.ImportKind.Global } :
+                metadata.Import)
             ok (core.result.Result.Ok p4,
               {
                 env
                   with
-                  imports := v1, global_types := v, num_imported_globals := i
+                  code :=
+                    { env.code with globals := v, num_imported_globals := i },
+                  imports := v1
               })
           | core.ops.control_flow.ControlFlow.Break residual =>
             let r4 ←
@@ -14633,10 +14615,12 @@ def metadata.decode_import
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_import_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
+  (data : Slice Std.U8) (count : Std.U32)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) (q : Std.Usize)
   (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  Result (ControlFlow ((metadata.ModuleMetadata metadata.CodeMetadata) ×
+    Std.Usize × Std.U32) ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata)))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14657,9 +14641,10 @@ def metadata.decode_import_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_import_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
+  (count : Std.U32) (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_import_section_loop.body data count
@@ -14669,8 +14654,10 @@ def metadata.decode_import_section_loop
 /-- [itasca::metadata::decode_import_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_import_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14796,10 +14783,10 @@ def metadata.decode_func_type
     Source: 'src/module.rs' -/
 @[rust_loop_body]
 def metadata.decode_type_section_loop.body
-  (data : Slice Std.U8) (count : Std.U32) (env : metadata.Env) (q : Std.Usize)
-  (i : Std.U32) :
-  Result (ControlFlow (metadata.Env × Std.Usize × Std.U32)
-    ((core.result.Result Std.Usize error.Error) × metadata.Env))
+  (data : Slice Std.U8) (count : Std.U32) (env : metadata.CodeMetadata)
+  (q : Std.Usize) (i : Std.U32) :
+  Result (ControlFlow (metadata.CodeMetadata × Std.Usize × Std.U32)
+    ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata))
   := do
   if i >= count
   then ok (done (core.result.Result.Ok q, env))
@@ -14822,9 +14809,9 @@ def metadata.decode_type_section_loop.body
     Source: 'src/module.rs' -/
 @[rust_loop]
 def metadata.decode_type_section_loop
-  (data : Slice Std.U8) (env : metadata.Env) (count : Std.U32) (q : Std.Usize)
-  (i : Std.U32) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (env : metadata.CodeMetadata) (count : Std.U32)
+  (q : Std.Usize) (i : Std.U32) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   loop
     (fun (env1, q1, i1) => metadata.decode_type_section_loop.body data count
@@ -14834,8 +14821,8 @@ def metadata.decode_type_section_loop
 /-- [itasca::metadata::decode_type_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_type_section
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) × metadata.CodeMetadata)
   := do
   let r ← reader.read_u32_leb data pos
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -14852,20 +14839,36 @@ def metadata.decode_type_section
 /-- [itasca::metadata::decode_env_section]:
     Source: 'src/module.rs' -/
 def metadata.decode_env_section
-  (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8) (env : metadata.Env) :
-  Result ((core.result.Result Std.Usize error.Error) × metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (id : Std.U8)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) :
+  Result ((core.result.Result Std.Usize error.Error) ×
+    (metadata.ModuleMetadata metadata.CodeMetadata))
   := do
   match id with
-  | 1#uscalar => metadata.decode_type_section data pos env
+  | 1#uscalar =>
+    let (r, cm) ← metadata.decode_type_section data pos env.code
+    ok (r, { env with code := cm })
   | 2#uscalar => metadata.decode_import_section data pos env
-  | 3#uscalar => metadata.decode_function_section data pos env
-  | 4#uscalar => metadata.decode_table_section data pos env
-  | 5#uscalar => metadata.decode_memory_section data pos env
-  | 6#uscalar => metadata.decode_global_section data pos env
+  | 3#uscalar =>
+    let (r, cm) ← metadata.decode_function_section data pos env.code
+    ok (r, { env with code := cm })
+  | 4#uscalar =>
+    let (r, cm) ← metadata.decode_table_section data pos env.code
+    ok (r, { env with code := cm })
+  | 5#uscalar =>
+    let (r, cm) ← metadata.decode_memory_section data pos env.code
+    ok (r, { env with code := cm })
+  | 6#uscalar =>
+    let (r, cm) ← metadata.decode_global_section data pos env.code
+    ok (r, { env with code := cm })
   | 7#uscalar => metadata.decode_export_section data pos env
-  | 8#uscalar => metadata.decode_start_section data pos env
+  | 8#uscalar =>
+    let (r, cm) ← metadata.decode_start_section data pos env.code
+    ok (r, { env with code := cm })
   | 9#uscalar => metadata.decode_element_section data pos env
-  | 12#uscalar => metadata.decode_data_count data pos env
+  | 12#uscalar =>
+    let (r, cm) ← metadata.decode_data_count data pos env.code
+    ok (r, { env with code := cm })
   | _ => ok (core.result.Result.Err (error.Error.UnknownSection id), env)
 
 /-- [itasca::metadata::section_order]:
@@ -15002,10 +15005,12 @@ def metadata.read_header
 @[rust_loop_body]
 def metadata.validate_env_with_loop.body
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (v : V) (env : metadata.Env) (q : Std.Usize)
+  (data : Slice Std.U8) (v : V)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) (q : Std.Usize)
   (last_id : Std.U8) :
-  Result (ControlFlow (V × metadata.Env × Std.Usize × Std.U8)
-    ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V))
+  Result (ControlFlow (V × (metadata.ModuleMetadata metadata.CodeMetadata) ×
+    Std.Usize × Std.U8) ((core.result.Result ((metadata.ModuleMetadata
+    metadata.CodeMetadata) × Std.Usize) error.Error) × V))
   := do
   let i := Slice.len data
   if q >= i
@@ -15030,8 +15035,8 @@ def metadata.validate_env_with_loop.body
         | core.ops.control_flow.ControlFlow.Break residual =>
           let r2 ←
             core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-              (metadata.Env × Std.Usize) (core.convert.FromSame error.Error)
-              residual
+              ((metadata.ModuleMetadata metadata.CodeMetadata) × Std.Usize)
+              (core.convert.FromSame error.Error) residual
           ok (done (r2, v))
       else
         if id = metadata.SECTION_CODE
@@ -15062,20 +15067,20 @@ def metadata.validate_env_with_loop.body
                 | core.ops.control_flow.ControlFlow.Break residual =>
                   let r3 ←
                     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                      (metadata.Env × Std.Usize) (core.convert.FromSame
-                      error.Error) residual
+                      ((metadata.ModuleMetadata metadata.CodeMetadata) ×
+                      Std.Usize) (core.convert.FromSame error.Error) residual
                   ok (done (r3, v))
             | core.ops.control_flow.ControlFlow.Break residual =>
               let r2 ←
                 core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-                  (metadata.Env × Std.Usize) (core.convert.FromSame
-                  error.Error) residual
+                  ((metadata.ModuleMetadata metadata.CodeMetadata) ×
+                  Std.Usize) (core.convert.FromSame error.Error) residual
               ok (done (r2, v))
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r1 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          (metadata.Env × Std.Usize) (core.convert.FromSame error.Error)
-          residual
+          ((metadata.ModuleMetadata metadata.CodeMetadata) × Std.Usize)
+          (core.convert.FromSame error.Error) residual
       ok (done (r1, v))
 
 /-- [itasca::metadata::validate_env_with]: loop 0:
@@ -15083,9 +15088,11 @@ def metadata.validate_env_with_loop.body
 @[rust_loop]
 def metadata.validate_env_with_loop
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
-  (data : Slice Std.U8) (v : V) (env : metadata.Env) (q : Std.Usize)
+  (data : Slice Std.U8) (v : V)
+  (env : metadata.ModuleMetadata metadata.CodeMetadata) (q : Std.Usize)
   (last_id : Std.U8) :
-  Result ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V)
+  Result ((core.result.Result ((metadata.ModuleMetadata metadata.CodeMetadata)
+    × Std.Usize) error.Error) × V)
   := do
   loop
     (fun (v1, env1, q1, last_id1) => metadata.validate_env_with_loop.body
@@ -15097,9 +15104,10 @@ def metadata.validate_env_with_loop
 def metadata.validate_env_with
   {V : Type} (ModuleVisitorInst : metadata.ModuleVisitor V)
   (data : Slice Std.U8) (v : V) :
-  Result ((core.result.Result (metadata.Env × Std.Usize) error.Error) × V)
+  Result ((core.result.Result ((metadata.ModuleMetadata metadata.CodeMetadata)
+    × Std.Usize) error.Error) × V)
   := do
-  let env ← metadata.Env.new
+  let env ← metadata.ModuleMetadataCodeMetadata.new
   let r ← metadata.read_header data
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
   match cf with
@@ -15108,8 +15116,8 @@ def metadata.validate_env_with
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        (metadata.Env × Std.Usize) (core.convert.FromSame error.Error)
-        residual
+        ((metadata.ModuleMetadata metadata.CodeMetadata) × Std.Usize)
+        (core.convert.FromSame error.Error) residual
     ok (r1, v)
 
 /-- [itasca::stream::validate_streaming]:
@@ -15118,8 +15126,9 @@ def metadata.validate_env_with
 def stream.validate_streaming
   {S : Type} {V : Type} (StreamingSourceInst : stream.StreamingSource S)
   (StreamingVisitorInst : stream.StreamingVisitor V) (module_id : Std.U64)
-  (source : S) (visitor : V) (env : metadata.Env) :
-  Result ((core.result.Result Unit error.Error) × V × metadata.Env)
+  (source : S) (visitor : V) :
+  Result ((core.result.Result (metadata.ModuleMetadata (alloc.sync.Arc
+    metadata.CodeMetadata)) error.Error) × V)
   := do
   let r ← StreamingSourceInst.environment source
   let cf ← core.result.Result.Insts.CoreOpsTry.branch r
@@ -15139,35 +15148,169 @@ def stream.validate_streaming
       let cf2 ← core.result.Result.Insts.CoreOpsTry.branch r2
       match cf2 with
       | core.ops.control_flow.ControlFlow.Continue val2 =>
-        let (decoded, env_end) := val2
+        let («prefix», env_end) := val2
         if env_end != val1
-        then ok (core.result.Result.Err error.Error.Host, visitor2, env)
+        then ok (core.result.Result.Err error.Error.Host, visitor2)
         else
-          let (r3, visitor3) ←
-            stream.validate_remaining StreamingSourceInst StreamingVisitorInst
-              module_id source decoded val1 visitor2
-          ok (r3, visitor3, decoded)
+          let module ← metadata.ModuleMetadataCodeMetadata.share «prefix»
+          let code_len ← StreamingSourceInst.code_len source
+          let r3 ← limits.add_offset val1 code_len
+          let cf3 ← core.result.Result.Insts.CoreOpsTry.branch r3
+          match cf3 with
+          | core.ops.control_flow.ControlFlow.Continue val3 =>
+            let cm ←
+              alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global module.code
+            let r4 ←
+              stream.read_code_header StreamingSourceInst source code_len cm
+            let cf4 ← core.result.Result.Insts.CoreOpsTry.branch r4
+            match cf4 with
+            | core.ops.control_flow.ControlFlow.Continue val4 =>
+              let (r5, visitor3) ←
+                StreamingVisitorInst.environment_ready visitor2 module
+              let cf5 ← core.result.Result.Insts.CoreOpsTry.branch r5
+              match cf5 with
+              | core.ops.control_flow.ControlFlow.Continue val5 =>
+                if val5.batch_bytes = 0#usize
+                then ok (core.result.Result.Err error.Error.Host, visitor3)
+                else
+                  if val5.max_batches = 0#usize
+                  then ok (core.result.Result.Err error.Error.Host, visitor3)
+                  else
+                    let (r6, visitor4) ←
+                      stream.submit_code_batches StreamingSourceInst
+                        StreamingVisitorInst module_id source module.code
+                        code_len val4 val5 visitor3
+                    let cf6 ← core.result.Result.Insts.CoreOpsTry.branch r6
+                    match cf6 with
+                    | core.ops.control_flow.ControlFlow.Continue val6 =>
+                      let (r7, visitor5) ←
+                        StreamingVisitorInst.code_end visitor4
+                      let cf7 ← core.result.Result.Insts.CoreOpsTry.branch r7
+                      match cf7 with
+                      | core.ops.control_flow.ControlFlow.Continue _ =>
+                        let r8 ← StreamingSourceInst.tail source
+                        let cf8 ←
+                          core.result.Result.Insts.CoreOpsTry.branch r8
+                        match cf8 with
+                        | core.ops.control_flow.ControlFlow.Continue val7 =>
+                          let i1 := Slice.len val7
+                          let r9 ← limits.add_offset val3 i1
+                          let cf9 ←
+                            core.result.Result.Insts.CoreOpsTry.branch r9
+                          match cf9 with
+                          | core.ops.control_flow.ControlFlow.Continue _ =>
+                            let visitor6 ←
+                              StreamingVisitorInst.custom_region visitor5
+                                stream.StreamingRegion.Tail
+                            let (r10, visitor7) ←
+                              metadata.validate_tail_with
+                                StreamingVisitorInst.metadataModuleVisitorInst
+                                val7 0#usize cm visitor6
+                            let cf10 ←
+                              core.result.Result.Insts.CoreOpsTry.branch r10
+                            match cf10 with
+                            | core.ops.control_flow.ControlFlow.Continue val8
+                              =>
+                              let (r11, visitor8, _) ←
+                                stream.retire_all_code_batches
+                                  StreamingVisitorInst module_id visitor7 val6
+                              let cf11 ←
+                                core.result.Result.Insts.CoreOpsTry.branch r11
+                              match cf11 with
+                              | core.ops.control_flow.ControlFlow.Continue _ =>
+                                ok (core.result.Result.Ok
+                                  { module with data := val8 }, visitor8)
+                              | core.ops.control_flow.ControlFlow.Break
+                                residual =>
+                                let r12 ←
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                    (metadata.ModuleMetadata (alloc.sync.Arc
+                                    metadata.CodeMetadata))
+                                    (core.convert.FromSame error.Error)
+                                    residual
+                                ok (r12, visitor8)
+                            | core.ops.control_flow.ControlFlow.Break residual
+                              =>
+                              let r11 ←
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                  (metadata.ModuleMetadata (alloc.sync.Arc
+                                  metadata.CodeMetadata))
+                                  (core.convert.FromSame error.Error) residual
+                              ok (r11, visitor7)
+                          | core.ops.control_flow.ControlFlow.Break residual =>
+                            let r10 ←
+                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                                (metadata.ModuleMetadata (alloc.sync.Arc
+                                metadata.CodeMetadata)) (core.convert.FromSame
+                                error.Error) residual
+                            ok (r10, visitor5)
+                        | core.ops.control_flow.ControlFlow.Break residual =>
+                          let r9 ←
+                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                              (metadata.ModuleMetadata (alloc.sync.Arc
+                              metadata.CodeMetadata)) (core.convert.FromSame
+                              error.Error) residual
+                          ok (r9, visitor5)
+                      | core.ops.control_flow.ControlFlow.Break residual =>
+                        let r8 ←
+                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                            (metadata.ModuleMetadata (alloc.sync.Arc
+                            metadata.CodeMetadata)) (core.convert.FromSame
+                            error.Error) residual
+                        ok (r8, visitor5)
+                    | core.ops.control_flow.ControlFlow.Break residual =>
+                      let r7 ←
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                          (metadata.ModuleMetadata (alloc.sync.Arc
+                          metadata.CodeMetadata)) (core.convert.FromSame
+                          error.Error) residual
+                      ok (r7, visitor4)
+              | core.ops.control_flow.ControlFlow.Break residual =>
+                let r6 ←
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                    (metadata.ModuleMetadata (alloc.sync.Arc
+                    metadata.CodeMetadata)) (core.convert.FromSame error.Error)
+                    residual
+                ok (r6, visitor3)
+            | core.ops.control_flow.ControlFlow.Break residual =>
+              let r5 ←
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                  (metadata.ModuleMetadata (alloc.sync.Arc
+                  metadata.CodeMetadata)) (core.convert.FromSame error.Error)
+                  residual
+              ok (r5, visitor2)
+          | core.ops.control_flow.ControlFlow.Break residual =>
+            let r4 ←
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+                (metadata.ModuleMetadata (alloc.sync.Arc
+                metadata.CodeMetadata)) (core.convert.FromSame error.Error)
+                residual
+            ok (r4, visitor2)
       | core.ops.control_flow.ControlFlow.Break residual =>
         let r3 ←
           core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            Unit (core.convert.FromSame error.Error) residual
-        ok (r3, visitor2, env)
+            (metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+            (core.convert.FromSame error.Error) residual
+        ok (r3, visitor2)
     | core.ops.control_flow.ControlFlow.Break residual =>
       let r2 ←
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-          Unit (core.convert.FromSame error.Error) residual
-      ok (r2, visitor, env)
+          (metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+          (core.convert.FromSame error.Error) residual
+      ok (r2, visitor)
   | core.ops.control_flow.ControlFlow.Break residual =>
     let r1 ←
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-        Unit (core.convert.FromSame error.Error) residual
-    ok (r1, visitor, env)
+        (metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+        (core.convert.FromSame error.Error) residual
+    ok (r1, visitor)
 
 /-- [itasca::stream::validate_module_slice]:
     Source: 'src/stream.rs' -/
 def stream.validate_module_slice
   (bytes : Slice Std.U8) :
-  Result (core.result.Result metadata.Module error.Error)
+  Result (core.result.Result (metadata.ModuleMetadata (alloc.sync.Arc
+    metadata.CodeMetadata)) error.Error)
   := do
   let (code_start, code_end) ← stream.find_code_region bytes
   let s ←
@@ -15180,192 +15323,221 @@ def stream.validate_module_slice
   let s2 ←
     core.slice.index.Slice.index (core.slice.index.SliceIndexRangeUsizeSlice
       Std.U8) bytes { start := code_end, «end» := i }
-  let env ← metadata.Env.new
-  let (r, visitor, env1) ←
+  let (r, _) ←
     stream.validate_streaming
       stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
-      { env := s, code := s1, tail := s2 } { completed := none, tail := none }
-      env
-  let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-  match cf with
-  | core.ops.control_flow.ControlFlow.Continue _ =>
-    match visitor.tail with
-    | none => ok (core.result.Result.Err error.Error.Host)
-    | some tail => ok (core.result.Result.Ok { env := env1, tail })
-  | core.ops.control_flow.ControlFlow.Break residual =>
-    core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-      metadata.Module (core.convert.FromSame error.Error) residual
+      { env := s, code := s1, tail := s2 } { completed := none }
+  ok r
 
 /-- [itasca::metadata::validate_module]:
     Source: 'src/module.rs'
     Visibility: public -/
 def metadata.validate_module
   (data : Slice Std.U8) :
-  Result (core.result.Result metadata.Module error.Error)
+  Result (core.result.Result (metadata.ModuleMetadata (alloc.sync.Arc
+    metadata.CodeMetadata)) error.Error)
   := do
   stream.validate_module_slice data
 
-/-- [itasca::metadata::{itasca::metadata::Env}::import_types]: loop body 0:
+/-- [itasca::metadata::copy_func_type]:
+    Source: 'src/module.rs' -/
+def metadata.copy_func_type
+  (ft : wasm_types.FuncType) : Result wasm_types.FuncType := do
+  let s := alloc.vec.Vec.deref ft.params
+  let v ← metadata.copy_value_types s
+  let s1 := alloc.vec.Vec.deref ft.results
+  let v1 ← metadata.copy_value_types s1
+  ok { params := v, results := v1 }
+
+/-- [itasca::metadata::{itasca::metadata::CodeMetadata}::extern_type]:
+    Source: 'src/module.rs' -/
+def metadata.CodeMetadata.extern_type
+  (self : metadata.CodeMetadata) (desc : metadata.ExportDesc) :
+  Result (core.result.Result wasm_types.ExternType error.Error)
+  := do
+  match desc with
+  | metadata.ExportDesc.Func idx =>
+    let o ← metadata.CodeMetadata.func_type self idx
+    let r ← core.option.Option.ok_or o (error.Error.UnknownFunc idx)
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let ft ← metadata.copy_func_type val
+      ok (core.result.Result.Ok (wasm_types.ExternType.Func ft))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+        wasm_types.ExternType (core.convert.FromSame error.Error) residual
+  | metadata.ExportDesc.Table idx =>
+    let i ← lift (UScalar.cast .Usize idx)
+    let i1 := alloc.vec.Vec.len self.tables
+    if i >= i1
+    then ok (core.result.Result.Err (error.Error.UnknownTable idx))
+    else
+      let td ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          metadata.TableDesc) self.tables i
+      ok (core.result.Result.Ok (wasm_types.ExternType.Table td.ty))
+  | metadata.ExportDesc.Memory idx =>
+    let i ← lift (UScalar.cast .Usize idx)
+    let i1 := alloc.vec.Vec.len self.memories
+    if i >= i1
+    then ok (core.result.Result.Err (error.Error.UnknownMemory idx))
+    else
+      let md ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          metadata.MemoryDesc) self.memories i
+      ok (core.result.Result.Ok (wasm_types.ExternType.Memory md.ty))
+  | metadata.ExportDesc.Global idx =>
+    let i ← lift (UScalar.cast .Usize idx)
+    let i1 := alloc.vec.Vec.len self.globals
+    if i >= i1
+    then ok (core.result.Result.Err (error.Error.UnknownGlobal idx))
+    else
+      let g ←
+        alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
+          metadata.Global) self.globals i
+      ok (core.result.Result.Ok (wasm_types.ExternType.Global g.gtype))
+
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::import_types]: loop body 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
-def metadata.Env.import_types_loop.body
-  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
-  (i : Std.Usize) :
-  Result (ControlFlow ((alloc.vec.Vec wasm_types.ExternType) × Std.Usize)
-    (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error))
+def metadata.ModuleMetadataArcCodeMetadata.import_types_loop.body
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+  (funcs : Std.U32) (tables : Std.U32) (memories : Std.U32) (globals : Std.U32)
+  (out : alloc.vec.Vec wasm_types.ExternType) (i : Std.Usize) :
+  Result (ControlFlow (Std.U32 × Std.U32 × Std.U32 × Std.U32 ×
+    (alloc.vec.Vec wasm_types.ExternType) × Std.Usize) (core.result.Result
+    (alloc.vec.Vec wasm_types.ExternType) error.Error))
   := do
   let i1 := alloc.vec.Vec.len self.imports
-  if i >= i1
-  then ok (done (core.result.Result.Ok out))
-  else
+  if i < i1
+  then
     let i2 ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         metadata.Import) self.imports i
-    match i2.desc with
-    | metadata.ImportDesc.Func idx =>
-      let r ← metadata.lookup_type self idx
-      let cf ← core.result.Result.Insts.CoreOpsTry.branch r
-      match cf with
-      | core.ops.control_flow.ControlFlow.Continue val =>
-        let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Func val)
-        let i3 ← i + 1#usize
-        ok (cont (out1, i3))
-      | core.ops.control_flow.ControlFlow.Break residual =>
-        let r1 ←
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
-            (alloc.vec.Vec wasm_types.ExternType) (core.convert.FromSame
-            error.Error) residual
-        ok (done r1)
-    | metadata.ImportDesc.Table tt =>
-      let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Table tt)
+    let (funcs1, tables1, memories1, globals1, desc) ←
+      match i2.kind with
+      | metadata.ImportKind.Func =>
+        do
+        let funcs2 ← funcs + 1#u32
+        ok (funcs2, tables, memories, globals, metadata.ExportDesc.Func funcs)
+      | metadata.ImportKind.Table =>
+        do
+        let tables2 ← tables + 1#u32
+        ok (funcs, tables2, memories, globals, metadata.ExportDesc.Table
+          tables)
+      | metadata.ImportKind.Memory =>
+        do
+        let memories2 ← memories + 1#u32
+        ok (funcs, tables, memories2, globals, metadata.ExportDesc.Memory
+          memories)
+      | metadata.ImportKind.Global =>
+        do
+        let globals2 ← globals + 1#u32
+        ok (funcs, tables, memories, globals2, metadata.ExportDesc.Global
+          globals)
+    let cm ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global self.code
+    let r ← metadata.CodeMetadata.extern_type cm desc
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let out1 ← alloc.vec.Vec.push out val
       let i3 ← i + 1#usize
-      ok (cont (out1, i3))
-    | metadata.ImportDesc.Memory mt =>
-      let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Memory mt)
-      let i3 ← i + 1#usize
-      ok (cont (out1, i3))
-    | metadata.ImportDesc.Global gt =>
-      let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Global gt)
-      let i3 ← i + 1#usize
-      ok (cont (out1, i3))
+      ok (cont (funcs1, tables1, memories1, globals1, out1, i3))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (alloc.vec.Vec wasm_types.ExternType) (core.convert.FromSame
+          error.Error) residual
+      ok (done r1)
+  else ok (done (core.result.Result.Ok out))
 
-/-- [itasca::metadata::{itasca::metadata::Env}::import_types]: loop 0:
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::import_types]: loop 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
-def metadata.Env.import_types_loop
-  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
-  (i : Std.Usize) :
+def metadata.ModuleMetadataArcCodeMetadata.import_types_loop
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+  (funcs : Std.U32) (tables : Std.U32) (memories : Std.U32) (globals : Std.U32)
+  (out : alloc.vec.Vec wasm_types.ExternType) (i : Std.Usize) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
   loop
-    (fun (out1, i1) => metadata.Env.import_types_loop.body self out1 i1)
-    (out, i)
+    (fun (funcs1, tables1, memories1, globals1, out1, i1) =>
+      metadata.ModuleMetadataArcCodeMetadata.import_types_loop.body self funcs1
+      tables1 memories1 globals1 out1 i1)
+    (funcs, tables, memories, globals, out, i)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::import_types]:
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::import_types]:
     Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
-def metadata.Env.import_types
-  (self : metadata.Env) :
+def metadata.ModuleMetadataArcCodeMetadata.import_types
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
-  metadata.Env.import_types_loop self (alloc.vec.Vec.new wasm_types.ExternType)
-    0#usize
+  metadata.ModuleMetadataArcCodeMetadata.import_types_loop self 0#u32 0#u32
+    0#u32 0#u32 (alloc.vec.Vec.new wasm_types.ExternType) 0#usize
 
-/-- [itasca::metadata::{itasca::metadata::Env}::export_types]: loop body 0:
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::export_types]: loop body 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop_body]
-def metadata.Env.export_types_loop.body
-  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
-  (i : Std.Usize) :
+def metadata.ModuleMetadataArcCodeMetadata.export_types_loop.body
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+  (out : alloc.vec.Vec wasm_types.ExternType) (i : Std.Usize) :
   Result (ControlFlow ((alloc.vec.Vec wasm_types.ExternType) × Std.Usize)
     (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error))
   := do
   let i1 := alloc.vec.Vec.len self.exports
-  if i >= i1
-  then ok (done (core.result.Result.Ok out))
-  else
+  if i < i1
+  then
+    let cm ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global self.code
     let e ←
       alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
         metadata.Export) self.exports i
-    match e.desc with
-    | metadata.ExportDesc.Func idx =>
-      let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len self.func_types
-      if j >= i2
-      then ok (done (core.result.Result.Err (error.Error.UnknownFunc idx)))
-      else
-        let ft ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.FuncType) self.func_types j
-        let ft1 ← metadata.copy_func_type ft
-        let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Func ft1)
-        let i3 ← i + 1#usize
-        ok (cont (out1, i3))
-    | metadata.ExportDesc.Table idx =>
-      let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len self.table_types
-      if j >= i2
-      then ok (done (core.result.Result.Err (error.Error.UnknownTable idx)))
-      else
-        let tt ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.TableType) self.table_types j
-        let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Table tt)
-        let i3 ← i + 1#usize
-        ok (cont (out1, i3))
-    | metadata.ExportDesc.Memory idx =>
-      let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len self.mem_types
-      if j >= i2
-      then ok (done (core.result.Result.Err (error.Error.UnknownMemory idx)))
-      else
-        let mt ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.MemType) self.mem_types j
-        let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Memory mt)
-        let i3 ← i + 1#usize
-        ok (cont (out1, i3))
-    | metadata.ExportDesc.Global idx =>
-      let j ← lift (UScalar.cast .Usize idx)
-      let i2 := alloc.vec.Vec.len self.global_types
-      if j >= i2
-      then ok (done (core.result.Result.Err (error.Error.UnknownGlobal idx)))
-      else
-        let gt ←
-          alloc.vec.Vec.index (core.slice.index.SliceIndexUsizeSlice
-            wasm_types.GlobalType) self.global_types j
-        let out1 ← alloc.vec.Vec.push out (wasm_types.ExternType.Global gt)
-        let i3 ← i + 1#usize
-        ok (cont (out1, i3))
+    let r ← metadata.CodeMetadata.extern_type cm e.desc
+    let cf ← core.result.Result.Insts.CoreOpsTry.branch r
+    match cf with
+    | core.ops.control_flow.ControlFlow.Continue val =>
+      let out1 ← alloc.vec.Vec.push out val
+      let i2 ← i + 1#usize
+      ok (cont (out1, i2))
+    | core.ops.control_flow.ControlFlow.Break residual =>
+      let r1 ←
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual
+          (alloc.vec.Vec wasm_types.ExternType) (core.convert.FromSame
+          error.Error) residual
+      ok (done r1)
+  else ok (done (core.result.Result.Ok out))
 
-/-- [itasca::metadata::{itasca::metadata::Env}::export_types]: loop 0:
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::export_types]: loop 0:
     Source: 'src/module.rs'
     Visibility: public -/
 @[rust_loop]
-def metadata.Env.export_types_loop
-  (self : metadata.Env) (out : alloc.vec.Vec wasm_types.ExternType)
-  (i : Std.Usize) :
+def metadata.ModuleMetadataArcCodeMetadata.export_types_loop
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
+  (out : alloc.vec.Vec wasm_types.ExternType) (i : Std.Usize) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
   loop
-    (fun (out1, i1) => metadata.Env.export_types_loop.body self out1 i1)
+    (fun (out1, i1) =>
+      metadata.ModuleMetadataArcCodeMetadata.export_types_loop.body self out1
+      i1)
     (out, i)
 
-/-- [itasca::metadata::{itasca::metadata::Env}::export_types]:
+/-- [itasca::metadata::{itasca::metadata::ModuleMetadata<alloc::sync::Arc<itasca::metadata::CodeMetadata>>}::export_types]:
     Source: 'src/module.rs'
     Visibility: public -/
 @[reducible]
-def metadata.Env.export_types
-  (self : metadata.Env) :
+def metadata.ModuleMetadataArcCodeMetadata.export_types
+  (self : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata)) :
   Result (core.result.Result (alloc.vec.Vec wasm_types.ExternType) error.Error)
   := do
-  metadata.Env.export_types_loop self (alloc.vec.Vec.new wasm_types.ExternType)
-    0#usize
+  metadata.ModuleMetadataArcCodeMetadata.export_types_loop self
+    (alloc.vec.Vec.new wasm_types.ExternType) 0#usize
 
 /-- Trait implementation: [itasca::metadata::{impl itasca::metadata::ModuleVisitor for itasca::metadata::DefaultModuleVisitor}]
     Source: 'src/module.rs' -/
@@ -15379,7 +15551,8 @@ def metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor :
     Source: 'src/module.rs' -/
 def metadata.validate_env
   (data : Slice Std.U8) :
-  Result (core.result.Result (metadata.Env × Std.Usize) error.Error)
+  Result (core.result.Result ((metadata.ModuleMetadata metadata.CodeMetadata)
+    × Std.Usize) error.Error)
   := do
   let (r, _) ←
     metadata.validate_env_with
@@ -15389,7 +15562,7 @@ def metadata.validate_env
 /-- [itasca::metadata::validate_code_entry]:
     Source: 'src/module.rs' -/
 def metadata.validate_code_entry
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata)
   (index : Std.Usize) :
   Result (core.result.Result Std.Usize error.Error)
   := do
@@ -15401,8 +15574,8 @@ def metadata.validate_code_entry
 /-- [itasca::metadata::validate_tail]:
     Source: 'src/module.rs' -/
 def metadata.validate_tail
-  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.Env) :
-  Result (core.result.Result metadata.Tail error.Error)
+  (data : Slice Std.U8) (pos : Std.Usize) (env : metadata.CodeMetadata) :
+  Result (core.result.Result (alloc.vec.Vec metadata.Data) error.Error)
   := do
   let (r, _) ←
     metadata.validate_tail_with
@@ -15436,6 +15609,13 @@ def metadata.code_entry_extent
       (Std.Usize × Std.Usize) error.Error.Insts.CoreConvertFromOpError
       residual
 
+/-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::code_metadata]:
+    Source: 'src/stream.rs'
+    Visibility: public -/
+def stream.StreamingBatch.code_metadata
+  (self : stream.StreamingBatch) : Result metadata.CodeMetadata := do
+  alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global self.env
+
 /-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::len]:
     Source: 'src/stream.rs'
     Visibility: public -/
@@ -15456,7 +15636,8 @@ def stream.StreamingBatch.is_empty
 def stream.StreamingBatch.is_last
   (self : stream.StreamingBatch) : Result Bool := do
   let i ← self.first_func + self.num_funcs
-  let i1 := alloc.vec.Vec.len self.env.func_type_indices
+  let cm ← alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref Global self.env
+  let i1 ← metadata.CodeMetadata.num_func_defs cm
   ok (i = i1)
 
 /-- [itasca::stream::{itasca::stream::StreamingBatch<'_0>}::code]:

@@ -22,7 +22,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Body
 
 /-- Successful prefixes of the real byte reader and opcode dispatch. -/
-inductive Execution (data : Slice U8) (env : metadata.Env)
+inductive Execution (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) : code.BodyState → code.BodyState → Prop where
   | nil (st) : Execution data env ctx index st st
   | cons (st next last : code.BodyState) (opcode : U8) (pos : Usize) :
@@ -48,7 +48,7 @@ theorem Execution.single {data env ctx index st next opcode pos}
       .ok (.Ok (), next)) : Execution data env ctx index st next :=
   .cons st next next opcode pos hc hr hs (.nil next)
 
-theorem run_unfold (data : Slice U8) (env : metadata.Env)
+theorem run_unfold (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st : code.BodyState) :
     run data env ctx index st = (do
       let r ← loopBody data env ctx index st
@@ -153,7 +153,7 @@ namespace Itasca
 
 /-- The no-op loop specializes the totality proof for arbitrary returning
 visitors; it has no separate termination induction. -/
-theorem Body.emptyVisitorLoop.total (data : Slice U8) (env : metadata.Env)
+theorem Body.emptyVisitorLoop.total (data : Slice U8) (env : metadata.CodeMetadata)
      (locals results : alloc.vec.Vec wasm_types.ValueType)
     (type_index : U32) (st : code.BodyState) (visitor : code.DefaultOpVisitor)
     (hdata : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -191,7 +191,7 @@ namespace Itasca.Body
 
 /-- Every opcode step from a `Pending` state either fails or yields a state satisfying
 `Pending.After`. -/
-def Steps (data : Slice U8) (env : metadata.Env)
+def Steps (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env locals index st),
     step st data env ctx index (data.val[p.start.val]'p.inbounds) ⦃ r =>
@@ -199,7 +199,7 @@ def Steps (data : Slice U8) (env : metadata.Env)
 
 /-- Each successful iteration extends the independent syntax and typing
 invariant. Its strictly increasing cursor justifies the whole-body induction. -/
-theorem run.sound (data : Slice U8) (env : metadata.Env)
+theorem run.sound (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hsteps : Steps data env locals ctx index) (st : code.BodyState)
     (hi : State data env locals index st)
@@ -241,7 +241,7 @@ theorem run.sound (data : Slice U8) (env : metadata.Env)
 
 /-- If every opcode step preserves the invariant, an accepting run from any `State` proves
 `Validated`. -/
-theorem run.spec (data : Slice U8) (env : metadata.Env)
+theorem run.spec (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32)
     (hsteps : Steps data env locals ctx index) (st : code.BodyState)
     (hi : State data env locals index st) :
@@ -257,7 +257,7 @@ theorem run.spec (data : Slice U8) (env : metadata.Env)
 
 /-- If every opcode step preserves the invariant, `code.bodyCore` accepts only `Validated`
 bodies. -/
-theorem public_spec_of_steps (data : Slice U8) (env : metadata.Env)
+theorem public_spec_of_steps (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32)
     (hsteps : Steps data env locals ⟨locals, results⟩ index) :
     code.bodyCore data env locals results index ⦃ r =>

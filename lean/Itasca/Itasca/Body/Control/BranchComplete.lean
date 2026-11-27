@@ -48,7 +48,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body
 
 /-- Resolved runtime labels agree with the generated context's label space. -/
-def BranchLabels (env : metadata.Env) (st : code.BodyState) (C : context) : Prop :=
+def BranchLabels (env : metadata.CodeMetadata) (st : code.BodyState) (C : context) : Prop :=
   ∀ (depth : U32) view, labelAt st depth.val = some view → ∃ ts,
     resolve env view = some ts ∧ C.LABELS[depth.val]? = some (.mk_list (ts.map Translation.valueType))
 
@@ -113,7 +113,7 @@ theorem code.read_multi_value_label.complete (st : code.BodyState) (data : Slice
 /-- Branch acceptance creates a generated typing derivation before discarding
 only the active frame's operands. -/
 theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.CodeMetadata) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hvals : st.core.vals.val = outer ++ segment)
     (hbase : c.value_stack_base.val = outer.length)
@@ -164,7 +164,7 @@ theorem code.branch.prefix (st : code.BodyState) (data : Slice U8)
 /-- Conditional branches reify the entire checked target signature on their
 fallthrough path, including parameters of multi-value loop labels. -/
 theorem code.branch.conditional_prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Body.Control.base st.core).val = outer.length)
     (hs : Body.Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -259,7 +259,7 @@ namespace Itasca.Body
 
 /-- Every target is checked against the original operand suffix. Only arities
 must agree; unreachable bottom operands may support different concrete types. -/
-def TableTargets (env : metadata.Env) (st : code.BodyState) (depths : List U32)
+def TableTargets (env : metadata.CodeMetadata) (st : code.BodyState) (depths : List U32)
     (arity : Option Usize) : Prop :=
   ∀ d ∈ depths, ∃ view ts n, labelAt st d.val = some view ∧ resolve env view = some ts ∧
     arity = some n ∧ n.val = ts.length ∧ Suffix st.core ts
@@ -281,7 +281,7 @@ theorem TableTargets.snoc {env st depths arity} (h : TableTargets env st depths 
     subst x
     exact ⟨view, ts, n, hl, hts, rfl, hn, hs⟩
 
-private def TableLoopInv (data : Slice U8) (env : metadata.Env)
+private def TableLoopInv (data : Slice U8) (env : metadata.CodeMetadata)
     (initial : code.BodyState) (count : U32)
     (p : code.OpIterState × alloc.vec.Vec signature.BlockType × Option Usize ×
       U32) : Prop :=
@@ -296,7 +296,7 @@ namespace Itasca
 
 /-- One table iteration after a successful label read, length and suffix check either finishes at
 the default or continues with the arity fixed. -/
-theorem Body.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem Body.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      (count i : U32) (arity : Option Usize)
     (depth : U32) (view : signature.ResultType) (n : Usize)
     (hr : code.read_label_info st data = .ok (.Ok (depth, view), s))
@@ -317,7 +317,7 @@ theorem Body.branchTableLoop.body_checked (st s : code.BodyState) (data : Slice 
 /-- Successful table iteration records all labels, including the default,
 and certifies the unchanged operand suffix against every target. -/
 theorem Body.branchTableLoop.spec (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (count : U32) (cs : List code.Ctrl)
+    (env : metadata.CodeMetadata) (count : U32) (cs : List code.Ctrl)
     (c : code.Ctrl) (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : Body.Control.Shape st.core) :
     Body.branchTableLoop st.core data env count none 0#u32 ⦃ r =>
       r.1 = .Ok () → ∃ depths n, depths.length = count.val + 1 ∧
@@ -487,7 +487,7 @@ namespace Itasca
 /-- Every successful branch table produces the generated common-subtype rule,
 including tables whose target types differ at bottom operands. -/
 theorem code.branch_table.prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.CodeMetadata) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hvals : st.core.vals.val = outer ++ segment)
     (hbase : c.value_stack_base.val = outer.length)
@@ -571,7 +571,7 @@ open Aeneas Aeneas.Std
 namespace Itasca
 
 /-- Completeness of the suffix check needs only the active frame's bound. -/
-theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : metadata.Env)
+theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : metadata.CodeMetadata)
     (view : signature.ResultType) (ts : List wasm_types.ValueType)
     (hbase : (Body.Control.base st).val ≤ st.vals.val.length)
     (hts : Body.resolve env view = some ts) (hfits : Body.Suffix st ts) :
@@ -588,7 +588,7 @@ theorem code.check_suffix.complete_of_base (st : code.OpIterState) (env : metada
 /-- The actual label loop accepts an independent vector whose targets all fit
 the original suffix and have the same arity. No successful-reader premise occurs. -/
 theorem Body.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (count i : U32) (arity : Option Usize)
+    (env : metadata.CodeMetadata) (count i : U32) (arity : Option Usize)
     (n : Usize)
     (cs : List code.Ctrl) (c : code.Ctrl) (depths : List U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hs : c.value_stack_base.val ≤ st.core.vals.val.length)
@@ -655,7 +655,7 @@ theorem Body.branchTableLoop.complete (st : code.BodyState) (data : Slice U8)
 /-- The generated common-subtype branch-table premise suffices for each
 concrete target check, while the selector is consumed just once. -/
 theorem code.branch_table.complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (cs : List code.Ctrl) (c : code.Ctrl)
+    (env : metadata.CodeMetadata) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (front common : List valtype)
     (depths : List U32) (default : U32) (next : Usize)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -729,7 +729,7 @@ namespace Itasca
 
 /-- A typed branch with an independent immediate always accepts. -/
 theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
+    (env : metadata.CodeMetadata) (depth : U32) (next : Usize) (view : signature.ResultType)
     (ts : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -758,7 +758,7 @@ theorem code.branch.complete (st : code.BodyState) (data : Slice U8)
 /-- A typed conditional branch restores every target operand, subject only to
 room for its resolved signature. -/
 theorem code.branch.conditional_complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (depth : U32) (next : Usize) (view : signature.ResultType)
+    (env : metadata.CodeMetadata) (depth : U32) (next : Usize) (view : signature.ResultType)
     (ts : List wasm_types.ValueType) (outer segment : List code.StackType) (before : List valtype)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Body.Control.base st.core).val = outer.length)
     (ha : st.blocks.val.length = st.core.ctrls.val.length)
@@ -826,7 +826,7 @@ open Aeneas Aeneas.Std Result
 namespace Itasca.Body
 
 /-- A block type whose resolved signature is within the limits passes `checkIndex`. -/
-theorem checkIndex.complete (env : metadata.Env) (bt : signature.BlockType)
+theorem checkIndex.complete (env : metadata.CodeMetadata) (bt : signature.BlockType)
     (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
@@ -856,7 +856,7 @@ theorem checkIndex.complete (env : metadata.Env) (bt : signature.BlockType)
 
 /-- A block type whose resolved signature is within the limits passes
 `checkBlock`. -/
-theorem checkBlock.complete (env : metadata.Env)
+theorem checkBlock.complete (env : metadata.CodeMetadata)
     (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs)
     (hip : ins.length ≤ 1000) (hop : outs.length ≤ 1000) :
@@ -876,7 +876,7 @@ def EnterForward (st s : code.BodyState) (form : Frames.Form) (bt : signature.Bl
 
 /-- A compatible operand segment makes `enterParams` accept and open the frame with effect
 `EnterForward`. -/
-theorem enterParams.complete (st : code.BodyState) (env : metadata.Env)
+theorem enterParams.complete (st : code.BodyState) (env : metadata.CodeMetadata)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
     (hin : resolve env (inputs bt) = some ins)
@@ -902,7 +902,7 @@ theorem enterParams.complete (st : code.BodyState) (env : metadata.Env)
   · simpa [hv1, hv'] using hvs
 
 /-- `enterArgs` also accepts when the stack carries the `i32` condition of `if`. -/
-theorem enterArgs.complete (st : code.BodyState) (env : metadata.Env)
+theorem enterArgs.complete (st : code.BodyState) (env : metadata.CodeMetadata)
     (form : Frames.Form) (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype) (initial : form.Initial)
     (hin : resolve env (inputs bt) = some ins)
@@ -938,7 +938,7 @@ namespace Itasca
 
 /-- Every compatible independently encoded structured entry is accepted,
 including indexed parameters/results and the if condition. -/
-theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem code.enter.complete (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      (form : Body.Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (next : Usize) (ins outs : List wasm_types.ValueType)
     (outer segment : List code.StackType) (ts : List valtype)
@@ -1095,7 +1095,7 @@ namespace Itasca
 /-- Direct-call acceptance consumes every parameter and supplies every result,
 with the function index certified by the independent LEB grammar. -/
 theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Body.Control.base st.core).val = outer.length)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (inputs : List valtype) (ops : List instr)
@@ -1111,16 +1111,16 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
   | Err e => simp [code.call.eq_core, Body.callCore, hr]
   | Ok pair =>
     obtain ⟨idx, next⟩ := pair
-    by_cases hi : idx.val < env.func_types.val.length
-    · have hix : (UScalar.cast .Usize idx).val < env.func_types.val.length := by simpa using hi
-      obtain ⟨ft, hft, heq⟩ := WP.spec_imp_exists
-        (alloc.vec.Vec.index_usize_spec env.func_types (UScalar.cast .Usize idx) hix)
-      have htype : env.func_types.val[idx.val] = ft := by simpa using heq.symm
-      have hsmall := Nat.not_le_of_gt hi
+    obtain ⟨resolved, hft, hlookup⟩ := WP.spec_imp_exists (metadata.CodeMetadata.func_type.spec env idx)
+    cases resolved with
+    | none => simp [code.call.eq_core, Body.callCore, hr, hft]
+    | some ft =>
+      obtain ⟨d, hdesc, htype⟩ := Option.bind_eq_some_iff.mp hlookup.symm
+      obtain ⟨hi, rfl⟩ := List.getElem?_eq_some_iff.mp hdesc
       obtain ⟨⟨res, s⟩, hs, hout⟩ := WP.spec_imp_exists
         (code.apply_func_type.realizes { st.core with pos := next } ft outer segment hvals hbase)
       cases res with
-      | Err e => simp [code.call.eq_core, Body.callCore, hr, lift, hsmall, hft, hs]
+      | Err e => simp [code.call.eq_core, Body.callCore, hr, hft, hs]
       | Ok u =>
         obtain ⟨hc, hp, _, _, rest, hv, _, ht⟩ := hout rfl
         dsimp only at hc hp hv ht
@@ -1132,17 +1132,15 @@ theorem code.call.direct_prefix (st : code.BodyState) (data : Slice U8)
           (hC.call idx ft hi htype)
         rw [WP.spec_equiv_exists]
         refine ⟨(.Ok (), ⟨s⟩), ?_, fun _ => ?_⟩
-        · simp [code.call.eq_core, Body.callCore, hr, lift, hsmall, hft, hs]
+        · simp [code.call.eq_core, Body.callCore, hr, hft, hs]
         · exact ⟨idx, by simpa [hp, Binary.Leb128.Post] using hd, hc, code.BodyState.blocks_eq_of_ctrls hc, _, hv, htyping⟩
-    · have hlarge := Nat.le_of_not_gt hi
-      simp [code.call.eq_core, Body.callCore, hr, lift, hlarge]
 
 /-- Direct calls accept independently encoded, in-range function indices and
 compatible operands within the explicit signature and operand capacity limits. -/
 theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (idx : U32) (next : Usize) (ft : wasm_types.FuncType)
+    (env : metadata.CodeMetadata) (idx : U32) (next : Usize) (ft : wasm_types.FuncType)
     (hd : Binary.Leb128.Decoded data st.core.pos idx next)
-    (hi : idx.val < env.func_types.val.length) (ht : env.func_types.val[idx.val] = ft)
+    (hi : idx.val < env.funcs.val.length) (ht : env.types.val[env.funcs.val[idx.val].type_index.val]? = some ft)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
     (outer segment : List code.StackType) (before : List valtype)
     (hv : st.core.vals.val = outer ++ segment) (hb : (Body.Control.base st.core).val = outer.length)
@@ -1156,23 +1154,20 @@ theorem code.call.direct_complete (st : code.BodyState) (data : Slice U8)
         Body.Stack.Realizes (Body.Control.polymorphic st.core) rest
           (before ++ ft.results.val.map Translation.valueType) ⦄ := by
   have hread := reader.read_u32_leb.complete data st.core.pos idx next hd
-  have hix : (UScalar.cast .Usize idx).val < env.func_types.val.length := by simpa using hi
-  obtain ⟨ft', hft, heq⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.index_usize_spec env.func_types (UScalar.cast .Usize idx) hix)
-  have he : ft' = ft := by simpa [ht] using heq
-  subst ft'
+  obtain ⟨resolved, hft, he⟩ := WP.spec_imp_exists (metadata.CodeMetadata.func_type.spec env idx)
+  have hresolved : resolved = some ft := by simpa [List.getElem?_eq_getElem hi, ht] using he
+  rw [hresolved] at hft
   obtain ⟨⟨_, s⟩, hs, rfl, hc, hpos, rest, hvs, hlen, hreal'⟩ := WP.spec_imp_exists
     (code.apply_func_type.complete { st.core with pos := next } ft outer segment before
       hp hr hv hb hcap hreal)
-  have hsmall := Nat.not_le_of_gt hi
   rw [WP.spec_equiv_exists]
   refine ⟨(.Ok (), ⟨s⟩), ?_, rfl, hc, code.BodyState.blocks_eq_of_ctrls hc, hpos, rest, hvs, hlen, hreal'⟩
-  simp [code.call.eq_core, Body.callCore, hread, lift, hsmall, hft, ht, hs]
+  simp [code.call.eq_core, Body.callCore, hread, hft, hs]
 
 /-- Indirect calls decode both indices and require a function-reference table.
 The selector is consumed before function arguments. -/
 theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.core.vals.val = outer ++ segment)
     (hbase : (Body.Control.base st.core).val = outer.length)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (inputs : List valtype) (ops : List instr)
@@ -1198,13 +1193,13 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
     | Ok pair =>
       obtain ⟨table, next⟩ := pair
-      by_cases htable : table.val < env.table_types.val.length
-      · have htix : (UScalar.cast .Usize table).val < env.table_types.val.length := by simpa using htable
+      by_cases htable : table.val < env.tables.val.length
+      · have htix : (UScalar.cast .Usize table).val < env.tables.val.length := by simpa using htable
         obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
-          (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize table) htix)
-        have htt : env.table_types.val[table.val] = tt := by simpa using hgeteq.symm
+          (alloc.vec.Vec.index_usize_spec env.tables (UScalar.cast .Usize table) htix)
+        have htt : env.tables.val[table.val] = tt := by simpa using hgeteq.symm
         have htablesmall := Nat.not_le_of_gt htable
-        cases helem : tt.elem with
+        cases helem : tt.ty.elem with
         | ExternRef =>
           simp [code.call, code.call_indirect_info, code.take_index, hr, hreadtable, lift,
             htablesmall, hget, helem, wasm_types.ElemType.value_type,
@@ -1213,7 +1208,7 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
             core.result.Result.Insts.CoreOpsTry.branch,
               core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
         | FuncRef =>
-          have hfun : env.table_types.val[table.val].elem = .FuncRef := by rw [htt]; exact helem
+          have hfun : env.tables.val[table.val].ty.elem = .FuncRef := by rw [htt]; exact helem
           by_cases hi : idx.val < env.types.val.length
           · have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
             obtain ⟨ft, hft, heq⟩ := WP.spec_imp_exists
@@ -1281,11 +1276,11 @@ theorem code.call.indirect_prefix (st : code.BodyState) (data : Slice U8)
 
 /-- Independently encoded indices and compatible operands force acceptance. -/
 theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
-    (env : metadata.Env) (idx table : U32) (middle next : Usize)
+    (env : metadata.CodeMetadata) (idx table : U32) (middle next : Usize)
     (ft : wasm_types.FuncType) (hd : Binary.Leb128.Decoded data st.core.pos idx middle)
     (hdtable : Binary.Leb128.Decoded data middle table next)
-    (htable : table.val < env.table_types.val.length)
-    (hfun : env.table_types.val[table.val].elem = .FuncRef)
+    (htable : table.val < env.tables.val.length)
+    (hfun : env.tables.val[table.val].ty.elem = .FuncRef)
     (hi : idx.val < env.types.val.length) (ht : env.types.val[idx.val] = ft)
     (hp : ft.params.val.length ≤ 1000) (hr : ft.results.val.length ≤ 1000)
     (outer segment : List code.StackType) (before : List valtype)
@@ -1301,10 +1296,10 @@ theorem code.call.indirect_complete (st : code.BodyState) (data : Slice U8)
           (before ++ ft.results.val.map Translation.valueType) ⦄ := by
   have hread := reader.read_u32_leb.complete data st.core.pos idx middle hd
   have hreadtable := reader.read_u32_leb.complete data middle table next hdtable
-  have htix : (UScalar.cast .Usize table).val < env.table_types.val.length := by simpa using htable
+  have htix : (UScalar.cast .Usize table).val < env.tables.val.length := by simpa using htable
   obtain ⟨tt, hget, hgeteq⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize table) htix)
-  have helem : tt.elem = .FuncRef := by simpa [hgeteq] using hfun
+    (alloc.vec.Vec.index_usize_spec env.tables (UScalar.cast .Usize table) htix)
+  have helem : tt.ty.elem = .FuncRef := by simpa [hgeteq] using hfun
   have htablesmall := Nat.not_le_of_gt htable
   have hix : (UScalar.cast .Usize idx).val < env.types.val.length := by simpa using hi
   obtain ⟨ft', hft, heq⟩ := WP.spec_imp_exists
@@ -1570,7 +1565,7 @@ namespace Itasca.Body
 
 /-- Returning checks the root function's complete result vector, even within
 nested blocks, and erases only the current active stack segment. -/
-theorem returnStep.prefix (st : code.BodyState) (env : metadata.Env) (index : U32)
+theorem returnStep.prefix (st : code.BodyState) (env : metadata.CodeMetadata) (index : U32)
     (results : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)
@@ -1604,7 +1599,7 @@ theorem returnStep.prefix (st : code.BodyState) (env : metadata.Env) (index : U3
       fun _ => ⟨by simpa [hv', hb] using hmv, hmc, by simp [hmc, hctrls], hmp.trans hp, htyping⟩⟩
 
 /-- Operands that realize the function's results make `returnStep` accept. -/
-theorem returnStep.complete (st : code.BodyState) (env : metadata.Env) (index : U32)
+theorem returnStep.complete (st : code.BodyState) (env : metadata.CodeMetadata) (index : U32)
     (results : List wasm_types.ValueType) (cs : List code.Ctrl) (c : code.Ctrl)
     (outer segment : List code.StackType) (before : List valtype)
     (hctrls : st.core.ctrls.val = cs ++ [c]) (hv : st.core.vals.val = outer ++ segment)

@@ -120,7 +120,7 @@ theorem code.read_ref_null.fixed (st : code.OpIterState) (data : Slice U8) :
     repeat' rfl
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
-theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_get st data env = Body.metadataOperands (code.take_table st data env)
       (fun _ => [.I32]) (fun a => some a.2) Prod.fst := by
   simp only [code.read_table_get, Body.metadataOperands]
@@ -145,7 +145,7 @@ theorem code.read_table_get.fixed (st : code.OpIterState) (data : Slice U8) (env
            Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
-theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_set st data env = Body.metadataOperands (code.take_table st data env)
       (fun a => [a.2, .I32]) (fun _ => none) Prod.fst := by
   simp only [code.read_table_set, Body.metadataOperands]
@@ -170,7 +170,7 @@ theorem code.read_table_set.fixed (st : code.OpIterState) (data : Slice U8) (env
            Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
-theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_grow st data env = Body.metadataOperands (code.take_table st data env)
       (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst := by
   simp only [code.read_table_grow, Body.metadataOperands]
@@ -195,7 +195,7 @@ theorem code.read_table_grow.fixed (st : code.OpIterState) (data : Slice U8) (en
            Std.bind_assoc])
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
-theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_size st data env = Body.metadataOperands (code.take_table st data env)
       (fun _ => []) (fun _ => some .I32) Prod.fst := by
   simp only [code.read_table_size, Body.metadataOperands]
@@ -212,7 +212,7 @@ theorem code.read_table_size.fixed (st : code.OpIterState) (data : Slice U8) (en
     try dsimp only
 
 /-- The extracted handler has exactly its metadata-dependent fixed operand effect. -/
-theorem code.read_table_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.read_table_fill.fixed (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.read_table_fill st data env = Body.metadataOperands (code.take_table st data env)
       (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst := by
   simp only [code.read_table_fill, Body.metadataOperands]
@@ -338,7 +338,7 @@ section
 /-!
 # Environment matching for reference and bulk instructions
 
-Lemmas about `Translation.Environment.Matches`, the agreement between a runtime `metadata.Env` and a
+Lemmas about `Translation.Environment.Matches`, the agreement between a runtime `metadata.CodeMetadata` and a
 SpecTec context. Each `Matches.table_get`, `Matches.table_copy`, `Matches.memory_init`, ... turns
 bounds on the runtime environment into the corresponding `Instr_ok` judgment for the reference,
 table and bulk-memory instructions.
@@ -350,8 +350,8 @@ namespace Itasca.Translation.Environment
 
 /-- A runtime table entry supplies the corresponding generated lookup. -/
 theorem Matches.table_entry {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     idx.val < C.TABLES.length ∧ C.TABLES[idx.val]! = tableType tt := by
   rw [h.tables]
   constructor
@@ -359,9 +359,9 @@ theorem Matches.table_entry {env ctx C} (h : Matches env ctx C)
   · rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map, ht]
 
 theorem Matches.element_entry {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (elem : metadata.Element) (hi : idx.val < env.elements.val.length)
-    (ht : env.elements.val[idx.val] = elem) :
-    idx.val < C.ELEMS.length ∧ C.ELEMS[idx.val]! = Translation.referenceType elem.elem := by
+    (idx : U32) (elem : wasm_types.ElemType) (hi : idx.val < env.elem_segment_types.val.length)
+    (ht : env.elem_segment_types.val[idx.val] = elem) :
+    idx.val < C.ELEMS.length ∧ C.ELEMS[idx.val]! = Translation.referenceType elem := by
   rw [h.elems]
   simp only [elementTypes]
   constructor
@@ -376,9 +376,9 @@ theorem Matches.data_entry {env ctx C} (h : Matches env ctx C)
   exact ⟨hi, trivial⟩
 
 theorem Matches.ref_func {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (hi : idx.val < env.func_types.val.length) :
+    (idx : U32) (hi : idx.val < env.funcs.val.length) :
     Instr_ok C (.REF_FUNC (.mk_uN idx.val)) (.mk_functype (.mk_list []) (.mk_list [.FUNCREF])) := by
-  apply Instr_ok.ref_func _ _ (funcType env.func_types.val[idx.val])
+  apply Instr_ok.ref_func _ _ (descriptorType env.types.val env.funcs.val[idx.val])
   · simpa [h.funcs, proj_uN_0] using hi
   · simp only [h.funcs, proj_uN_0]
     rw [getElem!_pos _ _ (by simpa using hi), List.getElem_map]
@@ -386,40 +386,40 @@ theorem Matches.ref_func {env ctx C} (h : Matches env ctx C)
   · exact .instr_case_41 _ (index_wf idx)
 
 theorem Matches.table_get {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     Instr_ok C (.TABLE_GET (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32]) (.mk_list [valtype_reftype (Translation.referenceType tt.elem)])) := by
   obtain ⟨hb, he⟩ := h.table_entry idx tt hi ht
   exact .table_get _ _ _ _ hb he h.wf (.instr_case_48 _ (index_wf idx)) (table_type_wf tt)
 
 theorem Matches.table_set {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     Instr_ok C (.TABLE_SET (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32, valtype_reftype (Translation.referenceType tt.elem)]) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.table_entry idx tt hi ht
   exact .table_set _ _ _ _ hb he h.wf (.instr_case_49 _ (index_wf idx)) (table_type_wf tt)
 
 theorem Matches.table_size {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     Instr_ok C (.TABLE_SIZE (.mk_uN idx.val))
       (.mk_functype (.mk_list []) (.mk_list [.I32])) := by
   obtain ⟨hb, he⟩ := h.table_entry idx tt hi ht
   exact .table_size _ _ _ _ hb he h.wf (.instr_case_50 _ (index_wf idx)) (table_type_wf tt)
 
 theorem Matches.table_grow {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     Instr_ok C (.TABLE_GROW (.mk_uN idx.val))
       (.mk_functype (.mk_list [valtype_reftype (Translation.referenceType tt.elem), .I32]) (.mk_list [.I32])) := by
   obtain ⟨hb, he⟩ := h.table_entry idx tt hi ht
   exact .table_grow _ _ _ _ hb he h.wf (.instr_case_51 _ (index_wf idx)) (table_type_wf tt)
 
 theorem Matches.table_fill {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.table_types.val.length)
-    (ht : env.table_types.val[idx.val] = tt) :
+    (idx : U32) (tt : wasm_types.TableType) (hi : idx.val < env.tables.val.length)
+    (ht : env.tables.val[idx.val].ty = tt) :
     Instr_ok C (.TABLE_FILL (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32, valtype_reftype (Translation.referenceType tt.elem), .I32]) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.table_entry idx tt hi ht
@@ -427,8 +427,8 @@ theorem Matches.table_fill {env ctx C} (h : Matches env ctx C)
 
 theorem Matches.table_copy {env ctx C} (h : Matches env ctx C)
     (destination source : U32) (dst src : wasm_types.TableType)
-    (hd : destination.val < env.table_types.val.length) (hs : source.val < env.table_types.val.length)
-    (htd : env.table_types.val[destination.val] = dst) (hts : env.table_types.val[source.val] = src)
+    (hd : destination.val < env.tables.val.length) (hs : source.val < env.tables.val.length)
+    (htd : env.tables.val[destination.val].ty = dst) (hts : env.tables.val[source.val].ty = src)
     (htype : src.elem = dst.elem) :
     Instr_ok C (.TABLE_COPY (.mk_uN destination.val) (.mk_uN source.val))
       (.mk_functype (.mk_list [.I32, .I32, .I32]) (.mk_list [])) := by
@@ -440,10 +440,10 @@ theorem Matches.table_copy {env ctx C} (h : Matches env ctx C)
     (by simpa [tableType, htype] using table_type_wf src)
 
 theorem Matches.table_init {env ctx C} (h : Matches env ctx C)
-    (table element : U32) (tt : wasm_types.TableType) (elem : metadata.Element)
-    (ht : table.val < env.table_types.val.length) (he : element.val < env.elements.val.length)
-    (htt : env.table_types.val[table.val] = tt) (hee : env.elements.val[element.val] = elem)
-    (htype : elem.elem = tt.elem) :
+    (table element : U32) (tt : wasm_types.TableType) (elem : wasm_types.ElemType)
+    (ht : table.val < env.tables.val.length) (he : element.val < env.elem_segment_types.val.length)
+    (htt : env.tables.val[table.val].ty = tt) (hee : env.elem_segment_types.val[element.val] = elem)
+    (htype : elem = tt.elem) :
     Instr_ok C (.TABLE_INIT (.mk_uN table.val) (.mk_uN element.val))
       (.mk_functype (.mk_list [.I32, .I32, .I32]) (.mk_list [])) := by
   obtain ⟨htb, hte⟩ := h.table_entry table tt ht htt
@@ -452,16 +452,16 @@ theorem Matches.table_init {env ctx C} (h : Matches env ctx C)
     (.instr_case_54 _ _ (index_wf table) (index_wf element)) (table_type_wf tt)
 
 theorem Matches.elem_drop {env ctx C} (h : Matches env ctx C)
-    (idx : U32) (elem : metadata.Element) (hi : idx.val < env.elements.val.length)
-    (ht : env.elements.val[idx.val] = elem) :
+    (idx : U32) (elem : wasm_types.ElemType) (hi : idx.val < env.elem_segment_types.val.length)
+    (ht : env.elem_segment_types.val[idx.val] = elem) :
     Instr_ok C (.ELEM_DROP (.mk_uN idx.val)) (.mk_functype (.mk_list []) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.element_entry idx elem hi ht
   exact .elem_drop _ _ _ hb he h.wf (.instr_case_55 _ (index_wf idx))
 
 theorem Matches.memory_copy {env ctx C} (h : Matches env ctx C)
-    (hmem : 0 < env.mem_types.val.length) :
+    (hmem : 0 < env.memories.val.length) :
     Instr_ok C .MEMORY_COPY (.mk_functype (.mk_list [.I32, .I32, .I32]) (.mk_list [])) := by
-  apply Instr_ok.memory_copy _ (memType env.mem_types.val[0])
+  apply Instr_ok.memory_copy _ (memType env.memories.val[0].ty)
   · simpa [h.mems] using hmem
   · simp only [h.mems]
     rw [getElem!_pos _ _ (by simpa using hmem), List.getElem_map]
@@ -470,9 +470,9 @@ theorem Matches.memory_copy {env ctx C} (h : Matches env ctx C)
   · exact .instr_case_65
 
 theorem Matches.memory_fill {env ctx C} (h : Matches env ctx C)
-    (hmem : 0 < env.mem_types.val.length) :
+    (hmem : 0 < env.memories.val.length) :
     Instr_ok C .MEMORY_FILL (.mk_functype (.mk_list [.I32, .I32, .I32]) (.mk_list [])) := by
-  apply Instr_ok.memory_fill _ (memType env.mem_types.val[0])
+  apply Instr_ok.memory_fill _ (memType env.memories.val[0].ty)
   · simpa [h.mems] using hmem
   · simp only [h.mems]
     rw [getElem!_pos _ _ (by simpa using hmem), List.getElem_map]
@@ -482,11 +482,11 @@ theorem Matches.memory_fill {env ctx C} (h : Matches env ctx C)
 
 theorem Matches.memory_init {env ctx C} (h : Matches env ctx C)
     (idx count : U32) (hc : env.data_count = some count) (hi : idx.val < count.val)
-    (hmem : 0 < env.mem_types.val.length) :
+    (hmem : 0 < env.memories.val.length) :
     Instr_ok C (.MEMORY_INIT (.mk_uN idx.val))
       (.mk_functype (.mk_list [.I32, .I32, .I32]) (.mk_list [])) := by
   obtain ⟨hb, he⟩ := h.data_entry idx count hc hi
-  apply Instr_ok.memory_init _ _ (memType env.mem_types.val[0])
+  apply Instr_ok.memory_init _ _ (memType env.memories.val[0].ty)
   · simpa [h.mems] using hmem
   · simp only [h.mems]
     rw [getElem!_pos _ _ (by simpa using hmem), List.getElem_map]
@@ -547,7 +547,7 @@ theorem Pending.metadata_reader {data env locals index st}
       Instr_ok C (operation a) (.mk_functype (.mk_list (Simd.inputTypes (pops a)))
         (.mk_list (Simd.outputTypes (output a)))))
     (declared : ∀ a, (∃ state, decode = .ok (.Ok a,state)) → Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a))
+      (Translation.Environment.declaredReferences env) (operation a))
     (size : st.core.vals.val.length < Usize.max) :
     metadataOperands decode pops output metadata ⦃ r => ∀ value, r.1 = .Ok value →
       MetadataReaderPost p decode pops output metadata operation value r.2 ⦄ := by
@@ -634,7 +634,7 @@ theorem Pending.metadata_read {data env locals index st} (p : Pending data env l
         (.mk_list (Simd.outputTypes (output a)))))
     (hsize : st.core.vals.val.length < Usize.max)
     (hdecl : ∀ a, Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) (operation a) := by
+      (Translation.Environment.declaredReferences env) (operation a) := by
         intro a
         simp [Spec.DeclaredReferences.Instruction, Spec.DeclaredReferences.instructionIndices]) :
     metadataOperands decode pops output metadata ⦃ r =>
@@ -671,7 +671,7 @@ theorem Pending.table_get {data env locals index st} (p : Pending data env local
     have hspec := code.take_table.spec st.core data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    have htyped := hC.table_get idx env.table_types.val[idx.val] hi rfl
+    have htyped := hC.table_get idx env.tables.val[idx.val].ty hi rfl
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translation.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
@@ -696,7 +696,7 @@ theorem Pending.table_set {data env locals index st} (p : Pending data env local
     have hspec := code.take_table.spec st.core data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    have htyped := hC.table_set idx env.table_types.val[idx.val] hi rfl
+    have htyped := hC.table_set idx env.tables.val[idx.val].ty hi rfl
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation, show Translation.valueType .I32 = valtype.I32 from rfl]
       using htyped
 
@@ -724,11 +724,11 @@ theorem Pending.ref_func_reader {data env locals index st} (p : Pending data env
     (hbyte : data.val[p.start.val]'p.inbounds = 210#u8)
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
-      ∀ idx, r.1 = .Ok idx → idx.val < env.func_types.val.length ∧ r.2.ctrls = st.core.ctrls ∧
+      ∀ idx, r.1 = .Ok idx → idx.val < env.funcs.val.length ∧ r.2.ctrls = st.core.ctrls ∧
         r.2.vals.val = st.core.vals.val ++ [.Val .FuncRef] ∧
         ReaderPost p r.2 (.REF_FUNC (.mk_uN idx.val)) p.current.ctrl.polymorphic_base
           (p.current.vals ++ [.Val .FuncRef]) ∧
-        Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
+        Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env)
           (.REF_FUNC (.mk_uN idx.val)) ⦄ := by
   apply WP.spec_mono (code.read_ref_func.spec st.core data env hsize)
   rintro ⟨res, out⟩ ⟨hc, hout⟩ idx hok
@@ -760,7 +760,7 @@ theorem Pending.ref_func {data env locals index st} (p : Pending data env locals
     (hsize : st.core.vals.val.length < Usize.max) :
     code.read_ref_func st.core data env ⦃ r =>
       ∀ idx, r.1 = .Ok idx → p.After {st with core := r.2} ∧
-        Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
+        Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env)
           (.REF_FUNC (.mk_uN idx.val)) ⦄ := by
   apply WP.spec_mono (p.ref_func_reader hbyte hsize)
   intro r effect idx accepted
@@ -810,7 +810,7 @@ theorem Pending.table_grow {data env locals index st} (p : Pending data env loca
     have hspec := code.take_table.spec {st.core with pos := next} data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    have htyped := hC.table_grow idx env.table_types.val[idx.val] hi rfl
+    have htyped := hC.table_grow idx env.tables.val[idx.val].ty hi rfl
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translation.valueType .I32 = valtype.I32 from rfl] using htyped
 
@@ -838,7 +838,7 @@ theorem Pending.table_size {data env locals index st} (p : Pending data env loca
     have hspec := code.take_table.spec {st.core with pos := next} data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    have htyped := hC.table_size idx env.table_types.val[idx.val] hi rfl
+    have htyped := hC.table_size idx env.tables.val[idx.val].ty hi rfl
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translation.valueType .I32 = valtype.I32 from rfl] using htyped
 
@@ -866,7 +866,7 @@ theorem Pending.table_fill {data env locals index st} (p : Pending data env loca
     have hspec := code.take_table.spec {st.core with pos := next} data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    have htyped := hC.table_fill idx env.table_types.val[idx.val] hi rfl
+    have htyped := hC.table_fill idx env.tables.val[idx.val].ty hi rfl
     simpa [Simd.inputTypes, Simd.outputTypes, hty, reference_value_translation,
       show Translation.valueType .I32 = valtype.I32 from rfl] using htyped
 
@@ -918,7 +918,7 @@ theorem Pending.elem_drop {data env locals index st} (p : Pending data env local
     have hspec := code.take_element.spec {st.core with pos := next} data env
     rw [hrun, WP.spec_ok] at hspec
     obtain ⟨_, hi, hty⟩ := hspec.2.2 idx ty rfl
-    exact hC.elem_drop idx env.elements.val[idx.val] hi rfl
+    exact hC.elem_drop idx env.elem_segment_types.val[idx.val] hi rfl
 
 theorem Pending.ref_is_null_reader {data env locals index st} (p : Pending data env locals index st)
     (hbyte : data.val[p.start.val]'p.inbounds = 209#u8)

@@ -137,7 +137,7 @@ set_option maxRecDepth 4096 in
 set_option maxHeartbeats 1000000 in
 /-- `code.step` sends every opcode from `0x45` up to `code.step_numeric`. -/
 theorem code.step.numeric_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v : V) (hlow : 0x45 ≤ opcode.val) :
     code.step visitor st data env ctx opcode v = code.step_numeric visitor st opcode v := by
   rcases opcode with ⟨⟨n, hn⟩⟩
@@ -180,7 +180,7 @@ set_option maxHeartbeats 1000000 in
 /-- Reserved opcode bytes below the numeric range are rejected before any reader or visitor hook
 runs. -/
 theorem code.step.reserved {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v : V)
     (hreserved : (0x06 ≤ opcode.val ∧ opcode.val ≤ 0x0A) ∨
       (0x12 ≤ opcode.val ∧ opcode.val ≤ 0x19) ∨
@@ -473,7 +473,7 @@ end Itasca.Body.Stack
 
 namespace Itasca
 private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_I64_CONST v =
       Visitor.Core.run (code.read_i64_const st data) visitor.on_i64_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -487,7 +487,7 @@ private theorem i64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_i64_const` that holds on every outcome lifts through `code.step` on
 `i64.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_i64_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : I64 → code.OpIterState → Prop)
     (hread : code.read_i64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_i64_const v s a = .ok (result, v')) :
@@ -497,7 +497,7 @@ theorem code.step_i64_const.of_read {V : Type} (visitor : code.OpVisitor V)
   exact Visitor.Core.run.spec _ _ v Q P hread hvisitor
 
 private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F32_CONST v =
       Visitor.Core.run (code.read_f32_const st data) visitor.on_f32_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -511,7 +511,7 @@ private theorem f32_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_f32_const` that holds on every outcome lifts through `code.step` on
 `f32.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_f32_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U32 → code.OpIterState → Prop)
     (hread : code.read_f32_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_f32_const v s a = .ok (result, v')) :
@@ -521,7 +521,7 @@ theorem code.step_f32_const.of_read {V : Type} (visitor : code.OpVisitor V)
   exact Visitor.Core.run.spec _ _ v Q P hread hvisitor
 
 private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_F64_CONST v =
       Visitor.Core.run (code.read_f64_const st data) visitor.on_f64_const v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,
@@ -535,7 +535,7 @@ private theorem f64_const_dispatch {V : Type} (visitor : code.OpVisitor V)
 /-- A property of `code.read_f64_const` that holds on every outcome lifts through `code.step` on
 `f64.const` and the visitor hook, given that the hook terminates. -/
 theorem code.step_f64_const.of_read {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V)
     (Q : code.OpIterState → Prop) (P : U64 → code.OpIterState → Prop)
     (hread : code.read_f64_const st data ⦃ r => Q r.2 ∧ ∀ a, r.1 = .Ok a → P a r.2 ⦄)
     (hvisitor : ∀ s a, ∃ result v', visitor.on_f64_const v s a = .ok (result, v')) :
@@ -755,7 +755,7 @@ theorem code.read_select.segment (st : code.OpIterState)
 
 /-- `code.step` on `select` runs `code.read_select` and then the visitor's `on_select` hook. -/
 theorem code.step_select.dispatch {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (v : V) :
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (v : V) :
     code.step visitor st data env ctx code.OP_SELECT v =
       Visitor.Core.run (code.read_select st) visitor.on_select v := by
   simp [global_simps, Visitor.Core.run, core.result.Result.Insts.CoreOpsTry.branch,

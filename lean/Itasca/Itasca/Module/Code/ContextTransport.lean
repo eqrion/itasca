@@ -1009,18 +1009,18 @@ namespace Itasca.CodeEntry
 
 /-- The context `C` has the module's types, functions, globals, tables and memories translated from
 `env`, with empty local and label spaces. -/
-structure ModuleContext (env : metadata.Env) (C : context) : Prop where
+structure ModuleContext (env : metadata.CodeMetadata) (C : context) : Prop where
   types : C.TYPES = env.types.val.map Translation.Environment.funcType
-  funcs : C.FUNCS = env.func_types.val.map Translation.Environment.funcType
-  globals : C.GLOBALS = env.global_types.val.map Translation.globalType
-  tables : C.TABLES = env.table_types.val.map Translation.Environment.tableType
-  mems : C.MEMS = env.mem_types.val.map Translation.Environment.memType
+  funcs : C.FUNCS = env.funcs.val.map (Translation.Environment.descriptorType env.types.val)
+  globals : C.GLOBALS = env.globals.val.map (fun g => Translation.globalType g.gtype)
+  tables : C.TABLES = env.tables.val.map (fun d => Translation.Environment.tableType d.ty)
+  mems : C.MEMS = env.memories.val.map (fun d => Translation.Environment.memType d.ty)
   locals : C.LOCALS = []
   labels : C.LABELS = []
 
 /-- The final element and data spaces of `C` extend those available while validating a body. The
 data count section supplies the body-visible data space. -/
-structure SegmentContext (env : metadata.Env) (C : context) : Prop where
+structure SegmentContext (env : metadata.CodeMetadata) (C : context) : Prop where
   elems : (Translation.Environment.elementTypes env).IsPrefix C.ELEMS
   datas : (Translation.Environment.dataTypes env).IsPrefix C.DATAS
 
@@ -1040,16 +1040,16 @@ theorem ModuleContext.wf {env C} (h : ModuleContext env C) : wf_context C := by
     rw [ht]
     simp only [Forall, List.mem_map]
     rintro _ ⟨tt, _, rfl⟩
-    exact Translation.Environment.table_type_wf tt
+    exact Translation.Environment.table_type_wf tt.ty
   · dsimp only at hm
     rw [hm]
     simp only [Forall, List.mem_map]
     rintro _ ⟨mt, _, rfl⟩
-    exact Translation.Environment.mem_type_wf mt
+    exact Translation.Environment.mem_type_wf mt.ty
 
 /-- A body typed in `bodyContext` gives the generated function typing `Func_ok` in any full module
 context `C` whose segment spaces extend those of the body. -/
-theorem typed_func_ok {env : metadata.Env} {typeIdx : U32} {entry : Binary.Code}
+theorem typed_func_ok {env : metadata.CodeMetadata} {typeIdx : U32} {entry : Binary.Code}
     (hindex : typeIdx.val < env.types.val.length)
     (htyped : Instrs_ok (bodyContext env env.types.val[typeIdx.val].params.val
       entry.declared env.types.val[typeIdx.val].results.val) entry.body
@@ -1095,7 +1095,7 @@ theorem typed_func_ok {env : metadata.Env} {typeIdx : U32} {entry : Binary.Code}
     Func_ok.mk_Func_ok C (.mk_uN typeIdx.val) ds entry.body ps rs hi hlookup hn he hc.wf (by simpa [function, Map, ds, List.map_map, Function.comp_def] using hf) hlwf
 
 /-- A `Typed` certificate gives `Func_ok` in the full module context. -/
-theorem Typed.func_ok {env : metadata.Env} {typeIdx : U32} {entry : Binary.Code}
+theorem Typed.func_ok {env : metadata.CodeMetadata} {typeIdx : U32} {entry : Binary.Code}
      (h : Typed env typeIdx entry) (C : context) (hc : ModuleContext env C)
     (hsegments : SegmentContext env C) :
     Func_ok C (function typeIdx entry) (Translation.Environment.funcType (env.types.val[typeIdx.val]'h.type_lt)) :=

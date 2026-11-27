@@ -37,6 +37,7 @@ _llbc: check-tools
         RUSTFLAGS=--cfg=charon \
         {{ quote(charon) }} cargo --preset=aeneas --sysroot=default --rustc-arg=--cfg=charon \
         --rustc-arg=-Adead_code \
+        --opaque='itasca::stream::share_code' \
         --exclude='{impl core::clone::Clone for _}' \
         --exclude='{impl core::marker::Copy for _}' \
         --include='core::marker::{impl core::marker::Copy for u8}' \

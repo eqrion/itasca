@@ -14,7 +14,7 @@ structure Declarations where
   functions : List U32 := []
   tables : List _root_.Itasca.wasm_types.TableType := []
   memories : List _root_.Itasca.wasm_types.MemType := []
-  globals : List metadata.Global := []
+  globals : List Binary.Global := []
   exports : List Binary.Export := []
   start : Option U32 := none
   elements : List Binary.Element := []
@@ -46,16 +46,16 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The environment `env` stores exactly the declarations `decls`, and its caches are the merged
 index spaces of `decls`. -/
-structure Represents (env : metadata.Env) (decls : Declarations) : Prop where
-  types : decls.types = env.types.val
-  imports : decls.imports = env.imports.val.map rawImport
-  functions : decls.functions = env.func_type_indices.val
-  globals : decls.globals = env.globals.val
+structure Represents (env : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations) : Prop where
+  types : decls.types = env.code.types.val
+  imports : env.imports.val.map (fun i => (i.module.val, i.name.val, i.kind)) =
+    decls.imports.map importRecord
   exports : decls.exports = env.exports.val.map rawExport
-  start : decls.start = env.start
+  start : decls.start = env.code.start
   elements : decls.elements = env.elements.val.map rawElement
-  dataCount : decls.dataCount = env.data_count
-  cache : Cache env decls.tables decls.memories
+  elementTypes : env.code.elem_segment_types.val = decls.elements.map Binary.Element.elem
+  dataCount : decls.dataCount = env.code.data_count
+  cache : Cache env.code decls.imports decls.functions decls.globals decls.tables decls.memories
 
 end Itasca.Module.Environment
 
@@ -65,7 +65,7 @@ open Aeneas Aeneas.Std Itasca
 /-- All slots through rank `last` are complete in `decls`, including omitted empty sections, and
 match the raw module `raw`. The environment `env` represents `decls`. -/
 structure Ready (raw : Binary.Module) (last : Nat) (decls : Declarations)
-    (env : metadata.Env) : Prop where
+    (env : metadata.ModuleMetadata metadata.CodeMetadata) : Prop where
   represents : Represents env decls
   phase : Phase last decls
   types : 1 ≤ last → decls.types = raw.types
@@ -104,10 +104,10 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The header `cs` is the code section header at `start`, with an entry count equal to the number
 of defined functions. -/
-def Section (data : Slice U8) (start : Usize) (env : metadata.Env) (cs : Header) : Prop :=
+def Section (data : Slice U8) (start : Usize) (env : metadata.CodeMetadata) (cs : Header) : Prop :=
   ∃ content, Binary.SectionHeader data start 10#u8 content cs.end ∧
     Binary.Leb128.Decoded data content cs.count cs.entries ∧
-    cs.count.val = env.func_type_indices.val.length
+    cs.count.val = (Translation.Environment.definedTypeIndices env).length
 
 end Itasca.Module.Code
 
@@ -126,18 +126,18 @@ open Aeneas Aeneas.Std Itasca
 
 /-- The initializer has the given type in `env`. `ref.func` needs an in-range function index, and
 `global.get` needs an imported immutable global. -/
-inductive Valid (env : metadata.Env) : wasm_types.ConstExpr → wasm_types.ValueType → Prop where
+inductive Valid (env : metadata.CodeMetadata) : wasm_types.ConstExpr → wasm_types.ValueType → Prop where
   | i32 (value : I32) : Valid env (.I32 value) .I32
   | i64 (value : I64) : Valid env (.I64 value) .I64
   | f32 (value : U32) : Valid env (.F32 value) .F32
   | f64 (value : U64) : Valid env (.F64 value) .F64
   | v128 (low high : U64) : Valid env (.V128 low high) .V128
   | refNull (ty : wasm_types.ElemType) : Valid env (.RefNull ty) (referenceValueType ty)
-  | refFunc (idx : U32) (hi : idx.val < env.func_types.val.length) :
+  | refFunc (idx : U32) (hi : idx.val < env.funcs.val.length) :
       Valid env (.RefFunc idx) .FuncRef
   | globalGet (idx : U32) (gt : wasm_types.GlobalType)
-      (hi : idx.val < env.global_types.val.length)
-      (hgt : env.global_types.val[idx.val] = gt)
+      (hi : idx.val < env.globals.val.length)
+      (hgt : env.globals.val[idx.val].gtype = gt)
       (himport : idx.val < env.num_imported_globals.val)
       (hconst : gt.mutability = .Const) : Valid env (.GlobalGet idx) gt.valtype
 
@@ -150,12 +150,32 @@ open Aeneas Aeneas.Std Itasca
 with a valid `i32` offset, and every initializer is a valid constant of the element type. Validity
 describes index spaces and initializer types independently of binary decoding and the generated
 module judgment. -/
-def elementValid (env : metadata.Env) (entry : metadata.Element) : Prop :=
+def elementValid (env : metadata.CodeMetadata) (entry : metadata.Element) : Prop :=
   (match entry.mode with
-    | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
-        env.table_types.val[idx.val].elem = entry.elem ∧ Module.Constants.Valid env offset .I32
+    | .Active idx offset => ∃ hi : idx.val < env.tables.val.length,
+        env.tables.val[idx.val].ty.elem = entry.elem ∧ Module.Constants.Valid env offset .I32
     | .Passive | .Declarative => True) ∧
-  ∀ init ∈ entry.init.val,
+  ∀ init ∈ (Module.Environment.rawElement entry).init,
     Module.Constants.Valid env init (Module.Constants.referenceValueType entry.elem)
 
 end Itasca.Module.Segments
+
+namespace Itasca.Module.Environment
+
+/-- The import/definition ordering certifies the subtraction performed by
+`CodeMetadata::num_func_defs`, including when every function is imported. -/
+theorem Cache.imported_func_bound {env imports functions globals tables memories}
+    (h : Cache env imports functions globals tables memories) :
+    env.num_imported_funcs.val ≤ env.funcs.val.length := by
+  have sizes := congrArg List.length h.funcs
+  simp only [List.length_map, List.length_append] at sizes
+  rw [h.numFuncs, sizes]
+  omega
+
+/-- Skipping the import prefix in retained descriptors recovers the function section. -/
+theorem Cache.defined_type_indices {env imports functions globals tables memories}
+    (h : Cache env imports functions globals tables memories) :
+    Translation.Environment.definedTypeIndices env = functions := by
+  simp [Translation.Environment.definedTypeIndices, List.map_drop, h.funcs, h.numFuncs]
+
+end Itasca.Module.Environment

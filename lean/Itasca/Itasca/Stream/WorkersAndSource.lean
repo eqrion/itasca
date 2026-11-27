@@ -86,7 +86,7 @@ theorem stream.StreamingBatch.validate_next.accepted {V : Type} (visitor : code.
     index.val = batch.first_func.val + batch.num_validated.val ∧
     metadata.validate_code_entry_with visitor batch.code batch.validated_end batch.env index v =
       .ok (.Ok finish, v') := by
-  unfold stream.StreamingBatch.validate_next at h
+  simp only [stream.StreamingBatch.validate_next, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, bind_ok] at h
   split at h
   · simp at h
   · rename_i hcount
@@ -279,12 +279,13 @@ malformed entry bytes. The declared function interval gives room to compute the 
 theorem stream.StreamingBatch.validate_next.total {V : Type} (visitor : code.OpVisitor V)
     (htotal : Visitor.Total visitor) (batch : stream.StreamingBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
-    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
+    (hrange : batch.first_func.val + batch.num_funcs.val ≤ (Translation.Environment.definedTypeIndices batch.env).length) :
     ∃ r, stream.StreamingBatch.validate_next visitor batch index v = .ok r := by
-  unfold stream.StreamingBatch.validate_next
+  simp only [stream.StreamingBatch.validate_next, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, bind_ok]
   split
   · exact ⟨_, rfl⟩
   · rename_i hcount
+    simp [Translation.Environment.definedTypeIndices] at hrange
     obtain ⟨expected, hadd, _⟩ := WP.spec_imp_exists
       (UScalar.add_spec (x := batch.first_func) (y := batch.num_validated) (by scalar_tac))
     rw [hadd]
@@ -299,7 +300,7 @@ overflow its counter because a successful entry validation occurs only before th
 theorem stream.StreamingBatch.validate_func.returns {V : Type} (visitor : code.OpVisitor V)
     (htotal : Visitor.Total visitor) (batch : stream.StreamingBatch) (index : Usize) (v : V)
     (hbound : CodeEntry.Bounds batch.env)
-    (hrange : batch.first_func.val + batch.num_funcs.val ≤ batch.env.func_type_indices.val.length) :
+    (hrange : batch.first_func.val + batch.num_funcs.val ≤ (Translation.Environment.definedTypeIndices batch.env).length) :
     ∃ r, stream.StreamingBatch.validate_func visitor batch index v = .ok r := by
   cases he : batch.error with
   | some e => exact ⟨_, stream.StreamingBatch.validate_func.sticky visitor batch index v e he⟩
@@ -355,14 +356,18 @@ theorem stream.StreamingBatch.validate_all_loop.spec (issued : Stream.Batch.Issu
     obtain ⟨_, _, henv, _, _, hfirst, hnum⟩ := hidentity
     dsimp only at henv hfirst hnum
     have hrange : current.first_func.val + current.num_funcs.val ≤
-        current.env.func_type_indices.val.length := by
+        (Translation.Environment.definedTypeIndices current.env).length := by
       rw [henv, hfirst, hnum]
       exact hissued.2.1
     unfold stream.StreamingBatch.validate_all_loop.body
     split
     · rename_i hcount
       split
-      · step
+      · have hroom := hrange
+        simp [Translation.Environment.definedTypeIndices] at hroom
+        obtain ⟨index, hadd, hindex⟩ := WP.spec_imp_exists
+          (UScalar.add_spec (x := current.first_func) (y := current.num_validated) (by scalar_tac))
+        simp only [hadd, bind_ok]
         obtain ⟨⟨reply, after, v⟩, hr⟩ := stream.StreamingBatch.validate_func.returns
           code.DefaultOpVisitor.Insts.ItascaCodeOpVisitor Visitor.empty_total
           current index () (by simpa [henv] using hbound) hrange
@@ -430,8 +435,8 @@ theorem stream.StreamingBatch.validate_func.complete_at {V : Type} (visitor : co
     (entry : Code) (finish : Usize) (v : V)
     (herror : batch.error = none) (hcount : batch.num_validated.val < batch.num_funcs.val)
     (hindex : index.val = batch.first_func.val + batch.num_validated.val)
-    (hi : index.val < batch.env.func_type_indices.val.length)
-    (htyped : CodeEntry.Typed batch.env batch.env.func_type_indices.val[index.val] entry)
+    (hi : index.val < (Translation.Environment.definedTypeIndices batch.env).length)
+    (htyped : CodeEntry.Typed batch.env (Translation.Environment.definedTypeIndices batch.env)[index.val] entry)
     (hlimits : CodeEntry.EnvironmentWithinLimits batch.env) (hbound : CodeEntry.Bounds batch.env)
     (hbytes : At (CodeEntry.CodeEncodingWithinLimits) batch.code batch.validated_end entry finish) :
     ∃ count v', count.val = batch.num_validated.val + 1 ∧
@@ -445,7 +450,7 @@ theorem stream.StreamingBatch.validate_func.complete_at {V : Type} (visitor : co
   subst expected
   have hn : ¬ batch.num_validated ≥ batch.num_funcs := by scalar_tac
   have hnext : stream.StreamingBatch.validate_next visitor batch index v = .ok (.Ok finish, v') := by
-    simp [stream.StreamingBatch.validate_next, hn, hadd, hentry]
+    simp [stream.StreamingBatch.validate_next, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, hn, hadd, hentry]
   obtain ⟨count, hinc, hcountval⟩ := WP.spec_imp_exists
     (UScalar.add_spec (x := batch.num_validated) (y := 1#usize) (by scalar_tac))
   refine ⟨count, v', by simpa using hcountval, ?_⟩
@@ -480,6 +485,8 @@ theorem stream.StreamingBatch.validate_all_loop.complete (batch : stream.Streami
     cases htyped with
     | cons ht hrest =>
       obtain ⟨hi, ht, _⟩ := ht
+      have hroom := hi
+      simp [Translation.Environment.definedTypeIndices] at hroom
       obtain ⟨index, hadd, hindex⟩ := WP.spec_imp_exists
         (UScalar.add_spec (x := batch.first_func) (y := batch.num_validated) (by scalar_tac))
       obtain ⟨next, hentry, hremaining⟩ := hbytes.rep_cons

@@ -126,8 +126,8 @@ theorem table_init_bytes {data env locals index st} (p : Pending data env locals
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
     (code.take_element {st.core with pos := next} data env)
     (fun i ty pos => Binary.Leb128.Decoded data next i pos ∧
-      ∃ hi : i.val < env.elements.val.length,
-        ty = Module.Constants.referenceValueType env.elements.val[i.val].elem)
+      ∃ hi : i.val < env.elem_segment_types.val.length,
+        ty = Module.Constants.referenceValueType env.elem_segment_types.val[i.val])
     (code.take_element.spec {st.core with pos := next} data env)
   apply metadata_bytes_at p next _ _ _ _ (fun a pos => At data p.start (.plain (.TABLE_INIT (.mk_uN a.2.val) (.mk_uN a.1.val))) pos) ?_ hsize a s hr
   apply WP.spec_mono hmetadata
@@ -170,8 +170,8 @@ theorem table_copy_bytes {data env locals index st} (p : Pending data env locals
   have hmetadata := referencePairMetadata.spec {st.core with pos := next} data env
     (code.take_table {st.core with pos := next} data env)
     (fun i ty pos => Binary.Leb128.Decoded data next i pos ∧
-      ∃ hi : i.val < env.table_types.val.length,
-        ty = Module.Constants.referenceValueType env.table_types.val[i.val].elem)
+      ∃ hi : i.val < env.tables.val.length,
+        ty = Module.Constants.referenceValueType env.tables.val[i.val].ty.elem)
     (code.take_table.spec {st.core with pos := next} data env)
   apply metadata_bytes_at p next _ _ _ _ (fun a pos => At data p.start (.plain (.TABLE_COPY (.mk_uN a.1.val) (.mk_uN a.2.val))) pos) ?_ hsize a s hr
   apply WP.spec_mono hmetadata
@@ -765,7 +765,7 @@ set_option maxHeartbeats 1500000 in
 including a rejecting label or a label preceding a suffix error. -/
 theorem table_loop_records {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st.core) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (count i : U32) (arity : Option Usize) (hi : i.val ≤ count.val)
     (v : V) (result : BodyResult) (final : code.BodyState) (v' : V)
@@ -933,7 +933,7 @@ theorem table_records {data env locals index st} (p : Pending data env locals in
 
 /-- The table arm of the instruction dispatcher returns its handler's exact result. -/
 theorem dispatch_br_table {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (v : V) :
     code.step_body visitor st data env ctx index 0x0e#u8 v =
       code.branch_table_with visitor st data env v := by
@@ -989,7 +989,7 @@ open Visitor.Trace
 /-- Factors the capacity-guarded scalar arm of `code.step_body` without changing error
 outcomes. -/
 theorem dispatch_scalar {V : Type} (visitor : code.OpVisitor V)
-    (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+    (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (opcode : U8) (v : V)
     (hscalar : opcode.val ∉ controlOpcodes) :
     code.step_body visitor st data env ctx index opcode v =
@@ -1035,7 +1035,7 @@ theorem step_scalar {data env locals index st} (p : Pending data env locals inde
 /-- Assemble every concrete step once the branch-table protocol is supplied. -/
 theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env)
+    (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
     (table : ∀ st (p : Pending data env locals index st),
@@ -1069,7 +1069,7 @@ theorem step_contract_of_table {V : Type} (visitor : code.OpVisitor V)
 provenance for every ordinary return, without a total-visitor premise. -/
 theorem steps {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env)
+    (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals) :
     StepContract visitor observe data env locals ctx index := by
@@ -1106,7 +1106,7 @@ partial; an observed rejecting callback is the last one recorded. No valid-input
 premise is needed. -/
 theorem Body.CallbackTrace.body_trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v v' : V) (result : BodyResult)
     (run : code.validate_body_with visitor data env ctx index v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -1119,7 +1119,7 @@ theorem Body.CallbackTrace.body_trace {V : Type} (visitor : code.OpVisitor V)
 independent byte grammar. -/
 theorem Body.CallbackTrace.body_trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v v' : V)
     (run : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -1140,7 +1140,7 @@ theorem Body.CallbackTrace.body_trace_sound {V : Type} (visitor : code.OpVisitor
 recording visitors within the documented resource bounds. -/
 theorem Body.CallbackTrace.body_trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (accepts : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
+    (accepts : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (environment : CodeEntry.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -1158,7 +1158,7 @@ theorem Body.CallbackTrace.body_trace_complete {V : Type} (visitor : code.OpVisi
 /-- Instrumenting an ordinary execution does not change its result or underlying visitor state.
 The added observations satisfy byte provenance. -/
 theorem Body.CallbackTrace.instrument_body_trace {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v : V)
     (log : List Observation) (result : BodyResult) (v' : V)
     (run : code.validate_body_with visitor data env ctx index v = .ok (result, v')) :
@@ -1176,7 +1176,7 @@ theorem Body.CallbackTrace.instrument_body_trace {V : Type} (visitor : code.OpVi
 
 /-- The concrete recorder returns a byte-provenance trace on arbitrary input, including malformed
 instructions and reserved opcodes. -/
-theorem Body.CallbackTrace.recorder_body_total (data : Slice U8) (env : metadata.Env)
+theorem Body.CallbackTrace.recorder_body_total (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) : ∃ result observations,
     code.validate_body_with recorder data env ctx index [] =
       .ok (result, observations) ∧
@@ -1201,7 +1201,7 @@ open Aeneas Aeneas.Std Visitor.Trace
 
 /-- The concrete `recorder` visitor accepts an independently encoded, typed body and visits every
 instruction, with all entries of every branch table in order. -/
-theorem Body.CallbackTrace.recorder_body_complete (data : Slice U8) (env : metadata.Env)
+theorem Body.CallbackTrace.recorder_body_complete (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (environment : CodeEntry.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)

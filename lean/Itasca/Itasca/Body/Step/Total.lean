@@ -28,7 +28,7 @@ namespace Itasca.Body.Visitor
 non-control Wasm 2.0 step and its exact final validator state. -/
 theorem instruction_transfer {V W : Type} (visitor : code.OpVisitor V)
     (replacement : code.OpVisitor W) (ha : Visitor.Accepts replacement)
-    (st final : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+    (st final : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx ctx' : code.Context) (opcode : U8) (v v' : V) (w : W)
     (hscalar : opcode.val ∉ controlOpcodes) (hlocals : ctx.locals = ctx'.locals)
     (h : code.step_wasm2 visitor st data env ctx opcode v = .ok (.Ok (), final, v')) :
@@ -108,7 +108,7 @@ namespace Itasca.Body
 /-- Every non-control Wasm 2.0 opcode is total on a bounded active operand stack when the
 visitor hooks return; the cursor never moves backwards. -/
 theorem instruction_total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Body.Control.Shape st)
     (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes) (hv : Visitor.Total visitor) :

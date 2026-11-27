@@ -33,7 +33,7 @@ with exact byte provenance. A rejected final `br_table` may leave a partial vect
 follows an observed rejecting callback. No valid-input or total-callback premise is needed. -/
 theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v v' : V) (result : BodyResult)
     (run : code.validate_body_with visitor data env ctx index v = .ok (result, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -44,7 +44,7 @@ theorem code.validate_body_with.trace {V : Type} (visitor : code.OpVisitor V)
 describe the same syntax, by uniqueness of the independent byte grammar. -/
 theorem code.validate_body_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
      (v v' : V)
     (run : code.validate_body_with visitor data env ctx index v = .ok (.Ok (), v')) :
     ∃ observations, observe v' = observe v ++ observations ∧
@@ -56,7 +56,7 @@ to produce an `AcceptedBody` trace, within the documented resource bounds. No su
 assumed. -/
 theorem code.validate_body_with.trace_complete {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Observation) (records : Records visitor observe)
-    (accepts : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.Env)
+    (accepts : Visitor.Accepts visitor) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (environment : CodeEntry.EnvironmentWithinLimits env)
     (size : data.length ≤ limits.MAX_FUNCTION_BYTES.val)
@@ -73,7 +73,7 @@ the independently encoded, typed operators of that entry. There is no terminatio
 hypothesis on other callback runs. -/
 theorem metadata.validate_code_entry_with.trace_sound {V : Type} (visitor : code.OpVisitor V)
     (observe : V → List Visitor.Trace.Observation) (records : Visitor.Trace.Records visitor observe)
-    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
+    (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata) (index finish : Usize)
     (v v' : V) (entry_bounds : CodeEntry.Bounds env)
     (accepted : metadata.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
     ∃ observations, observe v' = observe v ++ observations ∧

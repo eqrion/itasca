@@ -27,7 +27,7 @@ namespace Itasca
 recording the type lookup, locals, body slice and visitor calls. -/
 theorem metadata.validate_code_entry_with.pipeline {V : Type} (visitor : code.OpVisitor V)
     (hv : Visitor.Total visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
+    (env : metadata.CodeMetadata) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
      :
     metadata.validate_code_entry_with visitor data pos env index v ⦃ r =>
       ∀ finish, r.1 = .Ok finish →
@@ -38,7 +38,7 @@ theorem metadata.validate_code_entry_with.pipeline {V : Type} (visitor : code.Op
 /-- The entry validator with a total visitor returns a result. -/
 theorem metadata.validate_code_entry_with.total {V : Type} (visitor : code.OpVisitor V)
     (hv : Visitor.Total visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
+    (env : metadata.CodeMetadata) (index : Usize) (v : V) (hbound : CodeEntry.Bounds env)
      :
     ∃ r, metadata.validate_code_entry_with visitor data pos env index v = .ok r := by
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
@@ -73,10 +73,10 @@ and meets the byte and local limits, given a completeness hypothesis for the bod
 step. -/
 theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
+    (env : metadata.CodeMetadata) (index : Usize) (entry : Code) (next : Usize) (v : V)
 
-    (hi : index.val < env.func_type_indices.val.length)
-    (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry)
+    (hi : index.val < (Translation.Environment.definedTypeIndices env).length)
+    (htyped : CodeEntry.Typed env (Translation.Environment.definedTypeIndices env)[index.val] entry)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (CodeEntry.CodeEncodingWithinLimits ) data pos entry next)
     (hcomplete : ∀ body ctx typeIdx ft,
@@ -98,31 +98,36 @@ theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visi
     omega
   obtain ⟨declared, hdeclared, hdeclaredVal⟩ := metadata.decode_locals.complete data content entry.locals bodyStart
     ⟨localBytes, hlocals, hlocalsSpan⟩ hcap
-  have hindex : ¬ index ≥ alloc.vec.Vec.len env.func_type_indices := by scalar_tac
+  obtain ⟨count, hcount, hn⟩ := WP.spec_imp_exists (metadata.CodeMetadata.num_func_defs.spec env hbound.imported)
+  have hindex : ¬ index ≥ count := by
+    simp [Translation.Environment.definedTypeIndices] at hi
+    scalar_tac
   unfold metadata.validate_code_entry_with
-  simp [hindex, hread, core.result.Result.Insts.CoreOpsTry.branch]
-  step
+  simp only [hcount, bind_ok, if_neg hindex, hread, core.result.Result.Insts.CoreOpsTry.branch]
+  step as ⟨n, hnval⟩
   obtain ⟨hr, hhave, hhavePost⟩ := WP.spec_imp_exists
     (metadata.have_bytes.spec data content n (by have := hhead.bound; omega))
   have hgood : hr = .Ok () := hhavePost.1.mpr (by have := hspan.bound; scalar_tac)
   rw [hgood] at hhave
   simp [hhave]
-  step
+  step as ⟨«end», hendval⟩
   have hendEq : «end» = next := by scalar_tac
   simp [hdeclared]
   have hbodyStart : ¬ «end».val < bodyStart.val := by have := hbodySpan.length; scalar_tac
   simp only [hbodyStart, ↓reduceIte]
-  step
-  have ht : CodeEntry.Typed env type_idx entry := by simpa [type_idx_post] using htyped
-  step
+  obtain ⟨absolute, fd, hadd, hfd, htypeIdx⟩ := Translation.Environment.defined_descriptor env index hi
+  let type_idx := fd.type_index
+  have ht : CodeEntry.Typed env type_idx entry := by simpa only [type_idx, htypeIdx] using htyped
+  simp only [hadd, bind_ok, hfd]
+  step as ⟨t, t_post⟩
   have htype : ¬ env.types.val.length ≤ t.val := by have := ht.type_lt; scalar_tac
   simp only [htype, ↓reduceIte]
-  step
+  step as ⟨ft, ft_post⟩
   have hti := ht.type_lt
   have hft : env.types.val[type_idx.val] = ft := by simpa [t_post] using ft_post.symm
   have hmem : ft ∈ env.types.val := by rw [← hft]; exact List.getElem_mem _
   have hroom : ft.params.val.length + declared.val.length ≤ Usize.max := by
-    have := hbound ft hmem
+    have := hbound.locals ft hmem
     rw [hdeclaredVal]
     have hc : (CodeEntry.Locals.declared entry.locals).length ≤ limits.MAX_LOCALS.val := hcap
     omega
@@ -162,9 +167,9 @@ theorem metadata.validate_code_entry_with.complete_spec_of_body {V : Type} (visi
 environment and size bounds. -/
 theorem metadata.validate_code_entry_with.complete_spec {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
-     (hi : index.val < env.func_type_indices.val.length)
-    (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry )
+    (env : metadata.CodeMetadata) (index : Usize) (entry : Code) (next : Usize) (v : V)
+     (hi : index.val < (Translation.Environment.definedTypeIndices env).length)
+    (htyped : CodeEntry.Typed env (Translation.Environment.definedTypeIndices env)[index.val] entry )
     (hlimits : CodeEntry.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (CodeEntry.CodeEncodingWithinLimits ) data pos entry next) :
@@ -179,9 +184,9 @@ theorem metadata.validate_code_entry_with.complete_spec {V : Type} (visitor : co
 bounds. -/
 theorem metadata.validate_code_entry_with.complete {V : Type} (visitor : code.OpVisitor V)
     (haccept : Visitor.Accepts visitor) (data : Slice U8) (pos : Usize)
-    (env : metadata.Env) (index : Usize) (entry : Code) (next : Usize) (v : V)
-     (hi : index.val < env.func_type_indices.val.length)
-    (htyped : CodeEntry.Typed env env.func_type_indices.val[index.val] entry )
+    (env : metadata.CodeMetadata) (index : Usize) (entry : Code) (next : Usize) (v : V)
+     (hi : index.val < (Translation.Environment.definedTypeIndices env).length)
+    (htyped : CodeEntry.Typed env (Translation.Environment.definedTypeIndices env)[index.val] entry )
     (hlimits : CodeEntry.EnvironmentWithinLimits env)
     (hbound : CodeEntry.Bounds env)
     (hbytes : At (CodeEntry.CodeEncodingWithinLimits ) data pos entry next) :
@@ -231,7 +236,7 @@ theorem CodeEntry.Witness.validated
 /-- If the entry validator accepts, the entry satisfies `CodeEntry.Entry`. This needs no visitor
 totality assumption. -/
 theorem metadata.validate_code_entry_with.sound {V : Type} (visitor : code.OpVisitor V)
-    (data : Slice U8) (pos : Usize) (env : metadata.Env) (index finish : Usize)
+    (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata) (index finish : Usize)
     (v v' : V) (hbound : CodeEntry.Bounds env)
     (h : metadata.validate_code_entry_with visitor data pos env index v = .ok (.Ok finish, v')) :
     CodeEntry.Entry data env index pos finish := by

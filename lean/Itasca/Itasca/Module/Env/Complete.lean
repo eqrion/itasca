@@ -646,7 +646,7 @@ theorem metadata.validate_env.complete (data : Slice U8) (raw : Binary.Module)
   rw [hbytes] at hs
   obtain ⟨start, hheader, hsections⟩ := hs.split
   have hread := metadata.read_header.complete data start hheader
-  obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.Env.new.declarations)
+  obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.new.declarations)
   have hready : Ready raw 0 {} initial := by
     refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
   obtain ⟨env, finalDecls, hrun, hready⟩ := hchain'.complete data initial {} start next 0#u8

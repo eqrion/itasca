@@ -32,7 +32,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.Completeness
 
 /-- Pure SIMD operators accept every realization of their principal signature. -/
-theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.Operation)
     (bytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.pureMeaning subopcode.val = some op)
@@ -64,7 +64,7 @@ theorem Frame.simd_pure {st} (f : Frame st) (data : Slice U8) (env : metadata.En
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (subopcode : U32) (op : Simd.LaneOperation)
     (lane : U8) (prefixBytes : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (hmap : Simd.laneMeaning subopcode.val = some op)
@@ -101,7 +101,7 @@ theorem Frame.simd_lane {st} (f : Frame st) (data : Slice U8) (env : metadata.En
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Binary.Leb128.Encoding prefixBytes 12)
@@ -136,7 +136,7 @@ theorem Frame.simd_const {st} (f : Frame st) (data : Slice U8) (env : metadata.E
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -178,7 +178,7 @@ theorem Frame.simd_memory {st} (f : Frame st) (data : Slice U8) (env : metadata.
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : Simd.MemoryOperation)
     (arg : code.MemArg) (lane : U8) (prefixBytes alignment offset : List U8)
     (next : Usize) (C : context) (front ins outs : List valtype)
@@ -223,7 +223,7 @@ theorem Frame.simd_memory_lane {st} (f : Frame st) (data : Slice U8) (env : meta
   · simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (low high : U64)
     (prefixBytes lower upper : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Binary.Leb128.Encoding prefixBytes 13)
@@ -266,7 +266,7 @@ theorem Frame.simd_shuffle {st} (f : Frame st) (data : Slice U8) (env : metadata
     omega
 
 /-- Every independently encoded and typed SIMD instruction is accepted. -/
-theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.simd {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx semantic : code.Context) (index : U32) (subopcode : U32) (op : instr)
     (prefixBytes immediate : List U8) (next : Usize) (C : context) (front ins outs : List valtype)
     (he : Binary.Leb128.Encoding prefixBytes subopcode.val) (hi : Simd.Immediate subopcode op immediate)
@@ -321,7 +321,7 @@ theorem Pending.fixed_reader {data env locals index st}
     (capacity : st.core.vals.val.length < Usize.max)
     (wf : wf_instr source)
     (declared : Spec.DeclaredReferences.Instruction
-      (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) source)
+      (Translation.Environment.declaredReferences env) source)
     (typed : ∀ C, wf_context C → Translation.Environment.Matches env ⟨locals,p.ft.results⟩ C →
       Instr_ok C source (.mk_functype (.mk_list (Body.Simd.inputTypes inputs))
         (.mk_list (Body.Simd.outputTypes output))))
@@ -395,7 +395,7 @@ theorem Pending.fixed {data env locals index st}
     (p : Pending data env locals index st) {V : Type} (v : V)
     (inputs : List wasm_types.ValueType) (output : Option wasm_types.ValueType) (op : instr)
     (hw : wf_instr op)
-    (hdecl : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op)
+    (hdecl : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) op)
     (ht : ∀ C, wf_context C → Translation.Environment.Matches env ⟨locals, p.ft.results⟩ C → Instr_ok C op
       (.mk_functype (.mk_list (Simd.inputTypes inputs)) (.mk_list (Simd.outputTypes output))))
     (pos : Usize) (hsize : st.core.vals.val.length < Usize.max)

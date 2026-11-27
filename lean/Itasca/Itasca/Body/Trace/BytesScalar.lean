@@ -33,7 +33,7 @@ open Visitor.Trace
 
 /-- Byte provenance and stopping for every ordinary step. -/
 def StepContract {V : Type} (visitor : code.OpVisitor V) (observe : V → List Observation)
-    (data : Slice U8) (env : metadata.Env)
+    (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType) (ctx : code.Context) (index : U32) : Prop :=
   ∀ st (p : Pending data env locals index st) v result out v',
     code.step_body visitor st data env ctx index
@@ -75,7 +75,7 @@ open Body
 supplies strict cursor progress. -/
 theorem code.body_loop_loop.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List Visitor.Trace.Observation)
-    (data : Slice U8) (env : metadata.Env)
+    (data : Slice U8) (env : metadata.CodeMetadata)
     (locals : alloc.vec.Vec wasm_types.ValueType)
     (ctx : code.Context) (index : U32) (hlocals : ctx.locals = locals)
     (htrace : CallbackTrace.StepContract visitor observe data env locals ctx index)
@@ -182,7 +182,7 @@ theorem code.body_loop_loop.trace_of_contract {V : Type}
 
 /-- Successful initialization selects the actual type entry and the same root frame used by the
 independent syntax invariant. -/
-theorem code.initial_state.start (env : metadata.Env) (index : U32) :
+theorem code.initial_state.start (env : metadata.CodeMetadata) (index : U32) :
     code.initial_state env index ⦃ r => match r with
       | .Err _ => True
       | .Ok st => st = initial index ∧ ∃ ft, env.types.val[index.val]? = some ft ⦄ := by
@@ -208,7 +208,7 @@ theorem code.initial_state.start (env : metadata.Env) (index : U32) :
 an exact whole-body trace for every ordinary public outcome, including errors. -/
 theorem code.validate_body_with.trace_of_contract {V : Type}
     (visitor : code.OpVisitor V) (observe : V → List Visitor.Trace.Observation)
-    (data : Slice U8) (env : metadata.Env) (ctx : code.Context) (index : U32)
+    (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32)
 
     (htrace : CallbackTrace.StepContract visitor observe data env ctx.locals ctx index)
     (v v' : V) (result : Visitor.Trace.BodyResult)

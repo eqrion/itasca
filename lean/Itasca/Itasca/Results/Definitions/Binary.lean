@@ -675,12 +675,25 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Binary
 
+/-- Declaration payload on the wire. The retained import record only stores its kind. -/
+inductive ImportDesc where
+  | Func (typeIndex : U32)
+  | Table (ty : wasm_types.TableType)
+  | Memory (ty : wasm_types.MemType)
+  | Global (ty : wasm_types.GlobalType)
+
+/-- Every binary global definition has an initializer. Imported globals occur
+in the import section and have no entry in this section. -/
+structure Global where
+  gtype : wasm_types.GlobalType
+  init : wasm_types.ConstExpr
+
 /-- Raw module syntax keeps indices as written and locals in their binary groups. Names are bytes;
 their Unicode validity is a separate judgment (`NameEncoding`). -/
 structure Import where
   moduleName : List U8
   «name» : List U8
-  desc : metadata.ImportDesc
+  desc : Itasca.Binary.ImportDesc
 
 /-- A raw export: a byte-string name and its descriptor. -/
 structure Export where
@@ -714,7 +727,7 @@ structure Module where
   functions : List U32
   tables : List _root_.Itasca.wasm_types.TableType
   memories : List _root_.Itasca.wasm_types.MemType
-  globals : List metadata.Global
+  globals : List Itasca.Binary.Global
   exports : List Export
   start : Option U32
   elements : List Element
@@ -808,7 +821,7 @@ abbrev ConstEncoding (e : wasm_types.ConstExpr) (bs : List U8) :=
 
 namespace Source
 
-def importDesc : metadata.ImportDesc → WebAssembly.Binary.ImportDesc
+def importDesc : Itasca.Binary.ImportDesc → WebAssembly.Binary.ImportDesc
   | .Func i => .Func i.val
   | .Table t => .Table (Translation.Environment.tableType t)
   | .Memory t => .Memory (Translation.Environment.memType t)
@@ -823,7 +836,7 @@ def exportDesc : metadata.ExportDesc → externidx
 def importEntry (e : Itasca.Binary.Import) : WebAssembly.Binary.Import :=
   ⟨bytes e.moduleName, bytes e.name, importDesc e.desc⟩
 
-def globalEntry (e : metadata.Global) : WebAssembly.Binary.Global :=
+def globalEntry (e : Itasca.Binary.Global) : WebAssembly.Binary.Global :=
   ⟨Translation.globalType e.gtype, constant e.init⟩
 
 def exportEntry (e : Itasca.Binary.Export) : WebAssembly.Binary.Export :=
@@ -831,7 +844,7 @@ def exportEntry (e : Itasca.Binary.Export) : WebAssembly.Binary.Export :=
 
 end Source
 
-abbrev ImportDescEncoding (d : metadata.ImportDesc) (bs : List U8) :=
+abbrev ImportDescEncoding (d : Itasca.Binary.ImportDesc) (bs : List U8) :=
   WebAssembly.Binary.ImportDescEncoding (Source.importDesc d) (Source.bytes bs)
 
 /-- An import: module name, field name and descriptor. -/
@@ -846,7 +859,7 @@ abbrev ExportEncoding (entry : Export) (bs : List U8) :=
   WebAssembly.Binary.ExportEncoding (Source.exportEntry entry) (Source.bytes bs)
 
 /-- A global: its type followed by its initializer expression. -/
-abbrev GlobalEncoding (entry : metadata.Global) (bs : List U8) :=
+abbrev GlobalEncoding (entry : Itasca.Binary.Global) (bs : List U8) :=
   WebAssembly.Binary.GlobalEncoding (Source.globalEntry entry) (Source.bytes bs)
 
 namespace Source

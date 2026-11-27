@@ -67,7 +67,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body.Completeness
 
 /-- Execution of a typed instruction list within one concrete control frame. -/
-def Program (data : Slice U8) (env : metadata.Env)
+def Program (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (tokens : List Token) (ops : List instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (input output : List valtype),
@@ -75,13 +75,13 @@ def Program (data : Slice U8) (env : metadata.Env)
     Bounds data st → Consumed data st.core.pos tokens next →
     Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands input →
     Instrs_ok C ops (.mk_functype (.mk_list input) (.mk_list output)) →
-    Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops →
+    Spec.DeclaredReferences.Instructions (Translation.Environment.declaredReferences env) ops →
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧ f.Output output s ∧
       Bounds data s
 
 /-- The normalized head instruction has a primitive generated typing rule
 and a preserved prefix on its operand stack. -/
-def AtomProgram (data : Slice U8) (env : metadata.Env)
+def AtomProgram (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (tokens : List Token) (op : instr) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (next : Usize)
     (front input output : List valtype),
@@ -89,19 +89,19 @@ def AtomProgram (data : Slice U8) (env : metadata.Env)
     Bounds data st → Consumed data st.core.pos tokens next →
     Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
-    Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
+    Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) op →
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧ Bounds data s
 
 /-- `Program` holds for every emitted token list shorter than `n`. -/
-def SmallerPrograms (data : Slice U8) (env : metadata.Env)
+def SmallerPrograms (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (n : Nat) : Prop :=
   ∀ tokens ops, tokens.length < n → Emits tokens ops → Program data env ctx index tokens ops
 
 /-- Left-to-right execution follows a declarative derivation even when that
 derivation uses arbitrary sequence, framing, and subsumption rules. The atom
 obligation recursively receives only strictly smaller nested bodies. -/
-theorem program_of_atoms (data : Slice U8) (env : metadata.Env)
+theorem program_of_atoms (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (hatom : ∀ tokens op, Atom tokens op →
       SmallerPrograms data env ctx index tokens.length →
@@ -190,7 +190,7 @@ namespace Itasca.Body.Completeness
 /-- Scalar dispatch accepts an independently encoded principal typing and
 preserves the current block descriptor. The semantic return vector can
 differ from the runtime scalar context's unused return vector. -/
-theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx semantic : code.Context) (index : U32) (C : context)
     (opcode : U8) (op : instr) (bytes : List U8) (next : Usize)
     (front input output : List valtype)
@@ -218,7 +218,7 @@ theorem Frame.scalar {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
 /-- A leaf contract uses a principal generated typing and an independent
 Wasm 2.0 immediate encoding.
 Growth is bounded by the full token's encoded byte count. -/
-def LeafContract (data : Slice U8) (env : metadata.Env)
+def LeafContract (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) : Prop :=
   ∀ (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype),
@@ -227,14 +227,14 @@ def LeafContract (data : Slice U8) (env : metadata.Env)
     Immediate opcode (.plain op) bytes → Body.Scalar.BytesAt data st.core.pos bytes next →
     Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input) →
     Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)) →
-    Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op →
+    Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) op →
     ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
       f.Output (front ++ output) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 500 * (bytes.length + 1)
 
 /-- Reading the opcode and running a leaf contract produces an actual execution
 and preserves the byte-weighted capacity bound for the surrounding program. -/
-theorem atom_of_leaf (data : Slice U8) (env : metadata.Env)
+theorem atom_of_leaf (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (hstep : LeafContract data env ctx index) (op : instr) :
     AtomProgram data env ctx index [.plain op] op := by
@@ -260,7 +260,7 @@ theorem atom_of_leaf (data : Slice U8) (env : metadata.Env)
     simp [hb]
 
 /-- The scalar family discharges the shared leaf growth contract. -/
-theorem scalar_leaf (data : Slice U8) (env : metadata.Env)
+theorem scalar_leaf (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
     (op : instr) (bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -301,7 +301,7 @@ open Aeneas Aeneas.Std
 
 namespace Itasca.Body.Completeness
 
-theorem blocktype_signature {env : metadata.Env} {ctx : code.Context} {C : context}
+theorem blocktype_signature {env : metadata.CodeMetadata} {ctx : code.Context} {C : context}
     (hm : Translation.Environment.Matches env ctx C) (bt : signature.BlockType) {input output : List valtype}
     (h : Blocktype_ok C (blockType bt) (.mk_functype (.mk_list input) (.mk_list output))) :
     ∃ ins outs, resolve env (inputs bt) = some ins ∧ resolve env (outputs bt) = some outs ∧
@@ -322,7 +322,7 @@ theorem blocktype_signature {env : metadata.Env} {ctx : code.Context} {C : conte
         simpa [Translation.Environment.funcType] using congrArg (fun t => match t with | .mk_functype _ (.mk_list a) => a) he'.symm
       exact ⟨_, _, by simp [resolve, inputs, hib], by simp [resolve, outputs, hib], hie, hoe⟩
 
-theorem signature_limits {env : metadata.Env} (limits : CodeEntry.EnvironmentWithinLimits env)
+theorem signature_limits {env : metadata.CodeMetadata} (limits : CodeEntry.EnvironmentWithinLimits env)
     (bt : signature.BlockType) (ins outs : List wasm_types.ValueType)
     (hin : resolve env (inputs bt) = some ins) (hout : resolve env (outputs bt) = some outs) :
     ins.length ≤ 1000 ∧ outs.length ≤ 1000 := by
@@ -336,7 +336,7 @@ theorem signature_limits {env : metadata.Env} (limits : CodeEntry.EnvironmentWit
     simp [inputs, outputs, resolve, List.getElem?_eq_getElem hi] at hin hout
     simpa [← hin, ← hout] using h
 
-theorem labels_push {env : metadata.Env} {C : context} {st s : code.BodyState}
+theorem labels_push {env : metadata.CodeMetadata} {C : context} {st s : code.BodyState}
     (hl : Labels env st C) (ha : st.blocks.val.length = st.core.ctrls.val.length)
     (frame : code.Ctrl) (bt : signature.BlockType) (ts : List wasm_types.ValueType)
     (hc : s.core.ctrls.val = st.core.ctrls.val ++ [frame])
@@ -364,7 +364,7 @@ theorem labels_push {env : metadata.Env} {C : context} {st s : code.BodyState}
 /-- A delimiter execution, with exact effects and no post-delimiter capacity
 estimate; callers derive bounds from the enclosing entry. -/
 theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (index : U32) (next : Usize)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32) (next : Usize)
     (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .end_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
@@ -393,7 +393,7 @@ theorem execute_end {st : code.BodyState} (f : Frame st) (data : Slice U8)
     hp.trans hnext.symm, hc, hb, hv⟩
 
 theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (index : U32) (next : Usize)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32) (next : Usize)
     (ins outs : List wasm_types.ValueType)
     (hat : At data st.core.pos .else_ next)
     (hin : resolve env (inputs f.current) = some ins) (hout : resolve env (outputs f.current) = some outs)
@@ -422,7 +422,7 @@ theorem execute_else {st : code.BodyState} (f : Frame st) (data : Slice U8)
     hp.trans hnext.symm, hc, hb, hv⟩
 
 theorem execute_enter {st : code.BodyState} (f : Frame st) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (index : U32) (next : Usize)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (index : U32) (next : Usize)
     (form : Frames.Form) (initial : form.Initial) (bt : signature.BlockType)
     (ins outs : List wasm_types.ValueType) (front : List valtype)
     (limits : CodeEntry.EnvironmentWithinLimits env) (hb : Bounds data st)
@@ -468,7 +468,7 @@ private theorem restore_bounds {data : Slice U8} {st s : code.BodyState}
 
 /-- Execute a child list and its end, preserving the original suspended
 parent stack and result descriptor. -/
-theorem execute_body {data : Slice U8} {env : metadata.Env}
+theorem execute_body {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32} {tokens : List Token} {ops : List instr}
     (program : Program data env ctx index tokens ops) (C : context)
     (st : code.BodyState) (f : Frame st) (next : Usize)
@@ -482,7 +482,7 @@ theorem execute_body {data : Slice U8} {env : metadata.Env}
       (.mk_list (outs.map Translation.valueType))))
     (hthen : f.core.current.kind = .Then → ins = outs)
     (hcap : f.core.outer.length + outs.length ≤ Usize.max)
-    (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
+    (hdecl : Spec.DeclaredReferences.Instructions (Translation.Environment.declaredReferences env) ops) :
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       s.core.ctrls.val = f.core.parents ∧ s.blocks.val = f.parents ∧
       s.core.vals.val = if f.parents = [] then f.core.outer else f.core.outer ++ outs.map code.StackType.Val := by
@@ -530,7 +530,7 @@ private theorem closed_bounds {data : Slice U8} {st s : code.BodyState}
   · simp only [hp, hblocks]; omega
 
 /-- Common structured execution for blocks, loops, and omitted-else ifs. -/
-theorem run_closed_child {data : Slice U8} {env : metadata.Env}
+theorem run_closed_child {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32}
     (limits : CodeEntry.EnvironmentWithinLimits env) (form : Frames.Form) (initial : form.Initial)
     (bt : signature.BlockType) (tokens : List Token) (ops : List instr)
@@ -544,7 +544,7 @@ theorem run_closed_child {data : Slice U8} {env : metadata.Env}
     (hbody : Instrs_ok (Frames.enter C form ins outs) ops
       (.mk_functype (.mk_list (ins.map Translation.valueType)) (.mk_list (outs.map Translation.valueType))))
     (hthen : form = .then_ → ins = outs)
-    (hdecl : Spec.DeclaredReferences.Instructions (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) ops) :
+    (hdecl : Spec.DeclaredReferences.Instructions (Translation.Environment.declaredReferences env) ops) :
     ∃ s, Execution data env ctx index st s ∧ s.core.pos = next ∧
       f.Output (front ++ outs.map Translation.valueType) s ∧ Bounds data s := by
   obtain ⟨header, hheadc, hrest⟩ :=
@@ -613,7 +613,7 @@ theorem empty_identity {C : context} (ins outs : List wasm_types.ValueType)
       have hio := Translation.value_type_injective hs.1
       simp [hio, ih outs hs.2]
 
-theorem atom_block {data : Slice U8} {env : metadata.Env}
+theorem atom_block {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -629,7 +629,7 @@ theorem atom_block {data : Slice U8} {env : metadata.Env}
       C st f next front ins outs hm hl hb hbytes hin hout (by simpa [Frames.Form.args] using ht)
       hbody (by simp) hdecl
 
-theorem atom_loop {data : Slice U8} {env : metadata.Env}
+theorem atom_loop {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -645,7 +645,7 @@ theorem atom_loop {data : Slice U8} {env : metadata.Env}
       C st f next front ins outs hm hl hb hbytes hin hout (by simpa [Frames.Form.args] using ht)
       hbody (by simp) hdecl
 
-theorem atom_if_end {data : Slice U8} {env : metadata.Env}
+theorem atom_if_end {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {tokens : List Token} {ops : List instr} (he : Emits tokens ops)
@@ -661,7 +661,7 @@ theorem atom_if_end {data : Slice U8} {env : metadata.Env}
       C st f next front ins outs hm hl hb hbytes hin hout ht hbody (fun _ => empty_identity ins outs hempty)
       (Spec.DeclaredReferences.Instruction.if_else_iff.mp hdecl).1
 
-theorem atom_if_else {data : Slice U8} {env : metadata.Env}
+theorem atom_if_else {data : Slice U8} {env : metadata.CodeMetadata}
     {ctx : code.Context} {index : U32}
     (limits : CodeEntry.EnvironmentWithinLimits env) (bt : signature.BlockType)
     {yesTokens noTokens : List Token} {yes no : List instr}
@@ -815,7 +815,7 @@ namespace Completeness
 
 /-- Conclusion of a leaf contract: `Body.step` accepts, ends at `next` with output `out`, and
 grows the operand stack by at most 500 per encoded byte. -/
-def LeafResult {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+def LeafResult {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
      (ctx : code.Context) (index : U32) (opcode : U8)
     (bytes : List U8) (next : Usize) (out : List valtype) : Prop :=
   ∃ s, step st data env ctx index opcode = .ok (.Ok (), s) ∧ s.core.pos = next ∧
@@ -825,7 +825,7 @@ private theorem encoding_nonempty {bytes n} (h : Binary.Leb128.Encoding bytes n)
   obtain ⟨bs, hb, _, _⟩ := h
   cases bs <;> simp_all
 
-theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : Translation.Environment.Matches env ctx C)
     (henv : CodeEntry.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Binary.Leb128.Encoding bytes idx.val) (hb : Body.Scalar.BytesAt data st.core.pos bytes next)
@@ -836,12 +836,12 @@ theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (c
     LeafResult f data env ctx index 0x10#u8 bytes next (front ++ output) := by
   cases ht with
   | call _ _ params results hi ht _ _ =>
-    obtain ⟨ft, hi, ht, hv⟩ := hmatch.func_lookup idx _ hi ht
+    obtain ⟨ft, hi, ht, hv⟩ := hmatch.func_lookup idx _ hi ht henv.funcs
     have hparams : ft.params.val.map Translation.valueType = input :=
       list.mk_list.inj (functype.mk_functype.inj hv).1
     have hresults : ft.results.val.map Translation.valueType = output :=
       list.mk_list.inj (functype.mk_functype.inj hv).2
-    have hlimits := (henv.funcs ft (ht ▸ List.getElem_mem hi)).bounds
+    have hlimits := (henv.types ft (List.mem_of_getElem? ht)).bounds
     obtain ⟨⟨_, s⟩, hrun, rfl, hc, hblocks, hp, rest, hvals, hlen, hreal⟩ := WP.spec_imp_exists
       (code.call.direct_complete st data env idx next ft ⟨bytes, hb.suffix, hb.length, hb.bound, he⟩
         hi ht hlimits.1 hlimits.2 f.core.outer f.core.operands front f.core.vals f.core.base_eq
@@ -853,7 +853,7 @@ theorem Frame.call {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (c
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : Translation.Environment.Matches env ctx C)
     (henv : CodeEntry.EnvironmentWithinLimits env) (idx table : U32) (bytes tableBytes : List U8) (next : Usize)
     (he : Binary.Leb128.Encoding bytes idx.val) (hte : Binary.Leb128.Encoding tableBytes table.val)
@@ -887,7 +887,7 @@ theorem Frame.call_indirect_indexed {st} (f : Frame st) (data : Slice U8) (env :
     simp only [hvals, f.core.vals, List.length_append]
     omega
 
-theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : Translation.Environment.Matches env ctx C)
     (henv : CodeEntry.EnvironmentWithinLimits env) (idx : U32) (bytes : List U8) (next : Usize)
     (he : Binary.Leb128.Encoding bytes idx.val) (hb : Body.Scalar.BytesAt data st.core.pos (bytes ++ [0#u8]) next)
@@ -901,7 +901,7 @@ theorem Frame.call_indirect {st} (f : Frame st) (data : Slice U8) (env : metadat
     next he _ hb front input output hr ht hcap
   exact ⟨[], 0#u8, rfl, by simp, by simp, by decide, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons]⟩
 
-theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Binary.Leb128.Encoding bytes depth.val) (hb : Body.Scalar.BytesAt data st.core.pos bytes next)
@@ -925,7 +925,7 @@ theorem Frame.branch {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) 
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C) (henv : CodeEntry.EnvironmentWithinLimits env)
     (depth : U32) (bytes : List U8) (next : Usize)
     (he : Binary.Leb128.Encoding bytes depth.val) (hb : Body.Scalar.BytesAt data st.core.pos bytes next)
@@ -952,7 +952,7 @@ theorem Frame.branch_if {st} (f : Frame st) (data : Slice U8) (env : metadata.En
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hmatch : Translation.Environment.Matches env ctx C)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (next : Usize) (hb : Body.Scalar.BytesAt data st.core.pos [] next)
@@ -973,7 +973,7 @@ theorem Frame.return_ {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
     simp only [hv, f.core.vals, List.length_append]
     omega
 
-theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (index : U32) (C : context) (hlabels : Labels env st C)
     (depths : List U32) (default : U32) (count entries final : List U8) (next : Usize)
     (hcount : Binary.Leb128.Encoding count depths.length) (hentries : Body.Scalar.IndicesEncoding depths entries)
@@ -1009,7 +1009,7 @@ theorem Frame.branch_table {st} (f : Frame st) (data : Slice U8) (env : metadata
 
 /-- Reference immediates use ordinary generated typing together with the
 independent declaration condition for `ref.func`. -/
-theorem reference_leaf (data : Slice U8) (env : metadata.Env)
+theorem reference_leaf (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (henv : CodeEntry.EnvironmentWithinLimits env)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
@@ -1019,7 +1019,7 @@ theorem reference_leaf (data : Slice U8) (env : metadata.Env)
     (hi : ReferencesBinary.Immediate opcode op bytes) (hb : Body.Scalar.BytesAt data st.core.pos bytes next)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands (front ++ input))
     (ht : Instr_ok C op (.mk_functype (.mk_list input) (.mk_list output)))
-    (hdecl : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val)) op) :
+    (hdecl : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env) op) :
     LeafResult f data env ctx index opcode bytes next (front ++ output) := by
   cases hi with
   | refNull rt =>
@@ -1035,7 +1035,7 @@ theorem reference_leaf (data : Slice U8) (env : metadata.Env)
   | refFunc idx he =>
     cases ht with
     | ref_func _ _ ft hbound hlookup _ _ =>
-      have hidx : idx.val < env.func_types.val.length := by simpa [hmatch.funcs, proj_uN_0] using hbound
+      have hidx : idx.val < env.funcs.val.length := by simpa [hmatch.funcs, proj_uN_0] using hbound
       obtain ⟨s, hs, hp, ho, hl⟩ := f.ref_func data env ctx index idx next front
         (hb.u32_decoded idx he) hidx hdecl (by omega) (by simpa using hr)
       exact ⟨s, hs, hp, ho, by omega⟩
@@ -1071,7 +1071,7 @@ private theorem reference_type_injective {a b : wasm_types.ElemType}
 
 /-- Bulk memory and table instructions are complete for the Wasm 2.0
 reserved-byte grammar and the actual segment and table contexts. -/
-theorem bulk_leaf (data : Slice U8) (env : metadata.Env)
+theorem bulk_leaf (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32)
     (C : context) (st : code.BodyState) (f : Frame st) (subopcode : U32)
     (op : instr) (prefixBytes bytes : List U8) (next : Usize) (front input output : List valtype)
@@ -1161,7 +1161,7 @@ theorem bulk_leaf (data : Slice U8) (env : metadata.Env)
 
 /-- Every plain instruction of the independent Wasm 2.0 grammar has a
 complete actual dispatch contract, including all shared scalar instructions. -/
-theorem plain_leaf (data : Slice U8) (env : metadata.Env)
+theorem plain_leaf (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (henv : CodeEntry.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val)
     (C : context) (st : code.BodyState) (f : Frame st) (opcode : U8)
@@ -1199,7 +1199,7 @@ theorem plain_leaf (data : Slice U8) (env : metadata.Env)
     omega
   | _ => simp [controlOpcodes] at hcontrol
 
-theorem leaf_contract (data : Slice U8) (env : metadata.Env)
+theorem leaf_contract (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (henv : CodeEntry.EnvironmentWithinLimits env)
     (hroot : resolve env (.Type index .Results) = some ctx.results.val) :
     LeafContract data env ctx index := by

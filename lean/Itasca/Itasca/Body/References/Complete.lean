@@ -41,37 +41,37 @@ theorem code.take_value_type.complete (st : code.OpIterState) (data : Slice U8)
   cases ty <;> simp [code.take_value_type, hr, Itasca.Binary.valueByte, Itasca.Binary.Source.valueType, WebAssembly.Binary.valueByte, Itasca.Binary.Source.readerByte,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.take_table.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx : U32) (next : Usize) (hd : Binary.Leb128.Decoded data st.pos idx next)
-    (hi : idx.val < env.table_types.val.length) :
+    (hi : idx.val < env.tables.val.length) :
     code.take_table st data env = .ok (.Ok (idx,
-      Module.Constants.referenceValueType env.table_types.val[idx.val].elem), {st with pos := next}) := by
+      Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem), {st with pos := next}) := by
   obtain ⟨bs, hbs, hbl, hbb, hbe⟩ := hd
   have hr := (Body.Scalar.BytesAt.mk hbs hbl hbb).take_index st idx hbe
-  have hix : (UScalar.cast .Usize idx).val < env.table_types.val.length := by simpa using hi
+  have hix : (UScalar.cast .Usize idx).val < env.tables.val.length := by simpa using hi
   obtain ⟨tt, hget, heq⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.index_usize_spec env.table_types (UScalar.cast .Usize idx) hix)
-  have he : env.table_types.val[idx.val] = tt := by simpa using heq.symm
+    (alloc.vec.Vec.index_usize_spec env.tables (UScalar.cast .Usize idx) hix)
+  have he : env.tables.val[idx.val] = tt := by simpa using heq.symm
   have hn := Nat.not_le_of_gt hi
   simp [code.take_table, hr, lift, hn, hget, he, wasm_types.ElemType.value_type.eq,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_element.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.take_element.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx : U32) (next : Usize) (hd : Binary.Leb128.Decoded data st.pos idx next)
-    (hi : idx.val < env.elements.val.length) :
+    (hi : idx.val < env.elem_segment_types.val.length) :
     code.take_element st data env = .ok (.Ok (idx,
-      Module.Constants.referenceValueType env.elements.val[idx.val].elem), {st with pos := next}) := by
+      Module.Constants.referenceValueType env.elem_segment_types.val[idx.val]), {st with pos := next}) := by
   obtain ⟨bs, hbs, hbl, hbb, hbe⟩ := hd
   have hr := (Body.Scalar.BytesAt.mk hbs hbl hbb).take_index st idx hbe
-  have hix : (UScalar.cast .Usize idx).val < env.elements.val.length := by simpa using hi
+  have hix : (UScalar.cast .Usize idx).val < env.elem_segment_types.val.length := by simpa using hi
   obtain ⟨tt, hget, heq⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.index_usize_spec env.elements (UScalar.cast .Usize idx) hix)
-  have he : env.elements.val[idx.val] = tt := by simpa using heq.symm
+    (alloc.vec.Vec.index_usize_spec env.elem_segment_types (UScalar.cast .Usize idx) hix)
+  have he : env.elem_segment_types.val[idx.val] = tt := by simpa using heq.symm
   have hn := Nat.not_le_of_gt hi
   simp [code.take_element, hr, lift, hn, hget, he, wasm_types.ElemType.value_type.eq,
     core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.take_data_index.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.take_data_index.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (idx count : U32) (next : Usize) (hd : Binary.Leb128.Decoded data st.pos idx next)
     (hc : env.data_count = some count) (hi : idx.val < count.val) :
     code.take_data_index st data env = .ok (.Ok idx, {st with pos := next}) := by
@@ -85,11 +85,11 @@ theorem code.read_reserved_zero.complete (st : code.OpIterState) (data : Slice U
     code.read_reserved_zero st data = .ok (.Ok (), {st with pos := next}) := by
   simp [code.read_reserved_zero, hb.read_byte, core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem code.read_bulk_memory.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem code.read_bulk_memory.complete (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (next : Usize) (hb : Body.Scalar.BytesAt data st.pos [0#u8] next)
-    (hm : 0 < env.mem_types.val.length) :
+    (hm : 0 < env.memories.val.length) :
     code.read_bulk_memory st data env = .ok (.Ok (), {st with pos := next}) := by
-  have hn : env.mem_types.val.isEmpty = false := by simp [List.length_pos_iff.mp hm]
+  have hn : env.memories.val.isEmpty = false := by simp [List.length_pos_iff.mp hm]
   simp [code.read_bulk_memory, code.read_reserved_zero.complete st data next hb,
     alloc.vec.Vec.is_empty, hn, core.result.Result.Insts.CoreOpsTry.branch]
 
@@ -101,8 +101,8 @@ namespace Itasca.Translation.Environment
 theorem Matches.table_reference {env ctx C} (h : Matches env ctx C)
     (idx : U32) (lim : limits) (rt : reftype) (hi : idx.val < C.TABLES.length)
     (ht : C.TABLES[idx.val]! = .mk_tabletype lim rt) :
-    ∃ hv : idx.val < env.table_types.val.length,
-      Translation.valueType (Module.Constants.referenceValueType env.table_types.val[idx.val].elem) =
+    ∃ hv : idx.val < env.tables.val.length,
+      Translation.valueType (Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) =
         valtype_reftype rt := by
   obtain ⟨tt, hv, htt, htype⟩ := h.table_lookup idx _ hi ht
   refine ⟨hv, ?_⟩
@@ -117,18 +117,18 @@ namespace Itasca.Translation.Environment
 theorem Matches.element_reference {env ctx C} (h : Matches env ctx C)
     (idx : U32) (rt : reftype) (hi : idx.val < C.ELEMS.length)
     (ht : C.ELEMS[idx.val]! = rt) :
-    ∃ hv : idx.val < env.elements.val.length,
-      Translation.valueType (Module.Constants.referenceValueType env.elements.val[idx.val].elem) =
+    ∃ hv : idx.val < env.elem_segment_types.val.length,
+      Translation.valueType (Module.Constants.referenceValueType env.elem_segment_types.val[idx.val]) =
         valtype_reftype rt := by
-  have hv : idx.val < env.elements.val.length := by simpa [h.elems, elementTypes] using hi
-  have he : Translation.referenceType env.elements.val[idx.val].elem = rt := by
+  have hv : idx.val < env.elem_segment_types.val.length := by simpa [h.elems, elementTypes] using hi
+  have he : Translation.referenceType env.elem_segment_types.val[idx.val] = rt := by
     rw [h.elems] at ht
-    change (env.elements.val.map (fun e => Translation.referenceType e.elem))[idx.val]! = rt at ht
+    change (env.elem_segment_types.val.map Translation.referenceType)[idx.val]! = rt at ht
     rw [getElem!_pos _ _ (by simpa using hv), List.getElem_map] at ht
     exact ht
   refine ⟨hv, ?_⟩
   rw [← he]
-  cases env.elements.val[idx.val].elem <;> rfl
+  cases env.elem_segment_types.val[idx.val] <;> rfl
 
 theorem Matches.data_bound {env ctx C} (h : Matches env ctx C)
     (idx : U32) (hi : idx.val < C.DATAS.length) :
@@ -183,7 +183,7 @@ theorem Frame.metadata_read {st} (f : Frame st) {A B : Type}
 
 /-- Lift a successful leaf reader through its accepting empty-visitor hook and
 into the actual instruction step, including its checked capacity guard. -/
-theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (opcode : U8) {A : Type}
     (read : Result (core.result.Result A error.OpError × code.OpIterState))
     (hook : Unit → code.OpIterState → A → Result (core.result.Result Unit error.VisitError × Unit))
@@ -203,7 +203,7 @@ theorem Frame.reader_step {st} (f : Frame st) (data : Slice U8) (env : metadata.
   rw [if_neg hn, hdispatch]
   simp [Visitor.Core.run, hread, hhook, code.visit, core.result.Result.Insts.CoreOpsTry.branch]
 
-theorem Frame.ref_null {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.ref_null {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (rt : wasm_types.ElemType) (next : Usize) (front : List valtype)
     (hb : Body.Scalar.BytesAt data st.core.pos [ReferencesBinary.referenceByte rt] next)
     (hsize : st.core.vals.val.length < Usize.max)
@@ -220,95 +220,95 @@ theorem Frame.ref_null {st} (f : Frame st) (data : Slice U8) (env : metadata.Env
     (by cases rt <;> simpa [Simd.outputTypes, Module.Constants.referenceValueType,
       Translation.referenceType, Translation.valueType, valtype_reftype] using hout) hl hsize
 
-theorem Frame.table_get {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.table_get {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.table_types.val.length)
+    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.tables.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands
-      (front ++ Simd.inputTypes ((fun _ => [.I32]) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem)))) :
+      (front ++ Simd.inputTypes ((fun _ => [.I32]) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem)))) :
     ∃ s, step st data env ctx index 37#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
-      f.Output (front ++ Simd.outputTypes ((fun a => some a.2) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem))) s ∧
+      f.Output (front ++ Simd.outputTypes ((fun a => some a.2) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem))) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_table st.core data env)
-    (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem) next
+    (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) next
     (fun _ => [.I32]) (fun a => some a.2) Prod.fst front
     (code.take_table.complete st.core data env idx next hd hi) hsize hr
   rw [← code.read_table_get.fixed] at hs
   exact f.reader_step data env ctx index 37#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.table_get _ _ _ _ _ _) hs rfl hp hout hl hsize
 
-theorem Frame.table_set {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.table_set {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.table_types.val.length)
+    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.tables.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands
-      (front ++ Simd.inputTypes ((fun a => [a.2, .I32]) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem)))) :
+      (front ++ Simd.inputTypes ((fun a => [a.2, .I32]) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem)))) :
     ∃ s, step st data env ctx index 38#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
-      f.Output (front ++ Simd.outputTypes ((fun _ => none) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem))) s ∧
+      f.Output (front ++ Simd.outputTypes ((fun _ => none) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem))) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_table st.core data env)
-    (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem) next
+    (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) next
     (fun a => [a.2, .I32]) (fun _ => none) Prod.fst front
     (code.take_table.complete st.core data env idx next hd hi) hsize hr
   rw [← code.read_table_set.fixed] at hs
   exact f.reader_step data env ctx index 38#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.table_set _ _ _ _ _ _) hs rfl hp hout hl hsize
 
-theorem Frame.table_grow {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.table_grow {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Binary.Leb128.Decoded data st.core.pos 15#u32 middle)
     (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
+    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.tables.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands
-      (front ++ Simd.inputTypes ((fun a => [.I32, a.2]) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem)))) :
+      (front ++ Simd.inputTypes ((fun a => [.I32, a.2]) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem)))) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
-      f.Output (front ++ Simd.outputTypes ((fun _ => some .I32) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem))) s ∧
+      f.Output (front ++ Simd.outputTypes ((fun _ => some .I32) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem))) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_table {st.core with pos := middle} data env)
-    (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem) next
+    (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) next
     (fun a => [.I32, a.2]) (fun _ => some .I32) Prod.fst front
     (code.take_table.complete {st.core with pos := middle} data env idx next hd hi) hsize hr
   rw [← code.read_table_grow.fixed] at hs
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 15#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.table_size {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.table_size {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Binary.Leb128.Decoded data st.core.pos 16#u32 middle)
     (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
+    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.tables.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands
-      (front ++ Simd.inputTypes ((fun _ => []) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem)))) :
+      (front ++ Simd.inputTypes ((fun _ => []) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem)))) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
-      f.Output (front ++ Simd.outputTypes ((fun _ => some .I32) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem))) s ∧
+      f.Output (front ++ Simd.outputTypes ((fun _ => some .I32) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem))) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_table {st.core with pos := middle} data env)
-    (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem) next
+    (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) next
     (fun _ => []) (fun _ => some .I32) Prod.fst front
     (code.take_table.complete {st.core with pos := middle} data env idx next hd hi) hsize hr
   rw [← code.read_table_size.fixed] at hs
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 16#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.table_fill {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.table_fill {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (middle : Usize) (hprefix : Binary.Leb128.Decoded data st.core.pos 17#u32 middle)
     (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.table_types.val.length)
+    (hd : Binary.Leb128.Decoded data middle idx next) (hi : idx.val < env.tables.val.length)
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands
-      (front ++ Simd.inputTypes ((fun a => [.I32, a.2, .I32]) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem)))) :
+      (front ++ Simd.inputTypes ((fun a => [.I32, a.2, .I32]) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem)))) :
     ∃ s, step st data env ctx index 252#u8 = .ok (.Ok (), s) ∧ s.core.pos = next ∧
-      f.Output (front ++ Simd.outputTypes ((fun _ => none) (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem))) s ∧
+      f.Output (front ++ Simd.outputTypes ((fun _ => none) (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem))) s ∧
       s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨s, hs, hp, hout, hl⟩ := f.metadata_read (code.take_table {st.core with pos := middle} data env)
-    (idx, Module.Constants.referenceValueType env.table_types.val[idx.val].elem) next
+    (idx, Module.Constants.referenceValueType env.tables.val[idx.val].ty.elem) next
     (fun a => [.I32, a.2, .I32]) (fun _ => none) Prod.fst front
     (code.take_table.complete {st.core with pos := middle} data env idx next hd hi) hsize hr
   rw [← code.read_table_fill.fixed] at hs
   exact f.reader_step data env ctx index 252#u8 _ _ idx s next _ (by decide)
     (by rw [code.step_wasm2.bulk _ _ _ _ _ 17#u32 middle _ hprefix (by decide), code.step_bulk.eq_runs]; rfl) hs rfl hp hout hl hsize
 
-theorem Frame.typed_select {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.typed_select {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (ty : wasm_types.ValueType) (count : List U8)
     (next : Usize) (front : List valtype)
     (he : Binary.Leb128.Encoding count 1) (hb : Body.Scalar.BytesAt data st.core.pos (count ++ [Itasca.Binary.valueByte ty]) next)
@@ -332,10 +332,10 @@ theorem Frame.typed_select {st} (f : Frame st) (data : Slice U8) (env : metadata
 
 /-- Completeness of ref.func requires the independent declaration premise in
 addition to the ordinary generated function-index bound. -/
-theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index idx : U32) (next : Usize) (front : List valtype)
-    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.func_types.val.length)
-    (hdecl : Spec.DeclaredReferences.Instruction (env.declared_funcs.val.map (fun i => uN.mk_uN i.val))
+    (hd : Binary.Leb128.Decoded data st.core.pos idx next) (hi : idx.val < env.funcs.val.length)
+    (hdecl : Spec.DeclaredReferences.Instruction (Translation.Environment.declaredReferences env)
       (.REF_FUNC (.mk_uN idx.val)))
     (hsize : st.core.vals.val.length < Usize.max)
     (hr : Body.Stack.Realizes f.core.current.polymorphic_base f.core.operands front) :
@@ -343,13 +343,11 @@ theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : metadata.Env
       f.Output (front ++ [.FUNCREF]) s ∧ s.core.vals.val.length ≤ st.core.vals.val.length + 1 := by
   obtain ⟨bs, hbs, hbl, hbb, hbe⟩ := hd
   have hread := (Body.Scalar.BytesAt.mk hbs hbl hbb).take_index st.core idx hbe
-  obtain ⟨i, himem, hie⟩ := List.mem_map.mp (Spec.DeclaredReferences.Instruction.ref_func_iff.mp hdecl)
-  have heq : i = idx := UScalar.eq_of_val_eq (uN.mk_uN.inj hie)
-  subst i
+  have himem := Spec.DeclaredReferences.Instruction.ref_func_iff.mp hdecl
   obtain ⟨s, hs, hv, hc, hp⟩ := WP.spec_imp_exists
     (code.push_val.spec {st.core with pos := next} (.Val .FuncRef) hsize)
   have hrun : code.read_ref_func st.core data env = .ok (.Ok idx, s) := by
-    simp [code.read_ref_func, hread, lift, Nat.not_le_of_gt hi, metadata.Env.declares_function.eq,
+    simp [code.read_ref_func, hread, lift, Nat.not_le_of_gt hi, metadata.CodeMetadata.declares_function.eq,
       himem, hs, core.result.Result.Insts.CoreOpsTry.branch]
   apply f.reader_step data env ctx index 210#u8 _ _ idx s next _ (by decide)
     (code.step_wasm2.ref_func _ _ _ _ _ _) hrun rfl hp ?_ ?_ hsize
@@ -358,7 +356,7 @@ theorem Frame.ref_func {st} (f : Frame st) (data : Slice U8) (env : metadata.Env
     simpa [f.core.poly_eq] using hr.snoc (.Val .FuncRef) .FUNCREF rfl
   · simp [hv]
 
-theorem Frame.ref_is_null {st} (f : Frame st) (data : Slice U8) (env : metadata.Env)
+theorem Frame.ref_is_null {st} (f : Frame st) (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (rt : reftype) (next : Usize) (front : List valtype)
     (hb : Body.Scalar.BytesAt data st.core.pos [] next)
     (hsize : st.core.vals.val.length < Usize.max)

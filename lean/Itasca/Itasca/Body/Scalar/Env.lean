@@ -61,7 +61,7 @@ theorem take_local (st : code.OpIterState) (data : Slice U8) (ctx : code.Context
     · simp [hp]
     · exact (Binary.Leb128.Decoded.span _ _ _ _ hd).1.le
 
-theorem take_global (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem take_global (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) :
     code.take_global st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ∧ r.2.vals.val.length = st.vals.val.length ⦄ := by
@@ -134,7 +134,7 @@ theorem local_tee (st : code.OpIterState) (data : Slice U8) (ctx : code.Context)
   cases val
   step*
 
-theorem global_get (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem global_get (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_global_get st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
@@ -143,7 +143,7 @@ theorem global_get (st : code.OpIterState) (data : Slice U8) (env : metadata.Env
   cases val
   step*
 
-theorem global_set (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem global_set (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (_hsize : st.vals.val.length < Usize.max) :
     code.read_global_set st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
@@ -152,28 +152,28 @@ theorem global_set (st : code.OpIterState) (data : Slice U8) (env : metadata.Env
   cases val
   step*
 
-theorem memory_size (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem memory_size (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_memory_size st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_memory_size
   step*
 
-theorem memory_grow (st : code.OpIterState) (data : Slice U8) (env : metadata.Env)
+theorem memory_grow (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_memory_grow st data env ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_memory_grow
   step*
 
-theorem load (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ty : wasm_types.ValueType) (align : U32)
+theorem load (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ty : wasm_types.ValueType) (align : U32)
     (hs : Body.Control.Shape st) (hsize : st.vals.val.length < Usize.max) :
     code.read_load st data env ty align ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
   unfold code.read_load
   step*
 
-theorem store (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ty : wasm_types.ValueType) (align : U32)
+theorem store (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ty : wasm_types.ValueType) (align : U32)
     (hs : Body.Control.Shape st) (_hsize : st.vals.val.length < Usize.max) :
     code.read_store st data env ty align ⦃ r => Body.Control.Shape r.2 ∧ r.2.ctrls = st.ctrls ∧
       st.pos.val ≤ r.2.pos.val ⦄ := by
@@ -325,7 +325,7 @@ theorem memory_meaning_exists (opcode : U8)
 /-- The shared scalar dispatcher is total for arbitrary structurally bounded
 frames. It preserves control depth and never moves the cursor back. -/
 theorem scalar_total {V : Type} (visitor : code.OpVisitor V)
-    (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) (ctx : code.Context)
+    (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) (ctx : code.Context)
     (opcode : U8) (v : V) (hs : Body.Control.Shape st)
     (hsize : st.vals.val.length < Usize.max)
     (hscalar : opcode.val ∉ controlOpcodes) (hvisitor : Visitor.Total visitor) :
@@ -602,7 +602,7 @@ end Itasca.Body.Scalar
 namespace Itasca
 
 theorem code.read_local_get.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment) :
@@ -631,7 +631,7 @@ theorem code.read_local_get.prefix {inputs : List valtype} (st : code.OpIterStat
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
 theorem code.read_local_set.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment) :
@@ -670,7 +670,7 @@ theorem code.read_local_set.prefix {inputs : List valtype} (st : code.OpIterStat
               by simpa using htyping⟩
 
 theorem code.read_local_tee.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
@@ -716,7 +716,7 @@ theorem code.read_local_tee.prefix {inputs : List valtype} (st : code.OpIterStat
               by simpa using htyping⟩
 
 theorem code.read_global_get.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hsize : st.vals.val.length < Usize.max)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment) :
@@ -745,7 +745,7 @@ theorem code.read_global_get.prefix {inputs : List valtype} (st : code.OpIterSta
           by simpa [hv, hvals, List.append_assoc] using hv', by simp, by simpa using htyping⟩
 
 theorem code.read_global_set.prefix {inputs : List valtype} (st : code.OpIterState) (data : Slice U8)
-    (env : metadata.Env) (ctx : code.Context) (outer segment : List code.StackType)
+    (env : metadata.CodeMetadata) (ctx : code.Context) (outer segment : List code.StackType)
     (hvals : st.vals.val = outer ++ segment) (hbase : (Body.Control.base st).val = outer.length)
     (C : context) (hC : Translation.Environment.Matches env ctx C) (ops : List instr)
     (htyped : Body.TypedPrefix C inputs ops (Body.Control.polymorphic st) segment) :

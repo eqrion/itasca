@@ -231,11 +231,11 @@ theorem code.local_type.spec (ctx : code.Context) (idx : U32) :
   step*
 
 /-- `code.global_type` returns the global's type, or `UnknownGlobal` for an out-of-range index. -/
-theorem code.global_type.spec (env : metadata.Env) (idx : U32) :
+theorem code.global_type.spec (env : metadata.CodeMetadata) (idx : U32) :
     code.global_type env idx ⦃ r =>
       match r with
-      | .Ok gt => ∃ hi : idx.val < env.global_types.val.length, env.global_types.val[idx.val] = gt
-      | .Err e => e = .UnknownGlobal ∧ env.global_types.val.length ≤ idx.val ⦄ := by
+      | .Ok gt => ∃ hi : idx.val < env.globals.val.length, env.globals.val[idx.val].gtype = gt
+      | .Err e => e = .UnknownGlobal ∧ env.globals.val.length ≤ idx.val ⦄ := by
   unfold code.global_type
   step*
 
@@ -270,15 +270,15 @@ theorem code.take_local.spec (st : code.OpIterState) (data : Slice U8) (ctx : co
 
 /-- `code.take_global` decodes a global index with exact byte provenance and leaves both stacks
 alone. It rejects with the LEB128 error or `UnknownGlobal`. -/
-theorem code.take_global.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.Env) :
+theorem code.take_global.spec (st : code.OpIterState) (data : Slice U8) (env : metadata.CodeMetadata) :
     code.take_global st data env ⦃ r =>
       r.2.vals = st.vals ∧ r.2.ctrls = st.ctrls ∧
       match r.1 with
       | .Ok (idx, gt) => Binary.Leb128.Decoded data st.pos idx r.2.pos ∧
-          ∃ hi : idx.val < env.global_types.val.length, env.global_types.val[idx.val] = gt
+          ∃ hi : idx.val < env.globals.val.length, env.globals.val[idx.val].gtype = gt
       | .Err e => (Binary.Leb128.Rejected data st.pos e ∧ r.2.pos = st.pos) ∨
           (e = .UnknownGlobal ∧ ∃ idx, Binary.Leb128.Decoded data st.pos idx r.2.pos ∧
-            env.global_types.val.length ≤ idx.val) ⦄ := by
+            env.globals.val.length ≤ idx.val) ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (reader.read_u32_leb.spec data st.pos)
   cases r with
   | Err e =>
@@ -340,11 +340,11 @@ theorem code.read_reserved_zero.spec (st : code.OpIterState) (data : Slice U8) :
     simpa using Nat.le_of_not_gt hp
 
 /-- `code.require_memory` succeeds exactly when the environment has a memory. -/
-theorem code.require_memory.spec (env : metadata.Env) :
+theorem code.require_memory.spec (env : metadata.CodeMetadata) :
     code.require_memory env ⦃ r =>
       match r with
-      | .Ok _ => 0 < env.mem_types.val.length
-      | .Err e => e = .UnknownMemory ∧ env.mem_types.val = [] ⦄ := by
+      | .Ok _ => 0 < env.memories.val.length
+      | .Err e => e = .UnknownMemory ∧ env.memories.val = [] ⦄ := by
   unfold code.require_memory alloc.vec.Vec.is_empty
   step*
   all_goals simp_all
@@ -381,13 +381,13 @@ theorem code.read_memarg.spec (st : code.OpIterState) (data : Slice U8) :
 
 /-- `code.check_memory_and_alignment` requires a memory and an alignment at most `natural`, and
 rejects with `UnknownMemory` or `InvalidAlignment`. -/
-theorem code.check_memory_and_alignment.spec (env : metadata.Env) (arg : code.MemArg)
+theorem code.check_memory_and_alignment.spec (env : metadata.CodeMetadata) (arg : code.MemArg)
     (natural : U32) :
     code.check_memory_and_alignment env arg natural ⦃ r =>
       match r with
-      | .Ok _ => 0 < env.mem_types.val.length ∧ arg.align.val ≤ natural.val
-      | .Err e => (e = .UnknownMemory ∧ env.mem_types.val = []) ∨
-          (e = .InvalidAlignment ∧ 0 < env.mem_types.val.length ∧ natural.val < arg.align.val) ⦄ := by
+      | .Ok _ => 0 < env.memories.val.length ∧ arg.align.val ≤ natural.val
+      | .Err e => (e = .UnknownMemory ∧ env.memories.val = []) ∨
+          (e = .InvalidAlignment ∧ 0 < env.memories.val.length ∧ natural.val < arg.align.val) ⦄ := by
   obtain ⟨r, hr, hp⟩ := WP.spec_imp_exists (code.require_memory.spec env)
   cases r with
   | Err e =>
@@ -430,7 +430,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Body
 
 /-- Logical list denoted by a descriptor; no such list is allocated by Rust. -/
-def resolve (env : metadata.Env) : signature.ResultType → Option (List wasm_types.ValueType)
+def resolve (env : metadata.CodeMetadata) : signature.ResultType → Option (List wasm_types.ValueType)
   | .Empty => some []
   | .One t => some [t]
   | .Type index part => (env.types.val[index.val]?).map fun ft =>
