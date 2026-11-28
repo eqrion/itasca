@@ -140,6 +140,18 @@ def PrefixEncoding (value : Declarations) (bytes : List U8) : Prop :=
     bytes = Binary.magicVersion ++ types ++ imports ++ functions ++ tables ++ memories ++
       globals ++ exports ++ start ++ elements ++ dataCount ++ customs
 
+/-- The import count encoded in the prefix bounds every import accessor cursor. -/
+theorem PrefixEncoding.import_count_bound {decls bytes} (h : PrefixEncoding decls bytes) :
+    decls.imports.length ≤ U32.max := by
+  obtain ⟨_, _, _, _, _, _, _, _, _, _, _, _, ⟨_, _, _, sectionEnc, _⟩, _⟩ := h
+  generalize decls.imports = imports at sectionEnc ⊢
+  cases sectionEnc with
+  | absent => decide
+  | present encoded =>
+    obtain ⟨_, _, _, ⟨_, _, count, _, _⟩, _⟩ := encoded
+    have := count.value_lt
+    scalar_tac
+
 end Itasca.Module.Environment
 
 end

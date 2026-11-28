@@ -291,7 +291,7 @@ def Completed (issued : Stream.Batch.Issued) : Prop :=
 theorem Provenance.environment_preserves {V : Type} {visitor : stream.StreamingVisitor V}
     {Tracks : U64 → List Stream.Batch.Issued → V → Prop} (hp : Provenance visitor Tracks)
     (id : U64) (history : List Stream.Batch.Issued) (data : Slice U8)
-    (v v' : V) (env : metadata.Env) (next : Usize)
+    (v v' : V) (env : metadata.ModuleMetadata metadata.CodeMetadata) (next : Usize)
     (h : metadata.validate_env_with visitor.metadataModuleVisitorInst data v = .ok (.Ok (env, next), v')) :
     Tracks id history v → Tracks id history v' :=
   metadata.validate_env_with.accepted_invariant _ _ (hp.custom id history) data v env next v' h
@@ -299,7 +299,7 @@ theorem Provenance.environment_preserves {V : Type} {visitor : stream.StreamingV
 theorem Provenance.tail_preserves {V : Type} {visitor : stream.StreamingVisitor V}
     {Tracks : U64 → List Stream.Batch.Issued → V → Prop} (hp : Provenance visitor Tracks)
     (id : U64) (history : List Stream.Batch.Issued) (data : Slice U8) (pos : Usize)
-    (v v' : V) (env : metadata.Env) (tail : metadata.Tail)
+    (v v' : V) (env : metadata.CodeMetadata) (tail : (alloc.vec.Vec metadata.Data))
     (h : metadata.validate_tail_with visitor.metadataModuleVisitorInst data pos env v = .ok (.Ok tail, v')) :
     Tracks id history v → Tracks id history v' :=
   metadata.validate_tail_with.accepted_invariant _ _ (hp.custom id history) data pos env v tail v' h
@@ -455,98 +455,23 @@ section
 /-!
 # Accepted driver runs
 
-Unpacks an accepted run of the extracted driver into witnesses for each phase.
-`stream.validate_streaming.accepted` and `stream.validate_remaining.accepted` show that an
-`Ok` result of `stream.validate_streaming` and of its post-environment phases yields the
-`Stream.Run.Accepted` and `Stream.Run.Remaining` records: the environment read and decode, the code
-header, the configuration, the batch submission, the tail read and decode, and the final drain.
-The records describe executions of the extracted driver and make no claim about the source or
-scheduler.
+An accepted call to `stream.validate_streaming` yields a `Stream.Run.Accepted` witness.
+It records the decoded prefix and the calls that read the code header, configure the visitor,
+submit batches, decode data segments and drain outstanding work. Its publication equality
+identifies the returned module with the shared prefix updated with those segments.
 -/
 
 open Aeneas Aeneas.Std
 
 namespace Itasca
 
-/-- An accepted `stream.validate_remaining` yields witnesses for each of its phases. -/
-theorem stream.validate_remaining.accepted {S V : Type} (source : stream.StreamingSource S)
-    (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (env : metadata.Env) (envLen : Usize) (v v' : V)
-    (h : stream.validate_remaining source visitor id state env envLen v = .ok (.Ok (), v')) :
-    Nonempty (Stream.Run.Remaining source visitor id state env envLen v v' ) := by
-  unfold stream.validate_remaining at h
-  obtain ⟨codeLen, hlen, h⟩ := Computation.bind_ok_inv _ _ _ h
-  obtain ⟨r, hbound, h⟩ := Computation.bind_ok_inv _ _ _ h
-  cases r with
-  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-  | Ok codeEnd =>
-    simp [core.result.Result.Insts.CoreOpsTry.branch] at h
-    obtain ⟨r, hheader, h⟩ := Computation.bind_ok_inv _ _ _ h
-    cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-    | Ok entries =>
-      simp at h
-      obtain ⟨⟨r, configured⟩, hconfig, h⟩ := Computation.bind_ok_inv _ _ _ h
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-      | Ok config =>
-        simp at h
-        split at h
-        · simp at h
-        · rename_i hbytes
-          split at h
-          · simp at h
-          · rename_i hbatches
-            obtain ⟨⟨r, submitted⟩, hsubmit, h⟩ := Computation.bind_ok_inv _ _ _ h
-            cases r with
-            | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-            | Ok pending =>
-              simp at h
-              obtain ⟨⟨r, ended⟩, hend, h⟩ := Computation.bind_ok_inv _ _ _ h
-              cases r with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-              | Ok u =>
-                cases u
-                simp at h
-                obtain ⟨r, htail, h⟩ := Computation.bind_ok_inv _ _ _ h
-                cases r with
-                | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-                | Ok tailBytes =>
-                  simp at h
-                  obtain ⟨r, hmodule, h⟩ := Computation.bind_ok_inv _ _ _ h
-                  cases r with
-                  | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-                  | Ok moduleEnd =>
-                    simp at h
-                    obtain ⟨region, hregion, h⟩ := Computation.bind_ok_inv _ _ _ h
-                    obtain ⟨⟨r, decoded⟩, hdecoded, h⟩ := Computation.bind_ok_inv _ _ _ h
-                    cases r with
-                    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-                    | Ok tail =>
-                      simp at h
-                      obtain ⟨⟨r, ready⟩, hready, h⟩ := Computation.bind_ok_inv _ _ _ h
-                      cases r with
-                      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
-                      | Ok u =>
-                        cases u
-                        simp at h
-                        obtain ⟨⟨r, after, remaining⟩, hdrain, h⟩ := Computation.bind_ok_inv _ _ _ h
-                        simp at h
-                        obtain ⟨rfl, rfl⟩ := h
-                        exact ⟨⟨codeLen, codeEnd, entries, config, configured, pending, submitted, ended,
-                          tailBytes, moduleEnd, region, tail, decoded, ready, remaining, hlen, hbound,
-                          hheader, hconfig, hbytes, hbatches, hsubmit, hend, htail, hmodule, hregion,
-                          hdecoded, hready, hdrain⟩⟩
-
-set_option maxHeartbeats 600000 in
-/-- An accepted generic driver exposes its decoded environment and the tail delivery it actually
-performed. No assumption is made that the visitor state keeps any metadata. -/
+set_option maxHeartbeats 1000000 in
+/-- Recover the source reads, worker calls and published metadata from a successful driver run. -/
 theorem stream.validate_streaming.accepted {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (id : U64) (state : S)
-    (v v' : V) (initial env : metadata.Env)
-    (h : stream.validate_streaming source visitor id state v initial = .ok (.Ok (), v', env)) :
-    Nonempty (Stream.Run.Accepted source visitor id state v v' env ) := by
+    (v v' : V) (published : metadata.ModuleMetadata metadata.CodeMetadata)
+    (h : stream.validate_streaming source visitor id state v = .ok (.Ok published, v')) :
+    Nonempty (Stream.Run.Accepted source visitor id state v v' published) := by
   unfold stream.validate_streaming at h
   obtain ⟨r, henv, h⟩ := Computation.bind_ok_inv _ _ _ h
   cases r with
@@ -556,26 +481,97 @@ theorem stream.validate_streaming.accepted {S V : Type} (source : stream.Streami
     simp [core.result.Result.Insts.CoreOpsTry.branch] at h
     obtain ⟨r, hbound, h⟩ := Computation.bind_ok_inv _ _ _ h
     cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
     | Ok envLen =>
-      simp at h
+      simp [core.result.Result.Insts.CoreOpsTry.branch] at h
       obtain ⟨region, hregion, h⟩ := Computation.bind_ok_inv _ _ _ h
       obtain ⟨⟨r, decoded⟩, hdecode, h⟩ := Computation.bind_ok_inv _ _ _ h
       cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
       | Ok pair =>
-        obtain ⟨actualEnv, envEnd⟩ := pair
+        obtain ⟨prefixEnv, envEnd⟩ := pair
         simp at h
         split at h
-        · rename_i heq
-          have he : envEnd = envLen := by apply UScalar.eq_of_val_eq; simpa using heq
-          subst envEnd
-          obtain ⟨⟨r, after⟩, hremaining, h⟩ := Computation.bind_ok_inv _ _ _ h
-          simp at h
-          obtain ⟨rfl, rfl, rfl⟩ := h
-          obtain ⟨remaining⟩ := stream.validate_remaining.accepted source visitor id state actualEnv envLen decoded after hremaining
-          exact ⟨⟨environment, envLen, region, decoded, henv, hbound, hregion, hdecode, remaining⟩⟩
+        swap
         · simp at h
+        · rename_i heq
+          have same : envEnd = envLen := by apply UScalar.eq_of_val_eq; simpa using heq
+          subst envEnd
+          have sharing : metadata.ModuleMetadataCodeMetadata.share prefixEnv = .ok prefixEnv := by
+              obtain ⟨x, hx, same⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.share.spec prefixEnv)
+              simpa [same] using hx
+          simp only [sharing, bind_ok, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref] at h
+          obtain ⟨codeLen, hlen, h⟩ := Computation.bind_ok_inv _ _ _ h
+          obtain ⟨r, hcodeBound, h⟩ := Computation.bind_ok_inv _ _ _ h
+          cases r with
+          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+          | Ok codeEnd =>
+            simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+            obtain ⟨r, hheader, h⟩ := Computation.bind_ok_inv _ _ _ h
+            cases r with
+            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+            | Ok entries =>
+              simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+              obtain ⟨⟨r, configured⟩, hconfig, h⟩ := Computation.bind_ok_inv _ _ _ h
+              cases r with
+              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+              | Ok config =>
+                simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                split at h
+                · simp at h
+                · rename_i hbytes
+                  split at h
+                  · simp at h
+                  · rename_i hbatches
+                    obtain ⟨⟨r, submitted⟩, hsubmit, h⟩ := Computation.bind_ok_inv _ _ _ h
+                    cases r with
+                    | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                        core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                    | Ok pending =>
+                      simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                      obtain ⟨⟨r, ended⟩, hend, h⟩ := Computation.bind_ok_inv _ _ _ h
+                      cases r with
+                      | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                      | Ok u =>
+                        simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                        cases u
+                        obtain ⟨r, htail, h⟩ := Computation.bind_ok_inv _ _ _ h
+                        cases r with
+                        | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                            core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                        | Ok tailBytes =>
+                          simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                          obtain ⟨r, hmodule, h⟩ := Computation.bind_ok_inv _ _ _ h
+                          cases r with
+                          | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                              core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                          | Ok moduleEnd =>
+                            simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                            obtain ⟨tailRegion, htailRegion, h⟩ := Computation.bind_ok_inv _ _ _ h
+                            obtain ⟨⟨r, decodedTail⟩, hsegments, h⟩ := Computation.bind_ok_inv _ _ _ h
+                            cases r with
+                            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                            | Ok segments =>
+                              simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                              obtain ⟨⟨r, after, remaining⟩, hdrain, h⟩ := Computation.bind_ok_inv _ _ _ h
+                              cases r with
+                              | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                                  core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at h
+                              | Ok u =>
+                                simp [core.result.Result.Insts.CoreOpsTry.branch] at h
+                                cases u
+                                obtain ⟨rfl, rfl⟩ := h
+                                exact ⟨⟨environment, envLen, prefixEnv, region, decoded, henv, hbound, hregion, hdecode,
+                                  ⟨codeLen, codeEnd, entries, config, configured, pending, submitted, ended, tailBytes,
+                                   moduleEnd, tailRegion, segments, decodedTail, remaining, hlen, hcodeBound, hheader,
+                                   hconfig, hbytes, hbatches, hsubmit, hend, htail, hmodule, htailRegion, hsegments, hdrain⟩, rfl⟩⟩
 
 end Itasca
 
@@ -619,22 +615,25 @@ end Stream.Framing
 /-- `stream.read_code_header` either errors or returns the entry count of a checked header,
 provided the reached code read returns. -/
 theorem stream.read_code_header.spec {S : Type} (source : stream.StreamingSource S) (state : S)
-    (codeLen : Usize) (env : metadata.Env)
+    (codeLen : Usize) (env : metadata.CodeMetadata)
+    (imports : env.num_imported_funcs.val ≤ env.funcs.val.length)
     (hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
       (core.cmp.impls.OrdUsize.min codeLen 11#usize) = .ok r) :
     stream.read_code_header source state codeLen env ⦃ r => match r with
       | .Ok entries => Stream.Framing.HeaderChecked source state codeLen env entries
       | .Err _ => True ⦄ := by
+  obtain ⟨num, call, countEq⟩ := WP.spec_imp_exists (metadata.CodeMetadata.num_func_defs.spec env imports)
+  have numEq : (Translation.Environment.definedTypeIndices env).length = num.val := by
+    simp [Translation.Environment.definedTypeIndices, countEq]
   unfold stream.read_code_header
-  dsimp only
   split
   · rename_i hzero
-    simp [alloc.vec.Vec.is_empty]
+    simp only [call, bind_ok]
     split
-    · rename_i hempty
-      simp only [WP.spec_ok]
-      exact .inl ⟨hzero, rfl, by simpa using hempty⟩
     · simp
+    · rename_i empty
+      simp only [WP.spec_ok]
+      exact .inl ⟨hzero, rfl, List.length_eq_zero_iff.mp (by scalar_tac)⟩
   · rename_i hnonzero
     rw [Stream.Framing.header_limit]
     simp only [bind_ok, lift]
@@ -689,7 +688,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.StreamingSource
                 | Ok pair =>
                   obtain ⟨countLen, entries⟩ := pair
                   obtain ⟨count, hcountval, hcount⟩ := hcp
-                  simp
+                  simp [call]
                   split
                   · simp
                   · rename_i hentries
@@ -697,7 +696,7 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.StreamingSource
                     · rename_i hcountlen
                       simp only [WP.spec_ok]
                       change ¬ entries.val > finish.val at hentries
-                      change countLen.val = env.func_type_indices.val.length at hcountlen
+                      change countLen.val = num.val at hcountlen
                       exact .inr ⟨header, content, size, count, hr, hbyte, hsize, hend,
                         hcount, by omega, by omega⟩
                     · simp
@@ -706,7 +705,8 @@ theorem stream.read_code_header.spec {S : Type} (source : stream.StreamingSource
 /-- Acceptance itself supplies the reached source callback. No premise is
 imposed on unrelated or unexecuted source calls. -/
 theorem stream.read_code_header.checked {S : Type} (source : stream.StreamingSource S) (state : S)
-    (codeLen : Usize) (env : metadata.Env) (entries : Usize)
+    (codeLen : Usize) (env : metadata.CodeMetadata) (entries : Usize)
+    (imports : env.num_imported_funcs.val ≤ env.funcs.val.length)
     (h : stream.read_code_header source state codeLen env = .ok (.Ok entries)) :
     Stream.Framing.HeaderChecked source state codeLen env entries := by
   have hreturn : codeLen ≠ 0#usize → ∃ r, source.code state 0#usize
@@ -721,13 +721,13 @@ theorem stream.read_code_header.checked {S : Type} (source : stream.StreamingSou
         core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual] at hrest
     | Ok header =>
       exact ⟨.Ok header, (stream.read_exact.accepted source state _ _ header (by simp) hr).1⟩
-  have hs := stream.read_code_header.spec source state codeLen env hreturn
+  have hs := stream.read_code_header.spec source state codeLen env imports hreturn
   simpa [h] using hs
 
 namespace Stream.Framing
 
 theorem HeaderChecked.sound {S : Type} {source : stream.StreamingSource S} {state : S}
-    {codeLen : Usize} {env : metadata.Env} {entries : Usize} {data : Slice U8}
+    {codeLen : Usize} {env : metadata.CodeMetadata} {entries : Usize} {data : Slice U8}
     {environment tail : List U8}
     (h : HeaderChecked source state codeLen env entries)
     (hcoherent : Stream.Source.Coherent source state environment data.val tail)
@@ -757,93 +757,19 @@ end Stream.Framing
 /-- Over a coherent source, a successful `stream.read_code_header` returns the entry count of a
 code section that spans the whole code region. -/
 theorem stream.read_code_header.sound {S : Type} (source : stream.StreamingSource S) (state : S)
-    (codeLen : Usize) (env : metadata.Env) (entries : Usize) (data : Slice U8)
+    (codeLen : Usize) (env : metadata.CodeMetadata) (entries : Usize) (data : Slice U8)
     (environment tail : List U8)
     (hcoherent : Stream.Source.Coherent source state environment data.val tail)
     (hsize : codeLen.val = data.length)
+    (imports : env.num_imported_funcs.val ≤ env.funcs.val.length)
     (h : stream.read_code_header source state codeLen env = .ok (.Ok entries)) :
     Stream.Framing.HeaderAt data env entries :=
-  (stream.read_code_header.checked source state codeLen env entries h).sound hcoherent hsize
+  (stream.read_code_header.checked source state codeLen env entries imports h).sound hcoherent hsize
 
 end Itasca
 
 end
 
-
-/-! The observable tail-delivery suffix of an accepted streaming run.
-The driver witnesses remain internal. These proofs forget parsing and queue
-bookkeeping while retaining each actual callback and the final visitor state. -/
-
-open Aeneas Aeneas.Std
-namespace Itasca.Stream
-
-private theorem drain_delivery {V : Type} (visitor : stream.StreamingVisitor V)
-    (id : U64) (tail : metadata.Tail) (state after : V)
-    (pending remaining : alloc.vec.Vec Usize)
-    (delivered : TailDelivery visitor tail state)
-    (accepted : stream.retire_all_code_batches_loop visitor id state pending =
-      .ok (.Ok (), after, remaining)) : TailDelivery visitor tail after := by
-  generalize hn : pending.length = n
-  induction n using Nat.strong_induction_on generalizing state pending with
-  | h n ih =>
-    unfold stream.retire_all_code_batches_loop at accepted
-    rw [loop] at accepted
-    simp only [stream.retire_all_code_batches_loop.body, alloc.vec.Vec.is_empty, bind_ok] at accepted
-    by_cases hempty : pending.val = []
-    · simp only [hempty, List.isEmpty_nil, ↓reduceIte, bind_ok, Result.ok.injEq, Prod.mk.injEq, true_and] at accepted
-      exact accepted.1 ▸ delivered
-    · have hnonempty : pending.val.isEmpty = false := by simpa using hempty
-      simp only [hnonempty, Bool.false_eq_true, ↓reduceIte] at accepted
-      obtain ⟨flow, bodyCall, _⟩ := Computation.bind_ok_inv _ _ _ accepted
-      obtain ⟨⟨result, current, rest⟩, retired, _⟩ := Computation.bind_ok_inv _ _ _ bodyCall
-      rw [retired] at accepted
-      cases result with
-      | Err error =>
-        simp only [core.result.Result.Insts.CoreOpsTry.branch,
-          core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual,
-          core.convert.FromSame.from, bind_tc_ok, bind_ok, uncurry_apply_pair,
-          List.isEmpty_iff, Prod.mk.eta, Result.ok.injEq, Prod.mk.injEq, reduceCtorEq,
-          false_and] at accepted
-      | Ok value =>
-        cases value
-        obtain ⟨batch, polled, _, _, permutation⟩ := stream.retire_code_batch.accepted
-          visitor id state current pending rest retired
-        have smaller : rest.length < n := by
-          have lengths := permutation.length_eq
-          simp only [List.length_cons] at lengths
-          change rest.val.length < n
-          change pending.val.length = n at hn
-          omega
-        have remainingCall : stream.retire_all_code_batches_loop visitor id current rest =
-            .ok (.Ok (), after, remaining) := by
-          simpa [stream.retire_all_code_batches_loop, stream.retire_all_code_batches_loop.body,
-            alloc.vec.Vec.is_empty, core.result.Result.Insts.CoreOpsTry.branch] using accepted
-        exact ih rest.length smaller current rest (.poll delivered polled) remainingCall rfl
-
-/-- Project the final callback suffix from the full internal driver witness. -/
-theorem Run.Remaining.delivery {S V : Type} {source : stream.StreamingSource S}
-    {visitor : stream.StreamingVisitor V} {id : U64} {state : S}
-    {env : metadata.Env} {environmentLength : Usize} {before after : V}
-    (run : Run.Remaining source visitor id state env environmentLength before after) :
-    TailDelivery visitor run.tail after :=
-  drain_delivery visitor id run.tail run.ready after run.pending run.remaining
-    (.ready run.ready_call) run.drain_call
-
-/-- Clients need only show that delivery establishes their property and polling
-preserves it. No knowledge of the driver's queue representation is required. -/
-theorem TailDelivery.preserves {V : Type} {visitor : stream.StreamingVisitor V}
-    {tail : metadata.Tail} {after : V} (delivery : TailDelivery visitor tail after)
-    (P : V → Prop)
-    (ready : ∀ before next, visitor.tail_ready before tail = .ok (.Ok (), next) → P next)
-    (poll : ∀ before next batch, P before →
-      visitor.poll_code_batch before = .ok (.Ok batch, next) → P next) : P after := by
-  induction delivery with
-  | ready called => exact ready _ _ called
-  | poll _ called ih => exact poll _ _ _ ih called
-
-end Itasca.Stream
-
-end
 
 /-! ## Totality -/
 
@@ -1108,10 +1034,10 @@ def Post (max : Usize) : (core.result.Result (alloc.vec.Vec Usize) error.Error �
 /-- The loop continuation after its optional retirement, written as the extracted subexpression
 so that both generated branches share one proof. -/
 private theorem resume {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
-    (state : S) (moduleId : U64) (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig)
+    (state : S) (moduleId : U64) (env : metadata.CodeMetadata) (codeLen : Usize) (config : stream.StreamingConfig)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
-    (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
+    (henv : CodeEntry.Bounds env) (hnum : num.val = (Translation.Environment.definedTypeIndices env).length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) (hfunc : func.val < num.val)
     (hbatch : batchId.val ≤ func.val) (hpending : pending.length ≤ batchId.val)
@@ -1196,16 +1122,13 @@ end Itasca.Stream.Submission
 namespace Itasca
 private theorem submit_body_total {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig) (num : Usize)
+    (env : metadata.CodeMetadata) (codeLen : Usize) (config : stream.StreamingConfig) (num : Usize)
     (v : V) (pending : alloc.vec.Vec Usize) (pos func batchId : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
-    (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
+    (henv : CodeEntry.Bounds env) (hnum : num.val = (Translation.Environment.definedTypeIndices env).length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : Stream.Submission.Invariant codeLen num config.max_batches pending pos func batchId) :
-    stream.submit_code_batches_loop.body source visitor moduleId state env.types env.imports
-      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-      env.func_type_indices env.func_types
-      env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
+    stream.submit_code_batches_loop.body source visitor moduleId state env
       codeLen config num v pending pos func batchId ⦃ out => match out with
       | .done result => Stream.Submission.Post config.max_batches result
       | .cont (_, pending', pos', func', batchId') =>
@@ -1234,8 +1157,10 @@ private theorem submit_body_total {S V : Type} (source : stream.StreamingSource 
             pos func batchId num hs hv henv hnum hcap hpos (by scalar_tac) hbatch
             (by omega) (by scalar_tac))
         simp [core.result.Result.Insts.CoreOpsTry.branch] at hresume ⊢
+        simp only [stream.share_code, bind_ok]
         convert hresume using 1 <;> rfl
     · rw [if_neg hfull]
+      simp only [stream.share_code, bind_ok]
       exact Stream.Submission.resume source visitor state moduleId env codeLen config v pending
         pos func batchId num hs hv henv hnum hcap hpos (by scalar_tac) hbatch hpending (by scalar_tac)
   · rw [if_neg hmore]
@@ -1247,16 +1172,13 @@ private theorem submit_body_total {S V : Type} (source : stream.StreamingSource 
 vector stays within the configured maximum. -/
 theorem stream.submit_code_batches_loop.spec {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen : Usize) (config : stream.StreamingConfig) (v : V)
+    (env : metadata.CodeMetadata) (codeLen : Usize) (config : stream.StreamingConfig) (v : V)
     (pending : alloc.vec.Vec Usize) (pos func batchId num : Usize)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
-    (henv : CodeEntry.Bounds env) (hnum : num.val = env.func_type_indices.val.length)
+    (henv : CodeEntry.Bounds env) (hnum : num.val = (Translation.Environment.definedTypeIndices env).length)
     (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : Stream.Submission.Invariant codeLen num config.max_batches pending pos func batchId) :
-    stream.submit_code_batches_loop source visitor moduleId state env.types env.imports
-      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-      env.func_type_indices env.func_types
-      env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
+    stream.submit_code_batches_loop source visitor moduleId state env
       codeLen config v pending pos func batchId num ⦃ Stream.Submission.Post config.max_batches ⦄ := by
   unfold stream.submit_code_batches_loop
   apply loop.spec_decr_nat (fun s => num.val - s.2.2.2.1.val)
@@ -1275,21 +1197,22 @@ maximum, when the source and scheduler callbacks return. -/
 @[step]
 theorem stream.submit_code_batches.spec {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
+    (env : metadata.CodeMetadata) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
     stream.submit_code_batches source visitor moduleId state env codeLen pos config v
       ⦃ Stream.Submission.Post config.max_batches ⦄ := by
-  unfold stream.submit_code_batches
+  obtain ⟨num, call, hn⟩ := WP.spec_imp_exists (metadata.CodeMetadata.num_func_defs.spec env henv.1)
+  simp only [stream.submit_code_batches, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, call, bind_ok]
   apply stream.submit_code_batches_loop.spec source visitor moduleId state env codeLen config v
-    (alloc.vec.Vec.new Usize) pos 0#usize 0#usize (alloc.vec.Vec.len env.func_type_indices)
-    hs hv henv rfl hcap
+    (alloc.vec.Vec.new Usize) pos 0#usize 0#usize num
+    hs hv henv (by simp [Translation.Environment.definedTypeIndices, hn]) hcap
   exact ⟨hpos, by simp, by simp, by simp, by simp⟩
 
 theorem stream.submit_code_batches.total {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
+    (env : metadata.CodeMetadata) (codeLen pos : Usize) (config : stream.StreamingConfig) (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
     (henv : CodeEntry.Bounds env) (hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val)
     (hpos : pos.val ≤ codeLen.val) :
@@ -1312,8 +1235,7 @@ section
 `stream.validate_streaming.total_core`: on arbitrary bytes, `stream.validate_streaming`
 returns success or an error whenever the source and scheduler callbacks return
 (`Stream.Source.CallbacksTotal`, `Stream.Scheduler.CallbacksTotal`). Coherence, availability and
-worker provenance are not premises. `stream.validate_remaining.total_spec` covers the phases after
-the environment. `Itasca/Results/Stream` states the public `total`.
+worker provenance are not premises. `Itasca/Results/Stream` states the public `total`.
 -/
 
 open Aeneas Aeneas.Std
@@ -1321,113 +1243,15 @@ open Aeneas Aeneas.Std
 
 
 namespace Itasca
-/-- After a decoded environment, all remaining phases return an ordinary result when the source
-and visitor callbacks return. Worker provenance is not needed. -/
-theorem stream.validate_remaining.total_spec {S V : Type} (source : stream.StreamingSource S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (envLen : Usize) (v : V)
-    (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
-    (henv : CodeEntry.Bounds env) :
-    stream.validate_remaining source visitor moduleId state env envLen v ⦃ _ => True ⦄ := by
-  obtain ⟨codeLen, hlen⟩ := hs.code_len_returns
-  unfold stream.validate_remaining
-  rw [hlen]
-  simp only [bind_ok]
-  obtain ⟨r, hsum, hsp⟩ := WP.spec_imp_exists (limits.add_offset.spec envLen codeLen)
-  rw [hsum]
-  cases r with
-  | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-  | Ok beforeTail =>
-    have hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val := by omega
-    simp [core.result.Result.Insts.CoreOpsTry.branch]
-    obtain ⟨r, hheader, hhp⟩ := WP.spec_imp_exists
-      (stream.read_code_header.spec source state codeLen env (fun _ => hs.code_returns _ _))
-    rw [hheader]
-    cases r with
-    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-    | Ok entries =>
-      simp
-      obtain ⟨⟨r, v1⟩, hready⟩ := hv.environment v env
-      rw [hready]
-      cases r with
-      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-      | Ok config =>
-        simp
-        split
-        · simp
-        · split
-          · simp
-          · obtain ⟨r, hsubmit⟩ := stream.submit_code_batches.total source visitor moduleId state
-              env codeLen entries config v1 hs hv henv hcap hhp.entries_le
-            rw [hsubmit]
-            obtain ⟨r, v2⟩ := r
-            cases r with
-            | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-            | Ok pending =>
-              simp
-              obtain ⟨⟨r, v3⟩, hcodeEnd⟩ := hv.code_end v2
-              rw [hcodeEnd]
-              cases r with
-              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-              | Ok u =>
-                cases u
-                simp
-                obtain ⟨r, htail⟩ := hs.tail_returns
-                rw [htail]
-                cases r with
-                | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                | Ok bytes =>
-                  simp
-                  obtain ⟨r, hadd⟩ := limits.add_offset.total beforeTail (Slice.len bytes)
-                  rw [hadd]
-                  cases r with
-                  | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                  | Ok whole =>
-                    simp
-                    obtain ⟨v4, hregion⟩ := hv.region v3 stream.StreamingRegion.Tail
-                    rw [hregion]
-                    simp only [bind_ok]
-                    obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
-                      (metadata.validate_tail_with.spec visitor.metadataModuleVisitorInst hv.custom
-                        bytes 0#usize env v4 (by simp) )
-                    rw [hparsed]
-                    cases r with
-                    | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                    | Ok tail =>
-                      simp
-                      obtain ⟨⟨r, v6⟩, hready⟩ := hv.tail_ready v5 tail
-                      rw [hready]
-                      cases r with
-                      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
-                      | Ok u =>
-                        cases u
-                        simp
-                        obtain ⟨⟨r, v7, remaining⟩, hdrain⟩ :=
-                          stream.retire_all_code_batches.total visitor moduleId v6 pending hv.poll
-                        rw [hdrain]
-                        simp
-
-/-- `stream.validate_remaining` returns an ordinary result under returning callbacks. -/
-theorem stream.validate_remaining.total {S V : Type} (source : stream.StreamingSource S)
-    (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (env : metadata.Env) (envLen : Usize) (v : V)
-    (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor )
-    (henv : CodeEntry.Bounds env) :
-    ∃ r, stream.validate_remaining source visitor moduleId state env envLen v = .ok r := by
-  obtain ⟨r, hr, _⟩ := WP.spec_imp_exists
-    (stream.validate_remaining.total_spec source visitor moduleId state env envLen v hs hv henv)
-  exact ⟨r, hr⟩
-
 /-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
 is a termination premise. -/
 theorem stream.validate_streaming.total_core {S V : Type} (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : metadata.Env)
+    (v : V)
     (hs : Stream.Source.CallbacksTotal source state) (hv : Stream.Scheduler.CallbacksTotal visitor ) :
-    ∃ r, stream.validate_streaming source visitor moduleId state v storage = .ok r := by
-  have hspec : stream.validate_streaming source visitor moduleId state v storage ⦃ _ => True ⦄ := by
+    ∃ r, stream.validate_streaming source visitor moduleId state v = .ok r := by
+  have hspec : stream.validate_streaming source visitor moduleId state v ⦃ _ => True ⦄ := by
     unfold stream.validate_streaming
     obtain ⟨r, hread⟩ := hs.environment_returns
     rw [hread]
@@ -1458,11 +1282,82 @@ theorem stream.validate_streaming.total_core {S V : Type} (source : stream.Strea
           have henv := (Module.Environment.accepted_entry_conditions bytes env envEnd hsize herase).1
           simp
           split
-          · obtain ⟨⟨r, v3⟩, hr⟩ := stream.validate_remaining.total source visitor moduleId state
-              env envLen v2 hs hv henv
-            rw [hr]
-            simp
+          swap
           · simp
+          · have sharing : metadata.ModuleMetadataCodeMetadata.share env = .ok env := by
+              obtain ⟨x, hx, same⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.share.spec env)
+              simpa [same] using hx
+            simp only [sharing, bind_ok, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref]
+            obtain ⟨codeLen, hlen⟩ := hs.code_len_returns
+            rw [hlen]
+            simp only [bind_ok]
+            obtain ⟨r, hsum, hsp⟩ := WP.spec_imp_exists (limits.add_offset.spec envLen codeLen)
+            rw [hsum]
+            cases r with
+            | Err e => simp [core.result.Result.Insts.CoreOpsTry.branch,
+                core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+            | Ok beforeTail =>
+              have hcap : codeLen.val ≤ limits.MAX_MODULE_BYTES.val := by omega
+              simp [core.result.Result.Insts.CoreOpsTry.branch]
+              obtain ⟨r, hheader, hhp⟩ := WP.spec_imp_exists
+                (stream.read_code_header.spec source state codeLen env.code henv.1 (fun _ => hs.code_returns _ _))
+              rw [hheader]
+              cases r with
+              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+              | Ok entries =>
+                simp
+                obtain ⟨⟨r, v1⟩, hready⟩ := hv.environment v2 env
+                rw [hready]
+                cases r with
+                | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                | Ok config =>
+                  simp
+                  split
+                  · simp
+                  · split
+                    · simp
+                    · obtain ⟨r, hsubmit⟩ := stream.submit_code_batches.total source visitor moduleId state
+                        env.code codeLen entries config v1 hs hv henv hcap hhp.entries_le
+                      rw [hsubmit]
+                      obtain ⟨r, v2⟩ := r
+                      cases r with
+                      | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                      | Ok pending =>
+                        simp
+                        obtain ⟨⟨r, v3⟩, hcodeEnd⟩ := hv.code_end v2
+                        rw [hcodeEnd]
+                        cases r with
+                        | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                        | Ok u =>
+                          cases u
+                          simp
+                          obtain ⟨r, htail⟩ := hs.tail_returns
+                          rw [htail]
+                          cases r with
+                          | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                          | Ok bytes =>
+                            simp
+                            obtain ⟨r, hadd⟩ := limits.add_offset.total beforeTail (Slice.len bytes)
+                            rw [hadd]
+                            cases r with
+                            | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                            | Ok whole =>
+                              simp
+                              obtain ⟨v4, hregion⟩ := hv.region v3 stream.StreamingRegion.Tail
+                              rw [hregion]
+                              simp only [bind_ok]
+                              obtain ⟨⟨r, v5⟩, hparsed, _⟩ := WP.spec_imp_exists
+                                (metadata.validate_tail_with.spec visitor.metadataModuleVisitorInst hv.custom
+                                  bytes 0#usize env.code v4 (by simp) )
+                              rw [hparsed]
+                              cases r with
+                              | Err e => simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+                              | Ok tail =>
+                                simp
+                                obtain ⟨⟨r, after, remaining⟩, hdrain⟩ :=
+                                  stream.retire_all_code_batches.total visitor moduleId v5 pending hv.poll
+                                rw [hdrain]
+                                cases r <;> simp [core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   obtain ⟨r, hr, _⟩ := WP.spec_imp_exists hspec
   exact ⟨r, hr⟩
 

@@ -13,9 +13,7 @@ Soundness, termination and completeness of `stream.validate_streaming` for Wasm 
 termination on `Stream.Source.CallbacksTotal` and `Stream.Scheduler.CallbacksTotal`, completeness on
 `Stream.Source.CanonicalAvailable` and `Stream.Scheduler.Accepts`.
 
-Soundness and completeness identify the validated tail with a `Stream.TailDelivery`
-certificate. It records successful delivery followed by worker polls leading to
-the final visitor state; parser and scheduler implementation phases stay internal.
+Soundness and completeness identify the data segments and shared code descriptors in the returned module.
 -/
 
 open Aeneas Aeneas.Std
@@ -33,18 +31,17 @@ theorem stream.validate_streaming.sound {S V : Type}
     (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (provenance : Stream.Scheduler.Provenance visitor Tracks)
-    (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
+    (id : U64) (state : S) (v v' : V) (env : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
     (data : Slice U8)
     (coherent : Stream.Source.Describes source state data)
     (tracked : Tracks id [] v)
-    (accepted : stream.validate_streaming source visitor id state v storage = .ok (.Ok (), v', env)) :
-    ∃ deliveredTail, Stream.TailDelivery visitor deliveredTail v' ∧
-      Module.Sound.Validated data ⟨env, deliveredTail⟩ ∧
+    (accepted : stream.validate_streaming source visitor id state v = .ok (.Ok env, v')) :
+    Module.Sound.Validated data env ∧
       data.length ≤ limits.MAX_MODULE_BYTES.val := by
   obtain ⟨regions, concatenated, coherent⟩ := coherent
   obtain ⟨run, valid, bounded⟩ := stream.validate_streaming.sound_core source visitor Tracks
-    provenance id state v v' storage env data regions.env regions.code regions.tail coherent concatenated tracked accepted
-  exact ⟨run.remaining.tail, run.remaining.delivery, valid, bounded⟩
+    provenance id state v v' env data regions.env regions.code regions.tail coherent concatenated tracked accepted
+  exact ⟨valid, bounded⟩
 
 /-- `stream.validate_streaming` returns success or an error on arbitrary bytes when the source and
 scheduler callbacks return. Neither successful batches, source coherence nor scheduler provenance
@@ -52,33 +49,32 @@ is a termination premise. -/
 theorem stream.validate_streaming.total {S V : Type}
     (source : stream.StreamingSource S)
     (visitor : stream.StreamingVisitor V) (moduleId : U64) (state : S)
-    (v : V) (storage : metadata.Env)
+    (v : V)
     (source_returns : Stream.Source.CallbacksTotal source state) (scheduler_returns : Stream.Scheduler.CallbacksTotal visitor) :
-    ∃ r, stream.validate_streaming source visitor moduleId state v storage = .ok r :=
-  stream.validate_streaming.total_core source visitor moduleId state v storage source_returns scheduler_returns
+    ∃ r, stream.validate_streaming source visitor moduleId state v = .ok r :=
+  stream.validate_streaming.total_core source visitor moduleId state v source_returns scheduler_returns
 
 /-- Independently encoded, elaborated, typed modules within the limits are
 accepted by `stream.validate_streaming` under canonical available reads and an accepting
 scheduler that returns actual worker results, without assuming worker success.
-The returned environment and delivered tail describe the same raw module, including
-public metadata. Completeness fails if reads are unavailable or workers do not accept. -/
+The shared descriptors and data segments in the returned module match the raw module. Completeness fails if reads are unavailable or workers do not accept. -/
 theorem stream.validate_streaming.complete {S V : Type}
     (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (config : stream.StreamingConfig) (Queued : U64 → List Stream.Batch.Issued → V → Prop)
     (scheduler_accepts : Stream.Scheduler.Accepts visitor config Queued)
-    (id : U64) (state : S) (before : V) (storage : metadata.Env)
+    (id : U64) (state : S) (before : V)
     (data : Slice U8) (raw : Binary.Module)
     (encoded : ModuleEncodingWithinLimits raw data.val)
     (signatures : ModuleSignaturesWithinLimits raw)
     (elaborated : Elaborates raw (moduleOf raw))
     (typed : Module_ok (moduleOf raw)) (restricted : Restrictions raw)
     (available : Stream.Source.CanonicalAvailable source state data) (queued : Queued id [] before) :
-    ∃ env after deliveredTail, Stream.TailDelivery visitor deliveredTail after ∧
-      stream.validate_streaming source visitor id state before storage = .ok (.Ok (), after, env) ∧
-      Matches env deliveredTail raw ∧ AccessorTypes env raw ∧ Queued id [] after := by
+    ∃ env after,
+      stream.validate_streaming source visitor id state before = .ok (.Ok env, after) ∧
+      Matches env raw ∧ AccessorTypes env raw ∧ Queued id [] after := by
   obtain ⟨env, after, run, called, matched, accessors, retained⟩ :=
-    stream.validate_streaming.complete_core source visitor config Queued scheduler_accepts id state before storage
+    stream.validate_streaming.complete_core source visitor config Queued scheduler_accepts id state before
       data raw encoded signatures elaborated typed restricted available queued
-  exact ⟨env, after, run.remaining.tail, run.remaining.delivery, called, matched, accessors, retained⟩
+  exact ⟨env, after, called, matched, accessors, retained⟩
 
 end Itasca

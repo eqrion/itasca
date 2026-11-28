@@ -27,7 +27,7 @@ def globalType : wasm_types.GlobalType := ⟨.Const, .I32⟩
 /-- An import of global `m.<U+1F600>` of type `globalType`. -/
 def imported : Binary.Import := ⟨[0x6D#u8], [0xF0#u8,0x9F#u8,0x98#u8,0x80#u8], .Global globalType⟩
 /-- A defined global of type `globalType` initialized by `global.get 0`. -/
-def global : metadata.Global := ⟨globalType, .GlobalGet 0#u32⟩
+def global : Binary.Global := ⟨globalType, .GlobalGet 0#u32⟩
 /-- The import and global declarations of the module. -/
 def declarations : Declarations := { imports := [imported], globals := [global] }
 /-- The decoded module: `declarations` with no functions or data. -/
@@ -62,8 +62,8 @@ private theorem layout_valid : Layout.Valid 9 declarations layout := by
 
 private theorem init_typed : Expr_ok_const (Module.Elaboration.initializerContextOf raw)
     (Module.Constants.expression (.GlobalGet 0#u32)) (Translation.valueType .I32) := by
-  let env : metadata.Env := { Examples.Module.Basic.emptyEnv with
-    global_types := alloc.vec.Vec.from [globalType] (by simp; scalar_tac)
+  let env : metadata.CodeMetadata := { Examples.Module.Basic.emptyEnv.code with
+    globals := alloc.vec.Vec.from [⟨globalType, none, false⟩] (by simp; scalar_tac)
     num_imported_globals := 1#usize }
   have hv : Module.Constants.Valid env (.GlobalGet 0#u32) .I32 :=
     .globalGet _ globalType (by simp [env]) rfl (by simp [env]) rfl
@@ -111,7 +111,7 @@ theorem imported_initializer_accepted : ∃ decoded, metadata.validate_module in
       magicVersion, layout, Layout.bytes]
   obtain ⟨env, decls, he, hr⟩ := metadata.validate_env.complete input raw declarations (Slice.len input)
     hp rfl (.inl rfl) requirements
-  exact ⟨⟨env, ⟨alloc.vec.Vec.new _⟩⟩, Examples.Module.Basic.accepted_at_end input env
+  exact ⟨{env with data := alloc.vec.Vec.new _}, Examples.Module.Basic.accepted_at_end input env
     (by simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, limits.MAX_MODULE_BYTES])
     (hr.functions_eq (by decide)) (hr.data_count_eq (by decide)) he⟩
@@ -151,16 +151,15 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
   have hz : ConstEncoding (.I32 0#i32) [0x41#u8,0#u8,0x0B#u8] :=
     .i32 _ ⟨[], 0, rfl, by simp, by simp, by decide, rfl, by decide, by decide⟩
   have he1 := metadata.decode_const_expr.complete
-    (env := initial) (ty := .I32)
+    (env := initial.code) (ty := .I32)
     (show At ConstEncoding data 13#usize (.I32 0#i32) 16#usize from
       ⟨_, hz, by constructor <;> simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩) (.i32 _)
-  obtain ⟨types, htypes, htval⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.push_spec initial.global_types globalType (by simp [initial, Examples.Module.Basic.emptyEnv]; scalar_tac))
   obtain ⟨globals, hglobals, hgval⟩ := WP.spec_imp_exists
-    (alloc.vec.Vec.push_spec initial.globals (⟨globalType, .I32 0#i32⟩ : metadata.Global)
+    (alloc.vec.Vec.push_spec initial.code.globals (⟨globalType, some (.I32 0#i32), false⟩ : metadata.Global)
       (by simp [initial, Examples.Module.Basic.emptyEnv]; scalar_tac))
-  let updated := {initial with global_types := types, globals := globals}
-  have hgt : updated.global_types.val = [globalType] := by simpa [updated, initial, Examples.Module.Basic.emptyEnv] using htval
+  let updated := {initial.code with globals := globals}
+  have hgt : updated.globals.val = [⟨globalType, some (.I32 0#i32), false⟩] := by
+    simpa [updated, initial, Examples.Module.Basic.emptyEnv] using hgval
   have hglobal : metadata.const_global updated 0#u32 = .ok (.Err .MutableGlobalInConstExpr) := by
     have hcast : UScalar.cast .Usize 0#u32 = 0#usize := by scalar_tac
     simp [metadata.const_global, hcast, lift, hgt, updated, initial, Examples.Module.Basic.emptyEnv]
@@ -185,14 +184,14 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     have hs : (0#u32 + 1#u32 : Result U32) ⦃ x => x = 1#u32 ⦄ := by step*
     obtain ⟨x, hx, rfl⟩ := WP.spec_imp_exists hs
     exact hx
-  simp only [globalType] at htypes hglobals
-  have hread : metadata.decode_global_section data 10#usize initial =
+  simp only [globalType] at hglobals
+  have hread : metadata.decode_global_section data 10#usize initial.code =
       .ok (.Err .MutableGlobalInConstExpr, updated) := by
     simp [metadata.decode_global_section, hcount, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_global_section_loop
     rw [loop]
     simpa [metadata.decode_global_section_loop.body, hg1, he1, globalType,
-      htypes, hglobals, hinc, core.result.Result.Insts.CoreOpsTry.branch,
+      hglobals, hinc, core.result.Result.Insts.CoreOpsTry.branch,
       metadata.decode_global_section_loop, metadata.declare_initializer, updated] using hrest
   have hloop : parseLoop data initial 8#usize 0#u8 = .ok (.Err .MutableGlobalInConstExpr, ()) := by
     unfold parseLoop metadata.validate_env_with_loop
@@ -211,7 +210,7 @@ theorem defined_global_initializer_rejected : metadata.validate_module definedGl
     simpa [hlen] using Stream.Split.loop_eof data
   apply Examples.Module.Basic.environment_error data _
     (by simp [data, definedGlobalInput, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion, limits.MAX_MODULE_BYTES]) hsplit
-  simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hheader,
+  simp [metadata.validate_env, metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new, hheader,
     core.result.Result.Insts.CoreOpsTry.branch, initial, Examples.Module.Basic.emptyEnv,
     parseLoop] at hloop ⊢
   simp [hloop]

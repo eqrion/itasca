@@ -43,12 +43,12 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : Module.Layout data raw decls codePos tailPos )
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hrequirements : Requirements raw ) (hrawCount : raw.dataCount = none) (tail : metadata.Tail)
-    (hrawTail : tail.data.val.map Module.Data.raw = raw.data)
+    (hrequirements : Requirements raw ) (hrawCount : raw.dataCount = none) (tail : alloc.vec.Vec metadata.Data)
+    (hrawTail : tail.val.map Module.Data.raw = raw.data)
     (htypedReady : ∀ decls env, Ready raw 10 decls env →
-      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry ) env.func_type_indices.val raw.codes)
+      List.Forall₂ (fun idx entry => CodeEntry.Typed env.code idx entry ) (Translation.Environment.definedTypeIndices env.code) raw.codes)
     (htailReady : ∀ decls env, Ready raw 10 decls env →
-      ∀ segment ∈ tail.data.val, Module.Data.Valid env segment) :
+      ∀ segment ∈ tail.val, Module.Data.Valid env.code segment) :
     ∃ regions env, Certificate data raw regions env tail := by
   have hsplit := stream.find_code_region.complete_layout hl
   obtain ⟨hcodePos, htailPos⟩ := stream.find_code_region.bounds data codePos tailPos hsplit
@@ -70,8 +70,8 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
   obtain ⟨hbounds, hlimits⟩ := Module.Environment.accepted_entry_conditions
     environment env (Slice.len environment) henvSize henv
   have htypes := htypedReady finalDecls env hready
-  have hcount : raw.codes.length = env.func_type_indices.val.length := htypes.length_eq.symm
-  have hcode : ∃ entries, Stream.Framing.HeaderAt code env entries ∧
+  have hcount : raw.codes.length = (Translation.Environment.definedTypeIndices env.code).length := htypes.length_eq.symm
+  have hcode : ∃ entries, Stream.Framing.HeaderAt code env.code entries ∧
       At (Rep (Itasca.CodeEntry.CodeEncodingWithinLimits )) code entries raw.codes (Slice.len code) := by
     rcases hl.code with hcode | ⟨hempty, hsame, _⟩
     · have henc := hcode.on_region hcodeSpan
@@ -84,13 +84,13 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
         have := hcodeSpan.length
         rw [hsame] at this
         omega
-      have hfuncs : env.func_type_indices.val = [] := by
+      have hfuncs : (Translation.Environment.definedTypeIndices env.code) = [] := by
         apply List.eq_nil_of_length_eq_zero
         simpa [hempty] using hcount.symm
       refine ⟨0#usize, .inl ⟨hzero, rfl, hfuncs⟩, [], ?_, ?_⟩
       · simpa [hempty] using (WebAssembly.Binary.Rep.nil : Rep (Itasca.CodeEntry.CodeEncodingWithinLimits ) [] [])
       · exact ⟨by simp [hzero], by simp [hzero], by simp⟩
-  have htyped : Module.Code.EntriesTyped env 0 raw.codes := by
+  have htyped : Module.Code.EntriesTyped env.code 0 raw.codes := by
     obtain ⟨_, _, bytes, henc, _⟩ := hcode
     apply Module.Code.EntriesTyped.of_forall₂ (by simpa using htypes)
     exact Binary.Rep.locals_within_limits henc
@@ -98,18 +98,23 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
   have htail := metadata.validate_tail.complete tail (by simpa [hrawTail] using htailEnc)
     (htailReady finalDecls env hready)
     (by simp [hready.data_count_eq (by decide), hrawCount])
-  have hmatches := hready.matches tail hrawTail
   have hsemantic := metadata.validate_env.semantic_spec environment
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
-  obtain ⟨_, hrep, hv, _, _, hprefix⟩ := hsemantic
+  obtain ⟨_, hrep, hv, flags, _, _, hprefix⟩ := hsemantic
   obtain ⟨bytes, hprefix, _⟩ := hprefix
   have hnames : ∀ entry ∈ env.exports.val, wf_name (Binary.nameOfBytes entry.name.val) := by
     intro entry hentry
     exact hprefix.export_names_wf (Module.Environment.rawExport entry)
       (by rw [hrep.exports]; exact List.mem_map.mpr ⟨entry, hentry, rfl⟩)
-  have hmeta := accessor_types hmatches.2 hv hnames (codes := raw.codes) (segments := tail.data.val)
-  rw [← hmatches.1] at hmeta
+  have rawEq := hready.fromEnv_eq hrawTail
+  have hmatches := matches_from_env (codes := raw.codes) tail hready.represents hv flags (htailReady _ _ hready)
+  have bound : finalDecls.imports.length ≤ U32.max := by
+    have lengths := congrArg List.length (hready.represents.imports.symm.trans hrep.imports)
+    simp only [List.length_map] at lengths
+    exact lengths ▸ hprefix.import_count_bound
+  have hmeta := accessor_types tail hready.represents hv bound hnames (codes := raw.codes) (segments := tail.val)
+  rw [rawEq] at hmeta hmatches
   refine ⟨⟨environment, code, tailBytes⟩, env, ?_⟩
   exact ⟨⟨codePos, tailPos, hsplit, henvSlice, hcodeSlice, htailSlice⟩,
     ⟨codePos, tailPos, hl.canonical, span_slice henvSpan, span_slice hcodeSpan, span_slice htailSpan⟩,
@@ -120,23 +125,20 @@ theorem prepared_layout (data : Slice U8) (raw : Binary.Module)
 /-- `metadata.validate_module` accepts a region certificate and returns its environment and
 tail. -/
 theorem accepted_certificate (data : Slice U8) (raw : Binary.Module)
-    (regions : stream.SliceSource) (env : metadata.Env) (tail : metadata.Tail)
+    (regions : stream.SliceSource) (env : metadata.ModuleMetadata metadata.CodeMetadata) (tail : alloc.vec.Vec metadata.Data)
     (hc : Certificate data raw regions env tail ) :
-    metadata.validate_module data = .ok (.Ok ⟨env, tail⟩) := by
+    metadata.validate_module data = .ok (.Ok {env with data := tail}) := by
   obtain ⟨first, last, hsplit, he, hcode, ht⟩ := hc.split
-  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨after, run, hrun, htail, _⟩ := complete_certificate
     stream.SliceSource.Insts.ItascaStreamStreamingSource stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor
     { batch_bytes := 25000#usize, max_batches := 1#usize } Stream.Sync.Queued Stream.Sync.accepts
     0#u64 regions data raw regions env tail hc (stream.SliceSource.available regions)
-    ⟨none, none⟩ storage rfl
-  have hstored := Stream.Sync.delivered_tail run.remaining
-  rw [htail] at hstored
+    ⟨none⟩ rfl
   change stream.validate_module_slice data = _
   unfold stream.validate_module_slice
-  simp only [hsplit, bind_ok, Std.uncurry, he, hcode, ht, hstorage]
+  simp only [hsplit, bind_ok, Std.uncurry, he, hcode, ht]
   cases regions
-  simp [core.result.Result.Insts.CoreOpsTry.branch, hrun, hstored]
+  simp [core.result.Result.Insts.CoreOpsTry.branch, hrun]
 
 /-- A module with a canonical layout, typed code entries and valid data segments is accepted by
 `metadata.validate_module`, which runs through the streaming implementation. -/
@@ -144,29 +146,29 @@ theorem accepted_layout (data : Slice U8) (raw : Binary.Module)
     (decls : Declarations) (codePos tailPos : Usize)
     (hl : Module.Layout data raw decls codePos tailPos )
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hrequirements : Requirements raw ) (hrawCount : raw.dataCount = none) (tail : metadata.Tail)
-    (hrawTail : tail.data.val.map Module.Data.raw = raw.data)
+    (hrequirements : Requirements raw ) (hrawCount : raw.dataCount = none) (tail : alloc.vec.Vec metadata.Data)
+    (hrawTail : tail.val.map Module.Data.raw = raw.data)
     (htypedReady : ∀ decls env, Ready raw 10 decls env →
-      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry ) env.func_type_indices.val raw.codes)
+      List.Forall₂ (fun idx entry => CodeEntry.Typed env.code idx entry ) (Translation.Environment.definedTypeIndices env.code) raw.codes)
     (htailReady : ∀ decls env, Ready raw 10 decls env →
-      ∀ segment ∈ tail.data.val, Module.Data.Valid env segment) :
-    ∃ env, metadata.validate_module data = .ok (.Ok ⟨env, tail⟩) := by
+      ∀ segment ∈ tail.val, Module.Data.Valid env.code segment) :
+    ∃ env : metadata.ModuleMetadata metadata.CodeMetadata, metadata.validate_module data = .ok (.Ok {env with data := tail}) := by
   obtain ⟨regions, env, hc⟩ := prepared_layout data raw decls codePos tailPos hl hsize
     hrequirements hrawCount tail hrawTail htypedReady htailReady
   exact ⟨env, accepted_certificate data raw regions env tail hc⟩
 
 /-- An environment that consumes the whole input and defines no functions takes the empty-code and
 empty-tail paths of the streaming adapter, and the module is accepted. -/
-theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
+theorem accepted_at_end (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hfuncs : env.func_type_indices.val = [])
-    (hdataCount : env.data_count = none)
+    (hfuncs : (Translation.Environment.definedTypeIndices env.code) = [])
+    (hdataCount : env.code.data_count = none)
     (henv : metadata.validate_env data = .ok (.Ok (env, Slice.len data))) :
-    metadata.validate_module data = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) := by
+    metadata.validate_module data = .ok (.Ok {env with data := alloc.vec.Vec.new _}) := by
   have hsemantic := metadata.validate_env.semantic_spec data
   rw [henv] at hsemantic
   simp only [WP.spec_ok] at hsemantic
-  obtain ⟨decls, hrep, hv, _, _, hprefix⟩ := hsemantic
+  obtain ⟨decls, hrep, hv, flags, _, _, hprefix⟩ := hsemantic
   have hsplit : stream.find_code_region data = .ok (Slice.len data, Slice.len data) := by
     unfold stream.find_code_region
     rw [Stream.Split.skip_prefix hprefix, Stream.Split.loop_eof]
@@ -186,24 +188,26 @@ theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
   have hemptyEq : emptyBytes = empty := Slice.ext _ _ (by simpa [empty, alloc.vec.Vec.deref] using hnil)
   subst emptyBytes
   let raw := decls.module [] []
-  let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
+  let tail : alloc.vec.Vec metadata.Data := alloc.vec.Vec.new _
   have hready : Ready raw 10 decls env :=
     ⟨hrep, by simp [Phase], by intro; rfl, by intro; rfl, by intro; rfl,
       by intro; rfl, by intro; rfl, by intro; rfl, by intro; rfl,
       by intro; rfl, by intro; rfl, by intro; rfl⟩
-  have htail : metadata.validate_tail empty 0#usize env = .ok (.Ok tail) := by
-    have hr := Module.Tail.loop_eof empty env (alloc.vec.Vec.new _) false (by simp [hdataCount])
+  have htail : metadata.validate_tail empty 0#usize env.code = .ok (.Ok tail) := by
+    have hr := Module.Tail.loop_eof empty env.code (alloc.vec.Vec.new _) false (by simp [hdataCount])
     have hz : Slice.len empty = 0#usize := rfl
     rw [hz] at hr
     simp [metadata.validate_tail, metadata.validate_tail_with, hr, tail]
-  have hm := hready.matches tail (by simp [tail, raw, Declarations.module])
+  have rawEq := hready.fromEnv_eq (segments := tail.val) (by rfl)
+  have hm := matches_from_env (codes := raw.codes) tail hrep hv flags (by simp [tail])
   have hn : ∀ entry ∈ env.exports.val, wf_name (Binary.nameOfBytes entry.name.val) := by
     intro entry hentry
     obtain ⟨_, hp, _⟩ := hprefix
     exact hp.export_names_wf (Module.Environment.rawExport entry)
       (by rw [hrep.exports]; exact List.mem_map.mpr ⟨entry, hentry, rfl⟩)
-  have hmeta := accessor_types hm.2 hv hn (codes := raw.codes) (segments := tail.data.val)
-  rw [← hm.1] at hmeta
+  obtain ⟨_, encodedPrefix, _⟩ := (show _ from hprefix)
+  have hmeta := accessor_types tail hrep hv encodedPrefix.import_count_bound hn (codes := raw.codes) (segments := tail.val)
+  rw [rawEq] at hmeta hm
   have hc : Certificate data raw ⟨data, empty, empty⟩ env tail := by
     refine ⟨⟨Slice.len data, Slice.len data, hsplit, he, hempty, hempty⟩,
       ⟨Slice.len data, Slice.len data,
@@ -211,7 +215,7 @@ theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
         span_slice heSpan, span_slice hemptySpan, span_slice hemptySpan⟩,
       by simp [empty, alloc.vec.Vec.deref], hsize, henv, ⟨decls, hready⟩,
       (Module.Environment.accepted_entry_conditions data env (Slice.len data) hsize henv).1,
-      hv.environment_within_limits hrep.cache,
+      hv.environment_within_limits,
       ⟨0#usize, .inl ⟨rfl, rfl, hfuncs⟩, [], WebAssembly.Binary.Rep.nil, ?_⟩,
       .nil _, by simp [raw, Declarations.module, hfuncs], htail, hm, hmeta⟩
     constructor <;> simp [empty, alloc.vec.Vec.deref]

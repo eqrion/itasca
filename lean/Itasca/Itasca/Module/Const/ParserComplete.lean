@@ -22,14 +22,14 @@ open Aeneas Aeneas.Std
 namespace Itasca.Module.Constants
 
 /-- A constant, well-typed initializer instruction is valid at some type. -/
-theorem constant_valid_type {env : metadata.Env} {C : context} {e : wasm_types.ConstExpr}
+theorem constant_valid_type {env : metadata.CodeMetadata} {C : context} {e : wasm_types.ConstExpr}
     (hg : GlobalContext env C) (hf : FunctionContext env C)
     (h : Instr_const C (instruction e))
     {ins outs : List valtype}
     (ht : Instr_ok C (instruction e) (.mk_functype (.mk_list ins) (.mk_list outs))) :
     ∃ ty, Valid env e ty := by
-  change C.GLOBALS = (env.global_types.val.take env.num_imported_globals.val).map Translation.globalType at hg
-  change C.FUNCS = env.func_types.val.map Translation.Environment.funcType at hf
+  change C.GLOBALS = (env.globals.val.take env.num_imported_globals.val).map (fun g => Translation.globalType g.gtype) at hg
+  change C.FUNCS = env.funcs.val.map (Translation.Environment.descriptorType env.types.val) at hf
   cases e with
   | I32 value => exact ⟨.I32, .i32 value⟩
   | I64 value => exact ⟨.I64, .i64 value⟩
@@ -44,11 +44,11 @@ theorem constant_valid_type {env : metadata.Env} {C : context} {e : wasm_types.C
   | GlobalGet idx =>
     cases h with
     | global_get _ t hi he hw hf =>
-      have hbound : idx.val < (env.global_types.val.take env.num_imported_globals.val).length := by
+      have hbound : idx.val < (env.globals.val.take env.num_imported_globals.val).length := by
         simpa [hg, proj_uN_0] using hi
-      have hi' : idx.val < env.global_types.val.length := by simp only [List.length_take] at hbound; omega
+      have hi' : idx.val < env.globals.val.length := by simp only [List.length_take] at hbound; omega
       have hn : idx.val < env.num_imported_globals.val := by simp only [List.length_take] at hbound; omega
-      let gt := env.global_types.val[idx.val]
+      let gt := env.globals.val[idx.val].gtype
       have hgt : Translation.globalType gt = .mk_globaltype none t := by
         change C.GLOBALS[idx.val]! = .mk_globaltype none t at he
         rw [hg, getElem!_pos _ _ (by simpa using hbound), List.getElem_map, List.getElem_take] at he
@@ -67,7 +67,7 @@ theorem instruction_output_unique {C : context} {e : wasm_types.ConstExpr} {ins 
 
 /-- An initializer typed by `Expr_ok_const` at `Translation.valueType ty` satisfies `Valid env e
 ty`. -/
-theorem valid_of_typing {env : metadata.Env} {C : context} {e : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
+theorem valid_of_typing {env : metadata.CodeMetadata} {C : context} {e : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hg : GlobalContext env C) (hfunctions : FunctionContext env C) (h : Expr_ok_const C (expression e) (Translation.valueType ty)) :
     Valid env e ty := by
   cases h with
@@ -132,8 +132,8 @@ theorem metadata.read_expr_end.complete {data : Slice U8} {pos next : Usize}
   simp [metadata.read_expr_end, h.read_byte, core.result.Result.Insts.CoreOpsTry.branch, global_simps]
 
 /-- `metadata.const_global` accepts an in-range imported immutable global. -/
-theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted : wasm_types.GlobalType)
-    (hi : idx.val < env.global_types.val.length) (hgt : env.global_types.val[idx.val] = wanted)
+theorem metadata.const_global.complete (env : metadata.CodeMetadata) (idx : U32) (wanted : wasm_types.GlobalType)
+    (hi : idx.val < env.globals.val.length) (hgt : env.globals.val[idx.val].gtype = wanted)
     (hn : idx.val < env.num_imported_globals.val) (hm : wanted.mutability = .Const) :
     metadata.const_global env idx = .ok (.Ok wanted) := by
   have hs : metadata.const_global env idx ⦃ r => r = .Ok wanted ⦄ := by
@@ -143,12 +143,10 @@ theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted 
     · scalar_tac
     · split
       · scalar_tac
-      · step
-        have he : gt = wanted := by
-          have hx : gt = env.global_types.val[idx.val] := by
-            simpa only [show i.val = idx.val by scalar_tac] using gt_post
-          exact hx.trans hgt
-        subst gt
+      · step as ⟨g, hg⟩
+        have he : g.gtype = wanted := by
+          rw [hg]
+          simpa only [show i.val = idx.val by scalar_tac] using hgt
         simp [he, hm, core.cmp.PartialEq.ne.trait_default, core.cmp.PartialEq.ne.default,
           wasm_types.Mut.Insts.CoreCmpPartialEqMut.eq]
   obtain ⟨_, hr, rfl⟩ := WP.spec_imp_exists hs
@@ -156,7 +154,7 @@ theorem metadata.const_global.complete (env : metadata.Env) (idx : U32) (wanted 
 
 /-- `metadata.decode_const_expr` accepts a valid `ConstEncoding` span and returns its end. -/
 theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} {expr : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
+    {env : metadata.CodeMetadata} {expr : wasm_types.ConstExpr} {ty : wasm_types.ValueType}
     (hb : Binary.At Binary.ConstEncoding data pos expr next)
     (hv : Module.Constants.Valid env expr ty) :
     metadata.decode_const_expr data pos env ty = .ok (.Ok (expr, next)) := by
@@ -267,7 +265,7 @@ theorem metadata.decode_const_expr.complete {data : Slice U8} {pos next : Usize}
         (first := [0xD2#u8]) (rest := immediate ++ [0x0B#u8]) hs
       obtain ⟨beforeEnd, himm, hend⟩ := hrest.split
       have hr := reader.read_u32_leb.complete data afterOp idx beforeEnd (himm.u32_decoded idx hi)
-      have hn : ¬idx.val ≥ env.func_types.val.length := by omega
+      have hn : ¬idx.val ≥ env.funcs.val.length := by omega
       simp [metadata.decode_const_expr, hop.read_byte, hr, lift, hn,
         metadata.expect_const_type.complete, metadata.read_expr_end.complete hend,
         core.result.Result.Insts.CoreOpsTry.branch]

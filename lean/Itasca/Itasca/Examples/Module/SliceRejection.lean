@@ -19,8 +19,8 @@ of the environment loop, including its error constructor. -/
 theorem environment_loop_noop {V : Type} (visitor : metadata.ModuleVisitor V)
     (hnoop : ∀ (v : V) (chunk : wasm_types.CustomSection),
       visitor.on_custom_section v chunk = .ok (.Ok (), v))
-    (data : Slice U8) (v : V) (env : metadata.Env) (pos : Usize) (lastId : U8)
-    (result : core.result.Result (metadata.Env × Usize) error.Error)
+    (data : Slice U8) (v : V) (env : metadata.ModuleMetadata metadata.CodeMetadata) (pos : Usize) (lastId : U8)
+    (result : core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error)
     (h : metadata.validate_env_with_loop
       metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor data () env pos lastId =
       .ok (result, ())) :
@@ -103,7 +103,7 @@ theorem environment_noop {V : Type} (visitor : metadata.ModuleVisitor V)
     (hnoop : ∀ (v : V) (chunk : wasm_types.CustomSection),
       visitor.on_custom_section v chunk = .ok (.Ok (), v))
     (data : Slice U8) (v : V)
-    (result : core.result.Result (metadata.Env × Usize) error.Error)
+    (result : core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error)
     (h : metadata.validate_env data = .ok result) :
     metadata.validate_env_with visitor data v = .ok (result, v) := by
   unfold metadata.validate_env at h
@@ -143,34 +143,33 @@ theorem environment_error (data : Slice U8) (e : error.Error)
   subst environment
   have htail : tail = code := by simpa [hc] using ht.symm
   subst tail
-  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   obtain ⟨total, hadd, htotal⟩ := limits.add_offset.complete 0#usize (Slice.len data) (by simpa using hsize)
   have htotal : total = Slice.len data := by apply UScalar.eq_of_val_eq; simpa using htotal
   subst total
   have hparse := environment_noop stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor
-    (fun _ _ => rfl) data (⟨none, none⟩ : stream.SyncVisitor) (.Err e) herror
+    (fun _ _ => rfl) data (⟨none⟩ : stream.SyncVisitor) (.Err e) herror
   have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamStreamingSource
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64
-      ⟨data, code, code⟩ ⟨none, none⟩ storage = .ok (.Err e, ⟨none, none⟩, storage) := by
+      ⟨data, code, code⟩ ⟨none⟩ = .ok (.Err e, ⟨none⟩) := by
     simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamStreamingSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, hadd, hparse,
       core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   unfold metadata.validate_module stream.validate_module_slice
   simp only [hsplit, bind_ok, Std.uncurry]
-  simp only [he, hc, hstorage, bind_ok]
+  simp only [he, hc, bind_ok]
   simp [hrun, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 
 /-- A rejection by `stream.read_code_header` is returned unchanged by `metadata.validate_module`
 after the default environment parser has accepted the whole environment region. -/
 theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
-    (env : metadata.Env) (e : error.Error)
+    (env : metadata.ModuleMetadata metadata.CodeMetadata) (e : error.Error)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (hsplit : Stream.CompleteRegions.Split data regions)
     (henv : metadata.validate_env regions.env = .ok (.Ok (env, Slice.len regions.env)))
     (herror : stream.read_code_header stream.SliceSource.Insts.ItascaStreamStreamingSource
-      regions (Slice.len regions.code) env = .ok (.Err e)) :
+      regions (Slice.len regions.code) env.code = .ok (.Err e)) :
     metadata.validate_module data = .ok (.Err e) := by
   obtain ⟨first, last, hsplit, he, hc, ht⟩ := hsplit.computed
   obtain ⟨environment, code, tail, he', hc', ht', hbytes⟩ :=
@@ -187,25 +186,20 @@ theorem code_header_error (data : Slice U8) (regions : stream.SliceSource)
   subst envLen
   obtain ⟨codeEnd, hcodeadd, _⟩ := limits.add_offset.complete (Slice.len regions.env) (Slice.len regions.code)
     (by change regions.env.val.length + regions.code.val.length ≤ _; change data.val.length ≤ _ at hsize; omega)
-  obtain ⟨storage, hstorage, _⟩ := WP.spec_imp_exists metadata.Env.new.spec
   have hparse := environment_noop stream.SyncVisitor.Insts.ItascaMetadataModuleVisitor
-    (fun _ _ => rfl) regions.env (⟨none, none⟩ : stream.SyncVisitor)
+    (fun _ _ => rfl) regions.env (⟨none⟩ : stream.SyncVisitor)
     (.Ok (env, Slice.len regions.env)) henv
-  have hremaining : stream.validate_remaining stream.SliceSource.Insts.ItascaStreamStreamingSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions env (Slice.len regions.env)
-      ⟨none, none⟩ = .ok (.Err e, ⟨none, none⟩) := by
-    simp [stream.validate_remaining, stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len,
-      hcodeadd, herror, core.result.Result.Insts.CoreOpsTry.branch,
-      core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
+  obtain ⟨_, shared, same⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.share.spec env)
+  rw [same] at shared
   have hrun : stream.validate_streaming stream.SliceSource.Insts.ItascaStreamStreamingSource
-      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions ⟨none, none⟩ storage =
-      .ok (.Err e, ⟨none, none⟩, env) := by
+      stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor 0#u64 regions ⟨none⟩ =
+      .ok (.Err e, ⟨none⟩) := by
     simp [stream.validate_streaming, stream.SliceSource.Insts.ItascaStreamStreamingSource.environment,
       stream.SyncVisitor.Insts.ItascaStreamStreamingVisitor.custom_region, henvadd, hparse,
-      hremaining, core.result.Result.Insts.CoreOpsTry.branch]
+      shared, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, stream.SliceSource.Insts.ItascaStreamStreamingSource.code_len, hcodeadd, herror, core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual, core.result.Result.Insts.CoreOpsTry.branch]
   unfold metadata.validate_module stream.validate_module_slice
   simp only [hsplit, bind_ok, Std.uncurry]
-  simp only [he, hc, ht, hstorage, bind_ok]
+  simp only [he, hc, ht, bind_ok]
   simp [hrun, core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 

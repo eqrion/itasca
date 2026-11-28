@@ -19,25 +19,18 @@ namespace Itasca.Examples.Module.Basic
 open Itasca.Examples.Module.Support (bytes)
 
 /-- A module environment with no types, imports, functions, tables, memories or globals. -/
-def emptyEnv : metadata.Env where
-  types := alloc.vec.Vec.new _
+def emptyEnv : metadata.ModuleMetadata metadata.CodeMetadata where
+  code := {
+    types := alloc.vec.Vec.new _, funcs := alloc.vec.Vec.new _, globals := alloc.vec.Vec.new _,
+    tables := alloc.vec.Vec.new _, memories := alloc.vec.Vec.new _, elem_segment_types := alloc.vec.Vec.new _,
+    data_count := none, start := none, num_imported_funcs := 0#usize, num_imported_globals := 0#usize }
   imports := alloc.vec.Vec.new _
-  globals := alloc.vec.Vec.new _
   exports := alloc.vec.Vec.new _
   elements := alloc.vec.Vec.new _
-  start := none
-  data_count := none
-  declared_funcs := alloc.vec.Vec.new _
-  func_type_indices := alloc.vec.Vec.new _
-  func_types := alloc.vec.Vec.new _
-  table_types := alloc.vec.Vec.new _
-  mem_types := alloc.vec.Vec.new _
-  global_types := alloc.vec.Vec.new _
-  num_imported_funcs := 0#usize
-  num_imported_globals := 0#usize
+  data := alloc.vec.Vec.new _
 
-/-- The decoded module for the header alone: `emptyEnv` and no function bodies. -/
-def emptyModule : metadata.Module := ⟨emptyEnv, ⟨alloc.vec.Vec.new _⟩⟩
+/-- The decoded module for the header alone. -/
+def emptyModule : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata) := emptyEnv
 
 /-- The eight header bytes `00 61 73 6d 01 00 00 00`. -/
 def emptyBytes : Slice U8 := bytes Binary.magicVersion (by
@@ -69,7 +62,7 @@ theorem header (data : Slice U8) (rest : List U8)
 /-- `metadata.validate_env` on the header alone returns `emptyEnv` and consumed length 8. -/
 theorem empty_env : metadata.validate_env emptyBytes = .ok (.Ok (emptyEnv, 8#usize)) := by
   have hh := header emptyBytes [] (by simp [emptyBytes, bytes, alloc.vec.Vec.deref])
-  simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hh,
+  simp [metadata.validate_env, metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new, hh,
     core.result.Result.Insts.CoreOpsTry.branch, emptyEnv]
   unfold metadata.validate_env_with_loop
   rw [loop]
@@ -90,12 +83,12 @@ theorem empty_validated : Module.Sound.Validated emptyBytes emptyModule :=
 
 /-- A module of acceptable size with no declared functions, whose environment consumes all the
 bytes, is accepted with that environment and an empty tail. -/
-theorem accepted_at_end (data : Slice U8) (env : metadata.Env)
+theorem accepted_at_end (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
-    (hfuncs : env.func_type_indices.val = [])
-    (hdataCount : env.data_count = none)
+    (hfuncs : (Translation.Environment.definedTypeIndices env.code) = [])
+    (hdataCount : env.code.data_count = none)
     (henv : metadata.validate_env data = .ok (.Ok (env, Slice.len data))) :
-    metadata.validate_module data = .ok (.Ok ⟨env, ⟨alloc.vec.Vec.new _⟩⟩) :=
+    metadata.validate_module data = .ok (.Ok {env with data := alloc.vec.Vec.new _}) :=
   Examples.Stream.SliceSupport.accepted_at_end data env hsize hfuncs hdataCount henv
 
 /-- An error from `metadata.validate_env` is the result of `metadata.validate_module` when the code
@@ -118,7 +111,7 @@ theorem header_error (data : Slice U8) (e : error.Error)
     have hstop : 8#usize ≥ Slice.len data := by scalar_tac
     simp [stream.find_code_region_loop.body, hstop]
   apply environment_error data e hsize hsplit
-  simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, herror,
+  simp [metadata.validate_env, metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new, herror,
     core.result.Result.Insts.CoreOpsTry.branch,
     core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
 

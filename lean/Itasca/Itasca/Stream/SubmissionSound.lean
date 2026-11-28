@@ -4,6 +4,31 @@ import Itasca.Module.Layout
 import Itasca.Module.Code.FuncTyping
 import Itasca.Module.Env.Complete
 
+namespace Itasca.metadata.CodeMetadata
+open Aeneas Aeneas.Std
+
+/-- The number of defined functions as a machine index for the driver loop. -/
+def definedCount (env : CodeMetadata) : Usize :=
+  Usize.ofNatCore (Translation.Environment.definedTypeIndices env).length (by
+    have bound := env.funcs.property
+    simp only [Translation.Environment.definedTypeIndices, List.length_map, List.length_drop]
+    scalar_tac)
+
+@[simp, scalar_tac_simps] theorem definedCount_val (env : CodeMetadata) :
+    env.definedCount.val = (Translation.Environment.definedTypeIndices env).length := by
+  simp [definedCount]
+
+theorem num_func_defs_eq (env : CodeMetadata) (h : env.num_imported_funcs.val ≤ env.funcs.val.length) :
+    env.num_func_defs = .ok env.definedCount := by
+  obtain ⟨n, call, hn⟩ := WP.spec_imp_exists (num_func_defs.spec env h)
+  have same : n = env.definedCount := by
+    apply UScalar.eq_of_val_eq
+    simp [Translation.Environment.definedTypeIndices, hn]
+  simpa [same] using call
+
+end Itasca.metadata.CodeMetadata
+
+
 /-!
 Proofs for Stream.
 
@@ -417,7 +442,7 @@ open Aeneas Aeneas.Std
 namespace Itasca.Stream.Scheduler
 /-- Issued batches partition bytes and defined-function indices in submission
 order. Worker completion order is deliberately absent from this relation. -/
-inductive Partition (code : Slice U8) (env : metadata.Env) :
+inductive Partition (code : Slice U8) (env : metadata.CodeMetadata) :
     Usize → Nat → List Stream.Batch.Issued → Usize → Nat → Prop where
   | nil (pos : Usize) (func : Nat) : pos.val ≤ code.length →
       Partition code env pos func [] pos func
@@ -462,13 +487,13 @@ theorem Partition.encoding {code env pos func history finish next}
 encoding and the pairing of each declared function type with its typed code entry. -/
 theorem Partition.code {code env entries history}
     (hheader : Stream.Framing.HeaderAt code env entries)
-    (h : Partition code env entries 0 history (Slice.len code) env.func_type_indices.val.length)
+    (h : Partition code env entries 0 history (Slice.len code) (Translation.Environment.definedTypeIndices env).length)
     (hcompleted : ∀ issued ∈ history, Completed issued) :
     ∃ codes, Binary.PaddedEncoding 10#u8
       (Binary.VecEncoding (CodeEntry.CodeEncoding)) [] codes code.val ∧
-      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes := by
+      List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) (Translation.Environment.definedTypeIndices env) codes := by
   obtain ⟨codes, hn, hb, ht⟩ := h.encoding hcompleted
-  have hcount : codes.length = env.func_type_indices.val.length := by omega
+  have hcount : codes.length = (Translation.Environment.definedTypeIndices env).length := by omega
   have htyped := ht.forall₂ (by omega)
   rcases hheader with ⟨hbytes, _, hfuncs⟩ | ⟨count, hs, _⟩
   · have hcodes : codes = [] := by simpa [hfuncs] using hcount
@@ -508,12 +533,12 @@ open Stream.Scheduler
 order, batch IDs are numbered consecutively, the pending IDs are distinct and bounded by the
 capacity, and every issued batch is pending or has a completion certificate from a successful
 retirement. -/
-structure SoundInvariant (code : Slice U8) (env : metadata.Env) (start : Usize)
+structure SoundInvariant (code : Slice U8) (env : metadata.CodeMetadata) (start : Usize)
     (id : U64) (capacity : Usize) (history : List Stream.Batch.Issued)
     (pending : alloc.vec.Vec Usize) (pos func nextId : Usize) : Prop where
   partition : Partition code env start 0 history pos func.val
   position : pos.val ≤ code.length
-  functions : func.val ≤ env.func_type_indices.val.length
+  functions : func.val ≤ (Translation.Environment.definedTypeIndices env).length
   next_id : nextId.val = history.length
   numbered : history.map (fun issued => issued.batch_id.val) = List.range history.length
   issued : ∀ issued ∈ history, issued.module_id = id ∧ issued.env = env ∧ issued.Bounded
@@ -542,7 +567,7 @@ theorem SoundInvariant.pending_fresh {code env start id capacity history pending
   exact h.fresh issued hi he
 
 /-- The invariant holds before any batch is issued. -/
-theorem SoundInvariant.initial (code : Slice U8) (env : metadata.Env) (start : Usize)
+theorem SoundInvariant.initial (code : Slice U8) (env : metadata.CodeMetadata) (start : Usize)
     (id : U64) (capacity : Usize) (hstart : start.val ≤ code.length) :
     SoundInvariant code env start id capacity [] (alloc.vec.Vec.new _) start 0#usize 0#usize := by
   constructor
@@ -596,7 +621,7 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
     (hoffset : issued.code_offset = pos) (hfirst : issued.first_func = func)
     (hbytes : Body.Scalar.BytesAt code pos issued.code.val finish)
     (hcount : nextFunc.val = func.val + issued.num_funcs.val)
-    (hfunctions : nextFunc.val ≤ env.func_type_indices.val.length)
+    (hfunctions : nextFunc.val ≤ (Translation.Environment.definedTypeIndices env).length)
     (hnext : nextBatchId.val = nextId.val + 1)
     (hpending : nextPending.val = pending.val ++ [nextId])
     (hroom : pending.length < capacity.val) :
@@ -645,15 +670,15 @@ theorem SoundInvariant.issue {code env start id capacity history pending pos fun
 /-- Successful submission tiles the entire entry region and accounts for every issued ID as
 pending or completed, with the scheduler tracking the resulting history. -/
 def SoundPost {V : Type} (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
-    (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64) (capacity : Usize) :
+    (code : Slice U8) (env : metadata.CodeMetadata) (start : Usize) (id : U64) (capacity : Usize) :
     (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
   | (.Ok pending, v) => ∃ history nextId,
       SoundInvariant code env start id capacity history pending (Slice.len code)
-        (alloc.vec.Vec.len env.func_type_indices) nextId ∧ Tracks id history v
+        (env.definedCount) nextId ∧ Tracks id history v
   | (.Err _, _) => True
 
 private def BodyPost {V : Type} (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
-    (code : Slice U8) (env : metadata.Env) (start : Usize) (id : U64)
+    (code : Slice U8) (env : metadata.CodeMetadata) (start : Usize) (id : U64)
     (capacity func : Usize) :
     ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V) → Prop
@@ -668,18 +693,18 @@ namespace Itasca.Stream.Submission
 private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
-    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.CodeMetadata) (code : Slice U8) (start : Usize)
     (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env) (hcap : code.length ≤ limits.MAX_MODULE_BYTES.val)
     (hinv : SoundInvariant code env start moduleId config.max_batches history pending pos func batchId)
-    (hv : Tracks moduleId history v) (hfunc : func.val < env.func_type_indices.val.length)
+    (hv : Tracks moduleId history v) (hfunc : func.val < (Translation.Environment.definedTypeIndices env).length)
     (hroom : pending.length < config.max_batches.val)
     (out : ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V))
     (h : (do
-      let r ← stream.get_next_batch source state (Slice.len code) pos func (alloc.vec.Vec.len env.func_type_indices) config.batch_bytes
+      let r ← stream.get_next_batch source state (Slice.len code) pos func (env.definedCount) config.batch_bytes
       let cf ← core.result.Result.Insts.CoreOpsTry.branch r
       match cf with
       | core.ops.control_flow.ControlFlow.Continue val =>
@@ -689,9 +714,10 @@ private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (v
         match cf1 with
         | core.ops.control_flow.ControlFlow.Continue bytes =>
           let pending1 ← alloc.vec.Vec.push pending batchId
+          let shared ← stream.share_code env
           let count ← next - func
           let (r2, v') ← visitor.submit_code_batch v
-            { module_id := moduleId, batch_id := batchId, env := env, code := bytes,
+            { module_id := moduleId, batch_id := batchId, env := shared, code := bytes,
               code_offset := pos, first_func := func, num_funcs := count,
               num_dispatched := 0#usize, dispatch_end := 0#usize,
               num_validated := 0#usize, validated_end := 0#usize, error := none }
@@ -723,7 +749,7 @@ private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (v
   | Ok pair =>
     obtain ⟨finish, next⟩ := pair
     obtain ⟨hprogress, hfinish, hnext, hnextbound⟩ := stream.get_next_batch.sound source state
-      (Slice.len code) pos func (alloc.vec.Vec.len env.func_type_indices) config.batch_bytes finish next
+      (Slice.len code) pos func (env.definedCount) config.batch_bytes finish next
       (by simpa using hcap) (by simpa using hinv.position) (by simpa using hfunc) hframe
     simp [core.result.Result.Insts.CoreOpsTry.branch] at h
     obtain ⟨r, hread, h⟩ := Computation.bind_ok_inv _ _ _ h
@@ -742,6 +768,9 @@ private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (v
       have hpushspec := alloc.vec.Vec.push_spec pending batchId (by scalar_tac)
       rw [hpush] at hpushspec
       simp only [WP.spec_ok] at hpushspec
+      obtain ⟨shared, hshared, h⟩ := Computation.bind_ok_inv _ _ _ h
+      have eq : env = shared := by simpa [stream.share_code] using hshared
+      subst shared
       obtain ⟨count, hsub, h⟩ := Computation.bind_ok_inv _ _ _ h
       have hsubspec := UScalar.sub_equiv next func
       rw [hsub] at hsubspec
@@ -752,7 +781,7 @@ private theorem resume_sound {S V : Type} (source : stream.StreamingSource S) (v
         change finish.val = pos.val + bytes.length at hlength
         have hbound := hspan.bound
         have hcountval := hsubspec.2.1
-        have hnextbound' : next.val ≤ env.func_type_indices.val.length := by simpa using hnextbound
+        have hnextbound' : next.val ≤ (Translation.Environment.definedTypeIndices env).length := by simpa using hnextbound
         simp only [Slice.length] at hlength hbound hcap ⊢
         omega
       obtain ⟨⟨reply, v'⟩, hsubmit, h⟩ := Computation.bind_ok_inv _ _ _ h
@@ -783,7 +812,7 @@ namespace Itasca.Stream.Submission
 private theorem body_sound {S V : Type} (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
-    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.CodeMetadata) (code : Slice U8) (start : Usize)
     (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
@@ -793,14 +822,11 @@ private theorem body_sound {S V : Type} (source : stream.StreamingSource S) (vis
     (hv : Tracks moduleId history v)
     (out : ControlFlow (V × alloc.vec.Vec Usize × Usize × Usize × Usize)
       (core.result.Result (alloc.vec.Vec Usize) error.Error × V))
-    (h : stream.submit_code_batches_loop.body source visitor moduleId state env.types env.imports
-      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-      env.func_type_indices env.func_types
-      env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-      (Slice.len code) config (alloc.vec.Vec.len env.func_type_indices) v pending pos func batchId = .ok out) :
+    (h : stream.submit_code_batches_loop.body source visitor moduleId state env
+      (Slice.len code) config (env.definedCount) v pending pos func batchId = .ok out) :
     BodyPost Tracks code env start moduleId config.max_batches func out := by
   unfold stream.submit_code_batches_loop.body at h
-  by_cases hmore : func < alloc.vec.Vec.len env.func_type_indices
+  by_cases hmore : func < env.definedCount
   · rw [if_pos hmore] at h
     by_cases hfull : alloc.vec.Vec.len pending ≥ config.max_batches
     · rw [if_pos hfull] at h
@@ -841,7 +867,7 @@ private theorem body_sound {S V : Type} (source : stream.StreamingSource S) (vis
     · rename_i hpos
       simp only [Result.ok.injEq] at h
       subst out
-      have hfunc : func = alloc.vec.Vec.len env.func_type_indices := by
+      have hfunc : func = env.definedCount := by
         apply UScalar.eq_of_val_eq
         have hb := hinv.functions
         scalar_tac
@@ -859,7 +885,7 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
-    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.CodeMetadata) (code : Slice U8) (start : Usize)
     (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize)
     (pos func batchId : Usize) (history : List Stream.Batch.Issued)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
@@ -868,14 +894,11 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     (hinv : Stream.Submission.SoundInvariant code env start moduleId config.max_batches history pending pos func batchId)
     (hv : Tracks moduleId history v)
     (finalPending : alloc.vec.Vec Usize) (finalV : V)
-    (h : stream.submit_code_batches_loop source visitor moduleId state env.types env.imports
-      env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-      env.func_type_indices env.func_types
-      env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-      (Slice.len code) config v pending pos func batchId (alloc.vec.Vec.len env.func_type_indices) =
+    (h : stream.submit_code_batches_loop source visitor moduleId state env
+      (Slice.len code) config v pending pos func batchId (env.definedCount) =
         .ok (.Ok finalPending, finalV)) :
     Stream.Submission.SoundPost Tracks code env start moduleId config.max_batches (.Ok finalPending, finalV) := by
-  generalize hn : env.func_type_indices.val.length - func.val = n
+  generalize hn : (Translation.Environment.definedTypeIndices env).length - func.val = n
   induction n using Nat.strong_induction_on generalizing v pending pos func batchId history with
   | h n ih =>
     unfold stream.submit_code_batches_loop at h
@@ -891,14 +914,11 @@ theorem stream.submit_code_batches_loop.sound {S V : Type}
     | cont next =>
       obtain ⟨v', pending', pos', func', batchId'⟩ := next
       obtain ⟨history', hinv', hv', hprogress⟩ := hs
-      have hlt : env.func_type_indices.val.length - func'.val < n := by
+      have hlt : (Translation.Environment.definedTypeIndices env).length - func'.val < n := by
         have hb := hinv'.functions
         omega
-      have hrecursive : stream.submit_code_batches_loop source visitor moduleId state env.types env.imports
-          env.globals env.exports env.elements env.data_count env.declared_funcs env.start
-          env.func_type_indices env.func_types
-          env.table_types env.mem_types env.global_types env.num_imported_funcs env.num_imported_globals
-          (Slice.len code) config v' pending' pos' func' batchId' (alloc.vec.Vec.len env.func_type_indices) =
+      have hrecursive : stream.submit_code_batches_loop source visitor moduleId state env
+          (Slice.len code) config v' pending' pos' func' batchId' (env.definedCount) =
             .ok (.Ok finalPending, finalV) := hrest
       exact ih _ hlt v' pending' pos' func' batchId' history' hinv' hv' hrecursive rfl
 
@@ -910,7 +930,7 @@ theorem stream.submit_code_batches.sound {S V : Type}
     (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
-    (state : S) (moduleId : U64) (env : metadata.Env) (code : Slice U8) (start : Usize)
+    (state : S) (moduleId : U64) (env : metadata.CodeMetadata) (code : Slice U8) (start : Usize)
     (config : stream.StreamingConfig) (v : V) (pending : alloc.vec.Vec Usize) (v' : V)
     (environment tail : List U8) (hsource : Stream.Source.Coherent source state environment code.val tail)
     (henv : CodeEntry.Bounds env)
@@ -919,6 +939,8 @@ theorem stream.submit_code_batches.sound {S V : Type}
     (h : stream.submit_code_batches source visitor moduleId state env (Slice.len code) start config v =
       .ok (.Ok pending, v')) :
     Stream.Submission.SoundPost Tracks code env start moduleId config.max_batches (.Ok pending, v') := by
+  simp only [stream.submit_code_batches, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref,
+    env.num_func_defs_eq henv.1, bind_ok] at h
   exact stream.submit_code_batches_loop.sound source visitor Tracks hp state moduleId env code start
     config v (alloc.vec.Vec.new _) start 0#usize 0#usize [] environment tail hsource henv hcap
     (Stream.Submission.SoundInvariant.initial code env start moduleId config.max_batches hstart) hv pending v' h
@@ -1280,16 +1302,16 @@ theorem stream.validate_streaming.sound_core {S V : Type}
     (source : stream.StreamingSource S) (visitor : stream.StreamingVisitor V)
     (Tracks : U64 → List Stream.Batch.Issued → V → Prop)
     (hp : Stream.Scheduler.Provenance visitor Tracks )
-    (id : U64) (state : S) (v v' : V) (storage env : metadata.Env)
+    (id : U64) (state : S) (v v' : V) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (data environment code tail : Slice U8)
     (hsource : Stream.Source.Coherent source state environment.val code.val tail.val)
     (hbytes : data.val = environment.val ++ code.val ++ tail.val)
     (hv : Tracks id [] v)
-    (h : stream.validate_streaming source visitor id state v storage = .ok (.Ok (), v', env)) :
-    ∃ run : Stream.Run.Accepted source visitor id state v v' env ,
-      Module.Sound.Validated data ⟨env, run.remaining.tail⟩ ∧
+    (h : stream.validate_streaming source visitor id state v = .ok (.Ok env, v')) :
+    Nonempty (Stream.Run.Accepted source visitor id state v v' env) ∧
+      Module.Sound.Validated data env ∧
       data.length ≤ limits.MAX_MODULE_BYTES.val := by
-  obtain ⟨run⟩ := stream.validate_streaming.accepted source visitor id state v v' storage env h
+  obtain ⟨run⟩ := stream.validate_streaming.accepted source visitor id state v v' env h
   have heq := hsource.environment_eq run.environment run.environment_call
   have hteq := hsource.tail_eq run.remaining.tailBytes run.remaining.tail_call
   have hlen := hsource.code_len_eq run.remaining.codeLength run.remaining.length_call
@@ -1313,17 +1335,17 @@ theorem stream.validate_streaming.sound_core {S V : Type}
     rw [hend] at this
     simpa using this
   have hdecoded := metadata.validate_env_with.accepted_erase visitor.metadataModuleVisitorInst
-    run.environment run.region env run.environmentLength run.decoded run.decode_environment
+    run.environment run.region run.decodedPrefix run.environmentLength run.decoded run.decode_environment
   obtain ⟨henv, _⟩ := Module.Environment.accepted_entry_conditions _ _ _ hecap hdecoded
   have hsem := metadata.validate_env.semantic_spec run.environment
   rw [hdecoded] at hsem
   simp only [WP.spec_ok] at hsem
-  obtain ⟨decls, hrep, hvalid, _, _, before, hprefix, hspan⟩ := hsem
+  obtain ⟨decls, hrep, hvalid, flags, _, _, before, hprefix, hspan⟩ := hsem
   have hwhole : run.environment.val = before := by
     rw [hend] at hspan
     simpa using hspan.suffix
-  have hheader := stream.read_code_header.sound source state run.remaining.codeLength env
-    run.remaining.entries code environment.val tail.val hsource hlen run.remaining.header_call
+  have hheader := stream.read_code_header.sound source state run.remaining.codeLength run.decodedPrefix.code
+    run.remaining.entries code environment.val tail.val hsource hlen hrep.cache.imported_func_bound run.remaining.header_call
   have hstart : run.remaining.entries.val ≤ code.length := by
     rcases hheader with hempty | ⟨_, _, hb⟩
     · simp [hempty.1, hempty.2.1, Slice.length]
@@ -1333,26 +1355,25 @@ theorem stream.validate_streaming.sound_core {S V : Type}
     exact hlen
   have hregion := hp.region id [] v .Environment run.region hv run.region_call
   have hdecodedTracks := hp.environment_preserves id [] run.environment run.region run.decoded
-    env run.environmentLength run.decode_environment hregion
-  have hconfigured := hp.environment id [] run.decoded env run.remaining.config run.remaining.configured
+    run.decodedPrefix run.environmentLength run.decode_environment hregion
+  have hconfigured := hp.environment id [] run.decoded run.decodedPrefix run.remaining.config run.remaining.configured
     hdecodedTracks run.remaining.configured_call
   have hsubmit := run.remaining.submit_call
   rw [hcodeLen] at hsubmit
   obtain ⟨history, nextId, hinv, hsubmitted⟩ := stream.submit_code_batches.sound source visitor Tracks hp
-    state id env code run.remaining.entries run.remaining.config run.remaining.configured
+    state id run.decodedPrefix.code code run.remaining.entries run.remaining.config run.remaining.configured
     run.remaining.pending run.remaining.submitted environment.val tail.val hsource henv hcap hstart
     hconfigured hsubmit
   have hended := hp.code_end id history _ _ hsubmitted run.remaining.end_call
   have htailRegion := hp.region id history _ .Tail _ hended run.remaining.region_call
-  have htailDecoded := hp.tail_preserves id history run.remaining.tailBytes 0#usize _ _ env
+  have htailDecoded := hp.tail_preserves id history run.remaining.tailBytes 0#usize _ _ run.decodedPrefix.code
     run.remaining.tail run.remaining.decode_tail htailRegion
-  have hready := hp.tail_ready id history _ _ _ htailDecoded run.remaining.ready_call
   have hentry : ∀ issued ∈ history, CodeEntry.Bounds issued.env := by
     intro issued hi
     have he := (hinv.issued issued hi).2.1
     simpa [he] using henv
   obtain ⟨_, _, hcompleted⟩ := Stream.Scheduler.drain_sound visitor Tracks hp id history
-    run.remaining.ready v' run.remaining.pending run.remaining.remaining hready hentry run.remaining.drain_call
+    run.remaining.decodedTail v' run.remaining.pending run.remaining.remaining htailDecoded hentry run.remaining.drain_call
   have hall : ∀ issued ∈ history, Stream.Scheduler.Completed issued := by
     intro issued hi
     rcases hinv.accounted issued hi with hpend | hdone
@@ -1360,16 +1381,17 @@ theorem stream.validate_streaming.sound_core {S V : Type}
     · exact hdone
   obtain ⟨codes, hcode, htyped⟩ := Stream.Scheduler.Partition.code hheader hinv.partition hall
   have htail := metadata.validate_tail_with.accepted_erase visitor.metadataModuleVisitorInst
-    run.remaining.tailBytes 0#usize env run.remaining.region run.remaining.tail run.remaining.decodedTail
+    run.remaining.tailBytes 0#usize run.decodedPrefix.code run.remaining.region run.remaining.tail run.remaining.decodedTail
     run.remaining.decode_tail
-  have htailSem := metadata.validate_tail.spec run.remaining.tailBytes 0#usize env (by simp)
+  have htailSem := metadata.validate_tail.spec run.remaining.tailBytes 0#usize run.decodedPrefix.code (by simp)
   rw [htail] at htailSem
   simp only [WP.spec_ok] at htailSem
   obtain ⟨⟨tailBytes, ht, hts⟩, hsegments, hdataCount⟩ := htailSem
   have htailWhole : run.remaining.tailBytes.val = tailBytes := by simpa using hts.suffix
-  refine ⟨run, ?_, ?_⟩
-  · exact Module.Sound.assembled_regions hbytes (by simpa [← hwhole, heq] using hprefix)
-      hrep hvalid hcode htyped (by simpa [← htailWhole, hteq] using ht) hsegments hdataCount
+  refine ⟨⟨run⟩, ?_, ?_⟩
+  · rw [run.published]
+    exact Module.Sound.assembled_regions hbytes (by simpa [← hwhole, heq] using hprefix)
+      hrep hvalid flags hcode (by simpa [hrep.cache.defined_type_indices] using htyped) (by simpa [← htailWhole, hteq] using ht) hsegments hdataCount
   · have heLength := congrArg List.length heq
     have htLength := congrArg List.length hteq
     have hdLength := congrArg List.length hbytes

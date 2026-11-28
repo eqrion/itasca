@@ -96,44 +96,40 @@ private theorem code_guards {env indices codes}
 
 private theorem assembly_guards {env decls codes} {segments : List metadata.Data}
     (hr : Module.Environment.Represents env decls)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
-    (hc : ∀ count, env.data_count = some count → count.val = segments.length) :
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env.code idx entry) decls.functions codes)
+    (hc : ∀ count, env.code.data_count = some count → count.val = segments.length) :
     Binary.DataCountValid (decls.module codes (segments.map Module.Data.raw)) := by
   simp only [Binary.DataCountValid, WebAssembly.Binary.DataCountValidWith, Module.Environment.Declarations.module]
   rw [hr.dataCount]
-  cases he : env.data_count with
+  cases he : env.code.data_count with
   | none => exact code_guards hcodes he
   | some count => simpa using hc count he
 
 /-- Like `assembled`, from byte lists that tile `data` exactly as `before ++ codeBytes ++
 tailBytes` instead of spans of one slice. Every semantic witness still belongs to one raw
 module. -/
-theorem assembled_regions {data : Slice U8} {env : metadata.Env} {tail : metadata.Tail}
+theorem assembled_regions {data : Slice U8} {env : metadata.ModuleMetadata metadata.CodeMetadata} {tail : alloc.vec.Vec metadata.Data}
     {decls : Module.Environment.Declarations} {codes before codeBytes tailBytes}
     (hbytes : data.val = before ++ codeBytes ++ tailBytes)
     (henv : Module.Environment.PrefixEncoding decls before)
     (hrep : Module.Environment.Represents env decls) (hv : Module.Environment.Valid env)
+    (flags : Module.Environment.DescriptorFlags env)
     (hcode : Binary.PaddedEncoding 10#u8
       (Binary.VecEncoding (Itasca.CodeEntry.CodeEncoding)) [] codes codeBytes)
-    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val codes)
-    (htail : Module.Tail.Encoding (tail.data.val.map Module.Data.raw) tailBytes)
-    (hsegments : ∀ segment ∈ tail.data.val, Module.Data.Valid env segment)
-    (hdataCount : ∀ count, env.data_count = some count → count.val = tail.data.val.length) :
-    Validated data ⟨env, tail⟩ := by
-  have hiNames : ∀ entry ∈ env.imports.val,
-      wf_name (Binary.nameOfBytes entry.module.val) ∧ wf_name (Binary.nameOfBytes entry.name.val) := by
-    intro e he
-    exact henv.import_names_wf (Module.Environment.rawImport e)
-      (by rw [hrep.imports]; exact List.mem_map.mpr ⟨e, he, rfl⟩)
+    (hcodes : List.Forall₂ (fun idx entry => CodeEntry.Typed env.code idx entry) decls.functions codes)
+    (htail : Module.Tail.Encoding (tail.val.map Module.Data.raw) tailBytes)
+    (hsegments : ∀ segment ∈ tail.val, Module.Data.Valid env.code segment)
+    (hdataCount : ∀ count, env.code.data_count = some count → count.val = tail.val.length) :
+    Validated data {env with data := tail} := by
   have heNames : ∀ entry ∈ env.exports.val, wf_name (Binary.nameOfBytes entry.name.val) := by
     intro e he
     exact henv.export_names_wf (Module.Environment.rawExport e)
       (by rw [hrep.exports]; exact List.mem_map.mpr ⟨e, he, rfl⟩)
   obtain ⟨xts, hxts⟩ := hv.exports_resolve
-  refine ⟨fromEnv env decls.tables decls.memories codes tail.data.val, ?_,
-    elaborates hrep.cache hcodes, matches_from_env tail hrep.cache,
-    typed hrep.cache hv hiNames heNames hcodes hsegments hdataCount hxts,
-    restrictions hrep.cache hv hcodes, accessor_types hrep.cache hv heNames⟩
+  refine ⟨fromEnv env decls codes tail.val, ?_,
+    elaborates hrep hv hcodes, matches_from_env tail hrep hv flags hsegments,
+    typed hrep hv henv.import_names_wf heNames hcodes hsegments hdataCount hxts,
+    restrictions hrep hv hcodes, accessor_types tail hrep hv henv.import_count_bound heNames⟩
   rw [hbytes, ← represents_module hrep]
   have hg := assembly_guards hrep hcodes hdataCount
   exact Binary.Source.moduleEncoding (Module.Composition.encoding henv hcode htail hg)
@@ -278,8 +274,8 @@ theorem CodeAt.typed {raw decls env}
     (hr : Module.Environment.Ready raw 10 decls env)
     (ht : SectionsTyped raw) (hdata : DataCountValid raw)
     (hdeclared : ∀ entry ∈ raw.codes, Spec.DeclaredReferences.Instructions
-      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) :
-    List.Forall₂ (fun idx entry => CodeEntry.Typed env idx entry) env.func_type_indices.val raw.codes := by
+      (Translation.Environment.declaredReferences env.code) entry.body) :
+    List.Forall₂ (fun idx entry => CodeEntry.Typed env.code idx entry) (Translation.Environment.definedTypeIndices env.code) raw.codes := by
   rw [hr.functions_eq (by omega)]
   refine List.forall₂_iff_zip.mpr ⟨ht.functions.length_eq, ?_⟩
   intro idx entry hm

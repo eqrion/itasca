@@ -46,7 +46,7 @@ theorem memory_valid_of_typing {mt : wasm_types.MemType}
   | mk_Memtype_ok _ h _ => exact limits_valid_of_typing h
 
 /-- A typed global has a typed constant initializer of its value type. -/
-theorem global_expr_typed {C : context} {g : metadata.Global}
+theorem global_expr_typed {C : context} {g : Binary.Global}
     (h : Global_ok C (Module.Constants.global g) (Translation.globalType g.gtype)) :
     Expr_ok_const C (Module.Constants.expression g.init) (Translation.valueType g.gtype.valtype) := by
   cases h
@@ -55,7 +55,7 @@ theorem global_expr_typed {C : context} {g : metadata.Global}
   simpa [hety] using ht
 
 /-- A typed global has a valid initializer in the environment. -/
-theorem global_valid_of_typing {env : metadata.Env} {C : context} {g : metadata.Global}
+theorem global_valid_of_typing {env : metadata.CodeMetadata} {C : context} {g : Binary.Global}
     (hg : Module.Constants.GlobalContext env C)
     (hf : Module.Constants.FunctionContext env C)
     (h : Global_ok C (Module.Constants.global g) (Translation.globalType g.gtype)) :
@@ -71,16 +71,22 @@ theorem start_signature {C : context} {s : WebAssembly.start} (h : Start_ok C s)
   exact ⟨by assumption, by assumption⟩
 
 /-- A typed start function is a function of the environment with no parameters or results. -/
-theorem start_valid_of_typing {env : metadata.Env} {C : context} {idx : U32}
-    (hc : CodeEntry.ModuleContext env C) (h : Start_ok C (start idx)) :
-    ∃ hi : idx.val < env.func_types.val.length,
-      env.func_types.val[idx.val].params.val = [] ∧ env.func_types.val[idx.val].results.val = [] := by
+theorem start_valid_of_typing {env : metadata.CodeMetadata} {C : context} {idx : U32}
+    (hc : CodeEntry.ModuleContext env C)
+    (valid : ∀ d ∈ env.funcs.val, d.type_index.val < env.types.val.length)
+    (h : Start_ok C (start idx)) :
+    ∃ ft, env.externalTypeAt (.Func idx) = some (.Func ft) ∧
+      ft.params.val = [] ∧ ft.results.val = [] := by
   obtain ⟨hi, he⟩ := start_signature h
-  have hb : idx.val < env.func_types.val.length := by simpa [hc.funcs, proj_uN_0] using hi
+  have hb : idx.val < env.funcs.val.length := by simpa [hc.funcs, proj_uN_0] using hi
+  have ht := valid _ (List.getElem_mem (l := env.funcs.val) hb)
   change C.FUNCS[idx.val]! = _ at he
   rw [hc.funcs, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at he
+  simp only [Translation.Environment.descriptorType, List.getElem?_eq_getElem ht,
+    Option.map_some, Option.getD_some] at he
   obtain ⟨hp, hr⟩ := functype.mk_functype.inj he
-  exact ⟨hb, List.map_eq_nil_iff.mp (list.mk_list.inj hp), List.map_eq_nil_iff.mp (list.mk_list.inj hr)⟩
+  refine ⟨_, ?_, List.map_eq_nil_iff.mp (list.mk_list.inj hp), List.map_eq_nil_iff.mp (list.mk_list.inj hr)⟩
+  simp [metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem hb, List.getElem?_eq_getElem ht]
 
 /-- Inversion of `Datamode_ok`: an active segment uses memory `0` with a constant `i32` offset. -/
 theorem datamode_active_properties {C : context} {mode : datamode} (h : Datamode_ok C mode) :
@@ -96,10 +102,10 @@ theorem data_mode_typed {C : context} {d : WebAssembly.data} (h : Data_ok C d) :
     match d with | .DATA _ mode => Datamode_ok C mode := by cases h; assumption
 
 /-- A typed data segment is valid in the environment. -/
-theorem data_valid_of_typing {env : metadata.Env} {C : context} {entry : metadata.Data}
+theorem data_valid_of_typing {env : metadata.CodeMetadata} {C : context} {entry : metadata.Data}
     (hg : Module.Constants.GlobalContext env C)
     (hf : Module.Constants.FunctionContext env C)
-    (hm : C.MEMS = env.mem_types.val.map Translation.Environment.memType)
+    (hm : C.MEMS = env.memories.val.map (fun d => Translation.Environment.memType d.ty))
     (h : Data_ok C (Module.Data.translate (Module.Data.raw entry))) : Module.Data.Valid env entry := by
   have hmode : Datamode_ok C (Module.Segments.dataMode entry.mode) := data_mode_typed h
   cases he : entry.mode with
@@ -109,7 +115,7 @@ theorem data_valid_of_typing {env : metadata.Env} {C : context} {entry : metadat
     obtain ⟨hi, hn, ht⟩ := datamode_active_properties hmode
     have hidx : idx.val = 0 := uN.mk_uN.inj hi
     simpa only [Module.Data.Valid, he] using
-      (And.intro (show idx.val < env.mem_types.val.length by simpa [hm, hidx] using hn)
+      (And.intro (show idx.val < env.memories.val.length by simpa [hm, hidx] using hn)
         (Module.Constants.valid_of_typing hg hf ht))
 
 /-- Inversion of `Elem_ok`: the initializers are constant expressions of the reference type and
@@ -122,14 +128,14 @@ theorem element_parts {C : context} {e : elem} {rt} (h : Elem_ok C e rt) :
   exact ⟨by assumption, by assumption⟩
 
 /-- A typed raw element segment satisfies the element validity requirement. -/
-theorem element_valid_raw_of_typing {env : metadata.Env} {C : context} {entry : Binary.Element}
+theorem element_valid_raw_of_typing {env : metadata.CodeMetadata} {C : context} {entry : Binary.Element}
     (hg : Module.Constants.GlobalContext env C)
     (hf : Module.Constants.FunctionContext env C)
-    (ht : C.TABLES = env.table_types.val.map Translation.Environment.tableType)
+    (ht : C.TABLES = env.tables.val.map (fun d => Translation.Environment.tableType d.ty))
     (h : Elem_ok C (element entry) (Translation.referenceType entry.elem)) :
     (match entry.mode with
-      | .Active idx offset => ∃ hi : idx.val < env.table_types.val.length,
-          env.table_types.val[idx.val].elem = entry.elem ∧ Module.Constants.Valid env offset .I32
+      | .Active idx offset => ∃ hi : idx.val < env.tables.val.length,
+          env.tables.val[idx.val].ty.elem = entry.elem ∧ Module.Constants.Valid env offset .I32
       | .Passive | .Declarative => True) ∧
     ∀ init ∈ entry.init, Module.Constants.Valid env init (Module.Constants.referenceValueType entry.elem) := by
   obtain ⟨hexprs, hmode⟩ := element_parts h
@@ -142,7 +148,7 @@ theorem element_valid_raw_of_typing {env : metadata.Env} {C : context} {entry : 
       rw [hm] at hmode
       cases hmode with
       | active _ _ _ lim hi hlookup hconst _ _ _ =>
-        have hb : idx.val < env.table_types.val.length := by simpa [ht, proj_uN_0] using hi
+        have hb : idx.val < env.tables.val.length := by simpa [ht, proj_uN_0] using hi
         refine ⟨hb, ?_, Module.Constants.valid_of_typing hg hf hconst⟩
         change C.TABLES[idx.val]! = _ at hlookup
         rw [ht, getElem!_pos _ _ (by simpa using hb), List.getElem_map] at hlookup

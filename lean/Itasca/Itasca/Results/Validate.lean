@@ -39,7 +39,7 @@ theorem metadata.validate_module.total (data : Slice U8) :
 
 /-- Acceptance certifies `Module.Sound.Validated` for the returned
 module. -/
-theorem metadata.validate_module.sound (data : Slice U8) (decoded : metadata.Module)
+theorem metadata.validate_module.sound (data : Slice U8) (decoded : metadata.ModuleMetadata (alloc.sync.Arc metadata.CodeMetadata))
     (accepted : metadata.validate_module data = .ok (.Ok decoded)) :
     Module.Sound.Validated data decoded :=
   stream.validate_module_slice.sound data decoded accepted
@@ -52,11 +52,11 @@ theorem metadata.validate_module.complete (data : Slice U8) (raw : Binary.Module
     (elaborated : Elaborates raw (moduleOf raw))
     (typed : Module_ok (moduleOf raw)) (restricted : Restrictions raw) :
     ∃ decoded, metadata.validate_module data = .ok (.Ok decoded) ∧
-      Matches decoded.env decoded.tail raw :=
+      Matches decoded raw :=
   stream.validate_module_slice.complete data raw encoded signatures elaborated typed restricted
 
-/-- `complete` together with `AccessorTypes`: `metadata.Env.import_types` and
-`metadata.Env.export_types` on the returned environment give the types SpecTec assigns to the raw
+/-- `complete` together with `AccessorTypes`: `metadata.ModuleMetadataArcCodeMetadata.import_types` and
+`metadata.ModuleMetadataArcCodeMetadata.export_types` on the returned environment give the types SpecTec assigns to the raw
 module's imports and exports. -/
 theorem metadata.validate_module.complete_with_metadata
     (data : Slice U8) (raw : Binary.Module)
@@ -65,7 +65,7 @@ theorem metadata.validate_module.complete_with_metadata
     (elaborated : Elaborates raw (moduleOf raw))
     (typed : Module_ok (moduleOf raw)) (restricted : Restrictions raw) :
     ∃ decoded, metadata.validate_module data = .ok (.Ok decoded) ∧
-      Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw :=
+      Matches decoded raw ∧ AccessorTypes decoded raw :=
   stream.validate_module_slice.complete_with_metadata data raw encoded signatures elaborated typed restricted
 
 end Itasca

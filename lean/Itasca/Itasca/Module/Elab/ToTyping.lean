@@ -21,11 +21,9 @@ section
 /-!
 # Returned metadata
 
-`Matches` says the environment and tail the validator returns describe exactly a raw module, and
-`AccessorTypes` says the results of `metadata.Env.import_types` and `metadata.Env.export_types` agree with the
-elaborated module's import types and typed exports. `contextOf` is the module context computed from
-the raw module alone, and `accessor_types` and `matches_from_env` establish these properties for a
-valid cached environment.
+`AccessorTypes` relates both shared-module accessors to the import and export types
+of the independently elaborated module. `Matches` relates the retained metadata,
+including descriptor flags and final data segments, to that same module.
 -/
 
 open Aeneas Aeneas.Std
@@ -52,24 +50,37 @@ theorem import_types_resolved {env entries xts}
 
 /-- A valid cached environment with well-formed export names has `AccessorTypes` for the module it
 describes. -/
-theorem accessor_types {env tables memories codes segments}
-    (hc : Module.Environment.Cache env tables memories) (hv : Module.Environment.Valid env)
+theorem accessor_types {env decls codes segments} (data : alloc.vec.Vec metadata.Data)
+    (rep : Module.Environment.Represents env decls) (hv : Module.Environment.Valid env)
+    (bound : decls.imports.length ≤ U32.max)
     (hn : ∀ entry ∈ env.exports.val, wf_name (Binary.nameOfBytes entry.name.val)) :
-    AccessorTypes env (fromEnv env tables memories codes segments) := by
-  obtain ⟨ixts, hi⟩ := hc.imports_resolve
+    AccessorTypes {env with data := data} (fromEnv env decls codes segments) := by
+  obtain ⟨ixts, hi⟩ := rep.cache.imports_resolve hv.funcs
   obtain ⟨exts, he⟩ := hv.exports_resolve
-  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists (metadata.Env.import_types.resolved env ixts hi)
-  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (metadata.Env.export_types.resolved env exts he)
+  obtain ⟨ir, hir, imports, rfl, hiEq⟩ := WP.spec_imp_exists
+    (metadata.ModuleMetadataArcCodeMetadata.import_types.resolved {env with data := data} ixts (rep.ordered_imports hi bound))
+  obtain ⟨er, her, exports, rfl, heEq⟩ := WP.spec_imp_exists (metadata.ModuleMetadataArcCodeMetadata.export_types.resolved {env with data := data} exts he)
   refine ⟨imports, exports, hir, her, ?_, ?_⟩
-  · simpa [hiEq, fromEnv, Module.Environment.rawImport, List.map_map, Function.comp_def] using import_types_resolved hi
-  · rw [heEq, context_of_from_env hc]
+  · rw [hiEq]
+    exact import_types_resolved hi
+  · rw [heEq, context_of_from_env rep]
     simpa [fromEnv, List.map_map, Function.comp_def] using
-      exports_typed he hn _ (module_context_matches env (Translation.Environment.elementTypes env) segments.length)
+      exports_typed he hn _ (module_context_matches env.code (Translation.Environment.elementTypes env.code) segments.length)
 
-/-- A cached environment and tail match the module `fromEnv` builds from them. -/
-theorem matches_from_env {env tables memories codes} (tail : metadata.Tail)
-    (hc : Module.Environment.Cache env tables memories) :
-    Matches env tail (fromEnv env tables memories codes tail.data.val) := ⟨rfl, hc⟩
+/-- Installing the validated data segments completes the module described by the prefix. -/
+theorem matches_from_env {env decls codes} (data : alloc.vec.Vec metadata.Data)
+    (rep : Module.Environment.Represents env decls) (valid : Module.Environment.Valid env)
+    (flags : Module.Environment.DescriptorFlags env)
+    (segments : ∀ entry ∈ data.val, Module.Data.Valid env.code entry) :
+    Matches { env with data := data } (fromEnv env decls codes data.val) := by
+  refine ⟨rfl, rep.imports, rfl, rfl, rfl, ?_, rfl, rfl, rep.cache,
+    Module.References.coherent_declared_iff (env := env) (codes := codes) rep valid.references valid.elements segments,
+    ?_, ?_, ?_, ?_⟩
+  · simpa [fromEnv, ← rep.elements] using rep.elementTypes
+  · simpa [fromEnv, List.mem_map, Module.Environment.rawExport] using flags.eager
+  · simpa [fromEnv, List.mem_map, Module.Environment.rawExport] using flags.tablesExported
+  · simpa [fromEnv, List.mem_map, Module.Environment.rawExport] using flags.memoriesExported
+  · simpa [fromEnv, List.mem_map, Module.Environment.rawExport] using flags.globalsExported
 
 end Itasca.Module.Elaboration
 

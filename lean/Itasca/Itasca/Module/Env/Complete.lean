@@ -210,34 +210,28 @@ namespace Itasca.Module.Environment
 open Module.Elaboration
 
 theorem Ready.types_eq {raw last decls env} (h : Ready raw last decls env) (hn : 1 ≤ last) :
-    env.types.val = raw.types := h.represents.types.symm.trans (h.types hn)
-
-theorem Ready.imports_eq {raw last decls env} (h : Ready raw last decls env) (hn : 2 ≤ last) :
-    env.imports.val.map rawImport = raw.imports := h.represents.imports.symm.trans (h.imports hn)
+    env.code.types.val = raw.types := h.represents.types.symm.trans (h.types hn)
 
 theorem Ready.functions_eq {raw last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
-    env.func_type_indices.val = raw.functions := h.represents.functions.symm.trans (h.functions hn)
-
-theorem Ready.globals_eq {raw last decls env} (h : Ready raw last decls env) (hn : 6 ≤ last) :
-    env.globals.val = raw.globals := h.represents.globals.symm.trans (h.globals hn)
+    Translation.Environment.definedTypeIndices env.code = raw.functions :=
+  h.represents.cache.defined_type_indices.trans (h.functions hn)
 
 theorem Ready.elements_eq {raw last decls env} (h : Ready raw last decls env) (hn : 9 ≤ last) :
     env.elements.val.map rawElement = raw.elements := h.represents.elements.symm.trans (h.elements hn)
 
 theorem Ready.data_count_eq {raw last decls env} (h : Ready raw last decls env) (hn : 10 ≤ last) :
-    env.data_count = raw.dataCount := h.represents.dataCount.symm.trans (h.dataCount hn)
+    env.code.data_count = raw.dataCount := h.represents.dataCount.symm.trans (h.dataCount hn)
 
 theorem Ready.elements_context {raw last decls env} (h : Ready raw last decls env) (hn : 9 ≤ last) :
-    (contextOf raw).ELEMS = Translation.Environment.elementTypes env := by
+    (contextOf raw).ELEMS = Translation.Environment.elementTypes env.code := by
   simp only [contextOf]
-  rw [← h.elements_eq hn]
-  simp [Translation.Environment.elementTypes, rawElement, List.map_map]
+  simp [Translation.Environment.elementTypes, h.represents.elementTypes, h.elements hn, List.map_map, Function.comp_def]
 
 /-- An encoded data count identifies the final data space. When it is omitted, the binary condition
 rules out every data-index instruction in each body. -/
 theorem Ready.data_context {raw last decls env} (h : Ready raw last decls env) (hn : 10 ≤ last)
     (hv : Binary.DataCountValid raw) (entry : Binary.Code) (hm : entry ∈ raw.codes) :
-    (contextOf raw).DATAS = Translation.Environment.dataTypes env ∨ Binary.instructionsUseData entry.body = false := by
+    (contextOf raw).DATAS = Translation.Environment.dataTypes env.code ∨ Binary.instructionsUseData entry.body = false := by
   cases hc : raw.dataCount with
   | none =>
     right
@@ -249,46 +243,46 @@ theorem Ready.data_context {raw last decls env} (h : Ready raw last decls env) (
     simp [contextOf, Translation.Environment.dataTypes, h.data_count_eq hn, hc, he]
 
 theorem Ready.import_types_eq {raw last decls env} (h : Ready raw last decls env) (hn : 2 ≤ last) :
-    importTypes env = raw.imports.map (fun e => importType raw.types e.desc) := by
-  rw [← h.imports_eq hn]
-  simp [importTypes, h.types_eq (by omega), List.map_map, rawImport, Function.comp_def]
+    importTypes env.code.types.val decls.imports = raw.imports.map (fun e => importType raw.types e.desc) := by
+  simp [importTypes, h.types_eq (by omega), h.imports hn]
 
 theorem Ready.funcs_context {raw last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
-    (contextOf raw).FUNCS = env.func_types.val.map Translation.Environment.funcType := by
+    (contextOf raw).FUNCS = env.code.funcs.val.map (Translation.Environment.descriptorType env.code.types.val) := by
   symm
-  simpa [contextOf, h.import_types_eq (by omega), h.functions_eq hn, h.types_eq (by omega)] using funcs_cache h.represents.cache
+  simpa [contextOf, importTypes, h.imports (by omega), h.functions hn, h.types_eq (by omega)] using funcs_cache h.represents.cache
 
 theorem Ready.tables_context {raw last decls env} (h : Ready raw last decls env) (hn : 4 ≤ last) :
-    (contextOf raw).TABLES = env.table_types.val.map Translation.Environment.tableType := by
+    (contextOf raw).TABLES = env.code.tables.val.map (fun d => Translation.Environment.tableType d.ty) := by
   symm
   simpa [contextOf, h.import_types_eq (by omega), h.tables hn] using tables_cache h.represents.cache
 
 theorem Ready.memories_context {raw last decls env} (h : Ready raw last decls env) (hn : 5 ≤ last) :
-    (contextOf raw).MEMS = env.mem_types.val.map Translation.Environment.memType := by
+    (contextOf raw).MEMS = env.code.memories.val.map (fun d => Translation.Environment.memType d.ty) := by
   symm
   simpa [contextOf, h.import_types_eq (by omega), h.memories hn] using memories_cache h.represents.cache
 
 theorem Ready.globals_context {raw last decls env} (h : Ready raw last decls env) (hn : 6 ≤ last) :
-    (contextOf raw).GLOBALS = env.global_types.val.map Translation.globalType := by
+    (contextOf raw).GLOBALS = env.code.globals.val.map (fun d => Translation.globalType d.gtype) := by
   symm
-  simpa [contextOf, h.import_types_eq (by omega), h.globals_eq hn] using globals_cache h.represents.cache
+  simpa [contextOf, h.import_types_eq (by omega), h.globals hn] using globals_cache h.represents.cache
 
 /-- Once the global section is processed, the environment is a code-entry module context for the
 elaborated typing context. -/
 theorem Ready.module_context {raw last decls env} (h : Ready raw last decls env) (hn : 6 ≤ last) :
-    CodeEntry.ModuleContext env (contextOf raw) :=
+    CodeEntry.ModuleContext env.code (contextOf raw) :=
   ⟨by simp [contextOf, h.types_eq (by omega)], h.funcs_context (by omega),
     h.globals_context hn, h.tables_context (by omega), h.memories_context (by omega), rfl, rfl⟩
 
 theorem Ready.initializer_globals {raw last decls env} (h : Ready raw last decls env) (hn : 2 ≤ last) :
-    Module.Constants.GlobalContext env (initializerContextOf raw) := by
+    Module.Constants.GlobalContext env.code (initializerContextOf raw) := by
   change Module.Translation.globals (raw.imports.map (fun e => importType raw.types e.desc)) = _
-  rw [← h.import_types_eq hn, importTypes, globals_imports, h.represents.cache.global_prefix]
+  rw [← h.import_types_eq hn, importTypes, globals_imports, ← h.represents.cache.global_prefix]
+  simp [List.map_map, Function.comp_def]
 
 theorem Ready.empty_imports {raw last decls env} (h : Ready raw last decls env) (hn : last < 2) :
     env.imports.val = [] := by
   have hp := h.phase.2.1 hn
-  exact List.map_eq_nil_iff.mp (h.represents.imports.symm.trans hp)
+  simpa [hp] using h.represents.imports
 
 theorem Ready.future_tables {raw last decls env} (h : Ready raw last decls env) (hn : last < 4) :
     decls.tables = [] := h.phase.2.2.2.1 hn
@@ -297,15 +291,15 @@ theorem Ready.future_memories {raw last decls env} (h : Ready raw last decls env
     decls.memories = [] := h.phase.2.2.2.2.1 hn
 
 theorem Ready.empty_memories {raw last decls env} (h : Ready raw last decls env) (hn : last < 2) :
-    env.mem_types.val = [] := by
-  simp [h.represents.cache.memories, h.empty_imports hn, h.future_memories (by omega), importedMems]
+    env.code.memories.val = [] := by
+  simpa [h.phase.2.1 hn, h.future_memories (by omega), importedMems] using h.represents.cache.memoryEntries
 
 theorem Ready.memories_count {raw last decls env} (h : Ready raw last decls env)
     (hlo : 2 ≤ last) (hhi : last < 5) :
-    env.mem_types.val.length =
+    env.code.memories.val.length =
       (Module.Translation.mems (raw.imports.map (fun e => importType raw.types e.desc))).length := by
-  rw [← h.import_types_eq hlo, importTypes, mems_imports, List.length_map,
-    h.represents.cache.memories, h.future_memories hhi, List.append_nil]
+  rw [← h.import_types_eq hlo, importTypes, mems_imports, List.length_map]
+  simpa [h.future_memories hhi] using congrArg List.length h.represents.cache.memoryEntries
 
 end Itasca.Module.Environment
 
@@ -315,25 +309,14 @@ namespace Itasca.Module.Environment
 
 /-- A fully decoded declaration prefix and a tail with the raw data segments match every returned
 field of the raw module, including the merged index spaces. -/
-theorem Ready.matches {raw : Binary.Module} {decls : Declarations} {env : metadata.Env}
-    (h : Ready raw 10 decls env) (tail : metadata.Tail)
-    (htail : tail.data.val.map Module.Data.raw = raw.data) :
-    Module.Elaboration.Matches env tail raw := by
-  have hr := h.represents
-  have ht := h.types (by decide)
-  have hi := h.imports (by decide)
-  have hf := h.functions (by decide)
-  have hta := h.tables (by decide)
-  have hm := h.memories (by decide)
-  have hg := h.globals (by decide)
-  have he := h.exports (by decide)
-  have hs := h.start (by decide)
-  have hel := h.elements (by decide)
-  have hdc := h.dataCount (by decide)
-  refine ⟨?_, by simpa [hta, hm] using hr.cache⟩
+theorem Ready.fromEnv_eq {raw : Binary.Module} {decls : Declarations} {env}
+    (h : Ready raw 10 decls env) {segments} (hs : segments.map Module.Data.raw = raw.data) :
+    Module.Elaboration.fromEnv env decls raw.codes segments = raw := by
+  rw [← Module.Elaboration.represents_module h.represents, hs]
   cases raw
-  simp_all [Module.Elaboration.fromEnv, hr.types, hr.imports, hr.functions, hr.globals,
-      hr.exports, hr.start, hr.elements, hr.dataCount]
+  simp [Declarations.module, h.types (by decide), h.imports (by decide), h.functions (by decide),
+    h.tables (by decide), h.memories (by decide), h.globals (by decide), h.exports (by decide),
+    h.start (by decide), h.elements (by decide), h.dataCount (by decide)]
 
 end Itasca.Module.Environment
 
@@ -361,10 +344,10 @@ open Itasca.Binary Module.Sections Module.Environment
 returns success at the end of the payload together with the `Effect` of the matching slot update.
 The premises do not assume any parser execution. -/
 theorem metadata.decode_env_section.complete (data : Slice U8) (pos : Usize) (id : U8)
-    (env : metadata.Env) (decls : Declarations) (raw : Binary.Module) (next : Usize)
+    (env : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations) (raw : Binary.Module) (next : Usize)
     (hlo : 1 ≤ (sectionRank id).val) (hhi : (sectionRank id).val ≤ 10)
     (hb : At (fun u bs => Payload raw (sectionRank id).val u bs) data pos () next)
-    (hv : SectionValid raw (sectionRank id).val env) (hready : Ready raw ((sectionRank id).val - 1) decls env)
+    (hv : SectionValid raw (sectionRank id).val env.code) (hready : Ready raw ((sectionRank id).val - 1) decls env)
     (hbound : Bounded env pos.val) :
     ∃ result, metadata.decode_env_section data pos id env = .ok (.Ok next, result) ∧
       Effect data pos env decls id next result (update raw (sectionRank id).val decls) := by
@@ -372,64 +355,66 @@ theorem metadata.decode_env_section.complete (data : Slice U8) (pos : Usize) (id
   rcases hc with h | h | h | h | h | h | h | h | h | h
   · have he : id = 1#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_type_section.complete data pos env raw.types next hb
+    obtain ⟨result, hr, ha⟩ := metadata.decode_type_section.complete data pos env.code raw.types next hb
       (by intro ft hm; exact hv ft hm) hbound.types
-    exact ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr,
+    exact ⟨{env with code := result}, by simp [metadata.decode_env_section, hr, global_simps],
       .types ha hb hv⟩
   · have he : id = 2#u8 := UScalar.eq_of_val_eq h
     subst id
     change At (VecEncoding ImportEncoding) data pos raw.imports next at hb
-    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_import_section.complete data pos env raw.imports next hb hv hbound
+    obtain ⟨result, hr, ha⟩ := metadata.decode_import_section.complete data pos env raw.imports next hb hv hbound
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
-    simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.imports (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
+    exact .imports ha hb
   · have he : id = 3#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, sigs, hr, ha⟩ := metadata.decode_function_section.complete data pos env raw.functions next hb hv hbound.funcs hbound.funcIndices
-    exact ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr,
+    obtain ⟨result, hr, ha⟩ := metadata.decode_function_section.complete data pos env.code raw.functions next hb hv hbound.funcs
+    exact ⟨{env with code := result}, by simp [metadata.decode_env_section, hr, global_simps],
       .functions ha hb⟩
   · have he : id = 4#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_table_section.complete data pos env raw.tables next hb hv hbound.tables
-    refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, .tables ha hb ?_⟩
+    obtain ⟨result, hr, ha⟩ := metadata.decode_table_section.complete data pos env.code raw.tables next hb hv hbound.tables
+    refine ⟨{env with code := result}, by simp [metadata.decode_env_section, hr, global_simps], .tables ha hb ?_⟩
     intro tt ht
     simpa [Module.Translation.LimitsValid, Binary.LimitsValid, Option.mem_def, global_simps, U32.rMax] using hv tt ht
   · have he : id = 5#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_memory_section.complete data pos env raw.memories next hb hv.1 hv.2
-    refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, .memories ha hb ?_ ?_⟩
+    obtain ⟨result, hr, ha⟩ := metadata.decode_memory_section.complete data pos env.code raw.memories next hb hv.1 hv.2
+    refine ⟨{env with code := result}, by simp [metadata.decode_env_section, hr, global_simps], .memories ha hb ?_ ?_⟩
     · intro mt ht
       simpa [Module.Translation.LimitsValid, Binary.LimitsValid, Option.mem_def, global_simps] using hv.1 mt ht
-    · have hc : result.mem_types.val.length ≤ 1 := by simpa only [ha.2, List.length_append] using hv.2
+    · have hc : result.memories.val.length ≤ 1 := by simpa only [ha.2, List.length_append, List.length_map] using hv.2
       exact hc.trans (Nat.le_max_right _ _)
   · have he : id = 6#u8 := UScalar.eq_of_val_eq h
     subst id
-    obtain ⟨result, hr, ha⟩ := metadata.decode_global_section.complete data pos env raw.globals next hb hv hbound.globals hbound.globalTypes hbound.declaredFuncs
-    refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, .globals ha hb ?_⟩
+    obtain ⟨result, hr, ha⟩ := metadata.decode_global_section.complete data pos env.code raw.globals next hb hv hbound.globals
+    refine ⟨{env with code := result}, by simp [metadata.decode_env_section, hr, global_simps], .globals ha hb ?_⟩
     intro g hg
-    exact (hv g hg).append_globals _ ha.2.2.1 (by rw [ha.1]) (by rw [ha.1])
+    exact (hv g hg).append_globals _ ha.2.1 (by rw [ha.1]) (by simpa using congrArg List.length ha.2.2.funcs)
   · have he : id = 7#u8 := UScalar.eq_of_val_eq h
     subst id
     change At (VecEncoding ExportEncoding) data pos raw.exports next at hb
     have hempty : env.exports.val = [] := by
       have hx := hready.represents.exports.symm.trans (hready.phase.2.2.2.2.2.2.1 (by decide))
       exact List.map_eq_nil_iff.mp hx
-    obtain ⟨result, actual, hr, ha, hraw⟩ := metadata.decode_export_section.complete data pos env raw.exports next hb hempty hv.1 hv.2 hbound.declaredFuncs
+    obtain ⟨result, actual, hr, ha, hraw⟩ := metadata.decode_export_section.complete data pos env raw.exports next hb hempty hv.1 hv.2
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
     simpa [Payload, update, hraw, sectionRank, global_simps] using (Effect.exports (before := decls) ha (by simpa [Payload, update, hraw, sectionRank, global_simps] using hb))
   · have he : id = 8#u8 := UScalar.eq_of_val_eq h
     subst id
     obtain ⟨bs, ⟨idx, hstart, hi⟩, hs⟩ := hb
     have hbytes : At StartEncoding data pos (some idx) next := ⟨bs, ⟨idx, rfl, hi⟩, hs⟩
-    obtain ⟨hidx, hp, hr⟩ := hv idx hstart
-    have hread := metadata.decode_start_section.complete data pos env idx next hbytes hidx hp hr
-    refine ⟨{env with start := some idx}, by simpa [metadata.decode_env_section, global_simps] using hread, ?_⟩
-    simpa [update, hstart, sectionRank, global_simps] using (Effect.start (before := decls) rfl hbytes ⟨hidx, hp, hr⟩)
+    obtain ⟨ft, resolved, hp, hr⟩ := hv idx hstart
+    obtain ⟨fd, lookup, signature, read⟩ :=
+      metadata.decode_start_section.complete data pos env.code idx next hbytes resolved hp hr
+    refine ⟨{env with code := {env.code with start := some idx, funcs := env.code.funcs.set (UScalar.cast .Usize idx) {fd with eager := true}}}, by simp [metadata.decode_env_section, read, global_simps], ?_⟩
+    simpa [update, hstart, sectionRank, global_simps] using
+      (Effect.start (env := env) (before := decls) rfl hbytes ⟨lookup, ft, signature, hp, hr⟩)
   · have he : id = 9#u8 := UScalar.eq_of_val_eq h
     subst id
     change At (VecEncoding ElementEncoding) data pos raw.elements next at hb
-    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_element_section.complete data pos env raw.elements next hb hv hbound.elements hbound.declaredFuncs
+    obtain ⟨result, actual, hr, hraw, ha⟩ := metadata.decode_element_section.complete data pos env raw.elements next hb hv hbound.elements hbound.elementTypes
     refine ⟨result, by simpa [metadata.decode_env_section, global_simps] using hr, ?_⟩
-    have hva : ∀ e ∈ actual, ElementValid env e := by
+    have hva : ∀ e ∈ actual, ElementValid env.code e := by
       intro e he
       have hm : Module.Environment.rawElement e ∈ raw.elements := by rw [← hraw]; exact List.mem_map.mpr ⟨e, he, rfl⟩
       exact hv _ hm
@@ -440,8 +425,8 @@ theorem metadata.decode_env_section.complete (data : Slice U8) (pos : Usize) (id
     obtain ⟨bs, hstart, hspan⟩ := hb
     obtain ⟨idx, hcount, hindex⟩ := hstart
     have hbytes : At StartEncoding data pos (some idx) next := ⟨bs, ⟨idx, rfl, hindex⟩, hspan⟩
-    have hread := metadata.decode_data_count.complete data pos env idx next hbytes
-    refine ⟨{env with data_count := some idx}, by simpa [metadata.decode_env_section, global_simps] using hread, ?_⟩
+    have hread := metadata.decode_data_count.complete data pos env.code idx next hbytes
+    refine ⟨{env with code := {env.code with data_count := some idx}}, by simp [metadata.decode_env_section, hread, global_simps], ?_⟩
     simpa [update, hcount, sectionRank] using (Effect.dataCount (before := decls) rfl hbytes)
 
 end Itasca
@@ -485,14 +470,14 @@ namespace Itasca
 open Itasca.Binary Module.Environment
 
 /-- The environment section loop run with the empty module visitor. -/
-abbrev Module.Environment.parseLoop (data : Slice U8) (env : metadata.Env) (pos : Usize) (last : U8)
+abbrev Module.Environment.parseLoop (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata) (pos : Usize) (last : U8)
      :=
   metadata.validate_env_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
     data () env pos last
 
 /-- At end of input or at a code or data header, the loop returns the current environment and
 position. -/
-theorem metadata.validate_env_with_loop.complete_stop (data : Slice U8) (env : metadata.Env)
+theorem metadata.validate_env_with_loop.complete_stop (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (pos : Usize) (last : U8) (hstop : StopAt data pos) :
     Module.Environment.parseLoop data env pos last = .ok (.Ok (env, pos), ()) := by
   rcases hstop with rfl | ⟨id, first, next, hh, hid⟩
@@ -508,7 +493,7 @@ theorem metadata.validate_env_with_loop.complete_stop (data : Slice U8) (env : m
         core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- The loop skips one custom section. -/
-theorem metadata.validate_env_with_loop.complete_custom (data : Slice U8) (env : metadata.Env)
+theorem metadata.validate_env_with_loop.complete_custom (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (pos next : Usize) (last : U8)
     (hb : At (fun (_ : Unit) => CustomEncoding) data pos () next) :
     Module.Environment.parseLoop data env pos last = Module.Environment.parseLoop data env next last := by
@@ -522,7 +507,7 @@ theorem metadata.validate_env_with_loop.complete_custom (data : Slice U8) (env :
     metadata.ModuleVisitor.on_custom_section.default, core.result.Result.Insts.CoreOpsTry.branch]
 
 /-- The loop skips any run of custom sections. -/
-theorem metadata.validate_env_with_loop.complete_customs (data : Slice U8) (env : metadata.Env)
+theorem metadata.validate_env_with_loop.complete_customs (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (pos next : Usize) (last : U8)
     (hb : At (fun (_ : Unit) => CustomsEncoding) data pos () next) :
     Module.Environment.parseLoop data env pos last = Module.Environment.parseLoop data env next last := by
@@ -537,7 +522,7 @@ theorem metadata.validate_env_with_loop.complete_customs (data : Slice U8) (env 
 /-- When `metadata.decode_env_section` succeeds on a declaration section in increasing order, the
 loop continues from the end of the section with the updated environment and last-seen rank. -/
 theorem metadata.validate_env_with_loop.complete_section (data : Slice U8)
-    (env result : metadata.Env) (pos first next : Usize) (last id : U8)
+    (env result : metadata.ModuleMetadata metadata.CodeMetadata) (pos first next : Usize) (last id : U8)
     (hh : SectionHeader data pos id first next)
     (hlo : 1 ≤ (sectionRank id).val) (hhi : (sectionRank id).val ≤ 10)
     (horder : last.val < (sectionRank id).val)
@@ -581,10 +566,10 @@ open Itasca.Binary
 /-- The parser loop `parseLoop` accepts any `Chain` encoding. Absent slots advance the ghost
 phase, and only actual sections update the parser's last-seen section id. -/
 theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
-    (data : Slice U8) (env : metadata.Env) (decls : Declarations) (pos next : Usize) (last : U8)
+    (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata) (decls : Declarations) (pos next : Usize) (last : U8)
     (hb : Body.Scalar.BytesAt data pos bytes next) (hstop : StopAt data next)
     (hready : Ready raw n decls env) (hbound : Bounded env pos.val)
-    (hlast : last.val ≤ n) (hreq : Requirements raw) :
+    (indices : DescriptorIndices env.code) (hlast : last.val ≤ n) (hreq : Requirements raw) :
     ∃ result finalDecls, parseLoop data env pos last = .ok (.Ok (result, next), ()) ∧
       Ready raw 10 finalDecls result := by
   induction h generalizing env decls pos last with
@@ -606,7 +591,7 @@ theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
     · have hend := hsection.empty
       subst middle
       have hr : Ready raw (n + 1) decls env := by simpa only [hid] using hready'.absent hlo hhi hempty
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' (by omega)
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih env decls afterCustoms last hremaining hr hbound' indices (by omega)
       exact ⟨result, finalDecls, hcustomeq.trans hrun, hr⟩
     · obtain ⟨payloadStart, hh, hencoding⟩ := At.section_split
         (show At (SectionEncoding id (fun u bs => Payload raw (sectionRank id).val u bs)) data afterCustoms () middle from ⟨_, hpresent, hsection⟩)
@@ -617,10 +602,10 @@ theorem Chain.complete {raw n bytes} (h : Chain raw n bytes)
       have hr : Ready raw (n + 1) (update raw (sectionRank id).val decls) updated := by
         simpa only [hid] using hready'.updated hlo hhi hrep
       have hupdated : Bounded updated middle.val := by
-        have hs := metadata.decode_env_section.spec data payloadStart id env decls hboundPayload
+        have hs := metadata.decode_env_section.spec data payloadStart id env decls hboundPayload indices
         simp only [hread, WP.spec_ok] at hs
         exact hs.choose_spec.2
-      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw (sectionRank id).val decls) middle (sectionRank id) hremaining hr hupdated (by omega)
+      obtain ⟨result, finalDecls, hrun, hr⟩ := ih updated (update raw (sectionRank id).val decls) middle (sectionRank id) hremaining hr hupdated (heffect.indices indices) (by omega)
       refine ⟨result, finalDecls, hcustomeq.trans ?_, hr⟩
       exact (metadata.validate_env_with_loop.complete_section data env updated afterCustoms payloadStart middle last id
         hh hlo (by omega) (by omega) hread).trans hrun
@@ -646,11 +631,11 @@ theorem metadata.validate_env.complete (data : Slice U8) (raw : Binary.Module)
   rw [hbytes] at hs
   obtain ⟨start, hheader, hsections⟩ := hs.split
   have hread := metadata.read_header.complete data start hheader
-  obtain ⟨initial, hnew, hrep, _, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.new.declarations)
+  obtain ⟨initial, hnew, hrep, valid, _, hbound, hphase⟩ := WP.spec_imp_exists (metadata.ModuleMetadataCodeMetadata.new.declarations)
   have hready : Ready raw 0 {} initial := by
     refine ⟨hrep, hphase, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_, ?_⟩ <;> omega
   obtain ⟨env, finalDecls, hrun, hready⟩ := hchain'.complete data initial {} start next 0#u8
-    hsections hstop hready (hbound.mono (Nat.zero_le _)) (by simp) hrequirements
+    hsections hstop hready (hbound.mono (Nat.zero_le _)) valid.funcs (by simp) hrequirements
   refine ⟨env, finalDecls, ?_, hready⟩
   simp [metadata.validate_env, metadata.validate_env_with, hnew, hread,
     core.result.Result.Insts.CoreOpsTry.branch, hrun]

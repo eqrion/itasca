@@ -40,14 +40,15 @@ def functionType : wasm_types.FuncType :=
 def entry : Code := ⟨[], [Spec.i32Const 0#i32, Spec.Constants.i64 0#i64]⟩
 
 /-- The environment holding `functionType` and one function of that type. -/
-def env : metadata.Env :=
-  { Examples.Module.Basic.emptyEnv with
-    types := alloc.vec.Vec.from [functionType] (by scalar_tac)
-    func_type_indices := alloc.vec.Vec.from [0#u32] (by scalar_tac)
-    func_types := alloc.vec.Vec.from [functionType] (by scalar_tac) }
+def env : metadata.ModuleMetadata metadata.CodeMetadata :=
+  { Examples.Module.Basic.emptyEnv with code := { Examples.Module.Basic.emptyEnv.code with
+      types := alloc.vec.Vec.from [functionType] (by scalar_tac)
+      funcs := alloc.vec.Vec.from [⟨0#u32, false, false⟩] (by scalar_tac) } }
+
+private def declarations : Module.Environment.Declarations := { types := [functionType], functions := [0#u32] }
 
 /-- The decoded module that `env` and `entry` elaborate to. -/
-def raw : Binary.Module := fromEnv env [] [] [entry] []
+def raw : Binary.Module := fromEnv env declarations [entry] []
 
 /-- The module bytes: header, type section, function section and code section. -/
 def input : Slice U8 := Examples.Module.Support.bytes
@@ -56,20 +57,17 @@ def input : Slice U8 := Examples.Module.Support.bytes
     10#u8, 8#u8, 1#u8, 6#u8, 0#u8, 0x41#u8, 0#u8, 0x42#u8, 0#u8, 0x0B#u8])
   (by simp [magicVersion]; scalar_tac)
 
-private theorem cache : Module.Environment.Cache env [] [] := by
-  constructor
-  · exact .cons ⟨by simp [env], rfl⟩ .nil
-  all_goals simp [env, Examples.Module.Basic.emptyEnv, Module.Environment.importedFuncs,
-    Module.Environment.importedGlobals, Module.Environment.importedTables, Module.Environment.importedMems]
+private theorem represented : Module.Environment.Represents env declarations := by
+  constructor <;> first | rfl | (constructor <;> rfl)
 
 private theorem environment_valid : Module.Environment.Valid env := by
   constructor <;> simp [env, Examples.Module.Basic.emptyEnv, Itasca.CodeEntry.FuncTypeWithinLimits,
     functionType, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS,
-    Module.References.Coherent, Module.References.collected]
+    Module.References.Coherent, Module.References.collected, Translation.Environment.declaredReferences]
 
-private theorem entry_typed : CodeEntry.Typed env 0#u32 entry := by
+private theorem entry_typed : CodeEntry.Typed env.code 0#u32 entry := by
   refine ⟨by simp [env], ?_, ?_⟩
-  · let C := CodeEntry.bodyContext env [] [] [.I32, .I64]
+  · let C := CodeEntry.bodyContext env.code [] [] [.I32, .I64]
     have hC : wf_context C := by
       constructor <;> simp [env, Examples.Module.Basic.emptyEnv, Forall]
     have hp := ((Body.Stack.TypedPrefix.empty C hC).i32_const hC 0#i32).i64_const hC 0#i64
@@ -80,15 +78,15 @@ private theorem entry_typed : CodeEntry.Typed env 0#u32 entry := by
       Spec.DeclaredReferences.instructionIndices, Spec.i32Const, Spec.Constants.i64]
 
 private theorem codes_typed : List.Forall₂
-    (fun idx code => CodeEntry.Typed env idx code ) env.func_type_indices.val [entry] :=
+    (fun idx code => CodeEntry.Typed env.code idx code ) declarations.functions [entry] :=
   .cons entry_typed .nil
 
 /-- The generated `Module_ok` holds for `raw`, assembled from declarative body typing and
 environment caches without a successful validator call. -/
 theorem typed : Module_ok (moduleOf raw) := by
-  exact Module.Elaboration.typed cache environment_valid
-    (by simp [env, Examples.Module.Basic.emptyEnv]) (by simp [env, Examples.Module.Basic.emptyEnv])
-    codes_typed (by simp) (by simp [env, Examples.Module.Basic.emptyEnv]) (List.Forall₂.nil : List.Forall₂ (Module.Externals.ExportResolves env) [] [])
+  exact Module.Elaboration.typed represented environment_valid
+    (by simp [declarations]) (by simp [env, Examples.Module.Basic.emptyEnv])
+    codes_typed (by simp) (by simp [env, Examples.Module.Basic.emptyEnv]) (List.Forall₂.nil : List.Forall₂ (Module.Externals.ExportResolves env.code) [] [])
 
 private theorem module_zero32 : Binary.SignedLeb32.Encoding [0#u8] (0#i32).val := by
   refine ⟨[], 0#u8, rfl, by decide, by simp, by decide, ?_, by decide, by decide⟩
@@ -136,18 +134,18 @@ theorem encoded : ModuleEncodingWithinLimits raw input.val := by
         [0x41#u8,0#u8,0x42#u8,0#u8,0x0B#u8], leb 6#u8,
         ⟨[0#u8], [], leb 0#u8, .nil, rfl⟩,
         ⟨body_encoding, by simp [limits.MAX_FUNCTION_BYTES]⟩, rfl⟩
-    · simp [DataCountValid, WebAssembly.Binary.DataCountValidWith, raw, fromEnv, env, Examples.Module.Basic.emptyEnv, entry,
+    · simp [DataCountValid, WebAssembly.Binary.DataCountValidWith, raw, fromEnv, declarations, env, Examples.Module.Basic.emptyEnv, entry,
         instructionsUseData, instructionUsesData, Spec.i32Const, Spec.Constants.i64]
 
 /-- `metadata.validate_module` accepts `input` under Wasm 2.0, and the decoded metadata matches
 `raw`, by the shared completeness theorem. -/
 theorem accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
-    Matches decoded.env decoded.tail raw ∧ AccessorTypes decoded.env raw := by
+    Matches decoded raw ∧ AccessorTypes decoded raw := by
   exact metadata.validate_module.complete_with_metadata input raw encoded
-    (by simp [ModuleSignaturesWithinLimits, raw, fromEnv, env, functionType,
+    (by simp [ModuleSignaturesWithinLimits, raw, fromEnv, declarations, env, functionType,
       Itasca.CodeEntry.FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS])
-    (Module.Elaboration.elaborates cache codes_typed) typed
-    (Module.Elaboration.restrictions cache environment_valid codes_typed)
+    (Module.Elaboration.elaborates represented environment_valid codes_typed) typed
+    (Module.Elaboration.restrictions represented environment_valid codes_typed)
 
 /-- The accepted bytes also satisfy the shared module soundness theorem under Wasm 2.0. -/
 theorem validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
@@ -405,7 +403,7 @@ theorem indexed_body : BodyEncoding bytes [.BLOCK (blockType (.TypeIndex 0#u32))
 
 /-- An `if` without an `else` arm has type `[i32, i64, i32] -> [i32, i64]` when its block type is
 the identity on `[i32, i64]`. scalar frames have no counterpart for this rule. -/
-theorem identity_if (env : metadata.Env) (C : context) (hC : wf_context C)
+theorem identity_if (env : metadata.CodeMetadata) (C : context) (hC : wf_context C)
     (htypes : C.TYPES = env.types.val.map Translation.Environment.funcType) (index : U32)
     (hin : resolve env (inputs (.TypeIndex index)) = some [.I32, .I64])
     (hout : resolve env (outputs (.TypeIndex index)) = some [.I32, .I64]) :
@@ -449,22 +447,8 @@ def floatResult : wasm_types.FuncType :=
 
 /-- An environment whose type section is `pairResult`, `pairIdentity`, `pairLoop`, `emptyResult`
 and `floatResult` (indices 0 to 4), with no functions or other entities. -/
-def env : metadata.Env where
-  types := alloc.vec.Vec.from [pairResult, pairIdentity, pairLoop, emptyResult, floatResult] (by scalar_tac)
-  imports := alloc.vec.Vec.new _
-  globals := alloc.vec.Vec.new _
-  exports := alloc.vec.Vec.new _
-  elements := alloc.vec.Vec.new _
-  start := none
-  data_count := none
-  declared_funcs := alloc.vec.Vec.new _
-  func_type_indices := alloc.vec.Vec.new _
-  func_types := alloc.vec.Vec.new _
-  table_types := alloc.vec.Vec.new _
-  mem_types := alloc.vec.Vec.new _
-  global_types := alloc.vec.Vec.new _
-  num_imported_funcs := 0#usize
-  num_imported_globals := 0#usize
+def env : metadata.CodeMetadata :=
+  { Examples.Module.Basic.emptyEnv.code with types := alloc.vec.Vec.from [pairResult, pairIdentity, pairLoop, emptyResult, floatResult] (by scalar_tac) }
 
 /-- `env` is within the implementation limits. -/
 theorem environment_limits : CodeEntry.EnvironmentWithinLimits env := by
@@ -474,7 +458,7 @@ theorem environment_limits : CodeEntry.EnvironmentWithinLimits env := by
     rcases hf with rfl | rfl | rfl | rfl | rfl <;>
       simp [pairResult, pairIdentity, pairLoop, emptyResult, floatResult,
         CodeEntry.FuncTypeWithinLimits, limits.MAX_MULTI_VALUE_PARAMS, limits.MAX_MULTI_VALUE_RESULTS]
-  · simp [env]
+  · simp [env, Examples.Module.Basic.emptyEnv]
 
 private theorem unsigned (b : U8) (h : b.val < 128) : Binary.Leb128.Encoding [b] b.val :=
   ⟨[], b, rfl, by simp, by simp, h, by simp, by simp [Binary.Leb128.payload_nil, Binary.Leb128.payload_cons, Nat.mod_eq_of_lt h]⟩

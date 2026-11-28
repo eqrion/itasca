@@ -62,6 +62,17 @@ end Itasca.Module.Environment
 namespace Itasca.Module.Environment
 open Aeneas Aeneas.Std Itasca
 
+/-- Descriptor flags agree with the start function and the ordered export records. -/
+structure DescriptorFlags (env : metadata.ModuleMetadata metadata.CodeMetadata) : Prop where
+  eager : ∀ i d, env.code.funcs.val[i]? = some d → (d.eager = true ↔
+    ∃ idx : U32, idx.val = i ∧ (env.code.start = some idx ∨ ∃ e ∈ env.exports.val, e.desc = .Func idx))
+  tablesExported : ∀ i d, env.code.tables.val[i]? = some d → (d.is_exported = true ↔
+    ∃ idx : U32, idx.val = i ∧ ∃ e ∈ env.exports.val, e.desc = .Table idx)
+  memoriesExported : ∀ i d, env.code.memories.val[i]? = some d → (d.is_exported = true ↔
+    ∃ idx : U32, idx.val = i ∧ ∃ e ∈ env.exports.val, e.desc = .Memory idx)
+  globalsExported : ∀ i d, env.code.globals.val[i]? = some d → (d.is_exported = true ↔
+    ∃ idx : U32, idx.val = i ∧ ∃ e ∈ env.exports.val, e.desc = .Global idx)
+
 /-- All slots through rank `last` are complete in `decls`, including omitted empty sections, and
 match the raw module `raw`. The environment `env` represents `decls`. -/
 structure Ready (raw : Binary.Module) (last : Nat) (decls : Declarations)

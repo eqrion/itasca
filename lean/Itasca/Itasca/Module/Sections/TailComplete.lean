@@ -93,7 +93,7 @@ open Module.Elaboration
 theorem Ready.data_valid {raw decls env} (hready : Ready raw 10 decls env)
     (htyped : SectionsTyped raw) {segments : Vec metadata.Data}
     (hmap : segments.val.map Module.Data.raw = raw.data) :
-    ∀ segment ∈ segments.val, Module.Data.Valid env segment := by
+    ∀ segment ∈ segments.val, Module.Data.Valid env.code segment := by
   intro segment hm
   have hr : Module.Data.raw segment ∈ raw.data := by
     rw [← hmap]
@@ -110,12 +110,12 @@ namespace Itasca.Module.Tail
 /-- An independently encoded tail whose sections are typed gives runtime segments that match the
 raw data and are valid in the ready environment. -/
 theorem materialize (data : Slice U8) (start next : Usize)
-    (raw : Binary.Module) (decls : Module.Environment.Declarations) (env : metadata.Env)
+    (raw : Binary.Module) (decls : Module.Environment.Declarations) (env : metadata.ModuleMetadata metadata.CodeMetadata)
     (hb : Binary.At (fun es bs => Encoding es bs) data start raw.data next)
     (htyped : Module.Elaboration.SectionsTyped raw)
     (hready : Module.Environment.Ready raw 10 decls env) :
     ∃ segments : Vec metadata.Data, segments.val.map Module.Data.raw = raw.data ∧
-      ∀ segment ∈ segments.val, Module.Data.Valid env segment := by
+      ∀ segment ∈ segments.val, Module.Data.Valid env.code segment := by
   obtain ⟨_, he, _⟩ := hb
   obtain ⟨segments, hs⟩ := he.materialize
   exact ⟨segments, hs, hready.data_valid htyped hs⟩
@@ -157,10 +157,10 @@ private theorem data_active_parts {idx offset init bytes}
     exact ⟨flags, _, fb, mb, ob, ib, hf, hm, ho, ByteVecEncoding.source_iff.mpr hb, rfl⟩
 
 private theorem data_active_complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} (idx : U32) (offset : wasm_types.ConstExpr) (init : alloc.vec.Vec U8)
+    {env : metadata.CodeMetadata} (idx : U32) (offset : wasm_types.ConstExpr) (init : alloc.vec.Vec U8)
 
     (hb : At DataEncoding data pos ⟨.Active idx offset, init.val⟩ next)
-    (hv : idx.val < env.mem_types.val.length ∧ Module.Constants.Valid env offset .I32) :
+    (hv : idx.val < env.memories.val.length ∧ Module.Constants.Valid env offset .I32) :
     metadata.decode_data_segment data pos env = .ok (.Ok (⟨.Active idx offset, init⟩, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
   obtain ⟨flags, explicit, flagBytes, memory, encodedOffset, encodedInit, hf, hm, ho, hi, rfl⟩ := data_active_parts he
@@ -184,7 +184,7 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
     simp [metadata.decode_data_segment, hrf, hrm, core.result.Result.Insts.CoreOpsTry.branch]
     split <;> try contradiction
     step
-    have hguard : ¬env.mem_types.val.length ≤ i.val := by have := hv.1; scalar_tac
+    have hguard : ¬env.memories.val.length ≤ i.val := by have := hv.1; scalar_tac
     simp [hguard, hro, hrc]
     step
     have havail : content.val + n.val ≤ data.length := by
@@ -201,7 +201,7 @@ private theorem data_active_complete {data : Slice U8} {pos next : Usize}
   exact hr
 
 private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} (init : alloc.vec.Vec U8)
+    {env : metadata.CodeMetadata} (init : alloc.vec.Vec U8)
     (hb : At DataEncoding data pos ⟨.Passive, init.val⟩ next) :
     metadata.decode_data_segment data pos env = .ok (.Ok (⟨.Passive, init⟩, next)) := by
   obtain ⟨bytes, he, hs⟩ := hb
@@ -237,7 +237,7 @@ private theorem data_passive_complete {data : Slice U8} {pos next : Usize}
 
 /-- `metadata.decode_data_segment` accepts a `DataEncoding` span of a valid segment. -/
 theorem metadata.decode_data_segment.complete {data : Slice U8} {pos next : Usize}
-    {env : metadata.Env} (segment : metadata.Data)
+    {env : metadata.CodeMetadata} (segment : metadata.Data)
     (hb : At DataEncoding data pos (Module.Data.raw segment) next)
     (hv : Module.Data.Valid env segment) :
     metadata.decode_data_segment data pos env = .ok (.Ok (segment, next)) := by
@@ -248,7 +248,7 @@ theorem metadata.decode_data_segment.complete {data : Slice U8} {pos next : Usiz
     exact data_passive_complete init hb
 /-- The data loop accepts the remaining valid segments of a repetition span and appends them to
 `out`. -/
-theorem metadata.decode_data_section_loop.complete (data : Slice U8) (env : metadata.Env)
+theorem metadata.decode_data_section_loop.complete (data : Slice U8) (env : metadata.CodeMetadata)
     (count : U32) (out : alloc.vec.Vec metadata.Data) (pos : Usize) (i : U32)
     (segments : List metadata.Data) (next : Usize)
     (hb : At (Rep DataEncoding) data pos (segments.map Module.Data.raw) next)
@@ -284,7 +284,7 @@ theorem metadata.decode_data_section_loop.complete (data : Slice U8) (env : meta
     exact hloop
 
 /-- `metadata.decode_data_section` accepts a vector span of valid segments. -/
-theorem metadata.decode_data_section.complete (data : Slice U8) (pos : Usize) (env : metadata.Env)
+theorem metadata.decode_data_section.complete (data : Slice U8) (pos : Usize) (env : metadata.CodeMetadata)
     (segments : alloc.vec.Vec metadata.Data) (next : Usize)
     (hb : At (VecEncoding DataEncoding) data pos (segments.val.map Module.Data.raw) next)
     (hv : ∀ s ∈ segments.val, Module.Data.Valid env s) :
@@ -335,14 +335,14 @@ theorem custom_decode {data : Slice U8} {pos next : Usize} {bytes : List U8}
   exact ⟨first, custom, hh, hc⟩
 
 /-- The tail loop at EOF returns the accumulated segments. -/
-theorem loop_eof (data : Slice U8) (env : metadata.Env) (segments : alloc.vec.Vec metadata.Data) (seen : Bool)
+theorem loop_eof (data : Slice U8) (env : metadata.CodeMetadata) (segments : alloc.vec.Vec metadata.Data) (seen : Bool)
 
     (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
     metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
-      data env () segments (Slice.len data) seen = .ok (.Ok ⟨segments⟩, ()) := by
+      data env () segments (Slice.len data) seen = .ok (.Ok segments, ()) := by
   have hb : metadata.validate_tail_with_loop.body metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
       data env () segments (Slice.len data) seen ⦃ r =>
-      r = .done ((.Ok ⟨segments⟩), ()) ⦄ := by
+      r = .done ((.Ok segments), ()) ⦄ := by
     unfold metadata.validate_tail_with_loop.body
     simp only [ge_iff_le, le_refl, ↓reduceIte]
     cases hc : env.data_count with
@@ -357,10 +357,10 @@ theorem loop_eof (data : Slice U8) (env : metadata.Env) (segments : alloc.vec.Ve
   simp [hr]
 
 /-- Leading custom sections do not change the loop result. -/
-theorem customs_prefix {data : Slice U8} {env : metadata.Env} {segments : alloc.vec.Vec metadata.Data}
+theorem customs_prefix {data : Slice U8} {env : metadata.CodeMetadata} {segments : alloc.vec.Vec metadata.Data}
     {pos next : Usize} {seen : Bool} {bytes : List U8}
     (he : CustomsEncoding bytes) (hb : Body.Scalar.BytesAt data pos bytes next)
-    {result : core.result.Result metadata.Tail error.Error × Unit}
+    {result : core.result.Result (alloc.vec.Vec metadata.Data) error.Error × Unit}
     (hnext : metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
       data env () segments next seen = .ok result) :
     metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
@@ -382,11 +382,11 @@ theorem customs_prefix {data : Slice U8} {env : metadata.Env} {segments : alloc.
       metadata.ModuleVisitor.on_custom_section.default, core.result.Result.Insts.CoreOpsTry.branch] using hs
 
 /-- A leading data section of valid segments does not change the loop result. -/
-theorem data_prefix {data : Slice U8} {env : metadata.Env} {segments : alloc.vec.Vec metadata.Data}
+theorem data_prefix {data : Slice U8} {env : metadata.CodeMetadata} {segments : alloc.vec.Vec metadata.Data}
     {pos next : Usize} (hbytes : At (SectionEncoding 11#u8 (VecEncoding DataEncoding))
       data pos (segments.val.map Module.Data.raw) next)
     (hv : ∀ s ∈ segments.val, Module.Data.Valid env s)
-    {result : core.result.Result metadata.Tail error.Error × Unit}
+    {result : core.result.Result (alloc.vec.Vec metadata.Data) error.Error × Unit}
     (hnext : metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
       data env () segments next true = .ok result) :
     metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
@@ -411,12 +411,12 @@ private theorem optional_cases {α : Type} {id R absent value bytes}
   | present hs => exact .inr hs
 
 /-- The tail loop accepts a tail encoding to EOF and returns its segments. -/
-theorem loop_complete {data : Slice U8} {env : metadata.Env} {segments : alloc.vec.Vec metadata.Data}
+theorem loop_complete {data : Slice U8} {env : metadata.CodeMetadata} {segments : alloc.vec.Vec metadata.Data}
     {pos : Usize} (hb : At (fun segments bytes => Encoding segments bytes) data pos (segments.val.map Module.Data.raw) (Slice.len data))
     (hv : ∀ s ∈ segments.val, Module.Data.Valid env s)
     (hcount : ∀ count, env.data_count = some count → count.val = segments.val.length) :
     metadata.validate_tail_with_loop metadata.DefaultModuleVisitor.Insts.ItascaMetadataModuleVisitor
-      data env () (alloc.vec.Vec.new _) pos false = .ok (.Ok ⟨segments⟩, ()) := by
+      data env () (alloc.vec.Vec.new _) pos false = .ok (.Ok segments, ()) := by
   obtain ⟨bytes, hencoding, hspan⟩ := hb
   obtain ⟨chunk, trailing, hchunkEncoding, htrailing, hbytesEq⟩ := hencoding
   obtain ⟨before, sectionBytes, hbefore, hsection, hchunkEq⟩ := hchunkEncoding
@@ -442,15 +442,14 @@ namespace Itasca
 
 /-- `metadata.validate_tail` accepts a tail encoding to EOF with valid, count-consistent segments
 and returns them. -/
-theorem metadata.validate_tail.complete {data : Slice U8} {pos : Usize} {env : metadata.Env}
-    (tail : metadata.Tail)
+theorem metadata.validate_tail.complete {data : Slice U8} {pos : Usize} {env : metadata.CodeMetadata}
+    (tail : alloc.vec.Vec metadata.Data)
     (hb : Binary.At (fun segments bytes => Module.Tail.Encoding segments bytes) data pos
-      (tail.data.val.map Module.Data.raw) (Slice.len data))
-    (hv : ∀ s ∈ tail.data.val, Module.Data.Valid env s)
-    (hcount : ∀ count, env.data_count = some count → count.val = tail.data.val.length) :
+      (tail.val.map Module.Data.raw) (Slice.len data))
+    (hv : ∀ s ∈ tail.val, Module.Data.Valid env s)
+    (hcount : ∀ count, env.data_count = some count → count.val = tail.val.length) :
     metadata.validate_tail data pos env = .ok (.Ok tail) := by
   have h := Module.Tail.loop_complete hb hv hcount
-  cases tail
   simp [metadata.validate_tail, metadata.validate_tail_with, h]
 
 end Itasca

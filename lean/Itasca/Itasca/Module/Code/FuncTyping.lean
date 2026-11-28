@@ -1,5 +1,5 @@
 import Itasca.Module.Env.Requirements
-import Itasca.CodeEntry.Validation
+import Itasca.Module.Code.Framing
 import Itasca.Module.Code.ContextTransport
 import Itasca.Module.Elab.ToTyping
 
@@ -25,16 +25,16 @@ namespace Itasca.Module.Environment
 /-- An accepted environment decoded from input within the size limit supplies the entry
 prerequisites for the instruction grammar: the allocation bound and signatures within the
 completeness limits. -/
-theorem accepted_entry_conditions (data : Slice U8) (env : metadata.Env) (next : Usize)
+theorem accepted_entry_conditions (data : Slice U8) (env : metadata.ModuleMetadata metadata.CodeMetadata) (next : Usize)
      (hsize : data.length ≤ limits.MAX_MODULE_BYTES.val)
     (h : metadata.validate_env data = .ok (.Ok (env, next))) :
-    CodeEntry.Bounds env ∧ CodeEntry.EnvironmentWithinLimits env := by
+    CodeEntry.Bounds env.code ∧ CodeEntry.EnvironmentWithinLimits env.code := by
   have hs := metadata.validate_env.semantic_spec data
   rw [h] at hs
   simp only [WP.spec_ok] at hs
-  obtain ⟨decls, hr, hv, hsig, _, hb⟩ := hs
-  exact ⟨CodeEntry.Bounds.of_module_bound env (hsig.mono (by have := hb.span.2; omega)),
-    hv.environment_within_limits hr.cache⟩
+  obtain ⟨decls, hr, hv, _, hsig, _, hb⟩ := hs
+  exact ⟨CodeEntry.Bounds.of_module_bound env.code hr.cache.imported_func_bound (hsig.mono (by have := hb.span.2; omega)),
+    hv.environment_within_limits⟩
 
 end Itasca.Module.Environment
 
@@ -73,14 +73,14 @@ theorem function_body {C : context} {f ft} (h : Func_ok C f ft) :
 /-- Generated function typing of a code entry in a module context gives a `Typed` certificate.
 The context's element space must be the environment's, and its data space must be the
 environment's unless the body uses no data index. -/
-theorem Typed.of_func_ok {env : metadata.Env} {C : context} {idx : U32}
+theorem Typed.of_func_ok {env : metadata.CodeMetadata} {C : context} {idx : U32}
     {entry : Binary.Code} {ft : functype}
     (hc : ModuleContext env C)
     (he : C.ELEMS = Translation.Environment.elementTypes env)
     (hd : C.DATAS = Translation.Environment.dataTypes env ∨ Binary.instructionsUseData entry.body = false)
     (hf : Func_ok C (function idx entry) ft)
     (hdeclared : Spec.DeclaredReferences.Instructions
-      (env.declared_funcs.val.map (fun idx => uN.mk_uN idx.val)) entry.body) : Typed env idx entry := by
+      (Translation.Environment.declaredReferences env) entry.body) : Typed env idx entry := by
   have hi : idx.val < env.types.val.length := by
     simpa [function, hc.types, proj_uN_0] using Module.Elaboration.func_index_bound hf
   have hft := Module.Elaboration.function_type_of_typing hf hc.types

@@ -1,4 +1,5 @@
 import Itasca.Module.Env.ValidityTransport
+import Itasca.Module.Env.Flags
 
 section
 open Aeneas Aeneas.Std
@@ -7,7 +8,7 @@ namespace Itasca.Module.Sections
 
 open Module.Environment Binary
 
-private theorem Marked.sameCore {env result desc} (h : Marked env result desc) : SameCore env result := by
+theorem Marked.sameCore {env result desc} (h : Marked env result desc) : SameCore env result := by
   cases desc <;> obtain ⟨d, lookup, rfl⟩ := h <;> constructor <;>
     first | rfl | exact map_descriptor_update _ _ _ lookup rfl
 
@@ -344,7 +345,7 @@ checks, the signature and size bounds needed by the code and data parsers, and t
 encoding of the consumed prefix. -/
 def SemanticPostWith (data : Slice U8) : core.result.Result (metadata.ModuleMetadata metadata.CodeMetadata × Usize) error.Error → Prop
   | .Err _ => True
-  | .Ok (env, next) => ∃ decls, Represents env decls ∧ Valid env ∧
+  | .Ok (env, next) => ∃ decls, Represents env decls ∧ Valid env ∧ DescriptorFlags env ∧
       SignatureBounded env.code next.val ∧ Bounded env next.val ∧
       Binary.At (fun ds bs => PrefixEncoding ds bs) data 0#usize decls next
 
@@ -359,7 +360,7 @@ theorem PostWith.semantic {data result} (h : PostWith data result) : SemanticPos
       rw [hinit] at hi
       simp only [WP.spec_ok] at hi
       obtain ⟨hr, hv, hs, _, hp⟩ := hi
-      exact ⟨decls, hrun.represents hr hp, hrun.valid hr hv hp,
+      exact ⟨decls, hrun.represents hr hp, hrun.valid hr hv hp, hrun.descriptor_flags hinit hr hp,
         hrun.signature_bounded (hs.mono (Nat.zero_le _)), hbound, hrun.encoding hheader⟩
 
 end Itasca.Module.Environment

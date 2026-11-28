@@ -37,7 +37,7 @@ def emptyContext : code.Context := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _�
 def voidFunction : wasm_types.FuncType := ⟨alloc.vec.Vec.new _, alloc.vec.Vec.new _⟩
 
 /-- A run of the body loop from the initial frame determines the result of `code.bodyCore`. -/
-theorem body_core_of_run (data : Slice U8) (env : metadata.Env)
+theorem body_core_of_run (data : Slice U8) (env : metadata.CodeMetadata)
     (locals results : alloc.vec.Vec wasm_types.ValueType) (index : U32) (ft : wasm_types.FuncType)
     (result : core.result.Result Unit error.OpError)
     (hi : env.types.val[index.val]? = some ft)
@@ -66,7 +66,7 @@ theorem body_core_of_run (data : Slice U8) (env : metadata.Env)
       simp [hrun]
 
 /-- An accepted step continues the loop from the step's state. -/
-theorem run_step (data : Slice U8) (env : metadata.Env)
+theorem run_step (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st next : code.BodyState) (opcode : U8) (pos : Usize)
     (hc : st.blocks.val ≠ [])
     (hr : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
@@ -76,7 +76,7 @@ theorem run_step (data : Slice U8) (env : metadata.Env)
   (Body.Execution.single hc hr hs).loop_eq
 
 /-- A rejected step ends the loop with the step's error. -/
-theorem run_error (data : Slice U8) (env : metadata.Env)
+theorem run_error (data : Slice U8) (env : metadata.CodeMetadata)
     (ctx : code.Context) (index : U32) (st next : code.BodyState) (opcode : U8) (pos : Usize)
     (e : error.OpError) (hc : st.blocks.val ≠ [])
     (hr : reader.read_byte data st.core.pos = .ok (.Ok (opcode, pos)))
@@ -97,7 +97,7 @@ theorem read_at (data : Slice U8) (pos next : Usize) (opcode : U8)
   simpa [heq, hb] using hr
 
 /-- The byte `0xff` is not a recognized opcode. -/
-theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : metadata.Env)
+theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : metadata.CodeMetadata)
      (ctx : code.Context) (index : U32)
     (h : st.core.vals.val.length < Usize.max) :
     Body.step st data env ctx index 0xFF#u8 = .ok (.Err .UnrecognizedOpcode, st) := by
@@ -106,7 +106,7 @@ theorem step_unknown (st : code.BodyState) (data : Slice U8) (env : metadata.Env
     code.sign_extension_type]
 
 /-- The body `ff` of a function of type `[] -> []` is rejected with `UnrecognizedOpcode`. -/
-theorem unknown_opcode_rejected (env : metadata.Env)
+theorem unknown_opcode_rejected (env : metadata.CodeMetadata)
     (hi : env.types.val[0]? = some voidFunction) :
     code.bodyCore (bytes [0xFF#u8]) env (alloc.vec.Vec.new _) (alloc.vec.Vec.new _) 0#u32 =
       .ok (.Err .UnrecognizedOpcode) := by
@@ -151,11 +151,10 @@ opcode. -/
 def badBytes : Slice U8 := Examples.Module.Support.bytes [2#u8,0#u8,0xFF#u8]
 
 /-- An environment with one function of type `[] -> []`. -/
-def badEnv : metadata.Env :=
-  { Examples.Module.Basic.emptyEnv with
+def badEnv : metadata.CodeMetadata :=
+  { Examples.Module.Basic.emptyEnv.code with
     types := alloc.vec.Vec.from [Examples.BodySupport.voidFunction] (by simp; scalar_tac)
-    func_type_indices := alloc.vec.Vec.from [0#u32] (by simp; scalar_tac)
-    func_types := alloc.vec.Vec.from [Examples.BodySupport.voidFunction] (by simp; scalar_tac) }
+    funcs := alloc.vec.Vec.from [⟨0#u32, false, false⟩] (by scalar_tac) }
 
 private theorem bad_size : Binary.Leb128.Decoded badBytes 0#usize 2#u32 1#usize :=
   (show Body.Scalar.BytesAt badBytes 0#usize [2#u8] 1#usize by
@@ -191,11 +190,12 @@ theorem bad_body_entry_rejected : metadata.validate_code_entry badBytes 0#usize 
     .ok (.Err (.Body .UnrecognizedOpcode)) := by
   have hread := reader.read_u32_leb.complete badBytes 0#usize 2#u32 1#usize bad_size
   have htypes : badEnv.types.val = [Examples.BodySupport.voidFunction] := rfl
-  have hfuncs : badEnv.func_type_indices.val = [0#u32] := rfl
+  have hfuncs : badEnv.funcs.val = [⟨0#u32, false, false⟩] := rfl
   have hs : metadata.validate_code_entry badBytes 0#usize badEnv 0#usize ⦃ r =>
       r = .Err (.Body .UnrecognizedOpcode) ⦄ := by
     unfold metadata.validate_code_entry metadata.validate_code_entry_with
-    simp [hfuncs, hread, core.result.Result.Insts.CoreOpsTry.branch]
+    have defs : badEnv.num_func_defs = .ok 1#usize := badEnv.num_func_defs_eq (by decide)
+    simp [defs, hread, core.result.Result.Insts.CoreOpsTry.branch]
     step as ⟨n, n_post⟩
     have hn : n = 2#usize := by scalar_tac
     rw [hn]
@@ -205,11 +205,19 @@ theorem bad_body_entry_rejected : metadata.validate_code_entry badBytes 0#usize 
     have hend : last = 3#usize := by scalar_tac
     rw [hend]
     simp [bad_locals]
+    step as ⟨idx, idx_post⟩
+    have idxZero : idx = 0#usize := by
+      apply UScalar.eq_of_val_eq
+      simpa [badEnv, Examples.Module.Basic.emptyEnv] using idx_post
+    rw [idxZero]
     step as ⟨type_idx, type_idx_post⟩
-    have hi : type_idx = 0#u32 := by simpa [hfuncs] using type_idx_post
+    have hi : type_idx = ⟨0#u32, false, false⟩ := by simpa [hfuncs] using type_idx_post
     rw [hi]
     step as ⟨t, t_post⟩
-    have hti : t = 0#usize := by scalar_tac
+    have hti : t = 0#usize := by
+      change t = UScalar.cast .Usize 0#u32 at t_post
+      rw [t_post]
+      scalar_tac
     rw [hti]
     simp [htypes]
     step as ⟨ft, ft_post⟩
@@ -240,6 +248,7 @@ under Wasm 2.0. -/
 def badIssued : Stream.Batch.Issued := ⟨0#u64, 0#usize, badEnv, badBytes, 0#usize, 0#usize, 1#usize⟩
 
 private theorem bad_bounds : CodeEntry.Bounds badEnv := by
+  refine ⟨by decide, ?_⟩
   intro ft hm
   have he : ft = Examples.BodySupport.voidFunction := by simpa [badEnv] using hm
   subst ft
@@ -265,7 +274,7 @@ theorem bad_batch_validation_rejected : ∃ after,
     have he : n = 0#usize := by apply UScalar.eq_of_val_eq; simpa using hv
     simpa [he] using hn
   refine ⟨{ badIssued.seed with error := some (.Body .UnrecognizedOpcode) }, ?_, rfl⟩
-  simp [stream.StreamingBatch.validate_func, stream.StreamingBatch.validate_next,
+  simp [stream.StreamingBatch.validate_func, alloc.sync.Arc.Insts.CoreOpsDerefDeref.deref, stream.StreamingBatch.validate_next,
     badIssued, Stream.Batch.Issued.seed, hr, hz, core.option.Option.is_none]
 
 /-- After the worker fails, `stream.StreamingBatch.finish` on the resulting batch returns the same
@@ -280,9 +289,9 @@ theorem bad_batch_finish_rejected : ∃ after,
 /-- A trailing custom section with an empty name and no payload: `00 01 00`. -/
 def tailBuffer : Slice U8 := Examples.Module.Support.bytes [0#u8,1#u8,0#u8]
 /-- A tail with no data segments. -/
-def emptyTail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
+def emptyTail : alloc.vec.Vec metadata.Data := alloc.vec.Vec.new _
 
-private theorem good_tail (env : metadata.Env) (hcount : env.data_count = none) :
+private theorem good_tail (env : metadata.CodeMetadata) (hcount : env.data_count = none) :
     metadata.validate_tail tailBuffer 0#usize env = .ok (.Ok emptyTail) := by
   apply metadata.validate_tail.complete emptyTail
   · refine ⟨[0#u8,1#u8,0#u8], ?_, ?_⟩
@@ -311,7 +320,7 @@ private theorem observe_customs_preserve : Module.Tail.Preserves observeCustoms 
 
 /-- Validating the trailing custom section with `observeCustoms` accepts and returns the
 outstanding batch list `[badIssued]` unchanged. -/
-theorem tail_custom_preserves_work (env : metadata.Env) (hcount : env.data_count = none) :
+theorem tail_custom_preserves_work (env : metadata.CodeMetadata) (hcount : env.data_count = none) :
     metadata.validate_tail_with observeCustoms tailBuffer 0#usize env [badIssued] =
       .ok (.Ok emptyTail, [badIssued]) := by
   obtain ⟨v', hv⟩ := metadata.validate_tail_with.accepted_lift observeCustoms observe_customs_accept

@@ -37,7 +37,7 @@ private theorem env_from_loop (data : Slice U8)
     metadata.validate_env data = .ok (.Err e) := by
   have hh := metadata.read_header.complete data 8#usize hbytes
   simp only [parseLoop, Examples.Module.Basic.emptyEnv] at hloop
-  simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new,
+  simp [metadata.validate_env, metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new,
     hh, core.result.Result.Insts.CoreOpsTry.branch, hloop]
 
 /-- A module with one memory and two exports of it, both named by the four bytes of U+10FFFF.
@@ -48,8 +48,8 @@ def duplicateUnicodeExports : Slice U8 := Examples.Module.Support.bytes
     4#u8,0xF4#u8,0x8F#u8,0xBF#u8,0xBF#u8,2#u8,0#u8])
   (by simp [magicVersion]; scalar_tac)
 
-private theorem duplicate_exports_decode (env : metadata.Env)
-    (he : env.exports.val = []) (hm : env.mem_types.val.length = 1) :
+private theorem duplicate_exports_decode (env : metadata.ModuleMetadata metadata.CodeMetadata)
+    (he : env.exports.val = []) (hm : env.code.memories.val.length = 1) :
     ∃ result, metadata.decode_export_section duplicateUnicodeExports 15#usize env =
       .ok (.Err .DuplicateExportName, result) := by
   let data := duplicateUnicodeExports
@@ -74,12 +74,12 @@ private theorem duplicate_exports_decode (env : metadata.Env)
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, duplicateUnicodeExports,
       Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
   have hfresh := metadata.export_name_taken.fresh env (alloc.vec.Vec.deref nm) (by simp [he])
-  have hdesc := metadata.export_desc.complete env (.Memory 0#u32)
-    (by simp [Module.Sections.ExportDescValid, hm])
+  obtain ⟨cm, hdesc, _⟩ := metadata.mark_exported.complete env.code (.Memory 0#u32)
+    (by simp [Module.Sections.ExportDescValid, metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem (show 0 < env.code.memories.val.length by omega)])
   simp only [Module.Sections.descByte, Module.Sections.descIndex] at hdesc
   obtain ⟨exports, hpush, hexports⟩ := WP.spec_imp_exists
     (alloc.vec.Vec.push_spec env.exports (⟨nm, .Memory 0#u32⟩ : metadata.Export) (by simp [he]; scalar_tac))
-  let updated := { env with exports := exports }
+  let updated := { env with code := cm, exports := exports }
   have hduplicate := metadata.export_name_taken.duplicate updated (alloc.vec.Vec.deref nm)
     (by simp [updated, hexports, he, alloc.vec.Vec.deref])
   have hinc : (0#u32 + 1#u32 : Result U32) = .ok 1#u32 := by
@@ -112,16 +112,17 @@ theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateU
         WebAssembly.Binary.LimitsEncoding.noMax 0 ((Binary.Leb128.encoding_iff _ _).mp (leb 0#u8))) .nil
     · constructor <;> simp [data, duplicateUnicodeExports, Examples.Module.Support.bytes,
         alloc.vec.Vec.deref, magicVersion]
-  obtain ⟨env, hread, hadded⟩ := metadata.decode_memory_section.complete data 10#usize
-    Examples.Module.Basic.emptyEnv [mt] 13#usize hmem
+  obtain ⟨cm, hread, hadded⟩ := metadata.decode_memory_section.complete data 10#usize
+    Examples.Module.Basic.emptyEnv.code [mt] 13#usize hmem
     (by
       intro ty ht
       have ht : ty = mt := by simpa using ht
       subst ty
       simp [mt, LimitsValid, limits.MAX_MEMORY_PAGES])
     (by simp [Examples.Module.Basic.emptyEnv])
-  have he : env.exports.val = [] := by rw [hadded.1]; rfl
-  have hm : env.mem_types.val.length = 1 := by simp [hadded.2, Examples.Module.Basic.emptyEnv]
+  let env := {Examples.Module.Basic.emptyEnv with code := cm}
+  have he : env.exports.val = [] := rfl
+  have hm : env.code.memories.val.length = 1 := by simp [env, hadded.2, Examples.Module.Basic.emptyEnv]
   obtain ⟨result, hexport⟩ := duplicate_exports_decode env he hm
   change metadata.decode_export_section data 15#usize env = _ at hexport
   have hhmem : SectionHeader data 8#usize 5#u8 10#usize 13#usize := by
@@ -131,7 +132,7 @@ theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateU
       simp [data, duplicateUnicodeExports, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]
   have hstep := metadata.validate_env_with_loop.complete_section data Examples.Module.Basic.emptyEnv
     env 8#usize 10#usize 13#usize 0#u8 5#u8 hhmem (by decide) (by decide) (by decide)
-    (by simpa [metadata.decode_env_section, global_simps] using hread)
+    (by simp [metadata.decode_env_section, global_simps, hread, env])
   have hhexport : SectionHeader data 13#usize 7#u8 15#usize 30#usize := by
     apply section_header data 13#usize 14#usize 15#usize 30#usize 7#u8 15#u8 (by decide)
     all_goals first | rfl | (apply Body.Scalar.BytesAt.mk <;> simp [data, duplicateUnicodeExports,
@@ -160,7 +161,7 @@ theorem duplicate_unicode_exports_rejected : metadata.validate_module duplicateU
 
 private theorem first_section_error (data : Slice U8)
     (hbytes : Body.Scalar.BytesAt data 0#usize magicVersion 8#usize) (id : U8) (first last : Usize)
-    (e : error.Error) (updated : metadata.Env) (hmore : 8 < data.length)
+    (e : error.Error) (updated : metadata.ModuleMetadata metadata.CodeMetadata) (hmore : 8 < data.length)
     (hlo : 0 < id.val) (hhi : id.val < 10)
     (hsection : SectionHeader data 8#usize id first last)
     (hfinish : last = Slice.len data)
@@ -242,8 +243,8 @@ theorem invalid_function_type_rejected : metadata.validate_module invalidType =
   have ht := (show At ByteEncoding data 11#usize 0#u8 12#usize from
     ⟨[0#u8], rfl, by constructor <;> simp [data, invalidType,
       Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_byte
-  have hd : metadata.decode_type_section data 10#usize Examples.Module.Basic.emptyEnv =
-      .ok (.Err (.InvalidType 0#u8), Examples.Module.Basic.emptyEnv) := by
+  have hd : metadata.decode_type_section data 10#usize Examples.Module.Basic.emptyEnv.code =
+      .ok (.Err (.InvalidType 0#u8), Examples.Module.Basic.emptyEnv.code) := by
     simp [metadata.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_type_section_loop
     rw [loop]
@@ -254,7 +255,7 @@ theorem invalid_function_type_rejected : metadata.validate_module invalidType =
     alloc.vec.Vec.deref, magicVersion]) 1#u8 10#usize 12#usize _ Examples.Module.Basic.emptyEnv
     (by simp [data, invalidType, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion])
     (by decide) (by decide) hh rfl
-  · simpa [metadata.decode_env_section, global_simps] using hd
+  · simp [metadata.decode_env_section, global_simps, hd]
   · simp [data, invalidType, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
@@ -442,7 +443,7 @@ theorem truncated_code_count_rejected : metadata.validate_module (emptySection 1
     simp [core.cmp.impls.OrdUsize.min]
   have hlen : Slice.len regions.code = 2#usize := rfl
   have hs : stream.read_code_header stream.SliceSource.Insts.ItascaStreamStreamingSource
-      regions (Slice.len regions.code) Examples.Module.Basic.emptyEnv ⦃ r => r = .Err .UnexpectedEof ⦄ := by
+      regions (Slice.len regions.code) Examples.Module.Basic.emptyEnv.code ⦃ r => r = .Err .UnexpectedEof ⦄ := by
     simp only [stream.read_code_header, hlen, show (2#usize ≠ 0#usize) by decide,
       ↓reduceIte, Stream.Framing.header_limit, bind_ok, lift, hmin, hview,
       core.result.Result.Insts.CoreOpsTry.branch]
@@ -472,19 +473,19 @@ theorem invalid_type_index_rejected : metadata.validate_module invalidTypeIndex 
   have ht := (show At IndexEncoding data 11#usize 0#u32 12#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, invalidTypeIndex,
       Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hd : metadata.decode_function_section data 10#usize Examples.Module.Basic.emptyEnv =
-      .ok (.Err (.UnknownType 0#u32), Examples.Module.Basic.emptyEnv) := by
+  have hd : metadata.decode_function_section data 10#usize Examples.Module.Basic.emptyEnv.code =
+      .ok (.Err (.UnknownType 0#u32), Examples.Module.Basic.emptyEnv.code) := by
     simp [metadata.decode_function_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_function_section_loop
     rw [loop]
-    simp [metadata.decode_function_section_loop.body, ht, metadata.lookup_type, lift,
+    simp [metadata.decode_function_section_loop.body, ht, lift,
       Examples.Module.Basic.emptyEnv, core.result.Result.Insts.CoreOpsTry.branch,
       core.result.Result.Insts.CoreOpsTry_traitFromResidualResult.from_residual]
   apply first_section_error data (by constructor <;> simp [data, invalidTypeIndex, Examples.Module.Support.bytes,
     alloc.vec.Vec.deref, magicVersion]) 3#u8 10#usize 12#usize _ Examples.Module.Basic.emptyEnv
     (by simp [data, invalidTypeIndex, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion])
     (by decide) (by decide) hh rfl
-  · simpa [metadata.decode_env_section, global_simps] using hd
+  · simp [metadata.decode_env_section, global_simps, hd]
   · simp [data, invalidTypeIndex, Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion,
       limits.MAX_MODULE_BYTES]
 
@@ -507,8 +508,8 @@ theorem section_size_mismatch_rejected : metadata.validate_module longEmptyTypeS
   have hc := (show At IndexEncoding data 10#usize 0#u32 11#usize from
     ⟨[0#u8], leb 0#u8, by constructor <;> simp [data, longEmptyTypeSection,
       Examples.Module.Support.bytes, alloc.vec.Vec.deref, magicVersion]⟩).read_index
-  have hd : metadata.decode_type_section data 10#usize Examples.Module.Basic.emptyEnv =
-      .ok (.Ok 11#usize, Examples.Module.Basic.emptyEnv) := by
+  have hd : metadata.decode_type_section data 10#usize Examples.Module.Basic.emptyEnv.code =
+      .ok (.Ok 11#usize, Examples.Module.Basic.emptyEnv.code) := by
     simp [metadata.decode_type_section, hc, core.result.Result.Insts.CoreOpsTry.branch]
     unfold metadata.decode_type_section_loop
     rw [loop]

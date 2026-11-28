@@ -83,8 +83,9 @@ let module = itasca::validate_streaming(0, &source, &mut Visitor { returned: Vec
 
 ## Formal verification
 
-The Rust metadata and streaming API have changed. The guarantees below describe
-the previous extracted API until the handwritten proofs are ported to the new model.
+The slice and streaming validators return module metadata with shared immutable code
+descriptors and the decoded data segments. The soundness and completeness proofs cover
+this returned metadata, including descriptor flags and ordered import and export types.
 
 The pipeline is:
 

@@ -156,7 +156,7 @@ private theorem four_byte_custom_reply (a b c d : U8) (reply : core.result.Resul
   have henv : metadata.validate_env data = .ok (match reply with
       | .Ok _ => .Ok (Examples.Module.Basic.emptyEnv, 15#usize)
       | .Err e => .Err e) := by
-    simp [metadata.validate_env, metadata.validate_env_with, metadata.Env.new, hheader,
+    simp [metadata.validate_env, metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new, hheader,
       core.result.Result.Insts.CoreOpsTry.branch, Examples.Module.Basic.emptyEnv]
     unfold metadata.validate_env_with_loop
     rw [loop]
@@ -262,7 +262,7 @@ private theorem unicode_environment : metadata.validate_env_with customRecorder 
   have hname := metadata.decode_name.from_utf8 unicodeInput 10#usize nm 15#usize hnamebytes
     (.Ok ()) Examples.Module.Unicode.last_scalar_accepted
   have hn : alloc.vec.Vec.len nm = 4#usize := UScalar.eq_of_val_eq rfl
-  simp [metadata.validate_env_with, metadata.Env.new, hheader,
+  simp [metadata.validate_env_with, metadata.ModuleMetadataCodeMetadata.new, metadata.CodeMetadata.new, hheader,
     core.result.Result.Insts.CoreOpsTry.branch, Examples.Module.Basic.emptyEnv]
   unfold metadata.validate_env_with_loop
   rw [loop]

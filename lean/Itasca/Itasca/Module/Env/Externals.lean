@@ -111,6 +111,105 @@ theorem Cache.imports_resolve {env imports functions globals tables memories}
     | Memory mt => exact ⟨.Memory mt :: rest, .cons (by simp [Module.Externals.ImportResolves, hd]) hr⟩
     | Global gt => exact ⟨.Global gt :: rest, .cons (by simp [Module.Externals.ImportResolves, hd]) hr⟩
 
+private theorem lookup_of_drop_cons {xs : List α} {f : α → β} {i : Nat} {b bs}
+    (h : (xs.map f).drop i = b :: bs) :
+    ∃ a, xs[i]? = some a ∧ f a = b := by
+  have hd := congrArg List.head? h
+  simpa [List.getElem?_map, Option.map_eq_some_iff] using hd
+
+private theorem next_drop {xs : List α} {i : Nat} {x rest}
+    (h : xs.drop i = x :: rest) : xs.drop (i + 1) = rest := by
+  simpa only [List.drop_drop, List.drop_succ_cons, List.drop_zero] using congrArg (List.drop 1) h
+
+open Module.Externals in
+private theorem ordered_imports_from_positions {env entries types}
+    (typed : List.Forall₂ (ImportResolves env) entries types)
+    (records : List metadata.Import) (p : ImportPositions)
+    (same : records.map (fun i => (i.module.val, i.name.val, i.kind)) = entries.map importRecord)
+    (funcs : List U32)
+    (hfuncs : (env.funcs.val.map metadata.FuncDesc.type_index).drop p.funcs.val = importedFuncs entries ++ funcs)
+    (bfuncs : p.funcs.val + entries.length ≤ U32.max)
+    (tables : List wasm_types.TableType)
+    (htables : (env.tables.val.map metadata.TableDesc.ty).drop p.tables.val = importedTables entries ++ tables)
+    (btables : p.tables.val + entries.length ≤ U32.max)
+    (memories : List wasm_types.MemType)
+    (hmemories : (env.memories.val.map metadata.MemoryDesc.ty).drop p.memories.val = importedMems entries ++ memories)
+    (bmemories : p.memories.val + entries.length ≤ U32.max)
+    (globals : List wasm_types.GlobalType)
+    (hglobals : (env.globals.val.map metadata.Global.gtype).drop p.globals.val = importedGlobals entries ++ globals)
+    (bglobals : p.globals.val + entries.length ≤ U32.max)
+    : ImportTypes env p records types := by
+  induction typed generalizing records p with
+  | nil => cases records <;> simp_all [ImportTypes.nil]
+  | @cons entry xt entries types head _ ih =>
+    cases records with
+    | nil => simp at same
+    | cons record records =>
+      obtain ⟨names, tail⟩ := List.cons.inj same
+      have kind := congrArg (fun r : List U8 × List U8 × metadata.ImportKind => r.2.2) names
+      simp only [List.length_cons] at bfuncs btables bmemories bglobals
+      cases hd : entry.desc <;>
+        simp [importRecord, hd] at kind <;>
+        simp only [importedFuncs, importedTables, importedMems, importedGlobals, List.filterMap_cons,
+          hd, List.cons_append] at hfuncs htables hmemories hglobals
+      case Func ty =>
+        obtain ⟨d, look, eq⟩ := lookup_of_drop_cons hfuncs
+        let next := U32.ofNatCore (p.funcs.val + 1) (by scalar_tac)
+        apply ImportTypes.cons (q := { p with funcs := next })
+        · simp only [ImportResolves, hd] at head
+          obtain ⟨bound, rfl⟩ := head
+          simp [kind, ImportPositions.current, metadata.CodeMetadata.externalTypeAt, look, eq, List.getElem?_eq_getElem bound]
+        · simp [kind, ImportPositions.Advances, next]
+        · apply ih records _ tail <;> first
+          | assumption
+          | exact next_drop hfuncs
+          | (simp only [next, U32.ofNatCore_val_eq]; omega)
+      case Table ty =>
+        obtain ⟨d, look, eq⟩ := lookup_of_drop_cons htables
+        let next := U32.ofNatCore (p.tables.val + 1) (by scalar_tac)
+        apply ImportTypes.cons (q := { p with tables := next })
+        · simp only [ImportResolves, hd] at head
+          simp [kind, ImportPositions.current, metadata.CodeMetadata.externalTypeAt, look, eq, head]
+        · simp [kind, ImportPositions.Advances, next]
+        · apply ih records _ tail <;> first
+          | assumption
+          | exact next_drop htables
+          | (simp only [next, U32.ofNatCore_val_eq]; omega)
+      case Memory ty =>
+        obtain ⟨d, look, eq⟩ := lookup_of_drop_cons hmemories
+        let next := U32.ofNatCore (p.memories.val + 1) (by scalar_tac)
+        apply ImportTypes.cons (q := { p with memories := next })
+        · simp only [ImportResolves, hd] at head
+          simp [kind, ImportPositions.current, metadata.CodeMetadata.externalTypeAt, look, eq, head]
+        · simp [kind, ImportPositions.Advances, next]
+        · apply ih records _ tail <;> first
+          | assumption
+          | exact next_drop hmemories
+          | (simp only [next, U32.ofNatCore_val_eq]; omega)
+      case Global ty =>
+        obtain ⟨d, look, eq⟩ := lookup_of_drop_cons hglobals
+        let next := U32.ofNatCore (p.globals.val + 1) (by scalar_tac)
+        apply ImportTypes.cons (q := { p with globals := next })
+        · simp only [ImportResolves, hd] at head
+          simp [kind, ImportPositions.current, metadata.CodeMetadata.externalTypeAt, look, eq, head]
+        · simp [kind, ImportPositions.Advances, next]
+        · apply ih records _ tail <;> first
+          | assumption
+          | exact next_drop hglobals
+          | (simp only [next, U32.ofNatCore_val_eq]; omega)
+
+/-- The reader visits the imported prefix of each descriptor space in declaration order. -/
+theorem Represents.ordered_imports {env decls types} (rep : Represents env decls)
+    (typed : List.Forall₂ (Module.Externals.ImportResolves env.code) decls.imports types)
+    (bound : decls.imports.length ≤ U32.max) :
+    Module.Externals.ImportTypes env.code ⟨0#u32, 0#u32, 0#u32, 0#u32⟩ env.imports.val types := by
+  refine ordered_imports_from_positions typed _ _ rep.imports decls.functions rep.cache.funcs
+    (by simpa using bound) decls.tables ?_ (by simpa using bound) decls.memories ?_
+    (by simpa using bound) (decls.globals.map Binary.Global.gtype) ?_ (by simpa using bound)
+  · simpa [List.map_map, Function.comp_def] using congrArg (List.map Prod.fst) rep.cache.tableEntries
+  · simpa [List.map_map, Function.comp_def] using congrArg (List.map Prod.fst) rep.cache.memoryEntries
+  · simpa [List.map_map, Function.comp_def] using congrArg (List.map Prod.fst) rep.cache.globalEntries
+
 theorem Valid.exports_resolve {env} (h : Valid env) :
     ∃ xts, List.Forall₂ (Module.Externals.ExportResolves env.code) env.exports.val xts := by
   have he := h.exports

@@ -31,12 +31,42 @@ theorem limits_scalar {lim : wasm_types.Limits} {bound : U32}
   obtain ⟨hlo, hhi⟩ := h
   exact ⟨hlo, fun m hm => hhi m hm⟩
 
+/-- Every function descriptor in the completed function space has an elaborated type index. -/
+theorem descriptor_indices_of_elaboration {raw last decls env}
+    (ready : Module.Environment.Ready raw last decls env) (doneFuncs : 3 ≤ last)
+    (helab : Elaborates raw (moduleOf raw)) : Module.Environment.DescriptorIndices env.code := by
+  intro d mem
+  have member := List.mem_map_of_mem (f := metadata.FuncDesc.type_index) mem
+  rw [ready.represents.cache.funcs, ready.imports (by omega), ready.functions doneFuncs] at member
+  rw [ready.types_eq (by omega)]
+  rcases List.mem_append.mp member with imported | defined
+  · obtain ⟨entry, he, eq⟩ := List.mem_filterMap.mp imported
+    cases hd : entry.desc <;> simp [hd] at eq
+    exact eq ▸ helab.imports entry he _ hd
+  · exact helab.functions _ defined
+
 /-- A typed export index satisfies the export descriptor requirement of the environment. -/
-theorem external_index_valid {env : metadata.Env} {C : context} {desc : metadata.ExportDesc} {xt}
-    (hc : CodeEntry.ModuleContext env C) (h : Externidx_ok C (exportIndex desc) xt) :
-    Module.Sections.ExportDescValid env desc := by
-  cases desc <;> cases h <;>
-    simp_all [Module.Sections.ExportDescValid, hc.funcs, hc.globals, hc.tables, hc.mems, proj_uN_0]
+theorem external_index_valid {env : metadata.CodeMetadata} {C : context} {desc : metadata.ExportDesc} {xt}
+    (hc : CodeEntry.ModuleContext env C) (valid : Module.Environment.DescriptorIndices env)
+    (h : Externidx_ok C (exportIndex desc) xt) : Module.Sections.ExportDescValid env desc := by
+  cases desc with
+  | Func idx =>
+    cases h
+    have hi : idx.val < env.funcs.val.length := by simpa [hc.funcs, proj_uN_0] using (show proj_uN_0 (.mk_uN idx.val) < C.FUNCS.length by assumption)
+    have ht := valid _ (List.getElem_mem (l := env.funcs.val) hi)
+    simp [Module.Sections.ExportDescValid, metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem hi, List.getElem?_eq_getElem ht]
+  | Memory idx =>
+    cases h
+    have hi : idx.val < env.memories.val.length := by simpa [hc.mems, proj_uN_0] using (show proj_uN_0 (.mk_uN idx.val) < C.MEMS.length by assumption)
+    simp [Module.Sections.ExportDescValid, metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem hi]
+  | Global idx =>
+    cases h
+    have hi : idx.val < env.globals.val.length := by simpa [hc.globals, proj_uN_0] using (show proj_uN_0 (.mk_uN idx.val) < C.GLOBALS.length by assumption)
+    simp [Module.Sections.ExportDescValid, metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem hi]
+  | Table idx =>
+    cases h
+    have hi : idx.val < env.tables.val.length := by simpa [hc.tables, proj_uN_0] using (show proj_uN_0 (.mk_uN idx.val) < C.TABLES.length by assumption)
+    simp [Module.Sections.ExportDescValid, metadata.CodeMetadata.externalTypeAt, List.getElem?_eq_getElem hi]
 
 /-- Generated typing, the module-level restrictions and the signature limits discharge every
 semantic prerequisite of the environment parser at every declaration prefix. -/
@@ -79,12 +109,12 @@ theorem requirements_of_typing {raw : Binary.Module}
     · have hn : ((raw.exports.map Binary.Export.name).map Binary.nameOfBytes).Nodup := by
         simpa [List.map_map, Function.comp_def] using hp.unique_exports
       exact List.Nodup.of_map Binary.nameOfBytes hn
-    · intro e he
-      obtain ⟨xt, ht⟩ := hs.exports e he
+    · intro e mem
+      obtain ⟨xt, ht⟩ := hs.exports e mem
       have hx : Externidx_ok (contextOf raw) (exportIndex e.desc) xt := by cases ht; assumption
-      exact external_index_valid (hr.module_context (by decide)) hx
+      exact external_index_valid (hr.module_context (by decide)) (descriptor_indices_of_elaboration hr (by decide) he) hx
   · intro idx hi
-    exact start_valid_of_typing (hr.module_context (by decide)) (hs.start idx hi)
+    exact start_valid_of_typing (hr.module_context (by decide)) (descriptor_indices_of_elaboration hr (by decide) he) (hs.start idx hi)
   · intro e hm
     exact element_valid_raw_of_typing (hr.initializer_globals (by decide))
       (by simpa [Module.Constants.FunctionContext, initializerContextOf] using hr.funcs_context (by decide))

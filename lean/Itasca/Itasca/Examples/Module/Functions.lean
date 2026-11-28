@@ -82,7 +82,7 @@ theorem layout_valid : Layout.Valid 9 declarations layout := by
   · simp [Layout.Future, layout]
 
 private theorem functions_context {last decls env} (h : Ready raw last decls env) (hn : 3 ≤ last) :
-    env.func_types.val.map Translation.Environment.funcType =
+    env.code.funcs.val.map (Translation.Environment.descriptorType env.code.types.val) =
       [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] := by
   simpa [Module.Elaboration.contextOf, raw, declarations, Declarations.module, imported,
     Module.Elaboration.importType, Module.Elaboration.functionType, Module.Translation.funcs,
@@ -113,12 +113,23 @@ theorem requirements : Requirements raw := by
       subst e
       have hlen := congrArg List.length (functions_context hr (by decide))
       simp only [List.length_map, List.length_cons, List.length_nil] at hlen
-      change 1 < env.func_types.val.length
-      omega
+      have hi : 1 < env.code.funcs.val.length := by omega
+      have mem := List.mem_map_of_mem (f := metadata.FuncDesc.type_index)
+        (List.getElem_mem (l := env.code.funcs.val) hi)
+      rw [hr.represents.cache.funcs, hr.imports (by decide), hr.functions (by decide)] at mem
+      have eq : env.code.funcs.val[1].type_index = 0#u32 := by
+        simpa [raw, declarations, Declarations.module, Module.Environment.importedFuncs, imported] using mem
+      simp [Module.Sections.ExportDescValid, exported, metadata.CodeMetadata.externalTypeAt,
+        List.getElem?_eq_getElem hi, eq, hr.types_eq (by decide), raw, declarations, Declarations.module]
   · intro idx hi
     have he : idx = 1#u32 := by simpa [raw, declarations, Declarations.module] using hi.symm
     subst idx
     apply Module.Elaboration.start_valid_of_typing (hr.module_context (by decide))
+    · intro d hd
+      have member := List.mem_map_of_mem (f := metadata.FuncDesc.type_index) hd
+      rw [hr.represents.cache.funcs, hr.imports (by decide), hr.functions (by decide)] at member
+      have eq : d.type_index = 0#u32 := by simpa [raw, declarations, Declarations.module, Module.Environment.importedFuncs, imported] using member
+      simp [eq, hr.types_eq (by decide), raw, declarations, Declarations.module]
     apply Start_ok.mk_Start_ok
     · simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
         Module.Translation.funcs, Module.Elaboration.importType, imported, proj_uN_0]
@@ -142,16 +153,16 @@ theorem code_encoding : SectionEncoding 10#u8 (VecEncoding (Itasca.CodeEntry.Cod
 
 /-- The code entry has the type of function 1: `call 0` typechecks against the imported
 function. -/
-theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env 0#u32 entry := by
-  have htypes : env.types.val = [functionType] := hr.types_eq (by decide)
+theorem entry_typed {decls env} (hr : Ready raw 10 decls env) : CodeEntry.Typed env.code 0#u32 entry := by
+  have htypes : env.code.types.val = [functionType] := hr.types_eq (by decide)
   refine ⟨by simp [htypes], ?_, ?_⟩
-  · let C := CodeEntry.bodyContext env [] entry.declared []
+  · let C := CodeEntry.bodyContext env.code [] entry.declared []
     have hf : C.FUNCS = [.mk_functype (.mk_list []) (.mk_list []), .mk_functype (.mk_list []) (.mk_list [])] :=
       functions_context hr (by decide)
     have hw : wf_context C := by
       constructor <;> simp only [Forall, List.mem_map]
-      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.table_type_wf tt
-      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.mem_type_wf tt
+      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.table_type_wf tt.ty
+      · rintro _ ⟨tt, _, rfl⟩; exact Translation.Environment.mem_type_wf tt.ty
     have hi : Instr_ok C (.CALL (.mk_uN 0)) (.mk_functype (.mk_list []) (.mk_list [])) :=
       .call C _ [] [] (by simp [hf, proj_uN_0]) (by simp [hf, proj_uN_0]) hw
         (.instr_case_10 _ (Translation.Environment.index_wf 0#u32))
@@ -184,7 +195,7 @@ theorem environment : ∃ env decls, metadata.validate_env input = .ok (.Ok (env
 /-- `metadata.validate_module` accepts `input` under Wasm 2.0, checking the local declarations, a
 `call` of the imported function, the export and the start declaration. -/
 theorem functions_accepted : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) := by
-  let tail : metadata.Tail := ⟨alloc.vec.Vec.new _⟩
+  let tail : alloc.vec.Vec metadata.Data := alloc.vec.Vec.new _
   have ht : At (fun ds bs => Module.Tail.Encoding ds bs ) input 47#usize raw.data (Slice.len input) := by
     refine ⟨[], ⟨[], [], ⟨[], [], .nil, .absent, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
@@ -202,7 +213,7 @@ theorem functions_accepted : ∃ decoded, metadata.validate_module input = .ok (
       exact .cons (entry_typed hr) .nil) (by
       intro decls env hr
       simp [tail])
-  exact ⟨⟨env, tail⟩, ha⟩
+  exact ⟨_, ha⟩
 
 /-- The accepted module has a `Module.Sound.Validated` certificate for the bytes of `input`. -/
 theorem functions_validated : ∃ decoded, metadata.validate_module input = .ok (.Ok decoded) ∧
@@ -240,7 +251,7 @@ def tableType : wasm_types.TableType := ⟨⟨0#u32, none⟩, .FuncRef⟩
 /-- A memory with minimum size 0 pages and no maximum. -/
 def memoryType : wasm_types.MemType := ⟨⟨0#u32, none⟩⟩
 /-- An immutable `i32` global initialized to `i32.const 0`. -/
-def global : metadata.Global := ⟨⟨.Const, .I32⟩, .I32 0#i32⟩
+def global : Binary.Global := ⟨⟨.Const, .I32⟩, .I32 0#i32⟩
 /-- An export named `g` of global 0. -/
 def globalExport : Binary.Export := ⟨[0x67#u8], .Global 0#u32⟩
 /-- An active element segment for table 0 at offset `i32.const 0`, with no entries. -/
@@ -319,8 +330,9 @@ private theorem requirements : Requirements raw := by
       have hlen := congrArg List.length (hr.globals_context (by decide))
       simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
         Module.Translation.globals] at hlen
-      change 0 < env.global_types.val.length
-      omega
+      have hi : 0 < env.code.globals.val.length := by omega
+      simp [Module.Sections.ExportDescValid, globalExport, metadata.CodeMetadata.externalTypeAt,
+        List.getElem?_eq_getElem hi]
   · simp [SectionValid, raw, declarations, Declarations.module]
   · intro e he
     have heq : e = element := by simpa [raw, declarations, Declarations.module] using he
@@ -329,7 +341,7 @@ private theorem requirements : Requirements raw := by
     have hlen := congrArg List.length (hr.tables_context (by decide))
     simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
       Module.Translation.tables] at hlen
-    have hi : 0 < env.table_types.val.length := by omega
+    have hi : 0 < env.code.tables.val.length := by omega
     refine ⟨hi, ?_, .i32 _⟩
     have ht := hr.tables_context (by decide)
     have he := congrArg (fun ts => ts[0]!) ht
@@ -337,7 +349,7 @@ private theorem requirements : Requirements raw := by
       Module.Translation.tables, hi, tableType,
       Translation.Environment.tableType] at he
     have href := he.2
-    cases ht : env.table_types.val[0].elem <;> simp_all [Translation.referenceType, element]
+    cases ht : env.code.tables.val[0].ty.elem <;> simp_all [Translation.referenceType, element]
   · trivial
 
 private theorem data_encoding : SectionEncoding 11#u8 (VecEncoding DataEncoding)
@@ -360,8 +372,8 @@ theorem sections_accepted : ∃ decoded, metadata.validate_module input = .ok (.
     constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
   obtain ⟨first, hh, _⟩ := hd.section_split
-  let tail : metadata.Tail := ⟨alloc.vec.Vec.from [segment] (by simp; scalar_tac)⟩
-  have ht : At (fun ds bs => Module.Tail.Encoding ds bs ) input 42#usize (tail.data.val.map Module.Data.raw) (Slice.len input) := by
+  let tail : alloc.vec.Vec metadata.Data := alloc.vec.Vec.from [segment] (by simp; scalar_tac)
+  have ht : At (fun ds bs => Module.Tail.Encoding ds bs ) input 42#usize (tail.val.map Module.Data.raw) (Slice.len input) := by
     refine ⟨dataBytes, ⟨dataBytes, [], ⟨[], dataBytes, .nil, .present data_encoding, rfl⟩, .nil, rfl⟩, ?_⟩
     constructor <;> simp [input, Examples.Module.Support.bytes, alloc.vec.Vec.deref,
       magicVersion, layout, Layout.bytes, dataBytes]
@@ -384,9 +396,9 @@ theorem sections_accepted : ∃ decoded, metadata.validate_module input = .ok (.
       have hlen := congrArg List.length (hr.memories_context (by decide))
       simp [Module.Elaboration.contextOf, raw, declarations, Declarations.module,
         Module.Translation.mems] at hlen
-      change 0 < env.mem_types.val.length
+      change 0 < env.code.memories.val.length
       omega)
-  exact ⟨⟨env, tail⟩, ha⟩
+  exact ⟨_, ha⟩
 
 /-- The accepted module has a `Module.Sound.Validated` certificate for the bytes of `input`, which
 covers generated module typing, the Wasm 2.0 restrictions and ordered external metadata. -/
